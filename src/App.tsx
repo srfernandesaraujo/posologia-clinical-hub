@@ -19,6 +19,10 @@ import ToolDetail from "./pages/ToolDetail";
 import RiscoCardiovascular from "./pages/RiscoCardiovascular";
 import DesmaCorticoide from "./pages/DesmaCorticoide";
 import EquivalenciaOpioides from "./pages/EquivalenciaOpioides";
+import AjusteDoseRenal from "./pages/AjusteDoseRenal";
+import EquivalenciaAntidepressivos from "./pages/EquivalenciaAntidepressivos";
+import HomaIR from "./pages/HomaIR";
+import Findrisc from "./pages/Findrisc";
 import MinhaConta from "./pages/MinhaConta";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
@@ -50,6 +54,10 @@ const App = () => (
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
+              <Route path="/calculadoras/ajuste-dose-renal" element={<AjusteDoseRenal />} />
+              <Route path="/calculadoras/equivalencia-antidepressivos" element={<EquivalenciaAntidepressivos />} />
+              <Route path="/calculadoras/homa-ir" element={<HomaIR />} />
+              <Route path="/calculadoras/findrisc" element={<Findrisc />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
