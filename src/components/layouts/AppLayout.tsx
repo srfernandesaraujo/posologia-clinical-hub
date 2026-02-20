@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical,
@@ -23,9 +23,15 @@ const adminItems = [
 export function AppLayout() {
   const { signOut, isAdmin } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -33,7 +39,7 @@ export function AppLayout() {
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-4 gap-2 sticky top-0 h-screen">
         <Link to="/dashboard" className="flex items-center gap-2 px-3 py-4 mb-4">
           <Pill className="h-7 w-7 text-primary" />
-          <span className="text-lg font-bold">Posologia</span>
+          <span className="text-lg font-bold text-foreground">Posologia</span>
         </Link>
         <nav className="flex flex-col gap-1 flex-1">
           {allItems.map((item) => (
@@ -44,7 +50,7 @@ export function AppLayout() {
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 location.pathname.startsWith(item.to)
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -55,7 +61,7 @@ export function AppLayout() {
         <div className="border-t border-border pt-3 mt-2">
           <p className="px-3 text-[10px] text-muted-foreground/50 mb-2">Posologia Produções</p>
           <button
-            onClick={signOut}
+            onClick={handleSignOut}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full"
           >
             <LogOut className="h-4 w-4" />
@@ -69,7 +75,7 @@ export function AppLayout() {
         <header className="md:hidden sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card px-4">
           <Link to="/dashboard" className="flex items-center gap-2">
             <Pill className="h-6 w-6 text-primary" />
-            <span className="font-bold">Posologia</span>
+            <span className="font-bold text-foreground">Posologia</span>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -88,7 +94,7 @@ export function AppLayout() {
                     "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
                     location.pathname.startsWith(item.to)
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
+                      : "text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
@@ -96,7 +102,7 @@ export function AppLayout() {
                 </Link>
               ))}
               <button
-                onClick={() => { signOut(); setMobileOpen(false); }}
+                onClick={() => { handleSignOut(); setMobileOpen(false); }}
                 className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-destructive"
               >
                 <LogOut className="h-4 w-4" />
