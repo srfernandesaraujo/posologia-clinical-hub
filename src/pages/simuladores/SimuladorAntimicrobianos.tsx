@@ -114,7 +114,7 @@ export default function SimuladorAntimicrobianos() {
     );
   }
 
-  if (!c) return null;
+  if (!c || !c.patient || !c.day1 || !c.day3 || !c.expectedDay1 || !c.expectedDay3) return null;
 
   // Timeline
   const Timeline = () => (
@@ -140,8 +140,8 @@ export default function SimuladorAntimicrobianos() {
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="h-4 w-4" />Ficha do Paciente – Admissão</CardTitle></CardHeader>
             <CardContent className="text-sm space-y-2">
               <p><strong>{c.patient.name}</strong>, {c.patient.age} anos, {c.patient.weight}kg</p>
-              {c.patient.comorbidities.length > 0 && <p><strong>Comorbidades:</strong> {c.patient.comorbidities.join(", ")}</p>}
-              {c.patient.allergies.length > 0 && <p className="text-red-600"><strong>Alergias:</strong> {c.patient.allergies.join(", ")}</p>}
+              {(c.patient.comorbidities ?? []).length > 0 && <p><strong>Comorbidades:</strong> {c.patient.comorbidities.join(", ")}</p>}
+              {(c.patient.allergies ?? []).length > 0 && <p className="text-red-600"><strong>Alergias:</strong> {c.patient.allergies.join(", ")}</p>}
               <Separator />
               <p><strong>PA:</strong> {c.patient.vitalSigns.bp} | <strong>FC:</strong> {c.patient.vitalSigns.hr} | <strong>Temp:</strong> {c.patient.vitalSigns.temp} | <strong>SpO2:</strong> {c.patient.vitalSigns.spo2}</p>
               <Separator />
@@ -201,9 +201,9 @@ export default function SimuladorAntimicrobianos() {
               <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FlaskConical className="h-4 w-4" />Antibiograma</CardTitle></CardHeader>
               <CardContent>
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b"><th className="text-left py-2">Antibiótico</th><th className="text-left py-2">Resultado</th>{c.day3.antibiogram[0]?.mic && <th className="text-left py-2">MIC</th>}</tr></thead>
+                  <thead><tr className="border-b"><th className="text-left py-2">Antibiótico</th><th className="text-left py-2">Resultado</th>{(c.day3.antibiogram ?? [])[0]?.mic && <th className="text-left py-2">MIC</th>}</tr></thead>
                   <tbody>
-                    {c.day3.antibiogram.map((a, i) => (
+                    {(c.day3.antibiogram ?? []).map((a, i) => (
                       <tr key={i} className="border-b">
                         <td className="py-2">{a.antibiotic}</td>
                         <td className="py-2"><Badge variant={a.result === "S" ? "secondary" : "destructive"} className={a.result === "S" ? "bg-green-100 text-green-800" : ""}>{a.result === "S" ? "Sensível" : "Resistente"}</Badge></td>
