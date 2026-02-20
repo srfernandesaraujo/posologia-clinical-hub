@@ -2,6 +2,7 @@ import { Outlet, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Pill, Mail } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LoginPopover } from "@/components/LoginPopover";
 
 export function PublicLayout() {
   const { t } = useTranslation();
@@ -22,15 +23,7 @@ export function PublicLayout() {
               <Mail className="h-4 w-4" />
               {t("nav.contact")}
             </Link>
-            <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors px-3 py-2">
-              {t("common.enter")}
-            </Link>
-            <Link
-              to="/cadastro"
-              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 transition-colors"
-            >
-              {t("auth.signUp")}
-            </Link>
+            <LoginPopover />
           </nav>
         </div>
       </header>
