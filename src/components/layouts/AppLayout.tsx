@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Stethoscope, LayoutDashboard, Calculator, FlaskConical,
+  Pill, LayoutDashboard, Calculator, FlaskConical,
   User, LogOut, Shield, BarChart3, Menu, X,
 } from "lucide-react";
 import { useState } from "react";
@@ -32,8 +32,8 @@ export function AppLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-4 gap-2 sticky top-0 h-screen">
         <Link to="/dashboard" className="flex items-center gap-2 px-3 py-4 mb-4">
-          <Stethoscope className="h-7 w-7 text-primary" />
-          <span className="text-lg font-bold">MedCalc Hub</span>
+          <Pill className="h-7 w-7 text-primary" />
+          <span className="text-lg font-bold">Posologia</span>
         </Link>
         <nav className="flex flex-col gap-1 flex-1">
           {allItems.map((item) => (
@@ -52,28 +52,30 @@ export function AppLayout() {
             </Link>
           ))}
         </nav>
-        <button
-          onClick={signOut}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          Sair
-        </button>
+        <div className="border-t border-border pt-3 mt-2">
+          <p className="px-3 text-[10px] text-muted-foreground/50 mb-2">Posologia Produções</p>
+          <button
+            onClick={signOut}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </button>
+        </div>
       </aside>
 
       {/* Mobile header */}
       <div className="flex flex-col flex-1">
         <header className="md:hidden sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card px-4">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <Stethoscope className="h-6 w-6 text-primary" />
-            <span className="font-bold">MedCalc Hub</span>
+            <Pill className="h-6 w-6 text-primary" />
+            <span className="font-bold">Posologia</span>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </header>
 
-        {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden fixed inset-0 top-14 z-40 bg-background/95 backdrop-blur-sm p-4">
             <nav className="flex flex-col gap-1">

@@ -28,7 +28,7 @@ export default function Dashboard() {
       <div className="mb-10">
         <h1 className="text-3xl font-bold mb-2">Olá, {firstName}! 👋</h1>
         <p className="text-muted-foreground text-lg">
-          Escolha uma categoria para começar.
+          Bem-vindo ao <span className="font-semibold text-foreground">Posologia Clinical Hub</span>. Escolha uma categoria para começar.
         </p>
       </div>
 
