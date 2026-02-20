@@ -1,30 +1,33 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical,
-  User, LogOut, Shield, BarChart3, Menu, X,
+  User, LogOut, Shield, BarChart3, Menu, X, Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Calculadoras", to: "/calculadoras", icon: Calculator },
-  { label: "Simuladores", to: "/simuladores", icon: FlaskConical },
-  { label: "Minha Conta", to: "/minha-conta", icon: User },
-];
-
-const adminItems = [
-  { label: "Admin", to: "/admin", icon: Shield },
-  { label: "Analytics", to: "/analytics", icon: BarChart3 },
-];
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function AppLayout() {
   const { signOut, isAdmin } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { label: t("nav.dashboard"), to: "/dashboard", icon: LayoutDashboard },
+    { label: t("nav.calculators"), to: "/calculadoras", icon: Calculator },
+    { label: t("nav.simulators"), to: "/simuladores", icon: FlaskConical },
+    { label: t("nav.myAccount"), to: "/minha-conta", icon: User },
+  ];
+
+  const adminItems = [
+    { label: t("nav.admin"), to: "/admin", icon: Shield },
+    { label: t("nav.analytics"), to: "/analytics", icon: BarChart3 },
+  ];
 
   const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
 
@@ -58,14 +61,15 @@ export function AppLayout() {
             </Link>
           ))}
         </nav>
-        <div className="border-t border-border pt-3 mt-2">
-          <p className="px-3 text-[10px] text-muted-foreground/50 mb-2">Posologia Produções</p>
+        <div className="border-t border-border pt-3 mt-2 space-y-2">
+          <LanguageSwitcher className="px-3" />
+          <p className="px-3 text-[10px] text-muted-foreground/50">Posologia Produções</p>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full"
           >
             <LogOut className="h-4 w-4" />
-            Sair
+            {t("nav.logout")}
           </button>
         </div>
       </aside>
@@ -77,9 +81,12 @@ export function AppLayout() {
             <Pill className="h-6 w-6 text-primary" />
             <span className="font-bold text-foreground">Posologia</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </header>
 
         {mobileOpen && (
@@ -106,7 +113,7 @@ export function AppLayout() {
                 className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-destructive"
               >
                 <LogOut className="h-4 w-4" />
-                Sair
+                {t("nav.logout")}
               </button>
             </nav>
           </div>

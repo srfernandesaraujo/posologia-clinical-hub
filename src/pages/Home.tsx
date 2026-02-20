@@ -1,27 +1,10 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
   Clock, Brain, Heart, Activity, CheckCircle2, ArrowRight,
   TrendingUp, BookOpen, Star, ChevronRight,
 } from "lucide-react";
-
-const painPoints = [
-  {
-    icon: Clock,
-    problem: "Calculando scores manualmente?",
-    solution: "Resultados instantâneos com fórmulas validadas. Sem erros, sem perda de tempo.",
-  },
-  {
-    icon: Brain,
-    problem: "Inseguro na tomada de decisão?",
-    solution: "Simuladores clínicos que treinam seu raciocínio com cenários reais.",
-  },
-  {
-    icon: BookOpen,
-    problem: "Fórmulas espalhadas em livros e apps?",
-    solution: "Tudo centralizado: dezenas de calculadoras organizadas por especialidade.",
-  },
-];
 
 const toolExamples = [
   { name: "Clearance de Creatinina", category: "Nefrologia", icon: Activity, color: "bg-blue-500/10 text-blue-500" },
@@ -32,23 +15,27 @@ const toolExamples = [
   { name: "Wells Score", category: "Emergência", icon: Zap, color: "bg-orange-500/10 text-orange-500" },
 ];
 
-const stats = [
-  { value: "50+", label: "Calculadoras Clínicas" },
-  { value: "12", label: "Especialidades" },
-  { value: "100%", label: "Gratuito" },
-  { value: "24/7", label: "Disponível" },
-];
-
-const benefits = [
-  "Economize até 10 minutos por paciente em cálculos",
-  "Fórmulas atualizadas conforme diretrizes vigentes",
-  "Interface limpa e pensada para uso rápido no plantão",
-  "Explicação didática abaixo de cada ferramenta",
-  "Novos scores adicionados frequentemente",
-  "Acesso em qualquer dispositivo — desktop, tablet ou celular",
-];
-
 export default function Home() {
+  const { t } = useTranslation();
+
+  const painPoints = [
+    { icon: Clock, problem: t("painPoints.p1"), solution: t("painPoints.s1") },
+    { icon: Brain, problem: t("painPoints.p2"), solution: t("painPoints.s2") },
+    { icon: BookOpen, problem: t("painPoints.p3"), solution: t("painPoints.s3") },
+  ];
+
+  const benefits = [
+    t("benefits.b1"), t("benefits.b2"), t("benefits.b3"),
+    t("benefits.b4"), t("benefits.b5"), t("benefits.b6"),
+  ];
+
+  const stats = [
+    { value: "50+", label: t("home.stats.calculators") },
+    { value: "12", label: t("home.stats.specialties") },
+    { value: "100%", label: t("home.stats.free") },
+    { value: "24/7", label: t("home.stats.available") },
+  ];
+
   return (
     <div className="overflow-hidden">
       {/* Hero */}
@@ -67,14 +54,14 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 mb-6">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">
-                  Gratuito para profissionais de saúde
+                  {t("home.badge")}
                 </span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]">
-                Pare de perder tempo com{" "}
+                {t("home.heroTitle1")}{" "}
                 <span className="relative">
-                  <span className="text-gradient">cálculos manuais</span>
+                  <span className="text-gradient">{t("home.heroTitle2")}</span>
                   <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
                     <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 6" stroke="hsl(168 80% 42%)" strokeWidth="3" strokeLinecap="round" />
                   </svg>
@@ -82,8 +69,7 @@ export default function Home() {
               </h1>
 
               <p className="text-lg text-white/60 mb-8 leading-relaxed max-w-lg">
-                Scores, fórmulas e simuladores clínicos validados — prontos para usar 
-                no plantão, na enfermaria ou na sala de aula. Resultados precisos em segundos.
+                {t("home.heroSubtitle")}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
@@ -91,25 +77,25 @@ export default function Home() {
                   to="/cadastro"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-7 py-4 text-base font-bold text-white hover:from-emerald-400 hover:to-teal-500 transition-all shadow-lg shadow-emerald-500/25"
                 >
-                  Criar conta gratuita
+                  {t("home.createAccount")}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/login"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-7 py-4 text-base font-medium text-white/80 hover:bg-white/5 transition-colors"
                 >
-                  Já tenho conta
+                  {t("home.haveAccount")}
                 </Link>
               </div>
 
               <div className="flex items-center gap-6 text-sm text-white/40">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-emerald-400/60" />
-                  Baseado em evidências
+                  {t("home.evidenceBased")}
                 </div>
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-amber-400/60" />
-                  Revisado por médicos
+                  {t("home.reviewedByDoctors")}
                 </div>
               </div>
             </div>
@@ -157,9 +143,9 @@ export default function Home() {
       <section className="bg-[#080C18] py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
-            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">O problema que resolvemos</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">A rotina clínica não pode esperar</h2>
-            <p className="text-white/50 text-lg max-w-2xl mx-auto">Você precisa de respostas rápidas e confiáveis. Nós entregamos exatamente isso.</p>
+            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">{t("home.problemSolve")}</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("home.problemTitle")}</h2>
+            <p className="text-white/50 text-lg max-w-2xl mx-auto">{t("home.problemSubtitle")}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {painPoints.map((item) => (
@@ -179,9 +165,9 @@ export default function Home() {
       <section className="bg-[#0A0F1C] py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
-            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">Ferramentas disponíveis</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Scores e calculadoras que você usa todo dia</h2>
-            <p className="text-white/50 text-lg max-w-2xl mx-auto">De CHA₂DS₂-VASc a Clearance de Creatinina — tudo em um só lugar, com explicação didática e referências atualizadas.</p>
+            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">{t("home.toolsAvailable")}</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("home.toolsTitle")}</h2>
+            <p className="text-white/50 text-lg max-w-2xl mx-auto">{t("home.toolsSubtitle")}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
             {toolExamples.map((tool) => (
@@ -198,7 +184,7 @@ export default function Home() {
           </div>
           <div className="text-center">
             <Link to="/cadastro" className="inline-flex items-center gap-2 text-emerald-400 font-semibold text-sm hover:text-emerald-300 transition-colors">
-              Ver todas as ferramentas <ArrowRight className="h-4 w-4" />
+              {t("home.viewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -209,11 +195,11 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             <div>
-              <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">Por que usar o Posologia Clinical Hub?</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Feito por quem entende a rotina clínica</h2>
-              <p className="text-white/50 text-lg mb-8">Cada ferramenta foi pensada para se encaixar no fluxo de trabalho do profissional de saúde — rápida, precisa e sem distrações.</p>
+              <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">{t("home.whyUse")}</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("home.whyTitle")}</h2>
+              <p className="text-white/50 text-lg mb-8">{t("home.whySubtitle")}</p>
               <Link to="/cadastro" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-7 py-3.5 text-sm font-bold text-white hover:from-emerald-400 hover:to-teal-500 transition-all shadow-lg shadow-emerald-500/20">
-                Começar agora — é grátis <ArrowRight className="h-4 w-4" />
+                {t("home.startNow")} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="space-y-3">
@@ -232,14 +218,14 @@ export default function Home() {
       <section className="bg-[#0A0F1C] py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
-            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">Como funciona</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">3 passos para começar</h2>
+            <span className="inline-block text-xs font-bold tracking-widest text-emerald-400 uppercase mb-4">{t("home.howItWorks")}</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("home.threeSteps")}</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { step: "01", title: "Crie sua conta", desc: "Cadastro rápido e gratuito. Sem cartão de crédito.", icon: Users },
-              { step: "02", title: "Escolha a ferramenta", desc: "Navegue por especialidade ou busque pelo nome do score.", icon: Calculator },
-              { step: "03", title: "Obtenha o resultado", desc: "Preencha os campos e receba o resultado com interpretação clínica.", icon: TrendingUp },
+              { step: "01", title: t("home.step1Title"), desc: t("home.step1Desc"), icon: Users },
+              { step: "02", title: t("home.step2Title"), desc: t("home.step2Desc"), icon: Calculator },
+              { step: "03", title: t("home.step3Title"), desc: t("home.step3Desc"), icon: TrendingUp },
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="relative mx-auto mb-5">
@@ -264,12 +250,12 @@ export default function Home() {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(262_83%_58%/0.3),transparent_60%)]" />
             <div className="relative p-10 md:p-16 text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Sua próxima decisão clínica merece{" "}
-                <span className="underline decoration-white/30 decoration-2 underline-offset-4">precisão</span>
+                {t("home.ctaTitle")}{" "}
+                <span className="underline decoration-white/30 decoration-2 underline-offset-4">{t("home.ctaPrecision")}</span>
               </h2>
-              <p className="text-white/80 text-lg mb-8 max-w-lg mx-auto">Junte-se a profissionais que já utilizam o Posologia Clinical Hub para agilizar sua rotina e melhorar o cuidado ao paciente.</p>
+              <p className="text-white/80 text-lg mb-8 max-w-lg mx-auto">{t("home.ctaSubtitle")}</p>
               <Link to="/cadastro" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-emerald-700 hover:bg-white/90 transition-colors shadow-xl">
-                Criar minha conta gratuita <ArrowRight className="h-4 w-4" />
+                {t("home.ctaButton")} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

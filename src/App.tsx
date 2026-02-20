@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/layouts/AppLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import Contato from "./pages/Contato";
 import Dashboard from "./pages/Dashboard";
 import Calculadoras from "./pages/Calculadoras";
 import Simuladores from "./pages/Simuladores";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
+              <Route path="/contato" element={<Contato />} />
             </Route>
 
             {/* Authenticated routes */}
