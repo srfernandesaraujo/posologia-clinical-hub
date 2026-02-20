@@ -1,10 +1,13 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
   Clock, Brain, Heart, Activity, CheckCircle2, ArrowRight,
-  TrendingUp, BookOpen, Star, ChevronRight,
+  TrendingUp, BookOpen, Star, ChevronRight, DoorOpen,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const toolExamples = [
   { name: "Clearance de Creatinina", category: "Nefrologia", icon: Activity, color: "bg-blue-500/10 text-blue-500" },
@@ -17,7 +20,8 @@ const toolExamples = [
 
 export default function Home() {
   const { t } = useTranslation();
-
+  const navigate = useNavigate();
+  const [roomPin, setRoomPin] = useState("");
   const painPoints = [
     { icon: Clock, problem: t("painPoints.p1"), solution: t("painPoints.s1") },
     { icon: Brain, problem: t("painPoints.p2"), solution: t("painPoints.s2") },
@@ -238,6 +242,36 @@ export default function Home() {
                 <p className="text-white/50 text-sm">{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Virtual Room PIN Entry */}
+      <section className="bg-[#0A0F1C] py-20 md:py-28 border-t border-white/[0.06]">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto text-center">
+            <div className="inline-flex rounded-2xl bg-emerald-500/10 p-4 mb-5">
+              <DoorOpen className="h-7 w-7 text-emerald-400" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Sala Virtual</h2>
+            <p className="text-white/50 text-sm mb-6">Recebeu um PIN do seu professor? Insira abaixo para acessar a atividade.</p>
+            <div className="flex gap-2">
+              <Input
+                value={roomPin}
+                onChange={e => setRoomPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                className="text-center text-xl font-mono tracking-[0.3em] bg-white/[0.06] border-white/10 text-white placeholder:text-white/30"
+                maxLength={6}
+                onKeyDown={e => e.key === "Enter" && roomPin.length === 6 && navigate(`/sala?pin=${roomPin}`)}
+              />
+              <Button
+                onClick={() => navigate(`/sala?pin=${roomPin}`)}
+                disabled={roomPin.length !== 6}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 px-6"
+              >
+                Entrar
+              </Button>
+            </div>
           </div>
         </div>
       </section>

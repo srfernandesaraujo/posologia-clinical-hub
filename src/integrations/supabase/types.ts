@@ -101,6 +101,89 @@ export type Database = {
         }
         Relationships: []
       }
+      room_participants: {
+        Row: {
+          group_members: Json | null
+          id: string
+          is_group: boolean
+          joined_at: string
+          participant_name: string
+          room_id: string
+        }
+        Insert: {
+          group_members?: Json | null
+          id?: string
+          is_group?: boolean
+          joined_at?: string
+          participant_name: string
+          room_id: string
+        }
+        Update: {
+          group_members?: Json | null
+          id?: string
+          is_group?: boolean
+          joined_at?: string
+          participant_name?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_submissions: {
+        Row: {
+          actions: Json
+          id: string
+          participant_id: string
+          room_id: string
+          score: number
+          step_index: number
+          submitted_at: string
+          time_spent_seconds: number
+        }
+        Insert: {
+          actions?: Json
+          id?: string
+          participant_id: string
+          room_id: string
+          score?: number
+          step_index?: number
+          submitted_at?: string
+          time_spent_seconds?: number
+        }
+        Update: {
+          actions?: Json
+          id?: string
+          participant_id?: string
+          room_id?: string
+          score?: number
+          step_index?: number
+          submitted_at?: string
+          time_spent_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "room_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_submissions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       simulator_cases: {
         Row: {
           case_data: Json
@@ -236,6 +319,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      virtual_rooms: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          pin: string
+          simulator_slug: string
+          title: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          pin: string
+          simulator_slug: string
+          title: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          pin?: string
+          simulator_slug?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_rooms_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,11 +90,29 @@ export default function SimuladorAcompanhamento() {
   const [modalAction, setModalAction] = useState("manter");
   const [modalDose, setModalDose] = useState("");
   const [modalFrequency, setModalFrequency] = useState("");
+  // Virtual room context
+  const [roomCtx] = useState(() => {
+    try {
+      const data = sessionStorage.getItem("virtualRoom");
+      return data ? JSON.parse(data) : null;
+    } catch { return null; }
+  });
+  const stepStartTime = useRef(Date.now());
+
+  // Auto-start virtual room case
+  useEffect(() => {
+    if (roomCtx?.caseId && allCases.length > 0) {
+      const idx = allCases.findIndex((c: any) => c.id === roomCtx.caseId);
+      if (idx >= 0) {
+        start(idx);
+      }
+    }
+  }, [allCases.length]);
 
   const c = allCases[caseIdx] as CaseData | undefined;
   const consultation = c?.consultations?.[consultIdx];
 
-  const start = (i: number) => { setCaseIdx(i); setConsultIdx(0); setUserActions({}); setScores({}); setScreen("sim"); };
+  const start = (i: number) => { setCaseIdx(i); setConsultIdx(0); setUserActions({}); setScores({}); setScreen("sim"); stepStartTime.current = Date.now(); };
 
   const submitConsultation = () => {
     if (!c || !consultation) return;
@@ -107,6 +126,22 @@ export default function SimuladorAcompanhamento() {
     });
     const score = Math.round((correct / Math.max(expected.length, 1)) * 100);
     setScores(p => ({ ...p, [consultIdx]: score }));
+
+    // Submit to virtual room if active
+    if (roomCtx?.roomId && roomCtx?.participantId) {
+      const timeSpent = Math.round((Date.now() - stepStartTime.current) / 1000);
+      supabase.from("room_submissions").insert({
+        room_id: roomCtx.roomId,
+        participant_id: roomCtx.participantId,
+        step_index: consultIdx,
+        actions: ua,
+        score,
+        time_spent_seconds: timeSpent,
+      }).then(() => {});
+    }
+
+    stepStartTime.current = Date.now();
+
     if (consultIdx < c.consultations.length - 1) {
       setConsultIdx(consultIdx + 1);
     } else {

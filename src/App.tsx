@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { AppLayout } from "@/components/layouts/AppLayout";
 
@@ -31,6 +31,8 @@ import SimuladorInsulina from "./pages/simuladores/SimuladorInsulina";
 import MinhaConta from "./pages/MinhaConta";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
+import SalasVirtuais from "./pages/SalasVirtuais";
+import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/contato" element={<Contato />} />
+              <Route path="/sala" element={<SalaVirtualAluno />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -77,6 +80,11 @@ const App = () => (
             <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
               <Route path="/admin" element={<Admin />} />
               <Route path="/analytics" element={<Analytics />} />
+            </Route>
+
+            {/* Professor routes */}
+            <Route element={<ProfessorRoute><AppLayout /></ProfessorRoute>}>
+              <Route path="/salas-virtuais" element={<SalasVirtuais />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
