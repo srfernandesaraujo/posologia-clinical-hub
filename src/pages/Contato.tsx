@@ -29,13 +29,20 @@ export default function Contato() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("contact_messages").insert([result.data as any]);
-    setLoading(false);
-    if (error) {
-      toast.error(t("contact.error"));
-    } else {
+    try {
+      // Save to DB
+      await supabase.from("contact_messages").insert([result.data as any]);
+      // Send email via Resend
+      const { error } = await supabase.functions.invoke("send-contact-email", {
+        body: result.data,
+      });
+      if (error) throw error;
       toast.success(t("contact.success"));
       setForm({ name: "", email: "", subject: "", message: "" });
+    } catch {
+      toast.error(t("contact.error"));
+    } finally {
+      setLoading(false);
     }
   };
 
