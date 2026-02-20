@@ -84,12 +84,12 @@ export default function SimuladorTDM() {
   const start = (i: number) => { setCaseIdx(i); setNewDose(""); setNewInterval(""); setSubmitted(false); setExpandedJust(false); setScreen("sim"); };
 
   const currentCurve = useMemo(() => {
-    if (!c) return [];
+    if (!c?.currentPrescription?.dose || !c?.pharmacokineticData?.halfLife || !c?.patient?.weight || !c?.therapeuticRange?.troughMax) return [];
     return generateCurveData(c.currentPrescription.dose, c.currentPrescription.interval, c.pharmacokineticData.halfLife, c.pharmacokineticData.vd, c.patient.weight, c.therapeuticRange.troughMax);
   }, [c]);
 
   const newCurve = useMemo(() => {
-    if (!c || !submitted || !newDose || !newInterval) return [];
+    if (!c?.pharmacokineticData?.halfLife || !c?.patient?.weight || !c?.therapeuticRange?.troughMax || !submitted || !newDose || !newInterval) return [];
     return generateCurveData(Number(newDose), Number(newInterval), c.pharmacokineticData.halfLife, c.pharmacokineticData.vd, c.patient.weight, c.therapeuticRange.troughMax);
   }, [c, submitted, newDose, newInterval]);
 
