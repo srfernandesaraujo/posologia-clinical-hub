@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, Plus, Pencil, Trash2, Users, Calculator, BarChart3,
-  FlaskConical, X, Save, ToggleLeft, ToggleRight,
+  FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,29 +26,31 @@ interface ToolForm {
   short_description: string;
   category_id: string;
   is_active: boolean;
+  fields: any[];
+  formula: any;
 }
 
 const emptyTool: ToolForm = {
-  name: "",
-  slug: "",
-  type: "calculadora",
-  description: "",
-  short_description: "",
-  category_id: "",
-  is_active: true,
+  name: "", slug: "", type: "calculadora", description: "",
+  short_description: "", category_id: "", is_active: true,
+  fields: [], formula: {},
 };
 
 export default function Admin() {
   const queryClient = useQueryClient();
   const [editingTool, setEditingTool] = useState<(ToolForm & { id?: string }) | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiType, setAiType] = useState<"calculadora" | "simulador">("calculadora");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPreview, setAiPreview] = useState<any>(null);
 
   const { data: tools = [] } = useQuery({
     queryKey: ["admin-tools"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tools")
-        .select("*, categories(name)")
+        .from("tools").select("*, categories(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -68,8 +70,7 @@ export default function Admin() {
     queryKey: ["admin-users"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*, user_roles(role)")
+        .from("profiles").select("*, user_roles(role)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -80,10 +81,8 @@ export default function Admin() {
     queryKey: ["admin-usage-stats"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("usage_logs")
-        .select("*, tools(name)")
-        .order("created_at", { ascending: false })
-        .limit(50);
+        .from("usage_logs").select("*, tools(name)")
+        .order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
       return data;
     },
@@ -92,15 +91,11 @@ export default function Admin() {
   const saveTool = useMutation({
     mutationFn: async (tool: ToolForm & { id?: string }) => {
       const payload = {
-        name: tool.name,
-        slug: tool.slug,
-        type: tool.type,
-        description: tool.description,
-        short_description: tool.short_description,
-        category_id: tool.category_id || null,
-        is_active: tool.is_active,
+        name: tool.name, slug: tool.slug, type: tool.type,
+        description: tool.description, short_description: tool.short_description,
+        category_id: tool.category_id || null, is_active: tool.is_active,
+        fields: tool.fields || [], formula: tool.formula || {},
       };
-
       if (tool.id) {
         const { error } = await supabase.from("tools").update(payload).eq("id", tool.id);
         if (error) throw error;
@@ -135,37 +130,62 @@ export default function Admin() {
       const { error } = await supabase.from("tools").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-tools"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-tools"] }),
     onError: (err: any) => toast.error(err.message),
   });
 
   const generateSlug = (name: string) =>
-    name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const openNew = () => {
-    setEditingTool({ ...emptyTool });
-    setDialogOpen(true);
-  };
+  const openNew = () => { setEditingTool({ ...emptyTool }); setDialogOpen(true); };
 
   const openEdit = (tool: any) => {
     setEditingTool({
-      id: tool.id,
-      name: tool.name,
-      slug: tool.slug,
-      type: tool.type,
-      description: tool.description || "",
-      short_description: tool.short_description || "",
-      category_id: tool.category_id || "",
-      is_active: tool.is_active,
+      id: tool.id, name: tool.name, slug: tool.slug, type: tool.type,
+      description: tool.description || "", short_description: tool.short_description || "",
+      category_id: tool.category_id || "", is_active: tool.is_active,
+      fields: tool.fields || [], formula: tool.formula || {},
     });
     setDialogOpen(true);
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    setAiPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-tool", {
+        body: { prompt: aiPrompt, type: aiType },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      setAiPreview(data.tool);
+      toast.success("Ferramenta gerada pela IA! Revise e confirme.");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar ferramenta");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAiConfirm = () => {
+    if (!aiPreview) return;
+    setEditingTool({
+      name: aiPreview.name,
+      slug: aiPreview.slug,
+      type: aiType,
+      description: aiPreview.description,
+      short_description: aiPreview.short_description,
+      category_id: "",
+      is_active: true,
+      fields: aiPreview.fields || [],
+      formula: aiPreview.formula || {},
+    });
+    setAiDialogOpen(false);
+    setDialogOpen(true);
+    setAiPreview(null);
+    setAiPrompt("");
   };
 
   const calculadoras = tools.filter((t: any) => t.type === "calculadora");
@@ -181,24 +201,14 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="tools" className="space-y-6">
-        <TabsList className="bg-muted">
-          <TabsTrigger value="tools" className="gap-2">
-            <Calculator className="h-4 w-4" />
-            Ferramentas
-          </TabsTrigger>
-          <TabsTrigger value="users" className="gap-2">
-            <Users className="h-4 w-4" />
-            Usuários
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Uso Recente
-          </TabsTrigger>
+        <TabsList className="bg-secondary">
+          <TabsTrigger value="tools" className="gap-2"><Calculator className="h-4 w-4" />Ferramentas</TabsTrigger>
+          <TabsTrigger value="users" className="gap-2"><Users className="h-4 w-4" />Usuários</TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-2"><BarChart3 className="h-4 w-4" />Uso Recente</TabsTrigger>
         </TabsList>
 
         {/* Tools Tab */}
         <TabsContent value="tools" className="space-y-6">
-          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-border bg-card p-5">
               <p className="text-sm text-muted-foreground mb-1">Total de ferramentas</p>
@@ -214,131 +224,247 @@ export default function Admin() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-lg font-semibold">Todas as ferramentas</h2>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openNew} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Nova ferramenta
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingTool?.id ? "Editar ferramenta" : "Nova ferramenta"}
-                  </DialogTitle>
-                </DialogHeader>
-                {editingTool && (
+            <div className="flex gap-2">
+              {/* AI Generation Dialog */}
+              <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                    <Sparkles className="h-4 w-4" />
+                    Gerar com IA
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Gerar Ferramenta com IA (Gemini)
+                    </DialogTitle>
+                  </DialogHeader>
                   <div className="space-y-4 pt-2">
                     <div className="space-y-2">
-                      <Label>Nome</Label>
-                      <Input
-                        value={editingTool.name}
-                        onChange={(e) => {
-                          const name = e.target.value;
-                          setEditingTool({
-                            ...editingTool,
-                            name,
-                            slug: editingTool.id ? editingTool.slug : generateSlug(name),
-                          });
-                        }}
-                        placeholder="Ex: Clearance de Creatinina"
-                      />
+                      <Label>Tipo de ferramenta</Label>
+                      <Select value={aiType} onValueChange={(v) => setAiType(v as any)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="calculadora">Calculadora Clínica</SelectItem>
+                          <SelectItem value="simulador">Simulador Clínico</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Slug (URL)</Label>
-                      <Input
-                        value={editingTool.slug}
-                        onChange={(e) => setEditingTool({ ...editingTool, slug: e.target.value })}
-                        placeholder="clearance-creatinina"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tipo</Label>
-                        <Select
-                          value={editingTool.type}
-                          onValueChange={(v) => setEditingTool({ ...editingTool, type: v as any })}
-                        >
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="calculadora">Calculadora</SelectItem>
-                            <SelectItem value="simulador">Simulador</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Categoria</Label>
-                        <Select
-                          value={editingTool.category_id}
-                          onValueChange={(v) => setEditingTool({ ...editingTool, category_id: v })}
-                        >
-                          <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                          <SelectContent>
-                            {categories.map((c: any) => (
-                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Descrição curta</Label>
-                      <Input
-                        value={editingTool.short_description}
-                        onChange={(e) => setEditingTool({ ...editingTool, short_description: e.target.value })}
-                        placeholder="Resumo que aparece no card"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Descrição completa</Label>
+                      <Label>Descreva a ferramenta que deseja criar</Label>
                       <Textarea
-                        value={editingTool.description}
-                        onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
-                        placeholder="Explicação de como utilizar a ferramenta"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        placeholder={aiType === "calculadora"
+                          ? "Ex: Crie uma calculadora de Clearance de Creatinina usando a fórmula de Cockcroft-Gault, com campos para idade, peso, sexo e creatinina sérica"
+                          : "Ex: Crie um simulador de manejo de cetoacidose diabética com parâmetros de glicemia, pH, bicarbonato e potássio"
+                        }
                         rows={4}
+                        className="bg-secondary/50"
                       />
                     </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                        Cancelar
-                      </Button>
-                      <Button
-                        onClick={() => editingTool && saveTool.mutate(editingTool)}
-                        disabled={!editingTool?.name || !editingTool?.slug || saveTool.isPending}
-                        className="gap-2"
-                      >
-                        <Save className="h-4 w-4" />
-                        {saveTool.isPending ? "Salvando..." : "Salvar"}
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={handleAiGenerate}
+                      disabled={aiLoading || !aiPrompt.trim()}
+                      className="w-full gap-2"
+                    >
+                      {aiLoading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" />Gerando com Gemini...</>
+                      ) : (
+                        <><Sparkles className="h-4 w-4" />Gerar ferramenta</>
+                      )}
+                    </Button>
+
+                    {/* AI Preview */}
+                    {aiPreview && (
+                      <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                        <div className="flex items-center gap-2 text-primary font-semibold">
+                          <Sparkles className="h-4 w-4" />
+                          Prévia gerada pela IA
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Nome</p>
+                          <p className="font-semibold">{aiPreview.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Slug</p>
+                          <p className="text-sm font-mono text-muted-foreground">{aiPreview.slug}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Descrição curta</p>
+                          <p className="text-sm">{aiPreview.short_description}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Campos ({aiPreview.fields?.length || 0})</p>
+                          <div className="space-y-1">
+                            {aiPreview.fields?.map((f: any, i: number) => (
+                              <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex justify-between">
+                                <span>{f.label}</span>
+                                <span className="text-muted-foreground text-xs">{f.type}{f.unit ? ` (${f.unit})` : ""}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {aiPreview.formula?.interpretation && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Interpretações</p>
+                            <div className="space-y-1">
+                              {aiPreview.formula.interpretation.map((int: any, i: number) => (
+                                <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2">
+                                  <span className="font-medium">{int.label}</span>
+                                  <span className="text-muted-foreground"> — {int.range}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Descrição completa</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiPreview.description}</p>
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button variant="outline" onClick={() => setAiPreview(null)} className="flex-1">
+                            Descartar
+                          </Button>
+                          <Button onClick={handleAiConfirm} className="flex-1 gap-2">
+                            <Save className="h-4 w-4" />
+                            Usar e editar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+
+              {/* Manual Creation Dialog */}
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openNew} className="gap-2">
+                    <Plus className="h-4 w-4" />Nova ferramenta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{editingTool?.id ? "Editar ferramenta" : "Nova ferramenta"}</DialogTitle>
+                  </DialogHeader>
+                  {editingTool && (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-2">
+                        <Label>Nome</Label>
+                        <Input
+                          value={editingTool.name}
+                          onChange={(e) => {
+                            const name = e.target.value;
+                            setEditingTool({ ...editingTool, name,
+                              slug: editingTool.id ? editingTool.slug : generateSlug(name),
+                            });
+                          }}
+                          placeholder="Ex: Clearance de Creatinina"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Slug (URL)</Label>
+                        <Input
+                          value={editingTool.slug}
+                          onChange={(e) => setEditingTool({ ...editingTool, slug: e.target.value })}
+                          placeholder="clearance-creatinina"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tipo</Label>
+                          <Select value={editingTool.type} onValueChange={(v) => setEditingTool({ ...editingTool, type: v as any })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="calculadora">Calculadora</SelectItem>
+                              <SelectItem value="simulador">Simulador</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Categoria</Label>
+                          <Select value={editingTool.category_id} onValueChange={(v) => setEditingTool({ ...editingTool, category_id: v })}>
+                            <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                            <SelectContent>
+                              {categories.map((c: any) => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Descrição curta</Label>
+                        <Input
+                          value={editingTool.short_description}
+                          onChange={(e) => setEditingTool({ ...editingTool, short_description: e.target.value })}
+                          placeholder="Resumo que aparece no card"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Descrição completa</Label>
+                        <Textarea
+                          value={editingTool.description}
+                          onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
+                          placeholder="Explicação de como utilizar a ferramenta"
+                          rows={4}
+                        />
+                      </div>
+                      {editingTool.fields && editingTool.fields.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>Campos gerados pela IA ({editingTool.fields.length})</Label>
+                          <div className="space-y-1">
+                            {editingTool.fields.map((f: any, i: number) => (
+                              <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex justify-between">
+                                <span>{f.label}</span>
+                                <span className="text-muted-foreground text-xs">{f.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+                        <Button
+                          onClick={() => editingTool && saveTool.mutate(editingTool)}
+                          disabled={!editingTool?.name || !editingTool?.slug || saveTool.isPending}
+                          className="gap-2"
+                        >
+                          <Save className="h-4 w-4" />
+                          {saveTool.isPending ? "Salvando..." : "Salvar"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           {tools.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-12 text-center">
               <Calculator className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">Nenhuma ferramenta cadastrada ainda.</p>
-              <Button onClick={openNew} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Criar primeira ferramenta
-              </Button>
+              <div className="flex gap-3 justify-center">
+                <Button variant="outline" onClick={() => setAiDialogOpen(true)} className="gap-2">
+                  <Sparkles className="h-4 w-4" />Gerar com IA
+                </Button>
+                <Button onClick={openNew} className="gap-2">
+                  <Plus className="h-4 w-4" />Criar manualmente
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
               {tools.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition-colors">
+                <div key={t.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-secondary/50 transition-colors">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={`rounded-lg p-2 ${t.type === "calculadora" ? "bg-primary/10" : "bg-accent/10"}`}>
-                      {t.type === "calculadora" ? (
-                        <Calculator className="h-4 w-4 text-primary" />
-                      ) : (
-                        <FlaskConical className="h-4 w-4 text-accent" />
-                      )}
+                      {t.type === "calculadora" ? <Calculator className="h-4 w-4 text-primary" /> : <FlaskConical className="h-4 w-4 text-accent" />}
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium truncate">{t.name}</p>
@@ -349,28 +475,13 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleActive.mutate({ id: t.id, is_active: !t.is_active })}
-                      title={t.is_active ? "Desativar" : "Ativar"}
-                    >
-                      {t.is_active ? (
-                        <ToggleRight className="h-5 w-5 text-primary" />
-                      ) : (
-                        <ToggleLeft className="h-5 w-5 text-muted-foreground" />
-                      )}
+                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: t.id, is_active: !t.is_active })}>
+                      {t.is_active ? <ToggleRight className="h-5 w-5 text-primary" /> : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (confirm(`Remover "${t.name}"?`)) deleteTool.mutate(t.id);
-                      }}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${t.name}"?`)) deleteTool.mutate(t.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -398,13 +509,9 @@ export default function Admin() {
                       </div>
                       <div className="flex gap-2">
                         {roles.includes("admin") && (
-                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 text-accent">
-                            Admin
-                          </span>
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 text-accent">Admin</span>
                         )}
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                          Usuário
-                        </span>
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">Usuário</span>
                       </div>
                     </div>
                   );
@@ -425,9 +532,7 @@ export default function Admin() {
                 {usageLogs.map((log: any) => (
                   <div key={log.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
                     <span className="font-medium">{log.tools?.name || "Ferramenta removida"}</span>
-                    <span className="text-muted-foreground">
-                      {new Date(log.created_at).toLocaleString("pt-BR")}
-                    </span>
+                    <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString("pt-BR")}</span>
                   </div>
                 ))}
               </div>
