@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, AlertTriangle } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) 
 
 export default function SimuladorInsulina() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("insulina", BUILT_IN);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("insulina");
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
 
@@ -71,8 +73,14 @@ export default function SimuladorInsulina() {
   const [preceptorFeedback, setPreceptorFeedback] = useState("");
   const [preceptorLoading, setPreceptorLoading] = useState(false);
   const [pendingChange, setPendingChange] = useState<(() => void) | null>(null);
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
-  const c = allCases[caseIdx] as CaseData | undefined;
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("prontuario");
+  }
+
+  const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
 
   const start = (i: number) => {
     setCaseIdx(i);
@@ -140,6 +148,12 @@ export default function SimuladorInsulina() {
     setGlycemics(newG);
   };
 
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && screen === "dashboard") return null;
+
   if (screen === "dashboard") {
     return (
       <div className="max-w-5xl mx-auto">
@@ -175,7 +189,7 @@ export default function SimuladorInsulina() {
     const p = c.patient;
     return (
       <div className="max-w-3xl mx-auto">
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+        {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
         <Card>
           <CardHeader><CardTitle>Prontuário de Admissão</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
