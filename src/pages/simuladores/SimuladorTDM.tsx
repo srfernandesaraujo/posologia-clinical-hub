@@ -117,9 +117,9 @@ export default function SimuladorTDM() {
     );
   }
 
-  if (!c) return null;
+  if (!c || !c.tdmResult || !c.therapeuticRange || !c.currentPrescription || !c.patient || !c.pharmacokineticData) return null;
 
-  const troughStatus = c.tdmResult.troughLevel > c.therapeuticRange.troughMax ? "toxic" : c.tdmResult.troughLevel < c.therapeuticRange.troughMin ? "sub" : "ok";
+  const troughStatus = (c.tdmResult.troughLevel ?? 0) > (c.therapeuticRange.troughMax ?? 0) ? "toxic" : (c.tdmResult.troughLevel ?? 0) < (c.therapeuticRange.troughMin ?? 0) ? "sub" : "ok";
 
   return (
     <div className="max-w-7xl mx-auto">
