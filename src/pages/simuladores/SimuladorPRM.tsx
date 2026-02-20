@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Sparkles, Loader2, User, Pill, ClipboardCheck, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { AdminCaseActions } from "@/components/AdminCaseActions";
 
 type PRM_TYPE = "Seguranca" | "Efetividade" | "Indicacao" | "Adesao" | null;
 
@@ -83,7 +84,7 @@ const BUILT_IN_CASES: CaseData[] = [
 const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividade: "Efetividade", Indicacao: "Indicação", Adesao: "Adesão" };
 
 export default function SimuladorPRM() {
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("prm", BUILT_IN_CASES);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("prm", BUILT_IN_CASES);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
@@ -139,7 +140,10 @@ export default function SimuladorPRM() {
                   <Badge variant={c.difficulty === "Fácil" ? "secondary" : c.difficulty === "Difícil" ? "destructive" : "default"}>
                     {c.difficulty}
                   </Badge>
-                  {c.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                  <div className="flex items-center gap-1">
+                    {c.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                    <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                  </div>
                 </div>
                 <CardTitle className="text-lg mt-2">{c.title}</CardTitle>
               </CardHeader>

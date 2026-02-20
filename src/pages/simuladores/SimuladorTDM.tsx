@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Sparkles, Loader2, AlertTriangle, CheckCircle, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 
 interface CaseData {
@@ -71,7 +72,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 }
 
 export default function SimuladorTDM() {
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("tdm", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("tdm", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");
@@ -103,7 +104,13 @@ export default function SimuladorTDM() {
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between"><Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>{cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}</div>
+                <div className="flex items-center justify-between">
+                  <Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>
+                  <div className="flex items-center gap-1">
+                    {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                  </div>
+                </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>
               <CardContent><p className="text-sm text-muted-foreground">{cs.patient?.name} | {cs.currentPrescription?.drug}</p></CardContent>
