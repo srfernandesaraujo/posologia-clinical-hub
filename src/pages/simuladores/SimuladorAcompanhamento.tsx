@@ -76,7 +76,7 @@ const BUILT_IN: CaseData[] = [
   },
 ];
 
-type UserAction = { drug: string; action: string; newDose?: string };
+type UserAction = { drug: string; action: string; newDose?: string; newFrequency?: string };
 
 export default function SimuladorAcompanhamento() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("acompanhamento", BUILT_IN);
@@ -88,6 +88,7 @@ export default function SimuladorAcompanhamento() {
   const [modal, setModal] = useState<{ drug: string; idx: number } | null>(null);
   const [modalAction, setModalAction] = useState("manter");
   const [modalDose, setModalDose] = useState("");
+  const [modalFrequency, setModalFrequency] = useState("");
 
   const c = allCases[caseIdx] as CaseData | undefined;
   const consultation = c?.consultations?.[consultIdx];
@@ -115,13 +116,18 @@ export default function SimuladorAcompanhamento() {
 
   const saveModal = () => {
     if (!modal) return;
-    const act: UserAction = { drug: modal.drug, action: modalAction, newDose: modalAction !== "manter" && modalAction !== "suspender" ? modalDose : undefined };
+    const act: UserAction = {
+      drug: modal.drug,
+      action: modalAction,
+      newDose: modalAction !== "manter" && modalAction !== "suspender" ? modalDose : undefined,
+      newFrequency: modalAction !== "suspender" && modalFrequency ? modalFrequency : undefined,
+    };
     setUserActions(p => {
       const prev = p[consultIdx] || [];
       const filtered = prev.filter(a => a.drug !== modal.drug);
       return { ...p, [consultIdx]: [...filtered, act] };
     });
-    setModal(null); setModalAction("manter"); setModalDose("");
+    setModal(null); setModalAction("manter"); setModalDose(""); setModalFrequency("");
   };
 
   const chartData = useMemo(() => {
@@ -242,9 +248,9 @@ export default function SimuladorAcompanhamento() {
                   <div>
                     <p className="font-medium text-sm">{rx.drug} {rx.dose}</p>
                     <p className="text-xs text-muted-foreground">{rx.frequency}</p>
-                    {ua && ua.action !== "manter" && <Badge variant="outline" className="text-xs mt-1">{ua.action}{ua.newDose ? ` → ${ua.newDose}` : ""}</Badge>}
+                    {ua && (ua.action !== "manter" || ua.newFrequency) && <Badge variant="outline" className="text-xs mt-1">{ua.action}{ua.newDose ? ` → ${ua.newDose}` : ""}{ua.newFrequency ? ` (${ua.newFrequency})` : ""}</Badge>}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => { setModal({ drug: rx.drug, idx: i }); setModalAction("manter"); setModalDose(""); }}>Modificar</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setModal({ drug: rx.drug, idx: i }); setModalAction("manter"); setModalDose(""); setModalFrequency(""); }}>Modificar</Button>
                 </div>
               );
             })}
@@ -272,6 +278,9 @@ export default function SimuladorAcompanhamento() {
             </div>
             {(modalAction === "aumentar" || modalAction === "reduzir") && (
               <div><Label>Nova Dose:</Label><Input value={modalDose} onChange={e => setModalDose(e.target.value)} placeholder="Ex: 75 mcg" /></div>
+            )}
+            {modalAction !== "suspender" && (
+              <div><Label>Nova Frequência (opcional):</Label><Input value={modalFrequency} onChange={e => setModalFrequency(e.target.value)} placeholder="Ex: 3x/dia" /></div>
             )}
           </div>
           <DialogFooter><Button onClick={saveModal}>Confirmar</Button></DialogFooter>
