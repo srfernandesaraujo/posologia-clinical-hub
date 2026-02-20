@@ -147,6 +147,18 @@ function calcularConversao(form: FormData): Resultado | null {
   };
 }
 
+function sanitizePDF(text: string): string {
+  const map: Record<string, string> = {
+    "\u00e1":"a","\u00e0":"a","\u00e3":"a","\u00e2":"a","\u00e9":"e","\u00ea":"e","\u00ed":"i",
+    "\u00f3":"o","\u00f4":"o","\u00f5":"o","\u00fa":"u","\u00fc":"u","\u00e7":"c",
+    "\u00c1":"A","\u00c0":"A","\u00c3":"A","\u00c2":"A","\u00c9":"E","\u00ca":"E","\u00cd":"I",
+    "\u00d3":"O","\u00d4":"O","\u00d5":"O","\u00da":"U","\u00c7":"C",
+    "\u2013":"-","\u2014":"-","\u2018":"'","\u2019":"'","\u201c":"\"","\u201d":"\"","\u2026":"...",
+    "\u26a0":"[!]",
+  };
+  return text.replace(/[^\x00-\x7F]/g, (c) => map[c] || "");
+}
+
 function gerarPDF(form: FormData, resultado: Resultado, modo: Modo) {
   const doc = new jsPDF();
   const w = doc.internal.pageSize.getWidth();
@@ -177,28 +189,28 @@ function gerarPDF(form: FormData, resultado: Resultado, modo: Modo) {
     `Duracao do uso atual: ${form.duracaoUso} semanas`,
     form.resposta ? `Resposta terapeutica: ${form.resposta}` : null,
     form.objetivoTroca ? `Objetivo da troca: ${form.objetivoTroca}` : null,
-  ].filter(Boolean).forEach((d) => { doc.text(`  ${d}`, 18, y); y += 4.5; });
+  ].filter(Boolean).forEach((d) => { doc.text(sanitizePDF(`  ${d}`), 18, y); y += 4.5; });
   y += 4;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-  doc.text(`Dose equivalente (fluoxetina): ${resultado.doseEquivCalculada}mg`, 14, y); y += 5;
-  doc.text(`Dose sugerida de ${dest?.nome}: ${resultado.doseDestinoSugerida}mg/dia`, 14, y); y += 5;
-  doc.text(`Estrategia: ${resultado.estrategia}`, 14, y); y += 5;
+  doc.text(sanitizePDF(`Dose equivalente (fluoxetina): ${resultado.doseEquivCalculada}mg`), 14, y); y += 5;
+  doc.text(sanitizePDF(`Dose sugerida de ${dest?.nome}: ${resultado.doseDestinoSugerida}mg/dia`), 14, y); y += 5;
+  doc.text(sanitizePDF(`Estrategia: ${resultado.estrategia}`), 14, y); y += 5;
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-  const stratLines = doc.splitTextToSize(resultado.estrategiaDetalhe, w - 32);
+  const stratLines = doc.splitTextToSize(sanitizePDF(resultado.estrategiaDetalhe), w - 32);
   doc.text(stratLines, 18, y); y += stratLines.length * 4 + 4;
 
   if (resultado.alertas.length > 0) {
     doc.setFont("helvetica", "bold"); doc.text("Alertas:", 14, y); y += 5;
     doc.setFont("helvetica", "normal");
-    resultado.alertas.forEach((a) => { const l = doc.splitTextToSize(a, w - 32); doc.text(l, 18, y); y += l.length * 4 + 2; });
+    resultado.alertas.forEach((a) => { const l = doc.splitTextToSize(sanitizePDF(a), w - 32); doc.text(l, 18, y); y += l.length * 4 + 2; });
     y += 2;
   }
 
   if (resultado.observacoes.length > 0) {
     doc.setFont("helvetica", "bold"); doc.text("Observacoes:", 14, y); y += 5;
     doc.setFont("helvetica", "normal");
-    resultado.observacoes.forEach((o) => { const l = doc.splitTextToSize(`- ${o}`, w - 32); doc.text(l, 18, y); y += l.length * 4 + 1; });
+    resultado.observacoes.forEach((o) => { const l = doc.splitTextToSize(sanitizePDF(`- ${o}`), w - 32); doc.text(l, 18, y); y += l.length * 4 + 1; });
   }
 
   y += 8;
