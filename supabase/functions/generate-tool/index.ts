@@ -11,21 +11,128 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, type } = await req.json();
+    const { prompt, type, mode, existingTool } = await req.json();
+    // mode: "create" (default) or "edit"
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const isEdit = mode === "edit" && existingTool;
+
+    const categories = ["Cardiologia", "Emergência", "Endocrinologia", "Nefrologia", "Neurologia", "Pneumologia"];
+
     const systemPrompt = `Você é um especialista em medicina clínica e criação de ferramentas médicas.
-O usuário vai pedir para criar uma ${type === "simulador" ? "simulador clínico" : "calculadora clínica"}.
+${isEdit
+  ? `O usuário quer EDITAR uma ferramenta existente. Aqui estão os dados atuais:
+Nome: ${existingTool.name}
+Campos atuais: ${JSON.stringify(existingTool.fields)}
+Fórmula atual: ${JSON.stringify(existingTool.formula)}
+
+Aplique as alterações solicitadas pelo usuário, mantendo o que não foi mencionado. Retorne a ferramenta COMPLETA atualizada (não só as mudanças).`
+  : `O usuário vai pedir para criar uma ${type === "simulador" ? "simulador clínico" : "calculadora clínica"}.`}
 
 Você DEVE retornar APENAS o resultado da tool call, sem texto adicional.
 
-Regras:
+REGRAS IMPORTANTES PARA ESTRUTURA DOS CAMPOS:
+- Organize os campos em SEÇÕES (sections). Cada seção tem um "title" e um array de "fields".
+- Seções típicas: "Identificação (opcional)", "Dados Demográficos", "Dados Clínicos", "Antropometria", "Fatores de Risco", etc.
+- Campos booleanos (sim/não) DEVEM usar type "switch" (NÃO checkbox). Ex: tabagismo, diabetes.
+- Campos numéricos usam type "number" com unit.
+- Campos de seleção usam type "select" com options.
+- Campos de texto usam type "text".
+- Cada field tem: name (snake_case), label (português), type (number, select, switch, text), unit (opcional), options (para select), required (boolean), defaultValue (opcional).
+
+REGRAS PARA FÓRMULA E RESULTADOS:
+- expression: descrição textual do cálculo ou fórmula JavaScript avaliável
+- interpretation: array de faixas com range, label, description, color (hex ou hsl), e recommendations (array de strings com condutas clínicas)
+- Cada interpretation DEVE ter recommendations com pelo menos 2 sugestões de conduta
+
+REGRAS GERAIS:
 - O slug deve ser em português, sem acentos, separado por hífens
 - short_description deve ter no máximo 100 caracteres
-- description deve ter NO MÁXIMO 2 frases curtas: a primeira explica para que serve a ferramenta e a segunda menciona possíveis usos clínicos. NÃO inclua referências, modelos, interpretações ou instruções de uso. Seja extremamente conciso.
-- fields é um array de objetos com: name (snake_case), label (português), type (number, select, checkbox), unit (opcional), options (para select: array de {value, label}), required (boolean)
-- formula é um objeto com: expression (string descrevendo o cálculo), interpretation (array de {range, label, description} explicando os resultados)`;
+- description deve ter NO MÁXIMO 2 frases: para que serve e possíveis usos clínicos
+- category_name deve ser UMA das categorias existentes: ${categories.join(", ")}. Escolha a mais adequada.
+- author deve ser sempre "Sérgio Araújo"`;
+
+    const toolParams = {
+      type: "object" as const,
+      properties: {
+        name: { type: "string" as const, description: "Nome da ferramenta em português" },
+        slug: { type: "string" as const, description: "Slug URL-friendly sem acentos" },
+        short_description: { type: "string" as const, description: "Descrição curta até 100 chars" },
+        description: { type: "string" as const, description: "2 frases: propósito e usos clínicos" },
+        category_name: { type: "string" as const, enum: categories, description: "Categoria clínica mais adequada" },
+        author: { type: "string" as const, description: "Autor da ferramenta" },
+        sections: {
+          type: "array" as const,
+          description: "Seções organizadas de campos da ferramenta",
+          items: {
+            type: "object" as const,
+            properties: {
+              title: { type: "string" as const, description: "Título da seção (ex: Dados Clínicos)" },
+              fields: {
+                type: "array" as const,
+                items: {
+                  type: "object" as const,
+                  properties: {
+                    name: { type: "string" as const },
+                    label: { type: "string" as const },
+                    type: { type: "string" as const, enum: ["number", "select", "switch", "text"] },
+                    unit: { type: "string" as const },
+                    options: {
+                      type: "array" as const,
+                      items: {
+                        type: "object" as const,
+                        properties: {
+                          value: { type: "string" as const },
+                          label: { type: "string" as const },
+                        },
+                        required: ["value", "label"] as const,
+                        additionalProperties: false as const,
+                      },
+                    },
+                    required: { type: "boolean" as const },
+                    defaultValue: { type: "string" as const },
+                  },
+                  required: ["name", "label", "type"] as const,
+                  additionalProperties: false as const,
+                },
+              },
+            },
+            required: ["title", "fields"] as const,
+            additionalProperties: false as const,
+          },
+        },
+        formula: {
+          type: "object" as const,
+          properties: {
+            expression: { type: "string" as const, description: "Descrição ou fórmula do cálculo" },
+            interpretation: {
+              type: "array" as const,
+              items: {
+                type: "object" as const,
+                properties: {
+                  range: { type: "string" as const },
+                  label: { type: "string" as const },
+                  description: { type: "string" as const },
+                  color: { type: "string" as const, description: "Cor para essa faixa (ex: hsl(142 71% 45%) para verde)" },
+                  recommendations: {
+                    type: "array" as const,
+                    items: { type: "string" as const },
+                    description: "Condutas/recomendações clínicas para esta faixa",
+                  },
+                },
+                required: ["range", "label", "description", "color", "recommendations"] as const,
+                additionalProperties: false as const,
+              },
+            },
+          },
+          required: ["expression", "interpretation"] as const,
+          additionalProperties: false as const,
+        },
+      },
+      required: ["name", "slug", "short_description", "description", "category_name", "author", "sections", "formula"] as const,
+      additionalProperties: false as const,
+    };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -44,66 +151,8 @@ Regras:
             type: "function",
             function: {
               name: "create_clinical_tool",
-              description: "Cria uma calculadora ou simulador clínico com todos os dados necessários",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: { type: "string", description: "Nome da ferramenta em português" },
-                  slug: { type: "string", description: "Slug URL-friendly sem acentos" },
-                  short_description: { type: "string", description: "Descrição curta até 100 chars" },
-                  description: { type: "string", description: "Descrição completa com explicação de uso e referências" },
-                  fields: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string" },
-                        label: { type: "string" },
-                        type: { type: "string", enum: ["number", "select", "checkbox"] },
-                        unit: { type: "string" },
-                        options: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              value: { type: "string" },
-                              label: { type: "string" },
-                            },
-                            required: ["value", "label"],
-                            additionalProperties: false,
-                          },
-                        },
-                        required: { type: "boolean" },
-                      },
-                      required: ["name", "label", "type"],
-                      additionalProperties: false,
-                    },
-                  },
-                  formula: {
-                    type: "object",
-                    properties: {
-                      expression: { type: "string" },
-                      interpretation: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            range: { type: "string" },
-                            label: { type: "string" },
-                            description: { type: "string" },
-                          },
-                          required: ["range", "label", "description"],
-                          additionalProperties: false,
-                        },
-                      },
-                    },
-                    required: ["expression", "interpretation"],
-                    additionalProperties: false,
-                  },
-                },
-                required: ["name", "slug", "short_description", "description", "fields", "formula"],
-                additionalProperties: false,
-              },
+              description: "Cria ou edita uma calculadora/simulador clínico completo",
+              parameters: toolParams,
             },
           },
         ],
@@ -114,21 +163,18 @@ Regras:
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro no gateway de IA" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -137,22 +183,38 @@ Regras:
 
     if (!toolCall) {
       return new Response(JSON.stringify({ error: "A IA não retornou dados estruturados" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const toolData = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify({ tool: toolData }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Flatten sections into fields array for backward compatibility + keep sections in formula
+    const flatFields: any[] = [];
+    if (toolData.sections) {
+      for (const section of toolData.sections) {
+        for (const field of section.fields) {
+          flatFields.push({ ...field, section: section.title });
+        }
+      }
+    }
+
+    const result = {
+      ...toolData,
+      fields: flatFields,
+      formula: {
+        ...toolData.formula,
+        sections: toolData.sections,
+      },
+    };
+
+    return new Response(JSON.stringify({ tool: result }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("generate-tool error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

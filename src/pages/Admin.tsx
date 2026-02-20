@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, Plus, Pencil, Trash2, Users, Calculator, BarChart3,
-  FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2,
+  FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2, Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,12 @@ export default function Admin() {
   const [aiType, setAiType] = useState<"calculadora" | "simulador">("calculadora");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPreview, setAiPreview] = useState<any>(null);
+  // AI Edit state
+  const [aiEditDialogOpen, setAiEditDialogOpen] = useState(false);
+  const [aiEditPrompt, setAiEditPrompt] = useState("");
+  const [aiEditTarget, setAiEditTarget] = useState<any>(null);
+  const [aiEditLoading, setAiEditLoading] = useState(false);
+  const [aiEditPreview, setAiEditPreview] = useState<any>(null);
 
   const { data: tools = [] } = useQuery({
     queryKey: ["admin-tools"],
@@ -138,6 +144,14 @@ export default function Admin() {
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
+  const findCategoryId = (categoryName: string) => {
+    const cat = categories.find((c: any) =>
+      c.name.toLowerCase() === categoryName.toLowerCase() ||
+      c.slug === categoryName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    );
+    return cat?.id || "";
+  };
+
   const openNew = () => { setEditingTool({ ...emptyTool }); setDialogOpen(true); };
 
   const openEdit = (tool: any) => {
@@ -150,13 +164,14 @@ export default function Admin() {
     setDialogOpen(true);
   };
 
+  /* ─── AI Generate (Create) ─── */
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim()) return;
     setAiLoading(true);
     setAiPreview(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-tool", {
-        body: { prompt: aiPrompt, type: aiType },
+        body: { prompt: aiPrompt, type: aiType, mode: "create" },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -171,13 +186,14 @@ export default function Admin() {
 
   const handleAiConfirm = () => {
     if (!aiPreview) return;
+    const catId = aiPreview.category_name ? findCategoryId(aiPreview.category_name) : "";
     setEditingTool({
       name: aiPreview.name,
       slug: aiPreview.slug,
       type: aiType,
       description: aiPreview.description,
       short_description: aiPreview.short_description,
-      category_id: "",
+      category_id: catId,
       is_active: true,
       fields: aiPreview.fields || [],
       formula: aiPreview.formula || {},
@@ -186,6 +202,68 @@ export default function Admin() {
     setDialogOpen(true);
     setAiPreview(null);
     setAiPrompt("");
+  };
+
+  /* ─── AI Edit ─── */
+  const openAiEdit = (tool: any) => {
+    setAiEditTarget(tool);
+    setAiEditPrompt("");
+    setAiEditPreview(null);
+    setAiEditDialogOpen(true);
+  };
+
+  const handleAiEdit = async () => {
+    if (!aiEditPrompt.trim() || !aiEditTarget) return;
+    setAiEditLoading(true);
+    setAiEditPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-tool", {
+        body: {
+          prompt: aiEditPrompt,
+          type: aiEditTarget.type,
+          mode: "edit",
+          existingTool: {
+            name: aiEditTarget.name,
+            fields: aiEditTarget.fields,
+            formula: aiEditTarget.formula,
+            description: aiEditTarget.description,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      setAiEditPreview(data.tool);
+      toast.success("Edição gerada pela IA! Revise e confirme.");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao editar ferramenta");
+    } finally {
+      setAiEditLoading(false);
+    }
+  };
+
+  const handleAiEditConfirm = async () => {
+    if (!aiEditPreview || !aiEditTarget) return;
+    const catId = aiEditPreview.category_name ? findCategoryId(aiEditPreview.category_name) : aiEditTarget.category_id;
+    try {
+      const { error } = await supabase.from("tools").update({
+        name: aiEditPreview.name || aiEditTarget.name,
+        slug: aiEditPreview.slug || aiEditTarget.slug,
+        description: aiEditPreview.description,
+        short_description: aiEditPreview.short_description,
+        category_id: catId || null,
+        fields: aiEditPreview.fields || [],
+        formula: aiEditPreview.formula || {},
+      }).eq("id", aiEditTarget.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["admin-tools"] });
+      toast.success("Ferramenta atualizada com sucesso!");
+      setAiEditDialogOpen(false);
+      setAiEditTarget(null);
+      setAiEditPreview(null);
+      setAiEditPrompt("");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   const calculadoras = tools.filter((t: any) => t.type === "calculadora");
@@ -239,7 +317,7 @@ export default function Admin() {
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      Gerar Ferramenta com IA (Gemini)
+                      Gerar Ferramenta com IA
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-2">
@@ -266,81 +344,23 @@ export default function Admin() {
                         className="bg-secondary/50"
                       />
                     </div>
-                    <Button
-                      onClick={handleAiGenerate}
-                      disabled={aiLoading || !aiPrompt.trim()}
-                      className="w-full gap-2"
-                    >
-                      {aiLoading ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" />Gerando com Gemini...</>
-                      ) : (
-                        <><Sparkles className="h-4 w-4" />Gerar ferramenta</>
-                      )}
+                    <Button onClick={handleAiGenerate} disabled={aiLoading || !aiPrompt.trim()} className="w-full gap-2">
+                      {aiLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Gerando...</> : <><Sparkles className="h-4 w-4" />Gerar ferramenta</>}
                     </Button>
 
-                    {/* AI Preview */}
                     {aiPreview && (
-                      <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                        <div className="flex items-center gap-2 text-primary font-semibold">
-                          <Sparkles className="h-4 w-4" />
-                          Prévia gerada pela IA
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Nome</p>
-                          <p className="font-semibold">{aiPreview.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Slug</p>
-                          <p className="text-sm font-mono text-muted-foreground">{aiPreview.slug}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Descrição curta</p>
-                          <p className="text-sm">{aiPreview.short_description}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Campos ({aiPreview.fields?.length || 0})</p>
-                          <div className="space-y-1">
-                            {aiPreview.fields?.map((f: any, i: number) => (
-                              <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex justify-between">
-                                <span>{f.label}</span>
-                                <span className="text-muted-foreground text-xs">{f.type}{f.unit ? ` (${f.unit})` : ""}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        {aiPreview.formula?.interpretation && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Interpretações</p>
-                            <div className="space-y-1">
-                              {aiPreview.formula.interpretation.map((int: any, i: number) => (
-                                <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2">
-                                  <span className="font-medium">{int.label}</span>
-                                  <span className="text-muted-foreground"> — {int.range}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Descrição completa</p>
-                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiPreview.description}</p>
-                        </div>
-                        <div className="flex gap-2 pt-2">
-                          <Button variant="outline" onClick={() => setAiPreview(null)} className="flex-1">
-                            Descartar
-                          </Button>
-                          <Button onClick={handleAiConfirm} className="flex-1 gap-2">
-                            <Save className="h-4 w-4" />
-                            Usar e editar
-                          </Button>
-                        </div>
-                      </div>
+                      <AiPreviewCard
+                        preview={aiPreview}
+                        onDiscard={() => setAiPreview(null)}
+                        onConfirm={handleAiConfirm}
+                        confirmLabel="Usar e salvar"
+                      />
                     )}
                   </div>
                 </DialogContent>
               </Dialog>
 
-              {/* Manual Creation Dialog */}
+              {/* Manual Creation */}
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={openNew} className="gap-2">
@@ -368,11 +388,7 @@ export default function Admin() {
                       </div>
                       <div className="space-y-2">
                         <Label>Slug (URL)</Label>
-                        <Input
-                          value={editingTool.slug}
-                          onChange={(e) => setEditingTool({ ...editingTool, slug: e.target.value })}
-                          placeholder="clearance-creatinina"
-                        />
+                        <Input value={editingTool.slug} onChange={(e) => setEditingTool({ ...editingTool, slug: e.target.value })} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -399,29 +415,20 @@ export default function Admin() {
                       </div>
                       <div className="space-y-2">
                         <Label>Descrição curta</Label>
-                        <Input
-                          value={editingTool.short_description}
-                          onChange={(e) => setEditingTool({ ...editingTool, short_description: e.target.value })}
-                          placeholder="Resumo que aparece no card"
-                        />
+                        <Input value={editingTool.short_description} onChange={(e) => setEditingTool({ ...editingTool, short_description: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <Label>Descrição completa</Label>
-                        <Textarea
-                          value={editingTool.description}
-                          onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
-                          placeholder="Explicação de como utilizar a ferramenta"
-                          rows={4}
-                        />
+                        <Textarea value={editingTool.description} onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })} rows={3} />
                       </div>
                       {editingTool.fields && editingTool.fields.length > 0 && (
                         <div className="space-y-2">
-                          <Label>Campos gerados pela IA ({editingTool.fields.length})</Label>
-                          <div className="space-y-1">
+                          <Label>Campos ({editingTool.fields.length})</Label>
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
                             {editingTool.fields.map((f: any, i: number) => (
                               <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex justify-between">
                                 <span>{f.label}</span>
-                                <span className="text-muted-foreground text-xs">{f.type}</span>
+                                <span className="text-muted-foreground text-xs">{f.type}{f.unit ? ` (${f.unit})` : ""}</span>
                               </div>
                             ))}
                           </div>
@@ -429,11 +436,7 @@ export default function Admin() {
                       )}
                       <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                        <Button
-                          onClick={() => editingTool && saveTool.mutate(editingTool)}
-                          disabled={!editingTool?.name || !editingTool?.slug || saveTool.isPending}
-                          className="gap-2"
-                        >
+                        <Button onClick={() => editingTool && saveTool.mutate(editingTool)} disabled={!editingTool?.name || !editingTool?.slug || saveTool.isPending} className="gap-2">
                           <Save className="h-4 w-4" />
                           {saveTool.isPending ? "Salvando..." : "Salvar"}
                         </Button>
@@ -444,6 +447,55 @@ export default function Admin() {
               </Dialog>
             </div>
           </div>
+
+          {/* AI Edit Dialog */}
+          <Dialog open={aiEditDialogOpen} onOpenChange={setAiEditDialogOpen}>
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-accent" />
+                  Editar com IA — {aiEditTarget?.name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                {aiEditTarget && (
+                  <div className="rounded-xl bg-secondary/50 p-4 text-sm">
+                    <p className="text-muted-foreground mb-1">Campos atuais: {aiEditTarget.fields?.length || 0}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {(aiEditTarget.fields || []).slice(0, 10).map((f: any, i: number) => (
+                        <span key={i} className="text-xs bg-background px-2 py-1 rounded">{f.label}</span>
+                      ))}
+                      {(aiEditTarget.fields || []).length > 10 && (
+                        <span className="text-xs text-muted-foreground">+{aiEditTarget.fields.length - 10} mais</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>Descreva as alterações desejadas</Label>
+                  <Textarea
+                    value={aiEditPrompt}
+                    onChange={(e) => setAiEditPrompt(e.target.value)}
+                    placeholder="Ex: Adicione um campo de raça/etnia, remova o campo de glicemia, e inclua recomendações mais detalhadas para risco alto"
+                    rows={4}
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <Button onClick={handleAiEdit} disabled={aiEditLoading || !aiEditPrompt.trim()} className="w-full gap-2">
+                  {aiEditLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Aplicando alterações...</> : <><Wand2 className="h-4 w-4" />Aplicar com IA</>}
+                </Button>
+
+                {aiEditPreview && (
+                  <AiPreviewCard
+                    preview={aiEditPreview}
+                    onDiscard={() => setAiEditPreview(null)}
+                    onConfirm={handleAiEditConfirm}
+                    confirmLabel="Salvar alterações"
+                  />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {tools.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-12 text-center">
@@ -474,14 +526,17 @@ export default function Admin() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: t.id, is_active: !t.is_active })}>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: t.id, is_active: !t.is_active })} title={t.is_active ? "Desativar" : "Ativar"}>
                       {t.is_active ? <ToggleRight className="h-5 w-5 text-primary" /> : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
+                    <Button variant="ghost" size="icon" onClick={() => openAiEdit(t)} title="Editar com IA">
+                      <Wand2 className="h-4 w-4 text-accent" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(t)} title="Editar manualmente">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${t.name}"?`)) deleteTool.mutate(t.id); }}>
+                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${t.name}"?`)) deleteTool.mutate(t.id); }} title="Excluir">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -540,6 +595,69 @@ export default function Admin() {
           </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/* ─── Shared AI Preview Card ─── */
+function AiPreviewCard({ preview, onDiscard, onConfirm, confirmLabel }: {
+  preview: any;
+  onDiscard: () => void;
+  onConfirm: () => void;
+  confirmLabel: string;
+}) {
+  return (
+    <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+      <div className="flex items-center gap-2 text-primary font-semibold">
+        <Sparkles className="h-4 w-4" />
+        Prévia gerada pela IA
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">Nome</p>
+        <p className="font-semibold">{preview.name}</p>
+      </div>
+      {preview.category_name && (
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Categoria</p>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">{preview.category_name}</span>
+        </div>
+      )}
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">Descrição</p>
+        <p className="text-sm text-muted-foreground">{preview.short_description}</p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">Campos ({preview.fields?.length || 0})</p>
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          {preview.fields?.map((f: any, i: number) => (
+            <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex justify-between">
+              <span>{f.label} {f.section && <span className="text-muted-foreground text-xs ml-1">({f.section})</span>}</span>
+              <span className="text-muted-foreground text-xs">{f.type}{f.unit ? ` · ${f.unit}` : ""}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {preview.formula?.interpretation && (
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Faixas de Interpretação</p>
+          <div className="space-y-1">
+            {preview.formula.interpretation.map((int: any, i: number) => (
+              <div key={i} className="text-sm rounded-lg bg-secondary/50 px-3 py-2 flex items-center gap-2">
+                {int.color && <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: int.color }} />}
+                <span className="font-medium">{int.label}</span>
+                <span className="text-muted-foreground ml-auto">{int.range}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="flex gap-2 pt-2">
+        <Button variant="outline" onClick={onDiscard} className="flex-1">Descartar</Button>
+        <Button onClick={onConfirm} className="flex-1 gap-2">
+          <Save className="h-4 w-4" />
+          {confirmLabel}
+        </Button>
+      </div>
     </div>
   );
 }
