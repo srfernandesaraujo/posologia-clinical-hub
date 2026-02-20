@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Sparkles, Loader2, AlertTriangle, CheckCircle, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 
@@ -73,14 +74,21 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 
 export default function SimuladorTDM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("tdm", BUILT_IN);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("tdm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");
   const [newInterval, setNewInterval] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [expandedJust, setExpandedJust] = useState(false);
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
-  const c = allCases[caseIdx] as CaseData | undefined;
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("sim");
+  }
+
+  const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
 
   const start = (i: number) => { setCaseIdx(i); setNewDose(""); setNewInterval(""); setSubmitted(false); setExpandedJust(false); setScreen("sim"); };
 
@@ -95,6 +103,12 @@ export default function SimuladorTDM() {
   }, [c, submitted, newDose, newInterval]);
 
   const isCorrect = c && submitted ? Math.abs(Number(newDose) - c.expected.newDose) < 50 && Math.abs(Number(newInterval) - c.expected.newInterval) <= 6 : false;
+
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && screen === "dashboard") return null;
 
   if (screen === "dashboard") {
     return (
@@ -130,7 +144,7 @@ export default function SimuladorTDM() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
       <h2 className="text-xl font-bold mb-4">{c.title}</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Patient & Labs */}
@@ -205,7 +219,7 @@ export default function SimuladorTDM() {
             )}
             <div className="flex gap-2 mt-2">
               <Button variant="outline" size="sm" onClick={() => { setNewDose(""); setNewInterval(""); setSubmitted(false); }}>Novo Ajuste</Button>
-              <Button variant="outline" size="sm" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>
+              {isVirtualRoom ? <Button variant="outline" size="sm" onClick={goBack}>Voltar à Home</Button> : <Button variant="outline" size="sm" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>}
             </div>
           </CardContent>
         </Card>

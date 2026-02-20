@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, ChevronDown, ChevronUp, Clock, Stethoscope, FlaskConical } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 
 interface Antibiogram { antibiotic: string; result: "S" | "R"; mic?: string; }
@@ -52,6 +53,7 @@ const BUILT_IN: CaseData[] = [
 
 export default function SimuladorAntimicrobianos() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("antimicrobianos", BUILT_IN);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("antimicrobianos");
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [day1Antibiotics, setDay1Antibiotics] = useState<string[]>([]);
@@ -59,8 +61,14 @@ export default function SimuladorAntimicrobianos() {
   const [day3Actions, setDay3Actions] = useState<Record<string, "manter" | "suspender" | "trocar">>({});
   const [day3NewAntibiotic, setDay3NewAntibiotic] = useState("");
   const [expandedFb, setExpandedFb] = useState<Set<string>>(new Set());
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
-  const c = allCases[caseIdx] as CaseData | undefined;
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("day1");
+  }
+
+  const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
 
   const start = (i: number) => {
     setCaseIdx(i); setDay1Antibiotics([]); setDay1Cultures([]); setDay3Actions({}); setDay3NewAntibiotic(""); setScreen("day1");
@@ -85,6 +93,12 @@ export default function SimuladorAntimicrobianos() {
     const newMatch = c.expectedDay3.newAntibiotic ? day3NewAntibiotic.toLowerCase() === c.expectedDay3.newAntibiotic.toLowerCase() : true;
     return stopMatch && newMatch ? 100 : stopMatch || newMatch ? 50 : 0;
   };
+
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && screen === "dashboard") return null;
 
   if (screen === "dashboard") {
     return (
@@ -133,7 +147,7 @@ export default function SimuladorAntimicrobianos() {
   if (screen === "day1") {
     return (
       <div className="max-w-6xl mx-auto">
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+        {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
         <Timeline />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
@@ -254,7 +268,7 @@ export default function SimuladorAntimicrobianos() {
   const s3 = scoreDay3();
   return (
     <div className="max-w-4xl mx-auto">
-      <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
       <Timeline />
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card><CardContent className="pt-6 text-center"><p className="text-4xl font-bold">{s1}%</p><p className="text-muted-foreground mt-1">Score Dia 1 (Empírico)</p></CardContent></Card>
@@ -270,7 +284,7 @@ export default function SimuladorAntimicrobianos() {
           {expandedFb.has(fb.key) && <CardContent>{fb.content}</CardContent>}
         </Card>
       ))}
-      <div className="flex gap-3 mt-6"><Button onClick={() => start(caseIdx)}>Tentar Novamente</Button><Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button></div>
+      <div className="flex gap-3 mt-6"><Button onClick={() => start(caseIdx)}>Tentar Novamente</Button>{isVirtualRoom ? <Button variant="outline" onClick={goBack}>Voltar à Home</Button> : <Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>}</div>
     </div>
   );
 }

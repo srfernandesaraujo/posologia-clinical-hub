@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts";
 
@@ -81,6 +82,7 @@ type UserAction = { drug: string; action: string; newDose?: string; newFrequency
 
 export default function SimuladorAcompanhamento() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("acompanhamento", BUILT_IN);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("acompanhamento");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [consultIdx, setConsultIdx] = useState(0);
@@ -98,18 +100,15 @@ export default function SimuladorAcompanhamento() {
     } catch { return null; }
   });
   const stepStartTime = useRef(Date.now());
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
   // Auto-start virtual room case
-  useEffect(() => {
-    if (roomCtx?.caseId && allCases.length > 0) {
-      const idx = allCases.findIndex((c: any) => c.id === roomCtx.caseId);
-      if (idx >= 0) {
-        start(idx);
-      }
-    }
-  }, [allCases.length]);
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("sim");
+  }
 
-  const c = allCases[caseIdx] as CaseData | undefined;
+  const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
   const consultation = c?.consultations?.[consultIdx];
 
   const start = (i: number) => { setCaseIdx(i); setConsultIdx(0); setUserActions({}); setScores({}); setScreen("sim"); stepStartTime.current = Date.now(); };
@@ -183,6 +182,12 @@ export default function SimuladorAcompanhamento() {
     }));
   }, [c, consultIdx, mainLabName]);
 
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && screen === "dashboard") return null;
+
   if (screen === "dashboard") {
     return (
       <div className="max-w-5xl mx-auto">
@@ -217,7 +222,7 @@ export default function SimuladorAcompanhamento() {
     const avg = Object.values(scores).length > 0 ? Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length) : 0;
     return (
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+        {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
         <Card className="mb-6"><CardContent className="pt-6 text-center"><div className="text-5xl font-bold">{avg}%</div><p className="text-muted-foreground mt-2">Desempenho geral nas consultas</p></CardContent></Card>
         {c.consultations.map((cons, i) => (
           <Card key={i} className="mb-3">
@@ -229,7 +234,7 @@ export default function SimuladorAcompanhamento() {
             </CardContent>
           </Card>
         ))}
-        <div className="flex gap-3 mt-4"><Button onClick={() => start(caseIdx)}>Tentar Novamente</Button><Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button></div>
+        <div className="flex gap-3 mt-4"><Button onClick={() => start(caseIdx)}>Tentar Novamente</Button>{isVirtualRoom ? <Button variant="outline" onClick={goBack}>Voltar à Home</Button> : <Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>}</div>
       </div>
     );
   }
@@ -237,7 +242,7 @@ export default function SimuladorAcompanhamento() {
   // Simulation
   return (
     <div className="max-w-7xl mx-auto">
-      <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
       {/* Tabs navigation */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto">
         {c.consultations.map((cons, i) => (

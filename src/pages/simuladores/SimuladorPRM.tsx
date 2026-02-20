@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Sparkles, Loader2, User, Pill, ClipboardCheck, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 
 type PRM_TYPE = "Seguranca" | "Efetividade" | "Indicacao" | "Adesao" | null;
@@ -85,14 +86,22 @@ const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividad
 
 export default function SimuladorPRM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("prm", BUILT_IN_CASES);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack } = useVirtualRoomCase("prm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
   const [selectedDrug, setSelectedDrug] = useState<number | null>(null);
   const [reviewed, setReviewed] = useState<Set<number>>(new Set());
   const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set());
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
-  const currentCase = allCases[caseIdx] as CaseData | undefined;
+  // Auto-start virtual room case
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("sim");
+  }
+
+  const currentCase = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
 
   const startCase = (i: number) => {
     setCaseIdx(i);
@@ -122,6 +131,18 @@ export default function SimuladorPRM() {
     });
     return { found, total: realPRMs.length, details };
   };
+
+  if (loadingVRCase) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isVirtualRoom && screen === "dashboard") {
+    return null;
+  }
 
   if (screen === "dashboard") {
     return (
@@ -169,7 +190,11 @@ export default function SimuladorPRM() {
     const { found, total, details } = getScore();
     return (
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar aos Casos</Button>
+        {isVirtualRoom ? (
+          <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
+        ) : (
+          <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar aos Casos</Button>
+        )}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Relatório de Desempenho</CardTitle>
@@ -213,7 +238,11 @@ export default function SimuladorPRM() {
         </div>
         <div className="flex gap-3 mt-6">
           <Button onClick={() => startCase(caseIdx)}>Tentar Novamente</Button>
-          <Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>
+          {isVirtualRoom ? (
+            <Button variant="outline" onClick={goBack}>Voltar à Home</Button>
+          ) : (
+            <Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>
+          )}
         </div>
       </div>
     );
@@ -222,7 +251,11 @@ export default function SimuladorPRM() {
   // Simulation screen
   return (
     <div className="max-w-7xl mx-auto">
-      <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+      {isVirtualRoom ? (
+        <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
+      ) : (
+        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+      )}
       <h2 className="text-xl font-bold mb-4">{currentCase.title}</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Patient profile */}
