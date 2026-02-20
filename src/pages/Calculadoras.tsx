@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Calculator, Search, Heart, Pill } from "lucide-react";
+import { Calculator, Search, Heart, Pill, Syringe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
@@ -87,6 +87,25 @@ export default function Calculadoras() {
               </p>
               <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
                 Endocrinologia
+              </span>
+            </Link>
+          )}
+
+          {/* Fixed: Equivalência de Opioides */}
+          {(!search || "calculadora de equivalência de opioides".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/equivalencia-opioides"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <Syringe className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Equivalência de Opioides</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Conversão segura entre opioides com fatores de correção para tolerância cruzada.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Dor / Cuidados Paliativos
               </span>
             </Link>
           )}
