@@ -213,7 +213,7 @@ export default function SimuladorTDM() {
                 <p className={`text-xs mt-1 ${isCorrect ? "text-green-700 dark:text-green-300" : "text-orange-700 dark:text-orange-300"}`}>Esperado: {String(c.expected.newDose)}mg {String(c.expected.newInterval)}/{String(c.expected.newInterval)}h</p>
                 <div className="mt-2">
                   <button className="text-xs text-primary flex items-center gap-1" onClick={() => setExpandedJust(!expandedJust)}>{expandedJust ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}Justificativa</button>
-                  {expandedJust && <p className="text-xs mt-2 text-foreground">{String(c.expected.justification)}</p>}
+                  {expandedJust && <p className={`text-xs mt-2 ${isCorrect ? "text-green-800 dark:text-green-200" : "text-orange-800 dark:text-orange-200"}`}>{String(c.expected.justification)}</p>}
                 </div>
               </div>
             )}
