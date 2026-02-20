@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Calculator, Search, Heart, Pill, Syringe } from "lucide-react";
+import { Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
@@ -106,6 +106,82 @@ export default function Calculadoras() {
               </p>
               <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
                 Dor / Cuidados Paliativos
+              </span>
+            </Link>
+          )}
+
+          {/* Fixed: Ajuste de Dose Renal */}
+          {(!search || "calculadora de ajuste de dose renal".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/ajuste-dose-renal"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <Beaker className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Ajuste de Dose Renal</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Cockcroft-Gault, CKD-EPI e ajuste de dose para insuficiência renal.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Nefrologia
+              </span>
+            </Link>
+          )}
+
+          {/* Fixed: Equivalência de Antidepressivos */}
+          {(!search || "calculadora de equivalência de antidepressivos".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/equivalencia-antidepressivos"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <Brain className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Equivalência de Antidepressivos</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Conversão segura entre antidepressivos com estratégia de transição terapêutica.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Psiquiatria
+              </span>
+            </Link>
+          )}
+
+          {/* Fixed: HOMA-IR */}
+          {(!search || "calculadora de resistência insulínica homa-ir".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/homa-ir"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Resistência Insulínica (HOMA-IR)</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Cálculo e interpretação do índice HOMA-IR para avaliação metabólica.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Endocrinologia
+              </span>
+            </Link>
+          )}
+
+          {/* Fixed: FINDRISC */}
+          {(!search || "calculadora de risco de diabetes tipo 2 findrisc".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/findrisc"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <ShieldAlert className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Risco de Diabetes Tipo 2 (FINDRISC)</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Escore FINDRISC para estimar risco de DM2 em 10 anos.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Endocrinologia
               </span>
             </Link>
           )}
