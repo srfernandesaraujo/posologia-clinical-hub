@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, AlertTriangle } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -51,7 +52,7 @@ function calcISF(tdd: number, isAnalog: boolean) { return Math.round((isAnalog ?
 function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) => a + b, 0) / glycemics.length; return Math.round(((avg + 46.7) / 28.7) * 10) / 10; }
 
 export default function SimuladorInsulina() {
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("insulina", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("insulina", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
 
@@ -147,7 +148,13 @@ export default function SimuladorInsulina() {
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between"><Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>{cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}</div>
+                <div className="flex items-center justify-between">
+                  <Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>
+                  <div className="flex items-center gap-1">
+                    {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                  </div>
+                </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>
               <CardContent><p className="text-sm text-muted-foreground">{cs.patient?.name}, {cs.patient?.age} anos – {cs.patient?.diagnosis}</p></CardContent>

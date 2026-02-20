@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, ChevronDown, ChevronUp, Clock, Stethoscope, FlaskConical } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { AdminCaseActions } from "@/components/AdminCaseActions";
 
 interface Antibiogram { antibiotic: string; result: "S" | "R"; mic?: string; }
 interface CaseData {
@@ -50,7 +51,7 @@ const BUILT_IN: CaseData[] = [
 ];
 
 export default function SimuladorAntimicrobianos() {
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("antimicrobianos", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("antimicrobianos", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [day1Antibiotics, setDay1Antibiotics] = useState<string[]>([]);
@@ -95,7 +96,10 @@ export default function SimuladorAntimicrobianos() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>
-                  {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                  <div className="flex items-center gap-1">
+                    {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                  </div>
                 </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>

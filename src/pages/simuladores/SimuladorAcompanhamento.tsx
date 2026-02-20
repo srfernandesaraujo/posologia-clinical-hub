@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts";
 
 interface LabItem { name: string; value: number; unit: string; target: string; status: "normal" | "high" | "low" }
@@ -78,7 +79,7 @@ const BUILT_IN: CaseData[] = [
 type UserAction = { drug: string; action: string; newDose?: string };
 
 export default function SimuladorAcompanhamento() {
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("acompanhamento", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("acompanhamento", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [consultIdx, setConsultIdx] = useState(0);
@@ -141,7 +142,13 @@ export default function SimuladorAcompanhamento() {
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between"><Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>{cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}</div>
+                <div className="flex items-center justify-between">
+                  <Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>
+                  <div className="flex items-center gap-1">
+                    {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                  </div>
+                </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>
               <CardContent><p className="text-sm text-muted-foreground">{cs.patient?.name}, {cs.patient?.age} anos – {cs.patient?.diagnoses?.join(", ")}</p></CardContent>

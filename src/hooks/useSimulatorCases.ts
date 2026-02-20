@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const SIMULATOR_SLUGS = ["tdm", "prm", "antimicrobianos", "acompanhamento", "insulina"];
 
 export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
   const queryClient = useQueryClient();
@@ -61,5 +63,67 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
     }
   };
 
-  return { allCases, generateCase, isGenerating };
+  const deleteCase = async (caseId: string) => {
+    try {
+      const { error } = await supabase
+        .from("simulator_cases" as any)
+        .delete()
+        .eq("id", caseId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases", simulatorSlug] });
+      toast.success("Caso excluído com sucesso!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao excluir caso");
+    }
+  };
+
+  const updateCase = async (caseId: string, updates: { title: string; difficulty: string }) => {
+    try {
+      const { error } = await supabase
+        .from("simulator_cases" as any)
+        .update({ title: updates.title, difficulty: updates.difficulty } as any)
+        .eq("id", caseId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases", simulatorSlug] });
+      toast.success("Caso atualizado com sucesso!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao atualizar caso");
+    }
+  };
+
+  const copyCase = async (caseId: string, targetSlug: string) => {
+    try {
+      // Fetch the original case
+      const { data: original, error: fetchError } = await supabase
+        .from("simulator_cases" as any)
+        .select("*")
+        .eq("id", caseId)
+        .single();
+      if (fetchError) throw fetchError;
+      const orig = original as any;
+
+      const { error: insertError } = await supabase
+        .from("simulator_cases" as any)
+        .insert({
+          simulator_slug: targetSlug,
+          title: `${orig.title} (cópia)`,
+          difficulty: orig.difficulty,
+          case_data: orig.case_data,
+          is_ai_generated: orig.is_ai_generated,
+        } as any);
+      if (insertError) throw insertError;
+
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases", targetSlug] });
+      toast.success(`Caso copiado para ${targetSlug}!`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao copiar caso");
+    }
+  };
+
+  const availableTargets = SIMULATOR_SLUGS.filter(s => s !== simulatorSlug);
+
+  return { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets };
 }
