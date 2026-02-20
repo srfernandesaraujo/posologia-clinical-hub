@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isProfessor: boolean;
   userStatus: UserStatus;
   signOut: () => Promise<void>;
 }
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isAdmin: false,
+  isProfessor: false,
   userStatus: null,
   signOut: async () => {},
 });
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isProfessor, setIsProfessor] = useState(false);
   const [userStatus, setUserStatus] = useState<UserStatus>(null);
 
   useEffect(() => {
@@ -39,13 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           setTimeout(async () => {
-            const { data: roleData } = await supabase
+            const { data: roles } = await supabase
               .from("user_roles")
               .select("role")
-              .eq("user_id", session.user.id)
-              .eq("role", "admin")
-              .maybeSingle();
-            setIsAdmin(!!roleData);
+              .eq("user_id", session.user.id);
+            const roleList = (roles || []).map((r: any) => r.role);
+            setIsAdmin(roleList.includes("admin"));
+            setIsProfessor(roleList.includes("professor") || roleList.includes("admin"));
 
             const { data: profileData } = await supabase
               .from("profiles")
@@ -56,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsProfessor(false);
           setUserStatus(null);
         }
 
@@ -77,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, userStatus, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, isProfessor, userStatus, signOut }}>
       {children}
     </AuthContext.Provider>
   );

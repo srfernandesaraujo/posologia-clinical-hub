@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical,
-  User, LogOut, Shield, BarChart3, Menu, X, Mail,
+  User, LogOut, Shield, BarChart3, Menu, X, Mail, DoorOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function AppLayout() {
-  const { signOut, isAdmin } = useAuth();
+  const { signOut, isAdmin, isProfessor } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,7 +29,15 @@ export function AppLayout() {
     { label: t("nav.analytics"), to: "/analytics", icon: BarChart3 },
   ];
 
-  const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
+  const professorItems = [
+    { label: "Salas Virtuais", to: "/salas-virtuais", icon: DoorOpen },
+  ];
+
+  const allItems = [
+    ...navItems,
+    ...(isProfessor ? professorItems : []),
+    ...(isAdmin ? adminItems : []),
+  ];
 
   const handleSignOut = async () => {
     await signOut();
