@@ -110,7 +110,7 @@ export default function SalaVirtualAluno() {
       simulatorSlug: room.simulator_slug,
       participantName,
     }));
-    navigate(`/simuladores/${room.simulator_slug}`);
+    navigate(`/sala/simulador/${room.simulator_slug}`);
   };
 
   if (step === "pin") {

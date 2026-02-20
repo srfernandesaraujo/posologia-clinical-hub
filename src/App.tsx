@@ -52,6 +52,11 @@ const App = () => (
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/contato" element={<Contato />} />
               <Route path="/sala" element={<SalaVirtualAluno />} />
+              <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
+              <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
+              <Route path="/sala/simulador/tdm" element={<SimuladorTDM />} />
+              <Route path="/sala/simulador/acompanhamento" element={<SimuladorAcompanhamento />} />
+              <Route path="/sala/simulador/insulina" element={<SimuladorInsulina />} />
             </Route>
 
             {/* Authenticated routes */}
