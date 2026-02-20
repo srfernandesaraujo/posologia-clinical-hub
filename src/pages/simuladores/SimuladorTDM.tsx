@@ -187,12 +187,12 @@ export default function SimuladorTDM() {
             </div>
             <Button onClick={() => setSubmitted(true)} disabled={!newDose || !newInterval} className="w-full">Aplicar Novo Esquema</Button>
             {submitted && (
-              <div className={`p-3 rounded-lg ${isCorrect ? "bg-green-50 dark:bg-green-950/30 border border-green-200" : "bg-orange-50 dark:bg-orange-950/30 border border-orange-200"}`}>
-                <div className="flex items-center gap-2">{isCorrect ? <CheckCircle className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4 text-orange-600" />}<span className="font-medium text-sm">{isCorrect ? "Ajuste adequado!" : "Ajuste pode ser melhorado"}</span></div>
-                <p className="text-xs mt-1">Esperado: {c.expected.newDose}mg {c.expected.newInterval}/{c.expected.newInterval}h</p>
+              <div className={`p-3 rounded-lg ${isCorrect ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800" : "bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800"}`}>
+                <div className="flex items-center gap-2">{isCorrect ? <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> : <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />}<span className={`font-medium text-sm ${isCorrect ? "text-green-800 dark:text-green-200" : "text-orange-800 dark:text-orange-200"}`}>{isCorrect ? "Ajuste adequado!" : "Ajuste pode ser melhorado"}</span></div>
+                <p className={`text-xs mt-1 ${isCorrect ? "text-green-700 dark:text-green-300" : "text-orange-700 dark:text-orange-300"}`}>Esperado: {String(c.expected.newDose)}mg {String(c.expected.newInterval)}/{String(c.expected.newInterval)}h</p>
                 <div className="mt-2">
                   <button className="text-xs text-primary flex items-center gap-1" onClick={() => setExpandedJust(!expandedJust)}>{expandedJust ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}Justificativa</button>
-                  {expandedJust && <p className="text-xs mt-2 text-muted-foreground">{c.expected.justification}</p>}
+                  {expandedJust && <p className="text-xs mt-2 text-foreground">{String(c.expected.justification)}</p>}
                 </div>
               </div>
             )}
