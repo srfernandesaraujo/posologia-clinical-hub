@@ -2,11 +2,14 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+type UserStatus = "pending" | "approved" | "inactive" | null;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  userStatus: UserStatus;
   signOut: () => Promise<void>;
 }
 
@@ -15,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isAdmin: false,
+  userStatus: null,
   signOut: async () => {},
 });
 
@@ -25,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userStatus, setUserStatus] = useState<UserStatus>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -33,18 +38,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Check admin role using setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
-            const { data } = await supabase
+            const { data: roleData } = await supabase
               .from("user_roles")
               .select("role")
               .eq("user_id", session.user.id)
               .eq("role", "admin")
               .maybeSingle();
-            setIsAdmin(!!data);
+            setIsAdmin(!!roleData);
+
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("status")
+              .eq("user_id", session.user.id)
+              .single();
+            setUserStatus((profileData?.status as UserStatus) || "pending");
           }, 0);
         } else {
           setIsAdmin(false);
+          setUserStatus(null);
         }
 
         setLoading(false);
@@ -65,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, userStatus, signOut }}>
       {children}
     </AuthContext.Provider>
   );

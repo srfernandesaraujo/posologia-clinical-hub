@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { FlaskConical, Search } from "lucide-react";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 export default function Simuladores() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const { data: tools = [], isLoading } = useQuery({
@@ -29,14 +31,14 @@ export default function Simuladores() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Simuladores Clínicos</h1>
-        <p className="text-muted-foreground">Selecione um simulador para começar.</p>
+        <h1 className="text-3xl font-bold mb-2">{t("simulators.title")}</h1>
+        <p className="text-muted-foreground">{t("simulators.subtitle")}</p>
       </div>
 
       <div className="relative mb-8 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar simulador..."
+          placeholder={t("simulators.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -51,7 +53,7 @@ export default function Simuladores() {
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground text-center py-12">
-          {search ? "Nenhum simulador encontrado." : "Nenhum simulador disponível ainda."}
+          {search ? t("simulators.noResults") : t("simulators.empty")}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
