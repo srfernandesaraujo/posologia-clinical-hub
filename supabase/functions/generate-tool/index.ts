@@ -23,7 +23,7 @@ Você DEVE retornar APENAS o resultado da tool call, sem texto adicional.
 Regras:
 - O slug deve ser em português, sem acentos, separado por hífens
 - short_description deve ter no máximo 100 caracteres
-- description deve explicar como usar a ferramenta, referências e interpretação clínica
+- description deve ter NO MÁXIMO 2 frases curtas: a primeira explica para que serve a ferramenta e a segunda menciona possíveis usos clínicos. NÃO inclua referências, modelos, interpretações ou instruções de uso. Seja extremamente conciso.
 - fields é um array de objetos com: name (snake_case), label (português), type (number, select, checkbox), unit (opcional), options (para select: array de {value, label}), required (boolean)
 - formula é um objeto com: expression (string descrevendo o cálculo), interpretation (array de {range, label, description} explicando os resultados)`;
 
