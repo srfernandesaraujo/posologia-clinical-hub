@@ -130,15 +130,23 @@ export default function SimuladorAcompanhamento() {
     setModal(null); setModalAction("manter"); setModalDose(""); setModalFrequency("");
   };
 
+  const mainLabName = useMemo(() => {
+    if (!c) return "";
+    return c.consultations[0]?.labs[0]?.name ?? "";
+  }, [c]);
+
+  const mainLabUnit = useMemo(() => {
+    if (!c) return "";
+    return c.consultations[0]?.labs[0]?.unit ?? "";
+  }, [c]);
+
   const chartData = useMemo(() => {
-    if (!c) return [];
-    const mainLab = c.consultations[0]?.labs[0]?.name;
-    if (!mainLab) return [];
+    if (!c || !mainLabName) return [];
     return c.consultations.slice(0, consultIdx + 1).map(cons => ({
       month: `Mês ${cons.month}`,
-      value: cons.labs.find(l => l.name === mainLab)?.value ?? 0,
+      value: cons.labs.find(l => l.name === mainLabName)?.value ?? 0,
     }));
-  }, [c, consultIdx]);
+  }, [c, consultIdx, mainLabName]);
 
   if (screen === "dashboard") {
     return (
@@ -222,10 +230,13 @@ export default function SimuladorAcompanhamento() {
             </div>
             <p className="text-xs text-muted-foreground mt-2">Alvos: {consultation.labs.map(l => `${l.name}: ${l.target}`).join(" | ")}</p>
             {chartData.length > 1 && (
-              <div className="h-[150px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} /><Line dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} /></LineChart>
-                </ResponsiveContainer>
+              <div className="mt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-1">{mainLabName} ({mainLabUnit})</p>
+                <div className="h-[150px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} label={{ value: mainLabUnit, angle: -90, position: "insideLeft", style: { fontSize: 10 } }} /><Line dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} /></LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             )}
           </CardContent>
