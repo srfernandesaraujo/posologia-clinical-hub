@@ -139,13 +139,13 @@ export default function SimuladorTDM() {
             <p className="font-medium">Prescrição Atual:</p>
             <p>{c.currentPrescription.drug} {c.currentPrescription.dose}mg {c.currentPrescription.route} {c.currentPrescription.interval}/{c.currentPrescription.interval}h</p>
             <Separator />
-            <div className={`p-3 rounded-lg ${troughStatus === "toxic" ? "bg-red-50 dark:bg-red-950/30 border border-red-200" : troughStatus === "sub" ? "bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200" : "bg-green-50 dark:bg-green-950/30 border border-green-200"}`}>
+            <div className={`p-3 rounded-lg ${troughStatus === "toxic" ? "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800" : troughStatus === "sub" ? "bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800" : "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"}`}>
               <div className="flex items-center gap-2">
-                <AlertTriangle className={`h-4 w-4 ${troughStatus === "toxic" ? "text-red-600" : troughStatus === "sub" ? "text-yellow-600" : "text-green-600"}`} />
-                <span className="font-medium text-sm">Nível de Vale: {c.tdmResult.troughLevel} {c.tdmResult.unit}</span>
+                <AlertTriangle className={`h-4 w-4 flex-shrink-0 ${troughStatus === "toxic" ? "text-red-600 dark:text-red-400" : troughStatus === "sub" ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400"}`} />
+                <span className={`font-medium text-sm ${troughStatus === "toxic" ? "text-red-800 dark:text-red-200" : troughStatus === "sub" ? "text-yellow-800 dark:text-yellow-200" : "text-green-800 dark:text-green-200"}`}>Nível de Vale: {String(c.tdmResult.troughLevel)} {String(c.tdmResult.unit)}</span>
               </div>
-              <p className="text-xs mt-1">Alvo: {c.therapeuticRange.troughMin}-{c.therapeuticRange.troughMax} {c.tdmResult.unit}</p>
-              {c.tdmResult.peakLevel && <p className="text-xs">Pico: {c.tdmResult.peakLevel} {c.tdmResult.unit} (Alvo: {c.therapeuticRange.peakMin}-{c.therapeuticRange.peakMax})</p>}
+              <p className={`text-xs mt-1 ${troughStatus === "toxic" ? "text-red-700 dark:text-red-300" : troughStatus === "sub" ? "text-yellow-700 dark:text-yellow-300" : "text-green-700 dark:text-green-300"}`}>Alvo: {String(c.therapeuticRange.troughMin)}-{String(c.therapeuticRange.troughMax)} {String(c.tdmResult.unit)}</p>
+              {c.tdmResult.peakLevel && <p className={`text-xs ${troughStatus === "toxic" ? "text-red-700 dark:text-red-300" : troughStatus === "sub" ? "text-yellow-700 dark:text-yellow-300" : "text-green-700 dark:text-green-300"}`}>Pico: {String(c.tdmResult.peakLevel)} {String(c.tdmResult.unit)} (Alvo: {String(c.therapeuticRange.peakMin)}-{String(c.therapeuticRange.peakMax)})</p>}
             </div>
             <p className="text-xs text-muted-foreground"><strong>Meia-vida:</strong> {c.pharmacokineticData.halfLife}h | <strong>Vd:</strong> {c.pharmacokineticData.vd} L/kg | <strong>Eliminação:</strong> {c.pharmacokineticData.elimination}</p>
           </CardContent>
