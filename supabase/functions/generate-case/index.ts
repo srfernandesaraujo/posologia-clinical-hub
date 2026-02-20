@@ -94,27 +94,9 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. Retorne APENAS via tool call." },
-          { role: "user", content: prompt },
+          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. Retorne APENAS um JSON válido, sem markdown, sem blocos de código. O JSON deve conter title, difficulty e todos os campos clínicos do caso." },
+          { role: "user", content: prompt + "\n\nRETORNE APENAS O JSON PURO, sem ```json``` ou qualquer formatação. O JSON deve ter os campos title, difficulty e todos os dados clínicos no mesmo nível." },
         ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "generate_clinical_case",
-            description: "Gera um caso clínico completo para simulador educacional",
-            parameters: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                difficulty: { type: "string", enum: ["Fácil", "Médio", "Difícil"] },
-                case_data: { type: "object", description: "Objeto completo com todos os dados do caso clínico conforme a estrutura solicitada" },
-              },
-              required: ["title", "difficulty", "case_data"],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "generate_clinical_case" } },
       }),
     });
 
@@ -135,12 +117,27 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("IA não retornou dados estruturados");
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("IA não retornou conteúdo");
 
-    const result = JSON.parse(toolCall.function.arguments);
+    // Clean markdown code blocks if present
+    let jsonStr = content.trim();
+    if (jsonStr.startsWith("```")) {
+      jsonStr = jsonStr.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    }
 
-    return new Response(JSON.stringify({ case: result }), {
+    const result = JSON.parse(jsonStr);
+    const { title, difficulty, ...caseFields } = result;
+
+    console.log("Generated case fields:", Object.keys(caseFields));
+
+    return new Response(JSON.stringify({ 
+      case: { 
+        title: title || "Caso Clínico Gerado por IA", 
+        difficulty: difficulty || "Médio", 
+        case_data: caseFields 
+      } 
+    }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
