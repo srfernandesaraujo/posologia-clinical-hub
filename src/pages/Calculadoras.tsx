@@ -51,28 +51,26 @@ export default function Calculadoras() {
             <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">
-          {search ? t("calculators.noResults") : t("calculators.empty")}
-        </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Fixed: Risco Cardiovascular */}
-          <Link
-            to="/calculadoras/risco-cardiovascular"
-            className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
-          >
-            <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
-              <Heart className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-1">Calculadora de Risco Cardiovascular</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              Estima o risco CV em 10 anos via Framingham, ASCVD e SCORE2.
-            </p>
-            <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
-              Cardiologia
-            </span>
-          </Link>
+          {(!search || "calculadora de risco cardiovascular".includes(search.toLowerCase())) && (
+            <Link
+              to="/calculadoras/risco-cardiovascular"
+              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+            >
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                <Heart className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">Calculadora de Risco Cardiovascular</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                Estima o risco CV em 10 anos via Framingham, ASCVD e SCORE2.
+              </p>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                Cardiologia
+              </span>
+            </Link>
+          )}
 
           {/* Dynamic tools */}
           {filtered.map((tool: any) => (
