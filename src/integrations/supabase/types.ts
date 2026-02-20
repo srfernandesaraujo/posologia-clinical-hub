@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      simulator_cases: {
+        Row: {
+          case_data: Json
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          id: string
+          is_ai_generated: boolean
+          simulator_slug: string
+          title: string
+        }
+        Insert: {
+          case_data?: Json
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          id?: string
+          is_ai_generated?: boolean
+          simulator_slug: string
+          title: string
+        }
+        Update: {
+          case_data?: Json
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          id?: string
+          is_ai_generated?: boolean
+          simulator_slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       tools: {
         Row: {
           category_id: string | null
