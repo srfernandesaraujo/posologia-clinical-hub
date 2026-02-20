@@ -85,6 +85,10 @@ serve(async (req) => {
       });
     }
 
+    const difficulties = ["Fácil", "Médio", "Difícil"];
+    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+    const randomSeed = Math.floor(Math.random() * 100000);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -93,9 +97,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        temperature: 1.2,
         messages: [
-          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. Retorne APENAS um JSON válido, sem markdown, sem blocos de código. O JSON deve conter title, difficulty e todos os campos clínicos do caso." },
-          { role: "user", content: prompt + "\n\nRETORNE APENAS O JSON PURO, sem ```json``` ou qualquer formatação. O JSON deve ter os campos title, difficulty e todos os dados clínicos no mesmo nível." },
+          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
+          { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Use um cenário clínico incomum ou uma combinação única de comorbidades. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação. O JSON deve ter os campos title, difficulty e todos os dados clínicos no mesmo nível.` },
         ],
       }),
     });
