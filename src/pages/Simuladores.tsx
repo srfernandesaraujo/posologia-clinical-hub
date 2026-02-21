@@ -2,9 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { Badge } from "@/components/ui/badge";
 
 const NATIVE_SIMULATORS = [
   { slug: "prm", name: "Simulador de PRM", description: "Problemas Relacionados a Medicamentos – Avalie prescrições e identifique erros.", icon: Pill, category: "Farmácia Clínica" },
@@ -17,6 +20,7 @@ const NATIVE_SIMULATORS = [
 export default function Simuladores() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const { isPremium, canUseSimulator, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: tools = [], isLoading } = useQuery({
     queryKey: ["tools", "simulador"],
@@ -42,9 +46,26 @@ export default function Simuladores() {
 
   return (
     <div>
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t("simulators.title")}</h1>
-        <p className="text-muted-foreground">{t("simulators.subtitle")}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{t("simulators.title")}</h1>
+            <p className="text-muted-foreground">{t("simulators.subtitle")}</p>
+          </div>
+          {!canUseSimulator && (
+            <Badge variant="outline" className="gap-1 text-sm">
+              <Lock className="h-3.5 w-3.5" />
+              Premium
+            </Badge>
+          )}
+          {isPremium && (
+            <Badge className="gap-1 bg-primary/10 text-primary border-primary/20">
+              <Crown className="h-3.5 w-3.5" />
+              Premium – Desbloqueado
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="relative mb-8 max-w-md">
@@ -61,23 +82,32 @@ export default function Simuladores() {
         {/* Native simulators */}
         {filteredNative.map((sim) => {
           const Icon = sim.icon;
-          return (
+          return canUseSimulator ? (
             <Link
               key={sim.slug}
               to={`/simuladores/${sim.slug}`}
               className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
             >
-              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
-                <Icon className="h-5 w-5 text-primary" />
-              </div>
+              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3"><Icon className="h-5 w-5 text-primary" /></div>
               <h3 className="font-semibold mb-1">{sim.name}</h3>
               <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
-              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
-                {sim.category}
-              </span>
+              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{sim.category}</span>
             </Link>
+          ) : (
+            <div
+              key={sim.slug}
+              onClick={() => showUpgrade("Simuladores avançados são exclusivos do plano Premium")}
+              className="cursor-pointer rounded-2xl border border-border bg-card p-5 opacity-75 hover:opacity-100 transition-all relative"
+            >
+              <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-muted-foreground" /></div>
+              <div className="inline-flex rounded-lg bg-muted p-2.5 mb-3"><Icon className="h-5 w-5 text-muted-foreground" /></div>
+              <h3 className="font-semibold mb-1">{sim.name}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
+              <span className="inline-block mt-3 text-xs font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">{sim.category}</span>
+            </div>
           );
         })}
+
 
         {/* Dynamic tools from DB */}
         {filteredDynamic.map((tool: any) => (

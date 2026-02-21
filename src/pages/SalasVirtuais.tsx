@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock } from "lucide-react";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 const SIMULATOR_OPTIONS = [
   { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos" },
@@ -35,6 +37,7 @@ export default function SalasVirtuais() {
   const [caseId, setCaseId] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [detailRoom, setDetailRoom] = useState<any>(null);
+  const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ["virtual-rooms"],
@@ -144,8 +147,30 @@ export default function SalasVirtuais() {
     return p?.participant_name || "Desconhecido";
   };
 
+  if (!canUseVirtualRooms) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
+        <div className="flex items-center gap-3 mb-8">
+          <DoorOpen className="h-7 w-7 text-primary" />
+          <h1 className="text-3xl font-bold">Salas Virtuais</h1>
+        </div>
+        <Card>
+          <CardContent className="py-12 text-center space-y-4">
+            <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground">Salas Virtuais são um recurso exclusivo do plano <strong>Posologia Premium</strong>.</p>
+            <Button onClick={() => showUpgrade("Salas virtuais ilimitadas são exclusivas do plano Premium")}>
+              Assinar Premium
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <DoorOpen className="h-7 w-7 text-primary" />
