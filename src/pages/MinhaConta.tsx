@@ -95,9 +95,14 @@ export default function MinhaConta() {
                 Válido até {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
               </p>
             )}
-            <Button variant="outline" onClick={handleManagePortal}>
-              Gerenciar assinatura
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={handleManagePortal}>
+                Gerenciar assinatura
+              </Button>
+              <Button variant="destructive" onClick={handleManagePortal}>
+                Cancelar plano
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
