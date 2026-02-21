@@ -29,6 +29,7 @@ import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
 import SimuladorAcompanhamento from "./pages/simuladores/SimuladorAcompanhamento";
 import SimuladorInsulina from "./pages/simuladores/SimuladorInsulina";
 import MinhaConta from "./pages/MinhaConta";
+import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import SalasVirtuais from "./pages/SalasVirtuais";
@@ -79,6 +80,7 @@ const App = () => (
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
+              <Route path="/planos" element={<Planos />} />
             </Route>
 
             {/* Admin routes */}

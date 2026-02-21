@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical,
-  User, LogOut, Shield, BarChart3, Menu, X, Mail, DoorOpen,
+  User, LogOut, Shield, BarChart3, Menu, X, Mail, DoorOpen, Crown,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ export function AppLayout() {
     { label: t("nav.calculators"), to: "/calculadoras", icon: Calculator },
     { label: t("nav.simulators"), to: "/simuladores", icon: FlaskConical },
     { label: t("nav.myAccount"), to: "/minha-conta", icon: User },
+    { label: "Planos", to: "/planos", icon: Crown },
   ];
 
   const adminItems = [
