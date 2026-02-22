@@ -83,17 +83,13 @@ const App = () => (
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
               <Route path="/planos" element={<Planos />} />
+              <Route path="/salas-virtuais" element={<SalasVirtuais />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
 
             {/* Admin routes */}
             <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
               <Route path="/admin" element={<Admin />} />
-              <Route path="/analytics" element={<Analytics />} />
-            </Route>
-
-            {/* Professor routes */}
-            <Route element={<ProfessorRoute><AppLayout /></ProfessorRoute>}>
-              <Route path="/salas-virtuais" element={<SalasVirtuais />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
