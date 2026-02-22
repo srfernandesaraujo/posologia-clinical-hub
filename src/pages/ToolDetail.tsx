@@ -183,16 +183,92 @@ export default function ToolDetail() {
     setResult(null);
   }, []);
 
+  const evaluateFormula = useCallback((expression: string, vals: Record<string, string>, fieldsList: ToolField[]): number => {
+    // Build a context with all field values
+    const context: Record<string, number> = {};
+    for (const f of fieldsList) {
+      const raw = vals[f.name];
+      if (f.type === "switch" || f.type === "checkbox") {
+        context[f.name] = (raw === "1" || raw === "true") ? 1 : 0;
+      } else if (f.type === "number") {
+        context[f.name] = parseFloat(raw || "0") || 0;
+      } else if (f.type === "select") {
+        context[f.name] = parseFloat(raw || "0") || 0;
+      } else {
+        context[f.name] = parseFloat(raw || "0") || 0;
+      }
+    }
+
+    // Try to evaluate as JS expression
+    try {
+      const keys = Object.keys(context);
+      const vals2 = Object.values(context);
+      // eslint-disable-next-line no-new-func
+      const fn = new Function(...keys, `"use strict"; return (${expression});`);
+      const result = fn(...vals2);
+      if (typeof result === "number" && !isNaN(result)) return result;
+    } catch {
+      // If expression is not evaluable, fall through to sum heuristic
+    }
+
+    // Fallback: sum all numeric/boolean values (works for scores like CURB-65)
+    let sum = 0;
+    for (const v of Object.values(context)) {
+      sum += v;
+    }
+    return sum;
+  }, []);
+
+  const matchInterpretation = useCallback((score: number, interpretations: Interpretation[]): Interpretation | null => {
+    for (const interp of interpretations) {
+      const range = interp.range;
+      // Match patterns like "0", "0-1", ">=3", "<=2", "2-3", "0 pontos", etc.
+      const exactMatch = range.match(/^(\d+)(?:\s|$|[^-\d])/);
+      const rangeMatch = range.match(/(\d+)\s*[-–a]\s*(\d+)/);
+      const gteMatch = range.match(/>=?\s*(\d+)/);
+      const lteMatch = range.match(/<=?\s*(\d+)/);
+
+      if (rangeMatch) {
+        const low = parseInt(rangeMatch[1]);
+        const high = parseInt(rangeMatch[2]);
+        if (score >= low && score <= high) return interp;
+      } else if (gteMatch) {
+        const threshold = parseInt(gteMatch[1]);
+        if (score >= threshold) return interp;
+      } else if (lteMatch) {
+        const threshold = parseInt(lteMatch[1]);
+        if (score <= threshold) return interp;
+      } else if (exactMatch) {
+        const val = parseInt(exactMatch[1]);
+        if (score === val) return interp;
+      } else {
+        // Try parsing just a number
+        const num = parseInt(range);
+        if (!isNaN(num) && score === num) return interp;
+      }
+    }
+    // Fallback: return last interpretation for high scores, first for low
+    if (interpretations.length > 0) {
+      return interpretations[interpretations.length - 1];
+    }
+    return null;
+  }, []);
+
+  const [calculatedScore, setCalculatedScore] = useState<number | null>(null);
+
   const handleCalculate = () => {
-    // Validate required fields
     const missing = fields.filter(f => f.required && !values[f.name]);
     if (missing.length) {
       return;
     }
     setCalculated(true);
-    if (formula?.interpretation?.length) {
-      // Show all interpretations for user reference
-      setResult(formula.interpretation[0]);
+    if (formula) {
+      const score = evaluateFormula(formula.expression, values, fields);
+      setCalculatedScore(score);
+      if (formula.interpretation?.length) {
+        const matched = matchInterpretation(score, formula.interpretation);
+        setResult(matched);
+      }
     }
   };
 
@@ -200,6 +276,7 @@ export default function ToolDetail() {
     setValues({});
     setResult(null);
     setCalculated(false);
+    setCalculatedScore(null);
   };
 
   if (isLoading) {
@@ -377,17 +454,22 @@ export default function ToolDetail() {
           <div className="space-y-6">
             {calculated && result ? (
               <>
-                <div
-                  className="rounded-2xl border p-6"
-                  style={{
-                    borderColor: result.color ? `${result.color}50` : undefined,
-                    backgroundColor: result.color ? `${result.color}15` : undefined,
-                  }}
-                >
-                  <p className="text-sm text-muted-foreground mb-1">Resultado</p>
-                  <p className="text-2xl font-bold" style={{ color: result.color }}>
-                    {result.label}
-                  </p>
+                 <div
+                   className="rounded-2xl border p-6"
+                   style={{
+                     borderColor: result.color ? `${result.color}50` : undefined,
+                     backgroundColor: result.color ? `${result.color}15` : undefined,
+                   }}
+                 >
+                   <p className="text-sm text-muted-foreground mb-1">Resultado</p>
+                   {calculatedScore !== null && (
+                     <p className="text-4xl font-bold mb-1" style={{ color: result.color }}>
+                       {calculatedScore}
+                     </p>
+                   )}
+                   <p className="text-2xl font-bold" style={{ color: result.color }}>
+                     {result.label}
+                   </p>
                   <p className="text-sm text-muted-foreground mt-2">{result.description}</p>
                 </div>
 
