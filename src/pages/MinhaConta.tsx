@@ -17,6 +17,20 @@ export default function MinhaConta() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { isPremium, subscriptionEnd, loading: subLoading, openCustomerPortal } = useSubscription();
+  const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("has_unlimited_access")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          setHasUnlimitedAccess(data?.has_unlimited_access === true);
+        });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -83,7 +97,7 @@ export default function MinhaConta() {
             <Loader2 className="h-4 w-4 animate-spin" />
             Verificando...
           </div>
-        ) : isPremium ? (
+        ) : (isPremium || hasUnlimitedAccess) ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
