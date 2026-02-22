@@ -25,18 +25,18 @@ export function AppLayout() {
     { label: "Planos", to: "/planos", icon: Crown },
   ];
 
-  const adminItems = [
-    { label: t("nav.admin"), to: "/admin", icon: Shield },
+  const premiumItems = [
+    { label: "Salas Virtuais", to: "/salas-virtuais", icon: DoorOpen },
     { label: t("nav.analytics"), to: "/analytics", icon: BarChart3 },
   ];
 
-  const professorItems = [
-    { label: "Salas Virtuais", to: "/salas-virtuais", icon: DoorOpen },
+  const adminItems = [
+    { label: t("nav.admin"), to: "/admin", icon: Shield },
   ];
 
   const allItems = [
     ...navItems,
-    ...(isProfessor ? professorItems : []),
+    ...premiumItems,
     ...(isAdmin ? adminItems : []),
   ];
 
