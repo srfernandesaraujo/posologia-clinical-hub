@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend,
@@ -43,14 +44,17 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 export default function Analytics() {
+  const { user } = useAuth();
   const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade, loading } = useFeatureGating();
 
   const { data: logs = [] } = useQuery({
-    queryKey: ["analytics-logs"],
+    queryKey: ["analytics-logs", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("usage_logs")
         .select("*, tools(name)")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -59,23 +63,29 @@ export default function Analytics() {
   });
 
   const { data: rooms = [] } = useQuery({
-    queryKey: ["analytics-rooms"],
+    queryKey: ["analytics-rooms", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("virtual_rooms")
         .select("*")
+        .eq("created_by", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
+  const roomIds = rooms.map((r: any) => r.id);
+
   const { data: allParticipants = [] } = useQuery({
-    queryKey: ["analytics-participants"],
+    queryKey: ["analytics-participants", roomIds],
+    enabled: roomIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_participants")
         .select("*")
+        .in("room_id", roomIds)
         .order("joined_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -83,11 +93,13 @@ export default function Analytics() {
   });
 
   const { data: allSubmissions = [] } = useQuery({
-    queryKey: ["analytics-submissions"],
+    queryKey: ["analytics-submissions", roomIds],
+    enabled: roomIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_submissions")
         .select("*")
+        .in("room_id", roomIds)
         .order("submitted_at", { ascending: false });
       if (error) throw error;
       return data;
