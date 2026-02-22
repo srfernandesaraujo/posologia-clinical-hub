@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2,
-  User, ClipboardCheck, CheckCircle, XCircle, ChevronRight, Info,
+  User, ClipboardCheck, CheckCircle, XCircle, ChevronRight, Info, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ import { useState, useCallback, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+
+
 
 /* ─── Types ─── */
 interface ToolField {
@@ -550,6 +552,56 @@ export default function ToolDetail() {
 
   const authorName = tool?.created_by ? (authorProfile?.full_name || "Usuário") : "Sérgio Araújo";
 
+  // Reviews
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const { data: toolReviews = [] } = useQuery({
+    queryKey: ["tool-reviews", tool?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("tool_reviews" as any).select("*").eq("tool_id", tool!.id).order("created_at", { ascending: false });
+      return (data || []) as unknown as { id: string; tool_id: string; user_id: string; rating: number; comment: string | null; created_at: string }[];
+    },
+    enabled: !!tool?.id,
+  });
+
+  const { data: reviewProfiles = [] } = useQuery({
+    queryKey: ["review-profiles", toolReviews.map(r => r.user_id)],
+    queryFn: async () => {
+      const ids = [...new Set(toolReviews.map(r => r.user_id))];
+      if (ids.length === 0) return [];
+      const { data } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
+      return data || [];
+    },
+    enabled: toolReviews.length > 0,
+  });
+
+  const reviewProfileMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    reviewProfiles.forEach((p: any) => { map[p.user_id] = p.full_name || "Usuário"; });
+    return map;
+  }, [reviewProfiles]);
+
+  const userReview = toolReviews.find(r => r.user_id === user?.id);
+  const avgRating = toolReviews.length > 0 ? toolReviews.reduce((s, r) => s + r.rating, 0) / toolReviews.length : 0;
+
+  const submitReview = async () => {
+    if (!user || !tool || reviewRating === 0) return;
+    try {
+      if (userReview) {
+        await supabase.from("tool_reviews" as any).update({ rating: reviewRating, comment: reviewComment || null } as any).eq("id", userReview.id);
+      } else {
+        await supabase.from("tool_reviews" as any).insert({ tool_id: tool.id, user_id: user.id, rating: reviewRating, comment: reviewComment || null } as any);
+      }
+      queryClient.invalidateQueries({ queryKey: ["tool-reviews", tool.id] });
+      toast.success(userReview ? "Avaliação atualizada!" : "Avaliação enviada!");
+      if (!userReview) { setReviewRating(0); setReviewComment(""); }
+    } catch (e: any) {
+      toast.error("Erro ao enviar avaliação");
+    }
+  };
+
   const handleDelete = async () => {
     if (!tool || !isOwner) return;
     if (!confirm("Tem certeza que deseja excluir esta ferramenta?")) return;
@@ -810,6 +862,81 @@ export default function ToolDetail() {
             <p className="text-muted-foreground">Esta ferramenta não possui campos configurados.</p>
           </div>
           {tool.description && <p className="text-sm text-muted-foreground mt-4">{tool.description}</p>}
+        </div>
+      )}
+
+      {/* Reviews Section */}
+      {tool.is_marketplace && (
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" /> Avaliações
+            </h2>
+            {toolReviews.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Star key={s} className={`h-4 w-4 ${s <= Math.round(avgRating) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                  ))}
+                </div>
+                <span className="text-sm font-medium">{avgRating.toFixed(1)}</span>
+                <span className="text-sm text-muted-foreground">({toolReviews.length})</span>
+              </div>
+            )}
+          </div>
+
+          {/* Submit review */}
+          {user && !isOwner && (
+            <div className="mb-6 p-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-sm font-medium mb-2">{userReview ? "Atualizar sua avaliação" : "Deixe sua avaliação"}</p>
+              <div className="flex items-center gap-1 mb-3">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button key={s} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)} onClick={() => setReviewRating(s)}>
+                    <Star className={`h-6 w-6 transition-colors ${s <= (hoverRating || reviewRating) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                placeholder="Comentário (opcional)..."
+                value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)}
+                rows={2}
+                className="mb-3"
+              />
+              <Button size="sm" onClick={submitReview} disabled={reviewRating === 0}>
+                {userReview ? "Atualizar" : "Enviar"} Avaliação
+              </Button>
+            </div>
+          )}
+
+          {/* Review list */}
+          {toolReviews.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma avaliação ainda. Seja o primeiro!</p>
+          ) : (
+            <div className="space-y-4">
+              {toolReviews.map(review => (
+                <div key={review.id} className="flex gap-3 p-3 rounded-lg bg-muted/30">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium">{reviewProfileMap[review.user_id] || "Usuário"}</span>
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <Star key={s} className={`h-3 w-3 ${s <= review.rating ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {new Date(review.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

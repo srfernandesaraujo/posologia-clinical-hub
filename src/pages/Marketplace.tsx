@@ -5,10 +5,9 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Calculator, FlaskConical, Lock, Store, Crown } from "lucide-react";
-import { useState } from "react";
+import { Search, Calculator, FlaskConical, Lock, Store, Star } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Marketplace() {
@@ -31,6 +30,51 @@ export default function Marketplace() {
     },
   });
 
+  // Fetch author profiles for all tools with created_by
+  const creatorIds = useMemo(() => [...new Set(tools.filter((t: any) => t.created_by).map((t: any) => t.created_by))], [tools]);
+  
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["marketplace-profiles", creatorIds],
+    queryFn: async () => {
+      if (creatorIds.length === 0) return [];
+      const { data } = await supabase.from("profiles").select("user_id, full_name").in("user_id", creatorIds);
+      return data || [];
+    },
+    enabled: creatorIds.length > 0,
+  });
+
+  // Fetch average ratings for all marketplace tools
+  const toolIds = useMemo(() => tools.map((t: any) => t.id), [tools]);
+  
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["marketplace-reviews", toolIds],
+    queryFn: async () => {
+      if (toolIds.length === 0) return [];
+      const { data } = await supabase.from("tool_reviews" as any).select("tool_id, rating").in("tool_id", toolIds);
+      return (data || []) as unknown as { tool_id: string; rating: number }[];
+    },
+    enabled: toolIds.length > 0,
+  });
+
+  const profileMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    profiles.forEach((p: any) => { map[p.user_id] = p.full_name || "Usuário"; });
+    return map;
+  }, [profiles]);
+
+  const reviewStats = useMemo(() => {
+    const map: Record<string, { avg: number; count: number }> = {};
+    const grouped: Record<string, number[]> = {};
+    reviews.forEach((r: any) => {
+      if (!grouped[r.tool_id]) grouped[r.tool_id] = [];
+      grouped[r.tool_id].push(r.rating);
+    });
+    Object.entries(grouped).forEach(([tid, ratings]) => {
+      map[tid] = { avg: ratings.reduce((s, v) => s + v, 0) / ratings.length, count: ratings.length };
+    });
+    return map;
+  }, [reviews]);
+
   const calculadoras = tools.filter((t: any) => t.type === "calculadora" && t.name.toLowerCase().includes(search.toLowerCase()));
   const simuladores = tools.filter((t: any) => t.type === "simulador" && t.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -41,6 +85,49 @@ export default function Marketplace() {
     }
     const basePath = tool.type === "calculadora" ? "/calculadoras" : "/simuladores";
     navigate(`${basePath}/${tool.slug}`);
+  };
+
+  const ToolCard = ({ tool, icon: Icon }: { tool: any; icon: any }) => {
+    const authorName = tool.created_by ? (profileMap[tool.created_by] || "Usuário") : "Sérgio Araújo";
+    const stats = reviewStats[tool.id];
+    return (
+      <div
+        onClick={() => handleToolClick(tool)}
+        className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 ${
+          isPremium ? "border-border hover:shadow-lg hover:shadow-primary/5" : "border-border opacity-75"
+        }`}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="inline-flex rounded-lg bg-primary/10 p-2.5">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+          {!isPremium && <Lock className="h-4 w-4 text-muted-foreground" />}
+        </div>
+        <h3 className="font-semibold mb-1">{tool.name}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{tool.short_description || tool.description}</p>
+        
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
+          <span className="text-xs text-muted-foreground truncate max-w-[60%]">por {authorName}</span>
+          <div className="flex items-center gap-1">
+            {stats ? (
+              <>
+                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                <span className="text-xs font-medium">{stats.avg.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">({stats.count})</span>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">Sem avaliações</span>
+            )}
+          </div>
+        </div>
+        
+        {tool.categories && (
+          <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+            {tool.categories.name}
+          </span>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -95,27 +182,7 @@ export default function Marketplace() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {calculadoras.map((tool: any) => (
-                <div
-                  key={tool.id}
-                  onClick={() => handleToolClick(tool)}
-                  className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 ${
-                    isPremium ? "border-border hover:shadow-lg hover:shadow-primary/5" : "border-border opacity-75"
-                  }`}
-                >
-                  {!isPremium && <Lock className="h-4 w-4 text-muted-foreground float-right" />}
-                  <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
-                    <Calculator className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1">{tool.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
-                  {tool.categories && (
-                    <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
-                      {tool.categories.name}
-                    </span>
-                  )}
-                </div>
-              ))}
+              {calculadoras.map((tool: any) => <ToolCard key={tool.id} tool={tool} icon={Calculator} />)}
             </div>
           )}
         </TabsContent>
@@ -128,27 +195,7 @@ export default function Marketplace() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {simuladores.map((tool: any) => (
-                <div
-                  key={tool.id}
-                  onClick={() => handleToolClick(tool)}
-                  className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 ${
-                    isPremium ? "border-border hover:shadow-lg hover:shadow-primary/5" : "border-border opacity-75"
-                  }`}
-                >
-                  {!isPremium && <Lock className="h-4 w-4 text-muted-foreground float-right" />}
-                  <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
-                    <FlaskConical className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1">{tool.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
-                  {tool.categories && (
-                    <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
-                      {tool.categories.name}
-                    </span>
-                  )}
-                </div>
-              ))}
+              {simuladores.map((tool: any) => <ToolCard key={tool.id} tool={tool} icon={FlaskConical} />)}
             </div>
           )}
         </TabsContent>
