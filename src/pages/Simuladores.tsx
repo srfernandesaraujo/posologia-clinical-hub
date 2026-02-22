@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2 } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -19,6 +19,7 @@ const NATIVE_SIMULATORS = [
   { slug: "tdm", name: "Simulador TDM", description: "Monitoramento Terapêutico de Fármacos – Ajuste de doses de medicamentos de baixo índice terapêutico.", icon: Activity, category: "Farmacocinética" },
   { slug: "acompanhamento", name: "Simulador de Acompanhamento Farmacoterapêutico", description: "Monitore pacientes crônicos ao longo de várias consultas.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "insulina", name: "Simulador de Dose de Insulina", description: "Treinamento de insulinoterapia intensiva baseado no livro Koda-Kimble.", icon: Syringe, category: "Endocrinologia" },
+  { slug: "bomba-infusao", name: "Simulador de Bomba de Infusão", description: "Treinamento de programação de bombas de seringa/equipo com drug library e alarmes de segurança.", icon: HeartPulse, category: "Enfermagem / UTI" },
 ];
 
 export default function Simuladores() {
