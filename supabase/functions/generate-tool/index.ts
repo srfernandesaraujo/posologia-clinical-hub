@@ -22,12 +22,23 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um especialista em medicina clínica e criação de ferramentas médicas.
 ${isEdit
-  ? `O usuário quer EDITAR uma ferramenta existente. Aqui estão os dados atuais:
+  ? `O usuário quer CORRIGIR/EDITAR uma ferramenta existente que NÃO ESTÁ FUNCIONANDO CORRETAMENTE. Aqui estão os dados atuais:
 Nome: ${existingTool.name}
+Descrição: ${existingTool.description || "Sem descrição"}
 Campos atuais: ${JSON.stringify(existingTool.fields)}
 Fórmula atual: ${JSON.stringify(existingTool.formula)}
 
-Aplique as alterações solicitadas pelo usuário, mantendo o que não foi mencionado. Retorne a ferramenta COMPLETA atualizada (não só as mudanças).`
+O PROBLEMA RELATADO PELO USUÁRIO É: "${prompt}"
+
+INSTRUÇÕES CRÍTICAS PARA CORREÇÃO:
+- Analise cuidadosamente o problema descrito
+- Corrija a fórmula (expression) para que o cálculo funcione corretamente com JavaScript eval
+- A expression DEVE ser uma expressão JavaScript válida usando os nomes dos campos (name) como variáveis
+- Para scores baseados em soma de critérios booleanos (switches), use: campo1 + campo2 + campo3
+- Para cálculos com fórmulas matemáticas, use Math.round, Math.pow, etc.
+- Verifique que os ranges na interpretation correspondam aos resultados possíveis da fórmula
+- Para campos select, o value de cada option DEVE ser numérico (ex: "0", "1", "2") para funcionar no cálculo
+- Retorne a ferramenta COMPLETA atualizada (não só as mudanças)`
   : `O usuário vai pedir para criar uma ${type === "simulador" ? "simulador clínico" : "calculadora clínica"}.`}
 
 Você DEVE retornar APENAS o resultado da tool call, sem texto adicional.

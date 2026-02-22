@@ -213,6 +213,8 @@ export default function ToolDetail() {
           mode: "edit",
           existingTool: {
             name: tool.name,
+            description: tool.description,
+            short_description: tool.short_description,
             fields: tool.fields,
             formula: tool.formula,
           },
@@ -222,20 +224,33 @@ export default function ToolDetail() {
       if (data?.error) throw new Error(data.error);
 
       const updated = data.tool;
+      if (!updated || !updated.fields || !updated.formula) {
+        throw new Error("A IA não retornou dados válidos para a correção");
+      }
+
       const { error: updateError } = await supabase.from("tools").update({
         fields: updated.fields,
         formula: { ...updated.formula, sections: updated.sections },
-        description: updated.description,
-        short_description: updated.short_description,
+        description: updated.description || tool.description,
+        short_description: updated.short_description || tool.short_description,
       }).eq("id", tool.id);
 
       if (updateError) throw updateError;
 
-      toast.success("Ferramenta corrigida com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["tool", slug] });
+      // Reset calculation state so user sees the fresh tool
+      setValues({});
+      setResult(null);
+      setCalculated(false);
+      setCalculatedScore(null);
+
+      // Force refetch tool data
+      await queryClient.refetchQueries({ queryKey: ["tool", slug] });
+
+      toast.success("Ferramenta corrigida com sucesso! Os campos foram atualizados.");
       setFixDialogOpen(false);
       setFixDescription("");
     } catch (e: any) {
+      console.error("Fix with AI error:", e);
       toast.error(e.message || "Erro ao corrigir com IA");
     } finally {
       setFixLoading(false);
