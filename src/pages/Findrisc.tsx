@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, ShieldAlert, User, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -175,6 +177,7 @@ export default function Findrisc() {
   const [modo, setModo] = useState<Modo>("pro");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
@@ -189,7 +192,16 @@ export default function Findrisc() {
       setErro("Preencha todos os 8 campos do escore FINDRISC."); return;
     }
     const pts = calcPontos(form, Number(imc));
-    setResultado(classificar(pts, modo));
+    const res = classificar(pts, modo);
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "FINDRISC",
+      calculatorSlug: "findrisc",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `${res.pontos}/26 – ${res.faixa} (${res.riscoPct})`,
+      details: { Pontuação: `${res.pontos}/26`, Classificação: res.faixa, "Risco em 10 anos": res.riscoPct, IMC: imc, "Circ. Abdominal": `${form.circAbdominal} cm` },
+    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -210,6 +222,7 @@ export default function Findrisc() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="findrisc" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("pro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "pro" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Profissional
