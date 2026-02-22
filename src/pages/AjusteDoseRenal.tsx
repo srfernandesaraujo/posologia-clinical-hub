@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Beaker, User, Stethoscope, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -264,6 +266,7 @@ export default function AjusteDoseRenal() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => {
     setForm((p) => ({ ...p, [field]: value }));
@@ -304,13 +307,22 @@ export default function AjusteDoseRenal() {
       if (ajuste) ajusteDose = { dose: ajuste.dose, intervalo: ajuste.intervalo, obs: ajuste.obs };
     }
 
-    setResultado({
+    const res: Resultado = {
       crcl, egfr,
       estagio: classif.estagio,
       estagioLabel: classif.label,
       ajusteDose, drugInfo,
       cor: classif.cor,
       bgClass: classif.bgClass,
+    };
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "Ajuste de Dose Renal",
+      calculatorSlug: "ajuste-dose-renal",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `CrCl: ${crcl} – eGFR: ${egfr} – ${classif.estagio}`,
+      details: { CrCl: `${crcl} mL/min`, eGFR: `${egfr} mL/min/1.73m²`, Estágio: classif.estagio, Classificação: classif.label, ...(drugInfo ? { Medicamento: drugInfo.nome } : {}), ...(ajusteDose ? { Ajuste: ajusteDose.dose } : {}) },
     });
   };
 
@@ -332,6 +344,7 @@ export default function AjusteDoseRenal() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="ajuste-dose-renal" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico

@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -385,6 +387,7 @@ export default function RiscoCardiovascular() {
   const [modo, setModo] = useState<Modo>("pro");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => {
     setForm((p) => ({ ...p, [field]: value }));
@@ -432,7 +435,16 @@ export default function RiscoCardiovascular() {
       return;
     }
 
-    setResultado(classificar(risco, modo, form.histFamiliar === "1"));
+    const res = classificar(risco, modo, form.histFamiliar === "1");
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "Risco Cardiovascular",
+      calculatorSlug: "risco-cardiovascular",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `${res.risco}% – ${res.faixa} (${form.modelo.toUpperCase()})`,
+      details: { Modelo: form.modelo.toUpperCase(), Idade: form.idade, Sexo: form.sexo === "m" ? "Masculino" : "Feminino", PAS: `${form.pas} mmHg`, "Col. Total": `${form.colTotal} mg/dL`, HDL: `${form.hdl} mg/dL`, Risco: `${res.risco}%`, Classificação: res.faixa },
+    });
   };
 
   const limpar = () => {
@@ -466,6 +478,7 @@ export default function RiscoCardiovascular() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="risco-cardiovascular" />
             <span className="text-muted-foreground">Modo:</span>
             <button
               onClick={() => setModo("pro")}
@@ -488,6 +501,8 @@ export default function RiscoCardiovascular() {
           </div>
         </div>
       </div>
+
+      <HistoryConsentBanner />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ─── Left: Inputs ─── */}

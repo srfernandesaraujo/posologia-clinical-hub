@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -480,6 +482,7 @@ export default function DesmaCorticoide() {
   const [percentual, setPercentual] = useState("10");
   const [resultado, setResultado] = useState<ResultadoDesmame | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: any) => {
     setForm((p) => ({ ...p, [field]: value }));
@@ -532,7 +535,16 @@ export default function DesmaCorticoide() {
       semanas
     );
 
-    setResultado({ riscoSupressao: risco, tipoDesmame, esquema, recomendacoes, alertas });
+    const res = { riscoSupressao: risco, tipoDesmame, esquema, recomendacoes, alertas };
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "Desmame de Corticoides",
+      calculatorSlug: "desmame-corticoide",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `${form.corticoide} ${form.doseAtual}mg → Risco: ${risco} | ${esquema.length} etapas`,
+      details: { Corticoide: form.corticoide, "Dose atual": `${form.doseAtual} mg`, Risco: risco, Desmame: tipoDesmame, Etapas: esquema.length, "Duração": `${form.duracaoSemanas} semanas` },
+    });
   };
 
   const limpar = () => {
@@ -584,6 +596,7 @@ export default function DesmaCorticoide() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="desmame-corticoide" />
             <span className="text-muted-foreground">Modo:</span>
             <button
               onClick={() => setModo("pro")}

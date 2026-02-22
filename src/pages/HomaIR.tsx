@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Activity, User, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -123,6 +125,7 @@ export default function HomaIR() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
@@ -137,7 +140,16 @@ export default function HomaIR() {
     const ins = Number(form.insulina);
     if (glic <= 0 || ins <= 0) { setErro("Valores devem ser maiores que zero."); return; }
     const homa = calcHomaIR(glic, form.unidadeGlicemia, ins);
-    setResultado(classificar(Math.round(homa * 100) / 100, modo));
+    const res = classificar(Math.round(homa * 100) / 100, modo);
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "HOMA-IR",
+      calculatorSlug: "homa-ir",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `HOMA-IR: ${res.homaIR.toFixed(2)} – ${res.faixa}`,
+      details: { Glicemia: `${form.glicemia} ${form.unidadeGlicemia === "mgdl" ? "mg/dL" : "mmol/L"}`, Insulina: `${form.insulina} µU/mL`, "HOMA-IR": res.homaIR.toFixed(2), Classificação: res.faixa },
+    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -158,6 +170,7 @@ export default function HomaIR() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="homa-ir" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico

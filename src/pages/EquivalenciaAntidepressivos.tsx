@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Brain, User, Stethoscope, AlertTriangle, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -226,6 +228,7 @@ export default function EquivalenciaAntidepressivos() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
@@ -235,6 +238,16 @@ export default function EquivalenciaAntidepressivos() {
     const res = calcularConversao(form);
     if (!res) { setErro("Erro no cálculo. Verifique os dados."); return; }
     setResultado(res);
+    const orig = ANTIDEPRESSIVOS[form.origem];
+    const dest = ANTIDEPRESSIVOS[form.destino];
+    saveCalculation({
+      calculatorName: "Equivalência de Antidepressivos",
+      calculatorSlug: "equivalencia-antidepressivos",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `${orig?.nome} → ${dest?.nome}: ${res.doseDestinoSugerida}mg`,
+      details: { Origem: `${orig?.nome} ${form.doseOrigem}mg`, Destino: `${dest?.nome} ${res.doseDestinoSugerida}mg`, Estratégia: res.estrategia, "Faixa destino": res.faixaDestino },
+    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -258,6 +271,7 @@ export default function EquivalenciaAntidepressivos() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="equivalencia-antidepressivos" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Profissional

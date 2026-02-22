@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -469,6 +471,7 @@ export default function EquivalenciaOpioides() {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [simulacoes, setSimulacoes] = useState<Simulacao[]>([]);
   const [erro, setErro] = useState("");
+  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: any) => {
     setForm((p) => ({ ...p, [field]: value }));
@@ -523,7 +526,7 @@ export default function EquivalenciaOpioides() {
 
     const recomendacoes = gerarRecomendacoes(modo, dem, form.dorNeuropatica === "1", form.opioideDesejado);
 
-    setResultado({
+    const res = {
       demMg: dem,
       doseCalculada: doseCalc,
       doseComReducao: doseReduzida,
@@ -532,6 +535,15 @@ export default function EquivalenciaOpioides() {
       alertas,
       recomendacoes,
       orientacoesTitulacao: [],
+    };
+    setResultado(res);
+    saveCalculation({
+      calculatorName: "Equivalência de Opioides",
+      calculatorSlug: "equivalencia-opioides",
+      patientName: form.nomePaciente || undefined,
+      date: form.data,
+      summary: `${form.opioideAtual} → ${form.opioideDesejado}: ${doseReduzida} ${unidade}`,
+      details: { Origem: `${form.opioideAtual} ${form.doseDiaria}${isTransdermicoAtual ? "mcg/h" : "mg/dia"}`, Destino: `${form.opioideDesejado} ${doseReduzida} ${unidade}`, DEM: `${dem.toFixed(1)} mg`, "Redução segurança": `${reducao}%` },
     });
   };
 
@@ -590,6 +602,7 @@ export default function EquivalenciaOpioides() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <CalculationHistory calculatorSlug="equivalencia-opioides" />
             <span className="text-muted-foreground">Modo:</span>
             <button
               onClick={() => setModo("pro")}
