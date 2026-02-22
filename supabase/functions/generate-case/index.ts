@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,13 +75,76 @@ serve(async (req) => {
   }
 
   try {
-    const { simulator_slug } = await req.json();
+    const { simulator_slug, tool_id } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const prompt = SIMULATOR_PROMPTS[simulator_slug];
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: `Simulador '${simulator_slug}' não encontrado` }), {
+    let prompt: string;
+
+    if (tool_id) {
+      // ─── USER-CREATED SIMULATOR: fetch tool and build prompt from its structure ───
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: tool, error: toolError } = await supabase
+        .from("tools")
+        .select("name, description, formula")
+        .eq("id", tool_id)
+        .single();
+
+      if (toolError || !tool) {
+        return new Response(JSON.stringify({ error: "Ferramenta não encontrada" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const formula = tool.formula as any;
+      if (!formula || formula.type !== "simulator") {
+        return new Response(JSON.stringify({ error: "Esta ferramenta não é um simulador" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Build a prompt that describes the simulator's structure so the AI generates a new case
+      const stepsDescription = (formula.steps || []).map((step: any, i: number) => {
+        const panelsDesc = (step.panels || []).map((p: any) => {
+          let desc = `  - Painel "${p.title}" (tipo: ${p.type})`;
+          if (p.type === "checklist" || p.type === "radio") {
+            desc += ` com ${(p.options || []).length} opções`;
+          }
+          return desc;
+        }).join("\n");
+        return `Step ${i + 1}: "${step.title}"\n${panelsDesc}`;
+      }).join("\n\n");
+
+      prompt = `Gere um caso clínico NOVO e DIFERENTE para o seguinte simulador:
+Nome: ${tool.name}
+Descrição: ${tool.description || ""}
+
+ESTRUTURA DO SIMULADOR (mantenha EXATAMENTE esta estrutura de steps e panels):
+${stepsDescription}
+
+CASO EXEMPLO (use como referência de formato, mas crie conteúdo COMPLETAMENTE DIFERENTE):
+${JSON.stringify(formula, null, 2)}
+
+INSTRUÇÕES:
+- Mantenha a MESMA estrutura de steps e panels (mesmos títulos, mesmos tipos)
+- Mude COMPLETAMENTE: paciente diferente, cenário clínico diferente, opções diferentes (quando faz sentido clínico)
+- Para painéis "checklist" e "radio": mantenha opções clinicamente relevantes para o novo cenário e atualize correctAnswers
+- Para painéis "info": atualize o conteúdo com os dados do novo paciente
+- Para painéis "text": atualize correctText para o novo cenário
+- Atualize o feedback de cada step para o novo cenário
+- Mantenha patient_summary atualizado
+- O caso deve ter title, difficulty, patient_summary e steps
+
+Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma estrutura).`;
+
+    } else if (simulator_slug && SIMULATOR_PROMPTS[simulator_slug]) {
+      // ─── NATIVE SIMULATOR ───
+      prompt = SIMULATOR_PROMPTS[simulator_slug];
+    } else {
+      return new Response(JSON.stringify({ error: `Simulador '${simulator_slug || tool_id}' não encontrado` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -100,7 +164,7 @@ serve(async (req) => {
         temperature: 1.2,
         messages: [
           { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
-          { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Use um cenário clínico incomum ou uma combinação única de comorbidades. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação. O JSON deve ter os campos title, difficulty e todos os dados clínicos no mesmo nível.` },
+          { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
         ],
       }),
     });
@@ -125,7 +189,6 @@ serve(async (req) => {
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error("IA não retornou conteúdo");
 
-    // Clean markdown code blocks if present
     let jsonStr = content.trim();
     if (jsonStr.startsWith("```")) {
       jsonStr = jsonStr.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
