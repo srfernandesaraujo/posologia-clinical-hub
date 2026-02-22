@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const FREE_DAILY_CALCULATOR_LIMIT = 3;
 const USAGE_KEY = "posologia_calc_usage";
@@ -37,6 +38,24 @@ export function useFeatureGating() {
   const { user } = useAuth();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>();
+  const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setHasUnlimitedAccess(false);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("has_unlimited_access")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        setHasUnlimitedAccess(data?.has_unlimited_access === true);
+      });
+  }, [user]);
+
+  const isFullAccess = isPremium || hasUnlimitedAccess;
 
   const showUpgrade = useCallback((feature?: string) => {
     setUpgradeFeature(feature);
@@ -45,15 +64,15 @@ export function useFeatureGating() {
 
   /** Check if a calculator can be used. Returns true if allowed. */
   const canUseCalculator = useCallback((): boolean => {
-    if (!user) return true; // unauthenticated users can browse
-    if (isPremium) return true;
+    if (!user) return true;
+    if (isFullAccess) return true;
     const usage = getUsage();
     return usage.count < FREE_DAILY_CALCULATOR_LIMIT;
-  }, [isPremium, user]);
+  }, [isFullAccess, user]);
 
   /** Record a calculator use. Returns false + shows modal if limit reached. */
   const recordCalculatorUse = useCallback((): boolean => {
-    if (!user || isPremium) return true;
+    if (!user || isFullAccess) return true;
     const usage = getUsage();
     if (usage.count >= FREE_DAILY_CALCULATOR_LIMIT) {
       showUpgrade(`Você atingiu o limite de ${FREE_DAILY_CALCULATOR_LIMIT} calculadoras por dia`);
@@ -61,22 +80,22 @@ export function useFeatureGating() {
     }
     incrementUsage();
     return true;
-  }, [isPremium, user, showUpgrade]);
+  }, [isFullAccess, user, showUpgrade]);
 
   const remainingCalculators = (): number => {
-    if (isPremium) return Infinity;
+    if (isFullAccess) return Infinity;
     const usage = getUsage();
     return Math.max(0, FREE_DAILY_CALCULATOR_LIMIT - usage.count);
   };
 
   /** Check if simulators are available */
-  const canUseSimulator = isPremium;
+  const canUseSimulator = isFullAccess;
 
   /** Check if virtual rooms are available */
-  const canUseVirtualRooms = isPremium;
+  const canUseVirtualRooms = isFullAccess;
 
   return {
-    isPremium,
+    isPremium: isFullAccess,
     loading: subLoading,
     upgradeOpen,
     setUpgradeOpen,

@@ -34,6 +34,7 @@ import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import SalasVirtuais from "./pages/SalasVirtuais";
 import SalaVirtualAluno from "./pages/SalaVirtualAluno";
+import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/contato" element={<Contato />} />
+              <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
