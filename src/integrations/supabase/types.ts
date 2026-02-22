@@ -224,12 +224,14 @@ export type Database = {
         Row: {
           category_id: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           fields: Json | null
           formula: Json | null
           icon: string | null
           id: string
           is_active: boolean
+          is_marketplace: boolean
           name: string
           short_description: string | null
           slug: string
@@ -239,12 +241,14 @@ export type Database = {
         Insert: {
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           fields?: Json | null
           formula?: Json | null
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_marketplace?: boolean
           name: string
           short_description?: string | null
           slug: string
@@ -254,12 +258,14 @@ export type Database = {
         Update: {
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           fields?: Json | null
           formula?: Json | null
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_marketplace?: boolean
           name?: string
           short_description?: string | null
           slug?: string

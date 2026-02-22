@@ -1,13 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CreateToolDialog } from "@/components/CreateToolDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const NATIVE_SIMULATORS = [
   { slug: "prm", name: "Simulador de PRM", description: "Problemas Relacionados a Medicamentos – Avalie prescrições e identifique erros.", icon: Pill, category: "Farmácia Clínica" },
@@ -19,9 +23,13 @@ const NATIVE_SIMULATORS = [
 
 export default function Simuladores() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const { isPremium, canUseSimulator, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
+  const [createOpen, setCreateOpen] = useState(false);
 
+  // System tools
   const { data: tools = [], isLoading } = useQuery({
     queryKey: ["tools", "simulador"],
     queryFn: async () => {
@@ -30,7 +38,25 @@ export default function Simuladores() {
         .select("*, categories(name, slug)")
         .eq("type", "simulador")
         .eq("is_active", true)
+        .is("created_by", null)
         .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // User's own tools
+  const { data: userTools = [] } = useQuery({
+    queryKey: ["user-tools", "simulador", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tools")
+        .select("*, categories(name, slug)")
+        .eq("type", "simulador")
+        .eq("is_active", true)
+        .eq("created_by", user!.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -44,27 +70,60 @@ export default function Simuladores() {
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const filteredUser = userTools.filter((t: any) =>
+    t.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleCreateClick = () => {
+    if (!isPremium) {
+      showUpgrade("Criação de simuladores personalizados");
+      return;
+    }
+    setCreateOpen(true);
+  };
+
+  const toggleMarketplace = async (toolId: string, current: boolean) => {
+    const { error } = await supabase
+      .from("tools")
+      .update({ is_marketplace: !current })
+      .eq("id", toolId);
+    if (error) {
+      toast.error("Erro ao atualizar");
+    } else {
+      toast.success(!current ? "Publicado no Marketplace!" : "Removido do Marketplace");
+      queryClient.invalidateQueries({ queryKey: ["user-tools"] });
+    }
+  };
+
   return (
     <div>
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
+      <CreateToolDialog open={createOpen} onOpenChange={setCreateOpen} type="simulador" />
+
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t("simulators.title")}</h1>
             <p className="text-muted-foreground">{t("simulators.subtitle")}</p>
           </div>
-          {!canUseSimulator && (
-            <Badge variant="outline" className="gap-1 text-sm">
-              <Lock className="h-3.5 w-3.5" />
-              Premium
-            </Badge>
-          )}
-          {isPremium && (
-            <Badge className="gap-1 bg-primary/10 text-primary border-primary/20">
-              <Crown className="h-3.5 w-3.5" />
-              Premium – Desbloqueado
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {!canUseSimulator && (
+              <Badge variant="outline" className="gap-1 text-sm">
+                <Lock className="h-3.5 w-3.5" />
+                Premium
+              </Badge>
+            )}
+            {isPremium && (
+              <Badge className="gap-1 bg-primary/10 text-primary border-primary/20">
+                <Crown className="h-3.5 w-3.5" />
+                Premium – Desbloqueado
+              </Badge>
+            )}
+            <Button onClick={handleCreateClick} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Criar Simulador
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -77,6 +136,46 @@ export default function Simuladores() {
           className="pl-10"
         />
       </div>
+
+      {/* User's own simulators */}
+      {filteredUser.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Meus Simuladores</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredUser.map((tool: any) => (
+              <div
+                key={tool.id}
+                className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20 relative"
+              >
+                <Link to={`/simuladores/${tool.slug}`} className="block">
+                  <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                    <FlaskConical className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-1">{tool.name}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
+                  {tool.categories && (
+                    <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
+                  )}
+                </Link>
+                <button
+                  onClick={() => toggleMarketplace(tool.id, tool.is_marketplace)}
+                  className={`absolute top-3 right-3 p-1.5 rounded-lg transition-colors ${
+                    tool.is_marketplace
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={tool.is_marketplace ? "Remover do Marketplace" : "Publicar no Marketplace"}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Section header */}
+      {filteredUser.length > 0 && <h2 className="text-lg font-semibold mb-4">Simuladores do Sistema</h2>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Native simulators */}
@@ -108,8 +207,7 @@ export default function Simuladores() {
           );
         })}
 
-
-        {/* Dynamic tools from DB */}
+        {/* Dynamic system tools */}
         {filteredDynamic.map((tool: any) => (
           <Link
             key={tool.id}
@@ -120,19 +218,15 @@ export default function Simuladores() {
               <FlaskConical className="h-5 w-5 text-accent" />
             </div>
             <h3 className="font-semibold mb-1">{tool.name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {tool.short_description || tool.description}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
             {tool.categories && (
-              <span className="inline-block mt-3 text-xs font-medium text-accent bg-accent/10 rounded-full px-2.5 py-0.5">
-                {tool.categories.name}
-              </span>
+              <span className="inline-block mt-3 text-xs font-medium text-accent bg-accent/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
             )}
           </Link>
         ))}
       </div>
 
-      {!isLoading && filteredNative.length === 0 && filteredDynamic.length === 0 && (
+      {!isLoading && filteredNative.length === 0 && filteredDynamic.length === 0 && filteredUser.length === 0 && (
         <p className="text-muted-foreground text-center py-12">
           {search ? t("simulators.noResults") : t("simulators.empty")}
         </p>
