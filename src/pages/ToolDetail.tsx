@@ -111,9 +111,9 @@ function gerarPDF(toolName: string, values: Record<string, string>, fields: Tool
 /* ═══════════════════════════════════════════════════════════════
    GENERIC STEP-BASED SIMULATOR RENDERER
    ═══════════════════════════════════════════════════════════════ */
-function SimulatorRenderer({ formula, toolName, toolId, toolSlug, authorName, hasCreator }: {
+function SimulatorRenderer({ formula, toolName, toolId, toolSlug, authorName, hasCreator, isOwner }: {
   formula: ToolFormula; toolName: string; toolId: string; toolSlug: string;
-  authorName: string; hasCreator: boolean;
+  authorName: string; hasCreator: boolean; isOwner: boolean;
 }) {
   const queryClient = useQueryClient();
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
@@ -216,12 +216,14 @@ function SimulatorRenderer({ formula, toolName, toolId, toolSlug, authorName, ha
               </CardContent>
             </Card>
           ))}
-          <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
-            <div className="text-center p-6">
-              {isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
-              <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
-            </div>
-          </Card>
+          {isOwner && (
+            <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
+              <div className="text-center p-6">
+                {isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
+                <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
+              </div>
+            </Card>
+          )}
         </div>
         <p className="text-xs text-muted-foreground text-center mt-6">
           Autor: {authorName}{!hasCreator && " • Posologia Produções"}
@@ -703,7 +705,7 @@ export default function ToolDetail() {
 
       {/* ─── SIMULATOR ─── */}
       {isSimulatorType && formula ? (
-        <SimulatorRenderer formula={formula} toolName={tool.name} toolId={tool.id} toolSlug={tool.slug} authorName={authorName} hasCreator={!!tool.created_by} />
+        <SimulatorRenderer formula={formula} toolName={tool.name} toolId={tool.id} toolSlug={tool.slug} authorName={authorName} hasCreator={!!tool.created_by} isOwner={!!user && tool.created_by === user.id} />
       ) : fields.length > 0 ? (
         /* ─── CALCULATOR ─── */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
