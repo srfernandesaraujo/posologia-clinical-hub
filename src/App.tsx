@@ -40,6 +40,7 @@ import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
+import EmbedTool from "./pages/EmbedTool";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +105,9 @@ const App = () => (
             <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
               <Route path="/admin" element={<Admin />} />
             </Route>
+
+            {/* Public embed route */}
+            <Route path="/embed/:token" element={<EmbedTool />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
