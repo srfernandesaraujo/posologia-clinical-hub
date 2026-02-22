@@ -109,6 +109,15 @@ export default function Admin() {
     },
   });
 
+  const { data: invitedUsers = [] } = useQuery({
+    queryKey: ["admin-invited-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("list-invited-users");
+      if (error) throw error;
+      return data?.users || [];
+    },
+  });
+
   const saveTool = useMutation({
     mutationFn: async (tool: ToolForm & { id?: string }) => {
       const payload = {
@@ -630,6 +639,7 @@ export default function Admin() {
                   toast.success(data.message || "Convite enviado com sucesso!");
                   setInviteEmail("");
                   queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+                  queryClient.invalidateQueries({ queryKey: ["admin-invited-users"] });
                 } catch (err: any) {
                   toast.error(err.message || "Erro ao enviar convite");
                 } finally {
@@ -655,6 +665,32 @@ export default function Admin() {
               </Button>
             </form>
           </div>
+
+          {/* Invited Users List */}
+          {invitedUsers.length > 0 && (
+            <div className="rounded-2xl border border-border bg-card p-6 mt-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-muted-foreground" />
+                Usuários Convidados ({invitedUsers.length})
+              </h3>
+              <div className="space-y-2">
+                {invitedUsers.map((u: any) => (
+                  <div key={u.user_id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                    <div className="flex items-center gap-3">
+                      <span className={`h-3 w-3 rounded-full shrink-0 ${u.has_logged_in ? "bg-emerald-500" : "bg-destructive"}`} />
+                      <div>
+                        <p className="font-medium text-sm">{u.email}</p>
+                        {u.full_name && <p className="text-xs text-muted-foreground">{u.full_name}</p>}
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${u.has_logged_in ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"}`}>
+                      {u.has_logged_in ? "Conta ativa" : "Pendente"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Users Tab */}
