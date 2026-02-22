@@ -17,129 +17,112 @@ serve(async (req) => {
 
     const isEdit = mode === "edit" && existingTool;
     const isSimulator = type === "simulador";
-    const categories = ["Cardiologia", "Emergência", "Endocrinologia", "Nefrologia", "Neurologia", "Pneumologia", "Infectologia", "Pediatria", "Psiquiatria", "Reumatologia"];
+    const categories = ["Cardiologia", "Emergência", "Endocrinologia", "Nefrologia", "Neurologia", "Pneumologia", "Infectologia", "Pediatria", "Psiquiatria", "Reumatologia", "Farmacologia Clínica", "Atenção Farmacêutica", "Stewardship de Antimicrobianos", "Farmacocinética Clínica", "Oncologia"];
 
     let systemPrompt: string;
     let toolName: string;
     let toolParams: any;
 
     if (isSimulator) {
-      // ─── SIMULATOR PROMPT ───
-      systemPrompt = `Você é um especialista em farmácia clínica e criação de simuladores clínicos de alta fidelidade.
+      systemPrompt = `Você é um especialista em farmácia clínica e criação de simuladores clínicos interativos de alta fidelidade.
 ${isEdit
   ? `O usuário quer CORRIGIR/EDITAR um simulador existente. Dados atuais:
 Nome: ${existingTool.name}
-Descrição: ${existingTool.description || "Sem descrição"}
-Campos: ${JSON.stringify(existingTool.fields)}
-Fórmula (dados do caso): ${JSON.stringify(existingTool.formula)}
+Descrição: ${existingTool.description || ""}
+Dados: ${JSON.stringify(existingTool.formula)}
 
 PROBLEMA RELATADO: "${prompt}"
 
-Corrija o simulador mantendo a MESMA ESTRUTURA de caso clínico interativo.`
+Corrija o simulador mantendo a mesma estrutura de steps e panels.
+Retorne o simulador COMPLETO corrigido.`
   : `O usuário quer criar um simulador clínico interativo.`}
 
-VOCÊ DEVE GERAR UM CASO CLÍNICO COMPLETO no estilo PRM (Problemas Relacionados a Medicamentos).
+TIPOS DE SIMULADORES QUE VOCÊ PODE CRIAR (exemplos):
+1. **PRM (Problemas Relacionados a Medicamentos)**: Paciente + prescrição médica → aluno avalia cada medicamento buscando PRMs de segurança, efetividade, indicação ou adesão.
+2. **Stewardship de Antimicrobianos**: Caso infeccioso com timeline (Dia 1 admissão → Dia 3 resultados de cultura → Relatório). Aluno escolhe antibióticos empíricos, solicita culturas, depois ajusta terapia definitiva.
+3. **TDM (Monitorização Terapêutica)**: Paciente com dados farmacocinéticos (nível de vale, creatinina, ClCr). Aluno analisa se o nível está na janela terapêutica e propõe ajuste de dose/intervalo.
+4. **Acompanhamento Farmacoterapêutico**: Follow-up longitudinal (Mês 0 → Mês 3 → Mês 6). Exames laboratoriais com tendências, avaliação clínica, modificação de prescrição.
+5. **Qualquer outro tipo** que faça sentido clínicamente baseado na solicitação do usuário.
 
-ESTRUTURA OBRIGATÓRIA DO SIMULADOR:
-O simulador deve ter um caso clínico com:
-1. Um PACIENTE com dados demográficos realistas (nome brasileiro, idade, peso, altura, sexo)
-2. Um HISTÓRICO clínico (doenças, queixa principal, alergias, sinais vitais, clearance de creatinina se relevante)
-3. Uma PRESCRIÇÃO MÉDICA com 3-5 medicamentos (droga, dose, via, frequência)
-4. RESPOSTAS CORRETAS para cada medicamento: se tem PRM, tipo do PRM (Seguranca, Efetividade, Indicacao, Adesao), e justificativa clínica detalhada
+Escolha o tipo mais adequado baseado na solicitação do usuário e crie o simulador.
 
-REGRAS CRÍTICAS:
-- Pelo menos 1-2 medicamentos DEVEM ter PRMs (problemas reais e clinicamente relevantes)
-- Os PRMs devem ser clinicamente precisos e educativos
-- A justificativa deve explicar o problema E sugerir a conduta correta
-- Doses devem ser realistas para o perfil do paciente
-- Se paciente pediátrico, calcule doses por kg
-- Se paciente idoso ou com DRC, considere ajustes renais
-- Sinais vitais devem ser coerentes com o quadro clínico
-- A dificuldade deve refletir a complexidade real do caso
+ESTRUTURA OBRIGATÓRIA - STEPS E PANELS:
+O simulador é organizado em STEPS (etapas sequenciais). Cada step tem PANELS (painéis lado a lado, máximo 3).
 
-O slug deve ser em português, sem acentos, separado por hífens.
-short_description: máximo 100 caracteres.
-description: NO MÁXIMO 2 frases.
-category_name: UMA das categorias: ${categories.join(", ")}.`;
+Cada PANEL tem:
+- title: Título do painel
+- type: "info" (apenas exibição), "checklist" (múltipla seleção), "radio" (seleção única), "text" (resposta escrita)
+- content: Texto do painel (para type "info"). Use markdown simples: **negrito**, quebras de linha.
+- options: Array de strings com as opções (para checklist/radio)
+- correctAnswers: Array com as respostas corretas (para checklist/radio)
+- correctText: Texto da resposta correta (para type "text", usado na comparação)
+
+Cada STEP tem:
+- title: Nome da etapa (ex: "Dia 1: Admissão", "Mês 3", "Análise da Prescrição")
+- feedback: Texto detalhado de feedback mostrado APÓS o aluno completar a etapa. Deve ser educativo, explicando o raciocínio clínico correto.
+- panels: Array de 2-3 painéis
+
+REGRAS CLÍNICAS:
+- Dados do paciente devem ser realistas (nomes brasileiros, valores laboratoriais plausíveis)
+- Inclua sinais vitais quando relevante (PA, FC, Temp, SpO2)
+- Para PRM: pelo menos 1-2 medicamentos com problemas reais
+- Para Stewardship: inclua diagnóstico infeccioso, antibióticos empíricos E resultados de cultura/antibiograma
+- Para TDM: inclua parâmetros farmacocinéticos (nível sérico, Vd, meia-vida, ClCr)
+- Para Acompanhamento: inclua exames com valores e tendências, e condutas farmacêuticas
+
+REGRAS GERAIS:
+- slug: português sem acentos, separado por hífens
+- short_description: máximo 100 caracteres
+- description: 2 frases
+- category_name: UMA das categorias existentes (${categories.join(", ")}). Se nenhuma se encaixa, escolha a mais próxima.
+- difficulty: Fácil, Médio ou Difícil
+- O simulador DEVE ter no mínimo 2 steps e no máximo 5 steps`;
 
       toolName = "create_clinical_simulator";
       toolParams = {
         type: "object" as const,
         properties: {
-          name: { type: "string" as const, description: "Nome do simulador em português" },
-          slug: { type: "string" as const, description: "Slug URL-friendly sem acentos" },
-          short_description: { type: "string" as const, description: "Descrição curta até 100 chars" },
-          description: { type: "string" as const, description: "2 frases: propósito e usos" },
+          name: { type: "string" as const },
+          slug: { type: "string" as const },
+          short_description: { type: "string" as const },
+          description: { type: "string" as const },
           category_name: { type: "string" as const, enum: categories },
           difficulty: { type: "string" as const, enum: ["Fácil", "Médio", "Difícil"] },
-          patient: {
-            type: "object" as const,
-            properties: {
-              name: { type: "string" as const },
-              age: { type: "number" as const },
-              weight: { type: "number" as const },
-              height: { type: "number" as const },
-              sex: { type: "string" as const, enum: ["Masculino", "Feminino"] },
-            },
-            required: ["name", "age", "weight", "height", "sex"] as const,
-            additionalProperties: false as const,
-          },
-          history: {
-            type: "object" as const,
-            properties: {
-              diseases: { type: "array" as const, items: { type: "string" as const } },
-              mainComplaint: { type: "string" as const },
-              allergies: { type: "array" as const, items: { type: "string" as const } },
-              creatinineClearance: { type: "number" as const, description: "ClCr em mL/min, null se não relevante" },
-              vitalSigns: {
-                type: "object" as const,
-                properties: {
-                  bp: { type: "string" as const, description: "Pressão arterial ex: 140/85 mmHg" },
-                  hr: { type: "string" as const, description: "Frequência cardíaca ex: 76 bpm" },
-                  temp: { type: "string" as const, description: "Temperatura ex: 36.2°C" },
-                  spo2: { type: "string" as const, description: "Saturação ex: 96%" },
+          patient_summary: { type: "string" as const, description: "Resumo do paciente (ex: 'Maria, 72 anos, DM2 + HAS')" },
+          steps: {
+            type: "array" as const,
+            items: {
+              type: "object" as const,
+              properties: {
+                title: { type: "string" as const },
+                feedback: { type: "string" as const, description: "Feedback educativo detalhado mostrado após completar a etapa" },
+                panels: {
+                  type: "array" as const,
+                  items: {
+                    type: "object" as const,
+                    properties: {
+                      title: { type: "string" as const },
+                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text"] },
+                      content: { type: "string" as const, description: "Conteúdo textual. Use **negrito** e \\n para quebras de linha." },
+                      options: { type: "array" as const, items: { type: "string" as const }, description: "Opções para checklist/radio" },
+                      correctAnswers: { type: "array" as const, items: { type: "string" as const }, description: "Respostas corretas para checklist/radio" },
+                      correctText: { type: "string" as const, description: "Resposta esperada para type text" },
+                    },
+                    required: ["title", "type"] as const,
+                    additionalProperties: false as const,
+                  },
                 },
-                additionalProperties: false as const,
               },
-            },
-            required: ["diseases", "mainComplaint", "allergies"] as const,
-            additionalProperties: false as const,
-          },
-          prescription: {
-            type: "array" as const,
-            items: {
-              type: "object" as const,
-              properties: {
-                drug: { type: "string" as const },
-                dose: { type: "string" as const },
-                route: { type: "string" as const, description: "Via: VO, IV, IM, SC, etc." },
-                frequency: { type: "string" as const },
-              },
-              required: ["drug", "dose", "route", "frequency"] as const,
-              additionalProperties: false as const,
-            },
-          },
-          answers: {
-            type: "array" as const,
-            description: "Uma resposta para cada medicamento da prescrição, na mesma ordem",
-            items: {
-              type: "object" as const,
-              properties: {
-                drugIndex: { type: "number" as const },
-                hasPRM: { type: "boolean" as const },
-                type: { type: "string" as const, enum: ["Seguranca", "Efetividade", "Indicacao", "Adesao"], description: "Tipo do PRM, null se não tem PRM" },
-                justification: { type: "string" as const, description: "Justificativa clínica detalhada. Vazio se não tem PRM." },
-              },
-              required: ["drugIndex", "hasPRM", "justification"] as const,
+              required: ["title", "feedback", "panels"] as const,
               additionalProperties: false as const,
             },
           },
         },
-        required: ["name", "slug", "short_description", "description", "category_name", "difficulty", "patient", "history", "prescription", "answers"] as const,
+        required: ["name", "slug", "short_description", "description", "category_name", "difficulty", "patient_summary", "steps"] as const,
         additionalProperties: false as const,
       };
     } else {
-      // ─── CALCULATOR PROMPT (existing) ───
+      // ─── CALCULATOR PROMPT ───
       systemPrompt = `Você é um especialista em medicina clínica e criação de ferramentas médicas.
 ${isEdit
   ? `O usuário quer CORRIGIR/EDITAR uma ferramenta existente que NÃO ESTÁ FUNCIONANDO CORRETAMENTE. Aqui estão os dados atuais:
@@ -151,35 +134,30 @@ Fórmula atual: ${JSON.stringify(existingTool.formula)}
 O PROBLEMA RELATADO PELO USUÁRIO É: "${prompt}"
 
 INSTRUÇÕES CRÍTICAS PARA CORREÇÃO:
-- Analise cuidadosamente o problema descrito
-- Corrija a fórmula (expression) para que o cálculo funcione corretamente com JavaScript eval
+- Corrija a fórmula (expression) para que o cálculo funcione com JavaScript eval
 - A expression DEVE ser uma expressão JavaScript válida usando os nomes dos campos (name) como variáveis
 - Para scores baseados em soma de critérios booleanos (switches), use: campo1 + campo2 + campo3
 - Para cálculos com fórmulas matemáticas, use Math.round, Math.pow, etc.
-- Verifique que os ranges na interpretation correspondam aos resultados possíveis da fórmula
-- Para campos select, o value de cada option DEVE ser numérico (ex: "0", "1", "2") para funcionar no cálculo
-- Retorne a ferramenta COMPLETA atualizada (não só as mudanças)`
+- Verifique que os ranges na interpretation correspondam aos resultados possíveis
+- Para campos select, o value DEVE ser numérico (ex: "0", "1", "2")
+- Retorne a ferramenta COMPLETA atualizada`
   : `O usuário vai pedir para criar uma calculadora clínica.`}
 
-Você DEVE retornar APENAS o resultado da tool call, sem texto adicional.
+REGRAS PARA ESTRUTURA DOS CAMPOS:
+- Organize em SEÇÕES (sections). Cada seção tem "title" e "fields".
+- Campos booleanos: type "switch". Numéricos: "number" com unit. Seleção: "select" com options.
+- Cada field tem: name (snake_case), label (português), type, unit, options, required, defaultValue.
 
-REGRAS IMPORTANTES PARA ESTRUTURA DOS CAMPOS:
-- Organize os campos em SEÇÕES (sections). Cada seção tem um "title" e um array de "fields".
-- Campos booleanos (sim/não) DEVEM usar type "switch" (NÃO checkbox).
-- Campos numéricos usam type "number" com unit.
-- Campos de seleção usam type "select" com options.
-- Cada field tem: name (snake_case), label (português), type, unit (opcional), options (para select), required (boolean), defaultValue (opcional).
-
-REGRAS PARA FÓRMULA E RESULTADOS:
-- expression: fórmula JavaScript avaliável usando os nomes dos campos
-- interpretation: array de faixas com range, label, description, color (hex ou hsl), e recommendations
+REGRAS PARA FÓRMULA:
+- expression: fórmula JavaScript avaliável
+- interpretation: array de faixas com range, label, description, color, recommendations
 
 REGRAS GERAIS:
-- O slug deve ser em português, sem acentos, separado por hífens
-- short_description: máximo 100 caracteres
-- description: NO MÁXIMO 2 frases
+- slug: português sem acentos, hífens
+- short_description: máximo 100 chars
+- description: 2 frases
 - category_name: UMA das categorias: ${categories.join(", ")}
-- author: sempre "Sérgio Araújo"`;
+- author: "Sérgio Araújo"`;
 
       toolName = "create_clinical_tool";
       toolParams = {
@@ -243,10 +221,7 @@ REGRAS GERAIS:
                     label: { type: "string" as const },
                     description: { type: "string" as const },
                     color: { type: "string" as const },
-                    recommendations: {
-                      type: "array" as const,
-                      items: { type: "string" as const },
-                    },
+                    recommendations: { type: "array" as const, items: { type: "string" as const } },
                   },
                   required: ["range", "label", "description", "color", "recommendations"] as const,
                   additionalProperties: false as const,
@@ -280,7 +255,7 @@ REGRAS GERAIS:
             function: {
               name: toolName,
               description: isSimulator
-                ? "Cria ou edita um simulador clínico interativo com caso clínico completo"
+                ? "Cria ou edita um simulador clínico interativo com steps e panels"
                 : "Cria ou edita uma calculadora clínica completa",
               parameters: toolParams,
             },
@@ -320,7 +295,6 @@ REGRAS GERAIS:
     const toolData = JSON.parse(toolCall.function.arguments);
 
     if (isSimulator) {
-      // For simulators, store the case data in formula and leave fields empty
       const result = {
         name: toolData.name,
         slug: toolData.slug,
@@ -328,20 +302,17 @@ REGRAS GERAIS:
         description: toolData.description,
         category_name: toolData.category_name,
         difficulty: toolData.difficulty || "Médio",
-        fields: [], // Simulators don't use calculator fields
+        fields: [],
         formula: {
           type: "simulator",
-          patient: toolData.patient,
-          history: toolData.history,
-          prescription: toolData.prescription,
-          answers: toolData.answers,
+          patient_summary: toolData.patient_summary,
+          steps: toolData.steps,
         },
       };
       return new Response(JSON.stringify({ tool: result }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Calculator: flatten sections into fields
       const flatFields: any[] = [];
       if (toolData.sections) {
         for (const section of toolData.sections) {
@@ -353,10 +324,7 @@ REGRAS GERAIS:
       const result = {
         ...toolData,
         fields: flatFields,
-        formula: {
-          ...toolData.formula,
-          sections: toolData.sections,
-        },
+        formula: { ...toolData.formula, sections: toolData.sections },
       };
       return new Response(JSON.stringify({ tool: result }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
