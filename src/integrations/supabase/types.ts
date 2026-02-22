@@ -220,6 +220,36 @@ export type Database = {
         }
         Relationships: []
       }
+      student_points: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          simulator_slug: string | null
+          source: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points?: number
+          simulator_slug?: string | null
+          source: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          simulator_slug?: string | null
+          source?: string
+          source_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tool_reviews: {
         Row: {
           comment: string | null
@@ -349,6 +379,27 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -416,7 +467,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          active_days: number | null
+          avatar_url: string | null
+          badge_count: number | null
+          full_name: string | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
