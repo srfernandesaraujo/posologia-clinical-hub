@@ -39,10 +39,12 @@ export function useFeatureGating() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>();
   const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) {
       setHasUnlimitedAccess(false);
+      setIsAdmin(false);
       return;
     }
     supabase
@@ -53,9 +55,18 @@ export function useFeatureGating() {
       .then(({ data }) => {
         setHasUnlimitedAccess(data?.has_unlimited_access === true);
       });
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsAdmin(!!data);
+      });
   }, [user]);
 
-  const isFullAccess = isPremium || hasUnlimitedAccess;
+  const isFullAccess = isPremium || hasUnlimitedAccess || isAdmin;
 
   const showUpgrade = useCallback((feature?: string) => {
     setUpgradeFeature(feature);
