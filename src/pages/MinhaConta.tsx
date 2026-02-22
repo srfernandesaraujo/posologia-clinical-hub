@@ -18,6 +18,7 @@ export default function MinhaConta() {
   const [loading, setLoading] = useState(false);
   const { isPremium, subscriptionEnd, loading: subLoading, openCustomerPortal } = useSubscription();
   const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -28,6 +29,15 @@ export default function MinhaConta() {
         .single()
         .then(({ data }) => {
           setHasUnlimitedAccess(data?.has_unlimited_access === true);
+        });
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle()
+        .then(({ data }) => {
+          setIsAdmin(!!data);
         });
     }
   }, [user]);
@@ -97,7 +107,7 @@ export default function MinhaConta() {
             <Loader2 className="h-4 w-4 animate-spin" />
             Verificando...
           </div>
-        ) : (isPremium || hasUnlimitedAccess) ? (
+        ) : (isPremium || hasUnlimitedAccess || isAdmin) ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
