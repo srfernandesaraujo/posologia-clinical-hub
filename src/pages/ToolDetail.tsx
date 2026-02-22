@@ -1,15 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Calculator, FileText, Stethoscope, User } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useCallback, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 
 /* ─── Types ─── */
@@ -38,7 +41,7 @@ interface ToolFormula {
   sections?: { title: string; fields: any[] }[];
 }
 
-type Modo = "pro" | "paciente";
+
 
 /* ─── Parsers ─── */
 function parseFields(raw: Json | null): ToolField[] {
@@ -142,10 +145,13 @@ export default function ToolDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [values, setValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Interpretation | null>(null);
   const [calculated, setCalculated] = useState(false);
-  const [modo, setModo] = useState<Modo>("pro");
+  const [fixDialogOpen, setFixDialogOpen] = useState(false);
+  const [fixDescription, setFixDescription] = useState("");
+  const [fixLoading, setFixLoading] = useState(false);
 
   const { data: tool, isLoading } = useQuery({
     queryKey: ["tool", slug],
@@ -163,6 +169,78 @@ export default function ToolDetail() {
     },
     enabled: !!slug,
   });
+
+  const isOwner = tool?.created_by && user?.id === tool.created_by;
+
+  // Fetch author name for user-created tools
+  const { data: authorProfile } = useQuery({
+    queryKey: ["author-profile", tool?.created_by],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", tool!.created_by!)
+        .single();
+      return data;
+    },
+    enabled: !!tool?.created_by,
+  });
+
+  const authorName = tool?.created_by ? (authorProfile?.full_name || "Usuário") : "Sérgio Araújo";
+
+  const handleDelete = async () => {
+    if (!tool || !isOwner) return;
+    if (!confirm("Tem certeza que deseja excluir esta ferramenta?")) return;
+    const { error } = await supabase.from("tools").delete().eq("id", tool.id);
+    if (error) {
+      toast.error("Erro ao excluir ferramenta");
+    } else {
+      toast.success("Ferramenta excluída com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["user-tools"] });
+      navigate(tool.type === "calculadora" ? "/calculadoras" : "/simuladores");
+    }
+  };
+
+  const handleFixWithAI = async () => {
+    if (!fixDescription.trim() || !tool) return;
+    setFixLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-tool", {
+        body: {
+          prompt: fixDescription,
+          type: tool.type,
+          mode: "edit",
+          existingTool: {
+            name: tool.name,
+            fields: tool.fields,
+            formula: tool.formula,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const updated = data.tool;
+      const { error: updateError } = await supabase.from("tools").update({
+        fields: updated.fields,
+        formula: { ...updated.formula, sections: updated.sections },
+        description: updated.description,
+        short_description: updated.short_description,
+      }).eq("id", tool.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Ferramenta corrigida com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["tool", slug] });
+      setFixDialogOpen(false);
+      setFixDescription("");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao corrigir com IA");
+    } finally {
+      setFixLoading(false);
+    }
+  };
 
   const fields = tool ? parseFields(tool.fields) : [];
   const formula = tool ? parseFormula(tool.formula) : null;
@@ -324,27 +402,18 @@ export default function ToolDetail() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Modo:</span>
-            <button
-              onClick={() => setModo("pro")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                modo === "pro" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Stethoscope className="h-3.5 w-3.5" />
-              Profissional
-            </button>
-            <button
-              onClick={() => setModo("paciente")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                modo === "paciente" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              Paciente
-            </button>
-          </div>
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setFixDialogOpen(true)}>
+                <MessageCircleWarning className="h-4 w-4" />
+                Corrigir com IA
+              </Button>
+              <Button variant="destructive" size="sm" className="gap-1.5" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" />
+                Excluir
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -475,9 +544,7 @@ export default function ToolDetail() {
 
                 {result.recommendations && result.recommendations.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card p-6">
-                    <h3 className="font-semibold mb-3">
-                      {modo === "pro" ? "Condutas Sugeridas" : "Recomendações para Você"}
-                    </h3>
+                    <h3 className="font-semibold mb-3">Condutas Sugeridas</h3>
                     <ul className="space-y-2.5">
                       {result.recommendations.map((r, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -532,7 +599,7 @@ export default function ToolDetail() {
             )}
 
             <p className="text-xs text-muted-foreground text-center">
-              Autor: Sérgio Araújo • Posologia Produções
+              Autor: {authorName}{!tool.created_by && " • Posologia Produções"}
             </p>
           </div>
         </div>
@@ -546,6 +613,30 @@ export default function ToolDetail() {
           )}
         </div>
       )}
+
+      {/* AI Fix Dialog */}
+      <Dialog open={fixDialogOpen} onOpenChange={setFixDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Corrigir com IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Descreva o que não está funcionando corretamente nesta ferramenta. A IA irá analisar e corrigir automaticamente.
+            </p>
+            <Textarea
+              placeholder="Ex: O botão calcular não funciona, os valores das faixas estão errados, falta o campo de idade..."
+              value={fixDescription}
+              onChange={(e) => setFixDescription(e.target.value)}
+              rows={4}
+            />
+            <Button onClick={handleFixWithAI} disabled={fixLoading || !fixDescription.trim()} className="w-full gap-2">
+              {fixLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircleWarning className="h-4 w-4" />}
+              {fixLoading ? "Corrigindo..." : "Enviar para IA corrigir"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
