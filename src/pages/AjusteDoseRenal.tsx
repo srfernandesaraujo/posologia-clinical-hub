@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Beaker, User, Stethoscope, AlertTriangle } from "lucide-react";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -343,7 +344,8 @@ export default function AjusteDoseRenal() {
               <p className="text-sm text-muted-foreground mt-0.5">Cockcroft-Gault, CKD-EPI e ajuste de dose para insuficiência renal.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <ShareToolButton toolSlug="ajuste-dose-renal" toolName="Calculadora de Ajuste de Dose Renal" />
             <CalculationHistory calculatorSlug="ajuste-dose-renal" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
