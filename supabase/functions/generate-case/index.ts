@@ -84,6 +84,20 @@ O caso deve conter:
 - title: título descritivo do caso
 
 Varie entre cenários de UTI, emergência, pós-operatório, sedação processual. Use doses realistas e cenários educacionais que ensinem segurança do paciente.`,
+
+  "desmame-benzo": `Gere um caso clínico COMPLETO para o Simulador de Desmame de Benzodiazepínicos (Protocolo de Ashton).
+O caso deve conter:
+- patient: { name, age, sex, diagnosis, clinicalContext }
+- drugName: nome do benzodiazepínico atual (deve ser um de: "Alprazolam", "Clonazepam", "Lorazepam", "Bromazepam", "Diazepam", "Nitrazepam", "Flunitrazepam", "Midazolam")
+- dailyDose: dose diária atual em mg (number)
+- usageDuration: tempo de uso em meses (number)
+- sensitivity: "normal" ou "high" (alta sensibilidade para pacientes com tentativas anteriores de desmame fracassadas, idosos, ou uso muito prolongado)
+- comorbidities: array de comorbidades do paciente (ex: ["Depressão", "Hipertensão"])
+- expectedPlan: descrição textual do plano esperado de desmame
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo do caso
+
+Varie entre diferentes benzodiazepínicos, faixas etárias (jovens, adultos, idosos), tempos de uso (curto <6m, médio 6-24m, longo >24m), e contextos clínicos (insônia, TAG, pânico, epilepsia). Use farmacologia realista.`,
 };
 
 serve(async (req) => {
