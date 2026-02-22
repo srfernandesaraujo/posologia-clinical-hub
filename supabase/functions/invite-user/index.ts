@@ -124,7 +124,7 @@ serve(async (req) => {
     // Send email via Resend
     const resend = new Resend(Deno.env.get("RESEND_API_KEY")!);
     const { error: emailError } = await resend.emails.send({
-      from: "Posologia <onboarding@resend.dev>",
+      from: "Posologia <noreply@tbl.posologia.app>",
       to: [email],
       subject: "Você foi convidado para o Posologia!",
       html: `
