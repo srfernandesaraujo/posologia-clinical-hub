@@ -350,8 +350,10 @@ export default function ToolDetail() {
   const [calculatedScore, setCalculatedScore] = useState<number | null>(null);
 
   const handleCalculate = () => {
-    const missing = fields.filter(f => f.required && !values[f.name]);
+    // Switch/checkbox fields default to "0" (off), so they're never truly "missing"
+    const missing = fields.filter(f => f.required && f.type !== "switch" && f.type !== "checkbox" && !values[f.name]);
     if (missing.length) {
+      toast.error(`Preencha os campos obrigatórios: ${missing.map(f => f.label).join(", ")}`);
       return;
     }
     setCalculated(true);
