@@ -67,6 +67,23 @@ O caso deve conter:
 - title: título descritivo
 
 Varie entre DM1 e DM2, diferentes perfis glicêmicos, comorbidades variadas.`,
+
+  "bomba-infusao": `Gere um caso clínico COMPLETO para o Simulador de Bomba de Infusão.
+O caso deve conter:
+- patient: { name, age, weight, sex, diagnosis, clinicalContext }
+- scenario: descrição do cenário clínico (ex: choque séptico, pós-operatório, sedação em UTI)
+- drugName: nome da droga a ser infundida (deve ser uma de: "Noradrenalina", "Dopamina", "Fentanil", "Dobutamina", "Midazolam")
+- mode: modo de operação recomendado ("simple" | "dose_weight" | "bolus")
+- targetRate: taxa alvo em mL/h (para modo simples)
+- targetDose: dose alvo em mcg/kg/min (para modo dose/peso)
+- targetBolus: volume do bolus em mL (para modo bolus, ou null)
+- totalVolume: volume total a ser infundido (mL)
+- expectedActions: array de strings descrevendo as ações corretas que o aluno deve tomar
+- clinicalTip: dica farmacológica/clínica para feedback educacional
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo do caso
+
+Varie entre cenários de UTI, emergência, pós-operatório, sedação processual. Use doses realistas e cenários educacionais que ensinem segurança do paciente.`,
 };
 
 serve(async (req) => {
