@@ -17,43 +17,60 @@ import {
 import { toast } from "sonner";
 
 interface ShareToolButtonProps {
-  toolId: string;
+  toolId?: string;
+  toolSlug?: string;
   toolName: string;
 }
 
-export function ShareToolButton({ toolId, toolName }: ShareToolButtonProps) {
+export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
   const { user } = useAuth();
   const { isPremium } = useFeatureGating();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
 
+  // Resolve tool ID from slug if not provided directly
+  const { data: resolvedToolId } = useQuery({
+    queryKey: ["tool-id-by-slug", toolSlug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tools")
+        .select("id")
+        .eq("slug", toolSlug!)
+        .maybeSingle();
+      return data?.id || null;
+    },
+    enabled: !toolId && !!toolSlug && open,
+  });
+
+  const effectiveToolId = toolId || resolvedToolId;
+
   const { data: share, isLoading } = useQuery({
-    queryKey: ["shared-tool", toolId, user?.id],
+    queryKey: ["shared-tool", effectiveToolId, user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("shared_tools")
         .select("*")
-        .eq("tool_id", toolId)
+        .eq("tool_id", effectiveToolId!)
         .eq("user_id", user!.id)
         .maybeSingle();
       return data;
     },
-    enabled: !!user && open,
+    enabled: !!user && !!effectiveToolId && open,
   });
 
   const createShare = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
         .from("shared_tools")
-        .insert({ tool_id: toolId, user_id: user!.id })
+        .insert({ tool_id: effectiveToolId!, user_id: user!.id })
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["shared-tool", toolId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["shared-tool", effectiveToolId, user?.id] });
       toast.success("Link de compartilhamento criado!");
     },
     onError: () => toast.error("Erro ao criar link"),
@@ -68,7 +85,7 @@ export function ShareToolButton({ toolId, toolName }: ShareToolButtonProps) {
       if (error) throw error;
     },
     onSuccess: (_, active) => {
-      queryClient.invalidateQueries({ queryKey: ["shared-tool", toolId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["shared-tool", effectiveToolId, user?.id] });
       toast.success(active ? "Compartilhamento ativado!" : "Compartilhamento desativado!");
     },
     onError: () => toast.error("Erro ao atualizar compartilhamento"),

@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { Calculator, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import type { Json } from "@/integrations/supabase/types";
 import jsPDF from "jspdf";
+
+/* ─── Native calculator components (lazy) ─── */
+const NATIVE_CALCULATORS: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
+  "risco-cardiovascular": lazy(() => import("./RiscoCardiovascular")),
+  "desmame-corticoide": lazy(() => import("./DesmaCorticoide")),
+  "equivalencia-opioides": lazy(() => import("./EquivalenciaOpioides")),
+  "ajuste-dose-renal": lazy(() => import("./AjusteDoseRenal")),
+  "equivalencia-antidepressivos": lazy(() => import("./EquivalenciaAntidepressivos")),
+  "homa-ir": lazy(() => import("./HomaIR")),
+  "findrisc": lazy(() => import("./Findrisc")),
+};
 
 /* ─── Types (duplicated from ToolDetail for isolation) ─── */
 interface ToolField {
@@ -183,6 +194,23 @@ export default function EmbedTool() {
       </div>
     </div>
   );
+
+  // Check if this is a native calculator
+  const nativeSlug = tool?.slug as string;
+  const NativeComponent = nativeSlug ? NATIVE_CALCULATORS[nativeSlug] : undefined;
+
+  if (NativeComponent) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-48 bg-muted animate-pulse rounded" /></div>}>
+          <NativeComponent />
+        </Suspense>
+        <p className="text-xs text-muted-foreground text-center py-4">
+          Powered by <a href={window.location.origin} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Posologia</a>
+        </p>
+      </div>
+    );
+  }
 
   if (isSimulator) return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">

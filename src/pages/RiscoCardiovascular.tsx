@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { useNavigate } from "react-router-dom";
@@ -477,7 +478,8 @@ export default function RiscoCardiovascular() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <ShareToolButton toolSlug="risco-cardiovascular" toolName="Calculadora de Risco Cardiovascular" />
             <CalculationHistory calculatorSlug="risco-cardiovascular" />
             <span className="text-muted-foreground">Modo:</span>
             <button

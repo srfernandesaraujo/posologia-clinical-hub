@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, ShieldAlert, User, Stethoscope } from "lucide-react";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,7 +222,8 @@ export default function Findrisc() {
               <p className="text-sm text-muted-foreground mt-0.5">Escore FINDRISC — risco de DM2 em 10 anos.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <ShareToolButton toolSlug="findrisc" toolName="Calculadora FINDRISC" />
             <CalculationHistory calculatorSlug="findrisc" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("pro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "pro" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>

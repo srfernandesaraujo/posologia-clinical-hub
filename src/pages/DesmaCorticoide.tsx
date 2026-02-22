@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -595,7 +596,8 @@ export default function DesmaCorticoide() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <ShareToolButton toolSlug="desmame-corticoide" toolName="Calculadora de Desmame de Corticoides" />
             <CalculationHistory calculatorSlug="desmame-corticoide" />
             <span className="text-muted-foreground">Modo:</span>
             <button
