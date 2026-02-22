@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { EmbedProvider } from "@/contexts/EmbedContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useCallback, useMemo, lazy, Suspense } from "react";
@@ -202,9 +203,11 @@ export default function EmbedTool() {
   if (NativeComponent) {
     return (
       <div className="min-h-screen bg-background">
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-48 bg-muted animate-pulse rounded" /></div>}>
-          <NativeComponent />
-        </Suspense>
+        <EmbedProvider>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-48 bg-muted animate-pulse rounded" /></div>}>
+            <NativeComponent />
+          </Suspense>
+        </EmbedProvider>
         <p className="text-xs text-muted-foreground text-center py-4">
           Powered by <a href={window.location.origin} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Posologia</a>
         </p>
