@@ -40,11 +40,13 @@ export default function SalasVirtuais() {
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ["virtual-rooms"],
+    queryKey: ["virtual-rooms", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("virtual_rooms")
         .select("*")
+        .eq("created_by", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
