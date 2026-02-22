@@ -111,16 +111,152 @@ function gerarPDF(toolName: string, values: Record<string, string>, fields: Tool
 /* ═══════════════════════════════════════════════════════════════
    GENERIC STEP-BASED SIMULATOR RENDERER
    ═══════════════════════════════════════════════════════════════ */
-function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
-  formula: ToolFormula; toolName: string; authorName: string; hasCreator: boolean;
+function SimulatorRenderer({ formula, toolName, toolId, toolSlug, authorName, hasCreator }: {
+  formula: ToolFormula; toolName: string; toolId: string; toolSlug: string;
+  authorName: string; hasCreator: boolean;
 }) {
-  const steps = formula.steps || [];
+  const queryClient = useQueryClient();
+  const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
+  const [activeCase, setActiveCase] = useState<{ steps: SimStep[]; patient_summary?: string; title: string; difficulty: string } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Fetch additional AI-generated cases from simulator_cases table
+  const { data: dbCases = [] } = useQuery({
+    queryKey: ["simulator-cases-tool", toolSlug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("simulator_cases" as any)
+        .select("*")
+        .eq("simulator_slug", toolSlug)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data as any[]).map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        difficulty: c.difficulty,
+        isAI: true,
+        steps: c.case_data?.steps || [],
+        patient_summary: c.case_data?.patient_summary || "",
+      }));
+    },
+  });
+
+  // Original case from the tool's formula
+  const originalCase = {
+    title: toolName,
+    difficulty: "Médio",
+    steps: formula.steps || [],
+    patient_summary: formula.patient_summary || "",
+    isOriginal: true,
+  };
+
+  const allCases = [originalCase, ...dbCases];
+
+  const generateCase = async () => {
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-case", {
+        body: { tool_id: toolId, simulator_slug: toolSlug },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const generated = data.case;
+
+      const { error: insertError } = await supabase
+        .from("simulator_cases" as any)
+        .insert({
+          simulator_slug: toolSlug,
+          title: generated.title,
+          difficulty: generated.difficulty,
+          case_data: generated.case_data,
+          is_ai_generated: true,
+        } as any);
+
+      if (insertError) throw insertError;
+
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases-tool", toolSlug] });
+      toast.success("Caso clínico gerado com sucesso!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao gerar caso clínico");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const startCase = (c: any) => {
+    if (c.isOriginal) {
+      setActiveCase({ steps: c.steps, patient_summary: c.patient_summary, title: c.title, difficulty: c.difficulty });
+    } else {
+      // DB case: steps are in case_data
+      setActiveCase({ steps: c.steps, patient_summary: c.patient_summary, title: c.title, difficulty: c.difficulty });
+    }
+    setScreen("sim");
+  };
+
+  // ─── Dashboard ───
+  if (screen === "dashboard") {
+    return (
+      <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allCases.map((c: any, i: number) => (
+            <Card key={c.id || i} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => startCase(c)}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <Badge variant={c.difficulty === "Fácil" ? "secondary" : c.difficulty === "Difícil" ? "destructive" : "default"}>
+                    {c.difficulty}
+                  </Badge>
+                  {c.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
+                </div>
+                <CardTitle className="text-lg mt-2">{c.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{c.patient_summary || "Caso clínico"}</p>
+              </CardContent>
+            </Card>
+          ))}
+          <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
+            <div className="text-center p-6">
+              {isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
+              <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
+            </div>
+          </Card>
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-6">
+          Autor: {authorName}{!hasCreator && " • Posologia Produções"}
+        </p>
+      </div>
+    );
+  }
+
+  // ─── Simulation & Report ───
+  const caseData = activeCase;
+  if (!caseData) return null;
+
+  return (
+    <SimulatorCaseView
+      caseData={caseData}
+      authorName={authorName}
+      hasCreator={hasCreator}
+      onBack={() => { setScreen("dashboard"); setActiveCase(null); }}
+    />
+  );
+}
+
+/* Sparkles icon import helper */
+import { Sparkles } from "lucide-react";
+
+/* ─── Simulator Case View (step-based runner) ─── */
+function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
+  caseData: { steps: SimStep[]; patient_summary?: string; title: string; difficulty: string };
+  authorName: string; hasCreator: boolean; onBack: () => void;
+}) {
+  const steps = caseData.steps || [];
   const [currentStep, setCurrentStep] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [showReport, setShowReport] = useState(false);
-
-  // User answers per step per panel: { [stepIdx]: { [panelIdx]: string[] | string } }
   const [answers, setAnswers] = useState<Record<number, Record<number, any>>>({});
 
   const step = steps[currentStep];
@@ -134,9 +270,7 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
 
   const toggleChecklist = (panelIdx: number, option: string) => {
     const current: string[] = answers[currentStep]?.[panelIdx] || [];
-    const next = current.includes(option)
-      ? current.filter(o => o !== option)
-      : [...current, option];
+    const next = current.includes(option) ? current.filter(o => o !== option) : [...current, option];
     setAnswer(panelIdx, next);
   };
 
@@ -147,40 +281,30 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
 
   const handleNextStep = () => {
     setShowFeedback(false);
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setShowReport(true);
-    }
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    else setShowReport(true);
   };
 
-  // Calculate score per step
   const getStepScore = (stepIdx: number) => {
     const s = steps[stepIdx];
     if (!s) return { correct: 0, total: 0 };
-    let correct = 0;
-    let total = 0;
+    let correct = 0, total = 0;
     s.panels.forEach((panel, pi) => {
       if (panel.type === "info") return;
       total++;
       const userAns = answers[stepIdx]?.[pi];
       if (panel.type === "checklist" && panel.correctAnswers) {
         const selected: string[] = userAns || [];
-        const isCorrect =
-          panel.correctAnswers.length === selected.length &&
-          panel.correctAnswers.every(a => selected.includes(a));
-        if (isCorrect) correct++;
+        if (panel.correctAnswers.length === selected.length && panel.correctAnswers.every(a => selected.includes(a))) correct++;
       } else if (panel.type === "radio" && panel.correctAnswers) {
         if (panel.correctAnswers.includes(userAns)) correct++;
       } else if (panel.type === "text" && panel.correctText) {
-        // For text, just mark as answered (manual review)
         if (userAns?.trim()) correct++;
       }
     });
     return { correct, total };
   };
 
-  // Check if current step has any interactive panels answered
   const hasInteractivePanels = step?.panels.some(p => p.type !== "info");
   const hasAnswered = step?.panels.some((p, pi) => {
     if (p.type === "info") return false;
@@ -197,6 +321,7 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
 
     return (
       <div>
+        <Button variant="ghost" onClick={onBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar aos Casos</Button>
         <Card className="mb-6">
           <CardHeader><CardTitle>Relatório de Desempenho</CardTitle></CardHeader>
           <CardContent>
@@ -209,38 +334,29 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
             </div>
           </CardContent>
         </Card>
-
-        {/* Per-step breakdown */}
         <div className="space-y-4">
           {steps.map((s, si) => (
             <Card key={si}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   {getStepScore(si).correct === getStepScore(si).total && getStepScore(si).total > 0
-                    ? <CheckCircle className="h-5 w-5 text-green-500" />
-                    : <XCircle className="h-5 w-5 text-red-500" />}
+                    ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
                   {s.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm">
-                <div className="bg-muted p-3 rounded mb-2">
-                  <strong>Feedback:</strong> {s.feedback}
-                </div>
+                <div className="bg-muted p-3 rounded mb-2"><strong>Feedback:</strong> {s.feedback}</div>
                 {s.panels.filter(p => p.type !== "info").map((panel, pi) => {
                   const userAns = answers[si]?.[pi];
                   return (
                     <div key={pi} className="mt-2 text-muted-foreground">
                       <strong>{panel.title}:</strong>{" "}
-                      {panel.type === "checklist" || panel.type === "radio" ? (
+                      {(panel.type === "checklist" || panel.type === "radio") ? (
                         <>
                           <span>Sua resposta: {Array.isArray(userAns) ? userAns.join(", ") : userAns || "—"}</span>
-                          {panel.correctAnswers && (
-                            <span className="ml-2 text-primary">| Correto: {panel.correctAnswers.join(", ")}</span>
-                          )}
+                          {panel.correctAnswers && <span className="ml-2 text-primary">| Correto: {panel.correctAnswers.join(", ")}</span>}
                         </>
-                      ) : (
-                        <span>{userAns || "—"}</span>
-                      )}
+                      ) : <span>{userAns || "—"}</span>}
                     </div>
                   );
                 })}
@@ -248,15 +364,11 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
             </Card>
           ))}
         </div>
-
         <div className="flex gap-3 mt-6">
-          <Button onClick={() => { setShowReport(false); setCurrentStep(0); setCompletedSteps(new Set()); setAnswers({}); setShowFeedback(false); }}>
-            Tentar Novamente
-          </Button>
+          <Button onClick={() => { setShowReport(false); setCurrentStep(0); setCompletedSteps(new Set()); setAnswers({}); setShowFeedback(false); }}>Tentar Novamente</Button>
+          <Button variant="outline" onClick={onBack}>Voltar aos Casos</Button>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          Autor: {authorName}{!hasCreator && " • Posologia Produções"}
-        </p>
+        <p className="text-xs text-muted-foreground text-center mt-4">Autor: {authorName}{!hasCreator && " • Posologia Produções"}</p>
       </div>
     );
   }
@@ -265,17 +377,17 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
 
   return (
     <div>
+      <Button variant="ghost" onClick={onBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar aos Casos</Button>
+
       {/* Step progress bar */}
-      <div className="flex items-center justify-center gap-2 mb-6">
+      <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
         {steps.map((s, i) => (
           <div key={i} className="flex items-center gap-2">
             <button
               onClick={() => { if (completedSteps.has(i) || i === currentStep) { setCurrentStep(i); setShowFeedback(completedSteps.has(i)); } }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                i === currentStep
-                  ? "bg-primary text-primary-foreground"
-                  : completedSteps.has(i)
-                  ? "bg-primary/20 text-primary"
+                i === currentStep ? "bg-primary text-primary-foreground"
+                  : completedSteps.has(i) ? "bg-primary/20 text-primary"
                   : "bg-muted text-muted-foreground"
               }`}
             >
@@ -287,12 +399,8 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
         ))}
       </div>
 
-      {/* Patient summary */}
-      {formula.patient_summary && (
-        <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1.5">
-          <User className="h-4 w-4" />
-          {formula.patient_summary}
-        </p>
+      {caseData.patient_summary && (
+        <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1.5"><User className="h-4 w-4" />{caseData.patient_summary}</p>
       )}
 
       {/* Panels grid */}
@@ -306,32 +414,19 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* INFO panel */}
               {panel.type === "info" && panel.content && (
                 <div className="text-sm space-y-2 whitespace-pre-line">
                   {panel.content.split("\n").map((line, li) => {
-                    // Simple bold support
                     const parts = line.split(/(\*\*[^*]+\*\*)/g);
-                    return (
-                      <p key={li}>
-                        {parts.map((part, pi2) =>
-                          part.startsWith("**") && part.endsWith("**")
-                            ? <strong key={pi2}>{part.slice(2, -2)}</strong>
-                            : <span key={pi2}>{part}</span>
-                        )}
-                      </p>
-                    );
+                    return <p key={li}>{parts.map((part, pi2) => part.startsWith("**") && part.endsWith("**") ? <strong key={pi2}>{part.slice(2, -2)}</strong> : <span key={pi2}>{part}</span>)}</p>;
                   })}
                 </div>
               )}
 
-              {/* CHECKLIST panel */}
               {panel.type === "checklist" && panel.options && (
                 <div className="space-y-2">
                   {showFeedback && panel.correctAnswers && (
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Corretas: <span className="text-primary font-medium">{panel.correctAnswers.join(", ")}</span>
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">Corretas: <span className="text-primary font-medium">{panel.correctAnswers.join(", ")}</span></p>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {panel.options.map((opt, oi) => {
@@ -339,25 +434,10 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
                       const isCorrect = showFeedback && panel.correctAnswers?.includes(opt);
                       const isWrong = showFeedback && selected && !panel.correctAnswers?.includes(opt);
                       return (
-                        <label
-                          key={oi}
-                          className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all text-sm ${
-                            showFeedback
-                              ? isCorrect
-                                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                : isWrong
-                                ? "border-red-500 bg-red-50 dark:bg-red-950/20"
-                                : ""
-                              : selected
-                              ? "border-primary bg-primary/5"
-                              : "hover:border-primary/50"
-                          }`}
-                        >
-                          <Checkbox
-                            checked={selected}
-                            disabled={showFeedback}
-                            onCheckedChange={() => toggleChecklist(pi, opt)}
-                          />
+                        <label key={oi} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                          showFeedback ? (isCorrect ? "border-green-500 bg-green-50 dark:bg-green-950/20" : isWrong ? "border-red-500 bg-red-50 dark:bg-red-950/20" : "") : selected ? "border-primary bg-primary/5" : "hover:border-primary/50"
+                        }`}>
+                          <Checkbox checked={selected} disabled={showFeedback} onCheckedChange={() => toggleChecklist(pi, opt)} />
                           {opt}
                         </label>
                       );
@@ -366,40 +446,21 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
                 </div>
               )}
 
-              {/* RADIO panel */}
               {panel.type === "radio" && panel.options && (
                 <div className="space-y-2">
                   {showFeedback && panel.correctAnswers && (
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Correta: <span className="text-primary font-medium">{panel.correctAnswers.join(", ")}</span>
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">Correta: <span className="text-primary font-medium">{panel.correctAnswers.join(", ")}</span></p>
                   )}
-                  <RadioGroup
-                    value={answers[currentStep]?.[pi] || ""}
-                    onValueChange={(v) => setAnswer(pi, v)}
-                    disabled={showFeedback}
-                  >
+                  <RadioGroup value={answers[currentStep]?.[pi] || ""} onValueChange={(v) => setAnswer(pi, v)} disabled={showFeedback}>
                     {panel.options.map((opt, oi) => {
                       const isCorrect = showFeedback && panel.correctAnswers?.includes(opt);
                       const isSelected = answers[currentStep]?.[pi] === opt;
                       const isWrong = showFeedback && isSelected && !panel.correctAnswers?.includes(opt);
                       return (
-                        <label
-                          key={oi}
-                          className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all text-sm ${
-                            showFeedback
-                              ? isCorrect
-                                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                : isWrong
-                                ? "border-red-500 bg-red-50 dark:bg-red-950/20"
-                                : ""
-                              : isSelected
-                              ? "border-primary bg-primary/5"
-                              : "hover:border-primary/50"
-                          }`}
-                        >
-                          <RadioGroupItem value={opt} />
-                          {opt}
+                        <label key={oi} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                          showFeedback ? (isCorrect ? "border-green-500 bg-green-50 dark:bg-green-950/20" : isWrong ? "border-red-500 bg-red-50 dark:bg-red-950/20" : "") : isSelected ? "border-primary bg-primary/5" : "hover:border-primary/50"
+                        }`}>
+                          <RadioGroupItem value={opt} />{opt}
                         </label>
                       );
                     })}
@@ -407,20 +468,11 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
                 </div>
               )}
 
-              {/* TEXT panel */}
               {panel.type === "text" && (
                 <div className="space-y-2">
-                  <Textarea
-                    placeholder="Digite sua resposta..."
-                    value={answers[currentStep]?.[pi] || ""}
-                    onChange={(e) => setAnswer(pi, e.target.value)}
-                    rows={3}
-                    disabled={showFeedback}
-                  />
+                  <Textarea placeholder="Digite sua resposta..." value={answers[currentStep]?.[pi] || ""} onChange={(e) => setAnswer(pi, e.target.value)} rows={3} disabled={showFeedback} />
                   {showFeedback && panel.correctText && (
-                    <div className="text-sm bg-muted p-3 rounded">
-                      <strong>Resposta esperada:</strong> {panel.correctText}
-                    </div>
+                    <div className="text-sm bg-muted p-3 rounded"><strong>Resposta esperada:</strong> {panel.correctText}</div>
                   )}
                 </div>
               )}
@@ -429,7 +481,6 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
         ))}
       </div>
 
-      {/* Feedback area */}
       {showFeedback && step.feedback && (
         <Card className="mt-4 border-primary/30 bg-primary/5">
           <CardContent className="pt-4">
@@ -439,32 +490,19 @@ function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
         </Card>
       )}
 
-      {/* Action buttons */}
       <div className="flex justify-end mt-6 gap-3">
         {!showFeedback ? (
-          <Button
-            size="lg"
-            className="gap-2"
-            disabled={hasInteractivePanels && !hasAnswered}
-            onClick={handleFinishStep}
-          >
-            <ClipboardCheck className="h-4 w-4" />
-            {hasInteractivePanels ? "Finalizar Etapa" : "Ver Feedback"}
+          <Button size="lg" className="gap-2" disabled={hasInteractivePanels && !hasAnswered} onClick={handleFinishStep}>
+            <ClipboardCheck className="h-4 w-4" />{hasInteractivePanels ? "Finalizar Etapa" : "Ver Feedback"}
           </Button>
         ) : (
           <Button size="lg" className="gap-2" onClick={handleNextStep}>
-            {currentStep < steps.length - 1 ? (
-              <>Avançar <ChevronRight className="h-4 w-4" /></>
-            ) : (
-              <>Ver Relatório <ChevronRight className="h-4 w-4" /></>
-            )}
+            {currentStep < steps.length - 1 ? <>Avançar <ChevronRight className="h-4 w-4" /></> : <>Ver Relatório <ChevronRight className="h-4 w-4" /></>}
           </Button>
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground text-center mt-4">
-        Autor: {authorName}{!hasCreator && " • Posologia Produções"}
-      </p>
+      <p className="text-xs text-muted-foreground text-center mt-4">Autor: {authorName}{!hasCreator && " • Posologia Produções"}</p>
     </div>
   );
 }
@@ -665,7 +703,7 @@ export default function ToolDetail() {
 
       {/* ─── SIMULATOR ─── */}
       {isSimulatorType && formula ? (
-        <SimulatorRenderer formula={formula} toolName={tool.name} authorName={authorName} hasCreator={!!tool.created_by} />
+        <SimulatorRenderer formula={formula} toolName={tool.name} toolId={tool.id} toolSlug={tool.slug} authorName={authorName} hasCreator={!!tool.created_by} />
       ) : fields.length > 0 ? (
         /* ─── CALCULATOR ─── */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
