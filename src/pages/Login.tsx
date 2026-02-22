@@ -50,10 +50,27 @@ export default function Login() {
             {loading ? t("auth.loggingIn") : t("auth.login")}
           </Button>
         </form>
-        <p className="text-center text-sm text-muted-foreground">
-          {t("auth.noAccount")}{" "}
-          <Link to="/cadastro" className="font-medium text-primary hover:underline">{t("auth.signUp")}</Link>
-        </p>
+        <div className="text-center space-y-2">
+          <button
+            type="button"
+            onClick={async () => {
+              const resetEmail = prompt("Digite seu email para redefinir a senha:");
+              if (!resetEmail) return;
+              const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                redirectTo: `${window.location.origin}/redefinir-senha`,
+              });
+              if (error) toast.error(error.message);
+              else toast.success("Link de redefinição enviado! Verifique seu email.");
+            }}
+            className="text-sm text-primary hover:underline"
+          >
+            Esqueceu a senha?
+          </button>
+          <p className="text-sm text-muted-foreground">
+            {t("auth.noAccount")}{" "}
+            <Link to="/cadastro" className="font-medium text-primary hover:underline">{t("auth.signUp")}</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

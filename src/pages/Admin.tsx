@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   Shield, Plus, Pencil, Trash2, Users, Calculator, BarChart3,
   FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2, Wand2,
-  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare,
+  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare, UserPlus, Send, Infinity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,8 @@ export default function Admin() {
   const [aiEditTarget, setAiEditTarget] = useState<any>(null);
   const [aiEditLoading, setAiEditLoading] = useState(false);
   const [aiEditPreview, setAiEditPreview] = useState<any>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const { data: tools = [] } = useQuery({
     queryKey: ["admin-tools"],
@@ -605,6 +607,55 @@ export default function Admin() {
 
         {/* Users Tab */}
         <TabsContent value="users">
+          {/* Invite User Section */}
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-6">
+            <h2 className="font-semibold mb-3 flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Convidar Usuário (Acesso Ilimitado)
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              O usuário convidado receberá um email com link para definir sua senha e terá acesso ilimitado à plataforma.
+            </p>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!inviteEmail.trim()) return;
+                setInviteLoading(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("invite-user", {
+                    body: { email: inviteEmail.trim() },
+                  });
+                  if (error) throw error;
+                  if (data?.error) throw new Error(data.error);
+                  toast.success(data.message || "Convite enviado com sucesso!");
+                  setInviteEmail("");
+                  queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+                } catch (err: any) {
+                  toast.error(err.message || "Erro ao enviar convite");
+                } finally {
+                  setInviteLoading(false);
+                }
+              }}
+              className="flex gap-3"
+            >
+              <Input
+                type="email"
+                placeholder="email@exemplo.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                required
+                className="flex-1"
+              />
+              <Button type="submit" disabled={inviteLoading} className="gap-2">
+                {inviteLoading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</>
+                ) : (
+                  <><Send className="h-4 w-4" />Enviar convite</>
+                )}
+              </Button>
+            </form>
+          </div>
+
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4">{t("admin.registeredUsers")} ({users.length})</h2>
             {users.length === 0 ? (
@@ -620,9 +671,14 @@ export default function Admin() {
                         <p className="font-medium">{u.full_name || "Sem nome"}</p>
                         <p className="text-xs text-muted-foreground truncate">ID: {u.user_id}</p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
                         {roles.includes("admin") && (
                           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 text-accent">Admin</span>
+                        )}
+                        {u.has_unlimited_access && (
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                            <Infinity className="h-3 w-3" />Ilimitado
+                          </span>
                         )}
                         {getStatusBadge(status)}
                         {status === "pending" && (
