@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -21,6 +21,7 @@ const NATIVE_SIMULATORS = [
   { slug: "insulina", name: "Simulador de Dose de Insulina", description: "Treinamento de insulinoterapia intensiva baseado no livro Koda-Kimble.", icon: Syringe, category: "Endocrinologia" },
   { slug: "bomba-infusao", name: "Simulador de Bomba de Infusão", description: "Treinamento de programação de bombas de seringa/equipo com drug library e alarmes de segurança.", icon: HeartPulse, category: "Enfermagem / UTI" },
   { slug: "desmame-benzo", name: "Desmame de Benzodiazepínicos", description: "Planejamento de redução gradual baseado no Protocolo de Ashton com check-in de sintomas.", icon: PillBottle, category: "Psiquiatria" },
+  { slug: "interacoes", name: "Interações Medicamentosas", description: "Analise interações entre fármacos com dados do RxNav (NIH) e cenários clínicos.", icon: Zap, category: "Farmacologia Clínica" },
 ];
 
 export default function Simuladores() {

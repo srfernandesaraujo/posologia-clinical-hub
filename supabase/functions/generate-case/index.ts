@@ -98,6 +98,19 @@ O caso deve conter:
 - title: título descritivo do caso
 
 Varie entre diferentes benzodiazepínicos, faixas etárias (jovens, adultos, idosos), tempos de uso (curto <6m, médio 6-24m, longo >24m), e contextos clínicos (insônia, TAG, pânico, epilepsia). Use farmacologia realista.`,
+
+  interacoes: `Gere um caso clínico COMPLETO para o Simulador de Interações Medicamentosas.
+O caso deve conter:
+- patient: { name, age, sex, diagnosis, clinicalContext }
+- scenario: descrição do cenário clínico
+- drugs: array de strings com nomes de medicamentos em INGLÊS (ex: "warfarin", "amiodarone", "fluoxetine"). Use 3 a 6 medicamentos.
+- comorbidities: array de strings com IDs de comorbidades relevantes (valores possíveis: "renal", "hepatic", "cardiac", "elderly")
+- expectedInteractions: array de { drugA, drugB, severity ("high"|"medium"|"low"), mechanism, conduct }
+- clinicalTip: dica farmacológica para feedback educacional
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo do caso
+
+Varie entre cenários de polifarmácia em idosos, UTI, psiquiatria, cardiologia, e pacientes renais/hepáticos. Inclua pelo menos 1 interação grave. Use farmacologia realista e baseada em evidências.`,
 };
 
 serve(async (req) => {
