@@ -4,6 +4,7 @@ import { CalculationHistory, HistoryConsentBanner } from "@/components/Calculati
 import { ArrowLeft, FileText, Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, Plus, X } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useNavigate } from "react-router-dom";
+import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -467,6 +468,7 @@ function gerarPDF(form: FormData, resultado: Resultado, modo: Modo, simulacoes: 
 /* ─── Component ─── */
 export default function EquivalenciaOpioides() {
   const navigate = useNavigate();
+  const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("pro");
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -580,13 +582,15 @@ export default function EquivalenciaOpioides() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <button
-        onClick={() => navigate("/calculadoras")}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Voltar às Calculadoras
-      </button>
+      {!isEmbed && (
+        <button
+          onClick={() => navigate("/calculadoras")}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar às Calculadoras
+        </button>
+      )}
 
       {/* Header */}
       <div className="rounded-2xl border border-border bg-card p-6 mb-6">
