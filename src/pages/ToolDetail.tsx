@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2 } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2, User, Pill, ClipboardCheck, CheckCircle, XCircle, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useCallback, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -39,9 +44,26 @@ interface ToolFormula {
   expression: string;
   interpretation: Interpretation[];
   sections?: { title: string; fields: any[] }[];
+  type?: string;
+  patient?: any;
+  history?: any;
+  prescription?: any[];
+  answers?: any[];
 }
 
+type PRM_TYPE = "Seguranca" | "Efetividade" | "Indicacao" | "Adesao" | null;
+interface UserAnswer {
+  hasPRM: boolean | null;
+  type: PRM_TYPE;
+  suggestion: string;
+}
 
+const PRM_LABELS: Record<string, string> = {
+  Seguranca: "Segurança",
+  Efetividade: "Efetividade",
+  Indicacao: "Indicação",
+  Adesao: "Adesão",
+};
 
 /* ─── Parsers ─── */
 function parseFields(raw: Json | null): ToolField[] {
@@ -140,7 +162,273 @@ function gerarPDF(toolName: string, values: Record<string, string>, fields: Tool
   doc.save(`relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
-/* ─── Component ─── */
+/* ══════════════════════════════════════════════════════════════
+   SIMULATOR RENDERER (PRM-style interactive case)
+   ══════════════════════════════════════════════════════════════ */
+function SimulatorRenderer({ formula, toolName, authorName, hasCreator }: {
+  formula: ToolFormula;
+  toolName: string;
+  authorName: string;
+  hasCreator: boolean;
+}) {
+  const [screen, setScreen] = useState<"sim" | "report">("sim");
+  const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
+  const [selectedDrug, setSelectedDrug] = useState<number | null>(null);
+  const [reviewed, setReviewed] = useState<Set<number>>(new Set());
+  const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set());
+
+  const patient = formula.patient;
+  const history = formula.history;
+  const prescription = formula.prescription || [];
+  const answers = formula.answers || [];
+
+  const markReviewed = (i: number) => {
+    setReviewed(p => new Set(p).add(i));
+    if (!userAnswers[i]) setUserAnswers(p => ({ ...p, [i]: { hasPRM: null, type: null, suggestion: "" } }));
+  };
+
+  const allReviewed = prescription.every((_: any, i: number) => reviewed.has(i));
+
+  const getScore = () => {
+    const realPRMs = answers.filter((a: any) => a.hasPRM);
+    let found = 0;
+    const details = answers.map((ans: any) => {
+      const ua = userAnswers[ans.drugIndex];
+      const correct = ans.hasPRM
+        ? (ua?.hasPRM === true && ua?.type === ans.type)
+        : (ua?.hasPRM === false || ua?.hasPRM === null);
+      if (ans.hasPRM && ua?.hasPRM === true) found++;
+      return { ...ans, userAnswer: ua, correct, drug: prescription[ans.drugIndex] };
+    });
+    return { found, total: realPRMs.length, details };
+  };
+
+  if (screen === "report") {
+    const { found, total, details } = getScore();
+    return (
+      <div>
+        <Button variant="ghost" onClick={() => { setScreen("sim"); setReviewed(new Set()); setUserAnswers({}); setSelectedDrug(null); }} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />Tentar Novamente
+        </Button>
+        <Card className="mb-6">
+          <CardHeader><CardTitle>Relatório de Desempenho</CardTitle></CardHeader>
+          <CardContent>
+            <div className="text-center py-4">
+              <div className="text-5xl font-bold mb-2">{found}/{total}</div>
+              <p className="text-muted-foreground">PRMs identificados corretamente</p>
+              <div className="w-full bg-muted rounded-full h-3 mt-4 max-w-xs mx-auto">
+                <div className="bg-primary rounded-full h-3 transition-all" style={{ width: `${total > 0 ? (found / total) * 100 : 0}%` }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="space-y-3">
+          {details.map((d: any, i: number) => (
+            <Card key={i} className={`border-l-4 ${d.correct ? "border-l-green-500" : d.hasPRM ? "border-l-red-500" : "border-l-muted"}`}>
+              <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpandedFeedback(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {d.correct ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                    <span className="font-semibold">{d.drug?.drug} {d.drug?.dose}</span>
+                    {d.hasPRM && <Badge variant="destructive" className="text-xs">PRM: {PRM_LABELS[d.type!] || d.type}</Badge>}
+                  </div>
+                  {expandedFeedback.has(i) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </div>
+              </CardHeader>
+              {expandedFeedback.has(i) && (
+                <CardContent className="text-sm space-y-2">
+                  {d.hasPRM && <div className="bg-muted p-3 rounded"><strong>Justificativa:</strong> {d.justification}</div>}
+                  {d.userAnswer && (
+                    <div className="text-muted-foreground">
+                      <strong>Sua resposta:</strong> {d.userAnswer.hasPRM ? `PRM - ${PRM_LABELS[d.userAnswer.type!] || "Não classificado"}` : "Sem PRM"}
+                      {d.userAnswer.suggestion && <p className="mt-1"><strong>Intervenção sugerida:</strong> {d.userAnswer.suggestion}</p>}
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-6">
+          Autor: {authorName}{!hasCreator && " • Posologia Produções"}
+        </p>
+      </div>
+    );
+  }
+
+  // Simulation screen
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-4">{toolName}</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Patient profile */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />Perfil do Paciente</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            <p><strong>{patient?.name}</strong></p>
+            <p>{patient?.age} anos | {patient?.sex} | {patient?.weight}kg | {patient?.height}cm</p>
+            <Separator />
+            <p className="font-medium">Doenças:</p>
+            <ul className="list-disc list-inside">
+              {history?.diseases?.map((d: string, i: number) => <li key={i}>{d}</li>)}
+            </ul>
+            <p><strong>Queixa:</strong> {history?.mainComplaint}</p>
+            {history?.allergies?.length > 0 && (
+              <p className="text-red-600"><strong>Alergias:</strong> {history.allergies.join(", ")}</p>
+            )}
+            {history?.creatinineClearance != null && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="flex items-center gap-1"><strong>ClCr:</strong> {history.creatinineClearance} mL/min <Info className="h-3 w-3" /></p>
+                </TooltipTrigger>
+                <TooltipContent>Clearance de Creatinina estimado</TooltipContent>
+              </Tooltip>
+            )}
+            {history?.vitalSigns && (
+              <>
+                <Separator />
+                <p className="font-medium">Sinais Vitais:</p>
+                {history.vitalSigns.bp && <p>PA: {history.vitalSigns.bp}</p>}
+                {history.vitalSigns.hr && <p>FC: {history.vitalSigns.hr}</p>}
+                {history.vitalSigns.temp && <p>Temp: {history.vitalSigns.temp}</p>}
+                {history.vitalSigns.spo2 && <p>SpO2: {history.vitalSigns.spo2}</p>}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Prescription */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base"><Pill className="h-4 w-4" />Prescrição Médica</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {prescription.map((p: any, i: number) => (
+              <div
+                key={i}
+                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  selectedDrug === i
+                    ? "ring-2 ring-primary border-primary"
+                    : reviewed.has(i)
+                    ? "border-green-300 bg-green-50 dark:bg-green-950/20"
+                    : "hover:border-primary/50"
+                }`}
+                onClick={() => { setSelectedDrug(i); markReviewed(i); }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{p.drug}</p>
+                    <p className="text-xs text-muted-foreground">{p.dose} - {p.route} - {p.frequency}</p>
+                  </div>
+                  {reviewed.has(i) && <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Analysis panel */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="h-4 w-4" />Análise</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedDrug !== null ? (
+              <div className="space-y-4">
+                <p className="font-medium">{prescription[selectedDrug]?.drug}</p>
+                <div>
+                  <Label className="text-sm">Há algum PRM?</Label>
+                  <RadioGroup
+                    value={userAnswers[selectedDrug]?.hasPRM === true ? "yes" : userAnswers[selectedDrug]?.hasPRM === false ? "no" : ""}
+                    onValueChange={(v) => setUserAnswers(p => ({
+                      ...p,
+                      [selectedDrug]: { ...p[selectedDrug], hasPRM: v === "yes", type: v === "no" ? null : p[selectedDrug]?.type || null, suggestion: p[selectedDrug]?.suggestion || "" }
+                    }))}
+                    className="mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id={`prm-yes-${selectedDrug}`} />
+                      <Label htmlFor={`prm-yes-${selectedDrug}`}>Sim</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id={`prm-no-${selectedDrug}`} />
+                      <Label htmlFor={`prm-no-${selectedDrug}`}>Não</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {userAnswers[selectedDrug]?.hasPRM && (
+                  <div>
+                    <Label className="text-sm">Tipo do PRM</Label>
+                    <RadioGroup
+                      value={userAnswers[selectedDrug]?.type || ""}
+                      onValueChange={(v) => setUserAnswers(p => ({
+                        ...p,
+                        [selectedDrug]: { ...p[selectedDrug], type: v as PRM_TYPE }
+                      }))}
+                      className="mt-2"
+                    >
+                      {Object.entries(PRM_LABELS).map(([key, label]) => (
+                        <div key={key} className="flex items-center space-x-2">
+                          <RadioGroupItem value={key} id={`type-${key}-${selectedDrug}`} />
+                          <Label htmlFor={`type-${key}-${selectedDrug}`}>{label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+
+                {userAnswers[selectedDrug]?.hasPRM && (
+                  <div>
+                    <Label className="text-sm">Sugestão de intervenção</Label>
+                    <Textarea
+                      placeholder="Descreva a intervenção sugerida..."
+                      value={userAnswers[selectedDrug]?.suggestion || ""}
+                      onChange={(e) => setUserAnswers(p => ({
+                        ...p,
+                        [selectedDrug]: { ...p[selectedDrug], suggestion: e.target.value }
+                      }))}
+                      rows={3}
+                      className="mt-2"
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm text-center py-8">
+                Clique em um medicamento para avaliar
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Finalize button */}
+      <div className="flex justify-end mt-6">
+        <Button
+          size="lg"
+          className="gap-2"
+          disabled={!allReviewed}
+          onClick={() => setScreen("report")}
+        >
+          <ClipboardCheck className="h-4 w-4" />
+          Finalizar Avaliação
+        </Button>
+      </div>
+
+      <p className="text-xs text-muted-foreground text-center mt-4">
+        Autor: {authorName}{!hasCreator && " • Posologia Produções"}
+      </p>
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════════════════════ */
 export default function ToolDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -152,6 +440,7 @@ export default function ToolDetail() {
   const [fixDialogOpen, setFixDialogOpen] = useState(false);
   const [fixDescription, setFixDescription] = useState("");
   const [fixLoading, setFixLoading] = useState(false);
+  const [calculatedScore, setCalculatedScore] = useState<number | null>(null);
 
   const { data: tool, isLoading } = useQuery({
     queryKey: ["tool", slug],
@@ -172,7 +461,6 @@ export default function ToolDetail() {
 
   const isOwner = tool?.created_by && user?.id === tool.created_by;
 
-  // Fetch author name for user-created tools
   const { data: authorProfile } = useQuery({
     queryKey: ["author-profile", tool?.created_by],
     queryFn: async () => {
@@ -224,29 +512,25 @@ export default function ToolDetail() {
       if (data?.error) throw new Error(data.error);
 
       const updated = data.tool;
-      if (!updated || !updated.fields || !updated.formula) {
-        throw new Error("A IA não retornou dados válidos para a correção");
-      }
+      if (!updated) throw new Error("A IA não retornou dados válidos para a correção");
 
       const { error: updateError } = await supabase.from("tools").update({
         fields: updated.fields,
-        formula: { ...updated.formula, sections: updated.sections },
+        formula: updated.formula,
         description: updated.description || tool.description,
         short_description: updated.short_description || tool.short_description,
       }).eq("id", tool.id);
 
       if (updateError) throw updateError;
 
-      // Reset calculation state so user sees the fresh tool
       setValues({});
       setResult(null);
       setCalculated(false);
       setCalculatedScore(null);
 
-      // Force refetch tool data
       await queryClient.refetchQueries({ queryKey: ["tool", slug] });
 
-      toast.success("Ferramenta corrigida com sucesso! Os campos foram atualizados.");
+      toast.success("Ferramenta corrigida com sucesso!");
       setFixDialogOpen(false);
       setFixDescription("");
     } catch (e: any) {
@@ -260,8 +544,8 @@ export default function ToolDetail() {
   const fields = tool ? parseFields(tool.fields) : [];
   const formula = tool ? parseFormula(tool.formula) : null;
   const sections = useMemo(() => groupBySection(fields), [fields]);
+  const isSimulatorType = formula?.type === "simulator";
 
-  // Separate switch fields into their own section at the end
   const inputSections = useMemo(() => {
     return sections.map(s => ({
       ...s,
@@ -277,45 +561,32 @@ export default function ToolDetail() {
   }, []);
 
   const evaluateFormula = useCallback((expression: string, vals: Record<string, string>, fieldsList: ToolField[]): number => {
-    // Build a context with all field values
     const context: Record<string, number> = {};
     for (const f of fieldsList) {
       const raw = vals[f.name];
       if (f.type === "switch" || f.type === "checkbox") {
         context[f.name] = (raw === "1" || raw === "true") ? 1 : 0;
-      } else if (f.type === "number") {
-        context[f.name] = parseFloat(raw || "0") || 0;
-      } else if (f.type === "select") {
-        context[f.name] = parseFloat(raw || "0") || 0;
       } else {
         context[f.name] = parseFloat(raw || "0") || 0;
       }
     }
 
-    // Try to evaluate as JS expression
     try {
       const keys = Object.keys(context);
       const vals2 = Object.values(context);
-      // eslint-disable-next-line no-new-func
       const fn = new Function(...keys, `"use strict"; return (${expression});`);
       const result = fn(...vals2);
       if (typeof result === "number" && !isNaN(result)) return result;
-    } catch {
-      // If expression is not evaluable, fall through to sum heuristic
-    }
+    } catch { /* fall through */ }
 
-    // Fallback: sum all numeric/boolean values (works for scores like CURB-65)
     let sum = 0;
-    for (const v of Object.values(context)) {
-      sum += v;
-    }
+    for (const v of Object.values(context)) sum += v;
     return sum;
   }, []);
 
   const matchInterpretation = useCallback((score: number, interpretations: Interpretation[]): Interpretation | null => {
     for (const interp of interpretations) {
       const range = interp.range;
-      // Match patterns like "0", "0-1", ">=3", "<=2", "2-3", "0 pontos", etc.
       const exactMatch = range.match(/^(\d+)(?:\s|$|[^-\d])/);
       const rangeMatch = range.match(/(\d+)\s*[-–a]\s*(\d+)/);
       const gteMatch = range.match(/>=?\s*(\d+)/);
@@ -326,31 +597,21 @@ export default function ToolDetail() {
         const high = parseInt(rangeMatch[2]);
         if (score >= low && score <= high) return interp;
       } else if (gteMatch) {
-        const threshold = parseInt(gteMatch[1]);
-        if (score >= threshold) return interp;
+        if (score >= parseInt(gteMatch[1])) return interp;
       } else if (lteMatch) {
-        const threshold = parseInt(lteMatch[1]);
-        if (score <= threshold) return interp;
+        if (score <= parseInt(lteMatch[1])) return interp;
       } else if (exactMatch) {
-        const val = parseInt(exactMatch[1]);
-        if (score === val) return interp;
+        if (score === parseInt(exactMatch[1])) return interp;
       } else {
-        // Try parsing just a number
         const num = parseInt(range);
         if (!isNaN(num) && score === num) return interp;
       }
     }
-    // Fallback: return last interpretation for high scores, first for low
-    if (interpretations.length > 0) {
-      return interpretations[interpretations.length - 1];
-    }
+    if (interpretations.length > 0) return interpretations[interpretations.length - 1];
     return null;
   }, []);
 
-  const [calculatedScore, setCalculatedScore] = useState<number | null>(null);
-
   const handleCalculate = () => {
-    // Switch/checkbox fields default to "0" (off), so they're never truly "missing"
     const missing = fields.filter(f => f.required && f.type !== "switch" && f.type !== "checkbox" && !values[f.name]);
     if (missing.length) {
       toast.error(`Preencha os campos obrigatórios: ${missing.map(f => f.label).join(", ")}`);
@@ -396,7 +657,7 @@ export default function ToolDetail() {
   const backPath = tool.type === "calculadora" ? "/calculadoras" : "/simuladores";
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <button
         onClick={() => navigate(backPath)}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -434,13 +695,21 @@ export default function ToolDetail() {
         </div>
       </div>
 
-      {fields.length > 0 ? (
+      {/* ─── SIMULATOR RENDERING ─── */}
+      {isSimulatorType && formula ? (
+        <SimulatorRenderer
+          formula={formula}
+          toolName={tool.name}
+          authorName={authorName}
+          hasCreator={!!tool.created_by}
+        />
+      ) : fields.length > 0 ? (
+        /* ─── CALCULATOR RENDERING ─── */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Input sections */}
           <div className="lg:col-span-2 space-y-6">
             {inputSections.map((section, si) => (
               <div key={si}>
-                {/* Regular fields in a card */}
                 {section.regularFields.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card p-6 mb-6">
                     <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
@@ -500,7 +769,6 @@ export default function ToolDetail() {
                   </div>
                 )}
 
-                {/* Switch fields in a card */}
                 {section.switchFields.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card p-6">
                     {section.regularFields.length === 0 && (
@@ -524,7 +792,6 @@ export default function ToolDetail() {
               </div>
             ))}
 
-            {/* Actions */}
             <div className="flex gap-3">
               <Button size="lg" onClick={handleCalculate} className="gap-2 flex-1 sm:flex-none">
                 <Calculator className="h-4 w-4" />
@@ -540,22 +807,22 @@ export default function ToolDetail() {
           <div className="space-y-6">
             {calculated && result ? (
               <>
-                 <div
-                   className="rounded-2xl border p-6"
-                   style={{
-                     borderColor: result.color ? `${result.color}50` : undefined,
-                     backgroundColor: result.color ? `${result.color}15` : undefined,
-                   }}
-                 >
-                   <p className="text-sm text-muted-foreground mb-1">Resultado</p>
-                   {calculatedScore !== null && (
-                     <p className="text-4xl font-bold mb-1" style={{ color: result.color }}>
-                       {calculatedScore}
-                     </p>
-                   )}
-                   <p className="text-2xl font-bold" style={{ color: result.color }}>
-                     {result.label}
-                   </p>
+                <div
+                  className="rounded-2xl border p-6"
+                  style={{
+                    borderColor: result.color ? `${result.color}50` : undefined,
+                    backgroundColor: result.color ? `${result.color}15` : undefined,
+                  }}
+                >
+                  <p className="text-sm text-muted-foreground mb-1">Resultado</p>
+                  {calculatedScore !== null && (
+                    <p className="text-4xl font-bold mb-1" style={{ color: result.color }}>
+                      {calculatedScore}
+                    </p>
+                  )}
+                  <p className="text-2xl font-bold" style={{ color: result.color }}>
+                    {result.label}
+                  </p>
                   <p className="text-sm text-muted-foreground mt-2">{result.description}</p>
                 </div>
 
@@ -594,7 +861,6 @@ export default function ToolDetail() {
               </div>
             )}
 
-            {/* Interpretation scale */}
             {formula?.interpretation && formula.interpretation.length > 0 && (
               <div className="rounded-2xl border border-border bg-card p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
