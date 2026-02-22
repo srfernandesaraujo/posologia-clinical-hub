@@ -39,6 +39,7 @@ import SalasVirtuais from "./pages/SalasVirtuais";
 import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
+import Gamificacao from "./pages/Gamificacao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/gamificacao" element={<Gamificacao />} />
             </Route>
 
             {/* Admin routes */}

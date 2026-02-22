@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, FlaskConical, ArrowRight } from "lucide-react";
+import { Calculator, FlaskConical, ArrowRight, Trophy, Flame, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useGamification } from "@/hooks/useGamification";
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [profileName, setProfileName] = useState("");
+  const { totalPoints, streak, earnedBadges } = useGamification();
 
   useEffect(() => {
     if (user) {
@@ -50,6 +52,28 @@ export default function Dashboard() {
           {t("dashboard.welcome")} <span className="font-semibold text-foreground">{t("common.brand")}</span>. {t("dashboard.chooseCategory")}
         </p>
       </div>
+
+      {/* Gamification Mini Widget */}
+      <Link
+        to="/gamificacao"
+        className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5 hover:bg-primary/10 transition-colors group"
+      >
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-primary" />
+            <span className="text-lg font-bold text-primary">{totalPoints.toLocaleString("pt-BR")} pts</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">{streak} {streak === 1 ? "dia" : "dias"} de streak</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">{earnedBadges.length} badges</span>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+      </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((card) => (
