@@ -2,11 +2,28 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Calculator, FlaskConical, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Profissional";
+  const [profileName, setProfileName] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.full_name) setProfileName(data.full_name);
+        });
+    }
+  }, [user]);
+
+  const firstName = profileName?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Profissional";
 
   const cards = [
     {
