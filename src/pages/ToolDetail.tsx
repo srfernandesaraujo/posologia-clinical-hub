@@ -27,6 +27,7 @@ import { useState, useCallback, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import { ShareToolButton } from "@/components/ShareToolButton";
 
 
 
@@ -965,14 +966,19 @@ export default function ToolDetail() {
               {tool.short_description && <p className="text-sm text-muted-foreground mt-0.5">{tool.short_description}</p>}
             </div>
           </div>
-          {isOwner && (
+          {(isOwner || true) && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setFixDialogOpen(true)}>
-                <MessageCircleWarning className="h-4 w-4" />Corrigir com IA
-              </Button>
-              <Button variant="destructive" size="sm" className="gap-1.5" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4" />Excluir
-              </Button>
+              <ShareToolButton toolId={tool.id} toolName={tool.name} />
+              {isOwner && (
+                <>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setFixDialogOpen(true)}>
+                    <MessageCircleWarning className="h-4 w-4" />Corrigir com IA
+                  </Button>
+                  <Button variant="destructive" size="sm" className="gap-1.5" onClick={handleDelete}>
+                    <Trash2 className="h-4 w-4" />Excluir
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
