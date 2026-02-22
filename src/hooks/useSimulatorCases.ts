@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const SIMULATOR_SLUGS = ["tdm", "prm", "antimicrobianos", "acompanhamento", "insulina", "bomba-infusao"];
+const SIMULATOR_SLUGS = ["tdm", "prm", "antimicrobianos", "acompanhamento", "insulina", "bomba-infusao", "desmame-benzo"];
 
 export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
   const queryClient = useQueryClient();

@@ -29,6 +29,7 @@ import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
 import SimuladorAcompanhamento from "./pages/simuladores/SimuladorAcompanhamento";
 import SimuladorInsulina from "./pages/simuladores/SimuladorInsulina";
 import SimuladorBombaInfusao from "./pages/simuladores/SimuladorBombaInfusao";
+import SimuladorDesmameBenzo from "./pages/simuladores/SimuladorDesmameBenzo";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/sala/simulador/acompanhamento" element={<SimuladorAcompanhamento />} />
               <Route path="/sala/simulador/insulina" element={<SimuladorInsulina />} />
               <Route path="/sala/simulador/bomba-infusao" element={<SimuladorBombaInfusao />} />
+              <Route path="/sala/simulador/desmame-benzo" element={<SimuladorDesmameBenzo />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -76,6 +78,7 @@ const App = () => (
               <Route path="/simuladores/acompanhamento" element={<SimuladorAcompanhamento />} />
               <Route path="/simuladores/insulina" element={<SimuladorInsulina />} />
               <Route path="/simuladores/bomba-infusao" element={<SimuladorBombaInfusao />} />
+              <Route path="/simuladores/desmame-benzo" element={<SimuladorDesmameBenzo />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
