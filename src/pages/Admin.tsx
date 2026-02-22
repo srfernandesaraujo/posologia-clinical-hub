@@ -345,6 +345,7 @@ export default function Admin() {
       <Tabs defaultValue="tools" className="space-y-6">
         <TabsList className="bg-secondary">
           <TabsTrigger value="tools" className="gap-2"><Calculator className="h-4 w-4" />{t("admin.tools")}</TabsTrigger>
+          <TabsTrigger value="invite" className="gap-2"><UserPlus className="h-4 w-4" />Convidar</TabsTrigger>
           <TabsTrigger value="users" className="gap-2 relative">
             <Users className="h-4 w-4" />{t("admin.users")}
             {pendingUsers > 0 && <span className="ml-1 h-5 w-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">{pendingUsers}</span>}
@@ -605,10 +606,9 @@ export default function Admin() {
           )}
         </TabsContent>
 
-        {/* Users Tab */}
-        <TabsContent value="users">
-          {/* Invite User Section */}
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-6">
+        {/* Invite Tab */}
+        <TabsContent value="invite">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
             <h2 className="font-semibold mb-3 flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-primary" />
               Convidar Usuário (Acesso Ilimitado)
@@ -655,7 +655,10 @@ export default function Admin() {
               </Button>
             </form>
           </div>
+        </TabsContent>
 
+        {/* Users Tab */}
+        <TabsContent value="users">
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4">{t("admin.registeredUsers")} ({users.length})</h2>
             {users.length === 0 ? (
