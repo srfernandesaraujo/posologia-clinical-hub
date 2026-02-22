@@ -134,6 +134,10 @@ INSTRUÇÕES:
 - Para painéis "checklist" e "radio": mantenha opções clinicamente relevantes para o novo cenário e atualize correctAnswers
 - Para painéis "info": atualize o conteúdo com os dados do novo paciente
 - Para painéis "text": atualize correctText para o novo cenário
+- Para painéis "chart": atualize chartConfig.data com valores diferentes mas mantenha a mesma estrutura de series e axes
+- Para painéis "numeric_keypad": mantenha keypadConfig mas atualize correctValue para o novo cenário
+- Para painéis "indicator": atualize indicatorConfig.displayValues com novos valores
+- Para painéis "calculation": mantenha calculationConfig.fields mas atualize correctValue
 - Atualize o feedback de cada step para o novo cenário
 - Mantenha patient_summary atualizado
 - O caso deve ter title, difficulty, patient_summary e steps

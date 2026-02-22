@@ -5,7 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2,
   User, ClipboardCheck, CheckCircle, XCircle, ChevronRight, Info, Star,
+  Activity, Gauge,
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ReferenceLine, ReferenceArea, AreaChart, Area,
+  BarChart, Bar,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,10 +40,50 @@ interface ToolField {
 interface Interpretation {
   range: string; label: string; description: string; color?: string; recommendations?: string[];
 }
+interface ChartDataPoint {
+  label: string;
+  [key: string]: string | number;
+}
+interface ChartSeries {
+  dataKey: string;
+  name: string;
+  color?: string;
+  type?: "line" | "area" | "bar";
+}
+interface ChartConfig {
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  yAxisUnit?: string;
+  data: ChartDataPoint[];
+  series: ChartSeries[];
+  referenceLines?: { y: number; label: string; color?: string }[];
+  referenceAreas?: { y1: number; y2: number; label?: string; color?: string }[];
+}
+interface NumericKeypadConfig {
+  displayLabel?: string;
+  displayUnit?: string;
+  correctValue?: number;
+  tolerance?: number;
+  buttons?: string[];
+  lcdColor?: "green" | "blue" | "amber";
+  actionButtons?: { label: string; color?: string }[];
+}
+interface IndicatorConfig {
+  indicators: { label: string; status: "on" | "off" | "blink"; color: "green" | "red" | "yellow" | "blue"; icon?: string }[];
+  displayValues?: { label: string; value: string; unit?: string }[];
+}
+interface CalculationFieldConfig {
+  fields: { name: string; label: string; unit?: string; correctValue?: number; tolerance?: number }[];
+  formula_hint?: string;
+}
 interface SimPanel {
-  title: string; type: "info" | "checklist" | "radio" | "text";
+  title: string; type: "info" | "checklist" | "radio" | "text" | "chart" | "numeric_keypad" | "indicator" | "calculation";
   content?: string; options?: string[];
   correctAnswers?: string[]; correctText?: string;
+  chartConfig?: ChartConfig;
+  keypadConfig?: NumericKeypadConfig;
+  indicatorConfig?: IndicatorConfig;
+  calculationConfig?: CalculationFieldConfig;
 }
 interface SimStep {
   title: string; feedback: string; panels: SimPanel[];
@@ -294,7 +340,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     if (!s) return { correct: 0, total: 0 };
     let correct = 0, total = 0;
     s.panels.forEach((panel, pi) => {
-      if (panel.type === "info") return;
+      if (panel.type === "info" || panel.type === "chart" || panel.type === "indicator") return;
       total++;
       const userAns = answers[stepIdx]?.[pi];
       if (panel.type === "checklist" && panel.correctAnswers) {
@@ -304,18 +350,34 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
         if (panel.correctAnswers.includes(userAns)) correct++;
       } else if (panel.type === "text" && panel.correctText) {
         if (userAns?.trim()) correct++;
+      } else if (panel.type === "numeric_keypad" && panel.keypadConfig?.correctValue !== undefined) {
+        const val = parseFloat(userAns || "");
+        const tol = panel.keypadConfig.tolerance || 0;
+        if (Math.abs(val - panel.keypadConfig.correctValue) <= tol) correct++;
+      } else if (panel.type === "calculation" && panel.calculationConfig) {
+        const calcAns = userAns as Record<string, string> || {};
+        let allCorrect = true;
+        for (const f of panel.calculationConfig.fields) {
+          if (f.correctValue === undefined) continue;
+          const v = parseFloat(calcAns[f.name] || "");
+          const t = f.tolerance || 0;
+          if (isNaN(v) || Math.abs(v - f.correctValue) > t) { allCorrect = false; break; }
+        }
+        if (allCorrect) correct++;
       }
     });
     return { correct, total };
   };
 
-  const hasInteractivePanels = step?.panels.some(p => p.type !== "info");
+  const hasInteractivePanels = step?.panels.some(p => !["info", "chart", "indicator"].includes(p.type));
   const hasAnswered = step?.panels.some((p, pi) => {
-    if (p.type === "info") return false;
+    if (["info", "chart", "indicator"].includes(p.type)) return false;
     const ans = answers[currentStep]?.[pi];
     if (p.type === "checklist") return (ans as string[] || []).length > 0;
     if (p.type === "radio") return !!ans;
     if (p.type === "text") return !!(ans as string)?.trim();
+    if (p.type === "numeric_keypad") return !!(ans as string)?.trim();
+    if (p.type === "calculation") { const ca = ans as Record<string, string> || {}; return Object.values(ca).some(v => !!v?.trim()); }
     return false;
   });
 
@@ -480,6 +542,167 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
                   )}
                 </div>
               )}
+
+              {/* ─── Chart Panel ─── */}
+              {panel.type === "chart" && panel.chartConfig && (
+                <div className="w-full">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={panel.chartConfig.data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="label" label={panel.chartConfig.xAxisLabel ? { value: panel.chartConfig.xAxisLabel, position: "insideBottom", offset: -5 } : undefined} tick={{ fontSize: 12 }} />
+                      <YAxis label={panel.chartConfig.yAxisLabel ? { value: `${panel.chartConfig.yAxisLabel}${panel.chartConfig.yAxisUnit ? ` (${panel.chartConfig.yAxisUnit})` : ""}`, angle: -90, position: "insideLeft" } : undefined} tick={{ fontSize: 12 }} />
+                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--card-foreground))" }} />
+                      <Legend />
+                      {panel.chartConfig.referenceAreas?.map((ra, rai) => (
+                        <ReferenceArea key={rai} y1={ra.y1} y2={ra.y2} fill={ra.color || "hsl(var(--primary) / 0.15)"} label={ra.label} />
+                      ))}
+                      {panel.chartConfig.referenceLines?.map((rl, rli) => (
+                        <ReferenceLine key={rli} y={rl.y} stroke={rl.color || "hsl(var(--destructive))"} strokeDasharray="5 5" label={{ value: rl.label, position: "right", fontSize: 11 }} />
+                      ))}
+                      {panel.chartConfig.series.map((s, si) => (
+                        <Line key={si} type="monotone" dataKey={s.dataKey} name={s.name} stroke={s.color || "hsl(var(--primary))"} strokeWidth={2} dot={{ r: 3 }} />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* ─── Numeric Keypad + LCD Panel ─── */}
+              {panel.type === "numeric_keypad" && panel.keypadConfig && (() => {
+                const cfg = panel.keypadConfig;
+                const lcdColors = {
+                  green: "bg-green-900 text-green-300 border-green-700",
+                  blue: "bg-blue-900 text-blue-300 border-blue-700",
+                  amber: "bg-amber-900 text-amber-300 border-amber-700",
+                };
+                const lcdClass = lcdColors[cfg.lcdColor || "green"];
+                const currentVal = (answers[currentStep]?.[pi] as string) || "";
+                const handleKey = (key: string) => {
+                  if (showFeedback) return;
+                  if (key === "C") { setAnswer(pi, ""); return; }
+                  if (key === "⌫") { setAnswer(pi, currentVal.slice(0, -1)); return; }
+                  if (key === "." && currentVal.includes(".")) return;
+                  setAnswer(pi, currentVal + key);
+                };
+                const isCorrect = showFeedback && cfg.correctValue !== undefined && cfg.tolerance !== undefined
+                  ? Math.abs(parseFloat(currentVal) - cfg.correctValue) <= cfg.tolerance
+                  : showFeedback && cfg.correctValue !== undefined
+                  ? parseFloat(currentVal) === cfg.correctValue
+                  : undefined;
+                return (
+                  <div className="space-y-3">
+                    {/* LCD Display */}
+                    <div className={`${lcdClass} border-2 rounded-lg p-4 font-mono text-right`}>
+                      {cfg.displayLabel && <div className="text-xs opacity-70 text-left mb-1">{cfg.displayLabel}</div>}
+                      <div className="text-3xl font-bold tracking-wider min-h-[2.5rem]">
+                        {currentVal || "0"}{cfg.displayUnit && <span className="text-lg ml-1 opacity-70">{cfg.displayUnit}</span>}
+                      </div>
+                    </div>
+                    {showFeedback && isCorrect !== undefined && (
+                      <div className={`text-sm p-2 rounded ${isCorrect ? "bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300" : "bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-300"}`}>
+                        {isCorrect ? "✓ Valor correto!" : `✗ Valor esperado: ${cfg.correctValue}${cfg.displayUnit ? ` ${cfg.displayUnit}` : ""}`}
+                      </div>
+                    )}
+                    {/* Numeric Keypad */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {(cfg.buttons || ["7","8","9","⌫","4","5","6","C","1","2","3",".","0"]).map((btn, bi) => (
+                        <button key={bi} onClick={() => handleKey(btn)} disabled={showFeedback}
+                          className={`p-3 rounded-lg text-lg font-bold transition-all border ${
+                            btn === "C" ? "bg-red-600/20 border-red-600/40 text-red-400 hover:bg-red-600/30" :
+                            btn === "⌫" ? "bg-orange-600/20 border-orange-600/40 text-orange-400 hover:bg-orange-600/30" :
+                            "bg-muted border-border hover:bg-accent"
+                          } disabled:opacity-50`}
+                        >{btn}</button>
+                      ))}
+                    </div>
+                    {/* Action buttons */}
+                    {cfg.actionButtons && (
+                      <div className="flex gap-2 flex-wrap">
+                        {cfg.actionButtons.map((ab, abi) => (
+                          <button key={abi} className={`px-4 py-2 rounded-lg font-bold text-sm border transition-all ${
+                            ab.color === "green" ? "bg-green-600/20 border-green-600/50 text-green-400 hover:bg-green-600/30" :
+                            ab.color === "red" ? "bg-red-600/20 border-red-600/50 text-red-400 hover:bg-red-600/30" :
+                            ab.color === "yellow" ? "bg-yellow-600/20 border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/30" :
+                            "bg-muted border-border hover:bg-accent"
+                          }`}>{ab.label}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ─── Indicator Panel ─── */}
+              {panel.type === "indicator" && panel.indicatorConfig && (
+                <div className="space-y-4">
+                  {/* Status indicators */}
+                  <div className="flex flex-wrap gap-4">
+                    {panel.indicatorConfig.indicators.map((ind, ii) => {
+                      const colorMap = {
+                        green: "bg-green-500 shadow-green-500/50",
+                        red: "bg-red-500 shadow-red-500/50",
+                        yellow: "bg-yellow-500 shadow-yellow-500/50",
+                        blue: "bg-blue-500 shadow-blue-500/50",
+                      };
+                      return (
+                        <div key={ii} className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full ${colorMap[ind.color]} ${ind.status === "blink" ? "animate-pulse" : ""} ${ind.status === "off" ? "opacity-20" : "shadow-lg"}`} />
+                          <span className="text-sm font-medium">{ind.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Display values */}
+                  {panel.indicatorConfig.displayValues && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {panel.indicatorConfig.displayValues.map((dv, dvi) => (
+                        <div key={dvi} className="bg-muted/50 border border-border rounded-lg p-3 text-center">
+                          <div className="text-xs text-muted-foreground">{dv.label}</div>
+                          <div className="text-xl font-bold font-mono">{dv.value}{dv.unit && <span className="text-sm ml-1 text-muted-foreground">{dv.unit}</span>}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ─── Calculation Fields Panel ─── */}
+              {panel.type === "calculation" && panel.calculationConfig && (() => {
+                const cfg = panel.calculationConfig;
+                const calcAnswers = (answers[currentStep]?.[pi] as Record<string, string>) || {};
+                const setCalcField = (fieldName: string, val: string) => {
+                  setAnswer(pi, { ...calcAnswers, [fieldName]: val });
+                };
+                return (
+                  <div className="space-y-3">
+                    {cfg.formula_hint && (
+                      <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm">
+                        <strong>Dica:</strong> {cfg.formula_hint}
+                      </div>
+                    )}
+                    {cfg.fields.map((f, fi) => {
+                      const userVal = calcAnswers[f.name] || "";
+                      const isCorrect = showFeedback && f.correctValue !== undefined && f.tolerance !== undefined
+                        ? Math.abs(parseFloat(userVal) - f.correctValue) <= f.tolerance
+                        : showFeedback && f.correctValue !== undefined
+                        ? parseFloat(userVal) === f.correctValue
+                        : undefined;
+                      return (
+                        <div key={fi}>
+                          <Label className="text-sm">{f.label}{f.unit && ` (${f.unit})`}</Label>
+                          <Input type="number" step="any" placeholder="Calcule e insira..." value={userVal}
+                            onChange={e => setCalcField(f.name, e.target.value)} disabled={showFeedback} className="mt-1" />
+                          {showFeedback && isCorrect !== undefined && (
+                            <p className={`text-xs mt-1 ${isCorrect ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                              {isCorrect ? "✓ Correto!" : `✗ Valor esperado: ${f.correctValue}${f.unit ? ` ${f.unit}` : ""}`}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         ))}

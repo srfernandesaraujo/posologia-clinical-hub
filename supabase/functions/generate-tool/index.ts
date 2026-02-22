@@ -38,37 +38,77 @@ Retorne o simulador COMPLETO corrigido.`
   : `O usuário quer criar um simulador clínico interativo.`}
 
 TIPOS DE SIMULADORES QUE VOCÊ PODE CRIAR (exemplos):
-1. **PRM (Problemas Relacionados a Medicamentos)**: Paciente + prescrição médica → aluno avalia cada medicamento buscando PRMs de segurança, efetividade, indicação ou adesão.
-2. **Stewardship de Antimicrobianos**: Caso infeccioso com timeline (Dia 1 admissão → Dia 3 resultados de cultura → Relatório). Aluno escolhe antibióticos empíricos, solicita culturas, depois ajusta terapia definitiva.
-3. **TDM (Monitorização Terapêutica)**: Paciente com dados farmacocinéticos (nível de vale, creatinina, ClCr). Aluno analisa se o nível está na janela terapêutica e propõe ajuste de dose/intervalo.
-4. **Acompanhamento Farmacoterapêutico**: Follow-up longitudinal (Mês 0 → Mês 3 → Mês 6). Exames laboratoriais com tendências, avaliação clínica, modificação de prescrição.
-5. **Qualquer outro tipo** que faça sentido clínicamente baseado na solicitação do usuário.
+1. **PRM (Problemas Relacionados a Medicamentos)**: Paciente + prescrição médica → aluno avalia cada medicamento buscando PRMs.
+2. **Stewardship de Antimicrobianos**: Caso infeccioso com timeline. Aluno escolhe antibióticos, solicita culturas, ajusta terapia.
+3. **TDM (Monitorização Terapêutica)**: Paciente com dados farmacocinéticos, curvas de concentração vs tempo.
+4. **Acompanhamento Farmacoterapêutico**: Follow-up longitudinal com exames laboratoriais e tendências.
+5. **Bomba de Infusão**: Interface com LCD, teclado numérico, indicadores visuais, botões de ação.
+6. **Qualquer outro tipo** que faça sentido clínicamente baseado na solicitação do usuário.
 
 Escolha o tipo mais adequado baseado na solicitação do usuário e crie o simulador.
 
 ESTRUTURA OBRIGATÓRIA - STEPS E PANELS:
 O simulador é organizado em STEPS (etapas sequenciais). Cada step tem PANELS (painéis lado a lado, máximo 3).
 
-Cada PANEL tem:
-- title: Título do painel
-- type: "info" (apenas exibição), "checklist" (múltipla seleção), "radio" (seleção única), "text" (resposta escrita)
-- content: Texto do painel (para type "info"). Use markdown simples: **negrito**, quebras de linha.
-- options: Array de strings com as opções (para checklist/radio)
-- correctAnswers: Array com as respostas corretas (para checklist/radio)
-- correctText: Texto da resposta correta (para type "text", usado na comparação)
+TIPOS DE PANELS DISPONÍVEIS:
 
-Cada STEP tem:
-- title: Nome da etapa (ex: "Dia 1: Admissão", "Mês 3", "Análise da Prescrição")
-- feedback: Texto detalhado de feedback mostrado APÓS o aluno completar a etapa. Deve ser educativo, explicando o raciocínio clínico correto.
-- panels: Array de 2-3 painéis
+1. **"info"** - Apenas exibição de texto. Use markdown simples: **negrito**, quebras de linha.
+   Campos: content (texto)
+
+2. **"checklist"** - Múltipla seleção com opções.
+   Campos: options (array de strings), correctAnswers (array de strings corretas)
+
+3. **"radio"** - Seleção única.
+   Campos: options, correctAnswers
+
+4. **"text"** - Resposta escrita livre.
+   Campos: correctText (resposta esperada)
+
+5. **"chart"** - Gráfico interativo (curvas farmacocinéticas, tendências laboratoriais, etc.)
+   Campos: chartConfig com:
+   - data: array de pontos {label: "0h", concentracao: 25}
+   - series: [{dataKey: "concentracao", name: "Concentração", color: "#ef4444"}]
+   - xAxisLabel, yAxisLabel, yAxisUnit
+   - referenceLines: [{y: 20, label: "Cmax", color: "#22c55e"}]
+   - referenceAreas: [{y1: 15, y2: 20, label: "Janela Terapêutica", color: "rgba(34,197,94,0.15)"}]
+   USE ESTE TIPO para curvas de concentração vs tempo, tendências de exames, gráficos PK/PD.
+
+6. **"numeric_keypad"** - Teclado numérico com display LCD (estilo bomba de infusão, monitor).
+   Campos: keypadConfig com:
+   - displayLabel: "Taxa de Infusão"
+   - displayUnit: "mL/h"
+   - correctValue: 12.5 (valor correto numérico)
+   - tolerance: 0.5 (tolerância para aceitar como correto)
+   - lcdColor: "green" | "blue" | "amber"
+   - actionButtons: [{label: "Start", color: "green"}, {label: "Stop", color: "red"}]
+   USE ESTE TIPO para simulações de equipamentos (bombas de infusão, monitores, etc.)
+
+7. **"indicator"** - Indicadores visuais de status (luzes, valores de monitorização).
+   Campos: indicatorConfig com:
+   - indicators: [{label: "Infundindo", status: "blink", color: "green"}, {label: "Alarme", status: "off", color: "red"}]
+   - displayValues: [{label: "PAM", value: "72", unit: "mmHg"}, {label: "FC", value: "88", unit: "bpm"}]
+   USE ESTE TIPO para monitorização de sinais vitais, status de equipamentos.
+
+8. **"calculation"** - Campos de cálculo onde o aluno calcula e insere valores.
+   Campos: calculationConfig com:
+   - fields: [{name: "dose", label: "Dose", unit: "mg", correctValue: 500, tolerance: 10}]
+   - formula_hint: "Dose = Concentração × Volume"
+   USE ESTE TIPO quando o aluno precisa calcular doses, taxas de infusão, clearances, etc.
+
+REGRAS IMPORTANTES PARA INTERFACES RICAS:
+- Quando o usuário pedir simulação de equipamentos (bombas, monitores), USE os tipos "numeric_keypad", "indicator" e "chart"
+- Quando o usuário pedir curvas ou gráficos, USE o tipo "chart" com dados realistas
+- Combine painéis: ex: um "info" com dados do paciente + um "numeric_keypad" para entrada + um "indicator" para status
+- Os painéis devem criar uma interface visual imersiva e profissional
+- Dados do paciente devem ser realistas (nomes brasileiros, valores laboratoriais plausíveis)
 
 REGRAS CLÍNICAS:
-- Dados do paciente devem ser realistas (nomes brasileiros, valores laboratoriais plausíveis)
 - Inclua sinais vitais quando relevante (PA, FC, Temp, SpO2)
 - Para PRM: pelo menos 1-2 medicamentos com problemas reais
 - Para Stewardship: inclua diagnóstico infeccioso, antibióticos empíricos E resultados de cultura/antibiograma
-- Para TDM: inclua parâmetros farmacocinéticos (nível sérico, Vd, meia-vida, ClCr)
-- Para Acompanhamento: inclua exames com valores e tendências, e condutas farmacêuticas
+- Para TDM: inclua parâmetros farmacocinéticos com gráfico de curva usando panel type "chart"
+- Para Acompanhamento: inclua exames com valores e tendências usando type "chart"
+- Para Bombas de Infusão: use "numeric_keypad" com LCD, "indicator" para status, "calculation" para dose
 
 REGRAS GERAIS:
 - slug: português sem acentos, separado por hífens
@@ -102,19 +142,61 @@ REGRAS GERAIS:
                     type: "object" as const,
                     properties: {
                       title: { type: "string" as const },
-                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text"] },
-                      content: { type: "string" as const, description: "Conteúdo textual. Use **negrito** e \\n para quebras de linha." },
+                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text", "chart", "numeric_keypad", "indicator", "calculation"] },
+                      content: { type: "string" as const, description: "Conteúdo textual para type info. Use **negrito** e \\n para quebras de linha." },
                       options: { type: "array" as const, items: { type: "string" as const }, description: "Opções para checklist/radio" },
                       correctAnswers: { type: "array" as const, items: { type: "string" as const }, description: "Respostas corretas para checklist/radio" },
                       correctText: { type: "string" as const, description: "Resposta esperada para type text" },
+                      chartConfig: {
+                        type: "object" as const,
+                        description: "Configuração de gráfico para type chart",
+                        properties: {
+                          xAxisLabel: { type: "string" as const },
+                          yAxisLabel: { type: "string" as const },
+                          yAxisUnit: { type: "string" as const },
+                          data: { type: "array" as const, items: { type: "object" as const, additionalProperties: true } },
+                          series: { type: "array" as const, items: { type: "object" as const, properties: { dataKey: { type: "string" as const }, name: { type: "string" as const }, color: { type: "string" as const } }, required: ["dataKey", "name"] as const } },
+                          referenceLines: { type: "array" as const, items: { type: "object" as const, properties: { y: { type: "number" as const }, label: { type: "string" as const }, color: { type: "string" as const } }, required: ["y", "label"] as const } },
+                          referenceAreas: { type: "array" as const, items: { type: "object" as const, properties: { y1: { type: "number" as const }, y2: { type: "number" as const }, label: { type: "string" as const }, color: { type: "string" as const } }, required: ["y1", "y2"] as const } },
+                        },
+                        required: ["data", "series"] as const,
+                      },
+                      keypadConfig: {
+                        type: "object" as const,
+                        description: "Configuração do teclado numérico + LCD para type numeric_keypad",
+                        properties: {
+                          displayLabel: { type: "string" as const },
+                          displayUnit: { type: "string" as const },
+                          correctValue: { type: "number" as const },
+                          tolerance: { type: "number" as const },
+                          lcdColor: { type: "string" as const, enum: ["green", "blue", "amber"] },
+                          actionButtons: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, color: { type: "string" as const } }, required: ["label"] as const } },
+                        },
+                      },
+                      indicatorConfig: {
+                        type: "object" as const,
+                        description: "Configuração de indicadores visuais para type indicator",
+                        properties: {
+                          indicators: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, status: { type: "string" as const, enum: ["on", "off", "blink"] }, color: { type: "string" as const, enum: ["green", "red", "yellow", "blue"] } }, required: ["label", "status", "color"] as const } },
+                          displayValues: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, value: { type: "string" as const }, unit: { type: "string" as const } }, required: ["label", "value"] as const } },
+                        },
+                        required: ["indicators"] as const,
+                      },
+                      calculationConfig: {
+                        type: "object" as const,
+                        description: "Configuração de campos de cálculo para type calculation",
+                        properties: {
+                          fields: { type: "array" as const, items: { type: "object" as const, properties: { name: { type: "string" as const }, label: { type: "string" as const }, unit: { type: "string" as const }, correctValue: { type: "number" as const }, tolerance: { type: "number" as const } }, required: ["name", "label"] as const } },
+                          formula_hint: { type: "string" as const },
+                        },
+                        required: ["fields"] as const,
+                      },
                     },
                     required: ["title", "type"] as const,
-                    additionalProperties: false as const,
                   },
                 },
               },
               required: ["title", "feedback", "panels"] as const,
-              additionalProperties: false as const,
             },
           },
         },
