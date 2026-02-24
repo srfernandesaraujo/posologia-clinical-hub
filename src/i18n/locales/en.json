@@ -7,7 +7,10 @@
     "contact": "Contact",
     "admin": "Admin",
     "analytics": "Analytics",
-    "logout": "Log out"
+    "logout": "Log out",
+    "plans": "Plans",
+    "virtualRooms": "Virtual Rooms",
+    "gamification": "Gamification"
   },
   "home": {
     "badge": "Free for healthcare professionals",
@@ -62,7 +65,21 @@
     "haveAccount": "Already have an account?",
     "accountCreated": "Account created! Check your email to confirm.",
     "pendingApproval": "Your account is awaiting administrator approval.",
-    "accountInactive": "Your account has been deactivated. Please contact the administrator."
+    "pendingDescription": "Your registration has been received. An administrator will review your request shortly.",
+    "pendingEmail": "You will receive an email when your account is approved.",
+    "accountInactive": "Your account has been deactivated. Please contact the administrator.",
+    "forgotPassword": "Forgot password?",
+    "resetPasswordTitle": "Reset password",
+    "resetPasswordDesc": "Enter your email and we'll send you a link to reset your password.",
+    "sendResetLink": "Send reset link",
+    "sendingLink": "Sending...",
+    "resetLinkSent": "Reset link sent! Check your email.",
+    "pwWeak": "Weak",
+    "pwMedium": "Medium",
+    "pwStrong": "Strong",
+    "reqMinChars": "Minimum 6 characters",
+    "reqUppercase": "One uppercase letter",
+    "reqNumber": "One number"
   },
   "dashboard": {
     "hello": "Hello, {{name}}! 👋",
@@ -72,14 +89,24 @@
     "calcDesc": "Validated scores, indices and formulas from medical literature.",
     "clinicalSimulators": "Clinical Simulators",
     "simDesc": "Simulate scenarios and train your clinical decision-making.",
-    "explore": "Explore"
+    "explore": "Explore",
+    "welcomeTitle": "Welcome to Posologia Clinical Hub! 🎉",
+    "welcomeDesc": "Here you'll find clinical calculators, simulators and tools to support your practice. Start by exploring a calculator!",
+    "tryCaclulator": "Try a calculator",
+    "dayStreak": "day streak",
+    "daysStreak": "days streak"
   },
   "calculators": {
     "title": "Clinical Calculators",
     "subtitle": "Select a calculator to begin.",
     "search": "Search calculator...",
     "noResults": "No calculators found.",
-    "empty": "No calculators available yet."
+    "empty": "No calculators available yet.",
+    "remainingToday": "remaining today",
+    "unlimited": "Unlimited",
+    "create": "Create Calculator",
+    "myCalculators": "My Calculators",
+    "systemCalculators": "System Calculators"
   },
   "simulators": {
     "title": "Clinical Simulators",
@@ -107,7 +134,27 @@
     "save": "Save changes",
     "saving": "Saving...",
     "saved": "Profile updated!",
-    "error": "Error saving."
+    "error": "Error saving.",
+    "subscription": "Subscription",
+    "cancelPlan": "Cancel plan",
+    "freePlanDesc": "You're on the free plan. Upgrade to unlock all features.",
+    "viewPlans": "View plans"
+  },
+  "plans": {
+    "title": "Plans & Pricing",
+    "subtitle": "Choose the ideal plan for your clinical routine. Start free and upgrade when you need.",
+    "currentPlan": "Current Plan",
+    "free": "Free",
+    "recommended": "RECOMMENDED",
+    "fullAccess": "Full Access",
+    "fullAccessDesc": "You have full access to all platform features.",
+    "manage": "Manage subscription",
+    "validUntil": "Valid until",
+    "subscribe": "Subscribe Premium"
+  },
+  "notFound": {
+    "message": "Oops! Page not found",
+    "backHome": "Return to Home"
   },
   "admin": {
     "title": "Admin Panel",

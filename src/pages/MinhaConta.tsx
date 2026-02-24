@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Crown, Loader2 } from "lucide-react";
+import { Crown, Loader2, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function MinhaConta() {
@@ -55,6 +55,9 @@ export default function MinhaConta() {
     }
   }, [user]);
 
+  const isInvitedOrAdmin = hasUnlimitedAccess || isAdmin;
+  const hasFullAccess = isPremium || isInvitedOrAdmin;
+
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
@@ -100,42 +103,51 @@ export default function MinhaConta() {
       <div className="mt-8 rounded-2xl border border-border bg-card p-8">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Crown className="h-5 w-5" />
-          Assinatura
+          {t("account.subscription")}
         </h2>
         {subLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Verificando...
+            {t("common.loading")}
           </div>
-        ) : (isPremium || hasUnlimitedAccess || isAdmin) ? (
+        ) : hasFullAccess ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
-                Premium Ativo
+              <span className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center gap-1.5">
+                {isInvitedOrAdmin ? (
+                  <>
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    {t("plans.fullAccess")}
+                  </>
+                ) : (
+                  "Premium Ativo"
+                )}
               </span>
             </div>
-            {subscriptionEnd && (
+            {subscriptionEnd && !isInvitedOrAdmin && (
               <p className="text-sm text-muted-foreground">
-                Válido até {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
+                {t("plans.validUntil")} {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
               </p>
             )}
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={handleManagePortal}>
-                Gerenciar assinatura
-              </Button>
-              <Button variant="destructive" onClick={handleManagePortal}>
-                Cancelar plano
-              </Button>
-            </div>
+            {!isInvitedOrAdmin && (
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={handleManagePortal}>
+                  {t("plans.manage")}
+                </Button>
+                <Button variant="destructive" onClick={handleManagePortal}>
+                  {t("account.cancelPlan")}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Você está no plano gratuito. Faça upgrade para desbloquear todos os recursos.
+              {t("account.freePlanDesc")}
             </p>
             <Button onClick={() => navigate("/planos")}>
               <Crown className="h-4 w-4 mr-2" />
-              Ver planos
+              {t("account.viewPlans")}
             </Button>
           </div>
         )}

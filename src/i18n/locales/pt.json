@@ -7,7 +7,10 @@
     "contact": "Contato",
     "admin": "Admin",
     "analytics": "Analytics",
-    "logout": "Sair"
+    "logout": "Sair",
+    "plans": "Planos",
+    "virtualRooms": "Salas Virtuais",
+    "gamification": "Gamificação"
   },
   "home": {
     "badge": "Gratuito para profissionais de saúde",
@@ -62,7 +65,21 @@
     "haveAccount": "Já tem conta?",
     "accountCreated": "Conta criada! Verifique seu email para confirmar.",
     "pendingApproval": "Sua conta está aguardando aprovação do administrador.",
-    "accountInactive": "Sua conta foi desativada. Entre em contato com o administrador."
+    "pendingDescription": "Seu cadastro foi recebido com sucesso. Um administrador irá analisar sua solicitação em breve.",
+    "pendingEmail": "Você receberá um email quando sua conta for aprovada.",
+    "accountInactive": "Sua conta foi desativada. Entre em contato com o administrador.",
+    "forgotPassword": "Esqueceu a senha?",
+    "resetPasswordTitle": "Redefinir senha",
+    "resetPasswordDesc": "Digite seu email e enviaremos um link para redefinir sua senha.",
+    "sendResetLink": "Enviar link de redefinição",
+    "sendingLink": "Enviando...",
+    "resetLinkSent": "Link de redefinição enviado! Verifique seu email.",
+    "pwWeak": "Fraca",
+    "pwMedium": "Média",
+    "pwStrong": "Forte",
+    "reqMinChars": "Mínimo de 6 caracteres",
+    "reqUppercase": "Uma letra maiúscula",
+    "reqNumber": "Um número"
   },
   "dashboard": {
     "hello": "Olá, {{name}}! 👋",
@@ -72,14 +89,24 @@
     "calcDesc": "Scores, índices e fórmulas validadas pela literatura médica.",
     "clinicalSimulators": "Simuladores Clínicos",
     "simDesc": "Simule cenários e treine a tomada de decisão clínica.",
-    "explore": "Explorar"
+    "explore": "Explorar",
+    "welcomeTitle": "Bem-vindo ao Posologia Clinical Hub! 🎉",
+    "welcomeDesc": "Aqui você encontra calculadoras clínicas, simuladores e ferramentas para apoiar sua prática. Comece explorando uma calculadora!",
+    "tryCaclulator": "Experimentar uma calculadora",
+    "dayStreak": "dia de streak",
+    "daysStreak": "dias de streak"
   },
   "calculators": {
     "title": "Calculadoras Clínicas",
     "subtitle": "Selecione uma calculadora para começar.",
     "search": "Buscar calculadora...",
     "noResults": "Nenhuma calculadora encontrada.",
-    "empty": "Nenhuma calculadora disponível ainda."
+    "empty": "Nenhuma calculadora disponível ainda.",
+    "remainingToday": "restantes hoje",
+    "unlimited": "Ilimitado",
+    "create": "Criar Calculadora",
+    "myCalculators": "Minhas Calculadoras",
+    "systemCalculators": "Calculadoras do Sistema"
   },
   "simulators": {
     "title": "Simuladores Clínicos",
@@ -107,7 +134,27 @@
     "save": "Salvar alterações",
     "saving": "Salvando...",
     "saved": "Perfil atualizado!",
-    "error": "Erro ao salvar."
+    "error": "Erro ao salvar.",
+    "subscription": "Assinatura",
+    "cancelPlan": "Cancelar plano",
+    "freePlanDesc": "Você está no plano gratuito. Faça upgrade para desbloquear todos os recursos.",
+    "viewPlans": "Ver planos"
+  },
+  "plans": {
+    "title": "Planos e Preços",
+    "subtitle": "Escolha o plano ideal para sua rotina clínica. Comece gratuitamente e evolua quando precisar.",
+    "currentPlan": "Plano Atual",
+    "free": "Gratuito",
+    "recommended": "RECOMENDADO",
+    "fullAccess": "Acesso Completo",
+    "fullAccessDesc": "Você possui acesso completo a todos os recursos da plataforma.",
+    "manage": "Gerenciar assinatura",
+    "validUntil": "Válido até",
+    "subscribe": "Assinar Premium"
+  },
+  "notFound": {
+    "message": "Ops! Página não encontrada",
+    "backHome": "Voltar ao início"
   },
   "admin": {
     "title": "Painel Administrativo",
