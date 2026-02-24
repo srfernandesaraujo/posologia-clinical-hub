@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, FlaskConical, ArrowRight, Trophy, Flame, Star } from "lucide-react";
+import { Calculator, FlaskConical, ArrowRight, Trophy, Flame, Star, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
+
+const WELCOME_DISMISSED_KEY = "posologia_welcome_dismissed";
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [profileName, setProfileName] = useState("");
   const { totalPoints, streak, earnedBadges } = useGamification();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -22,10 +25,23 @@ export default function Dashboard() {
         .then(({ data }) => {
           if (data?.full_name) setProfileName(data.full_name);
         });
+
+      // Show welcome banner only on first visit
+      const dismissed = localStorage.getItem(WELCOME_DISMISSED_KEY);
+      if (!dismissed) {
+        setShowWelcome(true);
+      }
     }
   }, [user]);
 
+  const dismissWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem(WELCOME_DISMISSED_KEY, "true");
+  };
+
   const firstName = profileName?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Profissional";
+
+  const hasActivity = totalPoints > 0 || streak > 0 || earnedBadges.length > 0;
 
   const cards = [
     {
@@ -53,27 +69,56 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Gamification Mini Widget */}
-      <Link
-        to="/gamificacao"
-        className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5 hover:bg-primary/10 transition-colors group"
-      >
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold text-primary">{totalPoints.toLocaleString("pt-BR")} pts</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">{streak} {streak === 1 ? "dia" : "dias"} de streak</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">{earnedBadges.length} badges</span>
+      {/* Welcome Banner - First visit only */}
+      {showWelcome && (
+        <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 p-6 relative">
+          <button
+            onClick={dismissWelcome}
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground text-sm"
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
+          <div className="flex items-start gap-4">
+            <div className="rounded-xl bg-primary/10 p-3">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold">{t("dashboard.welcomeTitle")}</h2>
+              <p className="text-sm text-muted-foreground">{t("dashboard.welcomeDesc")}</p>
+              <div className="flex items-center gap-3 pt-1">
+                <Link to="/calculadoras" className="text-sm font-medium text-primary hover:underline">
+                  {t("dashboard.tryCaclulator")} →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-        <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-      </Link>
+      )}
+
+      {/* Gamification Mini Widget - only show if user has some activity */}
+      {hasActivity && (
+        <Link
+          to="/gamificacao"
+          className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5 hover:bg-primary/10 transition-colors group"
+        >
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold text-primary">{totalPoints.toLocaleString("pt-BR")} pts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">{streak} {streak === 1 ? t("dashboard.dayStreak") : t("dashboard.daysStreak")}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">{earnedBadges.length} badges</span>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+        </Link>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((card) => (

@@ -2,10 +2,12 @@ import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Crown, Zap, Loader2 } from "lucide-react";
+import { Check, X, Crown, Zap, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const features = [
   { key: "calculators", free: "3 por dia", premium: "Ilimitadas" },
@@ -28,6 +30,22 @@ export default function Planos() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isPremium, subscriptionEnd, loading, startCheckout, openCustomerPortal } = useSubscription();
+  const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").select("has_unlimited_access").eq("user_id", user.id).single().then(({ data }) => {
+        setHasUnlimitedAccess(data?.has_unlimited_access === true);
+      });
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
+        setIsAdmin(!!data);
+      });
+    }
+  }, [user]);
+
+  const isInvitedOrAdmin = hasUnlimitedAccess || isAdmin;
+  const hasFullAccess = isPremium || isInvitedOrAdmin;
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -52,28 +70,39 @@ export default function Planos() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Planos e Preços</h1>
+        <h1 className="text-4xl font-bold mb-4">{t("plans.title")}</h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Escolha o plano ideal para sua rotina clínica. Comece gratuitamente e evolua quando precisar.
+          {t("plans.subtitle")}
         </p>
       </div>
+
+      {/* Invited/Admin full access banner */}
+      {isInvitedOrAdmin && (
+        <div className="mb-8 rounded-2xl border border-primary/30 bg-primary/5 p-6 flex items-center gap-4 max-w-3xl mx-auto">
+          <ShieldCheck className="h-8 w-8 text-primary shrink-0" />
+          <div>
+            <h3 className="font-bold text-lg">{t("plans.fullAccess")}</h3>
+            <p className="text-sm text-muted-foreground">{t("plans.fullAccessDesc")}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
         {/* Free Plan */}
         <div
           className={cn(
             "rounded-2xl border-2 p-8 flex flex-col",
-            !isPremium ? "border-primary bg-primary/5" : "border-border bg-card"
+            !hasFullAccess ? "border-primary bg-primary/5" : "border-border bg-card"
           )}
         >
-          {!isPremium && (
+          {!hasFullAccess && (
             <span className="text-xs font-semibold text-primary bg-primary/10 rounded-full px-3 py-1 w-fit mb-4">
-              Plano Atual
+              {t("plans.currentPlan")}
             </span>
           )}
           <div className="flex items-center gap-2 mb-2">
             <Zap className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-2xl font-bold">Gratuito</h2>
+            <h2 className="text-2xl font-bold">{t("plans.free")}</h2>
           </div>
           <div className="mb-6">
             <span className="text-4xl font-extrabold">R$0</span>
@@ -96,9 +125,9 @@ export default function Planos() {
               </li>
             ))}
           </ul>
-          {!isPremium && (
+          {!hasFullAccess && (
             <Button variant="outline" disabled className="w-full">
-              Plano atual
+              {t("plans.currentPlan")}
             </Button>
           )}
         </div>
@@ -107,15 +136,15 @@ export default function Planos() {
         <div
           className={cn(
             "rounded-2xl border-2 p-8 flex flex-col relative overflow-hidden",
-            isPremium ? "border-primary bg-primary/5" : "border-primary/50 bg-card"
+            hasFullAccess ? "border-primary bg-primary/5" : "border-primary/50 bg-card"
           )}
         >
           <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-bl-lg">
-            RECOMENDADO
+            {t("plans.recommended")}
           </div>
-          {isPremium && (
+          {hasFullAccess && (
             <span className="text-xs font-semibold text-primary bg-primary/10 rounded-full px-3 py-1 w-fit mb-4">
-              Plano Atual
+              {isInvitedOrAdmin ? t("plans.fullAccess") : t("plans.currentPlan")}
             </span>
           )}
           <div className="flex items-center gap-2 mb-2">
@@ -143,23 +172,27 @@ export default function Planos() {
           {loading ? (
             <Button disabled className="w-full">
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Verificando...
+              {t("common.loading")}
+            </Button>
+          ) : isInvitedOrAdmin ? (
+            <Button variant="outline" disabled className="w-full">
+              {t("plans.fullAccess")}
             </Button>
           ) : isPremium ? (
             <div className="space-y-2">
               <Button onClick={handleManage} variant="outline" className="w-full">
-                Gerenciar assinatura
+                {t("plans.manage")}
               </Button>
               {subscriptionEnd && (
                 <p className="text-xs text-center text-muted-foreground">
-                  Válido até {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
+                  {t("plans.validUntil")} {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
                 </p>
               )}
             </div>
           ) : (
             <Button onClick={handleSubscribe} className="w-full">
               <Crown className="h-4 w-4 mr-2" />
-              Assinar Premium
+              {t("plans.subscribe")}
             </Button>
           )}
         </div>
