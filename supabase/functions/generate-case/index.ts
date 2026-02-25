@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callAI } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -120,8 +121,6 @@ serve(async (req) => {
 
   try {
     const { simulator_slug, tool_id } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     let prompt: string;
 
@@ -150,7 +149,6 @@ serve(async (req) => {
         });
       }
 
-      // Build a prompt that describes the simulator's structure so the AI generates a new case
       const stepsDescription = (formula.steps || []).map((step: any, i: number) => {
         const panelsDesc = (step.panels || []).map((p: any) => {
           let desc = `  - Painel "${p.title}" (tipo: ${p.type})`;
@@ -189,7 +187,6 @@ INSTRUÇÕES:
 Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma estrutura).`;
 
     } else if (simulator_slug && SIMULATOR_PROMPTS[simulator_slug]) {
-      // ─── NATIVE SIMULATOR ───
       prompt = SIMULATOR_PROMPTS[simulator_slug];
     } else {
       return new Response(JSON.stringify({ error: `Simulador '${simulator_slug || tool_id}' não encontrado` }), {
@@ -201,39 +198,14 @@ Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma
     const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
     const randomSeed = Math.floor(Math.random() * 100000);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        temperature: 1.2,
-        messages: [
-          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
-          { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
-        ],
-      }),
+    const { data } = await callAI({
+      messages: [
+        { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
+        { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
+      ],
+      temperature: 1.2,
+      model: "google/gemini-3-flash-preview",
     });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI error:", response.status, t);
-      throw new Error("Erro no gateway de IA");
-    }
-
-    const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error("IA não retornou conteúdo");
 
