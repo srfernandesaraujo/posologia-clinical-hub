@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Eye, EyeOff, Trash2, Loader2, Plus, ExternalLink, GripVertical } from "lucide-react";
+import { Key, Eye, EyeOff, Trash2, Loader2, Plus, ExternalLink, GripVertical, CheckCircle2, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,6 +140,37 @@ export default function AdminApiKeys() {
         <p className="text-xs text-muted-foreground mt-1">
           Se nenhuma chave estiver configurada, o sistema usará o modelo padrão da plataforma. Se a chamada com sua chave falhar, o sistema fará fallback automático.
         </p>
+
+        {/* Provider status overview */}
+        {!isLoading && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {PROVIDERS.map((provider) => {
+              const configured = apiKeys.find(k => k.provider === provider.value);
+              const isActive = configured?.is_active;
+              return (
+                <Badge
+                  key={provider.value}
+                  variant={isActive ? "default" : "outline"}
+                  className={`gap-1.5 py-1 px-3 text-xs font-medium ${
+                    isActive
+                      ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400 dark:bg-emerald-500/10"
+                      : configured
+                        ? "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {isActive ? (
+                    <CheckCircle2 className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  {provider.label}
+                  {isActive ? " — Ativa" : configured ? " — Inativa" : " — Não configurada"}
+                </Badge>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {isLoading ? (
