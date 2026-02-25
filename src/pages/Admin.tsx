@@ -5,8 +5,9 @@ import { useTranslation } from "react-i18next";
 import {
   Shield, Plus, Pencil, Trash2, Users, Calculator, BarChart3,
   FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2, Wand2,
-  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare, UserPlus, Send, Infinity,
+  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare, UserPlus, Send, Infinity, Key,
 } from "lucide-react";
+import AdminApiKeys from "@/components/AdminApiKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -364,6 +365,7 @@ export default function Admin() {
             {unreadMessages > 0 && <span className="ml-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{unreadMessages}</span>}
           </TabsTrigger>
           <TabsTrigger value="analytics" className="gap-2"><BarChart3 className="h-4 w-4" />{t("admin.recentUsage")}</TabsTrigger>
+          <TabsTrigger value="ai-keys" className="gap-2"><Key className="h-4 w-4" />API Keys</TabsTrigger>
         </TabsList>
 
         {/* Tools Tab */}
@@ -802,6 +804,13 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        {/* AI API Keys Tab */}
+        <TabsContent value="ai-keys">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <AdminApiKeys />
           </div>
         </TabsContent>
       </Tabs>
