@@ -29,6 +29,7 @@ export default function Simuladores() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { isPremium, canUseSimulator, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -65,17 +66,29 @@ export default function Simuladores() {
     },
   });
 
-  const filteredNative = NATIVE_SIMULATORS.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase())
-  );
+  // Collect all unique categories
+  const allCategories = Array.from(new Set([
+    ...NATIVE_SIMULATORS.map(s => s.category),
+    ...tools.filter((t: any) => t.categories?.name).map((t: any) => t.categories.name),
+  ])).sort();
 
-  const filteredDynamic = tools.filter((t: any) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredNative = NATIVE_SIMULATORS.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || s.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const filteredUser = userTools.filter((t: any) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredDynamic = tools.filter((t: any) => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || t.categories?.name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredUser = userTools.filter((t: any) => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || t.categories?.name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleCreateClick = () => {
     if (!isPremium) {
@@ -130,7 +143,7 @@ export default function Simuladores() {
         </div>
       </div>
 
-      <div className="relative mb-8 max-w-md">
+      <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={t("simulators.search")}
@@ -138,6 +151,32 @@ export default function Simuladores() {
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            !selectedCategory
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          Todas
+        </button>
+        {allCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              selectedCategory === cat
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {/* User's own simulators */}

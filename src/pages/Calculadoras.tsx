@@ -37,6 +37,7 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
 export default function Calculadoras() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -74,17 +75,29 @@ export default function Calculadoras() {
     },
   });
 
-  const filtered = tools.filter((t: any) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Collect all unique categories
+  const allCategories = Array.from(new Set([
+    ...NATIVE_CALCULATORS.map(c => c.category),
+    ...tools.filter((t: any) => t.categories?.name).map((t: any) => t.categories.name),
+  ])).sort();
 
-  const filteredUser = userTools.filter((t: any) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tools.filter((t: any) => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || t.categories?.name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const filteredNative = NATIVE_CALCULATORS.filter((c) =>
-    !search || c.searchKey.includes(search.toLowerCase())
-  );
+  const filteredUser = userTools.filter((t: any) => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || t.categories?.name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredNative = NATIVE_CALCULATORS.filter((c) => {
+    const matchesSearch = !search || c.searchKey.includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || c.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleCalcClick = (e: React.MouseEvent, path: string) => {
     if (recordCalculatorUse()) {
@@ -149,7 +162,7 @@ export default function Calculadoras() {
         </div>
       </div>
 
-      <div className="relative mb-8 max-w-md">
+      <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={t("calculators.search")}
@@ -157,6 +170,32 @@ export default function Calculadoras() {
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            !selectedCategory
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          Todas
+        </button>
+        {allCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              selectedCategory === cat
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {/* User's own tools */}
