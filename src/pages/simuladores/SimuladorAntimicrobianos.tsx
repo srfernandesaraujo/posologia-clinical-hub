@@ -53,7 +53,7 @@ const BUILT_IN: CaseData[] = [
 
 export default function SimuladorAntimicrobianos() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("antimicrobianos", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("antimicrobianos");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("antimicrobianos");
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [day1Antibiotics, setDay1Antibiotics] = useState<string[]>([]);
@@ -255,7 +255,17 @@ export default function SimuladorAntimicrobianos() {
                   </Select>
                 </div>
               )}
-              <Button onClick={() => setScreen("report")} className="w-full mt-4">Finalizar Conduta</Button>
+              <Button onClick={() => {
+                if (isVirtualRoom) {
+                  const s1 = scoreDay1();
+                  const s3 = scoreDay3();
+                  submitResults({
+                    score: Math.round((s1 + s3) / 2),
+                    actions: { day1Antibiotics, day1Cultures, day3Actions, day3NewAntibiotic, scoreDay1: s1, scoreDay3: s3 },
+                  });
+                }
+                setScreen("report");
+              }} className="w-full mt-4">Finalizar Conduta</Button>
             </CardContent>
           </Card>
         </div>
