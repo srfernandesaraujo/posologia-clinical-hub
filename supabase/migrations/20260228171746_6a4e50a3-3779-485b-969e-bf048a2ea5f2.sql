@@ -1,0 +1,1 @@
+ALTER TABLE public.shared_tools ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;

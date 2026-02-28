@@ -61,9 +61,10 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
 
   const createShare = useMutation({
     mutationFn: async () => {
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("shared_tools")
-        .insert({ tool_id: effectiveToolId!, user_id: user!.id })
+        .insert({ tool_id: effectiveToolId!, user_id: user!.id, expires_at: expiresAt })
         .select()
         .single();
       if (error) throw error;
@@ -78,9 +79,13 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
 
   const toggleShare = useMutation({
     mutationFn: async (active: boolean) => {
+      const updateData: Record<string, unknown> = { is_active: active };
+      if (active) {
+        updateData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      }
       const { error } = await supabase
         .from("shared_tools")
-        .update({ is_active: active })
+        .update(updateData)
         .eq("id", share!.id);
       if (error) throw error;
     },
@@ -179,6 +184,15 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
                     </div>
                   </div>
 
+                  {share.expires_at && (
+                    <p className="text-xs text-muted-foreground">
+                      ⏰ Este link expira em{" "}
+                      {new Date(share.expires_at).toLocaleString("pt-BR", {
+                        day: "2-digit", month: "2-digit", year: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     ⚠️ Se seu plano for alterado para gratuito, este link será automaticamente desativado.
                   </p>

@@ -276,6 +276,7 @@ export type Database = {
       shared_tools: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           is_active: boolean
           share_token: string
@@ -285,6 +286,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           share_token?: string
@@ -294,6 +296,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           share_token?: string
