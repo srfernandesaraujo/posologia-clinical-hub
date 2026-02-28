@@ -110,6 +110,53 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_purchases: {
+        Row: {
+          buyer_charged: boolean
+          buyer_id: string
+          created_at: string
+          id: string
+          price_brl: number
+          seller_credit: number
+          seller_credited: boolean
+          seller_id: string
+          tool_id: string
+          tool_type: string
+        }
+        Insert: {
+          buyer_charged?: boolean
+          buyer_id: string
+          created_at?: string
+          id?: string
+          price_brl: number
+          seller_credit: number
+          seller_credited?: boolean
+          seller_id: string
+          tool_id: string
+          tool_type: string
+        }
+        Update: {
+          buyer_charged?: boolean
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          price_brl?: number
+          seller_credit?: number
+          seller_credited?: boolean
+          seller_id?: string
+          tool_id?: string
+          tool_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_purchases_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

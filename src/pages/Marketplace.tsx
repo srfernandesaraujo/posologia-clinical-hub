@@ -2,19 +2,33 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useMarketplacePurchases } from "@/hooks/useMarketplacePurchases";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Calculator, FlaskConical, Lock, Store, Star } from "lucide-react";
-import { useState, useMemo } from "react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Search, Calculator, FlaskConical, Lock, Star, TrendingUp,
+  Sparkles, ChevronRight, ShoppingBag,
+} from "lucide-react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
+const TOOL_PRICES: Record<string, number> = {
+  calculadora: 5,
+  simulador: 10,
+};
 
 export default function Marketplace() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
+  const { hasPurchased, purchaseTool, isPurchasing } = useMarketplacePurchases();
   const [search, setSearch] = useState("");
+  const [purchaseDialog, setPurchaseDialog] = useState<{ open: boolean; tool: any | null }>({ open: false, tool: null });
 
   const { data: tools = [], isLoading } = useQuery({
     queryKey: ["marketplace-tools"],
@@ -30,9 +44,8 @@ export default function Marketplace() {
     },
   });
 
-  // Fetch author profiles for all tools with created_by
   const creatorIds = useMemo(() => [...new Set(tools.filter((t: any) => t.created_by).map((t: any) => t.created_by))], [tools]);
-  
+
   const { data: profiles = [] } = useQuery({
     queryKey: ["marketplace-profiles", creatorIds],
     queryFn: async () => {
@@ -43,9 +56,8 @@ export default function Marketplace() {
     enabled: creatorIds.length > 0,
   });
 
-  // Fetch average ratings for all marketplace tools
   const toolIds = useMemo(() => tools.map((t: any) => t.id), [tools]);
-  
+
   const { data: reviews = [] } = useQuery({
     queryKey: ["marketplace-reviews", toolIds],
     queryFn: async () => {
@@ -75,131 +87,282 @@ export default function Marketplace() {
     return map;
   }, [reviews]);
 
-  const calculadoras = tools.filter((t: any) => t.type === "calculadora" && t.name.toLowerCase().includes(search.toLowerCase()));
-  const simuladores = tools.filter((t: any) => t.type === "simulador" && t.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return tools.filter((t: any) => t.name.toLowerCase().includes(q) || t.short_description?.toLowerCase().includes(q));
+  }, [tools, search]);
+
+  const calculadoras = filtered.filter((t: any) => t.type === "calculadora");
+  const simuladores = filtered.filter((t: any) => t.type === "simulador");
+
+  // Featured: highest rated tool
+  const featured = useMemo(() => {
+    let best: any = null;
+    let bestScore = -1;
+    for (const t of tools) {
+      const s = reviewStats[t.id];
+      if (s && s.avg > bestScore) { bestScore = s.avg; best = t; }
+    }
+    return best || tools[0];
+  }, [tools, reviewStats]);
 
   const handleToolClick = (tool: any) => {
     if (!isPremium) {
       showUpgrade("O Marketplace é exclusivo para usuários Premium");
       return;
     }
-    const basePath = tool.type === "calculadora" ? "/calculadoras" : "/simuladores";
-    navigate(`${basePath}/${tool.slug}`);
+    const isOwner = tool.created_by === user?.id;
+    const purchased = hasPurchased(tool.id);
+    const isNative = !tool.created_by;
+
+    if (isOwner || purchased || isNative) {
+      const basePath = tool.type === "calculadora" ? "/calculadoras" : "/simuladores";
+      navigate(`${basePath}/${tool.slug}`);
+    } else {
+      setPurchaseDialog({ open: true, tool });
+    }
   };
 
-  const ToolCard = ({ tool, icon: Icon }: { tool: any; icon: any }) => {
+  const handlePurchase = async () => {
+    if (!purchaseDialog.tool) return;
+    try {
+      await purchaseTool(purchaseDialog.tool.id);
+      setPurchaseDialog({ open: false, tool: null });
+    } catch {}
+  };
+
+  const getActionLabel = (tool: any) => {
+    if (!tool.created_by) return "Abrir";
+    if (tool.created_by === user?.id) return "Sua";
+    if (hasPurchased(tool.id)) return "Abrir";
+    return `R$ ${TOOL_PRICES[tool.type] || 5},00`;
+  };
+
+  const getActionVariant = (tool: any): "default" | "secondary" | "outline" => {
+    if (!tool.created_by || hasPurchased(tool.id)) return "secondary";
+    if (tool.created_by === user?.id) return "outline";
+    return "default";
+  };
+
+  /* ─── Horizontal scroll section ─── */
+  const HorizontalSection = ({ title, icon: Icon, items }: { title: string; icon: any; items: any[] }) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    if (items.length === 0) return null;
+    return (
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Icon className="h-5 w-5 text-primary" />
+            {title}
+          </h2>
+          <span className="text-sm text-muted-foreground">{items.length} disponíveis</span>
+        </div>
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {items.map((tool: any) => (
+            <ToolCard key={tool.id} tool={tool} />
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  /* ─── Tool Card (App Store style) ─── */
+  const ToolCard = ({ tool, large = false }: { tool: any; large?: boolean }) => {
     const authorName = tool.created_by ? (profileMap[tool.created_by] || "Usuário") : "Sérgio Araújo";
     const stats = reviewStats[tool.id];
+    const Icon = tool.type === "simulador" ? FlaskConical : Calculator;
+    const actionLabel = getActionLabel(tool);
+    const actionVariant = getActionVariant(tool);
+
     return (
       <div
         onClick={() => handleToolClick(tool)}
-        className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 ${
-          isPremium ? "border-border hover:shadow-lg hover:shadow-primary/5" : "border-border opacity-75"
-        }`}
+        className={`group cursor-pointer flex-shrink-0 snap-start rounded-2xl border border-border bg-card transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 ${
+          large ? "w-full" : "w-[280px]"
+        } ${!isPremium ? "opacity-70" : ""}`}
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="inline-flex rounded-lg bg-primary/10 p-2.5">
-            <Icon className="h-5 w-5 text-primary" />
+        {/* Icon area */}
+        <div className="p-5 pb-0">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 p-3 group-hover:scale-105 transition-transform">
+              <Icon className="h-7 w-7 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm leading-tight line-clamp-2">{tool.name}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">por {authorName}</p>
+            </div>
+            {!isPremium && <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />}
           </div>
-          {!isPremium && <Lock className="h-4 w-4 text-muted-foreground" />}
         </div>
-        <h3 className="font-semibold mb-1">{tool.name}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{tool.short_description || tool.description}</p>
-        
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
-          <span className="text-xs text-muted-foreground truncate max-w-[60%]">por {authorName}</span>
+
+        {/* Description */}
+        <div className="px-5 pt-2 pb-3">
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {tool.short_description || tool.description || "Sem descrição"}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-4 flex items-center justify-between border-t border-border pt-3">
           <div className="flex items-center gap-1">
             {stats ? (
               <>
                 <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                <span className="text-xs font-medium">{stats.avg.toFixed(1)}</span>
+                <span className="text-xs font-semibold">{stats.avg.toFixed(1)}</span>
                 <span className="text-xs text-muted-foreground">({stats.count})</span>
               </>
             ) : (
-              <span className="text-xs text-muted-foreground">Sem avaliações</span>
+              <span className="text-xs text-muted-foreground">Novo</span>
             )}
           </div>
+          <Button
+            size="sm"
+            variant={actionVariant}
+            className="h-7 text-xs px-3 rounded-full font-semibold"
+            onClick={(e) => { e.stopPropagation(); handleToolClick(tool); }}
+          >
+            {actionLabel}
+          </Button>
         </div>
-        
+
         {tool.categories && (
-          <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
-            {tool.categories.name}
-          </span>
+          <div className="px-5 pb-4 -mt-1">
+            <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+              {tool.categories.name}
+            </span>
+          </div>
         )}
       </div>
     );
   };
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
 
-      <div className="mb-8">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2.5">
-              <Store className="h-6 w-6 text-primary" />
+      {/* Hero Banner */}
+      {featured && !search && (
+        <div
+          className="relative rounded-3xl overflow-hidden mb-10 cursor-pointer group"
+          onClick={() => handleToolClick(featured)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/10 to-transparent" />
+          <div className="relative p-8 md:p-12 flex items-center gap-8">
+            <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border p-5 group-hover:scale-105 transition-transform">
+              {featured.type === "simulador" ? (
+                <FlaskConical className="h-12 w-12 text-primary" />
+              ) : (
+                <Calculator className="h-12 w-12 text-primary" />
+              )}
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">Marketplace</h1>
-              <p className="text-muted-foreground">Calculadoras e simuladores compartilhados pela comunidade</p>
+            <div className="flex-1">
+              <Badge className="mb-2 gap-1 bg-primary/20 text-primary border-0">
+                <Sparkles className="h-3 w-3" /> Destaque
+              </Badge>
+              <h2 className="text-2xl md:text-3xl font-bold mb-1">{featured.name}</h2>
+              <p className="text-muted-foreground text-sm md:text-base line-clamp-2 max-w-xl">
+                {featured.short_description || featured.description}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                por {featured.created_by ? (profileMap[featured.created_by] || "Usuário") : "Sérgio Araújo"}
+              </p>
+            </div>
+            <div className="hidden md:flex flex-col items-end gap-2">
+              {reviewStats[featured.id] && (
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      className={`h-4 w-4 ${s <= Math.round(reviewStats[featured.id].avg) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground/30"}`}
+                    />
+                  ))}
+                </div>
+              )}
+              <Button size="lg" className="rounded-full gap-2 px-6">
+                {getActionLabel(featured)}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          {!isPremium && (
-            <Badge variant="outline" className="gap-1 text-sm">
-              <Lock className="h-3.5 w-3.5" />
-              Requer Premium
-            </Badge>
-          )}
         </div>
-      </div>
+      )}
 
-      <div className="relative mb-6 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Search bar */}
+      <div className="relative mb-8 max-w-lg">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar no marketplace..."
+          placeholder="Buscar ferramentas no marketplace..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
+          className="pl-11 h-12 rounded-xl bg-card border-border text-base"
         />
       </div>
 
-      <Tabs defaultValue="calculadoras">
-        <TabsList>
-          <TabsTrigger value="calculadoras" className="gap-1.5">
-            <Calculator className="h-3.5 w-3.5" /> Calculadoras ({calculadoras.length})
-          </TabsTrigger>
-          <TabsTrigger value="simuladores" className="gap-1.5">
-            <FlaskConical className="h-3.5 w-3.5" /> Simuladores ({simuladores.length})
-          </TabsTrigger>
-        </TabsList>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-48 rounded-2xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <>
+          <HorizontalSection title="Calculadoras" icon={Calculator} items={calculadoras} />
+          <HorizontalSection title="Simuladores" icon={FlaskConical} items={simuladores} />
 
-        <TabsContent value="calculadoras" className="mt-6">
-          {calculadoras.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <Calculator className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Nenhuma calculadora publicada no marketplace ainda.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {calculadoras.map((tool: any) => <ToolCard key={tool.id} tool={tool} icon={Calculator} />)}
+          {filtered.length === 0 && (
+            <div className="text-center py-20">
+              <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground text-lg">Nenhuma ferramenta encontrada</p>
+              <p className="text-sm text-muted-foreground mt-1">Tente outra busca ou volte mais tarde</p>
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="simuladores" className="mt-6">
-          {simuladores.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <FlaskConical className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Nenhum simulador publicado no marketplace ainda.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {simuladores.map((tool: any) => <ToolCard key={tool.id} tool={tool} icon={FlaskConical} />)}
+      {/* Purchase confirmation dialog */}
+      <Dialog open={purchaseDialog.open} onOpenChange={(o) => !o && setPurchaseDialog({ open: false, tool: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              Adquirir ferramenta
+            </DialogTitle>
+            <DialogDescription>
+              Deseja adquirir <strong>{purchaseDialog.tool?.name}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          {purchaseDialog.tool && (
+            <div className="py-4 space-y-3">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                <div>
+                  <p className="font-medium text-sm">{purchaseDialog.tool.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {purchaseDialog.tool.type === "simulador" ? "Simulador" : "Calculadora"}
+                  </p>
+                </div>
+                <span className="text-lg font-bold text-primary">
+                  R$ {TOOL_PRICES[purchaseDialog.tool.type] || 5},00
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O valor será adicionado à sua próxima fatura mensal como cobrança única. Você terá acesso permanente à ferramenta.
+              </p>
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPurchaseDialog({ open: false, tool: null })}>
+              Cancelar
+            </Button>
+            <Button onClick={handlePurchase} disabled={isPurchasing} className="gap-2">
+              {isPurchasing ? "Processando..." : "Confirmar compra"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

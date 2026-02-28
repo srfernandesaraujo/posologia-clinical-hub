@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useMarketplacePurchases } from "@/hooks/useMarketplacePurchases";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2,
   User, ClipboardCheck, CheckCircle, XCircle, ChevronRight, Info, Star,
-  Activity, Gauge,
+  Activity, Gauge, ShoppingBag,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -764,6 +765,9 @@ export default function ToolDetail() {
   });
 
   const isOwner = tool?.created_by && user?.id === tool.created_by;
+  const { hasPurchased, purchaseTool, isPurchasing } = useMarketplacePurchases();
+  const isNativeTool = !tool?.created_by;
+  const needsPurchase = tool?.is_marketplace && !isNativeTool && !isOwner && !hasPurchased(tool?.id || "");
 
   const { data: authorProfile } = useQuery({
     queryKey: ["author-profile", tool?.created_by],
@@ -984,8 +988,22 @@ export default function ToolDetail() {
         </div>
       </div>
 
-      {/* ─── SIMULATOR ─── */}
-      {isSimulatorType && formula ? (
+      {/* Purchase Gate */}
+      {needsPurchase ? (
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
+          <ShoppingBag className="h-12 w-12 mx-auto text-primary mb-4" />
+          <h2 className="text-xl font-bold mb-2">Adquira esta ferramenta</h2>
+          <p className="text-muted-foreground mb-1">
+            Para usar esta {tool.type === "simulador" ? "simulador" : "calculadora"} do marketplace, é necessário adquiri-la.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            O valor de <strong className="text-foreground">R$ {tool.type === "simulador" ? "10,00" : "5,00"}</strong> será adicionado à sua próxima fatura mensal como cobrança única.
+          </p>
+          <Button size="lg" className="gap-2" disabled={isPurchasing} onClick={async () => { try { await purchaseTool(tool.id); } catch {} }}>
+            {isPurchasing ? "Processando..." : `Adquirir por R$ ${tool.type === "simulador" ? "10,00" : "5,00"}`}
+          </Button>
+        </div>
+      ) : isSimulatorType && formula ? (
         <SimulatorRenderer formula={formula} toolName={tool.name} toolId={tool.id} toolSlug={tool.slug} authorName={authorName} hasCreator={!!tool.created_by} isOwner={!!user && tool.created_by === user.id} />
       ) : fields.length > 0 ? (
         /* ─── CALCULATOR ─── */
