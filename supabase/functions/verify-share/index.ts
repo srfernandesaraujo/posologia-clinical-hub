@@ -34,6 +34,14 @@ serve(async (req) => {
       });
     }
 
+    // Check if share has expired (24h auto-expiry)
+    if (share.expires_at && new Date(share.expires_at) < new Date()) {
+      await supabase.from("shared_tools").update({ is_active: false }).eq("id", share.id);
+      return new Response(JSON.stringify({ active: false, reason: "expired" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Check if user is admin or has unlimited access
     const { data: profile } = await supabase
       .from("profiles")
