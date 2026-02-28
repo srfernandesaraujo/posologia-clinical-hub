@@ -58,6 +58,27 @@ export default function SalaVirtualAluno() {
       return;
     }
 
+    // Check 7-day inactivity: get most recent participant join
+    const { data: lastParticipant } = await supabase
+      .from("room_participants")
+      .select("joined_at")
+      .eq("room_id", data.id)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastActivity = lastParticipant?.joined_at
+      ? new Date(lastParticipant.joined_at)
+      : new Date(data.created_at);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    if (lastActivity < sevenDaysAgo) {
+      // Auto-deactivate
+      await supabase.from("virtual_rooms").update({ is_active: false }).eq("id", data.id);
+      toast.error("Esta sala foi desativada por inatividade (7 dias sem acessos).");
+      return;
+    }
+
     setRoom(data);
     setStep("identify");
   };
