@@ -120,16 +120,20 @@ export default function SimuladorPRM() {
   const allReviewed = currentCase ? currentCase.prescription.every((_, i) => reviewed.has(i)) : false;
 
   const getScore = () => {
-    if (!currentCase) return { found: 0, total: 0, details: [] as any[] };
+    if (!currentCase) return { correctCount: 0, totalCount: 0, prmFound: 0, prmTotal: 0, details: [] as any[] };
     const realPRMs = currentCase.answers.filter(a => a.hasPRM);
-    let found = 0;
+    let correctCount = 0;
+    let prmFound = 0;
     const details = currentCase.answers.map(ans => {
       const ua = userAnswers[ans.drugIndex];
-      const correct = ans.hasPRM ? (ua?.hasPRM === true && ua?.type === ans.type) : (ua?.hasPRM === false || ua?.hasPRM === null);
-      if (ans.hasPRM && ua?.hasPRM === true) found++;
+      const correct = ans.hasPRM
+        ? (ua?.hasPRM === true && ua?.type === ans.type)
+        : (ua?.hasPRM === false || ua?.hasPRM === null);
+      if (correct) correctCount++;
+      if (ans.hasPRM && ua?.hasPRM === true && ua?.type === ans.type) prmFound++;
       return { ...ans, userAnswer: ua, correct, drug: currentCase.prescription[ans.drugIndex] };
     });
-    return { found, total: realPRMs.length, details };
+    return { correctCount, totalCount: currentCase.answers.length, prmFound, prmTotal: realPRMs.length, details };
   };
 
   if (loadingVRCase) {
@@ -187,7 +191,7 @@ export default function SimuladorPRM() {
   if (!currentCase) return null;
 
   if (screen === "report") {
-    const { found, total, details } = getScore();
+    const { correctCount, totalCount, prmFound, prmTotal, details } = getScore();
     return (
       <div className="max-w-4xl mx-auto">
         {isVirtualRoom ? (
@@ -201,10 +205,10 @@ export default function SimuladorPRM() {
           </CardHeader>
           <CardContent>
             <div className="text-center py-4">
-              <div className="text-5xl font-bold mb-2">{found}/{total}</div>
-              <p className="text-muted-foreground">PRMs identificados corretamente</p>
+              <div className="text-5xl font-bold mb-2">{correctCount}/{totalCount}</div>
+              <p className="text-muted-foreground">Respostas corretas ({prmFound}/{prmTotal} PRMs identificados)</p>
               <div className="w-full bg-muted rounded-full h-3 mt-4 max-w-xs mx-auto">
-                <div className="bg-primary rounded-full h-3 transition-all" style={{ width: `${total > 0 ? (found / total) * 100 : 0}%` }} />
+                <div className="bg-primary rounded-full h-3 transition-all" style={{ width: `${totalCount > 0 ? (correctCount / totalCount) * 100 : 0}%` }} />
               </div>
             </div>
           </CardContent>
@@ -344,10 +348,10 @@ export default function SimuladorPRM() {
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allReviewed} onClick={() => {
           if (isVirtualRoom) {
-            const { found, total } = getScore();
+            const { correctCount, totalCount } = getScore();
             submitResults({
-              score: total > 0 ? Math.round((found / total) * 100) : 0,
-              actions: { userAnswers, found, total },
+              score: totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0,
+              actions: { userAnswers, correctCount, totalCount },
             });
           }
           setScreen("report");
