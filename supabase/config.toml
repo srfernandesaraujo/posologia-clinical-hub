@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.purchase-tool]
 verify_jwt = false
+
+[functions.expire-inactive-rooms]
+verify_jwt = false
