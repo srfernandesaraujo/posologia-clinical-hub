@@ -69,7 +69,16 @@ serve(async (req) => {
     }
 
     const subscription = subscriptions.data[0];
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+    const periodEnd = subscription.current_period_end;
+    let subscriptionEnd: string;
+    try {
+      const endDate = typeof periodEnd === 'number' ? new Date(periodEnd * 1000) : new Date(periodEnd);
+      if (isNaN(endDate.getTime())) throw new Error("Invalid date");
+      subscriptionEnd = endDate.toISOString();
+    } catch {
+      subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      logStep("Could not parse subscription end, using fallback", { periodEnd });
+    }
     const productId = subscription.items.data[0].price.product;
     logStep("Active subscription found", { productId, subscriptionEnd });
 

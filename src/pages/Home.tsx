@@ -92,32 +92,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Virtual Room PIN – inline */}
-              <div className="mt-8 pt-6 border-t border-white/[0.06]">
-                <div className="flex items-center gap-3 mb-3">
-                  <DoorOpen className="h-5 w-5 text-emerald-400" />
-                  <span className="text-sm font-semibold text-white/70">Sala Virtual</span>
-                </div>
-                <p className="text-xs text-white/40 mb-3">Recebeu um PIN do professor? Insira para acessar.</p>
-                <div className="flex gap-2 max-w-sm">
-                  <Input
-                    value={roomPin}
-                    onChange={e => setRoomPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                    className="text-center text-lg font-mono tracking-[0.3em] bg-white/[0.06] border-white/10 text-white placeholder:text-white/30 h-11"
-                    maxLength={6}
-                    onKeyDown={e => e.key === "Enter" && roomPin.length === 6 && navigate(`/sala?pin=${roomPin}`)}
-                  />
-                  <Button
-                    onClick={() => navigate(`/sala?pin=${roomPin}`)}
-                    disabled={roomPin.length !== 6}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 px-5 h-11"
-                  >
-                    Entrar
-                  </Button>
-                </div>
-              </div>
-
               <div className="flex items-center gap-6 text-sm text-white/40 mt-8">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-emerald-400/60" />
@@ -150,6 +124,35 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Virtual Room PIN – full width */}
+          <div className="mt-12 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-8 md:p-10">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-3 mb-3">
+                <DoorOpen className="h-6 w-6 text-emerald-400" />
+                <h3 className="text-xl md:text-2xl font-bold text-white">Sala Virtual</h3>
+              </div>
+              <p className="text-base text-white/50">Recebeu um PIN do professor? Insira abaixo para acessar a simulação.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <Input
+                value={roomPin}
+                onChange={e => setRoomPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                className="text-center text-2xl font-mono tracking-[0.4em] bg-white/[0.06] border-white/10 text-white placeholder:text-white/30 h-14 flex-1"
+                maxLength={6}
+                onKeyDown={e => e.key === "Enter" && roomPin.length === 6 && navigate(`/sala?pin=${roomPin}`)}
+              />
+              <Button
+                onClick={() => navigate(`/sala?pin=${roomPin}`)}
+                disabled={roomPin.length !== 6}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 h-14 px-8 text-base font-bold"
+              >
+                <DoorOpen className="h-5 w-5 mr-2" />
+                Entrar na Sala
+              </Button>
             </div>
           </div>
         </div>

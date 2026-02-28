@@ -183,6 +183,9 @@ export default function Planos() {
               <Button onClick={handleManage} variant="outline" className="w-full">
                 {t("plans.manage")}
               </Button>
+              <Button onClick={handleManage} variant="destructive" className="w-full">
+                Cancelar Plano
+              </Button>
               {subscriptionEnd && (
                 <p className="text-xs text-center text-muted-foreground">
                   {t("plans.validUntil")} {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
