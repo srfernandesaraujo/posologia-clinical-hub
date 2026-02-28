@@ -1,153 +1,163 @@
 
-# Revisao Completa de UX -- Posologia Clinical Hub
+# Marketplace App Store Style + Sistema de Compras
 
-## Resumo Executivo
+## Resumo
 
-Apos revisar todos os fluxos do sistema, identifiquei **14 problemas de UX** organizados por gravidade. O sistema tem uma base solida, mas existem fricoes significativas no onboarding, inconsistencias visuais e oportunidades de melhoria na orientacao do usuario.
-
----
-
-## 1. Problemas Criticos (Bloqueiam ou Confundem)
-
-### 1.1 Onboarding Morto -- Usuario Aprovado Nao Sabe o Que Fazer
-**Problema:** Apos o cadastro, o usuario cai em uma tela de "Aguardando aprovacao" (`ProtectedRoute` com status `pending`). Nao ha:
-- Explicacao de quanto tempo leva
-- O que acontece depois
-- Nenhum email de confirmacao ou acompanhamento
-- O botao "Sair" na tela de pending redireciona para `/` mas nao faz signOut -- o usuario fica logado e preso
-
-**Solucao:**
-- Adicionar texto explicativo na tela pending ("Seu cadastro foi recebido. Um administrador ira analisar em ate X horas.")
-- Corrigir o botao para realmente chamar `signOut()` antes de redirecionar
-- Adicionar email automatico ao admin quando um novo usuario se cadastra
-- Considerar um estado de "tour guiado" apos aprovacao
-
-### 1.2 Tela de Login -- Esqueceu Senha Usa `prompt()`
-**Problema:** Na pagina `/login`, o fluxo de "Esqueceu a senha?" usa `window.prompt()` nativo do navegador, que e visualmente agressivo, nao estilizado, e em mobile pode ser confuso.
-
-**Solucao:** Substituir por um dialog/modal inline ou expandir um campo de email na propria pagina.
-
-### 1.3 Pagina Index.tsx Orfao
-**Problema:** O arquivo `src/pages/Index.tsx` ainda contem o template padrao "Welcome to Your Blank App" mas nao esta mapeado em nenhuma rota. Deveria ser removido para evitar confusao.
-
-**Solucao:** Excluir `src/pages/Index.tsx`.
+Redesenhar o Marketplace com estetica inspirada na App Store e implementar um sistema de compra/venda de ferramentas entre usuarios, com cobranca via Stripe InvoiceItems na proxima fatura.
 
 ---
 
-## 2. Problemas Moderados (Degradam a Experiencia)
+## Regras de Negocio
 
-### 2.1 Pagina 404 em Ingles
-**Problema:** A pagina `NotFound` exibe "Oops! Page not found" e "Return to Home" em ingles, enquanto todo o sistema e predominantemente em portugues.
+| | Calculadora | Simulador |
+|---|---|---|
+| Preco para comprador | R$ 5,00 (unico) | R$ 10,00 (unico) |
+| Desconto para autor | R$ 3,00 (unico) | R$ 6,00 (unico) |
+| Limite de desconto autor | 50% da assinatura mensal (R$ 14,95 max) |
 
-**Solucao:** Usar i18n e manter consistencia com o idioma do sistema.
-
-### 2.2 Dashboard Minimalista Demais para Primeiro Acesso
-**Problema:** O Dashboard mostra apenas dois cards (Calculadoras e Simuladores) e o widget de gamificacao. Para um usuario novo recem-aprovado, falta contexto:
-- Sem tutorial ou boas-vindas
-- Sem destaque dos recursos disponiveis
-- Sem indicacao do plano atual (free/premium)
-- O widget de gamificacao mostra "0 pts, 0 dias de streak, 0 badges" -- pouco motivador
-
-**Solucao:**
-- Adicionar banner de boas-vindas no primeiro acesso ("Bem-vindo ao Posologia! Aqui esta o que voce pode fazer...")
-- Mostrar badge do plano atual no Dashboard
-- Esconder ou simplificar o widget de gamificacao quando o usuario ainda nao tem pontos
-
-### 2.3 Sidebar Mostra Itens Premium para Usuarios Free Sem Indicacao
-**Problema:** No `AppLayout`, itens como "Salas Virtuais", "Analytics", "Marketplace" e "Gamificacao" aparecem na sidebar para todos os usuarios sem indicacao visual de que sao premium. O usuario clica, navega para a pagina, e so entao descobre que precisa pagar.
-
-**Solucao:** Adicionar um icone de cadeado ou badge "PRO" ao lado dos itens premium na sidebar para usuarios free.
-
-### 2.4 LoginPopover com Google OAuth Sem Validacao Visual
-**Problema:** O `LoginPopover` no header publico oferece login com Google (`signInWithOAuth`), mas se o provedor Google nao estiver configurado no Supabase, o usuario recebe um erro generico sem orientacao.
-
-**Solucao:** Verificar se OAuth esta habilitado antes de exibir o botao, ou tratar o erro com mensagem amigavel.
-
-### 2.5 Cadastro Nao Valida Forca da Senha
-**Problema:** O formulario de cadastro aceita qualquer senha com 6+ caracteres sem indicador de forca ou requisitos claros.
-
-**Solucao:** Adicionar indicador de forca de senha e requisitos minimos visiveis.
+- Compradores precisam ter assinatura Premium ativa
+- A cobranca e adicionada como InvoiceItem na proxima fatura do Stripe
+- O desconto do autor e aplicado como InvoiceItem negativo (credito) na proxima fatura
+- Se o total de creditos do autor exceder 50% da assinatura, o excedente nao e aplicado
 
 ---
 
-## 3. Problemas Menores (Polish)
+## 1. Banco de Dados
 
-### 3.1 Textos Hardcoded em Portugues Misturados com i18n
-**Problema:** Varios textos estao hardcoded em portugues ao inves de usar o sistema i18n:
-- Sidebar: "Planos", "Salas Virtuais", "Marketplace", "Gamificacao"
-- Dashboard: "dias de streak", "badges"
-- Gamificacao: toda a pagina
-- MinhaConta: secao de assinatura
-- Calculadoras/Simuladores: badges de status
+### Nova tabela: `marketplace_purchases`
 
-**Solucao:** Migrar todos os textos hardcoded para os arquivos de traducao.
+```text
+id              uuid PK default gen_random_uuid()
+tool_id         uuid NOT NULL (FK tools.id)
+buyer_id        uuid NOT NULL (referencia auth.users)
+seller_id       uuid NOT NULL (referencia auth.users)
+tool_type       text NOT NULL ('calculadora' | 'simulador')
+price_brl       numeric NOT NULL (5.00 ou 10.00)
+seller_credit   numeric NOT NULL (3.00 ou 6.00)
+buyer_charged   boolean default false
+seller_credited boolean default false
+created_at      timestamptz default now()
+```
 
-### 3.2 Sala Virtual -- Seção na Home Sem i18n
-**Problema:** A secao "Sala Virtual" na Home tem textos fixos em portugues: "Recebeu um PIN do seu professor?" e "Entrar".
-
-**Solucao:** Usar chaves de traducao.
-
-### 3.3 Calculadoras Nativas Hardcoded na Listagem
-**Problema:** As 7 calculadoras nativas estao definidas diretamente no JSX do componente `Calculadoras.tsx` com HTML repetitivo (~60 linhas por calculadora). Isso dificulta manutencao.
-
-**Solucao:** Extrair para um array de configuracao (similar ao `NATIVE_SIMULATORS` em `Simuladores.tsx`) e renderizar via map.
-
-### 3.4 Transicao Abrupta Public/Authenticated Layout
-**Problema:** O layout publico (fundo escuro `#0A0F1C`) e o layout autenticado (fundo claro `bg-background`) sao visualmente muito diferentes. A transicao Login -> Dashboard e brusca sem animacao.
-
-**Solucao:** Considerar adicionar uma transicao suave ou manter consistencia de theme entre os dois contextos.
-
-### 3.5 Planos -- Sem Indicacao para Convidados/Admin
-**Problema:** Na pagina `/planos`, usuarios com `has_unlimited_access` (convidados) veem o plano "Gratuito" como ativo, mesmo tendo acesso total. Isso causa confusao.
-
-**Solucao:** Detectar convidados e admin e mostrar badge "Acesso Completo" ao inves de "Plano Atual: Gratuito".
+**RLS:**
+- SELECT: usuarios veem suas proprias compras (buyer_id = auth.uid()) ou vendas (seller_id = auth.uid())
+- INSERT: via edge function (service role)
+- Admins: ALL
 
 ---
 
-## 4. Oportunidades de Melhoria
+## 2. Edge Function: `purchase-tool`
 
-### 4.1 Onboarding Guiado Pos-Aprovacao
-Criar um fluxo de primeiro acesso com:
-- Tooltip tour pelos itens do menu
-- Sugestao de primeira acao ("Experimente uma calculadora!")
-- Explicacao do sistema de gamificacao
-
-### 4.2 Empty States Mais Engajantes
-Nas paginas de Marketplace e Gamificacao, quando vazias, adicionar ilustracoes e CTAs mais claros.
+Nova edge function que:
+1. Autentica o usuario comprador
+2. Verifica se ja comprou esta ferramenta (evita duplicata)
+3. Verifica se o comprador tem assinatura ativa no Stripe
+4. Busca o Stripe customer do comprador e adiciona um InvoiceItem de R$ 5 ou R$ 10 (conforme tipo)
+5. Busca o Stripe customer do autor/vendedor e calcula creditos acumulados no periodo
+6. Se creditos totais do autor < 50% da assinatura, adiciona InvoiceItem negativo (credito) de R$ 3 ou R$ 6
+7. Registra a compra na tabela `marketplace_purchases`
+8. Retorna sucesso
 
 ---
 
-## Plano de Implementacao
+## 3. Redesign do Marketplace (App Store Style)
 
-### Fase 1 -- Correcoes Criticas (prioridade alta)
-1. Corrigir botao "Sair" na tela de pending para chamar `signOut()`
-2. Adicionar texto explicativo na tela de pending
-3. Substituir `prompt()` no fluxo de esqueci senha por modal inline
-4. Remover `Index.tsx` orfao
+### Layout inspirado na App Store:
+- **Banner hero** no topo com ferramenta em destaque (a mais bem avaliada ou mais recente)
+- **Secoes horizontais** com scroll: "Destaques", "Calculadoras Populares", "Simuladores Novos"
+- **Cards maiores** com icone arredondado, nome, autor, avaliacao com estrelas
+- **Botao "Obter"** (R$ 5,00 ou R$ 10,00) ou "Abrir" se ja comprado
+- **Sidebar de categorias** (se tela grande)
+- **Barra de busca** estilizada no topo
 
-### Fase 2 -- Melhorias de Onboarding
-5. Adicionar banner de boas-vindas no Dashboard (primeiro acesso)
-6. Adicionar indicadores visuais de itens premium na sidebar
-7. Traduzir pagina 404
+### Card do Marketplace (novo design):
+```text
++------------------------------------------+
+|  [Icone]  Nome da Ferramenta             |
+|           por Autor                      |
+|           ★★★★☆ (12)                     |
+|                          [R$ 5,00]       |
++------------------------------------------+
+```
 
-### Fase 3 -- Consistencia e Polish
-8. Migrar textos hardcoded para i18n
-9. Refatorar calculadoras nativas para array de configuracao
-10. Corrigir exibicao de plano para convidados/admin na pagina Planos
-11. Adicionar indicador de forca de senha no cadastro
+- O botao mostra "R$ 5,00" para calculadoras e "R$ 10,00" para simuladores
+- Se ja comprado, mostra "Abrir" em azul
+- Se o usuario e o autor, mostra "Sua ferramenta"
 
-### Detalhes Tecnicos
+### Pagina de detalhe da ferramenta:
+- Adicionar secao de compra antes de permitir uso
+- Mostrar preco, botao de comprar, e avaliacoes
 
-**Arquivos a modificar:**
-- `src/components/ProtectedRoute.tsx` -- correcao do signOut e texto pending
-- `src/pages/Login.tsx` -- substituir prompt por dialog
-- `src/pages/NotFound.tsx` -- adicionar i18n
-- `src/pages/Dashboard.tsx` -- banner de boas-vindas
-- `src/components/layouts/AppLayout.tsx` -- badges premium na sidebar
-- `src/pages/Calculadoras.tsx` -- refatorar para array
-- `src/pages/Planos.tsx` -- detectar convidados
-- `src/pages/MinhaConta.tsx` -- ajustar texto para convidados
-- `src/i18n/locales/en.json`, `es.json`, `pt.json` -- novas chaves
-- Excluir `src/pages/Index.tsx`
+---
 
-**Nenhuma mudanca de banco de dados necessaria.**
+## 4. Integracao no Frontend
+
+### Hook: `useMarketplacePurchases`
+- Busca as compras do usuario logado da tabela `marketplace_purchases`
+- Retorna set de `tool_id` comprados para verificacao rapida
+- Funcao `purchaseTool(toolId)` que invoca a edge function
+
+### Fluxo de compra:
+1. Usuario clica "R$ 5,00" no card
+2. Dialog de confirmacao: "Deseja adquirir [nome]? O valor de R$ 5,00 sera adicionado a sua proxima fatura."
+3. Chama edge function `purchase-tool`
+4. Sucesso: toast + botao muda para "Abrir"
+
+### Gating atualizado:
+- Marketplace visivel para todos Premium
+- Ferramentas so utilizaveis apos compra (ou se for o autor)
+- Ferramentas nativas (sem `created_by`) continuam gratuitas para Premium
+
+---
+
+## 5. Arquivos a Criar/Modificar
+
+### Criar:
+- `supabase/migrations/xxx_marketplace_purchases.sql` -- tabela e RLS
+- `supabase/functions/purchase-tool/index.ts` -- edge function de compra
+- `src/hooks/useMarketplacePurchases.ts` -- hook de compras
+
+### Modificar:
+- `src/pages/Marketplace.tsx` -- redesign completo App Store style
+- `src/pages/ToolDetail.tsx` -- adicionar gate de compra antes do uso
+- `supabase/config.toml` -- registrar nova edge function
+- `src/integrations/supabase/types.ts` -- tipos da nova tabela
+
+---
+
+## Detalhes Tecnicos
+
+### Stripe InvoiceItem (cobranca na proxima fatura):
+```typescript
+// Cobrar comprador
+await stripe.invoiceItems.create({
+  customer: buyerCustomerId,
+  amount: 500, // R$ 5,00 em centavos
+  currency: "brl",
+  description: `Marketplace: ${toolName}`,
+});
+
+// Creditar autor (invoice item negativo)
+await stripe.invoiceItems.create({
+  customer: sellerCustomerId,
+  amount: -300, // -R$ 3,00
+  currency: "brl",
+  description: `Venda Marketplace: ${toolName}`,
+});
+```
+
+### Calculo do limite de 50%:
+```typescript
+// Buscar creditos pendentes do autor no periodo atual
+const pendingCredits = await supabase
+  .from("marketplace_purchases")
+  .select("seller_credit")
+  .eq("seller_id", sellerId)
+  .eq("seller_credited", false);
+
+const totalCredits = pendingCredits.reduce((s, p) => s + p.seller_credit, 0);
+const maxDiscount = 29.90 * 0.5; // R$ 14,95
+if (totalCredits + newCredit <= maxDiscount) {
+  // aplicar credito
+}
+```
