@@ -54,7 +54,7 @@ function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) 
 
 export default function SimuladorInsulina() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("insulina", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("insulina");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("insulina");
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
 

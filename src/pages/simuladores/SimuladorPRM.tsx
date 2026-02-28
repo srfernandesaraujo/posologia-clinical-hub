@@ -86,7 +86,7 @@ const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividad
 
 export default function SimuladorPRM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("prm", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack } = useVirtualRoomCase("prm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults } = useVirtualRoomCase("prm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
@@ -342,7 +342,16 @@ export default function SimuladorPRM() {
         </Card>
       </div>
       <div className="mt-6 flex justify-end">
-        <Button size="lg" disabled={!allReviewed} onClick={() => setScreen("report")}>
+        <Button size="lg" disabled={!allReviewed} onClick={() => {
+          if (isVirtualRoom) {
+            const { found, total } = getScore();
+            submitResults({
+              score: total > 0 ? Math.round((found / total) * 100) : 0,
+              actions: { userAnswers, found, total },
+            });
+          }
+          setScreen("report");
+        }}>
           <ClipboardCheck className="h-4 w-4 mr-2" />Finalizar Avaliação
         </Button>
       </div>

@@ -74,7 +74,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 
 export default function SimuladorTDM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("tdm", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("tdm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("tdm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");
@@ -206,7 +206,16 @@ export default function SimuladorTDM() {
                 <SelectContent>{[6, 8, 12, 24, 36, 48].map(h => <SelectItem key={h} value={String(h)}>{h}h</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <Button onClick={() => setSubmitted(true)} disabled={!newDose || !newInterval} className="w-full">Aplicar Novo Esquema</Button>
+            <Button onClick={() => {
+              setSubmitted(true);
+              if (isVirtualRoom && c) {
+                const correct = Math.abs(Number(newDose) - c.expected.newDose) < 50 && Math.abs(Number(newInterval) - c.expected.newInterval) <= 6;
+                submitResults({
+                  score: correct ? 100 : 0,
+                  actions: { newDose, newInterval, expectedDose: c.expected.newDose, expectedInterval: c.expected.newInterval },
+                });
+              }
+            }} disabled={!newDose || !newInterval} className="w-full">Aplicar Novo Esquema</Button>
             {submitted && (
               <div className={`p-3 rounded-lg ${isCorrect ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800" : "bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800"}`}>
                 <div className="flex items-center gap-2">{isCorrect ? <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> : <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />}<span className={`font-medium text-sm ${isCorrect ? "text-green-800 dark:text-green-200" : "text-orange-800 dark:text-orange-200"}`}>{isCorrect ? "Ajuste adequado!" : "Ajuste pode ser melhorado"}</span></div>
