@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceArea, ResponsiveContainer, ReferenceLine } from "recharts";
 
-export default function JanelaTerapeuticaGame() {
+export default function JanelaTerapeuticaGame({ customData }: { customData?: any }) {
   const [currentDay, setCurrentDay] = useState(1);
   const [currentINR, setCurrentINR] = useState(2.2);
   const [history, setHistory] = useState([{ day: 0, inr: 1.0 }, { day: 1, inr: 2.2 }]);

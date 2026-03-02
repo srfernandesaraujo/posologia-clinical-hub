@@ -64,7 +64,9 @@ function SpaceCell({ space, isHere, owned }: { space: BoardSpace; isHere: boolea
   );
 }
 
-export default function CarreiraClinicaGame() {
+export default function CarreiraClinicaGame({ customData }: { customData?: any }) {
+  const boardData: BoardSpace[] = customData?.board || board;
+  const chestData = customData?.chestCards || chestCards;
   const [position, setPosition] = useState(0);
   const [balance, setBalance] = useState(1500);
   const [owned, setOwned] = useState<Set<number>>(new Set());

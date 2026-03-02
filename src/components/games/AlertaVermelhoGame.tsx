@@ -15,7 +15,11 @@ const availableTests = [
   { id: "T4", name: "EAS (Urina Tipo 1)", cost: 15, result: "Mioglobinúria Positiva. Coloração escura confirmada.", isKey: true },
 ];
 
-export default function AlertaVermelhoGame() {
+export default function AlertaVermelhoGame({ customData }: { customData?: any }) {
+  const patient = customData?.patientInfo || patientInfo;
+  const meds = customData?.currentMeds || currentMeds;
+  const tests = customData?.availableTests || availableTests;
+  const correctId = customData?.correctMedId || 2;
   const [budget, setBudget] = useState(100);
   const [health, setHealth] = useState(100);
   const [ordered, setOrdered] = useState<string[]>([]);

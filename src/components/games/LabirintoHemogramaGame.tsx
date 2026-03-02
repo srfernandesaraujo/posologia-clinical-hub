@@ -46,7 +46,8 @@ const storyNodes: Record<string, StoryNode> = {
   },
 };
 
-export default function LabirintoHemogramaGame() {
+export default function LabirintoHemogramaGame({ customData }: { customData?: any }) {
+  const nodes: Record<string, StoryNode> = customData?.storyNodes || storyNodes;
   const [currentNodeId, setCurrentNodeId] = useState("root");
   const [score, setScore] = useState(100);
   const [pathHistory, setPathHistory] = useState<string[]>(["Início"]);
