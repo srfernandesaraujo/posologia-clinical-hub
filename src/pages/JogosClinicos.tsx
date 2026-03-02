@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home } from "lucide-react";
+import { Brain, Home, FlaskConical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
 import VilaSaudeGame from "@/components/games/VilaSaudeGame";
+import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -25,6 +26,15 @@ const games = [
     iconColor: "text-emerald-600",
     badge: "6 construções",
   },
+  {
+    id: "laboratorio",
+    title: "Laboratório de Interações",
+    description: "Combine medicamentos, alimentos e fitoterápicos para descobrir interações.",
+    icon: FlaskConical,
+    iconBg: "bg-indigo-100",
+    iconColor: "text-indigo-600",
+    badge: "6 substâncias",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -37,6 +47,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: VilaSaudeGame,
     title: "Vila da Saúde",
     subtitle: "Tome os seus remédios e construa a sua vila!",
+  },
+  "laboratorio": {
+    component: LaboratorioInteracoesGame,
+    title: "Laboratório de Interações",
+    subtitle: "Descubra interações entre medicamentos, alimentos e fitoterápicos.",
   },
 };
 
