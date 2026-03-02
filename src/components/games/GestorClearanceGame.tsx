@@ -17,7 +17,10 @@ const labResults = [
 
 const doses = ["1000mg a cada 12h", "500mg a cada 12h", "500mg a cada 24h", "Suspender"];
 
-export default function GestorClearanceGame() {
+export default function GestorClearanceGame({ customData }: { customData?: any }) {
+  const labData = customData?.labResults || labResults;
+  const doseOptions = customData?.doses || doses;
+  const patientLabel = customData?.patientInfo ? `${customData.patientInfo.name} | ${customData.patientInfo.age} anos | ${customData.patientInfo.drug}` : "João Silva | 68 anos | Vancomicina IV";
   const [currentDay, setCurrentDay] = useState(1);
   const [toxicity, setToxicity] = useState(0);
   const [efficacy, setEfficacy] = useState(50);

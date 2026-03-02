@@ -11,7 +11,8 @@ interface InventoryItem {
   name: string;
 }
 
-export default function PlantaoNoturnoGame() {
+export default function PlantaoNoturnoGame({ customData }: { customData?: any }) {
+  const puzzleData = customData || null;
   const [timeLeft, setTimeLeft] = useState(600);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [gameStatus, setGameStatus] = useState<"playing" | "escaped" | "timeout">("playing");

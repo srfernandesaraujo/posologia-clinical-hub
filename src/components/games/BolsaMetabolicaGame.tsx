@@ -27,7 +27,7 @@ const initialHistory = [
 
 const targetLines: Record<string, number> = { HbA1c: 7.0, LDL: 100, HDL: 40 };
 
-export default function BolsaMetabolicaGame() {
+export default function BolsaMetabolicaGame({ customData }: { customData?: any }) {
   const [healthCoins, setHealthCoins] = useState(1500);
   const [selectedBio, setSelectedBio] = useState("HbA1c");
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
