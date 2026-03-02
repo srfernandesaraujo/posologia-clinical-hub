@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
@@ -17,6 +17,7 @@ import AlertaVermelhoGame from "@/components/games/AlertaVermelhoGame";
 import JanelaTerapeuticaGame from "@/components/games/JanelaTerapeuticaGame";
 import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
 import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
+import InsulinaBirdsGame from "@/components/games/InsulinaBirdsGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
 import { Button } from "@/components/ui/button";
@@ -149,6 +150,15 @@ const games = [
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-600",
     badge: "Portfólio",
+  },
+  {
+    id: "insulina-birds",
+    title: "Insulina Birds",
+    description: "Lance insulinas contra alvos glicêmicos estilo Angry Birds e controle o diabetes!",
+    icon: Target,
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    badge: "5 fases",
   },
 ];
 
@@ -527,6 +537,42 @@ Crie:
 - "updatedValues": objeto { [id]: number } com novos valores para quando clicar "Registar"
 Use biomarcadores diferentes: ex: Triglicerídeos, TSH, Vitamina D, Ácido Úrico, Creatinina, PCR.
 Retorne: { "biomarkers": [...], "historyData": [...], "targetLines": {...}, "updatedValues": {...} }`,
+  },
+  "insulina-birds": {
+    component: InsulinaBirdsGame,
+    title: "Insulina Birds — Angry Birds do Diabetes",
+    subtitle: "Lance insulinas e antidiabéticos contra alvos glicêmicos para controlar o diabetes!",
+    howToPlay: `💉 Insulina Birds — Angry Birds do Diabetes
+
+📋 Objetivo: Destrua os blocos de glicemia alta (vermelhos e amarelos) sem atingir os blocos de glicemia alvo (verdes).
+
+🕹️ Como jogar:
+1. Clique e arraste no estilingue para mirar
+2. Solte para lançar o projétil (insulina/fármaco)
+3. Cada fármaco tem comportamento diferente:
+   💙 Ins. Regular: trajetória padrão, impacto médio
+   💚 Ins. NPH: pesada, cai rápido, explode em área
+   💜 Ins. Glargina: lenta, atravessa obstáculos
+   🧡 Metformina: remove blocos de resistência (cinzas)
+4. Destrua todos os blocos vermelhos e amarelos para vencer
+
+⚠️ NÃO destrua blocos verdes (hipoglicemia = -200 pontos!)
+⚠️ Blocos cinzas (Resistência Insulínica) só são destruídos com Metformina
+
+⭐ Estrelas: baseadas na pontuação final de cada fase
+💡 Dica: Use menos projéteis = bônus de pontos!`,
+    aiPrompt: `Gere novos níveis para o jogo Insulina Birds (estilo Angry Birds do Diabetes).
+Crie "levels": array de 5 fases.
+Cada fase: {
+  name (string "Fase X: ..."),
+  patient: { name (string), hba1c (string), profile (string) },
+  projectiles: array de 3-4 objetos { type: "regular"|"nph"|"glargina"|"metformina" },
+  blocks: array de 4-8 blocos { x (380-640), y (260-340 em múltiplos de 40 subtraindo de 380), w (50), h (40), type ("red"|"yellow"|"green"|"gray"), hp (1-3), maxHp (igual ao hp), label (string mg/dL ou "RI") },
+  explanation (string justificativa clínica da fase)
+}
+Regras: blocos verdes são alvo (não destruir); blocos cinzas só removidos com metformina; blocos vermelhos precisam de mais HP.
+Use cenários clínicos diferentes dos originais (ex: diabetes gestacional, idoso polimedicado, DM1 juvenil, cetoacidose).
+Retorne: { "levels": [...] }`,
   },
 };
 
