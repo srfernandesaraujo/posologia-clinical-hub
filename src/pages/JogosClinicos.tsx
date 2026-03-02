@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
 import VilaSaudeGame from "@/components/games/VilaSaudeGame";
 import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
 import DetetiveHistoricoGame from "@/components/games/DetetiveHistoricoGame";
+import ResseccaoOncologicaGame from "@/components/games/ResseccaoOncologicaGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -45,6 +46,15 @@ const games = [
     iconColor: "text-stone-600",
     badge: "4 pistas",
   },
+  {
+    id: "resseccao",
+    title: "Ressecção Oncológica",
+    description: "Elimine células tumorais aplicando terapia alvo neste puzzle Resta 1.",
+    icon: Crosshair,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-600",
+    badge: "Puzzle",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -67,6 +77,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: DetetiveHistoricoGame,
     title: "Detetive do Histórico Clínico",
     subtitle: "Construa o seu dossiê farmacoterapêutico passo a passo.",
+  },
+  "resseccao": {
+    component: ResseccaoOncologicaGame,
+    title: "Ressecção Oncológica: Terapia Alvo",
+    subtitle: "Elimine todas as células tumorais até restar apenas uma.",
   },
 };
 
