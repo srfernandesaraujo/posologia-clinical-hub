@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
 import VilaSaudeGame from "@/components/games/VilaSaudeGame";
 import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
@@ -16,9 +17,11 @@ import AlertaVermelhoGame from "@/components/games/AlertaVermelhoGame";
 import JanelaTerapeuticaGame from "@/components/games/JanelaTerapeuticaGame";
 import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
 import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
-import GameHeader from "@/components/games/GameHeader";
+import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const games = [
   {
@@ -148,6 +151,24 @@ const games = [
     badge: "Portfólio",
   },
 ];
+
+const GAME_VERSION_STORAGE_KEY = "clinical-games-version-map-v1";
+
+const readInitialVersions = () => {
+  try {
+    const raw = localStorage.getItem(GAME_VERSION_STORAGE_KEY);
+    if (!raw) return {} as Record<string, number>;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {} as Record<string, number>;
+    return Object.entries(parsed).reduce<Record<string, number>>((acc, [key, value]) => {
+      const numeric = Number(value);
+      if (!Number.isNaN(numeric)) acc[key] = Number(numeric.toFixed(1));
+      return acc;
+    }, {});
+  } catch {
+    return {} as Record<string, number>;
+  }
+};
 
 const gameComponents: Record<string, {
   component: React.FC<{ customData?: any }>;
@@ -511,31 +532,111 @@ Retorne: { "biomarkers": [...], "historyData": [...], "targetLines": {...}, "upd
 
 export default function JogosClinicos() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [aiData, setAiData] = useState<Record<string, any>>({});
+  const [gameVersions, setGameVersions] = useState<Record<string, number>>(readInitialVersions);
+  const [sessionScore, setSessionScore] = useState(0);
 
+  const lastInteractionRef = useRef(0);
   const active = activeGame ? gameComponents[activeGame] : null;
+
+  const getVersion = useCallback((gameId: string) => Number((gameVersions[gameId] ?? 1).toFixed(1)), [gameVersions]);
+  const formatVersion = useCallback((value: number) => value.toFixed(1), []);
+
+  useEffect(() => {
+    localStorage.setItem(GAME_VERSION_STORAGE_KEY, JSON.stringify(gameVersions));
+  }, [gameVersions]);
+
+  const awardGamePoints = useCallback(async (gameId: string, points: number, reason: string) => {
+    if (!user) return;
+
+    setSessionScore((prev) => prev + points);
+
+    const { error } = await supabase.from("student_points").insert({
+      user_id: user.id,
+      source: `game:${gameId}`,
+      points,
+      simulator_slug: gameId,
+      source_id: reason,
+    });
+
+    if (error) {
+      console.error("Pontuação não registrada:", error.message);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!activeGame) return;
+
+    setSessionScore(0);
+    lastInteractionRef.current = 0;
+    void awardGamePoints(activeGame, 10, `start-${Date.now()}`);
+  }, [activeGame, awardGamePoints]);
+
+  const handleGameInteraction = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    if (!activeGame) return;
+
+    const target = event.target as HTMLElement;
+    if (!target.closest("button")) return;
+
+    const now = Date.now();
+    if (now - lastInteractionRef.current < 2500) return;
+
+    lastInteractionRef.current = now;
+    void awardGamePoints(activeGame, 3, `interaction-${now}`);
+  }, [activeGame, awardGamePoints]);
+
+  const handleAiUpdate = useCallback((data: any, updateType: GameUpdateType) => {
+    if (!activeGame) return;
+
+    setAiData((prev) => ({ ...prev, [activeGame]: data }));
+    setGameVersions((prev) => {
+      const current = prev[activeGame] ?? 1;
+      const next = updateType === "major"
+        ? Math.floor(current) + 1
+        : Number((current + 0.1).toFixed(1));
+
+      return { ...prev, [activeGame]: next };
+    });
+
+    void awardGamePoints(activeGame, updateType === "major" ? 30 : 10, `ai-update-${Date.now()}`);
+  }, [activeGame, awardGamePoints]);
 
   if (active && activeGame) {
     const GameComponent = active.component;
     const customData = aiData[activeGame] || undefined;
+    const versionLabel = formatVersion(getVersion(activeGame));
+
     return (
       <div className="max-w-3xl mx-auto">
         <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
           ← Voltar aos jogos
         </Button>
+
         <div className="mb-2">
-          <h1 className="text-2xl font-bold mb-1">{active.title}</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-2xl font-bold">{active.title}</h1>
+            <Badge variant="secondary">v{versionLabel}</Badge>
+          </div>
           <p className="text-muted-foreground">{active.subtitle}</p>
         </div>
+
         <GameHeader
           howToPlay={active.howToPlay}
           aiPrompt={active.aiPrompt}
           gameId={activeGame}
-          onAiUpdate={(data) => setAiData((prev) => ({ ...prev, [activeGame]: data }))}
+          versionLabel={versionLabel}
+          currentData={customData}
+          onAiUpdate={handleAiUpdate}
         />
-        <GameComponent key={JSON.stringify(customData)} customData={customData} />
-        <GameRanking gameId={activeGame} />
+
+        <div onClickCapture={handleGameInteraction}>
+          <GameComponent key={JSON.stringify(customData)} customData={customData} />
+        </div>
+
+        <GameRanking gameId={activeGame} currentScore={sessionScore} />
       </div>
     );
   }
@@ -548,27 +649,33 @@ export default function JogosClinicos() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {games.map((game) => (
-          <Card
-            key={game.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
-            onClick={() => setActiveGame(game.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
-                <game.icon className={`h-6 w-6 ${game.iconColor}`} />
-              </div>
-              <CardTitle className="text-lg">{game.title}</CardTitle>
-              <CardDescription>{game.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
-                {game.badge}
-              </span>
-            </CardContent>
-          </Card>
-        ))}
+        {games.map((game) => {
+          const versionLabel = formatVersion(getVersion(game.id));
+
+          return (
+            <Card
+              key={game.id}
+              className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
+              onClick={() => setActiveGame(game.id)}
+            >
+              <CardHeader className="pb-3">
+                <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
+                  <game.icon className={`h-6 w-6 ${game.iconColor}`} />
+                </div>
+                <CardTitle className="text-lg">{game.title}</CardTitle>
+                <CardDescription>{game.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  {game.badge}
+                </span>
+                <Badge variant="secondary" className="text-xs">v{versionLabel}</Badge>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
 }
+

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HelpCircle, Sparkles, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,17 +13,22 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export type GameUpdateType = "incremental" | "major";
+
 interface GameHeaderProps {
   howToPlay: string;
   aiPrompt: string;
   gameId: string;
-  onAiUpdate?: (data: any) => void;
+  versionLabel: string;
+  currentData?: any;
+  onAiUpdate?: (data: any, updateType: GameUpdateType) => void;
 }
 
-export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: GameHeaderProps) {
+export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, currentData, onAiUpdate }: GameHeaderProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [userPrompt, setUserPrompt] = useState("");
+  const [updateType, setUpdateType] = useState<GameUpdateType>("incremental");
   const [loading, setLoading] = useState(false);
 
   const handleAiUpdate = async () => {
@@ -30,21 +36,30 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: 
       toast.error("Escreva uma instrução de melhoria para o jogo.");
       return;
     }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("update-game", {
-        body: { gameId, aiPrompt, userPrompt: userPrompt.trim() },
+        body: {
+          gameId,
+          aiPrompt,
+          userPrompt: userPrompt.trim(),
+          updateType,
+          currentData: currentData ?? null,
+        },
       });
 
       if (error) throw error;
-      if (data?.gameData) {
-        onAiUpdate?.(data.gameData);
-        toast.success("Jogo atualizado com IA! Novos conteúdos carregados.");
-        setUserPrompt("");
-        setShowAiPanel(false);
-      } else {
-        throw new Error("Dados não retornados pela IA");
+
+      const gameData = data?.gameData;
+      if (!gameData || typeof gameData !== "object" || Object.keys(gameData).length === 0) {
+        throw new Error("A IA não retornou uma atualização válida para este jogo.");
       }
+
+      onAiUpdate?.(gameData, updateType);
+      toast.success(updateType === "major" ? "Grande atualização aplicada com sucesso!" : "Atualização incremental aplicada com sucesso!");
+      setUserPrompt("");
+      setShowAiPanel(false);
     } catch (e: any) {
       console.error("AI update error:", e);
       toast.error(e.message || "Erro ao atualizar com IA. Tente novamente.");
@@ -55,7 +70,11 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: 
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <Badge variant="secondary" className="text-xs">
+          Versão {versionLabel}
+        </Badge>
+
         <Button
           variant="outline"
           size="sm"
@@ -65,6 +84,7 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: 
           <HelpCircle className="h-3.5 w-3.5" />
           Como Jogar
         </Button>
+
         <Button
           variant="outline"
           size="sm"
@@ -78,21 +98,45 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: 
 
       {showAiPanel && (
         <div className="mb-4 p-4 rounded-lg border bg-muted/30 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-          <p className="text-sm font-medium">
-            ✨ Descreva a melhoria que deseja para este jogo:
-          </p>
+          <p className="text-sm font-medium">✨ Descreva a melhoria específica para este jogo:</p>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              type="button"
+              size="sm"
+              variant={updateType === "incremental" ? "default" : "outline"}
+              onClick={() => setUpdateType("incremental")}
+              disabled={loading}
+            >
+              Incremental (+0.1)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={updateType === "major" ? "default" : "outline"}
+              onClick={() => setUpdateType("major")}
+              disabled={loading}
+            >
+              Grande (+1.0)
+            </Button>
+          </div>
+
           <Textarea
-            placeholder="Ex: Crie uma nova fase com um paciente pediátrico, adicione um ranking de participantes, mude o enredo para emergência obstétrica..."
+            placeholder="Ex: Crie uma nova fase com paciente pediátrico, adicione personagens novos, mude o enredo para uma emergência específica..."
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
-            className="min-h-[80px] text-sm"
+            className="min-h-[90px] text-sm"
             disabled={loading}
           />
+
           <div className="flex gap-2 justify-end">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setShowAiPanel(false); setUserPrompt(""); }}
+              onClick={() => {
+                setShowAiPanel(false);
+                setUserPrompt("");
+              }}
               disabled={loading}
             >
               Cancelar
@@ -103,12 +147,8 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, onAiUpdate }: 
               onClick={handleAiUpdate}
               disabled={loading || !userPrompt.trim()}
             >
-              {loading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5" />
-              )}
-              {loading ? "Gerando..." : "Enviar para IA"}
+              {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              {loading ? "Gerando..." : "Aplicar atualização"}
             </Button>
           </div>
         </div>
