@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
@@ -7,6 +7,7 @@ import VilaSaudeGame from "@/components/games/VilaSaudeGame";
 import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
 import DetetiveHistoricoGame from "@/components/games/DetetiveHistoricoGame";
 import ResseccaoOncologicaGame from "@/components/games/ResseccaoOncologicaGame";
+import MilionarioFarmaGame from "@/components/games/MilionarioFarmaGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -55,6 +56,15 @@ const games = [
     iconColor: "text-rose-600",
     badge: "Puzzle",
   },
+  {
+    id: "milionario",
+    title: "Milionário da Farmacologia",
+    description: "Responda perguntas de farmacologia clínica e suba na carreira hospitalar.",
+    icon: Award,
+    iconBg: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+    badge: "5 níveis",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -82,6 +92,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: ResseccaoOncologicaGame,
     title: "Ressecção Oncológica: Terapia Alvo",
     subtitle: "Elimine todas as células tumorais até restar apenas uma.",
+  },
+  "milionario": {
+    component: MilionarioFarmaGame,
+    title: "Milionário da Farmacologia",
+    subtitle: "Responda perguntas clínicas e alcance o nível de Chefe de Clínica!",
   },
 };
 
