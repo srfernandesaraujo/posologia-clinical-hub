@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.update-game]
 verify_jwt = false
+
+[functions.game-ranking]
+verify_jwt = false
