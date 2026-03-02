@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, FlaskConical, ArrowRight, Trophy, Flame, Star, Sparkles } from "lucide-react";
+import { Calculator, FlaskConical, Gamepad2, ArrowRight, Trophy, Flame, Star, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,13 @@ export default function Dashboard() {
       icon: FlaskConical,
       to: "/simuladores",
       gradient: "from-accent to-accent/70",
+    },
+    {
+      title: t("dashboard.clinicalGames"),
+      description: t("dashboard.gamesDesc"),
+      icon: Gamepad2,
+      to: "/jogos-clinicos",
+      gradient: "from-[hsl(280,70%,50%)] to-[hsl(280,70%,50%)]/70",
     },
   ];
 
