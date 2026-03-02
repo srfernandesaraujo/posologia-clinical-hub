@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
@@ -9,6 +9,7 @@ import DetetiveHistoricoGame from "@/components/games/DetetiveHistoricoGame";
 import ResseccaoOncologicaGame from "@/components/games/ResseccaoOncologicaGame";
 import MilionarioFarmaGame from "@/components/games/MilionarioFarmaGame";
 import DominoClinicoGame from "@/components/games/DominoClinicoGame";
+import CarreiraClinicaGame from "@/components/games/CarreiraClinicaGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -75,6 +76,15 @@ const games = [
     iconColor: "text-stone-600",
     badge: "7 peças",
   },
+  {
+    id: "carreira",
+    title: "Carreira Clínica",
+    description: "Gerencie um consultório num tabuleiro estilo Banco Imobiliário.",
+    icon: Building,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badge: "16 casas",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -112,6 +122,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: DominoClinicoGame,
     title: "Dominó Clínico",
     subtitle: "Desvende a cascata prescritiva conectando peças clínicas.",
+  },
+  "carreira": {
+    component: CarreiraClinicaGame,
+    title: "Carreira Clínica",
+    subtitle: "Gerencie as finanças do seu consultório neste tabuleiro clínico.",
   },
 };
 
