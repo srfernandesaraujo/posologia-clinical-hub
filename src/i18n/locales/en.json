@@ -10,7 +10,8 @@
     "logout": "Log out",
     "plans": "Plans",
     "virtualRooms": "Virtual Rooms",
-    "gamification": "Gamification"
+    "gamification": "Gamification",
+    "games": "Clinical Games"
   },
   "home": {
     "badge": "Free for healthcare professionals",
@@ -89,6 +90,8 @@
     "calcDesc": "Validated scores, indices and formulas from medical literature.",
     "clinicalSimulators": "Clinical Simulators",
     "simDesc": "Simulate scenarios and train your clinical decision-making.",
+    "clinicalGames": "Clinical Games",
+    "gamesDesc": "Learn by playing interactive pharmacology and clinical games.",
     "explore": "Explore",
     "welcomeTitle": "Welcome to Posologia Clinical Hub! 🎉",
     "welcomeDesc": "Here you'll find clinical calculators, simulators and tools to support your practice. Start by exploring a calculator!",
@@ -212,5 +215,11 @@
     "b4": "Educational explanation below each tool",
     "b5": "New scores added frequently",
     "b6": "Access on any device — desktop, tablet or phone"
+  },
+  "games": {
+    "title": "Clinical Games",
+    "subtitle": "Learn by playing! Interactive games to train clinical knowledge.",
+    "comingSoon": "Coming soon!",
+    "comingSoonDesc": "We are developing interactive clinical games to make learning more fun and effective. Stay tuned!"
   }
 }

@@ -10,7 +10,8 @@
     "logout": "Sair",
     "plans": "Planos",
     "virtualRooms": "Salas Virtuais",
-    "gamification": "Gamificação"
+    "gamification": "Gamificação",
+    "games": "Jogos Clínicos"
   },
   "home": {
     "badge": "Gratuito para profissionais de saúde",
@@ -89,6 +90,8 @@
     "calcDesc": "Scores, índices e fórmulas validadas pela literatura médica.",
     "clinicalSimulators": "Simuladores Clínicos",
     "simDesc": "Simule cenários e treine a tomada de decisão clínica.",
+    "clinicalGames": "Jogos Clínicos",
+    "gamesDesc": "Aprenda jogando com jogos interativos de farmacologia e clínica.",
     "explore": "Explorar",
     "welcomeTitle": "Bem-vindo ao Posologia Clinical Hub! 🎉",
     "welcomeDesc": "Aqui você encontra calculadoras clínicas, simuladores e ferramentas para apoiar sua prática. Comece explorando uma calculadora!",
@@ -212,5 +215,11 @@
     "b4": "Explicação didática abaixo de cada ferramenta",
     "b5": "Novos scores adicionados frequentemente",
     "b6": "Acesso em qualquer dispositivo — desktop, tablet ou celular"
+  },
+  "games": {
+    "title": "Jogos Clínicos",
+    "subtitle": "Aprenda jogando! Jogos interativos para treinar conhecimentos clínicos.",
+    "comingSoon": "Em breve!",
+    "comingSoonDesc": "Estamos desenvolvendo jogos clínicos interativos para tornar o aprendizado mais divertido e eficaz. Fique ligado!"
   }
 }

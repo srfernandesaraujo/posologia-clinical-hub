@@ -40,6 +40,7 @@ import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
+import JogosClinicos from "./pages/JogosClinicos";
 import EmbedTool from "./pages/EmbedTool";
 import NotFound from "./pages/NotFound";
 
@@ -99,6 +100,7 @@ const App = () => (
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
+              <Route path="/jogos-clinicos" element={<JogosClinicos />} />
             </Route>
 
             {/* Admin routes */}
