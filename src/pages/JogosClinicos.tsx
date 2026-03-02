@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
@@ -10,6 +10,7 @@ import ResseccaoOncologicaGame from "@/components/games/ResseccaoOncologicaGame"
 import MilionarioFarmaGame from "@/components/games/MilionarioFarmaGame";
 import DominoClinicoGame from "@/components/games/DominoClinicoGame";
 import CarreiraClinicaGame from "@/components/games/CarreiraClinicaGame";
+import PlantaoNoturnoGame from "@/components/games/PlantaoNoturnoGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -85,6 +86,15 @@ const games = [
     iconColor: "text-amber-600",
     badge: "16 casas",
   },
+  {
+    id: "plantao",
+    title: "O Plantão Noturno",
+    description: "Escape Room clínico: encontre pistas e salve o paciente antes do tempo acabar.",
+    icon: Lock,
+    iconBg: "bg-zinc-200",
+    iconColor: "text-zinc-700",
+    badge: "Escape Room",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -127,6 +137,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: CarreiraClinicaGame,
     title: "Carreira Clínica",
     subtitle: "Gerencie as finanças do seu consultório neste tabuleiro clínico.",
+  },
+  "plantao": {
+    component: PlantaoNoturnoGame,
+    title: "O Plantão Noturno",
+    subtitle: "Encontre pistas, resolva puzzles e salve o paciente a tempo.",
   },
 };
 
