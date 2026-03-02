@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
@@ -8,6 +8,7 @@ import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesG
 import DetetiveHistoricoGame from "@/components/games/DetetiveHistoricoGame";
 import ResseccaoOncologicaGame from "@/components/games/ResseccaoOncologicaGame";
 import MilionarioFarmaGame from "@/components/games/MilionarioFarmaGame";
+import DominoClinicoGame from "@/components/games/DominoClinicoGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -65,6 +66,15 @@ const games = [
     iconColor: "text-yellow-600",
     badge: "5 níveis",
   },
+  {
+    id: "domino",
+    title: "Dominó Clínico",
+    description: "Conecte peças de doenças, fármacos e efeitos adversos numa cascata prescritiva.",
+    icon: Link,
+    iconBg: "bg-stone-100",
+    iconColor: "text-stone-600",
+    badge: "7 peças",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -97,6 +107,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: MilionarioFarmaGame,
     title: "Milionário da Farmacologia",
     subtitle: "Responda perguntas clínicas e alcance o nível de Chefe de Clínica!",
+  },
+  "domino": {
+    component: DominoClinicoGame,
+    title: "Dominó Clínico",
+    subtitle: "Desvende a cascata prescritiva conectando peças clínicas.",
   },
 };
 
