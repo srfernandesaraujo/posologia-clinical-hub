@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical } from "lucide-react";
+import { Brain, Home, FlaskConical, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
 import VilaSaudeGame from "@/components/games/VilaSaudeGame";
 import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
+import DetetiveHistoricoGame from "@/components/games/DetetiveHistoricoGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -35,6 +36,15 @@ const games = [
     iconColor: "text-indigo-600",
     badge: "6 substâncias",
   },
+  {
+    id: "detetive",
+    title: "Detetive do Histórico",
+    description: "Organize a sua anamnese farmacoterapêutica passo a passo antes da consulta.",
+    icon: Search,
+    iconBg: "bg-stone-100",
+    iconColor: "text-stone-600",
+    badge: "4 pistas",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -52,6 +62,11 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: LaboratorioInteracoesGame,
     title: "Laboratório de Interações",
     subtitle: "Descubra interações entre medicamentos, alimentos e fitoterápicos.",
+  },
+  "detetive": {
+    component: DetetiveHistoricoGame,
+    title: "Detetive do Histórico Clínico",
+    subtitle: "Construa o seu dossiê farmacoterapêutico passo a passo.",
   },
 };
 
