@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
@@ -18,6 +18,7 @@ import JanelaTerapeuticaGame from "@/components/games/JanelaTerapeuticaGame";
 import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
 import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
 import InsulinaBirdsGame from "@/components/games/InsulinaBirdsGame";
+import AlexKiddHipertensaoGame from "@/components/games/AlexKiddHipertensaoGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
 import { Button } from "@/components/ui/button";
@@ -158,6 +159,15 @@ const games = [
     icon: Target,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
+    badge: "5 fases",
+  },
+  {
+    id: "alex-kidd-has",
+    title: "Alex Kidd Anti-Hipertensivo",
+    description: "Plataformer retro: colete anti-hipertensivos corretos e desvie de efeitos adversos!",
+    icon: Gamepad2,
+    iconBg: "bg-cyan-100",
+    iconColor: "text-cyan-600",
     badge: "5 fases",
   },
 ];
@@ -572,6 +582,38 @@ Cada fase: {
 }
 Regras: blocos verdes são alvo (não destruir); blocos cinzas só removidos com metformina; blocos vermelhos precisam de mais HP.
 Use cenários clínicos diferentes dos originais (ex: diabetes gestacional, idoso polimedicado, DM1 juvenil, cetoacidose).
+Retorne: { "levels": [...] }`,
+  },
+  "alex-kidd-has": {
+    component: AlexKiddHipertensaoGame,
+    title: "Alex Kidd Anti-Hipertensivo",
+    subtitle: "Colete anti-hipertensivos e desvie de efeitos adversos neste plataformer retro!",
+    howToPlay: `🎮 Alex Kidd Anti-Hipertensivo — Plataformer da Hipertensão
+
+📋 Objetivo: Percorra as fases coletando anti-hipertensivos corretos, desvie de obstáculos e responda perguntas para controlar a PA do paciente.
+
+🕹️ Como jogar:
+1. Use ← → para mover e ↑ para pular
+2. Colete fármacos corretos (azul, verde, roxo, amarelo): +pontos e ↓PA
+3. EVITE obstáculos vermelhos (AINEs), brancos (sal) e laranjas (hipotensão)
+4. Blocos amarelos com "?" revelam perguntas de farmacologia
+5. Resposta correta: +200 pts e escudo temporário
+6. Resposta errada: perde 1 vida
+7. Chegue à bandeira 🏁 para completar a fase
+
+⚠️ 3 vidas | PA começa em 180 mmHg → meta < 140 mmHg
+💡 Dica: Evite AINEs — eles reduzem o efeito dos anti-hipertensivos!`,
+    aiPrompt: `Gere novos níveis para o jogo Alex Kidd Anti-Hipertensivo (plataformer de hipertensão).
+Crie "levels": array de 5 fases.
+Cada fase: {
+  name (string "Fase X: ..."),
+  patient: { name (string), pa (string "XXX/YY mmHg"), comorbidity (string) },
+  worldWidth (number 1400-1700),
+  explanation (string justificativa clínica),
+  platforms: array de 6-9 plataformas { x (number), y (number 230-320), w (number 90-160), h (20) } + chão { x:0, y:380, w:worldWidth, h:40 },
+  collectibles: array de 6-9 itens { id (string), x (number), y (number acima da plataforma), w:36, h:36, type ("good"|"bad"|"question"), name (string), label (string 2-4 chars), color (string classe Tailwind bg-*), points (number), collected (false), question (obj com question/options/correctIndex, apenas se type="question") }
+}
+Use cenários diferentes: HAS na gestação, HAS resistente, HAS no idoso, emergência hipertensiva, HAS + IRC.
 Retorne: { "levels": [...] }`,
   },
 };
