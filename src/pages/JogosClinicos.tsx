@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
@@ -11,6 +11,11 @@ import MilionarioFarmaGame from "@/components/games/MilionarioFarmaGame";
 import DominoClinicoGame from "@/components/games/DominoClinicoGame";
 import CarreiraClinicaGame from "@/components/games/CarreiraClinicaGame";
 import PlantaoNoturnoGame from "@/components/games/PlantaoNoturnoGame";
+import GestorClearanceGame from "@/components/games/GestorClearanceGame";
+import AlertaVermelhoGame from "@/components/games/AlertaVermelhoGame";
+import JanelaTerapeuticaGame from "@/components/games/JanelaTerapeuticaGame";
+import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
+import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -95,6 +100,51 @@ const games = [
     iconColor: "text-zinc-700",
     badge: "Escape Room",
   },
+  {
+    id: "clearance",
+    title: "Gestor de Clearance",
+    description: "Ajuste doses de Vancomicina monitorizando a função renal do paciente.",
+    icon: Activity,
+    iconBg: "bg-teal-100",
+    iconColor: "text-teal-600",
+    badge: "7 dias",
+  },
+  {
+    id: "alerta-vermelho",
+    title: "Alerta Vermelho",
+    description: "Investigue qual medicamento causa os sintomas do paciente.",
+    icon: Syringe,
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    badge: "Investigação",
+  },
+  {
+    id: "janela",
+    title: "A Janela Terapêutica",
+    description: "Ajuste a dose de Varfarina para manter o INR na zona segura.",
+    icon: Activity,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    badge: "10 dias",
+  },
+  {
+    id: "labirinto",
+    title: "Labirinto do Hemograma",
+    description: "Navegue pela árvore de decisão para diagnosticar o tipo de anemia.",
+    icon: Droplet,
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    badge: "3 passos",
+  },
+  {
+    id: "bolsa",
+    title: "Bolsa de Valores Metabólica",
+    description: "Transforme exames laboratoriais em ações de saúde estilo trading.",
+    icon: TrendingUp,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    badge: "Portfólio",
+  },
 ];
 
 const gameComponents: Record<string, { component: React.FC; title: string; subtitle: string }> = {
@@ -142,6 +192,31 @@ const gameComponents: Record<string, { component: React.FC; title: string; subti
     component: PlantaoNoturnoGame,
     title: "O Plantão Noturno",
     subtitle: "Encontre pistas, resolva puzzles e salve o paciente a tempo.",
+  },
+  "clearance": {
+    component: GestorClearanceGame,
+    title: "Gestor de Clearance",
+    subtitle: "Monitore a função renal e ajuste a dose de Vancomicina em 7 dias.",
+  },
+  "alerta-vermelho": {
+    component: AlertaVermelhoGame,
+    title: "Alerta Vermelho: Investigação Toxicológica",
+    subtitle: "Descubra qual medicamento está a causar os sintomas do paciente.",
+  },
+  "janela": {
+    component: JanelaTerapeuticaGame,
+    title: "A Janela Terapêutica",
+    subtitle: "Ajuste a dose diária de Varfarina para manter o INR na zona segura.",
+  },
+  "labirinto": {
+    component: LabirintoHemogramaGame,
+    title: "O Labirinto do Hemograma",
+    subtitle: "Navegue pela árvore de decisão e diagnostique a anemia.",
+  },
+  "bolsa": {
+    component: BolsaMetabolicaGame,
+    title: "Bolsa de Valores Metabólica",
+    subtitle: "Os seus exames são ações. Melhore os resultados e ganhe dividendos!",
   },
 };
 
