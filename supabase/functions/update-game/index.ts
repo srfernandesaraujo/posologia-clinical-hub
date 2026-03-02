@@ -12,13 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const { gameId, aiPrompt } = await req.json();
+    const { gameId, aiPrompt, userPrompt } = await req.json();
 
     if (!gameId || !aiPrompt) {
       return new Response(JSON.stringify({ error: "gameId e aiPrompt são obrigatórios" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const finalPrompt = userPrompt 
+      ? `O utilizador pediu a seguinte melhoria para o jogo "${gameId}": "${userPrompt}"\n\nUse como base a estrutura de dados do jogo descrita abaixo e adapte conforme o pedido do utilizador:\n\n${aiPrompt}`
+      : aiPrompt;
 
     const { data } = await callAI({
       messages: [
@@ -28,9 +32,10 @@ serve(async (req) => {
 Gere conteúdo novo, criativo e clinicamente preciso para jogos clínicos educativos.
 RETORNE APENAS UM JSON VÁLIDO, sem markdown, sem blocos de código, sem explicações.
 O JSON deve ser um objeto com os campos específicos solicitados.
+Adapte o conteúdo conforme a instrução do utilizador, mantendo a estrutura de dados compatível com o jogo.
 Seed de aleatoriedade: ${Math.floor(Math.random() * 100000)}.`
         },
-        { role: "user", content: aiPrompt },
+        { role: "user", content: finalPrompt },
       ],
       temperature: 1.1,
       model: "google/gemini-3-flash-preview",

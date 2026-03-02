@@ -17,6 +17,7 @@ import JanelaTerapeuticaGame from "@/components/games/JanelaTerapeuticaGame";
 import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
 import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
 import GameHeader from "@/components/games/GameHeader";
+import GameRanking from "@/components/games/GameRanking";
 import { Button } from "@/components/ui/button";
 
 const games = [
@@ -534,6 +535,7 @@ export default function JogosClinicos() {
           onAiUpdate={(data) => setAiData((prev) => ({ ...prev, [activeGame]: data }))}
         />
         <GameComponent key={JSON.stringify(customData)} customData={customData} />
+        <GameRanking gameId={activeGame} />
       </div>
     );
   }
