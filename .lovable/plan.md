@@ -1,117 +1,107 @@
 
 
-## Plano: Provas de Simulação em Salas Virtuais
+## Plano de Melhoria dos 16 Jogos Clínicos
 
-### Situação Atual
+### Diagnóstico Geral
 
-Hoje, uma sala virtual (`virtual_rooms`) vincula-se a **um único simulador** (`simulator_slug`) e opcionalmente **um único caso clínico** (`case_id`). O aluno entra via PIN, identifica-se, e é direcionado para aquele simulador/caso específico.
+Após analisar todos os 16 jogos, identifico padrões comuns de simplicidade:
 
-### Objetivo
+- **Conteúdo limitado**: poucos dados hardcoded, pouca variabilidade entre partidas
+- **Ausência de narrativa**: jogos pulam direto para a mecânica sem contextualização
+- **Feedback formativo fraco**: respostas certas/erradas sem explicação clínica aprofundada
+- **Sem progressão persistente**: nada salva entre sessões, sem desbloqueio de conteúdo
+- **Visual básico**: cards e botões padrão, sem animações, sons ou efeitos visuais marcantes
+- **Sem multijogador ou competição**: sem desafios entre alunos
 
-Permitir que o professor monte uma **prova de simulação** dentro da sala virtual, composta por **múltiplos simuladores** e **múltiplos casos clínicos** selecionados, formando uma sequência de atividades que o aluno deve completar.
+### Melhorias Transversais (aplicáveis a todos)
+
+1. **Sistema de Dificuldade Adaptativa** -- cada jogo terá 3 modos (Acadêmico, Clínico, Especialista) que alteram a complexidade dos dados e o tempo/recursos disponíveis.
+2. **Narrativa Introdutória** -- tela de briefing com cenário clínico imersivo antes de começar (nome do paciente, história, hospital).
+3. **Feedback Formativo Rico** -- ao errar ou acertar, exibir overlay com explicação clínica detalhada, referência bibliográfica e dica para estudo.
+4. **Animações e Efeitos Visuais** -- transições suaves, shake em erros, pulse em acertos, confetti em vitória, ícones animados, progress bars com gradiente.
+5. **Sistema de Estrelas (1-3)** -- ao final de cada partida, avaliação por estrelas baseada em score, tempo e erros. Salva no localStorage e no ranking global.
+6. **Persistência de Progresso** -- salvar melhor score, estrelas e contextos desbloqueados no perfil do aluno via `student_points`.
 
 ---
 
-### 1. Nova Tabela: `room_activities`
+### Melhorias por Jogo
 
-Armazena cada item da prova (simulador + caso) vinculado à sala:
+#### 1. RPG Clínico -- TCC (133 linhas)
+- **Atual**: 7 batalhas lineares com 3 opções, feedback genérico.
+- **Melhorias**: Adicionar **árvore de habilidades** (Empatia, Lógica, Resiliência) que desbloqueiam conforme XP. Cada batalha terá **animação de combate** (barra de HP com transição suave, efeito de dano/cura). Adicionar **itens consumíveis** (Diário de Pensamentos, Escudo da Respiração). Múltiplos **cenários/arcos** (Ansiedade, Depressão, TOC) com 7 batalhas cada.
 
-```text
-room_activities
-├── id (uuid, PK)
-├── room_id (uuid, FK → virtual_rooms.id, ON DELETE CASCADE)
-├── simulator_slug (text, NOT NULL)
-├── case_id (uuid, nullable, FK → simulator_cases.id)
-├── position (integer, NOT NULL) — ordem na prova
-├── created_at (timestamptz)
-```
+#### 2. Vila da Saúde (121 linhas)
+- **Atual**: 2 medicamentos, 6 construções estáticas, sem persistência.
+- **Melhorias**: Expandir para **10+ medicamentos** com horários variados. Adicionar **eventos aleatórios** (epidemia, falta de estoque, campanha de vacinação). **Ciclo dia/noite** visual. **Habitantes** que aparecem conforme a vila evolui. **Missões diárias** com recompensas especiais. Sistema de **conquistas** (7 dias consecutivos, todas construções max).
 
-RLS: mesmas regras de `virtual_rooms` — dono da sala gerencia, anon/authenticated visualizam se sala ativa.
+#### 3. Laboratório de Interações (111 linhas)
+- **Atual**: 6 substâncias, 3 interações conhecidas, mix simples.
+- **Melhorias**: Expandir para **20+ substâncias** organizadas em prateleiras (Medicamentos, Alimentos, Fitoterápicos, Suplementos). Adicionar **mecanismo de interação** visual (CYP450, proteínas plasmáticas). **Modo Desafio**: receber um paciente polimedicado e identificar TODAS as interações perigosas em tempo limitado. **Enciclopédia** desbloqueável com todas as interações descobertas.
 
-### 2. Alteração na tabela `virtual_rooms`
+#### 4. Detetive do Histórico (102 linhas)
+- **Atual**: 4 perguntas de anamnese, formulário simples.
+- **Melhorias**: Transformar em **investigação narrativa**: o jogador recebe um caso clínico complexo e precisa interrogar o paciente (com diálogos ramificados), examinar documentos (prescrições anteriores, exames), e montar o dossiê completo. Adicionar **pistas ocultas** que só aparecem se fizer as perguntas certas. **Timer** pressionando antes da consulta. **Múltiplos pacientes** com perfis diferentes.
 
-- Os campos `simulator_slug` e `case_id` tornam-se **opcionais** (nullable). Quando a sala usa o modelo de prova (múltiplas atividades), esses campos ficam nulos e as atividades vêm de `room_activities`. Quando há apenas um simulador (modo legado), continuam funcionando como antes — compatibilidade total.
-- Novo campo opcional: `description` (text) — já existe na tabela.
+#### 5. Ressecção Oncológica (88 linhas)
+- **Atual**: Puzzle Resta 1 padrão, sem conteúdo clínico durante o jogo.
+- **Melhorias**: Cada **célula tumoral** exibe o nome de um quimioterápico ou mecanismo de ação. Ao eliminar, mostrar flashcard com informação clínica. Adicionar **múltiplos tabuleiros** (Mama, Pulmão, Cólon) com layouts diferentes. **Modo cronometrado** e **modo zen**. Animação de "eliminação celular" ao saltar peças.
 
-### 3. Alteração na tabela `room_submissions`
+#### 6. Milionário da Farmacologia (272 linhas)
+- **Já melhorado**: 5 contextos com 15 perguntas cada.
+- **Melhorias adicionais**: Adicionar **animações de transição** entre perguntas (spotlight, suspense). **Efeito sonoro** simulado via CSS animations. **Lifeline visual** mais elaborado (plateia com votos animados, telefone com timer). **Modo Duelo**: dois jogadores respondem simultaneamente.
 
-- Novo campo: `activity_id` (uuid, nullable, FK → room_activities.id) — identifica a qual atividade da prova a submissão se refere. Nullable para manter compatibilidade com salas legadas.
+#### 7. Dominó Clínico (96 linhas)
+- **Atual**: 7 peças com cascata prescritiva linear.
+- **Melhorias**: Expandir para **múltiplas cascatas** (Cardiovascular, Endócrina, Psiquiátrica). Adicionar **peças curinga** e **peças armadilha** (interações medicamentosas graves). **Modo competitivo** contra IA. Ao conectar peça, exibir **tooltip com explicação clínica**. Animação de **encaixe** com efeito satisfatório.
 
-### 4. UI do Professor — Criação da Sala (SalasVirtuais.tsx)
+#### 8. Carreira Clínica (274 linhas)
+- **Atual**: Banco Imobiliário solo básico com 16 casas.
+- **Melhorias**: Adicionar **eventos clínicos** ao cair em casas (quiz rápido para ganhar bônus ou evitar multa). **Oponente IA** com estratégia. **Cartas de especialização** que multiplicam renda em propriedades temáticas. **Gráfico de patrimônio** ao longo do jogo. **10 rodadas** com objetivo final (abrir hospital).
 
-Reformular o dialog de criação:
+#### 9. O Plantão Noturno -- Escape Room (269 linhas)
+- **Atual**: 1 cenário fixo (overdose opioide), 4 objetos interativos.
+- **Melhorias**: Criar **3-5 cenários diferentes** (Choque Anafilático, Cetoacidose Diabética, Intoxicação Digitálica). Cada cenário com **10+ objetos** e múltiplos puzzles encadeados. **Mapa visual** do hospital (enfermaria, farmácia, laboratório) com áreas clicáveis. **Sistema de dicas** progressivo (custo em tempo). **Cronômetro visual** com urgência crescente (tela fica vermelha).
 
-1. Manter campo **Título** e **Data de Expiração**.
-2. Substituir o seletor único de simulador por uma **lista de atividades** com botão "Adicionar Atividade":
-   - Cada atividade: Select de simulador + Select de caso clínico (carregado dinamicamente por `simulator_slug` da `simulator_cases`).
-   - Botão de remover atividade e drag/reorder (ou setas cima/baixo para simplificar).
-3. Ao salvar: criar a sala e inserir os registros em `room_activities` com `position` sequencial.
-4. Manter retrocompatibilidade: se só 1 atividade, pode opcionalmente usar o modelo legado.
+#### 10. Gestor de Clearance (143 linhas)
+- **Atual**: 7 dias fixos de monitoramento renal, 4 opções de dose.
+- **Melhorias**: Adicionar **múltiplos pacientes** com perfis diferentes (idoso, obeso, pediátrico). **Gráfico de farmacocinética** em tempo real mostrando Cmin/Cmax. **Variáveis aleatórias** (febre, desidratação) que alteram o clearance. **Notificações de laboratório** que chegam durante o jogo. **14 dias** de monitoramento.
 
-### 5. UI do Professor — Detalhes da Sala
+#### 11. Alerta Vermelho (200 linhas)
+- **Atual**: 1 caso fixo (rabdomiólise por estatina), 4 exames.
+- **Melhorias**: Criar **banco de 10+ casos** diferentes de RAM (Reação Adversa a Medicamento). Adicionar **algoritmo de Naranjo** interativo para classificar a causalidade. **Árvore de decisão** para conduta (suspender, reduzir, trocar, notificar). **Painel do paciente** com sinais vitais em tempo real.
 
-- Exibir a lista de atividades da prova (simulador + caso) na ordem definida.
-- Nos resultados dos participantes, agrupar submissões por atividade, mostrando score por etapa e score geral da prova.
+#### 12. A Janela Terapêutica (105 linhas)
+- **Atual**: 10 dias de ajuste de varfarina, gráfico INR.
+- **Melhorias**: Adicionar **eventos intercorrentes** (paciente comeu brócolis, tomou antibiótico, esqueceu dose). **Múltiplos fármacos de janela estreita** (Lítio, Digoxina, Fenitoína) como cenários. **Gráfico mais detalhado** com zona terapêutica, subterapêutica e tóxica coloridas. **Exames complementares** opcionais (custos vs informação).
 
-### 6. UI do Aluno — Fluxo de Prova (SalaVirtualAluno.tsx)
+#### 13. Labirinto do Hemograma (136 linhas)
+- **Atual**: 3 nós de decisão, único caminho (anemia ferropénica).
+- **Melhorias**: Expandir para **árvore completa** com 15+ nós cobrindo anemias microcíticas, normocíticas e macrocíticas. **Visualização de árvore** interativa (não linear). **Múltiplos pacientes** com hemogramas diferentes. **Mini-atlas** de lâminas de sangue periférico como pistas visuais. **Score por eficiência** do caminho diagnóstico.
 
-Ao entrar na sala com múltiplas atividades:
+#### 14. Bolsa de Valores Metabólica (138 linhas)
+- **Atual**: 3 biomarcadores fixos, 1 atualização de exame.
+- **Melhorias**: Expandir para **8+ biomarcadores** (TFG, TSH, Vitamina D, PCR). Adicionar **decisões de investimento** reais (comprar metformina, vender estatina, investir em exercício físico). **Gráfico de portfólio** com histórico de decisões. **Eventos de mercado** (novo estudo clínico, efeito adverso descoberto). **Múltiplos trimestres** de jogo.
 
-1. Tela "Tudo pronto" mostra um **resumo da prova**: lista de atividades com simulador e caso.
-2. Botão "Iniciar Prova" leva à **primeira atividade**.
-3. Ao concluir cada atividade (submissão), o aluno é direcionado automaticamente para a **próxima atividade** da lista.
-4. Ao concluir todas, tela de **resultado final** com score geral.
-5. O `sessionStorage` passa a incluir `activityId` e a lista de atividades restantes.
+#### 15. Insulina Birds (642 linhas)
+- **Já elaborado** com canvas, física e 5 fases.
+- **Melhorias**: Adicionar **power-ups** (Bomba de Infusão = dano em área, Monitor CGM = mostrar blocos fracos). **Efeitos de partícula** ao destruir blocos. **Boss fight** no final (Hiperglicemia Refratária). **Classificação por estrelas** em cada fase.
 
-### 7. Migration SQL
+#### 16. Alex Kidd Anti-Hipertensivo (688 linhas)
+- **Já elaborado** com canvas e plataformas.
+- **Melhorias**: Adicionar **power-ups** (Escudo de Nefroproteção, Velocidade Vasodilatadora). **Inimigos móveis** (Efeitos Adversos que perseguem o jogador). **Chefão** por fase (Crise Hipertensiva). **Cutscenes** entre fases com informação clínica. **Vidas extras** por acertar quiz.
 
-```sql
--- Tornar simulator_slug nullable em virtual_rooms
-ALTER TABLE public.virtual_rooms 
-  ALTER COLUMN simulator_slug DROP NOT NULL;
+---
 
--- Tabela de atividades da prova
-CREATE TABLE public.room_activities (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  room_id uuid NOT NULL REFERENCES public.virtual_rooms(id) ON DELETE CASCADE,
-  simulator_slug text NOT NULL,
-  case_id uuid REFERENCES public.simulator_cases(id) ON DELETE SET NULL,
-  position integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(room_id, position)
-);
+### Implementação
 
-ALTER TABLE public.room_activities ENABLE ROW LEVEL SECURITY;
+Dado o volume (16 jogos), a implementação seria feita em **4 lotes** de 4 jogos cada, priorizando os mais simples (com menor número de linhas) primeiro:
 
--- RLS
-CREATE POLICY "Room owners can manage activities"
-  ON public.room_activities FOR ALL TO authenticated
-  USING (room_id IN (SELECT id FROM public.virtual_rooms WHERE created_by = auth.uid()));
+| Lote | Jogos | Prioridade |
+|------|-------|-----------|
+| 1 | Ressecção Oncológica, Dominó Clínico, Detetive do Histórico, Labirinto do Hemograma | Jogos <140 linhas, mais simples |
+| 2 | Janela Terapêutica, Laboratório de Interações, Vila da Saúde, RPG TCC | Jogos 100-140 linhas |
+| 3 | Bolsa Metabólica, Gestor de Clearance, Alerta Vermelho, Milionário | Jogos 140-275 linhas |
+| 4 | Plantão Noturno, Carreira Clínica, Insulina Birds, Alex Kidd | Jogos >270 linhas, mais complexos |
 
-CREATE POLICY "Anyone can view activities of active rooms"
-  ON public.room_activities FOR SELECT TO anon, authenticated
-  USING (room_id IN (SELECT id FROM public.virtual_rooms WHERE is_active = true));
-
-CREATE POLICY "Admins can manage all activities"
-  ON public.room_activities FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'admin'::app_role));
-
--- Campo activity_id em room_submissions
-ALTER TABLE public.room_submissions 
-  ADD COLUMN activity_id uuid REFERENCES public.room_activities(id) ON DELETE SET NULL;
-```
-
-### 8. Arquivos a Modificar
-
-| Arquivo | Mudança |
-|---|---|
-| `supabase/migrations/new_migration.sql` | Criar tabela e alterar schema |
-| `src/integrations/supabase/types.ts` | Atualizar tipos |
-| `src/pages/SalasVirtuais.tsx` | Novo dialog de criação com lista de atividades; detalhes agrupados por atividade |
-| `src/pages/SalaVirtualAluno.tsx` | Fluxo sequencial de prova com navegação entre atividades |
-| Rotas de simulador (`/sala/simulador/:slug`) | Receber `activityId` do contexto e submeter com ele |
-
-### Resumo
-
-A mudança central é criar a tabela `room_activities` como relação 1:N com `virtual_rooms`, permitindo montar provas com N simuladores/casos. O fluxo do aluno passa a ser sequencial (atividade 1 → 2 → ... → resultado). O modelo atual de sala com um único simulador continua funcionando sem quebrar nada.
+Cada lote aplicaria as melhorias transversais (dificuldade, narrativa, feedback, estrelas) e as específicas descritas acima.
 
