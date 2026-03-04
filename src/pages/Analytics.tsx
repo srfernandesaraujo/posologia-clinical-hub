@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, DoorOpen, Lock, Crown } from "lucide-react";
+import { BarChart3, DoorOpen, Lock, Crown, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,9 @@ const SIMULATOR_LABELS: Record<string, string> = {
   tdm: "TDM",
   acompanhamento: "Acompanhamento",
   insulina: "Insulina",
+  "bomba-infusao": "Bomba de Infusão",
+  "desmame-benzo": "Desmame Benzo",
+  interacoes: "Interações",
 };
 
 const CHART_COLORS = [
@@ -106,6 +109,20 @@ export default function Analytics() {
     },
   });
 
+  const { data: allActivities = [] } = useQuery({
+    queryKey: ["analytics-activities", roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_activities")
+        .select("*, simulator_cases(title)")
+        .in("room_id", roomIds)
+        .order("position");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const totalStudents = allParticipants.length;
   const totalSubmissions = allSubmissions.length;
   const avgScore = totalSubmissions > 0
@@ -114,11 +131,13 @@ export default function Analytics() {
 
   // --- Chart data ---
 
-  // Average score per simulator
+  // Average score per simulator (from activities + legacy rooms)
   const scoreBySimulator = Object.entries(
     allSubmissions.reduce((acc: any, s: any) => {
+      // Try to get slug from activity first, then from room
+      const activity = allActivities.find((a: any) => a.id === s.activity_id);
       const room = rooms.find((r: any) => r.id === s.room_id);
-      const slug = room?.simulator_slug || "outro";
+      const slug = activity?.simulator_slug || room?.simulator_slug || "outro";
       if (!acc[slug]) acc[slug] = { total: 0, count: 0 };
       acc[slug].total += s.score;
       acc[slug].count += 1;
@@ -189,14 +208,30 @@ export default function Analytics() {
 
   // Pie data for simulators distribution
   const simDistribution = Object.entries(
-    rooms.reduce((acc: Record<string, number>, r: any) => {
-      const label = SIMULATOR_LABELS[r.simulator_slug] || r.simulator_slug;
-      acc[label] = (acc[label] || 0) + 1;
+    (() => {
+      const acc: Record<string, number> = {};
+      // Count from activities
+      allActivities.forEach((a: any) => {
+        const label = SIMULATOR_LABELS[a.simulator_slug] || a.simulator_slug;
+        acc[label] = (acc[label] || 0) + 1;
+      });
+      // Count from legacy rooms (rooms without activities)
+      const roomsWithActivities = new Set(allActivities.map((a: any) => a.room_id));
+      rooms.forEach((r: any) => {
+        if (!roomsWithActivities.has(r.id) && r.simulator_slug) {
+          const label = SIMULATOR_LABELS[r.simulator_slug] || r.simulator_slug;
+          acc[label] = (acc[label] || 0) + 1;
+        }
+      });
       return acc;
-    }, {})
+    })()
   ).map(([name, value]) => ({ name, value }));
 
   const handleUpgrade = () => showUpgrade("Analytics completo é exclusivo do plano Premium");
+
+  // Helper to get activities for a room
+  const getRoomActivities = (roomId: string) => allActivities.filter((a: any) => a.room_id === roomId);
+  const isExamRoom = (roomId: string) => getRoomActivities(roomId).length > 0;
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -356,19 +391,56 @@ export default function Analytics() {
                     const rParticipants = allParticipants.filter((p: any) => p.room_id === room.id);
                     const rSubmissions = allSubmissions.filter((s: any) => s.room_id === room.id);
                     const rAvg = rSubmissions.length > 0 ? Math.round(rSubmissions.reduce((a: number, s: any) => a + s.score, 0) / rSubmissions.length) : null;
+                    const roomActs = getRoomActivities(room.id);
+                    const isExam = roomActs.length > 0;
 
                     return (
                       <Card key={room.id}>
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-base">{room.title}</CardTitle>
+                            <CardTitle className="text-base flex items-center gap-2">
+                              {room.title}
+                              {isExam && (
+                                <Badge variant="outline" className="text-xs">
+                                  <ClipboardList className="h-3 w-3 mr-1" />Prova · {roomActs.length} atividades
+                                </Badge>
+                              )}
+                            </CardTitle>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
+                              {!isExam && room.simulator_slug && (
+                                <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
+                              )}
                               <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">PIN: {room.pin} · {rParticipants.length} participantes · {rSubmissions.length} submissões{rAvg !== null ? ` · Média: ${rAvg}%` : ""}</p>
                         </CardHeader>
+
+                        {/* Show activities list for exam rooms */}
+                        {isExam && (
+                          <CardContent className="pb-2">
+                            <div className="flex flex-wrap gap-2">
+                              {roomActs.map((act: any, i: number) => {
+                                const actSubs = rSubmissions.filter((s: any) => s.activity_id === act.id);
+                                const actAvg = actSubs.length > 0 ? Math.round(actSubs.reduce((a: number, s: any) => a + s.score, 0) / actSubs.length) : null;
+                                return (
+                                  <div key={act.id} className="text-xs border border-border rounded-lg px-3 py-2 bg-muted/30">
+                                    <span className="font-medium">{i + 1}. {SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                                    {act.simulator_cases?.title && (
+                                      <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
+                                    )}
+                                    {actAvg !== null && (
+                                      <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-green-100 text-green-800" : ""}`}>
+                                        {actAvg}%
+                                      </Badge>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        )}
+
                         {rParticipants.length > 0 && (
                           <CardContent>
                             <div className="space-y-2">
@@ -377,27 +449,43 @@ export default function Analytics() {
                                 const pAvg = pSubs.length > 0 ? Math.round(pSubs.reduce((a: number, s: any) => a + s.score, 0) / pSubs.length) : null;
                                 const pTime = pSubs.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
                                 return (
-                                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                                    <div>
-                                      <p className="text-sm font-medium">{p.participant_name}</p>
-                                      {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
-                                      <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
+                                  <div key={p.id} className="rounded-lg border border-border p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="text-sm font-medium">{p.participant_name}</p>
+                                        {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
+                                        <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        {pSubs.length > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
+                                        {pAvg !== null ? (
+                                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                            {pAvg}%
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline">Pendente</Badge>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                      {pSubs.length > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
-                                      {pAvg !== null ? (
-                                        <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800" : ""}>
-                                          {pAvg}%
-                                        </Badge>
-                                      ) : (
-                                        <Badge variant="outline">Pendente</Badge>
-                                      )}
-                                      {pSubs.length > 0 && (
-                                        <div className="text-xs text-muted-foreground">
-                                          {pSubs.map((s: any) => <span key={s.id} className="mr-1">E{s.step_index + 1}:{s.score}%</span>)}
-                                        </div>
-                                      )}
-                                    </div>
+                                    {/* Per-activity breakdown for exam rooms */}
+                                    {isExam && pSubs.length > 0 && (
+                                      <div className="mt-2 flex flex-wrap gap-1">
+                                        {roomActs.map((act: any, i: number) => {
+                                          const actSub = pSubs.find((s: any) => s.activity_id === act.id);
+                                          return (
+                                            <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : actSub.score >= 50 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400") : "bg-muted text-muted-foreground"}`}>
+                                              {SIMULATOR_LABELS[act.simulator_slug]?.substring(0, 3) || act.simulator_slug.substring(0, 3)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                    {/* Legacy per-step display */}
+                                    {!isExam && pSubs.length > 0 && (
+                                      <div className="mt-1 text-xs text-muted-foreground">
+                                        {pSubs.map((s: any) => <span key={s.id} className="mr-1">E{s.step_index + 1}:{s.score}%</span>)}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}

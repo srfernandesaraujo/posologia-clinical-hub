@@ -12,6 +12,8 @@ import { ArrowLeft, Sparkles, Loader2, User, Pill, ClipboardCheck, AlertTriangle
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 type PRM_TYPE = "Seguranca" | "Efetividade" | "Indicacao" | "Adesao" | null;
 
@@ -86,7 +88,7 @@ const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividad
 
 export default function SimuladorPRM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("prm", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults } = useVirtualRoomCase("prm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("prm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
@@ -255,11 +257,22 @@ export default function SimuladorPRM() {
   // Simulation screen
   return (
     <div className="max-w-7xl mx-auto">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay
+          score={examFeedback.score}
+          simulatorSlug={examFeedback.simulatorSlug}
+          caseTitle={examFeedback.caseTitle}
+          examProgress={examProgress}
+          onProceed={proceedToNext}
+          isFinalActivity={examFeedback.isFinalActivity}
+        />
+      )}
       {isVirtualRoom ? (
         <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
       ) : (
         <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
       )}
+      <ExamBanner simulatorSlug="prm" caseTitle={currentCase?.title} examProgress={examProgress} />
       <h2 className="text-xl font-bold mb-4">{currentCase.title}</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Patient profile */}

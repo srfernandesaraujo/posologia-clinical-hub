@@ -13,6 +13,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts";
 import jsPDF from "jspdf";
 
@@ -107,7 +109,7 @@ export default function SimuladorDesmameBenzo() {
   const isVirtualRoom = location.pathname.startsWith("/sala");
 
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("desmame-benzo", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults } = useVirtualRoomCase("desmame-benzo");
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("desmame-benzo");
 
   const [screen, setScreen] = useState<"dashboard" | "config" | "plan">("dashboard");
   const [activeCase, setActiveCase] = useState<TaperingCase | null>(null);
@@ -388,6 +390,10 @@ export default function SimuladorDesmameBenzo() {
   if (screen === "config") {
     return (
       <div className="max-w-2xl mx-auto">
+        {examFeedback && examProgress && (
+          <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+        )}
+        <ExamBanner simulatorSlug="desmame-benzo" caseTitle={activeCase?.title} examProgress={examProgress} />
         <Button variant="ghost" onClick={backToDashboard} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />Voltar aos Casos
         </Button>

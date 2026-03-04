@@ -13,6 +13,8 @@ import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, AlertTriangle, Tren
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts";
 
 interface LabItem { name: string; value: number; unit: string; target: string; status: "normal" | "high" | "low" }
@@ -82,7 +84,7 @@ type UserAction = { drug: string; action: string; newDose?: string; newFrequency
 
 export default function SimuladorAcompanhamento() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("acompanhamento", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack } = useVirtualRoomCase("acompanhamento");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("acompanhamento");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [consultIdx, setConsultIdx] = useState(0);
@@ -242,7 +244,11 @@ export default function SimuladorAcompanhamento() {
   // Simulation
   return (
     <div className="max-w-7xl mx-auto">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
+      <ExamBanner simulatorSlug="acompanhamento" caseTitle={c?.title} examProgress={examProgress} />
       {/* Tabs navigation */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto">
         {c.consultations.map((cons, i) => (
