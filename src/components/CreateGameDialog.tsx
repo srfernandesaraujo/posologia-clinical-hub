@@ -243,12 +243,10 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
               </Badge>
             </div>
 
-            <div className="flex-1 min-h-0 rounded-lg border border-border bg-muted/30 overflow-hidden">
-              <ScrollArea className="h-full max-h-[50vh] p-4">
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm leading-relaxed pr-4">
-                  {plan}
-                </div>
-              </ScrollArea>
+            <div className="rounded-lg border border-border bg-muted/30 overflow-auto" style={{ maxHeight: "45vh" }}>
+              <div className="p-4 prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm leading-relaxed">
+                {plan}
+              </div>
             </div>
 
             {error && (

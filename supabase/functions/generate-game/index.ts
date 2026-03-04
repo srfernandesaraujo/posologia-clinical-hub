@@ -241,12 +241,30 @@ Minimum 8 rounds, maximum 15. Exactly 4 options per round, exactly 1 correct.`,
 
       const gameData = JSON.parse(toolCall.function.arguments);
 
-      // Parse the gameConfig from JSON string
+      // Parse the gameConfig - may come as string or object depending on AI provider
       let gameConfig;
       try {
-        gameConfig = JSON.parse(gameData.gameConfigJson);
-      } catch {
-        throw new Error("IA retornou gameConfig inválido");
+        if (typeof gameData.gameConfigJson === "string") {
+          gameConfig = JSON.parse(gameData.gameConfigJson);
+        } else if (typeof gameData.gameConfigJson === "object" && gameData.gameConfigJson !== null) {
+          gameConfig = gameData.gameConfigJson;
+        } else if (typeof gameData.gameConfig === "object" && gameData.gameConfig !== null) {
+          // Some models return it without "Json" suffix
+          gameConfig = gameData.gameConfig;
+        } else {
+          // Try to extract from the whole gameData
+          const { id, title, description, badge, icon, iconBg, iconColor, howToPlay, aiPrompt, ...rest } = gameData;
+          if (rest.narrative && rest.rounds) {
+            gameConfig = rest;
+          } else if (rest.gameConfigJson) {
+            gameConfig = typeof rest.gameConfigJson === "string" ? JSON.parse(rest.gameConfigJson) : rest.gameConfigJson;
+          } else {
+            throw new Error("Nenhum gameConfig encontrado");
+          }
+        }
+      } catch (parseErr) {
+        console.error("gameConfig parse error:", parseErr, "raw gameData keys:", Object.keys(gameData));
+        throw new Error("IA retornou gameConfig inválido: " + (parseErr instanceof Error ? parseErr.message : String(parseErr)));
       }
 
       // Validate minimum rounds
