@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.game-ranking]
 verify_jwt = false
+
+[functions.generate-game]
+verify_jwt = false
