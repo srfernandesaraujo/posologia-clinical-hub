@@ -1,121 +1,117 @@
 
 
-# Jogo Clinico: "Alex Kidd Anti-Hipertensivo" -- Plataformer do Tratamento da Hipertensao
+## Plano: Provas de Simulação em Salas Virtuais
 
-## Conceito
+### Situação Atual
 
-Um jogo de plataforma side-scroller 2D inspirado em Alex Kidd, onde o jogador controla um farmaceutico clinico que percorre fases coletando anti-hipertensivos corretos e desviando de obstaculos (efeitos adversos, farmacos contraindicados). O tema e o tratamento da hipertensao arterial.
+Hoje, uma sala virtual (`virtual_rooms`) vincula-se a **um único simulador** (`simulator_slug`) e opcionalmente **um único caso clínico** (`case_id`). O aluno entra via PIN, identifica-se, e é direcionado para aquele simulador/caso específico.
 
----
+### Objetivo
 
-## Mecanica do Jogo
-
-### O Personagem
-- Um farmaceutico (representado como sprite retangular com emoji/icone) que corre para a direita
-- Controles: **Setas do teclado** (esquerda/direita para mover, cima para pular) + **botoes touch** na tela para mobile
-- Gravidade e fisica de pulo simples via `requestAnimationFrame`
-
-### As Plataformas
-- Plataformas fixas em diferentes alturas (blocos marrons/verdes inspirados no visual retro da imagem)
-- Fundo azul liso simulando o estilo visual classico do Alex Kidd
-- Chao verde na base
-
-### Os Coletaveis (Farmacos Corretos)
-Itens que o jogador deve coletar para ganhar pontos:
-| Item | Pontos | Cor |
-|------|--------|-----|
-| Losartana (BRA) | +100 | Azul |
-| Enalapril (IECA) | +100 | Verde |
-| Anlodipino (BCC) | +80 | Roxo |
-| Hidroclorotiazida (Diuretico) | +80 | Amarelo |
-
-### Os Obstaculos (Efeitos Adversos / Erros)
-Itens que o jogador deve EVITAR:
-| Obstaculo | Penalidade | Representacao |
-|-----------|-----------|---------------|
-| AINE (Ibuprofeno) | -150 pontos + dano | Bloco vermelho (interage com anti-hipertensivos) |
-| Sal em excesso | -100 pontos | Bloco branco piscante |
-| Hipotensao | -200 pontos | Bloco laranja (dose excessiva) |
-
-### Blocos de Pergunta (Estilo "?" do Alex Kidd)
-- Blocos especiais amarelos com "?" que, ao serem atingidos por baixo (pulo), revelam uma pergunta de farmacologia
-- Resposta correta: +200 pontos e um "escudo" temporario (imunidade 5 segundos)
-- Resposta errada: perde 1 vida
-
-### Sistema de Vidas e Pontuacao
-- 3 vidas (coracoes)
-- Pontuacao acumulada ao longo das 5 fases
-- Barra de pressao arterial (Progress): comeca em 180mmHg, deve baixar para < 140mmHg ate o final
+Permitir que o professor monte uma **prova de simulação** dentro da sala virtual, composta por **múltiplos simuladores** e **múltiplos casos clínicos** selecionados, formando uma sequência de atividades que o aluno deve completar.
 
 ---
 
-## Fases (5 niveis)
+### 1. Nova Tabela: `room_activities`
 
-1. **Monoterapia Inicial** -- Plataformas simples. Coletar Losartana. Desviar de AINE.
-2. **Efeito Adverso: Tosse do IECA** -- Blocos de Enalapril estao marcados como "tosse". Deve trocar por BRA.
-3. **Crise Hipertensiva** -- Velocidade aumenta. Muitos coletaveis, mas tambem muitos obstaculos.
-4. **Combinacao Terapeutica** -- Precisa coletar 2 farmacos diferentes na mesma fase (IECA + Diuretico).
-5. **Paciente Complexo** -- Diabetes + HAS. Deve evitar Betabloqueador (mascara hipoglicemia) e coletar IECA.
+Armazena cada item da prova (simulador + caso) vinculado à sala:
 
-Ao final de cada fase, um card educativo aparece com a justificativa clinica.
+```text
+room_activities
+├── id (uuid, PK)
+├── room_id (uuid, FK → virtual_rooms.id, ON DELETE CASCADE)
+├── simulator_slug (text, NOT NULL)
+├── case_id (uuid, nullable, FK → simulator_cases.id)
+├── position (integer, NOT NULL) — ordem na prova
+├── created_at (timestamptz)
+```
 
----
+RLS: mesmas regras de `virtual_rooms` — dono da sala gerencia, anon/authenticated visualizam se sala ativa.
 
-## Layout Visual
+### 2. Alteração na tabela `virtual_rooms`
 
-- **Canvas de jogo**: Area de ~760x420px com fundo azul (estilo retro), plataformas marrons/verdes
-- **HUD superior**: Vidas (coracoes), pontuacao, fase atual, pressao arterial (Progress bar)
-- **Controles touch**: 3 botoes na parte inferior (esquerda, direita, pular) para mobile
-- **Dialog de pergunta**: Quando bate num bloco "?", abre um modal com pergunta e 3 opcoes
+- Os campos `simulator_slug` e `case_id` tornam-se **opcionais** (nullable). Quando a sala usa o modelo de prova (múltiplas atividades), esses campos ficam nulos e as atividades vêm de `room_activities`. Quando há apenas um simulador (modo legado), continuam funcionando como antes — compatibilidade total.
+- Novo campo opcional: `description` (text) — já existe na tabela.
 
----
+### 3. Alteração na tabela `room_submissions`
 
-## Implementacao Tecnica
+- Novo campo: `activity_id` (uuid, nullable, FK → room_activities.id) — identifica a qual atividade da prova a submissão se refere. Nullable para manter compatibilidade com salas legadas.
 
-### Arquivo novo
-- `src/components/games/AlexKiddHipertensaoGame.tsx`
+### 4. UI do Professor — Criação da Sala (SalasVirtuais.tsx)
 
-### Logica de fisica
-- Game loop com `requestAnimationFrame`
-- Gravidade constante, velocidade horizontal, detecao de colisao retangulo-retangulo
-- Plataformas como array de retangulos com posicao fixa
-- Coletaveis e obstaculos posicionados sobre/entre plataformas
-- Scroll lateral: o "mundo" move-se para a esquerda conforme o jogador avanca
+Reformular o dialog de criação:
 
-### Renderizacao
-- Uso de `<div>` posicionados absolutamente dentro de um container `relative` (mesmo padrao do InsulinaBirdsGame)
-- Blocos com cores solidas e bordas para efeito retro/pixel
-- Personagem como div colorida com emoji ou icone Lucide
+1. Manter campo **Título** e **Data de Expiração**.
+2. Substituir o seletor único de simulador por uma **lista de atividades** com botão "Adicionar Atividade":
+   - Cada atividade: Select de simulador + Select de caso clínico (carregado dinamicamente por `simulator_slug` da `simulator_cases`).
+   - Botão de remover atividade e drag/reorder (ou setas cima/baixo para simplificar).
+3. Ao salvar: criar a sala e inserir os registros em `room_activities` com `position` sequencial.
+4. Manter retrocompatibilidade: se só 1 atividade, pode opcionalmente usar o modelo legado.
 
-### Integracao com o ecossistema existente
-- Registar no array `games` em `JogosClinicos.tsx` com icone `Gamepad2` do Lucide
-- Adicionar entrada em `gameComponents` com `howToPlay`, `aiPrompt`, titulo e subtitulo
-- Aceitar prop `customData` para atualizacoes de IA
-- Pontuacao automatica via `awardGamePoints` + `GameRanking`
-- Versao inicial: v1.0
+### 5. UI do Professor — Detalhes da Sala
 
-### Componentes Shadcn utilizados
-- `Card` para HUD e info do paciente
-- `Badge` para tipo de farmaco e fase
-- `Progress` para barra de pressao arterial
-- `Dialog` para perguntas dos blocos "?" e telas de vitoria/derrota
-- `Button` para controles touch e reiniciar
+- Exibir a lista de atividades da prova (simulador + caso) na ordem definida.
+- Nos resultados dos participantes, agrupar submissões por atividade, mostrando score por etapa e score geral da prova.
 
-### Perguntas dos blocos "?"
-5 perguntas pre-definidas (1 por fase), exemplo:
-- "Qual e a primeira linha no tratamento da HAS segundo as diretrizes?"
-- "Por que os IECAs sao preferidos em pacientes diabeticos com HAS?"
-- "Qual anti-hipertensivo pode causar tosse seca como efeito adverso?"
+### 6. UI do Aluno — Fluxo de Prova (SalaVirtualAluno.tsx)
 
-### Condicoes de fim
-- **Vitoria**: Completar as 5 fases com vidas > 0 e PA < 140mmHg
-- **Derrota**: Perder todas as 3 vidas OU PA subir acima de 200mmHg
-- **Pontuacao final**: Soma de pontos + bonus por vidas restantes + bonus por PA baixa
+Ao entrar na sala com múltiplas atividades:
 
-### Valor educativo (cards pos-fase)
-- Fase 1: "BRAs como Losartana sao primeira linha na HAS, especialmente em pacientes com risco de tosse por IECA"
-- Fase 2: "A tosse seca ocorre em 5-20% dos pacientes com IECA. A troca por BRA resolve o problema"
-- Fase 3: "Na crise hipertensiva, a reducao deve ser gradual. Quedas abruptas causam hipoperfusao"
-- Fase 4: "A combinacao IECA + Diuretico tiaziico e sinergica e recomendada em HAS estagio 2"
-- Fase 5: "Em diabeticos hipertensos, IECAs/BRAs protegem os rins (nefroprotetores)"
+1. Tela "Tudo pronto" mostra um **resumo da prova**: lista de atividades com simulador e caso.
+2. Botão "Iniciar Prova" leva à **primeira atividade**.
+3. Ao concluir cada atividade (submissão), o aluno é direcionado automaticamente para a **próxima atividade** da lista.
+4. Ao concluir todas, tela de **resultado final** com score geral.
+5. O `sessionStorage` passa a incluir `activityId` e a lista de atividades restantes.
+
+### 7. Migration SQL
+
+```sql
+-- Tornar simulator_slug nullable em virtual_rooms
+ALTER TABLE public.virtual_rooms 
+  ALTER COLUMN simulator_slug DROP NOT NULL;
+
+-- Tabela de atividades da prova
+CREATE TABLE public.room_activities (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id uuid NOT NULL REFERENCES public.virtual_rooms(id) ON DELETE CASCADE,
+  simulator_slug text NOT NULL,
+  case_id uuid REFERENCES public.simulator_cases(id) ON DELETE SET NULL,
+  position integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(room_id, position)
+);
+
+ALTER TABLE public.room_activities ENABLE ROW LEVEL SECURITY;
+
+-- RLS
+CREATE POLICY "Room owners can manage activities"
+  ON public.room_activities FOR ALL TO authenticated
+  USING (room_id IN (SELECT id FROM public.virtual_rooms WHERE created_by = auth.uid()));
+
+CREATE POLICY "Anyone can view activities of active rooms"
+  ON public.room_activities FOR SELECT TO anon, authenticated
+  USING (room_id IN (SELECT id FROM public.virtual_rooms WHERE is_active = true));
+
+CREATE POLICY "Admins can manage all activities"
+  ON public.room_activities FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'admin'::app_role));
+
+-- Campo activity_id em room_submissions
+ALTER TABLE public.room_submissions 
+  ADD COLUMN activity_id uuid REFERENCES public.room_activities(id) ON DELETE SET NULL;
+```
+
+### 8. Arquivos a Modificar
+
+| Arquivo | Mudança |
+|---|---|
+| `supabase/migrations/new_migration.sql` | Criar tabela e alterar schema |
+| `src/integrations/supabase/types.ts` | Atualizar tipos |
+| `src/pages/SalasVirtuais.tsx` | Novo dialog de criação com lista de atividades; detalhes agrupados por atividade |
+| `src/pages/SalaVirtualAluno.tsx` | Fluxo sequencial de prova com navegação entre atividades |
+| Rotas de simulador (`/sala/simulador/:slug`) | Receber `activityId` do contexto e submeter com ele |
+
+### Resumo
+
+A mudança central é criar a tabela `room_activities` como relação 1:N com `virtual_rooms`, permitindo montar provas com N simuladores/casos. O fluxo do aluno passa a ser sequencial (atividade 1 → 2 → ... → resultado). O modelo atual de sala com um único simulador continua funcionando sem quebrar nada.
 
