@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Heart, ArrowLeft, ArrowRight, ArrowUp, Star, Trophy, RotateCcw } from "lucide-react";
+import GameNarrative from "./GameNarrative";
+import GameDifficultySelector, { GameDifficulty } from "./GameDifficultySelector";
+import GameStarsResult from "./GameStarsResult";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -190,10 +193,13 @@ function buildLevels(): LevelData[] {
 export default function AlexKiddHipertensaoGame({ customData }: { customData?: any }) {
   const levels = customData?.levels ? customData.levels : buildLevels();
 
+  const [gamePhase, setGamePhase] = useState<"narrative" | "difficulty" | "playing">("narrative");
+  const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>("academic");
+
   const [currentLevel, setCurrentLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [pa, setPa] = useState(180); // pressão arterial sistólica
+  const [pa, setPa] = useState(180);
   const [gameState, setGameState] = useState<"playing" | "quiz" | "levelComplete" | "gameOver" | "victory">("playing");
   const [currentQuiz, setCurrentQuiz] = useState<QuizQuestion | null>(null);
   const [shieldTimer, setShieldTimer] = useState(0);
@@ -201,6 +207,8 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
   const [player, setPlayer] = useState<Player>({ x: 60, y: GROUND_Y - PLAYER_H, w: PLAYER_W, h: PLAYER_H, vx: 0, vy: 0, onGround: true, facingRight: true });
   const [cameraX, setCameraX] = useState(0);
   const [starsPerLevel, setStarsPerLevel] = useState<number[]>([]);
+
+  const diffLives = gameDifficulty === "academic" ? 5 : gameDifficulty === "clinical" ? 3 : 2;
 
   const keysRef = useRef<Record<string, boolean>>({});
   const animRef = useRef<number>(0);
@@ -414,7 +422,7 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
   const handleRestart = () => {
     setCurrentLevel(0);
     setScore(0);
-    setLives(3);
+    setLives(diffLives);
     setPa(180);
     setStarsPerLevel([]);
     loadLevel(0);
@@ -426,6 +434,58 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
 
   /* PA progress (invert: 180→high, 120→low target) */
   const paProgress = Math.max(0, Math.min(100, ((220 - pa) / 120) * 100));
+
+  if (gamePhase === "narrative") {
+    return (
+      <GameNarrative
+        title="Alex Kidd Anti-Hipertensivo"
+        setting="Plataforma de Farmacologia Cardiovascular"
+        briefing="Controle a pressão arterial coletando anti-hipertensivos corretos e evitando fármacos prejudiciais! Responda quizzes para ganhar escudos de proteção. Use as setas para mover e pular."
+        onStart={() => setGamePhase("difficulty")}
+      />
+    );
+  }
+
+  if (gamePhase === "difficulty") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6">
+        <GameDifficultySelector selected={gameDifficulty} onChange={setGameDifficulty} />
+        <p className="text-xs text-muted-foreground">{diffLives} vidas • {levels.length} fases</p>
+        <Button onClick={() => { setLives(diffLives); setGamePhase("playing"); loadLevel(0); }} size="lg">Iniciar Jogo</Button>
+      </div>
+    );
+  }
+
+  if (gameState === "victory") {
+    return (
+      <GameStarsResult
+        score={score}
+        maxScore={levels.length * 500}
+        errors={0}
+        title="Parabéns! Jogo Completo!"
+        subtitle={`PA final: ${pa} mmHg ${pa < 140 ? "✅ Controlada!" : "⚠️ Ainda alta"}. ${score} pontos em ${levels.length} fases.`}
+        onRestart={() => { setGamePhase("narrative"); setGameState("playing"); }}
+        details={[
+          ...starsPerLevel.map((s, i) => ({ label: `Fase ${i + 1}`, value: `${"⭐".repeat(s)}` })),
+          ...(lives > 0 ? [{ label: "Bônus vidas", value: `+${lives * 50}` }] : []),
+          ...(pa < 140 ? [{ label: "Bônus PA", value: "+100" }] : []),
+        ]}
+      />
+    );
+  }
+
+  if (gameState === "gameOver") {
+    return (
+      <GameStarsResult
+        score={score}
+        maxScore={levels.length * 500}
+        errors={3}
+        title="Game Over"
+        subtitle={`O paciente não foi tratado adequadamente. Pontuação: ${score}.`}
+        onRestart={() => { setGamePhase("narrative"); setGameState("playing"); }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">
