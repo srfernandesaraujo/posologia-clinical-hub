@@ -53,43 +53,36 @@ serve(async (req) => {
             content: `Você é um arquiteto de jogos clínicos premium para uma plataforma de educação farmacêutica. Você cria planos de implementação DETALHADOS e PROFISSIONAIS para jogos educacionais clínicos interativos.
 
 CONTEXTO DA PLATAFORMA:
-- Jogos são componentes React + TypeScript renderizados dentro de um Card
-- Usam componentes compartilhados: GameNarrative (briefing), GameDifficultySelector (fácil/médio/difícil), GameStarsResult (resultado com estrelas), GameFeedbackOverlay (feedback formativo)
-- Integrados com sistema de gamificação (pontos, ranking)
-- Suportam "Atualizar com IA" para gerar novos conteúdos via aiPrompt
-- Usam Tailwind CSS, Lucide icons, shadcn/ui, recharts para gráficos, canvas-confetti
+- Jogos são renderizados como quizzes interativos com múltiplas rodadas
+- Cada rodada tem: cenário clínico contextual, pergunta, opções de resposta, feedback formativo com referência bibliográfica
+- Suportam 3 níveis de dificuldade (Acadêmico, Clínico, Especialista) que afetam timer e vidas
+- Integrados com sistema de gamificação (pontos, ranking, estrelas)
+- Lifeline "Consulta Rápida" elimina uma opção incorreta
+- Incluem narrativa imersiva com contexto clínico e paciente
 
-GÊNEROS DISPONÍVEIS (pode combinar):
-- RPG por turnos (combate, skills, árvore de habilidades)
-- Quiz progressivo (dificuldade crescente, ajudas/lifelines)
-- Simulador de gestão (recursos, investimentos, portfólio)
-- Escape Room (pistas, inventário, timer de urgência)
-- Puzzle/Estratégia (tabuleiro, resta 1, dominó)
-- Plataformer 2D (canvas ou divs, coleta, obstáculos)
-- Investigação/Detetive (Naranjo, árvore de decisão)
-- Jogo de cartas (deck building, combos)
-- Tower Defense (ondas, torres, upgrades)
-- Simulação de Equipamentos (bombas, monitores, LCD)
-- Match-3 / Candy Crush (combinação, cascata)
-- Rhythm Game (timing, sequências)
-- Survival / Roguelike (runs, upgrades permanentes)
+O JOGO SERÁ GERADO COMO DADOS ESTRUTURADOS (rodadas de quiz), NÃO como código React. Portanto, o plano deve focar em:
+1. Narrativa e contexto clínico (cenário hospitalar, paciente)
+2. Estrutura das rodadas (cenários, perguntas, opções corretas/incorretas)
+3. Progressão de dificuldade entre rodadas
+4. Feedback formativo e referências bibliográficas
+5. Diferencial de mercado e impacto educacional
 
 PADRÃO DE QUALIDADE PREMIUM OBRIGATÓRIO:
 1. **Narrativa Clínica Imersiva**: Briefing cinematográfico com contexto clínico real, paciente com nome e história
 2. **Profundidade Farmacológica**: Mecanismos de ação, farmacocinética, interações CYP, RAM documentadas
-3. **Múltiplos Cenários**: Mínimo 3 cenários/fases com variação clínica real
-4. **Sistema de Dificuldade**: 3 níveis que alteram mecânicas (timer, vidas, complexidade)
-5. **Feedback Formativo**: Cada decisão gera feedback com referência bibliográfica
-6. **Visualizações Dinâmicas**: Gráficos recharts, animações, indicadores visuais
-7. **Replay Value**: Conteúdo randomizado, modos extras, desafios
-8. **Diferencial de Mercado**: Mecânicas únicas que não existem em outros apps educacionais
+3. **Múltiplas Rodadas**: Mínimo 8-12 rodadas com variação clínica real e progressão de dificuldade
+4. **Feedback Formativo**: Cada decisão gera feedback com explicação detalhada e referência
+5. **Diferencial de Mercado**: Mecânicas e conteúdo que não existem em outros apps educacionais
+
+IMPORTANTE PARA JOGOS ESTILO "ADEDONHA"/PREENCHIMENTO:
+- Adapte o conceito para rodadas de quiz: ex. "Letra A sorteada → Qual fármaco começa com A?" com opções
+- Cada coluna (Fármaco, Mecanismo, Indicação, etc.) vira uma rodada separada com a mesma letra
+- O jogador seleciona a resposta correta entre 4 opções, com feedback farmacológico após cada resposta
 
 REGRAS DO PLANO:
 - Retorne em Markdown bem formatado
-- Inclua seções: Visão Geral, Impacto Educacional, Mecânicas de Jogo, Narrativa, Fases/Cenários, Sistema de Pontuação, Diferencial de Mercado, Estrutura de Dados (aiPrompt), Componentes Visuais
-- Seja EXTREMAMENTE detalhado — cada mecânica deve ser descrita com precisão
-- Proponha métricas de aprendizado (o que o aluno aprende em cada fase)
-- O plano deve ser tão bom que um desenvolvedor sênior consiga implementar sem ambiguidades`,
+- Inclua seções: Visão Geral, Impacto Educacional, Estrutura das Rodadas, Narrativa, Sistema de Pontuação, Diferencial de Mercado
+- Seja EXTREMAMENTE detalhado — cada rodada/mecânica deve ser descrita com precisão`,
           },
           {
             role: "user",
@@ -97,7 +90,7 @@ REGRAS DO PLANO:
 
 "${prompt}"
 
-IMPORTANTE: O plano deve ser inovador, com grande diferencial de mercado, alta complexidade técnica e profundidade farmacológica real. Não seja genérico — seja específico e criativo.`,
+IMPORTANTE: O plano deve ser inovador, com grande diferencial de mercado e profundidade farmacológica real. Não seja genérico — seja específico e criativo. Lembre-se que o jogo final será um quiz interativo com rodadas, cenários, perguntas e feedback.`,
           },
         ],
         temperature: 0.7,
@@ -113,7 +106,7 @@ IMPORTANTE: O plano deve ser inovador, com grande diferencial de mercado, alta c
       });
     }
 
-    // ── STEP 2: Generate game code from plan ──
+    // ── STEP 2: Generate structured game data from plan ──
     if (action === "generate") {
       if (!plan) {
         return new Response(JSON.stringify({ error: "Plano é obrigatório para gerar" }), {
@@ -126,67 +119,55 @@ IMPORTANTE: O plano deve ser inovador, com grande diferencial de mercado, alta c
         messages: [
           {
             role: "system",
-            content: `Você é um engenheiro de software sênior especializado em jogos React/TypeScript para educação farmacêutica. Você gera componentes React COMPLETOS e FUNCIONAIS.
+            content: `Você é um especialista em criação de jogos clínicos educacionais. Você gera DADOS ESTRUTURADOS para um motor de quiz interativo.
 
-TECNOLOGIAS DISPONÍVEIS:
-- React 18 + TypeScript
-- Tailwind CSS com tokens semânticos (bg-primary, text-foreground, bg-muted, border-border, etc.)
-- shadcn/ui: Button, Card, Badge, Dialog, Progress, Tabs, etc.
-- Lucide React icons
-- recharts para gráficos (AreaChart, LineChart, BarChart, etc.)
-- canvas-confetti para celebrações
-- framer-motion NÃO disponível
-- toast via: import { toast } from "sonner"
+O MOTOR DE JOGO renderiza automaticamente:
+- Tela de narrativa (briefing cinematográfico com paciente)
+- Seletor de dificuldade (Acadêmico/Clínico/Especialista)
+- Rodadas de quiz com: cenário contextual → pergunta → 4 opções → feedback formativo
+- Timer por rodada (ajustado pela dificuldade)
+- Sistema de vidas (hearts)
+- Lifeline "Consulta Rápida" (elimina 1 opção errada)
+- Tela de resultado com estrelas e confetes
 
-COMPONENTES COMPARTILHADOS OBRIGATÓRIOS:
-\`\`\`tsx
-import GameNarrative from "@/components/games/GameNarrative";
-// Props: { title, narrative, onStart } — tela de briefing inicial
-
-import GameDifficultySelector from "@/components/games/GameDifficultySelector";
-// Props: { onSelect: (d: "easy"|"medium"|"hard") => void } — seletor de dificuldade
-
-import GameStarsResult from "@/components/games/GameStarsResult";
-// Named export: calculateStars(score, maxScore, errors?) → 0-3
-// Props: { score, maxScore, timeSeconds?, errors?, title, subtitle?, onRestart, onBack?, details? }
-
-import GameFeedbackOverlay from "@/components/games/GameFeedbackOverlay";
-// Props: { isCorrect, title, message, details?, onContinue }
-\`\`\`
-
-ESTRUTURA OBRIGATÓRIA DO COMPONENTE:
-\`\`\`tsx
-interface Props { customData?: any; }
-
-export default function NomeDoJogo({ customData }: Props) {
-  // Use customData para sobrescrever dados padrão (permite "Atualizar com IA")
-  // Implemente: narrativa → dificuldade → gameplay → resultado com estrelas
-}
-\`\`\`
+VOCÊ DEVE GERAR:
+1. **Metadados do jogo** (título, descrição, badge, ícone)
+2. **Narrativa** (título, cenário/local, briefing, opcionalmente paciente)
+3. **Configurações** (pontos por acerto/erro, timer por rodada)
+4. **Rodadas** (mínimo 8, máximo 15) — cada uma com:
+   - phase: fase/categoria da rodada (ex: "Letra A - Fármaco", "Caso 1 - Diagnóstico")
+   - scenario: texto descritivo do cenário clínico (2-3 frases)
+   - question: a pergunta específica
+   - options: 4 opções com { text, isCorrect } — EXATAMENTE UMA correta
+   - explanation: explicação detalhada com fundamento farmacológico (3-5 frases)
+   - reference: referência bibliográfica (Goodman & Gilman, Rang & Dale, UpToDate, etc.)
+   - tip: dica educativa adicional
 
 REGRAS CRÍTICAS:
-1. O componente DEVE ser auto-contido num único arquivo .tsx
-2. DEVE usar os componentes compartilhados (GameNarrative, GameDifficultySelector, GameStarsResult, GameFeedbackOverlay)
-3. DEVE ter dados padrão hardcoded que podem ser sobrescritos via customData
-4. DEVE ter fluxo: Narrativa → Dificuldade → Jogo → Resultado
-5. Use APENAS tokens semânticos Tailwind (bg-primary, text-foreground, etc.) — não hardcode cores exceto para indicadores clínicos específicos
-6. Animações com CSS transitions/keyframes, NÃO framer-motion
-7. Toast para feedback rápido: import { toast } from "sonner"
-8. O código deve compilar sem erros e ser jogável imediatamente
-9. MÍNIMO 300 linhas de código — jogos devem ser COMPLETOS e RICOS
+- Cada rodada deve ter EXATAMENTE 4 opções
+- EXATAMENTE 1 opção deve ser isCorrect: true
+- As opções incorretas devem ser plausíveis (não absurdas)
+- Explicações devem ter profundidade farmacológica real
+- Cenários devem ser clínicos e imersivos
+- A progressão entre rodadas deve ter dificuldade crescente
+- Para jogos estilo "Adedonha": use uma letra aleatória e crie rodadas por categoria (Fármaco, Mecanismo, Indicação, Efeito Colateral, Interação)
 
-RETORNE UM JSON com esta estrutura exata (use tool calling):`,
+QUALIDADE DO CONTEÚDO:
+- Use dados farmacológicos REAIS e CORRETOS
+- Cite mecanismos de ação com alvos moleculares
+- Inclua interações via CYP450 quando relevante
+- Referencie guidelines e livros-texto reconhecidos`,
           },
           {
             role: "user",
-            content: `Baseado neste plano de implementação, gere o jogo COMPLETO:
+            content: `Baseado neste plano de implementação, gere os dados estruturados COMPLETOS do jogo:
 
 PEDIDO ORIGINAL: "${prompt}"
 
 PLANO APROVADO:
 ${plan}
 
-Gere o componente React COMPLETO e todos os metadados necessários.`,
+Gere o jogo com o máximo de qualidade farmacológica e educacional possível.`,
           },
         ],
         temperature: 0.5,
@@ -196,59 +177,57 @@ Gere o componente React COMPLETO e todos os metadados necessários.`,
             type: "function",
             function: {
               name: "create_clinical_game",
-              description: "Cria um jogo clínico completo com código React/TypeScript",
+              description: "Cria um jogo clínico completo com dados estruturados para o motor de quiz",
               parameters: {
                 type: "object",
                 properties: {
-                  id: {
-                    type: "string",
-                    description: "ID slug do jogo (ex: 'farmaco-tower', 'quiz-antibioticos')",
-                  },
+                  id: { type: "string", description: "ID slug do jogo (ex: 'adedonha-farma', 'quiz-antibioticos')" },
                   title: { type: "string", description: "Título do jogo em português" },
-                  description: {
+                  description: { type: "string", description: "Descrição curta (1 frase) para o card" },
+                  badge: { type: "string", description: "Badge do card (ex: '10 rodadas', 'Quiz Clínico')" },
+                  icon: { type: "string", description: "Nome do ícone Lucide (ex: 'BookOpen', 'Zap', 'Flame')" },
+                  iconBg: { type: "string", description: "Classe Tailwind de fundo do ícone (ex: 'bg-purple-100')" },
+                  iconColor: { type: "string", description: "Classe Tailwind de cor do ícone (ex: 'text-purple-600')" },
+                  howToPlay: { type: "string", description: "Texto completo de instruções 'Como Jogar' com emojis e formatação" },
+                  aiPrompt: { type: "string", description: "Prompt para 'Atualizar com IA' — descreve a estrutura JSON de rodadas que a IA deve gerar" },
+                  gameConfigJson: {
                     type: "string",
-                    description: "Descrição curta (1 frase) para o card",
-                  },
-                  badge: { type: "string", description: "Badge do card (ex: '5 fases', 'Puzzle')" },
-                  icon: {
-                    type: "string",
-                    description: "Nome do ícone Lucide (ex: 'Shield', 'Zap', 'Flame')",
-                  },
-                  iconBg: {
-                    type: "string",
-                    description: "Classe Tailwind de fundo do ícone (ex: 'bg-purple-100')",
-                  },
-                  iconColor: {
-                    type: "string",
-                    description: "Classe Tailwind de cor do ícone (ex: 'text-purple-600')",
-                  },
-                  howToPlay: {
-                    type: "string",
-                    description: "Texto completo de instruções 'Como Jogar' com emojis e formatação",
-                  },
-                  aiPrompt: {
-                    type: "string",
-                    description:
-                      "Prompt para o sistema 'Atualizar com IA' — descreve a estrutura JSON que a IA deve gerar para atualizar o conteúdo do jogo",
-                  },
-                  componentCode: {
-                    type: "string",
-                    description:
-                      "Código TypeScript/React COMPLETO do componente do jogo. Deve ser um componente funcional com export default. MÍNIMO 300 linhas.",
+                    description: `JSON stringified object with this exact structure:
+{
+  "narrative": {
+    "title": "string - título narrativo do jogo",
+    "setting": "string - local/cenário (ex: 'Hospital Universitário', 'Farmácia Clínica')",
+    "patientName": "string optional - nome do paciente",
+    "patientAge": "string optional - idade do paciente",
+    "patientHistory": "string optional - histórico clínico resumido",
+    "briefing": "string - texto de briefing narrativo imersivo (3-5 frases)"
+  },
+  "settings": {
+    "pointsPerCorrect": number (ex: 100),
+    "pointsPerError": number negative (ex: -20),
+    "timerPerRound": number optional in seconds (ex: 30)
+  },
+  "rounds": [
+    {
+      "phase": "string optional - fase/categoria (ex: 'Letra A - Fármaco')",
+      "scenario": "string - contexto clínico (2-3 frases)",
+      "question": "string - a pergunta",
+      "options": [
+        { "text": "string", "isCorrect": boolean },
+        { "text": "string", "isCorrect": boolean },
+        { "text": "string", "isCorrect": boolean },
+        { "text": "string", "isCorrect": boolean }
+      ],
+      "explanation": "string - explicação farmacológica detalhada (3-5 frases)",
+      "reference": "string - referência bibliográfica",
+      "tip": "string - dica educativa"
+    }
+  ]
+}
+Minimum 8 rounds, maximum 15. Exactly 4 options per round, exactly 1 correct.`,
                   },
                 },
-                required: [
-                  "id",
-                  "title",
-                  "description",
-                  "badge",
-                  "icon",
-                  "iconBg",
-                  "iconColor",
-                  "howToPlay",
-                  "aiPrompt",
-                  "componentCode",
-                ],
+                required: ["id", "title", "description", "badge", "icon", "iconBg", "iconColor", "howToPlay", "aiPrompt", "gameConfigJson"],
                 additionalProperties: false,
               },
             },
@@ -262,7 +241,34 @@ Gere o componente React COMPLETO e todos os metadados necessários.`,
 
       const gameData = JSON.parse(toolCall.function.arguments);
 
-      return new Response(JSON.stringify({ game: gameData }), {
+      // Parse the gameConfig from JSON string
+      let gameConfig;
+      try {
+        gameConfig = JSON.parse(gameData.gameConfigJson);
+      } catch {
+        throw new Error("IA retornou gameConfig inválido");
+      }
+
+      // Validate minimum rounds
+      if (!gameConfig.rounds || gameConfig.rounds.length < 3) {
+        throw new Error("Jogo gerado com poucas rodadas");
+      }
+
+      // Build final game object
+      const game = {
+        id: gameData.id,
+        title: gameData.title,
+        description: gameData.description,
+        badge: gameData.badge,
+        icon: gameData.icon,
+        iconBg: gameData.iconBg,
+        iconColor: gameData.iconColor,
+        howToPlay: gameData.howToPlay,
+        aiPrompt: gameData.aiPrompt,
+        gameConfig,
+      };
+
+      return new Response(JSON.stringify({ game }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
