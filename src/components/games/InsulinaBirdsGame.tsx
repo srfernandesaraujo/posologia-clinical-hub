@@ -4,7 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Star, RotateCcw, ChevronRight, Trophy, XCircle } from "lucide-react";
+import { Star, RotateCcw, ChevronRight, Trophy, XCircle, Zap, Shield } from "lucide-react";
+import GameNarrative from "./GameNarrative";
+import GameDifficultySelector, { GameDifficulty } from "./GameDifficultySelector";
+import GameStarsResult from "./GameStarsResult";
+import GameFeedbackOverlay from "./GameFeedbackOverlay";
 
 /* ─── Types ─── */
 interface Block {
@@ -137,6 +141,9 @@ const defaultLevels: Level[] = [
 export default function InsulinaBirdsGame({ customData }: { customData?: any }) {
   const levels: Level[] = customData?.levels || defaultLevels;
 
+  const [gamePhase, setGamePhase] = useState<"narrative" | "difficulty" | "playing" | "finalResult">("narrative");
+  const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>("academic");
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number>(0);
 
@@ -151,6 +158,11 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
   const [phaseResult, setPhaseResult] = useState<"won" | "lost" | "complete" | null>(null);
   const [stars, setStars] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [levelFeedback, setLevelFeedback] = useState<{ isCorrect: boolean; title: string; explanation: string } | null>(null);
+  const [totalErrors, setTotalErrors] = useState(0);
+
+  // Difficulty modifiers
+  const diffMod = gameDifficulty === "academic" ? { extraProj: 1, blockHpMult: 1 } : gameDifficulty === "clinical" ? { extraProj: 0, blockHpMult: 1 } : { extraProj: 0, blockHpMult: 1.5 };
 
   const level = levels[currentLevel];
   const projsLeft = level.projectiles.length - projIndex;
@@ -512,6 +524,51 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
 
   /* ─── Render ─── */
   const finalTotalScore = totalScore + score;
+
+  if (gamePhase === "narrative") {
+    return (
+      <GameNarrative
+        title="Insulina Birds — Controle Glicêmico"
+        setting="Clínica de Endocrinologia"
+        briefing="Lance insulinas e antidiabéticos contra blocos de hiperglicemia! Cada tipo de insulina tem física diferente. Blocos verdes são alvos glicêmicos — não destrua! Use estratégia para controlar a glicemia do paciente."
+        onStart={() => setGamePhase("difficulty")}
+      />
+    );
+  }
+
+  if (gamePhase === "difficulty") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6">
+        <GameDifficultySelector selected={gameDifficulty} onChange={setGameDifficulty} />
+        <p className="text-xs text-muted-foreground">{levels.length} fases • {gameDifficulty === "academic" ? "Projétil extra" : gameDifficulty === "specialist" ? "Blocos reforçados" : "Padrão"}</p>
+        <Button onClick={() => { loadLevel(0); setGamePhase("playing"); }} size="lg">Iniciar Tratamento</Button>
+      </div>
+    );
+  }
+
+  if (gamePhase === "finalResult") {
+    return (
+      <GameStarsResult
+        score={totalScore + score}
+        maxScore={levels.length * 500}
+        errors={totalErrors}
+        title="Tratamento Concluído!"
+        subtitle={`Pontuação total: ${totalScore + score} em ${levels.length} fases.`}
+        onRestart={() => setGamePhase("narrative")}
+      />
+    );
+  }
+
+  if (levelFeedback) {
+    return (
+      <GameFeedbackOverlay
+        isCorrect={levelFeedback.isCorrect}
+        title={levelFeedback.title}
+        explanation={levelFeedback.explanation}
+        onContinue={() => setLevelFeedback(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
