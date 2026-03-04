@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles, Shield, Pill, Heart } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles, Shield, Pill, Heart, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type MouseEvent, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
@@ -23,6 +23,8 @@ import PandemicFarmaGame from "@/components/games/PandemicFarmaGame";
 import FarmaciaPlantaoGame from "@/components/games/FarmaciaPlantaoGame";
 import CodigoAzulGame from "@/components/games/CodigoAzulGame";
 import DetetiveToxicologicoGame from "@/components/games/DetetiveToxicologicoGame";
+import DynamicAIGame from "@/components/games/DynamicAIGame";
+import type { AIGameConfig } from "@/components/games/DynamicAIGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
 import CreateGameDialog, { type GeneratedGame } from "@/components/CreateGameDialog";
@@ -32,187 +34,47 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const games = [
-  {
-    id: "rpg-tcc",
-    title: "RPG Clínico — TCC",
-    description: "Combata monstros de distorções cognitivas usando lógica e pensamento racional.",
-    icon: Brain,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-    badge: "7 batalhas",
-  },
-  {
-    id: "vila-saude",
-    title: "Vila da Saúde",
-    description: "Construa e melhore uma cidade ao registar que tomou os seus remédios.",
-    icon: Home,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    badge: "6 construções",
-  },
-  {
-    id: "laboratorio",
-    title: "Laboratório de Interações",
-    description: "Combine medicamentos, alimentos e fitoterápicos para descobrir interações.",
-    icon: FlaskConical,
-    iconBg: "bg-indigo-100",
-    iconColor: "text-indigo-600",
-    badge: "6 substâncias",
-  },
-  {
-    id: "detetive",
-    title: "Detetive do Histórico",
-    description: "Organize a sua anamnese farmacoterapêutica passo a passo antes da consulta.",
-    icon: Search,
-    iconBg: "bg-stone-100",
-    iconColor: "text-stone-600",
-    badge: "4 pistas",
-  },
-  {
-    id: "resseccao",
-    title: "Ressecção Oncológica",
-    description: "Elimine células tumorais aplicando terapia alvo neste puzzle Resta 1.",
-    icon: Crosshair,
-    iconBg: "bg-rose-100",
-    iconColor: "text-rose-600",
-    badge: "Puzzle",
-  },
-  {
-    id: "milionario",
-    title: "Milionário da Farmacologia",
-    description: "Responda perguntas de farmacologia clínica e suba na carreira hospitalar.",
-    icon: Award,
-    iconBg: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-    badge: "5 níveis",
-  },
-  {
-    id: "domino",
-    title: "Dominó Clínico",
-    description: "Conecte peças de doenças, fármacos e efeitos adversos numa cascata prescritiva.",
-    icon: Link,
-    iconBg: "bg-stone-100",
-    iconColor: "text-stone-600",
-    badge: "7 peças",
-  },
-  {
-    id: "carreira",
-    title: "Carreira Clínica",
-    description: "Gerencie um consultório num tabuleiro estilo Banco Imobiliário.",
-    icon: Building,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    badge: "16 casas",
-  },
-  {
-    id: "plantao",
-    title: "O Plantão Noturno",
-    description: "Escape Room clínico: encontre pistas e salve o paciente antes do tempo acabar.",
-    icon: Lock,
-    iconBg: "bg-zinc-200",
-    iconColor: "text-zinc-700",
-    badge: "Escape Room",
-  },
-  {
-    id: "clearance",
-    title: "Gestor de Clearance",
-    description: "Ajuste doses de Vancomicina monitorizando a função renal do paciente.",
-    icon: Activity,
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
-    badge: "7 dias",
-  },
-  {
-    id: "alerta-vermelho",
-    title: "Alerta Vermelho",
-    description: "Investigue qual medicamento causa os sintomas do paciente.",
-    icon: Syringe,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    badge: "Investigação",
-  },
-  {
-    id: "janela",
-    title: "A Janela Terapêutica",
-    description: "Ajuste a dose de Varfarina para manter o INR na zona segura.",
-    icon: Activity,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    badge: "10 dias",
-  },
-  {
-    id: "labirinto",
-    title: "Labirinto do Hemograma",
-    description: "Navegue pela árvore de decisão para diagnosticar o tipo de anemia.",
-    icon: Droplet,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    badge: "3 passos",
-  },
-  {
-    id: "bolsa",
-    title: "Bolsa de Valores Metabólica",
-    description: "Transforme exames laboratoriais em ações de saúde estilo trading.",
-    icon: TrendingUp,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    badge: "Portfólio",
-  },
-  {
-    id: "insulina-birds",
-    title: "Insulina Birds",
-    description: "Lance insulinas contra alvos glicêmicos estilo Angry Birds e controle o diabetes!",
-    icon: Target,
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
-    badge: "5 fases",
-  },
-  {
-    id: "alex-kidd-has",
-    title: "Alex Kidd Anti-Hipertensivo",
-    description: "Plataformer retro: colete anti-hipertensivos corretos e desvie de efeitos adversos!",
-    icon: Gamepad2,
-    iconBg: "bg-cyan-100",
-    iconColor: "text-cyan-600",
-    badge: "5 fases",
-  },
-  {
-    id: "pandemic-farma",
-    title: "Pandemic Farma",
-    description: "Tower Defense: posicione antibióticos para deter ondas de bactérias resistentes.",
-    icon: Shield,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    badge: "Tower Defense",
-  },
-  {
-    id: "farmacia-plantao",
-    title: "Farmácia de Plantão",
-    description: "Triagem de prescrições sob pressão: verifique doses, interações e oriente pacientes.",
-    icon: Pill,
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-600",
-    badge: "Gestão/Tempo",
-  },
-  {
-    id: "codigo-azul",
-    title: "Código Azul",
-    description: "Simulador ACLS: lidere uma parada cardiorrespiratória com timer real.",
-    icon: Heart,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    badge: "ACLS",
-  },
-  {
-    id: "detetive-toxico",
-    title: "Detetive Toxicológico",
-    description: "Investigue intoxicações: identifique toxidromes e administre o antídoto correto.",
-    icon: Search,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    badge: "Investigação",
-  },
+type GameCategory = "all" | "farmacologia" | "investigacao" | "simulacao" | "acao" | "emergencia";
+
+const categoryLabels: { id: GameCategory; label: string }[] = [
+  { id: "all", label: "Todos" },
+  { id: "farmacologia", label: "Farmacologia" },
+  { id: "investigacao", label: "Investigação" },
+  { id: "simulacao", label: "Simulação" },
+  { id: "acao", label: "Ação & Estratégia" },
+  { id: "emergencia", label: "Emergência" },
+];
+
+const games: Array<{
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  iconBg: string;
+  iconColor: string;
+  badge: string;
+  category: GameCategory;
+}> = [
+  { id: "rpg-tcc", title: "RPG Clínico — TCC", description: "Combata monstros de distorções cognitivas usando lógica e pensamento racional.", icon: Brain, iconBg: "bg-purple-100", iconColor: "text-purple-600", badge: "7 batalhas", category: "acao" },
+  { id: "vila-saude", title: "Vila da Saúde", description: "Construa e melhore uma cidade ao registar que tomou os seus remédios.", icon: Home, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", badge: "6 construções", category: "simulacao" },
+  { id: "laboratorio", title: "Laboratório de Interações", description: "Combine medicamentos, alimentos e fitoterápicos para descobrir interações.", icon: FlaskConical, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", badge: "6 substâncias", category: "farmacologia" },
+  { id: "detetive", title: "Detetive do Histórico", description: "Organize a sua anamnese farmacoterapêutica passo a passo antes da consulta.", icon: Search, iconBg: "bg-stone-100", iconColor: "text-stone-600", badge: "4 pistas", category: "investigacao" },
+  { id: "resseccao", title: "Ressecção Oncológica", description: "Elimine células tumorais aplicando terapia alvo neste puzzle Resta 1.", icon: Crosshair, iconBg: "bg-rose-100", iconColor: "text-rose-600", badge: "Puzzle", category: "acao" },
+  { id: "milionario", title: "Milionário da Farmacologia", description: "Responda perguntas de farmacologia clínica e suba na carreira hospitalar.", icon: Award, iconBg: "bg-yellow-100", iconColor: "text-yellow-600", badge: "5 níveis", category: "farmacologia" },
+  { id: "domino", title: "Dominó Clínico", description: "Conecte peças de doenças, fármacos e efeitos adversos numa cascata prescritiva.", icon: Link, iconBg: "bg-stone-100", iconColor: "text-stone-600", badge: "7 peças", category: "farmacologia" },
+  { id: "carreira", title: "Carreira Clínica", description: "Gerencie um consultório num tabuleiro estilo Banco Imobiliário.", icon: Building, iconBg: "bg-amber-100", iconColor: "text-amber-600", badge: "16 casas", category: "simulacao" },
+  { id: "plantao", title: "O Plantão Noturno", description: "Escape Room clínico: encontre pistas e salve o paciente antes do tempo acabar.", icon: Lock, iconBg: "bg-zinc-200", iconColor: "text-zinc-700", badge: "Escape Room", category: "emergencia" },
+  { id: "clearance", title: "Gestor de Clearance", description: "Ajuste doses de Vancomicina monitorizando a função renal do paciente.", icon: Activity, iconBg: "bg-teal-100", iconColor: "text-teal-600", badge: "7 dias", category: "farmacologia" },
+  { id: "alerta-vermelho", title: "Alerta Vermelho", description: "Investigue qual medicamento causa os sintomas do paciente.", icon: Syringe, iconBg: "bg-red-100", iconColor: "text-red-600", badge: "Investigação", category: "investigacao" },
+  { id: "janela", title: "A Janela Terapêutica", description: "Ajuste a dose de Varfarina para manter o INR na zona segura.", icon: Activity, iconBg: "bg-blue-100", iconColor: "text-blue-600", badge: "10 dias", category: "farmacologia" },
+  { id: "labirinto", title: "Labirinto do Hemograma", description: "Navegue pela árvore de decisão para diagnosticar o tipo de anemia.", icon: Droplet, iconBg: "bg-red-100", iconColor: "text-red-600", badge: "3 passos", category: "investigacao" },
+  { id: "bolsa", title: "Bolsa de Valores Metabólica", description: "Transforme exames laboratoriais em ações de saúde estilo trading.", icon: TrendingUp, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", badge: "Portfólio", category: "simulacao" },
+  { id: "insulina-birds", title: "Insulina Birds", description: "Lance insulinas contra alvos glicêmicos estilo Angry Birds e controle o diabetes!", icon: Target, iconBg: "bg-sky-100", iconColor: "text-sky-600", badge: "5 fases", category: "acao" },
+  { id: "alex-kidd-has", title: "Alex Kidd Anti-Hipertensivo", description: "Plataformer retro: colete anti-hipertensivos corretos e desvie de efeitos adversos!", icon: Gamepad2, iconBg: "bg-cyan-100", iconColor: "text-cyan-600", badge: "5 fases", category: "acao" },
+  { id: "pandemic-farma", title: "Pandemic Farma", description: "Tower Defense: posicione antibióticos para deter ondas de bactérias resistentes.", icon: Shield, iconBg: "bg-red-100", iconColor: "text-red-600", badge: "Tower Defense", category: "acao" },
+  { id: "farmacia-plantao", title: "Farmácia de Plantão", description: "Triagem de prescrições sob pressão: verifique doses, interações e oriente pacientes.", icon: Pill, iconBg: "bg-orange-100", iconColor: "text-orange-600", badge: "Gestão/Tempo", category: "simulacao" },
+  { id: "codigo-azul", title: "Código Azul", description: "Simulador ACLS: lidere uma parada cardiorrespiratória com timer real.", icon: Heart, iconBg: "bg-red-100", iconColor: "text-red-600", badge: "ACLS", category: "emergencia" },
+  { id: "detetive-toxico", title: "Detetive Toxicológico", description: "Investigue intoxicações: identifique toxidromes e administre o antídoto correto.", icon: Search, iconBg: "bg-amber-100", iconColor: "text-amber-600", badge: "Investigação", category: "investigacao" },
 ];
 
 const GAME_VERSION_STORAGE_KEY = "clinical-games-version-map-v1";
@@ -306,7 +168,6 @@ Crie:
 - "items": array de 6 substâncias com { id (string M1-M4, A1, F1), name (string), type ("Pill" ou "Leaf"), category (string), color (string classe Tailwind como "bg-blue-100 text-blue-700") }
 - "interactions": objeto onde chaves são "ID1-ID2" (IDs ordenados) e valores são { type ("danger" ou "safe"), title (string), description (string com mecanismo farmacológico), points (number 50-75 para danger, 10 para safe) }
 Inclua exatamente 3 interações perigosas reais e documentadas. Use medicamentos e substâncias diferentes dos originais.
-Exemplo de interações: Metformina+Álcool, IECA+Espironolactona, ISRS+Tramadol, Lítio+AINE, etc.
 Retorne: { "items": [...], "interactions": {...} }`,
   },
   "detetive": {
@@ -326,7 +187,6 @@ Retorne: { "items": [...], "interactions": {...} }`,
 💡 Dica: Seja detalhado nas respostas. Um bom histórico farmacoterapêutico é a base de qualquer cuidado farmacêutico.`,
     aiPrompt: `Gere novas perguntas para o Detetive do Histórico Clínico farmacoterapêutico.
 Crie "questions": array de 5 perguntas com { id (number), title (string criativo), description (string - pergunta detalhada), type ("text" ou "boolean-text"), icon (string - um de: Search, Pill, Leaf, AlertTriangle, FileText), booleanLabel (string, apenas se type="boolean-text"), textPlaceholder (string exemplo) }
-Cubra aspectos diferentes: queixa principal, medicamentos de uso contínuo, automedicação, alergias, hábitos de vida (álcool, tabaco), e histórico familiar.
 Retorne: { "questions": [...] }`,
   },
   "resseccao": {
@@ -347,8 +207,6 @@ Retorne: { "questions": [...] }`,
 💡 Dica: Planeje várias jogadas à frente. Comece pelas bordas e trabalhe em direção ao centro.`,
     aiPrompt: `Gere uma nova configuração de tabuleiro para o jogo Resta 1 Oncológico.
 Crie "board": array 7x7 onde cada célula é null (fora do tabuleiro), 0 (vazio) ou 1 (célula tumoral).
-O tabuleiro deve ter formato de cruz (como o Resta 1 clássico) mas com a posição vazia inicial em local DIFERENTE do centro.
-Pode ser: canto superior, lateral, ou qualquer posição que ainda permita solução.
 Retorne: { "board": [[...], ...] }`,
   },
   "milionario": {
@@ -357,7 +215,7 @@ Retorne: { "board": [[...], ...] }`,
     subtitle: "Escolha um contexto clínico e responda 15 perguntas de dificuldade crescente!",
     howToPlay: `💰 Milionário da Farmacologia
 
-📋 Objetivo: Escolha um contexto clínico (Diabetes, Hipertensão, Antibióticos, etc.) e responda 15 perguntas de dificuldade crescente até o nível de Chefe de Clínica.
+📋 Objetivo: Escolha um contexto clínico e responda 15 perguntas de dificuldade crescente.
 
 🕹️ Como jogar:
 1. Selecione um contexto clínico na tela inicial
@@ -368,11 +226,11 @@ Retorne: { "board": [[...], ...] }`,
    📞 Ligar para o Preceptor: dica sobre a resposta
    👥 Reunião Clínica: mostra % de votos
 
-💡 Dica: Use as ajudas nas perguntas mais difíceis. Guarde-as para os níveis finais.`,
+💡 Dica: Use as ajudas nas perguntas mais difíceis.`,
     aiPrompt: `Gere contextos clínicos para o jogo Milionário da Farmacologia.
 Crie "contexts": array de contextos clínicos.
-Cada contexto: { id (string slug), label (string nome do contexto), icon (string emoji), questions (array de 15 perguntas) }
-Cada pergunta: { id (number 1-15), levelName (string: "Interno" para 1-3, "Residente Júnior" para 4-6, "Residente Sênior" para 7-9, "Especialista" para 10-12, "Chefe de Clínica" para 13-15), question (string - cenário clínico real), options (array de 4 strings), correctIndex (0-3), hint (string - dica educativa), audienceVotes (array de 4 numbers que somam ~100) }
+Cada contexto: { id (string slug), label (string), icon (string emoji), questions (array de 15 perguntas) }
+Cada pergunta: { id (number 1-15), levelName (string), question (string), options (array de 4 strings), correctIndex (0-3), hint (string), audienceVotes (array de 4 numbers que somam ~100) }
 Retorne: { "contexts": [...] }`,
   },
   "domino": {
@@ -387,16 +245,10 @@ Retorne: { "contexts": [...] }`,
 1. O tabuleiro começa com uma peça (doença → fármaco)
 2. Clique numa peça da sua mão para jogá-la
 3. A peça deve conectar: lado esquerdo com lado direito
-4. Doença ↔ Fármaco ↔ Efeito Adverso ↔ Novo Fármaco
-5. Se não encaixar, receberá um aviso
 
-💡 Dica: Observe as pontas abertas do tabuleiro e procure peças que conectem fármaco → efeito adverso ou vice-versa.`,
+💡 Dica: Observe as pontas abertas do tabuleiro.`,
     aiPrompt: `Gere uma nova cascata prescritiva para o Dominó Clínico.
 Crie "tiles": array de 7 peças de dominó com { id (number 1-7), left (string), right (string) }.
-A cascata deve seguir a lógica: Doença → Fármaco → Efeito Adverso → Novo Fármaco → Novo Efeito → ...
-Use uma cascata prescritiva DIFERENTE da original (Hipertensão→Amlodipina→Edema).
-Exemplos: Diabetes→Metformina→Diarreia→Loperamida, ou Depressão→Fluoxetina→Insônia→Zolpidem.
-Também forneça "diseases" e "drugs" (arrays de strings para colorir corretamente).
 Retorne: { "tiles": [...], "diseases": [...], "drugs": [...] }`,
   },
   "carreira": {
@@ -405,23 +257,16 @@ Retorne: { "tiles": [...], "diseases": [...], "drugs": [...] }`,
     subtitle: "Gerencie as finanças do seu consultório neste tabuleiro clínico.",
     howToPlay: `🏥 Carreira Clínica — Tabuleiro Clínico
 
-📋 Objetivo: Gerencie o seu consultório sem ir à falência. Compre propriedades e acumule riqueza.
+📋 Objetivo: Gerencie o seu consultório sem ir à falência.
 
 🕹️ Como jogar:
 1. Lance os dados para mover o peão pelo tabuleiro
 2. Ao passar pela PARTIDA, recebe $200
-3. Em propriedades livres: pode comprar para investir
-4. Cofre Clínico: sorte ou revés financeiro
-5. Imposto/Auditoria: paga taxas obrigatórias
-6. Conselho de Ética: perde 1 turno
-7. Se o saldo ficar negativo, é falência!
+3. Compre propriedades e acumule riqueza
 
-💡 Dica: Compre propriedades estrategicamente. Guarde reserva para impostos inesperados.`,
-    aiPrompt: `Gere um novo tabuleiro para o jogo Carreira Clínica (estilo Banco Imobiliário).
-Crie:
-- "board": array de 16 espaços com { id (0-15), name (string), type (um de: "go", "property", "chest", "tax", "jail", "free", "go-to-jail"), cost (number, apenas property), rent (number, apenas property), color (string classe Tailwind como "bg-blue-500", apenas property) }
-- "chestCards": array de 6 cartas com { text (string - evento clínico), amount (number positivo ou negativo) }
-Mantenha a estrutura: posição 0=GO, 7=jail, 10=free, 15=go-to-jail. Use temas de gestão hospitalar diferente (ex: telemedicina, saúde mental, pediatria).
+💡 Dica: Compre propriedades estrategicamente. Guarde reserva para impostos.`,
+    aiPrompt: `Gere um novo tabuleiro para o jogo Carreira Clínica.
+Crie "board" e "chestCards".
 Retorne: { "board": [...], "chestCards": [...] }`,
   },
   "plantao": {
@@ -433,112 +278,49 @@ Retorne: { "board": [...], "chestCards": [...] }`,
 📋 Objetivo: Encontre o antídoto antes que o tempo acabe (10 minutos).
 
 🕹️ Como jogar:
-1. 📋 Leia o Prontuário: identifique a síndrome clínica
-2. 📖 Consulte o Livro: encontre dados farmacocinéticos
-3. 💻 Desbloqueie o Computador: digite o nome do antídoto
-4. 🔐 Abra o Cofre: calcule o código de 4 dígitos
+1. 📋 Leia o Prontuário
+2. 📖 Consulte o Livro
+3. 💻 Desbloqueie o Computador
+4. 🔐 Abra o Cofre
 
-⚠️ Código errado no cofre: -30 segundos de penalidade!
-
-💡 Dica: O código combina dados do livro de bioquímica. Pense em meia-vida e dose.`,
-    aiPrompt: `Gere um novo cenário para o Escape Room Clínico "O Plantão Noturno".
-Crie um caso com:
-- "prontuario": { text (string - sintomas do paciente que apontam para uma intoxicação/overdose específica) }
-- "book": { text (string - página de farmacologia com dados numéricos: meia-vida e dose de um frasco) }
-- "computerPassword": string (nome do antídoto correto, ex: "FLUMAZENIL", "ATROPINA", "DESFERROXAMINA")
-- "computerHint": string (pista revelada após desbloquear o computador)
-- "safeCode": string de 4 dígitos (calculável a partir dos dados do livro)
-- "safeCodeExplanation": string (como calcular o código)
-Use um caso DIFERENTE de overdose de opioides. Ex: intoxicação por benzodiazepínicos, organofosforados, paracetamol, digitálicos.
+💡 Dica: O código combina dados do livro de bioquímica.`,
+    aiPrompt: `Gere um novo cenário para o Escape Room "O Plantão Noturno".
 Retorne: { "prontuario": {...}, "book": {...}, "computerPassword": "...", "computerHint": "...", "safeCode": "...", "safeCodeExplanation": "..." }`,
   },
   "clearance": {
     component: GestorClearanceGame,
     title: "Gestor de Clearance",
     subtitle: "Monitore a função renal e ajuste a dose de Vancomicina em 7 dias.",
-    howToPlay: `💉 Gestor de Clearance — Ajuste de Dose Renal
+    howToPlay: `💉 Gestor de Clearance
 
-📋 Objetivo: Mantenha o paciente vivo por 7 dias ajustando a dose de Vancomicina conforme a função renal.
+📋 Objetivo: Mantenha o paciente vivo por 7 dias ajustando a dose conforme a função renal.
 
-🕹️ Como jogar:
-1. Observe os exames diários (Creatinina e TFG)
-2. Escolha a dose adequada para o dia
-3. Clique em "Avançar" para ver o impacto
-4. Monitore as barras de Toxicidade e Eficácia
-
-⚠️ Toxicidade = 100: nefrotoxicidade fatal
-⚠️ Eficácia = 0: infeção generalizada
-
-💡 Dica: Quando a TFG cair abaixo de 50, reduza a dose para 500mg a cada 24h. Nunca suspenda por muito tempo ou a infeção volta.`,
-    aiPrompt: `Gere novos dados para o Gestor de Clearance com um cenário clínico diferente.
-Crie:
-- "patientInfo": { name (string), age (number), drug (string - fármaco nefrotóxico diferente, ex: "Gentamicina IV", "Anfotericina B", "Cisplatina") }
-- "labResults": array de 7 objetos com { day (1-7), creatinina (number), tfg (number), alert (string) }. O paciente deve piorar no dia 3-4 e melhorar se dose ajustada.
-- "doses": array de 4 strings com opções de dose adequadas ao novo fármaco
+💡 Dica: Quando a TFG cair abaixo de 50, reduza a dose.`,
+    aiPrompt: `Gere novos dados para o Gestor de Clearance.
 Retorne: { "patientInfo": {...}, "labResults": [...], "doses": [...] }`,
   },
   "alerta-vermelho": {
     component: AlertaVermelhoGame,
     title: "Alerta Vermelho: Investigação Toxicológica",
     subtitle: "Descubra qual medicamento está a causar os sintomas do paciente.",
-    howToPlay: `🚨 Alerta Vermelho — Investigação Toxicológica
+    howToPlay: `🚨 Alerta Vermelho
 
-📋 Objetivo: Identifique qual medicamento causa os sintomas e prove com exames laboratoriais.
+📋 Objetivo: Identifique qual medicamento causa os sintomas e prove com exames.
 
-🕹️ Como jogar:
-1. Leia os sintomas do paciente
-2. Solicite exames laboratoriais (custo do orçamento)
-3. Analise os resultados para encontrar evidências
-4. Selecione o medicamento culpado
-5. Confirme o diagnóstico
-
-⚠️ Cada exame solicitado reduz a saúde do paciente (-15%)
-⚠️ Orçamento limitado: escolha exames estratégicos
-
-💡 Dica: Procure exames com marcador "ALERTA" — são as provas-chave. Não precisa pedir todos os exames.`,
-    aiPrompt: `Gere um novo caso para o Alerta Vermelho (investigação toxicológica).
-Crie:
-- "patientInfo": { name (string), age (number), symptoms (string - sintomas que apontam para reação adversa a medicamento) }
-- "currentMeds": array de 3 medicamentos com { id (number 1-3), name (string com dose) }
-- "availableTests": array de 4 exames com { id (string T1-T4), name (string), cost (number 15-40), result (string), isKey (boolean - true para no máximo 2 exames) }
-- "correctMedId": number (id do medicamento culpado)
-O caso deve ser diferente de rabdomiólise. Exemplos: hepatotoxicidade por paracetamol, hipoglicemia por sulfonilureia, sangramento por anticoagulante, síndrome serotoninérgica.
+💡 Dica: Procure exames com marcador "ALERTA".`,
+    aiPrompt: `Gere um novo caso para o Alerta Vermelho.
 Retorne: { "patientInfo": {...}, "currentMeds": [...], "availableTests": [...], "correctMedId": ... }`,
   },
   "janela": {
     component: JanelaTerapeuticaGame,
     title: "A Janela Terapêutica",
     subtitle: "Ajuste a dose diária de Varfarina para manter o INR na zona segura.",
-    howToPlay: `📊 A Janela Terapêutica — Monitorização de INR
+    howToPlay: `📊 A Janela Terapêutica
 
 📋 Objetivo: Mantenha o INR do paciente entre 2.0 e 3.0 durante 10 dias.
 
-🕹️ Como jogar:
-1. Observe o valor atual do INR e o gráfico
-2. Escolha a conduta posológica para o dia seguinte:
-   ⬆️ Aumentar Dose: INR sobe ~0.6
-   ➡️ Manter Dose: INR estável
-   ⬇️ Reduzir Dose: INR desce ~0.5
-   ⏸️ Suspender: INR desce ~1.2
-3. Há variabilidade biológica (±0.2) em cada ajuste
-
-⚠️ INR ≥ 5.0: hemorragia severa (derrota)
-⚠️ INR ≤ 1.2 após dia 3: trombose (derrota)
-
 💡 Dica: Mantenha ajustes pequenos. A zona verde (2.0-3.0) é o seu alvo.`,
     aiPrompt: `Gere novos parâmetros para A Janela Terapêutica com um fármaco diferente.
-Crie:
-- "drugName": string (ex: "Fenitoína", "Lítio", "Digoxina", "Teofilina")
-- "parameterName": string (ex: "Nível Sérico", "Concentração Plasmática")
-- "unit": string (ex: "mcg/mL", "mEq/L", "ng/mL")
-- "targetMin": number (limite inferior da faixa terapêutica)
-- "targetMax": number (limite superior da faixa terapêutica)
-- "criticalHigh": number (nível tóxico)
-- "criticalLow": number (nível subterapêutico)
-- "initialValue": number (valor inicial dentro da faixa)
-- "maxDays": number (7-12)
-- "highLabel": string (ex: "Toxicidade", "Arritmia")
-- "lowLabel": string (ex: "Convulsão", "Recidiva")
 Retorne: { "drugName": "...", "parameterName": "...", ... }`,
   },
   "labirinto": {
@@ -549,22 +331,9 @@ Retorne: { "drugName": "...", "parameterName": "...", ... }`,
 
 📋 Objetivo: Navegue pela árvore de decisão diagnóstica e identifique o tipo correto de anemia.
 
-🕹️ Como jogar:
-1. Leia o dado laboratorial apresentado
-2. Escolha o próximo passo diagnóstico correto
-3. Resposta correta: avança para o próximo nó
-4. Resposta errada: perde 20 pontos (fica no mesmo nó)
-5. Chegue ao diagnóstico final com a maior pontuação!
-
-⚠️ Se a pontuação chegar a 0: Game Over
-
-💡 Dica: Siga o algoritmo: Hb baixa → VCM (tamanho) → Exames confirmatórios → Diagnóstico.`,
-    aiPrompt: `Gere uma nova árvore de decisão para o Labirinto do Hemograma com um diagnóstico DIFERENTE.
-Crie "storyNodes": objeto com nós da árvore de decisão.
-Estrutura de cada nó: { id (string), title (string "Passo X: ..."), labData (string com valores de referência), question (string), options: array de 3 opções com { text (string), nextNode (string - "" se erro), isError (boolean) } }
-Deve ter: "root" (nó inicial), 2 nós intermediários, e terminar em "victory".
-Use um diagnóstico diferente: anemia megaloblástica (B12), anemia hemolítica, anemia aplástica, ou policitemia.
-Retorne: { "storyNodes": { "root": {...}, "node2": {...}, "node3": {...} } }`,
+💡 Dica: Siga o algoritmo: Hb baixa → VCM → Exames confirmatórios → Diagnóstico.`,
+    aiPrompt: `Gere uma nova árvore de decisão para o Labirinto do Hemograma.
+Retorne: { "storyNodes": { "root": {...}, ... } }`,
   },
   "bolsa": {
     component: BolsaMetabolicaGame,
@@ -572,92 +341,34 @@ Retorne: { "storyNodes": { "root": {...}, "node2": {...}, "node3": {...} } }`,
     subtitle: "Os seus exames são ações. Melhore os resultados e ganhe dividendos!",
     howToPlay: `📈 Bolsa de Valores Metabólica
 
-📋 Objetivo: Acompanhe os seus biomarcadores como ações na bolsa e ganhe moedas de saúde.
+📋 Objetivo: Acompanhe os seus biomarcadores como ações na bolsa e ganhe moedas.
 
-🕹️ Como jogar:
-1. Visualize os 3 biomarcadores (HbA1c, LDL, HDL)
-2. Verde com ↗️ = resultado favorável (LUCRO)
-3. Vermelho com ↘️ = resultado desfavorável (PREJUÍZO)
-4. Clique num card para ver o gráfico de evolução
-5. Use "Registar Novos Exames" para simular novos resultados
-6. Se bater a meta, ganha 500 moedas em dividendos!
-
-💡 Dica: HbA1c e LDL devem BAIXAR para ser lucro. HDL deve SUBIR.`,
-    aiPrompt: `Gere novos biomarcadores para a Bolsa de Valores Metabólica com tema diferente.
-Crie:
-- "biomarkers": array de 3 biomarcadores com { id (string), name (string), currentValue (number), previousValue (number), target (string como "< X" ou "> X"), unit (string), isHigherBetter (boolean) }
-- "historyData": array de 4 semestres com { semester (string "SX YYYY"), [id1] (number), [id2] (number), [id3] (number) }
-- "targetLines": objeto { [id]: number } com valor numérico da meta
-- "updatedValues": objeto { [id]: number } com novos valores para quando clicar "Registar"
-Use biomarcadores diferentes: ex: Triglicerídeos, TSH, Vitamina D, Ácido Úrico, Creatinina, PCR.
+💡 Dica: HbA1c e LDL devem BAIXAR. HDL deve SUBIR.`,
+    aiPrompt: `Gere novos biomarcadores para a Bolsa de Valores Metabólica.
 Retorne: { "biomarkers": [...], "historyData": [...], "targetLines": {...}, "updatedValues": {...} }`,
   },
   "insulina-birds": {
     component: InsulinaBirdsGame,
     title: "Insulina Birds — Angry Birds do Diabetes",
-    subtitle: "Lance insulinas e antidiabéticos contra alvos glicêmicos para controlar o diabetes!",
-    howToPlay: `💉 Insulina Birds — Angry Birds do Diabetes
+    subtitle: "Lance insulinas e antidiabéticos contra alvos glicêmicos!",
+    howToPlay: `💉 Insulina Birds
 
-📋 Objetivo: Destrua os blocos de glicemia alta (vermelhos e amarelos) sem atingir os blocos de glicemia alvo (verdes).
+📋 Objetivo: Destrua os blocos de glicemia alta sem atingir os blocos verdes.
 
-🕹️ Como jogar:
-1. Clique e arraste no estilingue para mirar
-2. Solte para lançar o projétil (insulina/fármaco)
-3. Cada fármaco tem comportamento diferente:
-   💙 Ins. Regular: trajetória padrão, impacto médio
-   💚 Ins. NPH: pesada, cai rápido, explode em área
-   💜 Ins. Glargina: lenta, atravessa obstáculos
-   🧡 Metformina: remove blocos de resistência (cinzas)
-4. Destrua todos os blocos vermelhos e amarelos para vencer
-
-⚠️ NÃO destrua blocos verdes (hipoglicemia = -200 pontos!)
-⚠️ Blocos cinzas (Resistência Insulínica) só são destruídos com Metformina
-
-⭐ Estrelas: baseadas na pontuação final de cada fase
 💡 Dica: Use menos projéteis = bônus de pontos!`,
-    aiPrompt: `Gere novos níveis para o jogo Insulina Birds (estilo Angry Birds do Diabetes).
-Crie "levels": array de 5 fases.
-Cada fase: {
-  name (string "Fase X: ..."),
-  patient: { name (string), hba1c (string), profile (string) },
-  projectiles: array de 3-4 objetos { type: "regular"|"nph"|"glargina"|"metformina" },
-  blocks: array de 4-8 blocos { x (380-640), y (260-340 em múltiplos de 40 subtraindo de 380), w (50), h (40), type ("red"|"yellow"|"green"|"gray"), hp (1-3), maxHp (igual ao hp), label (string mg/dL ou "RI") },
-  explanation (string justificativa clínica da fase)
-}
-Regras: blocos verdes são alvo (não destruir); blocos cinzas só removidos com metformina; blocos vermelhos precisam de mais HP.
-Use cenários clínicos diferentes dos originais (ex: diabetes gestacional, idoso polimedicado, DM1 juvenil, cetoacidose).
+    aiPrompt: `Gere novos níveis para o jogo Insulina Birds.
 Retorne: { "levels": [...] }`,
   },
   "alex-kidd-has": {
     component: AlexKiddHipertensaoGame,
     title: "Alex Kidd Anti-Hipertensivo",
     subtitle: "Colete anti-hipertensivos e desvie de efeitos adversos neste plataformer retro!",
-    howToPlay: `🎮 Alex Kidd Anti-Hipertensivo — Plataformer da Hipertensão
+    howToPlay: `🎮 Alex Kidd Anti-Hipertensivo
 
-📋 Objetivo: Percorra as fases coletando anti-hipertensivos corretos, desvie de obstáculos e responda perguntas para controlar a PA do paciente.
+📋 Objetivo: Colete fármacos corretos e desvie de obstáculos.
 
-🕹️ Como jogar:
-1. Use ← → para mover e ↑ para pular
-2. Colete fármacos corretos (azul, verde, roxo, amarelo): +pontos e ↓PA
-3. EVITE obstáculos vermelhos (AINEs), brancos (sal) e laranjas (hipotensão)
-4. Blocos amarelos com "?" revelam perguntas de farmacologia
-5. Resposta correta: +200 pts e escudo temporário
-6. Resposta errada: perde 1 vida
-7. Chegue à bandeira 🏁 para completar a fase
-
-⚠️ 3 vidas | PA começa em 180 mmHg → meta < 140 mmHg
 💡 Dica: Evite AINEs — eles reduzem o efeito dos anti-hipertensivos!`,
-    aiPrompt: `Gere novos níveis para o jogo Alex Kidd Anti-Hipertensivo (plataformer de hipertensão).
-Crie "levels": array de 5 fases.
-Cada fase: {
-  name (string "Fase X: ..."),
-  patient: { name (string), pa (string "XXX/YY mmHg"), comorbidity (string) },
-  worldWidth (number 1400-1700),
-  explanation (string justificativa clínica),
-  platforms: array de 6-9 plataformas { x (number), y (number 230-320), w (number 90-160), h (20) } + chão { x:0, y:380, w:worldWidth, h:40 },
-  collectibles: array de 6-9 itens { id (string), x (number), y (number acima da plataforma), w:36, h:36, type ("good"|"bad"|"question"), name (string), label (string 2-4 chars), color (string classe Tailwind bg-*), points (number), collected (false), question (obj com question/options/correctIndex, apenas se type="question") }
-}
-Use cenários diferentes: HAS na gestação, HAS resistente, HAS no idoso, emergência hipertensiva, HAS + IRC.
+    aiPrompt: `Gere novos níveis para Alex Kidd Anti-Hipertensivo.
 Retorne: { "levels": [...] }`,
   },
   "pandemic-farma": {
@@ -666,20 +377,10 @@ Retorne: { "levels": [...] }`,
     subtitle: "Posicione antibióticos para deter ondas de bactérias resistentes no hospital.",
     howToPlay: `🛡️ Pandemic Farma — Tower Defense
 
-📋 Objetivo: Proteja os pacientes posicionando antibióticos (torres) para eliminar ondas de bactérias resistentes.
+📋 Objetivo: Proteja os pacientes posicionando antibióticos para eliminar bactérias.
 
-🕹️ Como jogar:
-1. Selecione um antibiótico no painel inferior
-2. Clique numa posição vazia no mapa para posicionar
-3. Cada antibiótico tem espectro, custo e efeito adverso
-4. Bactérias resistentes ignoram antibióticos fora do espectro
-5. Gerencie o orçamento da CCIH — antibióticos de último recurso custam mais
-6. Clique numa torre para vendê-la (50% reembolso)
-
-⚠️ Bactérias que chegam aos pacientes causam dano!
-💡 Dica: MRSA exige Vancomicina. KPC exige Polimixina B. Não desperdice carbapenêmicos.`,
+💡 Dica: MRSA exige Vancomicina. KPC exige Polimixina B.`,
     aiPrompt: `Gere novas ondas para o Tower Defense Pandemic Farma.
-Crie "waves": array de 5 ondas com { id (number), description (string), mechanism (string explicação do mecanismo de resistência), bacteria: array de 4-6 bactérias com { name, type ("gram+"|"gram-"|"mrsa"|"kpc"|"anaerob"), hp, maxHp, speed (0.3-1.3), lane (0-2), resistances (array de ids de antibióticos), icon (emoji), reward (number) } }
 Retorne: { "waves": [...] }`,
   },
   "farmacia-plantao": {
@@ -688,19 +389,10 @@ Retorne: { "waves": [...] }`,
     subtitle: "Verifique prescrições, identifique erros e oriente pacientes sob pressão temporal.",
     howToPlay: `💊 Farmácia de Plantão
 
-📋 Objetivo: Analise prescrições sob pressão temporal. Dispense as corretas, devolva as com erro.
+📋 Objetivo: Analise prescrições sob pressão temporal.
 
-🕹️ Como jogar:
-1. Leia a prescrição e os medicamentos listados
-2. DISPENSAR: se a prescrição estiver correta
-3. DEVOLVER: se identificar erro (dose, interação, contraindicação)
-4. ORIENTAR: fornecer orientação farmacêutica ao paciente
-5. Timer ativo — pacientes impacientes saem da fila!
-
-⚠️ Dispensar prescrição com erro = evento adverso visível
-💡 Dica: Preste atenção especial a interações medicamentosas e doses pediátricas.`,
+💡 Dica: Preste atenção a interações medicamentosas e doses pediátricas.`,
     aiPrompt: `Gere novos turnos para Farmácia de Plantão.
-Crie "shifts": array de 3 turnos com { id, name, sector, timeLimit, description, prescriptions: array de 3 prescrições com { patientName, age, sector, medications (array de { name, dose, route, frequency }), hasError (boolean), errorType, errorDescription, errorMed, correctAction, explanation, urgency ("normal"|"urgent"|"critical"), orientationNeeded, reference } }
 Retorne: { "shifts": [...] }`,
   },
   "codigo-azul": {
@@ -709,21 +401,10 @@ Retorne: { "shifts": [...] }`,
     subtitle: "Lidere uma parada cardiorrespiratória seguindo o protocolo ACLS.",
     howToPlay: `❤️ Código Azul — Simulador ACLS
 
-📋 Objetivo: Siga o protocolo ACLS, administre medicações e encontre a causa reversível para obter ROSC.
+📋 Objetivo: Siga o protocolo ACLS e obtenha ROSC.
 
-🕹️ Como jogar:
-1. Identifique o ritmo: FV/TV (chocável) ou AESP/Assistolia (não chocável)
-2. Inicie RCP de alta qualidade imediatamente
-3. Desfibrilar apenas ritmos chocáveis!
-4. Epinefrina 1mg IV a cada 3-5min
-5. Amiodarona 300mg para FV/TV refratária
-6. Identifique a causa reversível (5H/5T)
-7. Verifique ROSC quando a chance estiver alta
-
-⚠️ Desfibrilar assistolia = erro grave!
 💡 Dica: Sempre comece com compressões. Sem RCP, nenhuma droga funciona.`,
     aiPrompt: `Gere novos cenários ACLS para o Código Azul.
-Crie "scenarios": array de 4 cenários com { id, title, patientName, patientAge, history, initialRhythm ("fv"|"tv"|"aesp"|"assistolia"), reversibleCause, reversibleCauseHint, reversibleCauseCategory ("5H"|"5T"), correctSequence (array de ações), explanation, reference }
 Retorne: { "scenarios": [...] }`,
   },
   "detetive-toxico": {
@@ -732,29 +413,23 @@ Retorne: { "scenarios": [...] }`,
     subtitle: "Investigue intoxicações, identifique toxidromes e administre o antídoto correto.",
     howToPlay: `🔍 Detetive Toxicológico
 
-📋 Objetivo: Investigue pacientes intoxicados, colete evidências e administre o antídoto correto.
+📋 Objetivo: Investigue pacientes intoxicados e administre o antídoto correto.
 
-🕹️ Como jogar:
-1. Examine sinais vitais e exame físico
-2. Colete evidências no cenário (frascos, relatos)
-3. Solicite exames laboratoriais estrategicamente
-4. Identifique a toxidrome (colinérgica, opioide, etc.)
-5. Selecione e confirme o antídoto correto
-
-⚠️ O paciente deteriora com o tempo!
-💡 Dica: Pupilas são a chave: miose = opioides/organofosforados. Midríase = anticolinérgicos/simpatomiméticos.`,
+💡 Dica: Pupilas são a chave: miose = opioides. Midríase = anticolinérgicos.`,
     aiPrompt: `Gere novos casos para o Detetive Toxicológico.
-Crie "cases": array de 4 casos com { id, title, arrival, vitals (objeto com fc/pa/fr/temp/spo2/pupilas/glasgow), toxidrome, toxidromeType, substance, antidote, antidoteOptions (array de 5), evidences (array de 3), labTests (array de 4), physicalExam (array de 6 strings), timerSeconds, explanation, reference, deteriorationWarning }
 Retorne: { "cases": [...] }`,
   },
 };
 
-const AI_GAMES_STORAGE_KEY = "clinical-ai-games-v1";
+const AI_GAMES_STORAGE_KEY = "clinical-ai-games-v2";
 
-function loadAiGames(): Array<{ id: string; title: string; description: string; badge: string; icon: string; iconBg: string; iconColor: string; howToPlay: string; aiPrompt: string; componentCode: string }> {
+function loadAiGames(): GeneratedGame[] {
   try {
     const raw = localStorage.getItem(AI_GAMES_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Filter out old format games (with componentCode instead of gameConfig)
+    return parsed.filter((g: any) => g.gameConfig && g.gameConfig.rounds);
   } catch { return []; }
 }
 
@@ -768,7 +443,8 @@ export default function JogosClinicos() {
   const [gameVersions, setGameVersions] = useState<Record<string, number>>(readInitialVersions);
   const [sessionScore, setSessionScore] = useState(0);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [aiGames, setAiGames] = useState(loadAiGames);
+  const [aiGames, setAiGames] = useState<GeneratedGame[]>(loadAiGames);
+  const [selectedCategory, setSelectedCategory] = useState<GameCategory>("all");
 
   const lastInteractionRef = useRef(0);
   const active = activeGame ? gameComponents[activeGame] : null;
@@ -782,9 +458,7 @@ export default function JogosClinicos() {
 
   const awardGamePoints = useCallback(async (gameId: string, points: number, reason: string) => {
     if (!user) return;
-
     setSessionScore((prev) => prev + points);
-
     const { error } = await supabase.from("student_points").insert({
       user_id: user.id,
       source: `game:${gameId}`,
@@ -792,15 +466,11 @@ export default function JogosClinicos() {
       simulator_slug: gameId,
       source_id: reason,
     });
-
-    if (error) {
-      console.error("Pontuação não registrada:", error.message);
-    }
+    if (error) console.error("Pontuação não registrada:", error.message);
   }, [user]);
 
   useEffect(() => {
     if (!activeGame) return;
-
     setSessionScore(0);
     lastInteractionRef.current = 0;
     void awardGamePoints(activeGame, 10, `start-${Date.now()}`);
@@ -808,30 +478,24 @@ export default function JogosClinicos() {
 
   const handleGameInteraction = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (!activeGame) return;
-
     const target = event.target as HTMLElement;
     if (!target.closest("button")) return;
-
     const now = Date.now();
     if (now - lastInteractionRef.current < 2500) return;
-
     lastInteractionRef.current = now;
     void awardGamePoints(activeGame, 3, `interaction-${now}`);
   }, [activeGame, awardGamePoints]);
 
   const handleAiUpdate = useCallback((data: any, updateType: GameUpdateType) => {
     if (!activeGame) return;
-
     setAiData((prev) => ({ ...prev, [activeGame]: data }));
     setGameVersions((prev) => {
       const current = prev[activeGame] ?? 1;
       const next = updateType === "major"
         ? Math.floor(current) + 1
         : Number((current + 0.1).toFixed(1));
-
       return { ...prev, [activeGame]: next };
     });
-
     void awardGamePoints(activeGame, updateType === "major" ? 30 : 10, `ai-update-${Date.now()}`);
   }, [activeGame, awardGamePoints]);
 
@@ -856,6 +520,7 @@ export default function JogosClinicos() {
   // Check if activeGame is an AI-generated game
   const activeAiGame = aiGames.find((g) => g.id === activeGame);
 
+  // ── AI GAME VIEW (now playable!) ──
   if (activeAiGame && activeGame) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -870,44 +535,16 @@ export default function JogosClinicos() {
           <p className="text-muted-foreground">{activeAiGame.description}</p>
         </div>
 
-        <div className="rounded-lg border border-border bg-muted/30 p-6 space-y-4">
-          <div className="flex items-center gap-2 text-primary">
-            <Sparkles className="h-5 w-5" />
-            <h3 className="font-semibold">Jogo Gerado por IA</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Este jogo foi criado pela IA. O código do componente React está disponível abaixo para integração na plataforma.
-          </p>
-
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h4 className="text-sm font-medium mb-2">📋 Como Jogar</h4>
-            <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{activeAiGame.howToPlay}</pre>
-          </div>
-
-          <details className="rounded-lg border border-border bg-card">
-            <summary className="px-4 py-3 text-sm font-medium cursor-pointer hover:text-primary transition-colors">
-              💻 Código do Componente ({activeAiGame.componentCode.split("\n").length} linhas)
-            </summary>
-            <div className="px-4 pb-4">
-              <pre className="text-xs font-mono bg-muted p-3 rounded overflow-x-auto max-h-[400px] overflow-y-auto">
-                {activeAiGame.componentCode}
-              </pre>
-            </div>
-          </details>
-
-          <details className="rounded-lg border border-border bg-card">
-            <summary className="px-4 py-3 text-sm font-medium cursor-pointer hover:text-primary transition-colors">
-              🤖 Prompt para Atualização IA
-            </summary>
-            <div className="px-4 pb-4">
-              <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{activeAiGame.aiPrompt}</pre>
-            </div>
-          </details>
+        <div onClickCapture={handleGameInteraction}>
+          <DynamicAIGame config={activeAiGame.gameConfig} />
         </div>
+
+        <GameRanking gameId={activeGame} currentScore={sessionScore} />
       </div>
     );
   }
 
+  // ── BUILT-IN GAME VIEW ──
   if (active && activeGame) {
     const GameComponent = active.component;
     const customData = aiData[activeGame] || undefined;
@@ -945,9 +582,14 @@ export default function JogosClinicos() {
     );
   }
 
+  // ── GAMES LISTING ──
+  const filteredGames = selectedCategory === "all"
+    ? games
+    : games.filter((g) => g.category === selectedCategory);
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("games.title")}</h1>
           <p className="text-muted-foreground text-lg">{t("games.subtitle")}</p>
@@ -960,62 +602,134 @@ export default function JogosClinicos() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {games.map((game) => {
-          const versionLabel = formatVersion(getVersion(game.id));
-
+      {/* Category filter */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {categoryLabels.map((cat) => {
+          const count = cat.id === "all" ? games.length : games.filter(g => g.category === cat.id).length;
           return (
-            <Card
-              key={game.id}
-              className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
-              onClick={() => setActiveGame(game.id)}
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                selectedCategory === cat.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+              }`}
             >
-              <CardHeader className="pb-3">
-                <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
-                  <game.icon className={`h-6 w-6 ${game.iconColor}`} />
-                </div>
-                <CardTitle className="text-lg">{game.title}</CardTitle>
-                <CardDescription>{game.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
-                  {game.badge}
-                </span>
-                <Badge variant="secondary" className="text-xs">v{versionLabel}</Badge>
-              </CardContent>
-            </Card>
+              {cat.label} ({count})
+            </button>
           );
         })}
-
-        {/* AI-generated games */}
-        {aiGames.map((game) => (
-          <Card
-            key={game.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative group"
-            onClick={() => setActiveGame(game.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-2 w-fit">
-                <Sparkles className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-lg">{game.title}</CardTitle>
-              <CardDescription>{game.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
-                {game.badge}
-              </span>
-              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">IA</Badge>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDeleteAiGame(game.id); }}
-                className="ml-auto text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                Remover
-              </button>
-            </CardContent>
-          </Card>
-        ))}
       </div>
+
+      {/* AI games section */}
+      {aiGames.length > 0 && (selectedCategory === "all") && (
+        <>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Jogos Criados com IA</h2>
+            <Badge variant="secondary" className="text-xs">{aiGames.length}</Badge>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            {aiGames.map((game) => (
+              <Card
+                key={game.id}
+                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative group"
+                onClick={() => setActiveGame(game.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-2 w-fit">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{game.title}</CardTitle>
+                  <CardDescription>{game.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {game.badge}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">{game.gameConfig.rounds.length} rodadas</Badge>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteAiGame(game.id); }}
+                    className="ml-auto text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    Remover
+                  </button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Built-in games by category */}
+      {selectedCategory !== "all" ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredGames.map((game) => {
+            const versionLabel = formatVersion(getVersion(game.id));
+            return (
+              <Card
+                key={game.id}
+                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
+                onClick={() => setActiveGame(game.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
+                    <game.icon className={`h-6 w-6 ${game.iconColor}`} />
+                  </div>
+                  <CardTitle className="text-lg">{game.title}</CardTitle>
+                  <CardDescription>{game.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {game.badge}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">v{versionLabel}</Badge>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          {/* Group by category when "all" is selected */}
+          {categoryLabels.filter(c => c.id !== "all").map((cat) => {
+            const catGames = games.filter(g => g.category === cat.id);
+            if (catGames.length === 0) return null;
+            return (
+              <div key={cat.id} className="mb-8">
+                <h2 className="text-lg font-semibold text-foreground mb-3">{cat.label}</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {catGames.map((game) => {
+                    const versionLabel = formatVersion(getVersion(game.id));
+                    return (
+                      <Card
+                        key={game.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
+                        onClick={() => setActiveGame(game.id)}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
+                            <game.icon className={`h-6 w-6 ${game.iconColor}`} />
+                          </div>
+                          <CardTitle className="text-lg">{game.title}</CardTitle>
+                          <CardDescription>{game.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+                            {game.badge}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">v{versionLabel}</Badge>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
 
       <CreateGameDialog
         open={createDialogOpen}
@@ -1025,4 +739,3 @@ export default function JogosClinicos() {
     </div>
   );
 }
-

@@ -5,9 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, FileText, Code, Loader2, CheckCircle2, AlertTriangle, Lightbulb, Rocket } from "lucide-react";
+import { Sparkles, FileText, Code, Loader2, CheckCircle2, AlertTriangle, Lightbulb, Rocket, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { AIGameConfig } from "@/components/games/DynamicAIGame";
 
 interface CreateGameDialogProps {
   open: boolean;
@@ -25,16 +26,16 @@ export interface GeneratedGame {
   iconColor: string;
   howToPlay: string;
   aiPrompt: string;
-  componentCode: string;
+  gameConfig: AIGameConfig;
 }
 
 type Step = "prompt" | "planning" | "review" | "generating" | "done";
 
 const EXAMPLE_PROMPTS = [
-  "Jogo estilo Tower Defense onde o jogador posiciona antibióticos para defender contra ondas de bactérias resistentes",
-  "Match-3 de neurotransmissores onde combinar 3 iguais ativa vias neurológicas e trata transtornos psiquiátricos",
-  "Jogo de cartas colecionáveis (TCG) onde fármacos são cartas com atributos de potência, biodisponibilidade e interações",
-  "Survival roguelike onde o farmacêutico enfrenta plantões com emergências aleatórias e precisa escolher condutas",
+  "Uma versão do clássico 'Adedonha' farmacológica: sorteia-se uma letra e o jogador deve identificar Fármaco, Mecanismo de Ação, Indicação, Efeito Colateral e Interação",
+  "Quiz progressivo de farmacologia de emergência com cenários de UTI e decisões terapêuticas críticas",
+  "Jogo de identificação de reações adversas: o jogador recebe sinais e sintomas e deve descobrir qual medicamento é o culpado",
+  "Desafio de farmacocinética: ajuste doses em pacientes com insuficiência renal e hepática baseado em parâmetros laboratoriais",
 ];
 
 export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: CreateGameDialogProps) {
@@ -112,8 +113,8 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             Criar Jogo com IA
@@ -124,7 +125,7 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
         </DialogHeader>
 
         {/* Progress steps */}
-        <div className="flex items-center gap-2 py-2">
+        <div className="flex items-center gap-2 py-2 shrink-0">
           {[
             { key: "prompt", label: "Prompt", icon: Lightbulb },
             { key: "review", label: "Plano", icon: FileText },
@@ -163,11 +164,11 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
           })}
         </div>
 
-        <Separator />
+        <Separator className="shrink-0" />
 
         {/* STEP: Prompt */}
         {(step === "prompt" || step === "planning") && (
-          <div className="space-y-4 flex-1">
+          <div className="space-y-4 flex-1 overflow-y-auto">
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
                 Descreva o jogo que deseja criar
@@ -175,7 +176,7 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
               <Textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ex: Jogo estilo Tower Defense onde o jogador posiciona antibióticos para defender contra ondas de bactérias resistentes..."
+                placeholder="Ex: Uma versão do clássico 'Adedonha' farmacológica: sorteia-se uma letra e o jogador identifica Fármaco, Mecanismo, Indicação..."
                 className="min-h-[120px] resize-none"
                 disabled={step === "planning"}
               />
@@ -231,8 +232,8 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
 
         {/* STEP: Review Plan */}
         {(step === "review" || step === "generating") && (
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-2 shrink-0">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">Plano de Implementação</span>
@@ -242,20 +243,22 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
               </Badge>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0 max-h-[45vh] rounded-lg border border-border p-4 bg-muted/30">
-              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm leading-relaxed">
-                {plan}
-              </div>
-            </ScrollArea>
+            <div className="flex-1 min-h-0 rounded-lg border border-border bg-muted/30 overflow-hidden">
+              <ScrollArea className="h-full max-h-[50vh] p-4">
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm leading-relaxed pr-4">
+                  {plan}
+                </div>
+              </ScrollArea>
+            </div>
 
             {error && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm mt-3">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm mt-3 shrink-0">
                 <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                 {error}
               </div>
             )}
 
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between mt-4 shrink-0">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -298,10 +301,10 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
 
         {/* STEP: Done */}
         {step === "done" && game && (
-          <div className="space-y-4 flex-1">
+          <div className="space-y-4 flex-1 overflow-y-auto">
             <div className="flex flex-col items-center text-center py-4">
               <div className="rounded-full bg-primary/10 p-4 mb-3">
-                <CheckCircle2 className="h-10 w-10 text-primary" />
+                <Gamepad2 className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-foreground">{game.title}</h3>
               <p className="text-muted-foreground mt-1">{game.description}</p>
@@ -310,22 +313,41 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
 
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">ID</span>
-                <span className="font-mono text-foreground">{game.id}</span>
+                <span className="text-muted-foreground">Rodadas</span>
+                <span className="font-bold text-foreground">{game.gameConfig.rounds.length}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Ícone</span>
-                <span className="text-foreground">{game.icon}</span>
+                <span className="text-muted-foreground">Cenário</span>
+                <span className="text-foreground">{game.gameConfig.narrative.setting}</span>
               </div>
+              {game.gameConfig.settings.timerPerRound && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Timer por rodada</span>
+                  <span className="text-foreground">{game.gameConfig.settings.timerPerRound}s</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Código</span>
-                <span className="text-foreground">{game.componentCode.split("\n").length} linhas</span>
+                <span className="text-muted-foreground">Pontos por acerto</span>
+                <span className="text-foreground">+{game.gameConfig.settings.pointsPerCorrect}</span>
               </div>
             </div>
 
+            {game.gameConfig.narrative.patientName && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-xs text-muted-foreground mb-1">Paciente</p>
+                <p className="text-sm font-medium text-foreground">
+                  {game.gameConfig.narrative.patientName}
+                  {game.gameConfig.narrative.patientAge && ` — ${game.gameConfig.narrative.patientAge}`}
+                </p>
+                {game.gameConfig.narrative.patientHistory && (
+                  <p className="text-xs text-muted-foreground mt-1">{game.gameConfig.narrative.patientHistory}</p>
+                )}
+              </div>
+            )}
+
             <details className="rounded-lg border border-border bg-muted/30">
               <summary className="px-4 py-2 text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
-                Ver instruções "Como Jogar"
+                📋 Ver instruções "Como Jogar"
               </summary>
               <div className="px-4 pb-3 text-sm whitespace-pre-wrap text-muted-foreground">
                 {game.howToPlay}
@@ -334,12 +356,19 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
 
             <details className="rounded-lg border border-border bg-muted/30">
               <summary className="px-4 py-2 text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
-                Ver código do componente ({game.componentCode.split("\n").length} linhas)
+                🎯 Ver rodadas ({game.gameConfig.rounds.length})
               </summary>
               <ScrollArea className="max-h-[200px]">
-                <pre className="px-4 pb-3 text-xs font-mono overflow-x-auto text-muted-foreground">
-                  {game.componentCode}
-                </pre>
+                <div className="px-4 pb-3 space-y-2">
+                  {game.gameConfig.rounds.map((r, i) => (
+                    <div key={i} className="text-xs border-b border-border pb-2 last:border-0">
+                      <span className="font-medium text-foreground">
+                        {r.phase ? `${r.phase} — ` : `Rodada ${i + 1} — `}
+                      </span>
+                      <span className="text-muted-foreground">{r.question}</span>
+                    </div>
+                  ))}
+                </div>
               </ScrollArea>
             </details>
 
@@ -349,7 +378,7 @@ export default function CreateGameDialog({ open, onOpenChange, onGameCreated }: 
               </Button>
               <Button onClick={handleConfirm} className="gap-2">
                 <CheckCircle2 className="h-4 w-4" />
-                Adicionar à Coleção
+                Adicionar e Jogar
               </Button>
             </div>
           </div>
