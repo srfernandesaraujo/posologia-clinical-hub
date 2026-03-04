@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2 } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import RpgTccGame from "@/components/games/RpgTccGame";
 import VilaSaudeGame from "@/components/games/VilaSaudeGame";
 import LaboratorioInteracoesGame from "@/components/games/LaboratorioInteracoesGame";
@@ -21,9 +21,12 @@ import InsulinaBirdsGame from "@/components/games/InsulinaBirdsGame";
 import AlexKiddHipertensaoGame from "@/components/games/AlexKiddHipertensaoGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
+import CreateGameDialog, { type GeneratedGame } from "@/components/CreateGameDialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const games = [
   {
@@ -619,14 +622,26 @@ Retorne: { "levels": [...] }`,
   },
 };
 
+const AI_GAMES_STORAGE_KEY = "clinical-ai-games-v1";
+
+function loadAiGames(): Array<{ id: string; title: string; description: string; badge: string; icon: string; iconBg: string; iconColor: string; howToPlay: string; aiPrompt: string; componentCode: string }> {
+  try {
+    const raw = localStorage.getItem(AI_GAMES_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
 export default function JogosClinicos() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { isPremium } = useFeatureGating();
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [aiData, setAiData] = useState<Record<string, any>>({});
   const [gameVersions, setGameVersions] = useState<Record<string, number>>(readInitialVersions);
   const [sessionScore, setSessionScore] = useState(0);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [aiGames, setAiGames] = useState(loadAiGames);
 
   const lastInteractionRef = useRef(0);
   const active = activeGame ? gameComponents[activeGame] : null;
@@ -693,6 +708,79 @@ export default function JogosClinicos() {
     void awardGamePoints(activeGame, updateType === "major" ? 30 : 10, `ai-update-${Date.now()}`);
   }, [activeGame, awardGamePoints]);
 
+  const handleGameCreated = useCallback((game: GeneratedGame) => {
+    setAiGames((prev) => {
+      const next = [...prev, game];
+      localStorage.setItem(AI_GAMES_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+    toast.success(`Jogo "${game.title}" adicionado à coleção!`);
+  }, []);
+
+  const handleDeleteAiGame = useCallback((gameId: string) => {
+    setAiGames((prev) => {
+      const next = prev.filter((g) => g.id !== gameId);
+      localStorage.setItem(AI_GAMES_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+    toast.success("Jogo removido da coleção.");
+  }, []);
+
+  // Check if activeGame is an AI-generated game
+  const activeAiGame = aiGames.find((g) => g.id === activeGame);
+
+  if (activeAiGame && activeGame) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
+          ← Voltar aos jogos
+        </Button>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-2xl font-bold">{activeAiGame.title}</h1>
+            <Badge variant="secondary" className="bg-primary/10 text-primary">Criado com IA</Badge>
+          </div>
+          <p className="text-muted-foreground">{activeAiGame.description}</p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/30 p-6 space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Sparkles className="h-5 w-5" />
+            <h3 className="font-semibold">Jogo Gerado por IA</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Este jogo foi criado pela IA. O código do componente React está disponível abaixo para integração na plataforma.
+          </p>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h4 className="text-sm font-medium mb-2">📋 Como Jogar</h4>
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{activeAiGame.howToPlay}</pre>
+          </div>
+
+          <details className="rounded-lg border border-border bg-card">
+            <summary className="px-4 py-3 text-sm font-medium cursor-pointer hover:text-primary transition-colors">
+              💻 Código do Componente ({activeAiGame.componentCode.split("\n").length} linhas)
+            </summary>
+            <div className="px-4 pb-4">
+              <pre className="text-xs font-mono bg-muted p-3 rounded overflow-x-auto max-h-[400px] overflow-y-auto">
+                {activeAiGame.componentCode}
+              </pre>
+            </div>
+          </details>
+
+          <details className="rounded-lg border border-border bg-card">
+            <summary className="px-4 py-3 text-sm font-medium cursor-pointer hover:text-primary transition-colors">
+              🤖 Prompt para Atualização IA
+            </summary>
+            <div className="px-4 pb-4">
+              <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{activeAiGame.aiPrompt}</pre>
+            </div>
+          </details>
+        </div>
+      </div>
+    );
+  }
+
   if (active && activeGame) {
     const GameComponent = active.component;
     const customData = aiData[activeGame] || undefined;
@@ -732,9 +820,17 @@ export default function JogosClinicos() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t("games.title")}</h1>
-        <p className="text-muted-foreground text-lg">{t("games.subtitle")}</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{t("games.title")}</h1>
+          <p className="text-muted-foreground text-lg">{t("games.subtitle")}</p>
+        </div>
+        {isPremium && (
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2 shrink-0">
+            <Plus className="h-4 w-4" />
+            Criar com IA
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -763,7 +859,42 @@ export default function JogosClinicos() {
             </Card>
           );
         })}
+
+        {/* AI-generated games */}
+        {aiGames.map((game) => (
+          <Card
+            key={game.id}
+            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative group"
+            onClick={() => setActiveGame(game.id)}
+          >
+            <CardHeader className="pb-3">
+              <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-2 w-fit">
+                <Sparkles className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-lg">{game.title}</CardTitle>
+              <CardDescription>{game.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+                {game.badge}
+              </span>
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">IA</Badge>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDeleteAiGame(game.id); }}
+                className="ml-auto text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                Remover
+              </button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <CreateGameDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onGameCreated={handleGameCreated}
+      />
     </div>
   );
 }
