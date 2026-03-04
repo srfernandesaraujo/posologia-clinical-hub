@@ -311,25 +311,26 @@ Retorne: { "board": [[...], ...] }`,
   "milionario": {
     component: MilionarioFarmaGame,
     title: "Milionário da Farmacologia",
-    subtitle: "Responda perguntas clínicas e alcance o nível de Chefe de Clínica!",
+    subtitle: "Escolha um contexto clínico e responda 15 perguntas de dificuldade crescente!",
     howToPlay: `💰 Milionário da Farmacologia
 
-📋 Objetivo: Responda 5 perguntas de dificuldade crescente e alcance o nível de Chefe de Clínica.
+📋 Objetivo: Escolha um contexto clínico (Diabetes, Hipertensão, Antibióticos, etc.) e responda 15 perguntas de dificuldade crescente até o nível de Chefe de Clínica.
 
 🕹️ Como jogar:
-1. Leia a pergunta e selecione uma opção
-2. Clique em "Confirmar Decisão Clínica"
-3. Ajudas disponíveis (uma vez cada):
+1. Selecione um contexto clínico na tela inicial
+2. Leia a pergunta e selecione uma opção
+3. Clique em "Confirmar Decisão Clínica"
+4. Ajudas disponíveis (uma vez cada):
    📚 Revisão de Literatura: elimina 2 opções erradas
    📞 Ligar para o Preceptor: dica sobre a resposta
    👥 Reunião Clínica: mostra % de votos
 
 💡 Dica: Use as ajudas nas perguntas mais difíceis. Guarde-as para os níveis finais.`,
-    aiPrompt: `Gere 5 novas perguntas de farmacologia clínica para o jogo Milionário.
-Crie "questions": array de 5 perguntas com dificuldade crescente.
-Cada pergunta: { id (number 1-5), levelName (string: "Interno", "Residente Júnior", "Residente Sênior", "Especialista", "Chefe de Clínica"), question (string - cenário clínico real), options (array de 4 strings), correctIndex (0-3), hint (string - dica do preceptor), audienceVotes (array de 4 numbers que somam ~100) }
-Temas: farmacocinética, interações, efeitos adversos, protocolos, mecanismos de ação. Use cenários clínicos realistas.
-Retorne: { "questions": [...] }`,
+    aiPrompt: `Gere contextos clínicos para o jogo Milionário da Farmacologia.
+Crie "contexts": array de contextos clínicos.
+Cada contexto: { id (string slug), label (string nome do contexto), icon (string emoji), questions (array de 15 perguntas) }
+Cada pergunta: { id (number 1-15), levelName (string: "Interno" para 1-3, "Residente Júnior" para 4-6, "Residente Sênior" para 7-9, "Especialista" para 10-12, "Chefe de Clínica" para 13-15), question (string - cenário clínico real), options (array de 4 strings), correctIndex (0-3), hint (string - dica educativa), audienceVotes (array de 4 numbers que somam ~100) }
+Retorne: { "contexts": [...] }`,
   },
   "domino": {
     component: DominoClinicoGame,
