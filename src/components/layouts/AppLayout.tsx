@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Badge } from "@/components/ui/badge";
+import { SidebarContactForm } from "@/components/SidebarContactForm";
 
 export function AppLayout() {
   const { signOut, isAdmin, isProfessor } = useAuth();
@@ -82,6 +83,7 @@ export function AppLayout() {
         <nav className="flex flex-col gap-1 flex-1">
           {allItems.map((item) => renderNavItem(item))}
         </nav>
+        <SidebarContactForm />
         <div className="border-t border-border pt-3 mt-2 space-y-2">
           <LanguageSwitcher className="px-3" />
           <p className="px-3 text-[10px] text-muted-foreground/50">Posologia Produções</p>
