@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
@@ -24,6 +24,11 @@ const SIMULATOR_OPTIONS = [
   { slug: "insulina", label: "Dose de Insulina" },
 ];
 
+interface ActivityItem {
+  simulatorSlug: string;
+  caseId: string;
+}
+
 function generatePin(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -33,9 +38,8 @@ export default function SalasVirtuais() {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [simulatorSlug, setSimulatorSlug] = useState("");
-  const [caseId, setCaseId] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [activities, setActivities] = useState<ActivityItem[]>([{ simulatorSlug: "", caseId: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
@@ -53,14 +57,31 @@ export default function SalasVirtuais() {
     },
   });
 
-  const { data: cases = [] } = useQuery({
-    queryKey: ["simulator-cases-for-rooms", simulatorSlug],
-    enabled: !!simulatorSlug,
+  // Fetch activities for detail room
+  const { data: roomActivities = [] } = useQuery({
+    queryKey: ["room-activities", detailRoom?.id],
+    enabled: !!detailRoom,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_activities")
+        .select("*")
+        .eq("room_id", detailRoom.id)
+        .order("position");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch cases for all unique simulator slugs in activities
+  const uniqueSlugs = [...new Set(activities.map(a => a.simulatorSlug).filter(Boolean))];
+  const { data: allCases = [] } = useQuery({
+    queryKey: ["simulator-cases-for-rooms", uniqueSlugs],
+    enabled: uniqueSlugs.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("simulator_cases")
-        .select("id, title, difficulty")
-        .eq("simulator_slug", simulatorSlug)
+        .select("id, title, difficulty, simulator_slug")
+        .in("simulator_slug", uniqueSlugs)
         .order("title");
       if (error) throw error;
       return data;
@@ -97,27 +118,50 @@ export default function SalasVirtuais() {
 
   const createRoom = useMutation({
     mutationFn: async () => {
+      const validActivities = activities.filter(a => a.simulatorSlug);
+      if (validActivities.length === 0) throw new Error("Adicione pelo menos uma atividade");
+
       const pin = generatePin();
-      const { error } = await supabase.from("virtual_rooms").insert({
-        pin,
-        title,
-        simulator_slug: simulatorSlug,
-        case_id: caseId || null,
-        created_by: user!.id,
-        expires_at: expiresAt || null,
-      });
-      if (error) throw error;
+
+      // For single activity, keep legacy compatibility
+      const isLegacy = validActivities.length === 1;
+
+      const { data: roomData, error: roomError } = await supabase
+        .from("virtual_rooms")
+        .insert({
+          pin,
+          title,
+          simulator_slug: isLegacy ? validActivities[0].simulatorSlug : null,
+          case_id: isLegacy ? (validActivities[0].caseId || null) : null,
+          created_by: user!.id,
+          expires_at: expiresAt || null,
+        })
+        .select("id")
+        .single();
+      if (roomError) throw roomError;
+
+      // Always insert room_activities for consistency
+      const activityRows = validActivities.map((a, i) => ({
+        room_id: roomData.id,
+        simulator_slug: a.simulatorSlug,
+        case_id: a.caseId || null,
+        position: i,
+      }));
+
+      const { error: actError } = await supabase
+        .from("room_activities")
+        .insert(activityRows);
+      if (actError) throw actError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
       toast.success("Sala criada com sucesso!");
       setCreateOpen(false);
       setTitle("");
-      setSimulatorSlug("");
-      setCaseId("");
+      setActivities([{ simulatorSlug: "", caseId: "" }]);
       setExpiresAt("");
     },
-    onError: () => toast.error("Erro ao criar sala"),
+    onError: (err: any) => toast.error(err.message || "Erro ao criar sala"),
   });
 
   const toggleRoom = useMutation({
@@ -144,10 +188,31 @@ export default function SalasVirtuais() {
     toast.success(`PIN ${pin} copiado!`);
   };
 
-  const getParticipantName = (participantId: string) => {
-    const p = participants.find((p: any) => p.id === participantId);
-    return p?.participant_name || "Desconhecido";
+  const addActivity = () => setActivities([...activities, { simulatorSlug: "", caseId: "" }]);
+  const removeActivity = (i: number) => {
+    if (activities.length <= 1) return;
+    setActivities(activities.filter((_, idx) => idx !== i));
   };
+  const updateActivity = (i: number, field: keyof ActivityItem, value: string) => {
+    const copy = [...activities];
+    copy[i] = { ...copy[i], [field]: value };
+    if (field === "simulatorSlug") copy[i].caseId = "";
+    setActivities(copy);
+  };
+  const moveActivity = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= activities.length) return;
+    const copy = [...activities];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+    setActivities(copy);
+  };
+
+  const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
+
+  const getSimulatorLabel = (slug: string) =>
+    SIMULATOR_OPTIONS.find(s => s.slug === slug)?.label || slug;
+
+  const isExam = (room: any) => !room.simulator_slug;
 
   if (!canUseVirtualRooms) {
     return (
@@ -193,7 +258,14 @@ export default function SalasVirtuais() {
             <Card key={room.id} className="relative">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
+                    {isExam(room) && (
+                      <Badge variant="outline" className="text-xs">
+                        <ClipboardList className="h-3 w-3 mr-1" />Prova
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: !room.is_active })}>
                       {room.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -213,9 +285,15 @@ export default function SalasVirtuais() {
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Simulador: {SIMULATOR_OPTIONS.find(s => s.slug === room.simulator_slug)?.label || room.simulator_slug}
-                </p>
+                {room.simulator_slug ? (
+                  <p className="text-sm text-muted-foreground">
+                    Simulador: {getSimulatorLabel(room.simulator_slug)}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Prova com múltiplos simuladores
+                  </p>
+                )}
                 {room.expires_at && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -233,34 +311,86 @@ export default function SalasVirtuais() {
 
       {/* Create Room Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Criar Nova Sala Virtual</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Título da Sala</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2025.1 – Farmácia Clínica" /></div>
             <div>
-              <Label>Simulador</Label>
-              <Select value={simulatorSlug} onValueChange={v => { setSimulatorSlug(v); setCaseId(""); }}>
-                <SelectTrigger><SelectValue placeholder="Selecione o simulador" /></SelectTrigger>
-                <SelectContent>
-                  {SIMULATOR_OPTIONS.map(s => <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Título da Sala</Label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2025.1 – Farmácia Clínica" />
             </div>
-            {simulatorSlug && cases.length > 0 && (
-              <div>
-                <Label>Caso Clínico (opcional – será o caso usado na sala)</Label>
-                <Select value={caseId} onValueChange={setCaseId}>
-                  <SelectTrigger><SelectValue placeholder="Qualquer caso disponível" /></SelectTrigger>
-                  <SelectContent>
-                    {cases.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>)}
-                  </SelectContent>
-                </Select>
+
+            <Separator />
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-base font-semibold">Atividades da Prova</Label>
+                <Button variant="outline" size="sm" onClick={addActivity}>
+                  <Plus className="h-4 w-4 mr-1" />Adicionar Atividade
+                </Button>
               </div>
-            )}
-            <div><Label>Data de Expiração (opcional)</Label><Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} /></div>
+              <div className="space-y-3">
+                {activities.map((act, i) => {
+                  const casesForSlug = getCasesForSlug(act.simulatorSlug);
+                  return (
+                    <Card key={i} className="border-dashed">
+                      <CardContent className="pt-4 pb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-muted-foreground">Atividade {i + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, -1)} disabled={i === 0}>
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, 1)} disabled={i === activities.length - 1}>
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                            {activities.length > 1 && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeActivity(i)}>
+                                <X className="h-3 w-3 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Simulador</Label>
+                            <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
+                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                              <SelectContent>
+                                {SIMULATOR_OPTIONS.map(s => <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {act.simulatorSlug && casesForSlug.length > 0 && (
+                            <div>
+                              <Label className="text-xs">Caso Clínico (opcional)</Label>
+                              <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
+                                <SelectTrigger><SelectValue placeholder="Qualquer caso" /></SelectTrigger>
+                                <SelectContent>
+                                  {casesForSlug.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <Label>Data de Expiração (opcional)</Label>
+              <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => createRoom.mutate()} disabled={!title || !simulatorSlug || createRoom.isPending}>
+            <Button
+              onClick={() => createRoom.mutate()}
+              disabled={!title || activities.every(a => !a.simulatorSlug) || createRoom.isPending}
+            >
               {createRoom.isPending ? "Criando..." : "Criar Sala"}
             </Button>
           </DialogFooter>
@@ -270,7 +400,25 @@ export default function SalasVirtuais() {
       {/* Room Detail Dialog */}
       <Dialog open={!!detailRoom} onOpenChange={() => setDetailRoom(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{detailRoom?.title} – Participantes</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{detailRoom?.title} – Detalhes</DialogTitle></DialogHeader>
+
+          {/* Show activities if exam */}
+          {detailRoom && isExam(detailRoom) && roomActivities.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold mb-2">Atividades da Prova</h3>
+              <div className="space-y-1">
+                {roomActivities.map((act: any, i: number) => (
+                  <div key={act.id} className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline" className="text-xs">{i + 1}</Badge>
+                    <span>{getSimulatorLabel(act.simulator_slug)}</span>
+                  </div>
+                ))}
+              </div>
+              <Separator className="mt-3" />
+            </div>
+          )}
+
+          <h3 className="text-sm font-semibold mb-2">Participantes</h3>
           {participants.length === 0 ? (
             <p className="text-muted-foreground text-sm py-4">Nenhum participante entrou na sala ainda.</p>
           ) : (
@@ -306,17 +454,24 @@ export default function SalasVirtuais() {
                         <>
                           <Separator className="my-2" />
                           <div className="space-y-1">
-                            {pSubmissions.map((s: any) => (
-                              <div key={s.id} className="flex items-center justify-between text-sm">
-                                <span>Etapa {s.step_index + 1}</span>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-muted-foreground">{Math.floor(s.time_spent_seconds / 60)}m{s.time_spent_seconds % 60}s</span>
-                                  <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-green-100 text-green-800" : ""}>
-                                    {s.score}%
-                                  </Badge>
+                            {pSubmissions.map((s: any) => {
+                              // Find activity info if available
+                              const activity = roomActivities.find((a: any) => a.id === s.activity_id);
+                              const actLabel = activity
+                                ? `${getSimulatorLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
+                                : `Etapa ${s.step_index + 1}`;
+                              return (
+                                <div key={s.id} className="flex items-center justify-between text-sm">
+                                  <span>{actLabel}</span>
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-muted-foreground">{Math.floor(s.time_spent_seconds / 60)}m{s.time_spent_seconds % 60}s</span>
+                                    <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                      {s.score}%
+                                    </Badge>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                             <p className="text-xs text-muted-foreground mt-1">Tempo total: {Math.floor(totalTime / 60)}m{totalTime % 60}s</p>
                           </div>
                         </>

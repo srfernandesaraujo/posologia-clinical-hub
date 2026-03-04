@@ -36,6 +36,10 @@ export function useVirtualRoomCase(simulatorSlug: string) {
             }
             setLoading(false);
           });
+      } else if (ctx.simulatorSlug === simulatorSlug) {
+        // Room without a specific case (or exam activity without case)
+        roomCtxRef.current = ctx;
+        setIsVirtualRoom(true);
       }
     } catch {}
   }, [simulatorSlug]);
@@ -57,9 +61,36 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         score: opts.score,
         actions: opts.actions as any,
         time_spent_seconds: opts.timeSpentSeconds ?? 0,
+        activity_id: ctx.activityId || null,
       });
       if (!error) {
         setSubmitted(true);
+
+        // If exam mode, navigate to next activity or back to results
+        if (ctx.allActivities && ctx.activityIndex !== undefined) {
+          const nextIndex = ctx.activityIndex + 1;
+          if (nextIndex < ctx.totalActivities) {
+            // Navigate to next activity
+            const nextAct = ctx.allActivities[nextIndex];
+            sessionStorage.setItem("virtualRoom", JSON.stringify({
+              ...ctx,
+              caseId: nextAct.caseId,
+              simulatorSlug: nextAct.simulatorSlug,
+              activityId: nextAct.id,
+              activityIndex: nextIndex,
+            }));
+            // Small delay for UX
+            setTimeout(() => {
+              navigate(`/sala/simulador/${nextAct.simulatorSlug}`);
+            }, 1500);
+          } else {
+            // All done - clear and go home
+            setTimeout(() => {
+              sessionStorage.removeItem("virtualRoom");
+              navigate("/");
+            }, 2000);
+          }
+        }
       } else {
         console.error("Error submitting room results:", error);
       }
@@ -73,5 +104,9 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     navigate("/");
   };
 
-  return { virtualRoomCase, isVirtualRoom, loading, goBack, submitResults, submitted };
+  const examProgress = roomCtxRef.current?.allActivities
+    ? { current: (roomCtxRef.current.activityIndex ?? 0) + 1, total: roomCtxRef.current.totalActivities }
+    : null;
+
+  return { virtualRoomCase, isVirtualRoom, loading, goBack, submitResults, submitted, examProgress };
 }
