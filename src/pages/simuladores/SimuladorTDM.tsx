@@ -10,6 +10,8 @@ import { ArrowLeft, Sparkles, Loader2, AlertTriangle, CheckCircle, Activity, Che
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 
 interface CaseData {
@@ -74,7 +76,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 
 export default function SimuladorTDM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("tdm", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("tdm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tdm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");
@@ -144,8 +146,11 @@ export default function SimuladorTDM() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
-      <h2 className="text-xl font-bold mb-4">{c.title}</h2>
+      <ExamBanner simulatorSlug="tdm" caseTitle={c?.title} examProgress={examProgress} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Patient & Labs */}
         <Card>

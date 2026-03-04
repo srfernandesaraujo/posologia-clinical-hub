@@ -1,6 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
+interface ExamFeedback {
+  score: number;
+  simulatorSlug: string;
+  caseTitle?: string;
+  isFinalActivity: boolean;
+}
 
 export function useVirtualRoomCase(simulatorSlug: string) {
   const navigate = useNavigate();
@@ -8,6 +15,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
   const [isVirtualRoom, setIsVirtualRoom] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [examFeedback, setExamFeedback] = useState<ExamFeedback | null>(null);
   const roomCtxRef = useRef<any>(null);
 
   useEffect(() => {
@@ -37,7 +45,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
             setLoading(false);
           });
       } else if (ctx.simulatorSlug === simulatorSlug) {
-        // Room without a specific case (or exam activity without case)
         roomCtxRef.current = ctx;
         setIsVirtualRoom(true);
       }
@@ -66,30 +73,15 @@ export function useVirtualRoomCase(simulatorSlug: string) {
       if (!error) {
         setSubmitted(true);
 
-        // If exam mode, navigate to next activity or back to results
+        // If exam mode, show feedback overlay instead of auto-navigating
         if (ctx.allActivities && ctx.activityIndex !== undefined) {
-          const nextIndex = ctx.activityIndex + 1;
-          if (nextIndex < ctx.totalActivities) {
-            // Navigate to next activity
-            const nextAct = ctx.allActivities[nextIndex];
-            sessionStorage.setItem("virtualRoom", JSON.stringify({
-              ...ctx,
-              caseId: nextAct.caseId,
-              simulatorSlug: nextAct.simulatorSlug,
-              activityId: nextAct.id,
-              activityIndex: nextIndex,
-            }));
-            // Small delay for UX
-            setTimeout(() => {
-              navigate(`/sala/simulador/${nextAct.simulatorSlug}`);
-            }, 1500);
-          } else {
-            // All done - clear and go home
-            setTimeout(() => {
-              sessionStorage.removeItem("virtualRoom");
-              navigate("/");
-            }, 2000);
-          }
+          const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
+          setExamFeedback({
+            score: opts.score,
+            simulatorSlug: ctx.simulatorSlug,
+            caseTitle: virtualRoomCase?.title,
+            isFinalActivity: isFinal,
+          });
         }
       } else {
         console.error("Error submitting room results:", error);
@@ -98,6 +90,27 @@ export function useVirtualRoomCase(simulatorSlug: string) {
       console.error("Error submitting room results:", err);
     }
   };
+
+  const proceedToNext = useCallback(() => {
+    const ctx = roomCtxRef.current;
+    if (!ctx) return;
+
+    const nextIndex = ctx.activityIndex + 1;
+    if (nextIndex < ctx.totalActivities) {
+      const nextAct = ctx.allActivities[nextIndex];
+      sessionStorage.setItem("virtualRoom", JSON.stringify({
+        ...ctx,
+        caseId: nextAct.caseId,
+        simulatorSlug: nextAct.simulatorSlug,
+        activityId: nextAct.id,
+        activityIndex: nextIndex,
+      }));
+      navigate(`/sala/simulador/${nextAct.simulatorSlug}`);
+    } else {
+      sessionStorage.removeItem("virtualRoom");
+      navigate("/");
+    }
+  }, [navigate]);
 
   const goBack = () => {
     sessionStorage.removeItem("virtualRoom");
@@ -108,5 +121,15 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     ? { current: (roomCtxRef.current.activityIndex ?? 0) + 1, total: roomCtxRef.current.totalActivities }
     : null;
 
-  return { virtualRoomCase, isVirtualRoom, loading, goBack, submitResults, submitted, examProgress };
+  return {
+    virtualRoomCase,
+    isVirtualRoom,
+    loading,
+    goBack,
+    submitResults,
+    submitted,
+    examProgress,
+    examFeedback,
+    proceedToNext,
+  };
 }

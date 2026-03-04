@@ -12,6 +12,8 @@ import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, 
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -54,7 +56,7 @@ function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) 
 
 export default function SimuladorInsulina() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("insulina", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("insulina");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("insulina");
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
 
@@ -189,7 +191,11 @@ export default function SimuladorInsulina() {
     const p = c.patient;
     return (
       <div className="max-w-3xl mx-auto">
+        {examFeedback && examProgress && (
+          <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+        )}
         {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
+        <ExamBanner simulatorSlug="insulina" caseTitle={c?.title} examProgress={examProgress} />
         <Card>
           <CardHeader><CardTitle>Prontuário de Admissão</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">

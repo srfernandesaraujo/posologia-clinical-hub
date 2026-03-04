@@ -8,6 +8,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 // ─── Drug Library ───
 interface Drug {
@@ -114,7 +116,7 @@ export default function SimuladorBombaInfusao() {
   const isVirtualRoom = location.pathname.startsWith("/sala");
 
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("bomba-infusao", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults } = useVirtualRoomCase("bomba-infusao");
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("bomba-infusao");
 
   const [screen, setScreen] = useState<"dashboard" | "sim">("dashboard");
   const [activeCase, setActiveCase] = useState<InfusionCase | null>(null);
@@ -424,9 +426,13 @@ export default function SimuladorBombaInfusao() {
   // ═══ SIMULATOR SCREEN ═══
   return (
     <div className="max-w-5xl mx-auto">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       <Button variant="ghost" onClick={isVR ? goBack : backToDashboard} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" />{isVR ? "Voltar à Home" : "Voltar aos Casos"}
       </Button>
+      <ExamBanner simulatorSlug="bomba-infusao" caseTitle={activeCase?.title} examProgress={examProgress} />
       <h1 className="text-2xl font-bold mb-2">Simulador de Bomba de Infusão</h1>
 
       {/* Case context card */}

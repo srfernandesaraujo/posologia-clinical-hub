@@ -10,6 +10,8 @@ import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, ChevronDown, Chevro
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 interface Antibiogram { antibiotic: string; result: "S" | "R"; mic?: string; }
 interface CaseData {
@@ -53,7 +55,7 @@ const BUILT_IN: CaseData[] = [
 
 export default function SimuladorAntimicrobianos() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("antimicrobianos", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults } = useVirtualRoomCase("antimicrobianos");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("antimicrobianos");
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [day1Antibiotics, setDay1Antibiotics] = useState<string[]>([]);
@@ -147,8 +149,11 @@ export default function SimuladorAntimicrobianos() {
   if (screen === "day1") {
     return (
       <div className="max-w-6xl mx-auto">
+        {examFeedback && examProgress && (
+          <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+        )}
         {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
-        <Timeline />
+        <ExamBanner simulatorSlug="antimicrobianos" caseTitle={c?.title} examProgress={examProgress} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="h-4 w-4" />Ficha do Paciente – Admissão</CardTitle></CardHeader>
