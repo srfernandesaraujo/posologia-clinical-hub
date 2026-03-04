@@ -689,60 +689,6 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Game over dialog */}
-      <Dialog open={gameState === "gameOver"} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle className="text-red-500">💔 Game Over</DialogTitle>
-          </DialogHeader>
-          <div className="text-center space-y-2">
-            <p className="text-lg">O paciente não foi tratado adequadamente.</p>
-            <p className="text-muted-foreground">Pontuação final: {score} pontos</p>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleRestart} variant="outline" className="w-full gap-2">
-              <RotateCcw className="h-4 w-4" /> Recomeçar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Victory dialog */}
-      <Dialog open={gameState === "victory"} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              🎉 Parabéns! Jogo Completo!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="text-center space-y-3">
-            <div className="flex justify-center gap-1">
-              {starsPerLevel.map((s, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-xs text-muted-foreground mb-1">F{i + 1}</p>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 3 }).map((_, j) => (
-                      <Star key={j} className={`h-4 w-4 ${j < s ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-2xl font-bold">{score} pontos</p>
-            <p className="text-muted-foreground">PA final: {pa} mmHg {pa < 140 ? "✅ Controlada!" : "⚠️ Ainda alta"}</p>
-            <div className="flex gap-2 mt-2">
-              {lives > 0 && <Badge variant="secondary">+{lives * 50} bônus vidas</Badge>}
-              {pa < 140 && <Badge className="bg-green-600 text-white">+100 bônus PA</Badge>}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleRestart} variant="outline" className="w-full gap-2">
-              <RotateCcw className="h-4 w-4" /> Jogar Novamente
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
