@@ -23,6 +23,7 @@ import PandemicFarmaGame from "@/components/games/PandemicFarmaGame";
 import FarmaciaPlantaoGame from "@/components/games/FarmaciaPlantaoGame";
 import CodigoAzulGame from "@/components/games/CodigoAzulGame";
 import DetetiveToxicologicoGame from "@/components/games/DetetiveToxicologicoGame";
+import BatalhaNavalClinicaGame from "@/components/games/BatalhaNavalClinicaGame";
 import DynamicAIGame from "@/components/games/DynamicAIGame";
 import type { AIGameConfig } from "@/components/games/DynamicAIGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
@@ -75,6 +76,7 @@ const games: Array<{
   { id: "farmacia-plantao", title: "Farmácia de Plantão", description: "Triagem de prescrições sob pressão: verifique doses, interações e oriente pacientes.", icon: Pill, iconBg: "bg-orange-100", iconColor: "text-orange-600", badge: "Gestão/Tempo", category: "simulacao" },
   { id: "codigo-azul", title: "Código Azul", description: "Simulador ACLS: lidere uma parada cardiorrespiratória com timer real.", icon: Heart, iconBg: "bg-red-100", iconColor: "text-red-600", badge: "ACLS", category: "emergencia" },
   { id: "detetive-toxico", title: "Detetive Toxicológico", description: "Investigue intoxicações: identifique toxidromes e administre o antídoto correto.", icon: Search, iconBg: "bg-amber-100", iconColor: "text-amber-600", badge: "Investigação", category: "investigacao" },
+  { id: "batalha-naval", title: "Batalha Naval Clínica", description: "Localize órgãos ocultos no tabuleiro e responda perguntas de fisiopatologia para confirmar o acerto.", icon: Crosshair, iconBg: "bg-sky-100", iconColor: "text-sky-600", badge: "8×8 / 30 tiros", category: "investigacao" },
 ];
 
 const GAME_VERSION_STORAGE_KEY = "clinical-games-version-map-v1";
@@ -418,6 +420,28 @@ Retorne: { "scenarios": [...] }`,
 💡 Dica: Pupilas são a chave: miose = opioides. Midríase = anticolinérgicos.`,
     aiPrompt: `Gere novos casos para o Detetive Toxicológico.
 Retorne: { "cases": [...] }`,
+  },
+  "batalha-naval": {
+    component: BatalhaNavalClinicaGame,
+    title: "Batalha Naval Clínica",
+    subtitle: "Localize órgãos ocultos e responda perguntas clínicas.",
+    howToPlay: `⚓ Batalha Naval Clínica
+
+📋 Objetivo: Encontre os 6 órgãos ocultos no tabuleiro 8×8 e responda perguntas de fisiopatologia/farmacologia para confirmar cada acerto.
+
+🕹️ Como jogar:
+1. Clique em uma coordenada para "atirar"
+2. Se acertar água → célula azul, sem pergunta
+3. Se acertar um órgão → responda a pergunta clínica
+4. Resposta correta → acerto confirmado (verde) + 10 pontos
+5. Resposta errada → acerto perdido (vermelho)
+6. Afunde todos os 6 órgãos antes de gastar os 30 tiros!
+
+💡 Dica: Observe os acertos para deduzir a orientação dos órgãos (horizontal ou vertical) e economize tiros.`,
+    aiPrompt: `Gere novas perguntas para a Batalha Naval Clínica, organizadas por órgão.
+Órgãos: Coração, Fígado, Rins, Pulmões, Cérebro, Pâncreas.
+Para cada órgão, gere 5 perguntas com: question, options (4 alternativas), correctIndex (0-3), explanation, reference.
+Retorne: { "questions": { "coracao": [...], "figado": [...], "rins": [...], "pulmoes": [...], "cerebro": [...], "pancreas": [...] } }`,
   },
 };
 
