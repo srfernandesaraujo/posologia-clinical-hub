@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
+import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
+
+const SIMULATOR_LABELS: Record<string, string> = {
+  prm: "PRM – Problemas Relacionados a Medicamentos",
+  antimicrobianos: "Antimicrobianos / Stewardship",
+  tdm: "TDM – Monitoramento Terapêutico",
+  acompanhamento: "Acompanhamento Farmacoterapêutico",
+  insulina: "Dose de Insulina",
+};
 
 export default function SalaVirtualAluno() {
   const [searchParams] = useSearchParams();
@@ -19,7 +27,8 @@ export default function SalaVirtualAluno() {
   const [pin, setPin] = useState(pinFromUrl);
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"pin" | "identify" | "ready">(pinFromUrl ? "pin" : "pin");
+  const [step, setStep] = useState<"pin" | "identify" | "ready">("pin");
+  const [activities, setActivities] = useState<any[]>([]);
 
   // Identification
   const [participantName, setParticipantName] = useState("");
@@ -46,19 +55,20 @@ export default function SalaVirtualAluno() {
       .eq("pin", p)
       .eq("is_active", true)
       .maybeSingle();
-    setLoading(false);
 
     if (error || !data) {
+      setLoading(false);
       toast.error("Sala não encontrada ou inativa. Verifique o PIN.");
       return;
     }
 
     if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      setLoading(false);
       toast.error("Esta sala já expirou.");
       return;
     }
 
-    // Check 7-day inactivity: get most recent participant join
+    // Check 7-day inactivity
     const { data: lastParticipant } = await supabase
       .from("room_participants")
       .select("joined_at")
@@ -73,13 +83,22 @@ export default function SalaVirtualAluno() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     if (lastActivity < sevenDaysAgo) {
-      // Auto-deactivate
       await supabase.from("virtual_rooms").update({ is_active: false }).eq("id", data.id);
+      setLoading(false);
       toast.error("Esta sala foi desativada por inatividade (7 dias sem acessos).");
       return;
     }
 
+    // Fetch room activities
+    const { data: acts } = await supabase
+      .from("room_activities")
+      .select("*")
+      .eq("room_id", data.id)
+      .order("position");
+
     setRoom(data);
+    setActivities(acts || []);
+    setLoading(false);
     setStep("identify");
   };
 
@@ -122,16 +141,48 @@ export default function SalaVirtualAluno() {
     setStep("ready");
   };
 
+  const isExam = activities.length > 1;
+  const isLegacy = !isExam && room?.simulator_slug;
+
   const goToSimulator = () => {
-    // Store room context in sessionStorage for the simulator to use
+    if (isLegacy) {
+      // Legacy single-simulator mode
+      sessionStorage.setItem("virtualRoom", JSON.stringify({
+        roomId: room.id,
+        participantId,
+        caseId: room.case_id,
+        simulatorSlug: room.simulator_slug,
+        participantName,
+      }));
+      navigate(`/sala/simulador/${room.simulator_slug}`);
+    } else {
+      // Exam mode: start first activity
+      startActivity(0);
+    }
+  };
+
+  const startActivity = (index: number) => {
+    const act = activities[index];
+    if (!act) return;
+
     sessionStorage.setItem("virtualRoom", JSON.stringify({
       roomId: room.id,
       participantId,
-      caseId: room.case_id,
-      simulatorSlug: room.simulator_slug,
+      caseId: act.case_id,
+      simulatorSlug: act.simulator_slug,
       participantName,
+      // Exam context
+      activityId: act.id,
+      activityIndex: index,
+      totalActivities: activities.length,
+      allActivities: activities.map((a: any) => ({
+        id: a.id,
+        simulatorSlug: a.simulator_slug,
+        caseId: a.case_id,
+        position: a.position,
+      })),
     }));
-    navigate(`/sala/simulador/${room.simulator_slug}`);
+    navigate(`/sala/simulador/${act.simulator_slug}`);
   };
 
   if (step === "pin") {
@@ -172,7 +223,7 @@ export default function SalaVirtualAluno() {
       <div className="min-h-[70vh] flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <Button variant="ghost" size="sm" onClick={() => { setStep("pin"); setRoom(null); }} className="w-fit mb-2">
+            <Button variant="ghost" size="sm" onClick={() => { setStep("pin"); setRoom(null); setActivities([]); }} className="w-fit mb-2">
               <ArrowLeft className="h-4 w-4 mr-1" />Voltar
             </Button>
             <CardTitle className="text-xl">{room?.title}</CardTitle>
@@ -221,17 +272,43 @@ export default function SalaVirtualAluno() {
   // Ready
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <Card className="w-full max-w-md text-center">
-        <CardContent className="pt-8 space-y-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-8 space-y-4 text-center">
           <div className="mx-auto inline-flex rounded-full bg-green-100 p-4 dark:bg-green-900/30">
-            <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+            {isExam ? (
+              <ClipboardList className="h-10 w-10 text-green-600 dark:text-green-400" />
+            ) : (
+              <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+            )}
           </div>
-          <h2 className="text-2xl font-bold">Tudo pronto!</h2>
+          <h2 className="text-2xl font-bold">
+            {isExam ? "Prova de Simulação" : "Tudo pronto!"}
+          </h2>
           <p className="text-muted-foreground">
             Olá, <strong>{participantName}</strong>! Você está na sala <strong>{room?.title}</strong>.
           </p>
+
+          {isExam && (
+            <div className="text-left space-y-2 bg-muted/50 rounded-lg p-4">
+              <p className="text-sm font-semibold">Atividades ({activities.length}):</p>
+              {activities.map((act: any, i: number) => (
+                <div key={act.id} className="flex items-center gap-2 text-sm">
+                  <Badge variant="outline" className="text-xs min-w-[24px] justify-center">{i + 1}</Badge>
+                  <span>{SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground mt-2">
+                Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
+              </p>
+            </div>
+          )}
+
           <Button onClick={goToSimulator} size="lg" className="w-full">
-            Iniciar Simulador
+            {isExam ? (
+              <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+            ) : (
+              "Iniciar Simulador"
+            )}
           </Button>
         </CardContent>
       </Card>

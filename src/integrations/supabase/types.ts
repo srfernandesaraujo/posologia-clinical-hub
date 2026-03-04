@@ -190,6 +190,48 @@ export type Database = {
         }
         Relationships: []
       }
+      room_activities: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          id: string
+          position: number
+          room_id: string
+          simulator_slug: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          room_id: string
+          simulator_slug: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          room_id?: string
+          simulator_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_activities_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_activities_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           group_members: Json | null
@@ -228,6 +270,7 @@ export type Database = {
       room_submissions: {
         Row: {
           actions: Json
+          activity_id: string | null
           id: string
           participant_id: string
           room_id: string
@@ -238,6 +281,7 @@ export type Database = {
         }
         Insert: {
           actions?: Json
+          activity_id?: string | null
           id?: string
           participant_id: string
           room_id: string
@@ -248,6 +292,7 @@ export type Database = {
         }
         Update: {
           actions?: Json
+          activity_id?: string | null
           id?: string
           participant_id?: string
           room_id?: string
@@ -257,6 +302,13 @@ export type Database = {
           time_spent_seconds?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "room_submissions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "room_activities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "room_submissions_participant_id_fkey"
             columns: ["participant_id"]
@@ -555,7 +607,7 @@ export type Database = {
           id: string
           is_active: boolean
           pin: string
-          simulator_slug: string
+          simulator_slug: string | null
           title: string
         }
         Insert: {
@@ -567,7 +619,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           pin: string
-          simulator_slug: string
+          simulator_slug?: string | null
           title: string
         }
         Update: {
@@ -579,7 +631,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           pin?: string
-          simulator_slug?: string
+          simulator_slug?: string | null
           title?: string
         }
         Relationships: [
