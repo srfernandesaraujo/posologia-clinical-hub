@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles, Shield, Pill, Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type MouseEvent, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
@@ -19,6 +19,10 @@ import LabirintoHemogramaGame from "@/components/games/LabirintoHemogramaGame";
 import BolsaMetabolicaGame from "@/components/games/BolsaMetabolicaGame";
 import InsulinaBirdsGame from "@/components/games/InsulinaBirdsGame";
 import AlexKiddHipertensaoGame from "@/components/games/AlexKiddHipertensaoGame";
+import PandemicFarmaGame from "@/components/games/PandemicFarmaGame";
+import FarmaciaPlantaoGame from "@/components/games/FarmaciaPlantaoGame";
+import CodigoAzulGame from "@/components/games/CodigoAzulGame";
+import DetetiveToxicologicoGame from "@/components/games/DetetiveToxicologicoGame";
 import GameHeader, { type GameUpdateType } from "@/components/games/GameHeader";
 import GameRanking from "@/components/games/GameRanking";
 import CreateGameDialog, { type GeneratedGame } from "@/components/CreateGameDialog";
@@ -172,6 +176,42 @@ const games = [
     iconBg: "bg-cyan-100",
     iconColor: "text-cyan-600",
     badge: "5 fases",
+  },
+  {
+    id: "pandemic-farma",
+    title: "Pandemic Farma",
+    description: "Tower Defense: posicione antibióticos para deter ondas de bactérias resistentes.",
+    icon: Shield,
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    badge: "Tower Defense",
+  },
+  {
+    id: "farmacia-plantao",
+    title: "Farmácia de Plantão",
+    description: "Triagem de prescrições sob pressão: verifique doses, interações e oriente pacientes.",
+    icon: Pill,
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-600",
+    badge: "Gestão/Tempo",
+  },
+  {
+    id: "codigo-azul",
+    title: "Código Azul",
+    description: "Simulador ACLS: lidere uma parada cardiorrespiratória com timer real.",
+    icon: Heart,
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    badge: "ACLS",
+  },
+  {
+    id: "detetive-toxico",
+    title: "Detetive Toxicológico",
+    description: "Investigue intoxicações: identifique toxidromes e administre o antídoto correto.",
+    icon: Search,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badge: "Investigação",
   },
 ];
 
@@ -619,6 +659,93 @@ Cada fase: {
 }
 Use cenários diferentes: HAS na gestação, HAS resistente, HAS no idoso, emergência hipertensiva, HAS + IRC.
 Retorne: { "levels": [...] }`,
+  },
+  "pandemic-farma": {
+    component: PandemicFarmaGame,
+    title: "Pandemic Farma — Tower Defense de Antimicrobianos",
+    subtitle: "Posicione antibióticos para deter ondas de bactérias resistentes no hospital.",
+    howToPlay: `🛡️ Pandemic Farma — Tower Defense
+
+📋 Objetivo: Proteja os pacientes posicionando antibióticos (torres) para eliminar ondas de bactérias resistentes.
+
+🕹️ Como jogar:
+1. Selecione um antibiótico no painel inferior
+2. Clique numa posição vazia no mapa para posicionar
+3. Cada antibiótico tem espectro, custo e efeito adverso
+4. Bactérias resistentes ignoram antibióticos fora do espectro
+5. Gerencie o orçamento da CCIH — antibióticos de último recurso custam mais
+6. Clique numa torre para vendê-la (50% reembolso)
+
+⚠️ Bactérias que chegam aos pacientes causam dano!
+💡 Dica: MRSA exige Vancomicina. KPC exige Polimixina B. Não desperdice carbapenêmicos.`,
+    aiPrompt: `Gere novas ondas para o Tower Defense Pandemic Farma.
+Crie "waves": array de 5 ondas com { id (number), description (string), mechanism (string explicação do mecanismo de resistência), bacteria: array de 4-6 bactérias com { name, type ("gram+"|"gram-"|"mrsa"|"kpc"|"anaerob"), hp, maxHp, speed (0.3-1.3), lane (0-2), resistances (array de ids de antibióticos), icon (emoji), reward (number) } }
+Retorne: { "waves": [...] }`,
+  },
+  "farmacia-plantao": {
+    component: FarmaciaPlantaoGame,
+    title: "Farmácia de Plantão — Triagem em Tempo Real",
+    subtitle: "Verifique prescrições, identifique erros e oriente pacientes sob pressão temporal.",
+    howToPlay: `💊 Farmácia de Plantão
+
+📋 Objetivo: Analise prescrições sob pressão temporal. Dispense as corretas, devolva as com erro.
+
+🕹️ Como jogar:
+1. Leia a prescrição e os medicamentos listados
+2. DISPENSAR: se a prescrição estiver correta
+3. DEVOLVER: se identificar erro (dose, interação, contraindicação)
+4. ORIENTAR: fornecer orientação farmacêutica ao paciente
+5. Timer ativo — pacientes impacientes saem da fila!
+
+⚠️ Dispensar prescrição com erro = evento adverso visível
+💡 Dica: Preste atenção especial a interações medicamentosas e doses pediátricas.`,
+    aiPrompt: `Gere novos turnos para Farmácia de Plantão.
+Crie "shifts": array de 3 turnos com { id, name, sector, timeLimit, description, prescriptions: array de 3 prescrições com { patientName, age, sector, medications (array de { name, dose, route, frequency }), hasError (boolean), errorType, errorDescription, errorMed, correctAction, explanation, urgency ("normal"|"urgent"|"critical"), orientationNeeded, reference } }
+Retorne: { "shifts": [...] }`,
+  },
+  "codigo-azul": {
+    component: CodigoAzulGame,
+    title: "Código Azul — Simulador ACLS",
+    subtitle: "Lidere uma parada cardiorrespiratória seguindo o protocolo ACLS.",
+    howToPlay: `❤️ Código Azul — Simulador ACLS
+
+📋 Objetivo: Siga o protocolo ACLS, administre medicações e encontre a causa reversível para obter ROSC.
+
+🕹️ Como jogar:
+1. Identifique o ritmo: FV/TV (chocável) ou AESP/Assistolia (não chocável)
+2. Inicie RCP de alta qualidade imediatamente
+3. Desfibrilar apenas ritmos chocáveis!
+4. Epinefrina 1mg IV a cada 3-5min
+5. Amiodarona 300mg para FV/TV refratária
+6. Identifique a causa reversível (5H/5T)
+7. Verifique ROSC quando a chance estiver alta
+
+⚠️ Desfibrilar assistolia = erro grave!
+💡 Dica: Sempre comece com compressões. Sem RCP, nenhuma droga funciona.`,
+    aiPrompt: `Gere novos cenários ACLS para o Código Azul.
+Crie "scenarios": array de 4 cenários com { id, title, patientName, patientAge, history, initialRhythm ("fv"|"tv"|"aesp"|"assistolia"), reversibleCause, reversibleCauseHint, reversibleCauseCategory ("5H"|"5T"), correctSequence (array de ações), explanation, reference }
+Retorne: { "scenarios": [...] }`,
+  },
+  "detetive-toxico": {
+    component: DetetiveToxicologicoGame,
+    title: "Detetive Toxicológico — Investigação de Intoxicações",
+    subtitle: "Investigue intoxicações, identifique toxidromes e administre o antídoto correto.",
+    howToPlay: `🔍 Detetive Toxicológico
+
+📋 Objetivo: Investigue pacientes intoxicados, colete evidências e administre o antídoto correto.
+
+🕹️ Como jogar:
+1. Examine sinais vitais e exame físico
+2. Colete evidências no cenário (frascos, relatos)
+3. Solicite exames laboratoriais estrategicamente
+4. Identifique a toxidrome (colinérgica, opioide, etc.)
+5. Selecione e confirme o antídoto correto
+
+⚠️ O paciente deteriora com o tempo!
+💡 Dica: Pupilas são a chave: miose = opioides/organofosforados. Midríase = anticolinérgicos/simpatomiméticos.`,
+    aiPrompt: `Gere novos casos para o Detetive Toxicológico.
+Crie "cases": array de 4 casos com { id, title, arrival, vitals (objeto com fc/pa/fr/temp/spo2/pupilas/glasgow), toxidrome, toxidromeType, substance, antidote, antidoteOptions (array de 5), evidences (array de 3), labTests (array de 4), physicalExam (array de 6 strings), timerSeconds, explanation, reference, deteriorationWarning }
+Retorne: { "cases": [...] }`,
   },
 };
 
