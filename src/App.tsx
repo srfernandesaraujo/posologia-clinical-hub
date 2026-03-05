@@ -28,6 +28,15 @@ import CorrecaoSodio from "./pages/CorrecaoSodio";
 import CorrecaoCalcio from "./pages/CorrecaoCalcio";
 import WellsScore from "./pages/WellsScore";
 import QSofa from "./pages/QSofa";
+import VancomicinaAUC from "./pages/VancomicinaAUC";
+import InsulinaBasalBolus from "./pages/InsulinaBasalBolus";
+import HollidaySegar from "./pages/HollidaySegar";
+import MeldScore from "./pages/MeldScore";
+import QTcCorrigido from "./pages/QTcCorrigido";
+import DosePediatrica from "./pages/DosePediatrica";
+import RassSas from "./pages/RassSas";
+import NutricaoParenteral from "./pages/NutricaoParenteral";
+import InteracoesCYP from "./pages/InteracoesCYP";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -102,6 +111,15 @@ const App = () => (
               <Route path="/calculadoras/correcao-calcio" element={<CorrecaoCalcio />} />
               <Route path="/calculadoras/wells-score" element={<WellsScore />} />
               <Route path="/calculadoras/qsofa" element={<QSofa />} />
+              <Route path="/calculadoras/vancomicina-auc" element={<VancomicinaAUC />} />
+              <Route path="/calculadoras/insulina-basal-bolus" element={<InsulinaBasalBolus />} />
+              <Route path="/calculadoras/holliday-segar" element={<HollidaySegar />} />
+              <Route path="/calculadoras/meld-score" element={<MeldScore />} />
+              <Route path="/calculadoras/qtc-corrigido" element={<QTcCorrigido />} />
+              <Route path="/calculadoras/dose-pediatrica" element={<DosePediatrica />} />
+              <Route path="/calculadoras/rass-sedacao" element={<RassSas />} />
+              <Route path="/calculadoras/nutricao-parenteral" element={<NutricaoParenteral />} />
+              <Route path="/calculadoras/interacoes-cyp" element={<InteracoesCYP />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />

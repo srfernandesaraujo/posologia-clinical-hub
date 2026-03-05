@@ -72,6 +72,51 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "Surviving Sepsis Campaign Guidelines 2021", source: "Crit Care Med", year: "2021", url: "https://doi.org/10.1097/CCM.0000000000005337" },
     { title: "qSOFA as Screening Tool for Sepsis", source: "Chest", year: "2017" },
   ],
+  "vancomicina-auc": [
+    { title: "IDSA/ASHP/SIDP Vancomycin Therapeutic Monitoring Guidelines", source: "Am J Health-Syst Pharm", year: "2020", url: "https://doi.org/10.1093/ajhp/zxaa036" },
+    { title: "AUC-Guided Vancomycin Dosing", source: "Clin Infect Dis", year: "2020" },
+    { title: "Vancomycin Pharmacokinetics in Critically Ill", source: "Antimicrob Agents Chemother", year: "2019" },
+  ],
+  "insulina-basal-bolus": [
+    { title: "ADA Standards of Care: Glycemic Management in Hospital", source: "Diabetes Care", year: "2024", url: "https://doi.org/10.2337/dc24-Sint" },
+    { title: "RABBIT 2 Trial: Basal-Bolus vs Sliding Scale", source: "NEJM", year: "2007" },
+    { title: "Endocrine Society: Management of Hyperglycemia in Hospitalized Patients", source: "JCEM", year: "2022" },
+  ],
+  "holliday-segar": [
+    { title: "Holliday MA, Segar WE. Maintenance need for water", source: "Pediatrics", year: "1957" },
+    { title: "Fluid and Electrolyte Management in Children", source: "Nelson Textbook of Pediatrics", year: "2023" },
+    { title: "NICE Guideline: IV Fluid Therapy in Children", source: "NICE", year: "2020" },
+  ],
+  "meld-score": [
+    { title: "MELD Score for Liver Transplant Allocation", source: "Hepatology", year: "2001", url: "https://doi.org/10.1053/jhep.2001.22172" },
+    { title: "MELD-Na for Liver Transplant", source: "Gastroenterology", year: "2008" },
+    { title: "Child-Pugh Classification", source: "Br J Surg", year: "1973" },
+  ],
+  "qtc-corrigido": [
+    { title: "QT Interval Correction Formulas", source: "JACC", year: "2017" },
+    { title: "Drug-Induced QT Prolongation", source: "Circulation", year: "2010", url: "https://doi.org/10.1161/CIRCULATIONAHA.109.868570" },
+    { title: "CredibleMeds QTDrugs List", source: "CredibleMeds.org", year: "2024", url: "https://crediblemeds.org" },
+  ],
+  "dose-pediatrica": [
+    { title: "Nelson Textbook of Pediatrics: Drug Dosages", source: "Elsevier", year: "2023" },
+    { title: "BNF for Children (BNFC)", source: "BMJ/Pharmaceutical Press", year: "2024" },
+    { title: "Harriet Lane Handbook", source: "Johns Hopkins", year: "2024" },
+  ],
+  "rass-sedacao": [
+    { title: "PADIS Guidelines: Pain, Agitation/Sedation, Delirium, Immobility, Sleep", source: "Crit Care Med", year: "2018", url: "https://doi.org/10.1097/CCM.0000000000002806" },
+    { title: "Richmond Agitation-Sedation Scale (RASS)", source: "Am J Respir Crit Care Med", year: "2002" },
+    { title: "Daily Sedation Interruption", source: "NEJM", year: "2000" },
+  ],
+  "nutricao-parenteral": [
+    { title: "ASPEN Guidelines for Parenteral Nutrition", source: "JPEN", year: "2023", url: "https://doi.org/10.1002/jpen.2525" },
+    { title: "ESPEN Guideline on Parenteral Nutrition", source: "Clin Nutr", year: "2018" },
+    { title: "Harris-Benedict Equation", source: "Proc Natl Acad Sci", year: "1918" },
+  ],
+  "interacoes-cyp": [
+    { title: "Cytochrome P450 Drug Interaction Table", source: "Indiana University", year: "2024", url: "https://drug-interactions.medicine.iu.edu" },
+    { title: "Drug Metabolism and CYP450 Interactions", source: "Clin Pharmacol Ther", year: "2021" },
+    { title: "FDA Guidance on Drug Interaction Studies", source: "FDA", year: "2020" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {
