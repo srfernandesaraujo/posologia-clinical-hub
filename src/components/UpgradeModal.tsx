@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Zap, FileText, DoorOpen, Calculator } from "lucide-react";
+import { Crown, Zap, FileText, DoorOpen, Calculator, Gamepad2 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ interface UpgradeModalProps {
 const PREMIUM_BENEFITS = [
   { icon: Calculator, label: "Calculadoras ilimitadas" },
   { icon: Zap, label: "Simuladores avançados" },
+  { icon: Gamepad2, label: "Jogos clínicos interativos" },
   { icon: FileText, label: "Relatórios em PDF" },
   { icon: DoorOpen, label: "Salas virtuais ilimitadas" },
 ];
