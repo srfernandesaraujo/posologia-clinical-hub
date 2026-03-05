@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert, Crown, Plus, Lock, Share2, Droplets, Bone, HeartPulse, Thermometer } from "lucide-react";
+import { Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert, Crown, Plus, Lock, Share2, Droplets, Bone, HeartPulse, Thermometer, FlaskConical, Baby, Flame, Zap, Moon, Utensils, Dna } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -36,7 +36,16 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Correção de Sódio por Hiperglicemia", description: "Corrige sódio pela glicemia (fórmula de Katz) — essencial em CAD/EHH.", category: "Emergência / Medicina Interna", path: "/calculadoras/correcao-sodio", icon: Droplets, searchKey: "correcao sodio hiponatremia hiperglicemia katz" },
   { name: "Correção de Cálcio pela Albumina", description: "Ajusta o cálcio total pela albumina sérica (fórmula de Payne).", category: "Emergência / Medicina Interna", path: "/calculadoras/correcao-calcio", icon: Bone, searchKey: "correcao calcio albumina payne hipocalcemia" },
   { name: "Escore de Wells (TEP / TVP)", description: "Estratificação de probabilidade pré-teste para tromboembolismo venoso.", category: "Cardiologia", path: "/calculadoras/wells-score", icon: HeartPulse, searchKey: "wells score tep tvp embolia pulmonar trombose venosa" },
-  { name: "qSOFA (Quick SOFA)", description: "Triagem rápida à beira-leito para risco de sepse — Sepsis-3.", category: "Emergência / Medicina Interna", path: "/calculadoras/qsofa", icon: Thermometer, searchKey: "qsofa sofa sepse sepsis triagem" },
+  { name: "qSOFA (Quick SOFA)", description: "Triagem rapida a beira-leito para risco de sepse — Sepsis-3.", category: "Emergencia / Medicina Interna", path: "/calculadoras/qsofa", icon: Thermometer, searchKey: "qsofa sofa sepse sepsis triagem" },
+  { name: "Vancomicina AUC/MIC", description: "Monitoramento farmacocinetico baseado em AUC — IDSA/ASHP 2020.", category: "Farmacologia Clinica", path: "/calculadoras/vancomicina-auc", icon: FlaskConical, searchKey: "vancomicina auc mic farmacocinetica" },
+  { name: "Insulina Basal-Bolus + Correcao", description: "Calculo de dose basal, prandial e escala de correcao hospitalar.", category: "Endocrinologia", path: "/calculadoras/insulina-basal-bolus", icon: Syringe, searchKey: "insulina basal bolus correcao hospitalar" },
+  { name: "Holliday-Segar (Hidratacao Pediatrica)", description: "Volume de manutencao IV com eletrolitos — regra 4-2-1.", category: "Pediatria", path: "/calculadoras/holliday-segar", icon: Baby, searchKey: "holliday segar pediatria hidratacao 4-2-1" },
+  { name: "MELD / MELD-Na / Child-Pugh", description: "Prognostico hepatico e priorizacao para transplante.", category: "Hepatologia", path: "/calculadoras/meld-score", icon: Flame, searchKey: "meld meld-na child pugh hepatologia cirrose transplante" },
+  { name: "QTc Corrigido (Bazett / Fridericia)", description: "Correcao do intervalo QT pela frequencia cardiaca.", category: "Cardiologia", path: "/calculadoras/qtc-corrigido", icon: Zap, searchKey: "qtc corrigido bazett fridericia intervalo qt ecg" },
+  { name: "Dose Pediatrica por Peso", description: "Calculo de dose por kg para medicamentos pediatricos comuns.", category: "Pediatria", path: "/calculadoras/dose-pediatrica", icon: Baby, searchKey: "dose pediatrica peso crianca amoxicilina ibuprofeno" },
+  { name: "Escala RASS (Sedacao em UTI)", description: "Richmond Agitation-Sedation Scale — avaliacao e conduta.", category: "Terapia Intensiva", path: "/calculadoras/rass-sedacao", icon: Moon, searchKey: "rass sedacao uti agitacao richmond" },
+  { name: "Nutricao Parenteral Total (NPT)", description: "Calculo de macronutrientes, GIR e volume para NPT.", category: "Terapia Intensiva", path: "/calculadoras/nutricao-parenteral", icon: Utensils, searchKey: "nutricao parenteral npt gir harris benedict" },
+  { name: "Radar de Interacoes CYP450", description: "Visualizacao das interacoes farmacocineticas via citocromo P450.", category: "Farmacologia Clinica", path: "/calculadoras/interacoes-cyp", icon: Dna, searchKey: "interacoes cyp450 citocromo farmacologia" },
 ];
 
 // Slugs of native calculators — used to filter out duplicates from dynamic tools
@@ -44,7 +53,8 @@ const NATIVE_SLUGS = new Set([
   "risco-cardiovascular", "desmame-corticoide", "equivalencia-opioides",
   "ajuste-dose-renal", "equivalencia-antidepressivos", "homa-ir", "findrisc",
   "ckd-epi", "correcao-sodio", "correcao-calcio", "wells-score", "qsofa",
-  // Also match Portuguese variations used in the DB
+  "vancomicina-auc", "insulina-basal-bolus", "holliday-segar", "meld-score",
+  "qtc-corrigido", "dose-pediatrica", "rass-sedacao", "nutricao-parenteral", "interacoes-cyp",
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
   "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",
