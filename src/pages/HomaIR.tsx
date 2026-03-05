@@ -3,6 +3,9 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Activity, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { RiskGauge } from "@/components/calculators/RiskGauge";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -268,11 +271,19 @@ export default function HomaIR() {
           {resultado ? (
             <>
               <div className={`rounded-2xl border p-6 ${resultado.bgClass}`}>
-                <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
-                <div className="text-center">
-                  <p className="text-4xl font-bold" style={{ color: resultado.cor }}>{resultado.homaIR.toFixed(2)}</p>
-                  <p className="font-medium mt-2" style={{ color: resultado.cor }}>{resultado.faixa}</p>
-                </div>
+                <h2 className="font-semibold mb-2 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
+                <RiskGauge
+                  value={resultado.homaIR}
+                  maxValue={5}
+                  label={resultado.faixa}
+                  unit=""
+                  segments={[
+                    { min: 0, max: 20, color: "hsl(142 71% 45%)", label: "Normal" },
+                    { min: 20, max: 50, color: "hsl(60 70% 45%)", label: "Normal" },
+                    { min: 50, max: 60, color: "hsl(38 92% 50%)", label: "Resist." },
+                    { min: 60, max: 100, color: "hsl(0 72% 51%)", label: "Signif." },
+                  ]}
+                />
                 <div className="mt-4 pt-4 border-t border-border/50">
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <div className="flex justify-between"><span>&lt;1,0</span><span>Sensibilidade aumentada</span></div>
@@ -291,6 +302,9 @@ export default function HomaIR() {
               <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo, imc)}>
                 <FileText className="h-4 w-4" /> Gerar Relatório PDF
               </Button>
+
+              <ClinicalReferences references={CALCULATOR_REFERENCES["homa-ir"]} />
+              <RelatedCalculators currentSlug="homa-ir" />
             </>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">

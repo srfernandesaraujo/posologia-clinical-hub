@@ -34,6 +34,17 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Calculadora de Risco de Diabetes Tipo 2 (FINDRISC)", description: "Escore FINDRISC para estimar risco de DM2 em 10 anos.", category: "Endocrinologia", path: "/calculadoras/findrisc", icon: ShieldAlert, searchKey: "calculadora de risco de diabetes tipo 2 findrisc" },
 ];
 
+// Slugs of native calculators — used to filter out duplicates from dynamic tools
+const NATIVE_SLUGS = new Set([
+  "risco-cardiovascular", "desmame-corticoide", "equivalencia-opioides",
+  "ajuste-dose-renal", "equivalencia-antidepressivos", "homa-ir", "findrisc",
+  // Also match Portuguese variations used in the DB
+  "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
+  "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
+  "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",
+  "calculadora-de-risco-de-diabetes-tipo-2-findrisc",
+]);
+
 export default function Calculadoras() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
@@ -81,7 +92,9 @@ export default function Calculadoras() {
     ...tools.filter((t: any) => t.categories?.name).map((t: any) => t.categories.name),
   ])).sort();
 
+  // Filter out dynamic tools that duplicate native calculators
   const filtered = tools.filter((t: any) => {
+    if (NATIVE_SLUGS.has(t.slug)) return false; // Remove duplicates
     const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = !selectedCategory || t.categories?.name === selectedCategory;
     return matchesSearch && matchesCategory;

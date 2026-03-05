@@ -3,6 +3,9 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, ShieldAlert, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { ScoreBar } from "@/components/calculators/ScoreBar";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -349,15 +352,24 @@ export default function Findrisc() {
                   <p className="font-semibold text-lg mt-3" style={{ color: resultado.cor }}>{resultado.faixa}</p>
                   <p className="text-sm mt-1">Risco em 10 anos: <strong>{resultado.riscoPct}</strong></p>
                 </div>
-                <div className="mt-4 pt-4 border-t border-border/50">
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex justify-between"><span>&lt;7 pts</span><span>Baixo (~1%)</span></div>
-                    <div className="flex justify-between"><span>7-11 pts</span><span>Ligeiramente ↑ (~4%)</span></div>
-                    <div className="flex justify-between"><span>12-14 pts</span><span>Moderado (~17%)</span></div>
-                    <div className="flex justify-between"><span>15-20 pts</span><span>Alto (~33%)</span></div>
-                    <div className="flex justify-between"><span>&gt;20 pts</span><span>Muito alto (~50%)</span></div>
-                  </div>
-                </div>
+              </div>
+
+              {/* Segmented Score Bar */}
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Posição no Escore</h3>
+                <ScoreBar
+                  value={resultado.pontos}
+                  minValue={0}
+                  maxValue={26}
+                  segments={[
+                    { min: 0, max: 7, color: "hsl(142 71% 45%)", label: "Baixo" },
+                    { min: 7, max: 12, color: "hsl(60 70% 45%)", label: "Ligeiro" },
+                    { min: 12, max: 15, color: "hsl(38 92% 50%)", label: "Moderado" },
+                    { min: 15, max: 21, color: "hsl(20 90% 48%)", label: "Alto" },
+                    { min: 21, max: 26, color: "hsl(0 72% 51%)", label: "Muito Alto" },
+                  ]}
+                  unit="pts"
+                />
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-6">
@@ -368,6 +380,9 @@ export default function Findrisc() {
               <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo, imc)}>
                 <FileText className="h-4 w-4" /> Gerar Relatório PDF
               </Button>
+
+              <ClinicalReferences references={CALCULATOR_REFERENCES["findrisc"]} />
+              <RelatedCalculators currentSlug="findrisc" />
             </>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">

@@ -3,6 +3,9 @@ import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
+import { RiskGauge } from "@/components/calculators/RiskGauge";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -11,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import jsPDF from "jspdf";
 
 /* ─── types ─── */
@@ -670,19 +674,58 @@ export default function RiscoCardiovascular() {
         <div className="space-y-6">
           {resultado ? (
             <>
-              {/* Risk gauge */}
+              {/* Risk Gauge */}
               <div className={`rounded-2xl border p-6 ${resultado.bgClass}`}>
-                <p className="text-sm text-muted-foreground mb-1">Risco em 10 anos</p>
-                <p className="text-5xl font-bold" style={{ color: resultado.cor }}>
-                  {resultado.risco}%
-                </p>
-                <p className="text-lg font-semibold mt-1" style={{ color: resultado.cor }}>
-                  {resultado.faixa}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <RiskGauge
+                  value={resultado.risco}
+                  maxValue={30}
+                  label={resultado.faixa}
+                  unit="%"
+                  segments={[
+                    { min: 0, max: 17, color: "hsl(142 71% 45%)", label: "Baixo" },
+                    { min: 17, max: 25, color: "hsl(38 92% 50%)", label: "Moderado" },
+                    { min: 25, max: 67, color: "hsl(20 90% 48%)", label: "Alto" },
+                    { min: 67, max: 100, color: "hsl(0 72% 51%)", label: "Muito Alto" },
+                  ]}
+                />
+                <p className="text-xs text-muted-foreground text-center mt-2">
                   Modelo: {{ framingham: "Framingham", ascvd: "ASCVD", score2: "SCORE2" }[form.modelo]}
                 </p>
               </div>
+
+              {/* Multi-model comparison */}
+              {(() => {
+                const models = [
+                  { name: "Framingham", fn: calcFramingham, color: "hsl(142 71% 45%)" },
+                  { name: "ASCVD", fn: calcASCVD, color: "hsl(38 92% 50%)" },
+                  { name: "SCORE2", fn: calcSCORE2, color: "hsl(217 91% 60%)" },
+                ];
+                const data = models.map(m => {
+                  const r = m.fn(form);
+                  return { name: m.name, risco: r >= 0 ? Math.round(r * 10) / 10 : null, color: m.color };
+                }).filter(d => d.risco !== null && d.risco >= 0);
+
+                if (data.length >= 2) {
+                  return (
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Comparação Multi-Modelo</h3>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <BarChart data={data} layout="vertical" margin={{ left: 10, right: 30 }}>
+                          <XAxis type="number" domain={[0, 'auto']} tick={{ fontSize: 11 }} unit="%" />
+                          <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
+                          <Tooltip formatter={(v: number) => [`${v}%`, "Risco"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                          <Bar dataKey="risco" radius={[0, 6, 6, 0]} barSize={20}>
+                            {data.map((d, i) => (
+                              <Cell key={i} fill={d.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* Recommendations */}
               <div className="rounded-2xl border border-border bg-card p-6">
@@ -708,6 +751,12 @@ export default function RiscoCardiovascular() {
                 <FileText className="h-4 w-4" />
                 Gerar Relatório PDF
               </Button>
+
+              {/* References */}
+              <ClinicalReferences references={CALCULATOR_REFERENCES["risco-cardiovascular"]} />
+
+              {/* Related */}
+              <RelatedCalculators currentSlug="risco-cardiovascular" />
             </>
           ) : (
             <div className="rounded-2xl border border-border bg-card p-6 text-center">
