@@ -174,6 +174,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   const [spotlightActive, setSpotlightActive] = useState(false);
   const [timer, setTimer] = useState(0);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; title: string; explanation: string; reference?: string; tip?: string } | null>(null);
+  const [stoppedEarly, setStoppedEarly] = useState(false);
 
   const config = difficultyConfig[difficulty];
   const currentContext = contexts.find((c) => c.id === selectedContext);
@@ -212,7 +213,12 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setQIndex(0); setSelected(null); setIsRevealing(false); setRevealed(false);
     setUsedFiftyFifty(false); setUsedPhone(false); setUsedAudience(false);
     setHiddenOptions(new Set()); setShowAudience(false); setScore(0); setErrors(0);
-    setFeedback(null);
+    setFeedback(null); setStoppedEarly(false);
+  };
+
+  const handleStop = () => {
+    setStoppedEarly(true);
+    setPhase("result");
   };
 
   const handleSelect = (i: number) => {
@@ -343,13 +349,19 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   }
 
   if (phase === "result") {
+    const resultTitle = stoppedEarly
+      ? "Você decidiu parar!"
+      : score === questions.length ? "Parabéns, Chefe de Clínica!" : score >= questions.length * 0.6 ? "Bom desempenho!" : "Continue estudando!";
+    const resultSubtitle = stoppedEarly
+      ? `Você parou na pergunta ${qIndex + 1} e garantiu o prêmio de ${score > 0 ? prizeValues[score - 1] : "R$ 0"}. Acertou ${score} de ${qIndex} perguntas respondidas.`
+      : `Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`;
     return (
       <GameStarsResult
         score={score}
-        maxScore={questions.length}
+        maxScore={stoppedEarly ? qIndex : questions.length}
         errors={errors}
-        title={score === questions.length ? "Parabéns, Chefe de Clínica!" : score >= questions.length * 0.6 ? "Bom desempenho!" : "Continue estudando!"}
-        subtitle={`Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`}
+        title={resultTitle}
+        subtitle={resultSubtitle}
         onRestart={() => setPhase("narrative")}
       />
     );
@@ -442,9 +454,18 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       </div>
 
       {selected !== null && !revealed && !isRevealing && (
-        <div className="flex justify-center animate-in fade-in">
+        <div className="flex justify-center gap-3 animate-in fade-in">
           <Button size="lg" onClick={handleConfirm} className="gap-2">
             <Zap className="h-4 w-4" /> Confirmar Decisão Clínica
+          </Button>
+        </div>
+      )}
+
+      {/* Stop button - always visible during play when not revealing */}
+      {!isRevealing && !revealed && selected === null && score > 0 && (
+        <div className="flex justify-center animate-in fade-in">
+          <Button size="lg" variant="outline" onClick={handleStop} className="gap-2 border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10">
+            <Award className="h-4 w-4" /> Parar e Garantir {prizeValues[score - 1]}
           </Button>
         </div>
       )}
