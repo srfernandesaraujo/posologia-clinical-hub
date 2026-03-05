@@ -17,17 +17,27 @@ const NATIVE_PATHS: Record<string, string> = {
   "equivalencia-antidepressivos": "/calculadoras/equivalencia-antidepressivos",
   "homa-ir": "/calculadoras/homa-ir",
   "findrisc": "/calculadoras/findrisc",
+  "ckd-epi": "/calculadoras/ckd-epi",
+  "correcao-sodio": "/calculadoras/correcao-sodio",
+  "correcao-calcio": "/calculadoras/correcao-calcio",
+  "wells-score": "/calculadoras/wells-score",
+  "qsofa": "/calculadoras/qsofa",
 };
 
 // Clinical relationships between calculators
 const RELATED_MAP: Record<string, string[]> = {
-  "risco-cardiovascular": ["homa-ir", "findrisc", "ajuste-dose-renal"],
+  "risco-cardiovascular": ["homa-ir", "findrisc", "wells-score"],
   "homa-ir": ["findrisc", "risco-cardiovascular"],
   "findrisc": ["homa-ir", "risco-cardiovascular"],
-  "desmame-corticoide": ["homa-ir", "ajuste-dose-renal"],
-  "equivalencia-opioides": ["ajuste-dose-renal"],
-  "ajuste-dose-renal": ["risco-cardiovascular", "equivalencia-opioides"],
-  "equivalencia-antidepressivos": ["risco-cardiovascular"],
+  "desmame-corticoide": ["homa-ir", "ajuste-dose-renal", "correcao-calcio"],
+  "equivalencia-opioides": ["ajuste-dose-renal", "qsofa"],
+  "ajuste-dose-renal": ["ckd-epi", "equivalencia-opioides", "correcao-sodio"],
+  "equivalencia-antidepressivos": ["risco-cardiovascular", "correcao-sodio"],
+  "ckd-epi": ["ajuste-dose-renal", "correcao-sodio", "correcao-calcio"],
+  "correcao-sodio": ["ckd-epi", "correcao-calcio", "ajuste-dose-renal"],
+  "correcao-calcio": ["correcao-sodio", "ckd-epi"],
+  "wells-score": ["qsofa", "risco-cardiovascular"],
+  "qsofa": ["wells-score", "correcao-sodio"],
 };
 
 const CALC_NAMES: Record<string, string> = {
@@ -38,6 +48,11 @@ const CALC_NAMES: Record<string, string> = {
   "equivalencia-antidepressivos": "Equivalência de Antidepressivos",
   "homa-ir": "HOMA-IR",
   "findrisc": "FINDRISC",
+  "ckd-epi": "CKD-EPI 2021",
+  "correcao-sodio": "Correção de Sódio",
+  "correcao-calcio": "Correção de Cálcio",
+  "wells-score": "Wells Score (TEP/TVP)",
+  "qsofa": "qSOFA",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {

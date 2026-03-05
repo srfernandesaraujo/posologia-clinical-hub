@@ -23,6 +23,11 @@ import AjusteDoseRenal from "./pages/AjusteDoseRenal";
 import EquivalenciaAntidepressivos from "./pages/EquivalenciaAntidepressivos";
 import HomaIR from "./pages/HomaIR";
 import Findrisc from "./pages/Findrisc";
+import CkdEpi from "./pages/CkdEpi";
+import CorrecaoSodio from "./pages/CorrecaoSodio";
+import CorrecaoCalcio from "./pages/CorrecaoCalcio";
+import WellsScore from "./pages/WellsScore";
+import QSofa from "./pages/QSofa";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -92,6 +97,11 @@ const App = () => (
               <Route path="/calculadoras/equivalencia-antidepressivos" element={<EquivalenciaAntidepressivos />} />
               <Route path="/calculadoras/homa-ir" element={<HomaIR />} />
               <Route path="/calculadoras/findrisc" element={<Findrisc />} />
+              <Route path="/calculadoras/ckd-epi" element={<CkdEpi />} />
+              <Route path="/calculadoras/correcao-sodio" element={<CorrecaoSodio />} />
+              <Route path="/calculadoras/correcao-calcio" element={<CorrecaoCalcio />} />
+              <Route path="/calculadoras/wells-score" element={<WellsScore />} />
+              <Route path="/calculadoras/qsofa" element={<QSofa />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
