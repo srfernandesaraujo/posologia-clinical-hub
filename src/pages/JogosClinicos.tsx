@@ -564,7 +564,7 @@ export default function JogosClinicos() {
   // ── AI GAME VIEW (now playable!) ──
   if (activeAiGame && activeGame) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl">
         <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
           ← Voltar aos jogos
         </Button>
@@ -592,7 +592,7 @@ export default function JogosClinicos() {
     const versionLabel = formatVersion(getVersion(activeGame));
 
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl">
         <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
           ← Voltar aos jogos
         </Button>
@@ -630,7 +630,7 @@ export default function JogosClinicos() {
     : games.filter((g) => g.category === selectedCategory);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("games.title")}</h1>

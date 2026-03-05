@@ -256,9 +256,9 @@ export default function Calculadoras() {
             <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />
           ))}
         </div>
-      ) : (
+      ) : selectedCategory ? (
+        /* Filtered view: flat grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Native calculators via config array */}
           {filteredNative.map((calc) => (
             <div
               key={calc.path}
@@ -273,8 +273,6 @@ export default function Calculadoras() {
               <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{calc.category}</span>
             </div>
           ))}
-
-          {/* Dynamic system tools */}
           {filtered.map((tool: any) => (
             <div
               key={tool.id}
@@ -290,6 +288,57 @@ export default function Calculadoras() {
             </div>
           ))}
         </div>
+      ) : (
+        /* All view: grouped by category */
+        <>
+          {allCategories.map((cat) => {
+            const catNative = NATIVE_CALCULATORS.filter((c) => {
+              const matchesSearch = !search || c.searchKey.includes(search.toLowerCase());
+              return c.category === cat && matchesSearch;
+            });
+            const catDynamic = tools.filter((t: any) => {
+              if (NATIVE_SLUGS.has(t.slug)) return false;
+              const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+              return t.categories?.name === cat && matchesSearch;
+            });
+            if (catNative.length === 0 && catDynamic.length === 0) return null;
+            return (
+              <div key={cat} className="mb-8">
+                <h2 className="text-lg font-semibold mb-3">{cat}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {catNative.map((calc) => (
+                    <div
+                      key={calc.path}
+                      onClick={(e) => handleCalcClick(e, calc.path)}
+                      className="cursor-pointer rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+                    >
+                      <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3">
+                        <calc.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-semibold mb-1">{calc.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{calc.description}</p>
+                      <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{calc.category}</span>
+                    </div>
+                  ))}
+                  {catDynamic.map((tool: any) => (
+                    <div
+                      key={tool.id}
+                      onClick={(e) => handleCalcClick(e, `/calculadoras/${tool.slug}`)}
+                      className="cursor-pointer rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
+                    >
+                      <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3"><Calculator className="h-5 w-5 text-primary" /></div>
+                      <h3 className="font-semibold mb-1">{tool.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
+                      {tool.categories && (
+                        <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </>
       )}
     </div>
   );

@@ -219,54 +219,117 @@ export default function Simuladores() {
       {/* Section header */}
       {filteredUser.length > 0 && <h2 className="text-lg font-semibold mb-4">Simuladores do Sistema</h2>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Native simulators */}
-        {filteredNative.map((sim) => {
-          const Icon = sim.icon;
-          return canUseSimulator ? (
+      {selectedCategory ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredNative.map((sim) => {
+            const Icon = sim.icon;
+            return canUseSimulator ? (
+              <Link
+                key={sim.slug}
+                to={`/simuladores/${sim.slug}`}
+                className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+              >
+                <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3"><Icon className="h-5 w-5 text-primary" /></div>
+                <h3 className="font-semibold mb-1">{sim.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
+                <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{sim.category}</span>
+              </Link>
+            ) : (
+              <div
+                key={sim.slug}
+                onClick={() => showUpgrade("Simuladores avançados são exclusivos do plano Premium")}
+                className="cursor-pointer rounded-2xl border border-border bg-card p-5 opacity-75 hover:opacity-100 transition-all relative"
+              >
+                <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-muted-foreground" /></div>
+                <div className="inline-flex rounded-lg bg-muted p-2.5 mb-3"><Icon className="h-5 w-5 text-muted-foreground" /></div>
+                <h3 className="font-semibold mb-1">{sim.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
+                <span className="inline-block mt-3 text-xs font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">{sim.category}</span>
+              </div>
+            );
+          })}
+          {filteredDynamic.map((tool: any) => (
             <Link
-              key={sim.slug}
-              to={`/simuladores/${sim.slug}`}
-              className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+              key={tool.id}
+              to={`/simuladores/${tool.slug}`}
+              className="rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
             >
-              <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3"><Icon className="h-5 w-5 text-primary" /></div>
-              <h3 className="font-semibold mb-1">{sim.name}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
-              <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{sim.category}</span>
+              <div className="inline-flex rounded-lg bg-accent/10 p-2.5 mb-3">
+                <FlaskConical className="h-5 w-5 text-accent" />
+              </div>
+              <h3 className="font-semibold mb-1">{tool.name}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
+              {tool.categories && (
+                <span className="inline-block mt-3 text-xs font-medium text-accent bg-accent/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
+              )}
             </Link>
-          ) : (
-            <div
-              key={sim.slug}
-              onClick={() => showUpgrade("Simuladores avançados são exclusivos do plano Premium")}
-              className="cursor-pointer rounded-2xl border border-border bg-card p-5 opacity-75 hover:opacity-100 transition-all relative"
-            >
-              <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-muted-foreground" /></div>
-              <div className="inline-flex rounded-lg bg-muted p-2.5 mb-3"><Icon className="h-5 w-5 text-muted-foreground" /></div>
-              <h3 className="font-semibold mb-1">{sim.name}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
-              <span className="inline-block mt-3 text-xs font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">{sim.category}</span>
-            </div>
-          );
-        })}
-
-        {/* Dynamic system tools */}
-        {filteredDynamic.map((tool: any) => (
-          <Link
-            key={tool.id}
-            to={`/simuladores/${tool.slug}`}
-            className="rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
-          >
-            <div className="inline-flex rounded-lg bg-accent/10 p-2.5 mb-3">
-              <FlaskConical className="h-5 w-5 text-accent" />
-            </div>
-            <h3 className="font-semibold mb-1">{tool.name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
-            {tool.categories && (
-              <span className="inline-block mt-3 text-xs font-medium text-accent bg-accent/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
-            )}
-          </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {allCategories.map((cat) => {
+            const catNative = NATIVE_SIMULATORS.filter((s) => {
+              const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase());
+              return s.category === cat && matchesSearch;
+            });
+            const catDynamic = tools.filter((t: any) => {
+              const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+              return t.categories?.name === cat && matchesSearch;
+            });
+            if (catNative.length === 0 && catDynamic.length === 0) return null;
+            return (
+              <div key={cat} className="mb-8">
+                <h2 className="text-lg font-semibold mb-3">{cat}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {catNative.map((sim) => {
+                    const Icon = sim.icon;
+                    return canUseSimulator ? (
+                      <Link
+                        key={sim.slug}
+                        to={`/simuladores/${sim.slug}`}
+                        className="rounded-2xl border border-primary/30 bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5 ring-1 ring-primary/20"
+                      >
+                        <div className="inline-flex rounded-lg bg-primary/10 p-2.5 mb-3"><Icon className="h-5 w-5 text-primary" /></div>
+                        <h3 className="font-semibold mb-1">{sim.name}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
+                        <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">{sim.category}</span>
+                      </Link>
+                    ) : (
+                      <div
+                        key={sim.slug}
+                        onClick={() => showUpgrade("Simuladores avançados são exclusivos do plano Premium")}
+                        className="cursor-pointer rounded-2xl border border-border bg-card p-5 opacity-75 hover:opacity-100 transition-all relative"
+                      >
+                        <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-muted-foreground" /></div>
+                        <div className="inline-flex rounded-lg bg-muted p-2.5 mb-3"><Icon className="h-5 w-5 text-muted-foreground" /></div>
+                        <h3 className="font-semibold mb-1">{sim.name}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{sim.description}</p>
+                        <span className="inline-block mt-3 text-xs font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">{sim.category}</span>
+                      </div>
+                    );
+                  })}
+                  {catDynamic.map((tool: any) => (
+                    <Link
+                      key={tool.id}
+                      to={`/simuladores/${tool.slug}`}
+                      className="rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
+                    >
+                      <div className="inline-flex rounded-lg bg-accent/10 p-2.5 mb-3">
+                        <FlaskConical className="h-5 w-5 text-accent" />
+                      </div>
+                      <h3 className="font-semibold mb-1">{tool.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{tool.short_description || tool.description}</p>
+                      {tool.categories && (
+                        <span className="inline-block mt-3 text-xs font-medium text-accent bg-accent/10 rounded-full px-2.5 py-0.5">{tool.categories.name}</span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
 
       {!isLoading && filteredNative.length === 0 && filteredDynamic.length === 0 && filteredUser.length === 0 && (
         <p className="text-muted-foreground text-center py-12">
