@@ -1,49 +1,81 @@
 
 
-## Plano: Batalha Naval Clínica
+## Plano Expandido: Melhorias para TODAS as Calculadoras
 
-### Conceito
-Tabuleiro 8x8 representando o corpo humano com "navios" sendo órgãos ocultos (Coração, Fígado, Rins, Pulmões, Cérebro, Pâncreas). Ao atirar em uma coordenada, se acertar um órgão, o jogador deve responder uma pergunta de fisiopatologia/farmacologia daquela região para confirmar o ponto. Errar a pergunta = tiro perdido mesmo tendo acertado o órgão.
+### Situação Atual
 
-### Mecânica
-- **Tabuleiro 8x8** com grid visual estilo batalha naval (A1-H8)
-- **6 órgãos ocultos** posicionados aleatoriamente (tamanhos 2-4 células cada)
-- **Ao acertar um órgão**: abre pergunta clínica contextual (fisiopatologia, tratamento, efeito adverso)
-- **Resposta correta**: marca o acerto (célula verde), ganha pontos
-- **Resposta errada**: perde o acerto (célula vermelha), feedback formativo com explicação
-- **Tiro na água**: célula azul, sem pergunta
-- **3 dificuldades**: Acadêmico (conceitos básicos), Clínico (cenários reais), Especialista (casos complexos)
-- **Condição de vitória**: afundar todos os 6 órgãos (acertar todas as células + responder corretamente)
-- **Limite**: 30 tiros disponíveis (exige estratégia)
+O sistema tem **três camadas** de calculadoras:
 
-### Banco de Perguntas (8-10 por órgão, por dificuldade)
-- **Coração**: ICC, arritmias, antiarrítmicos, betabloqueadores, digitálicos
-- **Fígado**: metabolismo CYP450, hepatotoxicidade, cirrose, ajuste hepato
-- **Rins**: clearance de creatinina, nefrotoxicidade, ajuste renal, diuréticos
-- **Pulmões**: asma, DPOC, corticoides inalatórios, broncodilatadores
-- **Cérebro**: epilepsia, depressão, BHE, neurotransmissores, antipsicóticos
-- **Pâncreas**: diabetes, insulinas, antidiabéticos orais, pancreatite
+1. **7 nativas** (hardcoded): Risco CV, Desmame Corticoides, Equivalência Opioides, Ajuste Dose Renal, Equivalência Antidepressivos, HOMA-IR, FINDRISC — cada uma com página própria e lógica customizada
+2. **8 dinâmicas do sistema** (tabela `tools`, `created_by = NULL`): Risco Cardiovascular, Desmame de Corticoide, Equivalência de Opioides, Ajuste Dose Renal, Equivalência de Antidepressivos, HOMA-IR, FINDRISC, **Escala de Coma de Glasgow** — renderizadas pelo `ToolDetail.tsx` genérico
+3. **4+ criadas por usuários**: Escore CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc — também via `ToolDetail.tsx`
 
-### Componentes Compartilhados
-GameNarrative, GameDifficultySelector, GameFeedbackOverlay, GameStarsResult — padrão da plataforma.
+**Problema visível na imagem**: as 7 nativas aparecem **duplicadas** com suas versões dinâmicas, resultando em cards repetidos na listagem.
 
-### Entregas
-1. Criar `src/components/games/BatalhaNavalClinicaGame.tsx` (~500 linhas)
-2. Registrar em `JogosClinicos.tsx` (games array + gameComponents + import)
+---
 
-### Estrutura Técnica
+### Fase 0 — Resolver Duplicação
 
-```text
-Estado do jogo:
-  board[8][8] = { hasOrgan?, organId?, hit?, status: "hidden"|"water"|"hit"|"miss" }
-  organs[] = { id, name, icon, cells[], sunk }
-  questions[organId][difficulty][] = { question, options[4], correctIndex, explanation, reference }
-  
-Fluxo por tiro:
-  1. Jogador clica célula → revela
-  2. Se água → marca azul, próximo tiro
-  3. Se órgão → abre GameFeedbackOverlay-style modal com pergunta
-  4. Resposta correta → célula verde, pontos, check se órgão afundou
-  5. Resposta errada → célula vermelha, explicação formativa, tiro perdido
-```
+Remover os 7 registros duplicados da tabela `tools` (ou filtrar no frontend) para que cada calculadora apareça apenas uma vez. Alternativa: ocultar os cards dinâmicos quando já existe uma versão nativa com o mesmo slug.
+
+**Arquivo**: `src/pages/Calculadoras.tsx` — filtrar `tools` excluindo slugs que já existem em `NATIVE_CALCULATORS`.
+
+---
+
+### Fase 1 — Melhorias no Motor Genérico (`ToolDetail.tsx`)
+
+Estas melhorias beneficiam TODAS as calculadoras dinâmicas (Glasgow, CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc e futuras):
+
+1. **Gauge visual de resultado**: Após o cálculo, exibir um componente `RiskGauge` (semicircular com Recharts) colorido por faixa de interpretação. O `ToolDetail` já tem acesso às `interpretations` com ranges e cores — basta renderizar um gauge quando houver resultado numérico.
+
+2. **Referências clínicas inline**: Adicionar campo `references` ao schema de `ToolFormula`. Quando presente, exibir seção "Referências" abaixo do resultado com links clicáveis. Retroalimentar as calculadoras existentes no banco.
+
+3. **Calculadoras Relacionadas**: Componente `RelatedCalculators` que sugere outras ferramentas da mesma categoria após o resultado. Consulta simples à tabela `tools` filtrando pela mesma `category_id`.
+
+4. **Barra de interpretação segmentada**: Para escores como Glasgow (3-15), CURB-65 (0-5), HAS-BLED (0-9), Apgar (0-10) — renderizar uma barra horizontal segmentada com a posição do paciente marcada. Aplica-se automaticamente quando a fórmula tem múltiplas interpretações com ranges numéricos.
+
+**Arquivos**:
+- Criar `src/components/calculators/RiskGauge.tsx`
+- Criar `src/components/calculators/RelatedCalculators.tsx`
+- Criar `src/components/calculators/ScoreBar.tsx`
+- Editar `src/pages/ToolDetail.tsx` — integrar os 3 componentes após o bloco de resultado
+
+---
+
+### Fase 2 — Melhorias nas 7 Calculadoras Nativas
+
+Como detalhado no plano anterior:
+
+| Calculadora | Melhoria Principal |
+|---|---|
+| Risco CV | Gauge semicircular + comparação automática 3 modelos |
+| Desmame Corticoides | AreaChart da curva de redução semanal |
+| Equivalência Opioides | Barras horizontais comparativas |
+| Ajuste Dose Renal | Gauge eGFR + barra KDIGO + expandir para 30+ fármacos |
+| Equivalência Antidepressivos | Radar chart de perfis + modo comparação |
+| HOMA-IR | Gauge com zonas de resistência |
+| FINDRISC | Barra segmentada por faixa de risco |
+
+Adicionar referências clínicas e calculadoras relacionadas a todas.
+
+**Arquivos**: as 7 páginas em `src/pages/` + componentes compartilhados da Fase 1.
+
+---
+
+### Fase 3 — Melhorias Transversais
+
+1. **Tendência temporal no histórico**: Adicionar sparklines ao `CalculationHistory.tsx` mostrando evolução de valores ao longo do tempo por paciente.
+
+2. **Atualizar calculadoras dinâmicas no banco**: Executar UPDATE nas calculadoras Glasgow, CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc para adicionar `references` e melhorar `interpretations` com cores e recomendações.
+
+---
+
+### Resumo de Impacto
+
+- **Fase 0**: Corrige duplicação visível na imagem — impacto imediato na UX
+- **Fase 1**: Beneficia TODAS as calculadoras (atuais e futuras) via motor genérico — maior ROI
+- **Fase 2**: Diferencial premium nas 7 nativas com gráficos específicos
+- **Fase 3**: Acompanhamento longitudinal e enriquecimento de dados
+
+Recomendo implementar na ordem: Fase 0 → Fase 1 → Fase 2 → Fase 3.
 
