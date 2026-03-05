@@ -34,6 +34,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = claimsData.claims.sub as string;
 
     const { action, prompt, plan } = await req.json();
 
@@ -46,7 +47,7 @@ serve(async (req) => {
 
     // ── STEP 1: Generate implementation plan ──
     if (action === "plan") {
-      const { data } = await callAI({
+      const { data } = await callAI({ userId, promptType: "game-plan",
         messages: [
           {
             role: "system",
@@ -115,7 +116,7 @@ IMPORTANTE: O plano deve ser inovador, com grande diferencial de mercado e profu
         });
       }
 
-      const { data } = await callAI({
+      const { data } = await callAI({ userId, promptType: "game-generate",
         messages: [
           {
             role: "system",

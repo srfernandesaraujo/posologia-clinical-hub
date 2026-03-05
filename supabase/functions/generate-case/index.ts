@@ -138,6 +138,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = claimsData.claims.sub as string;
 
     const { simulator_slug, tool_id } = await req.json();
 
@@ -217,7 +218,7 @@ Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma
     const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
     const randomSeed = Math.floor(Math.random() * 100000);
 
-    const { data } = await callAI({
+    const { data } = await callAI({ userId, promptType: "case-generate",
       messages: [
         { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
         { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },

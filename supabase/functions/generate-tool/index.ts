@@ -31,6 +31,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = claimsData.claims.sub as string;
 
     const { prompt, type, mode, existingTool } = await req.json();
 
@@ -338,7 +339,7 @@ REGRAS GERAIS:
       };
     }
 
-    const { data } = await callAI({
+    const { data } = await callAI({ userId, promptType: isEdit ? "tool-edit" : "tool-generate",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt },

@@ -209,6 +209,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = claimsData.claims.sub as string;
 
     const { gameId, aiPrompt, userPrompt, updateType = "incremental", currentData = null } = await req.json();
 
@@ -236,7 +237,7 @@ serve(async (req) => {
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const { data } = await callAI({
+        const { data } = await callAI({ userId, promptType: "game-update",
           messages: [
             {
               role: "system",

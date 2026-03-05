@@ -203,14 +203,61 @@ async function tryLovableAI(options: AiRequestOptions): Promise<any> {
   return await response.json();
 }
 
-export async function callAI(options: AiRequestOptions): Promise<{ data: any; provider: string }> {
+// Cost per 1M tokens (USD) - approximate
+const COST_PER_MILLION: Record<string, { input: number; output: number }> = {
+  "gpt-4o-mini": { input: 0.15, output: 0.60 },
+  "gpt-4o": { input: 2.50, output: 10.00 },
+  "llama-3.3-70b-versatile": { input: 0.59, output: 0.79 },
+  "claude-sonnet-4-20250514": { input: 3.00, output: 15.00 },
+  "gemini-2.5-flash": { input: 0.15, output: 0.60 },
+  "google/gemini-3-flash-preview": { input: 0.15, output: 0.60 },
+  "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
+};
+
+function estimateCost(model: string, tokensIn: number, tokensOut: number): number {
+  const rates = COST_PER_MILLION[model] || { input: 0.50, output: 1.50 };
+  return (tokensIn * rates.input + tokensOut * rates.output) / 1_000_000;
+}
+
+async function logAiUsage(userId: string | null, providerName: string, model: string, promptType: string, data: any) {
+  try {
+    if (!userId) return;
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const usage = data?.usage;
+    const tokensInput = usage?.prompt_tokens ?? 0;
+    const tokensOutput = usage?.completion_tokens ?? 0;
+    const cost = estimateCost(model, tokensInput, tokensOutput);
+
+    await supabase.from("ai_usage_log").insert({
+      user_id: userId,
+      provider: providerName,
+      model,
+      prompt_type: promptType,
+      tokens_input: tokensInput,
+      tokens_output: tokensOutput,
+      estimated_cost_usd: cost,
+    });
+  } catch (e) {
+    console.warn("[AI-PROVIDER] Failed to log usage:", e);
+  }
+}
+
+export async function callAI(options: AiRequestOptions & { userId?: string; promptType?: string }): Promise<{ data: any; provider: string }> {
   const providers = await getActiveProviders();
+  const userId = options.userId || null;
+  const promptType = options.promptType || "unknown";
 
   // Try external providers first (sorted by priority)
   for (const provider of providers) {
     try {
       const data = await tryProvider(provider, options);
+      const model = provider.model || PROVIDER_CONFIGS[provider.provider]?.defaultModel || "unknown";
       console.log(`[AI-PROVIDER] Success with ${provider.display_name}`);
+      logAiUsage(userId, provider.provider, model, promptType, data);
       return { data, provider: provider.display_name };
     } catch (err) {
       console.warn(`[AI-PROVIDER] ${provider.display_name} failed:`, err instanceof Error ? err.message : err);
@@ -220,7 +267,9 @@ export async function callAI(options: AiRequestOptions): Promise<{ data: any; pr
   // Fallback to Lovable AI
   try {
     const data = await tryLovableAI(options);
+    const model = options.model || "google/gemini-3-flash-preview";
     console.log("[AI-PROVIDER] Success with Lovable AI (fallback)");
+    logAiUsage(userId, "lovable", model, promptType, data);
     return { data, provider: "Lovable AI" };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
