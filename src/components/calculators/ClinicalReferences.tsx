@@ -47,6 +47,31 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "IDF Consensus on Type 2 Diabetes Prevention", source: "Int Diabetes Federation", year: "2007" },
     { title: "Screening for Prediabetes and T2DM", source: "ADA Standards", year: "2024" },
   ],
+  "ckd-epi": [
+    { title: "New Creatinine- and Cystatin C–Based Equations (CKD-EPI 2021)", source: "NEJM", year: "2021", url: "https://doi.org/10.1056/NEJMoa2102953" },
+    { title: "KDIGO 2024 Clinical Practice Guideline for CKD", source: "Kidney International", year: "2024", url: "https://kdigo.org/guidelines/ckd-evaluation-and-management/" },
+    { title: "Removing Race From eGFR Calculations", source: "NEJM", year: "2021" },
+  ],
+  "correcao-sodio": [
+    { title: "Diagnosis and Treatment of Hyponatremia", source: "Am J Med", year: "2013", url: "https://doi.org/10.1016/j.amjmed.2013.02.015" },
+    { title: "European Hyponatremia Guidelines", source: "Eur J Endocrinol", year: "2014" },
+    { title: "Correction of Hyperglycemia-Related Hyponatremia (Katz)", source: "NEJM", year: "1973" },
+  ],
+  "correcao-calcio": [
+    { title: "Evaluation and Treatment of Hypocalcemia", source: "Endocrine Society", year: "2022" },
+    { title: "Albumin-Corrected Calcium (Payne Formula)", source: "BMJ", year: "1979" },
+    { title: "Management of Acute Hypercalcemia", source: "NEJM", year: "2005", url: "https://doi.org/10.1056/NEJMcp0801870" },
+  ],
+  "wells-score": [
+    { title: "Wells Score for PE — Derivation and Validation", source: "Thromb Haemost", year: "2000" },
+    { title: "Diagnosis of DVT with Wells Score", source: "Lancet", year: "1997" },
+    { title: "ACEP Clinical Policy: PE", source: "Ann Emerg Med", year: "2018", url: "https://doi.org/10.1016/j.annemergmed.2018.03.005" },
+  ],
+  "qsofa": [
+    { title: "Sepsis-3: Third International Consensus Definitions for Sepsis", source: "JAMA", year: "2016", url: "https://doi.org/10.1001/jama.2016.0287" },
+    { title: "Surviving Sepsis Campaign Guidelines 2021", source: "Crit Care Med", year: "2021", url: "https://doi.org/10.1097/CCM.0000000000005337" },
+    { title: "qSOFA as Screening Tool for Sepsis", source: "Chest", year: "2017" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert, Crown, Plus, Lock, Share2 } from "lucide-react";
+import { Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert, Crown, Plus, Lock, Share2, Droplets, Bone, HeartPulse, Thermometer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -32,12 +32,18 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Calculadora de Equivalência de Antidepressivos", description: "Conversão segura entre antidepressivos com estratégia de transição terapêutica.", category: "Psiquiatria", path: "/calculadoras/equivalencia-antidepressivos", icon: Brain, searchKey: "calculadora de equivalência de antidepressivos" },
   { name: "Calculadora de Resistência Insulínica (HOMA-IR)", description: "Cálculo e interpretação do índice HOMA-IR para avaliação metabólica.", category: "Endocrinologia", path: "/calculadoras/homa-ir", icon: Activity, searchKey: "calculadora de resistência insulínica homa-ir" },
   { name: "Calculadora de Risco de Diabetes Tipo 2 (FINDRISC)", description: "Escore FINDRISC para estimar risco de DM2 em 10 anos.", category: "Endocrinologia", path: "/calculadoras/findrisc", icon: ShieldAlert, searchKey: "calculadora de risco de diabetes tipo 2 findrisc" },
+  { name: "CKD-EPI 2021 (TFG estimada)", description: "Equação 2021 sem correção racial — estimativa da taxa de filtração glomerular.", category: "Nefrologia", path: "/calculadoras/ckd-epi", icon: Beaker, searchKey: "ckd-epi tfg taxa filtracao glomerular renal creatinina" },
+  { name: "Correção de Sódio por Hiperglicemia", description: "Corrige sódio pela glicemia (fórmula de Katz) — essencial em CAD/EHH.", category: "Emergência / Medicina Interna", path: "/calculadoras/correcao-sodio", icon: Droplets, searchKey: "correcao sodio hiponatremia hiperglicemia katz" },
+  { name: "Correção de Cálcio pela Albumina", description: "Ajusta o cálcio total pela albumina sérica (fórmula de Payne).", category: "Emergência / Medicina Interna", path: "/calculadoras/correcao-calcio", icon: Bone, searchKey: "correcao calcio albumina payne hipocalcemia" },
+  { name: "Escore de Wells (TEP / TVP)", description: "Estratificação de probabilidade pré-teste para tromboembolismo venoso.", category: "Cardiologia", path: "/calculadoras/wells-score", icon: HeartPulse, searchKey: "wells score tep tvp embolia pulmonar trombose venosa" },
+  { name: "qSOFA (Quick SOFA)", description: "Triagem rápida à beira-leito para risco de sepse — Sepsis-3.", category: "Emergência / Medicina Interna", path: "/calculadoras/qsofa", icon: Thermometer, searchKey: "qsofa sofa sepse sepsis triagem" },
 ];
 
 // Slugs of native calculators — used to filter out duplicates from dynamic tools
 const NATIVE_SLUGS = new Set([
   "risco-cardiovascular", "desmame-corticoide", "equivalencia-opioides",
   "ajuste-dose-renal", "equivalencia-antidepressivos", "homa-ir", "findrisc",
+  "ckd-epi", "correcao-sodio", "correcao-calcio", "wells-score", "qsofa",
   // Also match Portuguese variations used in the DB
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
