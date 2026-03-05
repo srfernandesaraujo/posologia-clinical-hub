@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2,
-  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock,
+  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export function AppLayout() {
     { label: t("nav.games"), to: "/jogos-clinicos", icon: Gamepad2 },
     { label: t("nav.myAccount"), to: "/minha-conta", icon: User },
     { label: t("nav.plans"), to: "/planos", icon: Crown },
+    { label: "Documentação", to: "/documentacao", icon: FileText },
   ];
 
   const premiumItems = [

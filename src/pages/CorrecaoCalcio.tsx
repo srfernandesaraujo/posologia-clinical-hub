@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
+import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Bone, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
@@ -93,7 +93,6 @@ export default function CorrecaoCalcio() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
-  const { saveCalculation } = useCalculationHistory();
 
   const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
@@ -102,19 +101,10 @@ export default function CorrecaoCalcio() {
     const ca = Number(form.calcioTotal);
     const alb = Number(form.albumina);
     if (ca <= 0 || alb <= 0) { setErro("Valores devem ser maiores que zero."); return; }
-    // Fórmula: Ca corr = Ca medido + 0.8 × (4.0 – Albumina)
     const delta = 0.8 * (4.0 - alb);
     const caCorr = Math.round((ca + delta) * 10) / 10;
     const res = classificar(caCorr, delta, modo);
     setResultado(res);
-    saveCalculation({
-      calculatorName: "Correção de Cálcio",
-      calculatorSlug: "correcao-calcio",
-      patientName: form.nomePaciente || undefined,
-      date: form.data,
-      summary: `Ca corrigido: ${res.calcioCorrigido.toFixed(1)} mg/dL – ${res.classificacao}`,
-      details: { "Ca total": `${form.calcioTotal} mg/dL`, Albumina: `${form.albumina} g/dL`, "Ca corrigido": res.calcioCorrigido.toFixed(1), Classificação: res.classificacao },
-    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -139,6 +129,15 @@ export default function CorrecaoCalcio() {
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="correcao-calcio" toolName="Correção de Cálcio" />
             <CalculationHistory calculatorSlug="correcao-calcio" />
+            {resultado && (
+              <SaveToHistoryButton
+                calculatorName="Correção de Cálcio"
+                calculatorSlug="correcao-calcio"
+                summary={`Ca corrigido: ${resultado.calcioCorrigido.toFixed(1)} mg/dL – ${resultado.classificacao}`}
+                details={{ "Ca total": `${form.calcioTotal} mg/dL`, Albumina: `${form.albumina} g/dL`, "Ca corrigido": resultado.calcioCorrigido.toFixed(1), Classificação: resultado.classificacao }}
+                date={form.data}
+              />
+            )}
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico

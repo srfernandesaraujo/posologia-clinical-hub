@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface CalculationEntry {
   id: string;
@@ -6,78 +8,73 @@ export interface CalculationEntry {
   calculatorSlug: string;
   patientName?: string;
   date: string;
-  summary: string; // e.g. "Risco: 12% – Moderado"
-  details: Record<string, string | number>; // key-value pairs of inputs/outputs
+  summary: string;
+  details: Record<string, string | number>;
   createdAt: string;
 }
 
-const STORAGE_KEY = "medtools_calc_history";
-const CONSENT_KEY = "medtools_calc_history_consent";
-
-function loadHistory(): CalculationEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistHistory(entries: CalculationEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
-
 export function useCalculationHistory() {
-  const [entries, setEntries] = useState<CalculationEntry[]>(loadHistory);
-  const [hasConsent, setHasConsent] = useState(() => localStorage.getItem(CONSENT_KEY) === "true");
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<CalculationEntry[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Sync state when localStorage changes (multi-tab)
-  useEffect(() => {
-    const handler = () => setEntries(loadHistory());
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+  const fetchHistory = useCallback(async () => {
+    if (!user) { setEntries([]); return; }
+    setLoading(true);
+    const { data } = await supabase
+      .from("calculation_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (data) {
+      setEntries(data.map((row: any) => ({
+        id: row.id,
+        calculatorName: row.calculator_name,
+        calculatorSlug: row.calculator_slug,
+        patientName: row.patient_name || undefined,
+        date: row.calculation_date || "",
+        summary: row.summary,
+        details: (row.details || {}) as Record<string, string | number>,
+        createdAt: row.created_at,
+      })));
+    }
+    setLoading(false);
+  }, [user]);
 
-  const grantConsent = useCallback(() => {
-    localStorage.setItem(CONSENT_KEY, "true");
-    setHasConsent(true);
-  }, []);
-
-  const revokeConsent = useCallback(() => {
-    localStorage.removeItem(CONSENT_KEY);
-    localStorage.removeItem(STORAGE_KEY);
-    setHasConsent(false);
-    setEntries([]);
-  }, []);
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const saveCalculation = useCallback(
-    (entry: Omit<CalculationEntry, "id" | "createdAt">) => {
-      if (!hasConsent) return;
-      const newEntry: CalculationEntry = {
-        ...entry,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      };
-      const updated = [newEntry, ...entries].slice(0, 200); // max 200 entries
-      setEntries(updated);
-      persistHistory(updated);
+    async (entry: Omit<CalculationEntry, "id" | "createdAt">) => {
+      if (!user) return;
+      const { error } = await supabase.from("calculation_history").insert({
+        user_id: user.id,
+        calculator_name: entry.calculatorName,
+        calculator_slug: entry.calculatorSlug,
+        patient_name: entry.patientName || null,
+        calculation_date: entry.date || null,
+        summary: entry.summary,
+        details: entry.details as any,
+      });
+      if (!error) await fetchHistory();
     },
-    [hasConsent, entries]
+    [user, fetchHistory]
   );
 
   const deleteEntry = useCallback(
-    (id: string) => {
-      const updated = entries.filter((e) => e.id !== id);
-      setEntries(updated);
-      persistHistory(updated);
+    async (id: string) => {
+      if (!user) return;
+      await supabase.from("calculation_history").delete().eq("id", id);
+      setEntries((prev) => prev.filter((e) => e.id !== id));
     },
-    [entries]
+    [user]
   );
 
-  const clearHistory = useCallback(() => {
+  const clearHistory = useCallback(async () => {
+    if (!user) return;
+    await supabase.from("calculation_history").delete().eq("user_id", user.id);
     setEntries([]);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  }, [user]);
 
   const getByCalculator = useCallback(
     (slug: string) => entries.filter((e) => e.calculatorSlug === slug),
@@ -92,9 +89,10 @@ export function useCalculationHistory() {
 
   return {
     entries,
-    hasConsent,
-    grantConsent,
-    revokeConsent,
+    loading,
+    hasConsent: !!user, // always enabled for logged-in users
+    grantConsent: () => {},
+    revokeConsent: clearHistory,
     saveCalculation,
     deleteEntry,
     clearHistory,

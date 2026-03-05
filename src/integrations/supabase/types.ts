@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      calculation_history: {
+        Row: {
+          calculation_date: string | null
+          calculator_name: string
+          calculator_slug: string
+          created_at: string
+          details: Json
+          id: string
+          patient_name: string | null
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          calculation_date?: string | null
+          calculator_name: string
+          calculator_slug: string
+          created_at?: string
+          details?: Json
+          id?: string
+          patient_name?: string | null
+          summary: string
+          user_id: string
+        }
+        Update: {
+          calculation_date?: string | null
+          calculator_name?: string
+          calculator_slug?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          patient_name?: string | null
+          summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string

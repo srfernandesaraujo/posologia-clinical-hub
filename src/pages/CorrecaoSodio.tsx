@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
+import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Droplets, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
@@ -109,9 +109,8 @@ export default function CorrecaoSodio() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
-  const { saveCalculation } = useCalculationHistory();
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+    const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
   const calcular = () => {
     if (!form.sodioMedido || !form.glicemia) { setErro("Preencha sódio medido e glicemia."); return; }
@@ -121,14 +120,6 @@ export default function CorrecaoSodio() {
     const { corrigido, delta } = calcCorrecao(na, glic, form.unidadeGlicemia);
     const res = classificar(Math.round(corrigido * 10) / 10, delta, modo);
     setResultado(res);
-    saveCalculation({
-      calculatorName: "Correção de Sódio",
-      calculatorSlug: "correcao-sodio",
-      patientName: form.nomePaciente || undefined,
-      date: form.data,
-      summary: `Na corrigido: ${res.sodioCorrigido.toFixed(1)} mEq/L – ${res.classificacao}`,
-      details: { "Na medido": `${form.sodioMedido} mEq/L`, Glicemia: `${form.glicemia}`, "Na corrigido": res.sodioCorrigido.toFixed(1), Classificação: res.classificacao },
-    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -153,6 +144,15 @@ export default function CorrecaoSodio() {
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="correcao-sodio" toolName="Correção de Sódio" />
             <CalculationHistory calculatorSlug="correcao-sodio" />
+            {resultado && (
+              <SaveToHistoryButton
+                calculatorName="Correção de Sódio"
+                calculatorSlug="correcao-sodio"
+                summary={`Na corrigido: ${resultado.sodioCorrigido.toFixed(1)} mEq/L – ${resultado.classificacao}`}
+                details={{ "Na medido": `${form.sodioMedido} mEq/L`, Glicemia: `${form.glicemia}`, "Na corrigido": resultado.sodioCorrigido.toFixed(1), Classificação: resultado.classificacao }}
+                date={form.data}
+              />
+            )}
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico
