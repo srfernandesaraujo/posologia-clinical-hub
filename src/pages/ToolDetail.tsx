@@ -32,6 +32,8 @@ import { ShareToolButton } from "@/components/ShareToolButton";
 import { RiskGauge as RiskGaugeComponent } from "@/components/calculators/RiskGauge";
 import { ScoreBar as ScoreBarComponent } from "@/components/calculators/ScoreBar";
 import { RelatedCalculators as RelatedCalculatorsComponent } from "@/components/calculators/RelatedCalculators";
+import { ClinicalReferences } from "@/components/calculators/ClinicalReferences";
+import type { Reference } from "@/components/calculators/ClinicalReferences";
 
 
 /* ─── Types ─── */
@@ -96,6 +98,7 @@ interface ToolFormula {
   expression: string; interpretation: Interpretation[];
   sections?: { title: string; fields: any[] }[];
   type?: string; patient_summary?: string; steps?: SimStep[];
+  references?: Reference[];
   // Legacy PRM fields
   patient?: any; history?: any; prescription?: any[]; answers?: any[];
 }
@@ -1122,6 +1125,11 @@ export default function ToolDetail() {
                     </ul>
                   </div>
                 )}
+                {/* Clinical References */}
+                {formula?.references && formula.references.length > 0 && (
+                  <ClinicalReferences references={formula.references} />
+                )}
+
                 <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(tool.name, values, fields, result)}>
                   <FileText className="h-4 w-4" />Gerar Relatório PDF
                 </Button>
