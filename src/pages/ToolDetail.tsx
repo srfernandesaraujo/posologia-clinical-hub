@@ -29,7 +29,9 @@ import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { ShareToolButton } from "@/components/ShareToolButton";
-
+import { RiskGauge as RiskGaugeComponent } from "@/components/calculators/RiskGauge";
+import { ScoreBar as ScoreBarComponent } from "@/components/calculators/ScoreBar";
+import { RelatedCalculators as RelatedCalculatorsComponent } from "@/components/calculators/RelatedCalculators";
 
 
 /* ─── Types ─── */
@@ -1064,6 +1066,50 @@ export default function ToolDetail() {
                   <p className="text-2xl font-bold" style={{ color: result.color }}>{result.label}</p>
                   <p className="text-sm text-muted-foreground mt-2">{result.description}</p>
                 </div>
+
+                {/* Score Bar for multi-interpretation scales */}
+                {calculatedScore !== null && formula?.interpretation && formula.interpretation.length >= 3 && (() => {
+                  const interps = formula.interpretation;
+                  const allRanges = interps.map(interp => {
+                    const rangeMatch = interp.range.match(/(\d+)\s*[-–a]\s*(\d+)/);
+                    const gteMatch = interp.range.match(/>=?\s*(\d+)/);
+                    const lteMatch = interp.range.match(/<=?\s*(\d+)/);
+                    if (rangeMatch) return { min: parseInt(rangeMatch[1]), max: parseInt(rangeMatch[2]) };
+                    if (gteMatch) return { min: parseInt(gteMatch[1]), max: parseInt(gteMatch[1]) + 10 };
+                    if (lteMatch) return { min: 0, max: parseInt(lteMatch[1]) };
+                    return null;
+                  }).filter(Boolean) as { min: number; max: number }[];
+                  
+                  if (allRanges.length >= 3) {
+                    const globalMin = Math.min(...allRanges.map(r => r.min));
+                    const globalMax = Math.max(...allRanges.map(r => r.max));
+                    const segments = interps.map((interp, i) => ({
+                      min: allRanges[i]?.min ?? globalMin,
+                      max: allRanges[i]?.max ?? globalMax,
+                      color: interp.color || "hsl(var(--primary))",
+                      label: interp.label,
+                    }));
+                    return (
+                      <div className="rounded-2xl border border-border bg-card p-5">
+                        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Posição no Escore</h3>
+                        <ScoreBarComponent value={calculatedScore} minValue={globalMin} maxValue={globalMax} segments={segments} />
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Risk Gauge for percentage/numeric results */}
+                {calculatedScore !== null && formula?.interpretation && formula.interpretation.length >= 2 && formula.interpretation.length < 3 && (
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <RiskGaugeComponent
+                      value={calculatedScore}
+                      maxValue={Math.max(calculatedScore * 1.5, 100)}
+                      label={result.label}
+                    />
+                  </div>
+                )}
+
                 {result.recommendations && result.recommendations.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card p-6">
                     <h3 className="font-semibold mb-3">Condutas Sugeridas</h3>
@@ -1079,6 +1125,11 @@ export default function ToolDetail() {
                 <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(tool.name, values, fields, result)}>
                   <FileText className="h-4 w-4" />Gerar Relatório PDF
                 </Button>
+
+                {/* Related Calculators */}
+                {tool.type === "calculadora" && (
+                  <RelatedCalculatorsComponent currentSlug={tool.slug} categoryId={tool.category_id} />
+                )}
               </>
             ) : (
               <div className="rounded-2xl border border-border bg-card p-6 text-center">

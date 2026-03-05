@@ -3,6 +3,9 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Beaker, User, Stethoscope, AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { ScoreBar } from "@/components/calculators/ScoreBar";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -446,6 +449,25 @@ export default function AjusteDoseRenal() {
                 </div>
               </div>
 
+              {/* KDIGO Stage Bar */}
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Classificação KDIGO</h3>
+                <ScoreBar
+                  value={resultado.egfr}
+                  minValue={0}
+                  maxValue={120}
+                  segments={[
+                    { min: 0, max: 15, color: "hsl(0 72% 51%)", label: "G5" },
+                    { min: 15, max: 30, color: "hsl(20 90% 48%)", label: "G4" },
+                    { min: 30, max: 45, color: "hsl(38 92% 50%)", label: "G3b" },
+                    { min: 45, max: 60, color: "hsl(38 92% 50%)", label: "G3a" },
+                    { min: 60, max: 90, color: "hsl(142 71% 45%)", label: "G2" },
+                    { min: 90, max: 120, color: "hsl(142 71% 45%)", label: "G1" },
+                  ]}
+                  unit="mL/min"
+                />
+              </div>
+
               {resultado.ajusteDose && resultado.drugInfo && (
                 <div className="rounded-2xl border border-border bg-card p-6">
                   <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Ajuste de Dose — {resultado.drugInfo.nome}</h2>
@@ -474,6 +496,9 @@ export default function AjusteDoseRenal() {
               <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo)}>
                 <FileText className="h-4 w-4" /> Gerar Relatório PDF
               </Button>
+
+              <ClinicalReferences references={CALCULATOR_REFERENCES["ajuste-dose-renal"]} />
+              <RelatedCalculators currentSlug="ajuste-dose-renal" />
             </>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">

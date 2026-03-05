@@ -3,6 +3,9 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Brain, User, Stethoscope, AlertTriangle, Info } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -394,6 +397,28 @@ export default function EquivalenciaAntidepressivos() {
                 </div>
               </div>
 
+              {/* Radar Chart comparing profiles */}
+              {origDrug && destDrug && (
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Comparação de Perfil</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={[
+                      { axis: "Sedação", A: { baixa: 1, moderada: 2, alta: 3 }[origDrug.sedacao] || 1, B: { baixa: 1, moderada: 2, alta: 3 }[destDrug.sedacao] || 1 },
+                      { axis: "Ganho Peso", A: { baixo: 1, moderado: 2, alto: 3 }[origDrug.ganPeso] || 1, B: { baixo: 1, moderado: 2, alto: 3 }[destDrug.ganPeso] || 1 },
+                      { axis: "Disf. Sexual", A: { baixo: 1, moderado: 2, alto: 3 }[origDrug.disfSexual] || 1, B: { baixo: 1, moderado: 2, alto: 3 }[destDrug.disfSexual] || 1 },
+                      { axis: "Risco QT", A: { baixo: 1, moderado: 2, alto: 3 }[origDrug.riscoQT] || 1, B: { baixo: 1, moderado: 2, alto: 3 }[destDrug.riscoQT] || 1 },
+                    ]}>
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="axis" tick={{ fontSize: 10 }} />
+                      <PolarRadiusAxis domain={[0, 3]} tick={false} axisLine={false} />
+                      <Radar name={origDrug.nome} dataKey="A" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" strokeWidth={2} />
+                      <Radar name={destDrug.nome} dataKey="B" stroke="hsl(38 92% 50%)" fill="hsl(38 92% 50% / 0.2)" strokeWidth={2} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
               <div className="rounded-2xl border border-border bg-card p-6">
                 <h2 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Estratégia de Transição</h2>
                 <p className="font-medium text-sm mb-2">{resultado.estrategia}</p>
@@ -415,6 +440,9 @@ export default function EquivalenciaAntidepressivos() {
               <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo)}>
                 <FileText className="h-4 w-4" /> Gerar Relatório PDF
               </Button>
+
+              <ClinicalReferences references={CALCULATOR_REFERENCES["equivalencia-antidepressivos"]} />
+              <RelatedCalculators currentSlug="equivalencia-antidepressivos" />
             </>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">

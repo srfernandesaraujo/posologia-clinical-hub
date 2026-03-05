@@ -3,6 +3,9 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, CartesianGrid, ReferenceLine, Tooltip } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
@@ -833,6 +836,21 @@ export default function DesmaCorticoide() {
                 </p>
               </div>
 
+              {/* Tapering Curve Chart */}
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Curva de Desmame</h3>
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart data={resultado.esquema.map(e => ({ semana: `S${e.semana}`, dose: e.dose }))} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="semana" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} unit=" mg" />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <ReferenceLine y={5} stroke="hsl(142 71% 45%)" strokeDasharray="5 5" label={{ value: "Zona fisiológica", position: "right", fontSize: 9 }} />
+                    <Area type="monotone" dataKey="dose" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
               {/* Tapering schedule */}
               <div className="rounded-2xl border border-border bg-card p-6">
                 <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">
@@ -893,6 +911,9 @@ export default function DesmaCorticoide() {
                   ))}
                 </ul>
               </div>
+
+              <ClinicalReferences references={CALCULATOR_REFERENCES["desmame-corticoide"]} />
+              <RelatedCalculators currentSlug="desmame-corticoide" />
 
               {/* Disclaimer */}
               <div className="rounded-2xl border border-border bg-card/50 p-4">
