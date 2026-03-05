@@ -56,6 +56,7 @@ import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
 import JogosClinicos from "./pages/JogosClinicos";
 import EmbedTool from "./pages/EmbedTool";
+import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -129,6 +130,7 @@ const App = () => (
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
               <Route path="/jogos-clinicos" element={<JogosClinicos />} />
+              <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 
             {/* Admin routes */}

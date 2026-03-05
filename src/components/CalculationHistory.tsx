@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
-import { History, Trash2, Search, X, ShieldCheck, ShieldOff, ChevronDown, ChevronUp, Clock, TrendingUp, User } from "lucide-react";
+import { History, Trash2, Search, X, ChevronDown, ChevronUp, Clock, TrendingUp, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCalculationHistory, type CalculationEntry } from "@/hooks/useCalculationHistory";
 import { toast } from "sonner";
@@ -54,7 +52,7 @@ function groupByPatientAndCalc(entries: CalculationEntry[]) {
 }
 
 export function CalculationHistory({ calculatorSlug }: Props) {
-  const { entries, hasConsent, grantConsent, revokeConsent, deleteEntry, clearHistory, getByCalculator } = useCalculationHistory();
+  const { entries, loading, hasConsent, grantConsent, revokeConsent, deleteEntry, clearHistory, getByCalculator } = useCalculationHistory();
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -101,37 +99,13 @@ export function CalculationHistory({ calculatorSlug }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        {/* Consent */}
-        <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30">
-          <div className="flex items-center gap-2">
-            {hasConsent ? <ShieldCheck className="h-4 w-4 text-green-500" /> : <ShieldOff className="h-4 w-4 text-muted-foreground" />}
-            <Label htmlFor="consent" className="text-sm cursor-pointer">
-              {hasConsent ? "Histórico ativado (dados locais)" : "Ativar histórico local"}
-            </Label>
-          </div>
-          <Switch
-            id="consent"
-            checked={hasConsent}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                grantConsent();
-                toast.success("Histórico ativado! Dados salvos apenas no seu dispositivo.");
-              } else {
-                revokeConsent();
-                toast.info("Histórico desativado e dados removidos.");
-              }
-            }}
-          />
-        </div>
-
-        {!hasConsent && (
+        {/* Content */}
+        {entries.length === 0 && !loading ? (
           <div className="text-sm text-muted-foreground text-center py-6 space-y-2">
-            <p>O histórico salva seus cálculos <strong>localmente no navegador</strong>.</p>
-            <p>Nenhum dado é enviado para servidores. Ative acima para começar.</p>
+            <p>Nenhum cálculo salvo ainda.</p>
+            <p>Use o botão <strong>"Salvar no Histórico"</strong> nas calculadoras para começar.</p>
           </div>
-        )}
-
-        {hasConsent && (
+        ) : (
           <>
             {/* Tabs: List vs Trends */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "trends")} className="flex-1 flex flex-col min-h-0">

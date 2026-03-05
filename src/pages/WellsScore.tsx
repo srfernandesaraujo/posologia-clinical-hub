@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
+import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, HeartPulse, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
@@ -112,7 +112,7 @@ export default function WellsScore() {
   const [checkedTEP, setCheckedTEP] = useState<Record<string, boolean>>({});
   const [checkedTVP, setCheckedTVP] = useState<Record<string, boolean>>({});
   const [resultado, setResultado] = useState<Resultado | null>(null);
-  const { saveCalculation } = useCalculationHistory();
+  
 
   const scoreTEP = CRITERIOS_TEP.reduce((s, c) => s + (checkedTEP[c.id] ? c.pontos : 0), 0);
   const scoreTVP = CRITERIOS_TVP.reduce((s, c) => s + (checkedTVP[c.id] ? c.pontos : 0), 0);
@@ -121,14 +121,6 @@ export default function WellsScore() {
   const calcular = () => {
     const res = tipo === "tep" ? classificarTEP(currentScore, modo) : classificarTVP(currentScore, modo);
     setResultado(res);
-    saveCalculation({
-      calculatorName: `Wells ${tipo.toUpperCase()}`,
-      calculatorSlug: "wells-score",
-      patientName: nomePaciente || undefined,
-      date: data,
-      summary: `Wells ${tipo.toUpperCase()}: ${res.score} pts – ${res.probabilidade}`,
-      details: { Score: String(res.score), Risco: res.risco, Tipo: tipo.toUpperCase() },
-    });
   };
 
   const limpar = () => {
@@ -159,6 +151,15 @@ export default function WellsScore() {
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="wells-score" toolName="Wells Score" />
             <CalculationHistory calculatorSlug="wells-score" />
+            {resultado && (
+              <SaveToHistoryButton
+                calculatorName={`Wells ${tipo.toUpperCase()}`}
+                calculatorSlug="wells-score"
+                summary={`Wells ${tipo.toUpperCase()}: ${resultado.score} pts – ${resultado.probabilidade}`}
+                details={{ Score: String(resultado.score), Risco: resultado.risco, Tipo: tipo.toUpperCase() }}
+                date={data}
+              />
+            )}
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico

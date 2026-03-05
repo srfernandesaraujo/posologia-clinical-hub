@@ -15,6 +15,7 @@
   },
   "home": {
     "badge": "Gratis para profesionales de la salud",
+    "badgeNew": "Plataforma clínica completa",
     "heroTitle1": "Deja de perder tiempo con",
     "heroTitle2": "cálculos manuales",
     "heroSubtitle": "Scores, fórmulas y simuladores clínicos validados — listos para usar en guardia, en sala o en clase. Resultados precisos en segundos.",
@@ -22,7 +23,7 @@
     "haveAccount": "Ya tengo cuenta",
     "evidenceBased": "Basado en evidencia",
     "reviewedByDoctors": "Revisado por médicos",
-    "stats": { "calculators": "Calculadoras Clínicas", "specialties": "Especialidades", "free": "Gratis", "available": "Disponible" },
+    "stats": { "calculators": "Calculadoras Clínicas", "simulators": "Simuladores Clínicos", "games": "Juegos Educativos", "available": "Disponible" },
     "problemTitle": "La rutina clínica no puede esperar",
     "problemSubtitle": "Necesitas respuestas rápidas y confiables. Entregamos exactamente eso.",
     "problemSolve": "El problema que resolvemos",

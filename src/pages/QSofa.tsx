@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
+import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Thermometer, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
@@ -73,21 +73,12 @@ export default function QSofa() {
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [resultado, setResultado] = useState<Resultado | null>(null);
-  const { saveCalculation } = useCalculationHistory();
 
   const score = CRITERIOS_QSOFA.reduce((s, c) => s + (checked[c.id] ? c.pontos : 0), 0);
 
   const calcular = () => {
     const res = classificar(score, modo);
     setResultado(res);
-    saveCalculation({
-      calculatorName: "qSOFA",
-      calculatorSlug: "qsofa",
-      patientName: nomePaciente || undefined,
-      date: data,
-      summary: `qSOFA: ${res.score}/3 – ${res.risco}`,
-      details: { Score: `${res.score}/3`, Risco: res.risco },
-    });
   };
 
   const limpar = () => { setChecked({}); setResultado(null); };
@@ -112,6 +103,15 @@ export default function QSofa() {
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="qsofa" toolName="qSOFA" />
             <CalculationHistory calculatorSlug="qsofa" />
+            {resultado && (
+              <SaveToHistoryButton
+                calculatorName="qSOFA"
+                calculatorSlug="qsofa"
+                summary={`qSOFA: ${resultado.score}/3 – ${resultado.risco}`}
+                details={{ Score: `${resultado.score}/3`, Risco: resultado.risco }}
+                date={data}
+              />
+            )}
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico

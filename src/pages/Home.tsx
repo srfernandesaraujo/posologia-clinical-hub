@@ -34,9 +34,9 @@ export default function Home() {
   ];
 
   const stats = [
-    { value: "50+", label: t("home.stats.calculators") },
-    { value: "12", label: t("home.stats.specialties") },
-    { value: "100%", label: t("home.stats.free") },
+    { value: "20+", label: t("home.stats.calculators") },
+    { value: "8+", label: t("home.stats.simulators") },
+    { value: "20+", label: t("home.stats.games") },
     { value: "24/7", label: t("home.stats.available") },
   ];
 
@@ -58,7 +58,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 mb-6">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">
-                  {t("home.badge")}
+                  {t("home.badgeNew")}
                 </span>
               </div>
 
@@ -294,6 +294,21 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Footer links */}
+      <footer className="border-t border-white/[0.06] bg-[#080C18] py-10">
+        <div className="container mx-auto px-4 text-center space-y-3">
+          <Link to="/documentacao" className="text-sm text-white/50 hover:text-white transition-colors">
+            📖 Documentação
+          </Link>
+          <p className="text-sm text-white/40">
+            {t("common.developedBy")} <span className="text-white/60 font-medium">{t("common.author")}</span> — <span className="text-white/60 font-medium">{t("common.company")}</span>
+          </p>
+          <p className="text-xs text-white/25">
+            © 2026 {t("common.brand")}. {t("common.footer")}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

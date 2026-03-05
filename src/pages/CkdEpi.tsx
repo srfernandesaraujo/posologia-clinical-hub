@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
+import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Beaker, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
@@ -122,7 +122,7 @@ export default function CkdEpi() {
   const [modo, setModo] = useState<Modo>("clinico");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState("");
-  const { saveCalculation } = useCalculationHistory();
+  
 
   const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
 
@@ -134,14 +134,6 @@ export default function CkdEpi() {
     const egfr = calcCkdEpi2021(cr, age, form.sexo);
     const res = classificar(Math.round(egfr * 10) / 10, modo);
     setResultado(res);
-    saveCalculation({
-      calculatorName: "CKD-EPI 2021",
-      calculatorSlug: "ckd-epi",
-      patientName: form.nomePaciente || undefined,
-      date: form.data,
-      summary: `TFGe: ${res.egfr.toFixed(1)} mL/min/1.73m² – ${res.estagio}`,
-      details: { Creatinina: `${form.creatinina} mg/dL`, Idade: form.idade, Sexo: form.sexo === "m" ? "Masculino" : "Feminino", TFGe: res.egfr.toFixed(1), Estágio: res.estagio },
-    });
   };
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
@@ -166,6 +158,15 @@ export default function CkdEpi() {
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="ckd-epi" toolName="CKD-EPI 2021" />
             <CalculationHistory calculatorSlug="ckd-epi" />
+            {resultado && (
+              <SaveToHistoryButton
+                calculatorName="CKD-EPI 2021"
+                calculatorSlug="ckd-epi"
+                summary={`TFGe: ${resultado.egfr.toFixed(1)} mL/min/1.73m² – ${resultado.estagio}`}
+                details={{ Creatinina: `${form.creatinina} mg/dL`, Idade: form.idade, Sexo: form.sexo === "m" ? "Masculino" : "Feminino", TFGe: resultado.egfr.toFixed(1), Estágio: resultado.estagio }}
+                date={form.data}
+              />
+            )}
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="h-3.5 w-3.5" /> Clínico
