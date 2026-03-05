@@ -49,13 +49,25 @@ Deno.serve(async (req) => {
       ).length;
     }
 
+    // AI usage (últimos 30 dias)
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const { data: aiLogs } = await supabase
+      .from("ai_usage_log")
+      .select("tokens_input, tokens_output, estimated_cost_usd")
+      .gte("created_at", since.toISOString());
+
+    const ai_requests = aiLogs?.length ?? 0;
+    const ai_tokens_used = aiLogs?.reduce((sum, r) => sum + (r.tokens_input ?? 0) + (r.tokens_output ?? 0), 0) ?? 0;
+    const ai_cost_usd = aiLogs?.reduce((sum, r) => sum + Number(r.estimated_cost_usd ?? 0), 0) ?? 0;
+
     const metrics = {
       total_users: totalUsers ?? (allUsers?.users?.length ?? 0),
       active_users: activeUsers,
       subscribers: 0,
-      ai_requests: 0,
-      ai_tokens_used: 0,
-      ai_cost_usd: 0,
+      ai_requests,
+      ai_tokens_used,
+      ai_cost_usd,
       revenue_usd: 0,
       mrr_usd: 0,
       collected_at: new Date().toISOString(),
