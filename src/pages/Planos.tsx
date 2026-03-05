@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 const features = [
   { key: "calculators", free: "3 por dia", premium: "Ilimitadas" },
   { key: "simulators", free: false, premium: true },
+  { key: "games", free: false, premium: true },
   { key: "pdf", free: false, premium: true },
   { key: "virtualRooms", free: false, premium: true },
   { key: "priority", free: false, premium: true },
@@ -20,6 +21,7 @@ const features = [
 const featureLabels: Record<string, string> = {
   calculators: "Calculadoras Clínicas",
   simulators: "Simuladores Avançados",
+  games: "Jogos Clínicos Interativos",
   pdf: "Relatórios em PDF",
   virtualRooms: "Salas Virtuais Ilimitadas",
   priority: "Suporte Prioritário",

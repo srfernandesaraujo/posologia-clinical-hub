@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles, Shield, Pill, Heart, Filter } from "lucide-react";
+import { Brain, Home, FlaskConical, Search, Crosshair, Award, Link, Building, Lock, Activity, Syringe, Droplet, TrendingUp, Target, Gamepad2, Plus, Sparkles, Shield, Pill, Heart, Filter, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type MouseEvent, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
@@ -34,6 +34,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 type GameCategory = "all" | "farmacologia" | "investigacao" | "simulacao" | "acao" | "emergencia";
 
@@ -460,7 +461,15 @@ function loadAiGames(): GeneratedGame[] {
 export default function JogosClinicos() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { isPremium } = useFeatureGating();
+  const { isPremium, showUpgrade, upgradeOpen, setUpgradeOpen, upgradeFeature } = useFeatureGating();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
+      setIsAdmin(!!data);
+    });
+  }, [user]);
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [aiData, setAiData] = useState<Record<string, any>>({});
@@ -472,6 +481,14 @@ export default function JogosClinicos() {
 
   const lastInteractionRef = useRef(0);
   const active = activeGame ? gameComponents[activeGame] : null;
+
+  const handleOpenGame = useCallback((gameId: string) => {
+    if (!isPremium) {
+      showUpgrade("Jogos Clínicos são exclusivos do plano Premium");
+      return;
+    }
+    setActiveGame(gameId);
+  }, [isPremium, showUpgrade]);
 
   const getVersion = useCallback((gameId: string) => Number((gameVersions[gameId] ?? 1).toFixed(1)), [gameVersions]);
   const formatVersion = useCallback((value: number) => value.toFixed(1), []);
@@ -595,6 +612,7 @@ export default function JogosClinicos() {
           versionLabel={versionLabel}
           currentData={customData}
           onAiUpdate={handleAiUpdate}
+          showAiFeatures={isAdmin}
         />
 
         <div onClickCapture={handleGameInteraction}>
@@ -618,7 +636,7 @@ export default function JogosClinicos() {
           <h1 className="text-3xl font-bold mb-2">{t("games.title")}</h1>
           <p className="text-muted-foreground text-lg">{t("games.subtitle")}</p>
         </div>
-        {isPremium && (
+        {isAdmin && (
           <Button onClick={() => setCreateDialogOpen(true)} className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
             Criar com IA
@@ -659,7 +677,7 @@ export default function JogosClinicos() {
               <Card
                 key={game.id}
                 className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative group"
-                onClick={() => setActiveGame(game.id)}
+                onClick={() => handleOpenGame(game.id)}
               >
                 <CardHeader className="pb-3">
                   <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-2 w-fit">
@@ -694,9 +712,14 @@ export default function JogosClinicos() {
             return (
               <Card
                 key={game.id}
-                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
-                onClick={() => setActiveGame(game.id)}
+                className={`cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative ${!isPremium ? "opacity-75" : ""}`}
+                onClick={() => handleOpenGame(game.id)}
               >
+                {!isPremium && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Badge variant="outline" className="gap-1 text-xs bg-background"><Lock className="h-3 w-3" /> Premium</Badge>
+                  </div>
+                )}
                 <CardHeader className="pb-3">
                   <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
                     <game.icon className={`h-6 w-6 ${game.iconColor}`} />
@@ -729,9 +752,14 @@ export default function JogosClinicos() {
                     return (
                       <Card
                         key={game.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40"
-                        onClick={() => setActiveGame(game.id)}
+                        className={`cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary/40 relative ${!isPremium ? "opacity-75" : ""}`}
+                        onClick={() => handleOpenGame(game.id)}
                       >
+                        {!isPremium && (
+                          <div className="absolute top-2 right-2 z-10">
+                            <Badge variant="outline" className="gap-1 text-xs bg-background"><Lock className="h-3 w-3" /> Premium</Badge>
+                          </div>
+                        )}
                         <CardHeader className="pb-3">
                           <div className={`inline-flex rounded-xl ${game.iconBg} p-3 mb-2 w-fit`}>
                             <game.icon className={`h-6 w-6 ${game.iconColor}`} />
@@ -755,10 +783,31 @@ export default function JogosClinicos() {
         </>
       )}
 
+      {/* Premium lock banner for free users */}
+      {!isPremium && (
+        <div className="mt-8 rounded-2xl border-2 border-primary/30 bg-primary/5 p-6 flex items-center gap-4">
+          <Crown className="h-8 w-8 text-primary shrink-0" />
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">Jogos Clínicos — Exclusivo Premium</h3>
+            <p className="text-sm text-muted-foreground">Assine o plano Premium para acessar todos os jogos clínicos interativos com feedback formativo e ranking global.</p>
+          </div>
+          <Button onClick={() => showUpgrade("Jogos Clínicos")} className="shrink-0 gap-2">
+            <Crown className="h-4 w-4" />
+            Fazer Upgrade
+          </Button>
+        </div>
+      )}
+
       <CreateGameDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onGameCreated={handleGameCreated}
+      />
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        feature={upgradeFeature}
       />
     </div>
   );

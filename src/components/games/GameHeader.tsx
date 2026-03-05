@@ -24,7 +24,17 @@ interface GameHeaderProps {
   onAiUpdate?: (data: any, updateType: GameUpdateType) => void;
 }
 
-export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, currentData, onAiUpdate }: GameHeaderProps) {
+interface GameHeaderProps {
+  howToPlay: string;
+  aiPrompt: string;
+  gameId: string;
+  versionLabel: string;
+  currentData?: any;
+  onAiUpdate?: (data: any, updateType: GameUpdateType) => void;
+  showAiFeatures?: boolean;
+}
+
+export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, currentData, onAiUpdate, showAiFeatures = true }: GameHeaderProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [userPrompt, setUserPrompt] = useState("");
@@ -85,15 +95,17 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, 
           Como Jogar
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs"
-          onClick={() => setShowAiPanel(!showAiPanel)}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Atualizar com IA
-        </Button>
+        {showAiFeatures && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setShowAiPanel(!showAiPanel)}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Atualizar com IA
+          </Button>
+        )}
       </div>
 
       {showAiPanel && (
