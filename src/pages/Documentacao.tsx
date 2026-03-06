@@ -1,4 +1,4 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, History, FileText, Share2, Globe, Brain, Pill, Heart, Activity, Bone, Droplets, HeartPulse, Thermometer, Syringe, Baby, Stethoscope, Zap } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, History, FileText, Share2, Globe, Brain, Pill, Heart, Activity, Bone, Droplets, HeartPulse, Thermometer, Syringe, Baby, Stethoscope, Zap, Beaker } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 const sections = [
