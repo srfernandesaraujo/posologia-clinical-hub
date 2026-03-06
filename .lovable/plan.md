@@ -1,81 +1,98 @@
 
 
-## Plano Expandido: Melhorias para TODAS as Calculadoras
+# Plano de Implantação: Simuladores de Fisiologia Humana
 
-### Situação Atual
+## Visão Geral
 
-O sistema tem **três camadas** de calculadoras:
+Criação de 10 simuladores nativos de fisiologia humana, seguindo exatamente o padrão de qualidade dos simuladores existentes (Bomba de Infusão, Desmame de Benzo, etc.): casos clínicos built-in, suporte a casos IA, gráficos Recharts interativos, integração com salas virtuais, modo exame e exportação PDF.
 
-1. **7 nativas** (hardcoded): Risco CV, Desmame Corticoides, Equivalência Opioides, Ajuste Dose Renal, Equivalência Antidepressivos, HOMA-IR, FINDRISC — cada uma com página própria e lógica customizada
-2. **8 dinâmicas do sistema** (tabela `tools`, `created_by = NULL`): Risco Cardiovascular, Desmame de Corticoide, Equivalência de Opioides, Ajuste Dose Renal, Equivalência de Antidepressivos, HOMA-IR, FINDRISC, **Escala de Coma de Glasgow** — renderizadas pelo `ToolDetail.tsx` genérico
-3. **4+ criadas por usuários**: Escore CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc — também via `ToolDetail.tsx`
+## Arquitetura
 
-**Problema visível na imagem**: as 7 nativas aparecem **duplicadas** com suas versões dinâmicas, resultando em cards repetidos na listagem.
+Cada simulador será um componente React em `src/pages/simuladores/fisiologia/`, registrado como rota protegida em `App.tsx` e listado em `Simuladores.tsx` sob a nova categoria **"Fisiologia Humana"**.
 
----
+### Padrão de cada simulador:
+- Dashboard inicial com casos built-in + botão "Gerar com IA"
+- Sliders/controles interativos para manipular variáveis fisiológicas
+- Gráficos Recharts em tempo real (LineChart, AreaChart, BarChart)
+- Modo educativo com explicações farmacológicas/fisiológicas
+- Integração com `useSimulatorCases`, `useVirtualRoomCase`, `ExamBanner`, `ExamFeedbackOverlay`, `AdminCaseActions`
+- Exportação PDF com jsPDF
 
-### Fase 0 — Resolver Duplicação
+## Implementação por Lotes
 
-Remover os 7 registros duplicados da tabela `tools` (ou filtrar no frontend) para que cada calculadora apareça apenas uma vez. Alternativa: ocultar os cards dinâmicos quando já existe uma versão nativa com o mesmo slug.
+### Lote 1 (4 simuladores — sistemas cardiovascular e renal)
 
-**Arquivo**: `src/pages/Calculadoras.tsx` — filtrar `tools` excluindo slugs que já existem em `NATIVE_CALCULATORS`.
+1. **SimuladorSNA** (`sna`) — Sistema Nervoso Autônomo
+   - Sliders: tônus simpático (0-100%) e parassimpático (0-100%)
+   - Outputs em tempo real: FC, PA, diâmetro pupilar, motilidade GI
+   - Gráfico temporal mostrando evolução dos parâmetros
+   - Casos: bradicardia vagal, tempestade adrenérgica, síncope vasovagal
 
----
+2. **SimuladorEletrofisiologiaCardiaca** (`eletrofisiologia-cardiaca`) — Canais Iônicos
+   - Gráfico do potencial de ação (fases 0-4) com Recharts
+   - Sliders para condutância de Na⁺, K⁺, Ca²⁺
+   - Toggle entre miócito ventricular e célula nodal SA
+   - Simulação de bloqueios (antiarrítmicos classe I-IV)
 
-### Fase 1 — Melhorias no Motor Genérico (`ToolDetail.tsx`)
+3. **SimuladorDepuracaoRenal** (`depuracao-renal`) — TFG e Néfron
+   - Controles: PA aferente/eferente, hidratação, permeabilidade tubular
+   - Outputs: TFG, volume urina, reabsorção Na⁺/glicose
+   - Gráfico de barras empilhadas (filtrado vs reabsorvido vs excretado)
 
-Estas melhorias beneficiam TODAS as calculadoras dinâmicas (Glasgow, CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc e futuras):
+4. **SimuladorEquilibrioAcidoBase** (`equilibrio-acido-base`) — Gasometria
+   - Botões para injetar distúrbios (cetoacidose, DPOC, vômitos, diarreia)
+   - Sliders: frequência respiratória e excreção renal de HCO₃⁻
+   - Display de pH, pCO₂, HCO₃⁻, BE com classificação automática
+   - Diagrama de Davenport interativo
 
-1. **Gauge visual de resultado**: Após o cálculo, exibir um componente `RiskGauge` (semicircular com Recharts) colorido por faixa de interpretação. O `ToolDetail` já tem acesso às `interpretations` com ranges e cores — basta renderizar um gauge quando houver resultado numérico.
+### Lote 2 (3 simuladores — endócrino e metabólico)
 
-2. **Referências clínicas inline**: Adicionar campo `references` ao schema de `ToolFormula`. Quando presente, exibir seção "Referências" abaixo do resultado com links clicáveis. Retroalimentar as calculadoras existentes no banco.
+5. **SimuladorRegulacaoGlicemica** (`regulacao-glicemica`) — Resistência à Insulina
+   - Controles: ingestão de carboidratos, sensibilidade à insulina, função pancreática
+   - Gráficos: glicemia, insulinemia e captação muscular ao longo do tempo
+   - Toggle para simular DM1, DM2, estado normal
 
-3. **Calculadoras Relacionadas**: Componente `RelatedCalculators` que sugere outras ferramentas da mesma categoria após o resultado. Consulta simples à tabela `tools` filtrando pela mesma `category_id`.
+6. **SimuladorEixoHPA** (`eixo-hpa`) — Hipotálamo-Hipófise-Adrenal
+   - Timeline com feedback negativo: CRH → ACTH → Cortisol
+   - Botões: aplicar estresse, administrar corticoide exógeno
+   - Gráfico de linhas múltiplas mostrando supressão hormonal
 
-4. **Barra de interpretação segmentada**: Para escores como Glasgow (3-15), CURB-65 (0-5), HAS-BLED (0-9), Apgar (0-10) — renderizar uma barra horizontal segmentada com a posição do paciente marcada. Aplica-se automaticamente quando a fórmula tem múltiplas interpretações com ranges numéricos.
+7. **SimuladorCineticaEnzimatica** (`cinetica-enzimatica`) — Michaelis-Menten
+   - Sliders: [S], [E], Vmax, Km
+   - Botões para adicionar inibidor competitivo / não-competitivo
+   - Gráfico V vs [S] com curva de Michaelis-Menten
+   - Gráfico de Lineweaver-Burk (1/V vs 1/[S])
 
-**Arquivos**:
-- Criar `src/components/calculators/RiskGauge.tsx`
-- Criar `src/components/calculators/RelatedCalculators.tsx`
-- Criar `src/components/calculators/ScoreBar.tsx`
-- Editar `src/pages/ToolDetail.tsx` — integrar os 3 componentes após o bloco de resultado
+### Lote 3 (3 simuladores — GI, coagulação e farmacocinética)
 
----
+8. **SimuladorSecrecaoGastrica** (`secrecao-gastrica`) — Célula Parietal
+   - Toggles: histamina (H2), acetilcolina (M3), gastrina (CCK-B)
+   - Botões para bloquear: IBP, anti-H2, anticolinérgico
+   - Output: taxa de secreção H⁺, pH gástrico
+   - Diagrama da célula parietal com vias destacadas
 
-### Fase 2 — Melhorias nas 7 Calculadoras Nativas
+9. **SimuladorCascataCoagulacao** (`cascata-coagulacao`) — Hemostasia
+   - Fluxograma interativo das vias intrínseca/extrínseca/comum
+   - Toggle para desativar fatores (II, V, VII, VIII, IX, X, XI, XII)
+   - Simulação de hemofilias A/B, uso de varfarina, heparina, DOACs
+   - Outputs: TP, INR, TTPa
 
-Como detalhado no plano anterior:
+10. **SimuladorADME** (`compartimentos-adme`) — Farmacocinética
+    - Modelo de 2 compartimentos com absorção oral
+    - Sliders: biodisponibilidade, Vd, clearance, Ka
+    - Gráficos: concentração plasmática vs tempo, quantidade em cada compartimento
+    - Toggle para metabolismo de primeira passagem
 
-| Calculadora | Melhoria Principal |
-|---|---|
-| Risco CV | Gauge semicircular + comparação automática 3 modelos |
-| Desmame Corticoides | AreaChart da curva de redução semanal |
-| Equivalência Opioides | Barras horizontais comparativas |
-| Ajuste Dose Renal | Gauge eGFR + barra KDIGO + expandir para 30+ fármacos |
-| Equivalência Antidepressivos | Radar chart de perfis + modo comparação |
-| HOMA-IR | Gauge com zonas de resistência |
-| FINDRISC | Barra segmentada por faixa de risco |
+## Alterações em arquivos existentes
 
-Adicionar referências clínicas e calculadoras relacionadas a todas.
+- **`App.tsx`**: 10 novas rotas em `/simuladores/fisiologia/*`
+- **`Simuladores.tsx`**: Adicionar 10 entradas em `NATIVE_SIMULATORS` com categoria "Fisiologia Humana" e ícones Lucide apropriados (Brain, Heart, Beaker, Droplets, etc.)
 
-**Arquivos**: as 7 páginas em `src/pages/` + componentes compartilhados da Fase 1.
+## Detalhes Técnicos
 
----
-
-### Fase 3 — Melhorias Transversais
-
-1. **Tendência temporal no histórico**: Adicionar sparklines ao `CalculationHistory.tsx` mostrando evolução de valores ao longo do tempo por paciente.
-
-2. **Atualizar calculadoras dinâmicas no banco**: Executar UPDATE nas calculadoras Glasgow, CURB-65, HAS-BLED, Apgar, CHA₂DS₂-VASc para adicionar `references` e melhorar `interpretations` com cores e recomendações.
-
----
-
-### Resumo de Impacto
-
-- **Fase 0**: Corrige duplicação visível na imagem — impacto imediato na UX
-- **Fase 1**: Beneficia TODAS as calculadoras (atuais e futuras) via motor genérico — maior ROI
-- **Fase 2**: Diferencial premium nas 7 nativas com gráficos específicos
-- **Fase 3**: Acompanhamento longitudinal e enriquecimento de dados
-
-Recomendo implementar na ordem: Fase 0 → Fase 1 → Fase 2 → Fase 3.
+- Cada simulador terá ~400-700 linhas seguindo o padrão do `SimuladorBombaInfusao.tsx`
+- Modelos matemáticos implementados no front-end (equações diferenciais simplificadas com `useEffect` + intervalos)
+- Gráficos: `LineChart`, `AreaChart`, `BarChart` do Recharts com `ResponsiveContainer`
+- Sliders: `@radix-ui/react-slider` já instalado
+- Implementação sequencial por lotes para manter qualidade e permitir revisão
 
