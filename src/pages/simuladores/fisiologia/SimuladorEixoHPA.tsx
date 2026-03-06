@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getEixoHPAChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "eixo-hpa";
 
@@ -288,6 +290,11 @@ export default function SimuladorEixoHPA() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getEixoHPAChallenges()}
+        simulatorState={{ stress, exogenousCortisol }}
+      />
     </div>
   );
 }

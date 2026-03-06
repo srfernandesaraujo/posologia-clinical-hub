@@ -12,6 +12,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getCineticaEnzimaticaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cinetica-enzimatica";
 
@@ -296,6 +298,11 @@ export default function SimuladorCineticaEnzimatica() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCineticaEnzimaticaChallenges()}
+        simulatorState={{ vmax, km }}
+      />
     </div>
   );
 }

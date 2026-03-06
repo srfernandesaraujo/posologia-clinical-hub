@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getDepuracaoRenalChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "depuracao-renal";
 
@@ -250,6 +252,11 @@ export default function SimuladorDepuracaoRenal() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getDepuracaoRenalChallenges()}
+        simulatorState={{ afferent, efferent, hydration, permeability }}
+      />
     </div>
   );
 }

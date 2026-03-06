@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getSecrecaoGastricaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "secrecao-gastrica";
 
@@ -346,6 +348,11 @@ export default function SimuladorSecrecaoGastrica() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getSecrecaoGastricaChallenges()}
+        simulatorState={{}}
+      />
     </div>
   );
 }

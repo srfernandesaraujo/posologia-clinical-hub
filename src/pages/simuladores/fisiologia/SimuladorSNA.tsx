@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getSNAChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "sna";
 
@@ -270,6 +272,11 @@ export default function SimuladorSNA() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getSNAChallenges()}
+        simulatorState={{ sympathetic, parasympathetic, fc: outputs.fc, pas: outputs.pas, pad: outputs.pad, giMotility: outputs.giMotility }}
+      />
     </div>
   );
 }

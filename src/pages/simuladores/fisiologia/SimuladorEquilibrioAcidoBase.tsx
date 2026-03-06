@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getEquilibrioAcidoBaseChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "equilibrio-acido-base";
 
@@ -292,6 +294,11 @@ export default function SimuladorEquilibrioAcidoBase() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getEquilibrioAcidoBaseChallenges()}
+        simulatorState={{ pH: ph, pCO2: pco2, hco3 }}
+      />
     </div>
   );
 }
