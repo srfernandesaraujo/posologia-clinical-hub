@@ -1,4 +1,4 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, History, FileText, Share2, Globe, Brain, Pill, Heart, Activity, Bone, Droplets, HeartPulse, Thermometer, Syringe, Baby, Stethoscope, Zap } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, History, FileText, Share2, Globe, Brain, Pill, Heart, Activity, Bone, Droplets, HeartPulse, Thermometer, Syringe, Baby, Stethoscope, Zap, Beaker } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 const sections = [
@@ -41,6 +41,40 @@ const sections = [
       { name: "Bomba de Infusão", link: "/simuladores/bomba-infusao" },
       { name: "Desmame de Benzodiazepínicos", link: "/simuladores/desmame-benzo" },
       { name: "Interações Medicamentosas", link: "/simuladores/interacoes" },
+    ],
+  },
+  {
+    title: "Simuladores de Fisiologia Humana",
+    icon: HeartPulse,
+    description: "Modelos fisiológicos interativos com gráficos em tempo real, casos IA e integração com salas virtuais.",
+    items: [
+      { name: "Sistema Nervoso Autônomo (SNA)", desc: "Tônus simpático/parassimpático e efeitos em FC, PA, pupila e TGI", link: "/simuladores/sna" },
+      { name: "Eletrofisiologia Cardíaca", desc: "Potencial de ação cardíaco com canais de Na⁺, K⁺ e Ca²⁺", link: "/simuladores/eletrofisiologia-cardiaca" },
+      { name: "Depuração Renal e TFG", desc: "Pressões arteriolares, hidratação e permeabilidade tubular", link: "/simuladores/depuracao-renal" },
+      { name: "Equilíbrio Ácido-Base", desc: "Distúrbios metabólicos/respiratórios e correção de pH", link: "/simuladores/equilibrio-acido-base" },
+      { name: "Regulação Glicêmica", desc: "Insulina, glucagon, DM1, DM2 e resistência insulínica", link: "/simuladores/regulacao-glicemica" },
+      { name: "Eixo HPA", desc: "Feedback hipotálamo-hipófise-adrenal e corticoides exógenos", link: "/simuladores/eixo-hpa" },
+      { name: "Cinética Enzimática", desc: "Michaelis-Menten e Lineweaver-Burk com inibidores", link: "/simuladores/cinetica-enzimatica" },
+      { name: "Secreção Ácida Gástrica", desc: "Receptores H2, M3 e CCK-B da célula parietal", link: "/simuladores/secrecao-gastrica" },
+      { name: "Cascata de Coagulação", desc: "Hemofilia, varfarina, heparina e CIVD", link: "/simuladores/cascata-coagulacao" },
+      { name: "Compartimentos ADME", desc: "Farmacocinética de 1 compartimento com metabolismo de primeira passagem", link: "/simuladores/compartimentos-adme" },
+    ],
+  },
+  {
+    title: "Simuladores de Bioquímica",
+    icon: Beaker,
+    description: "Modelos bioquímicos interativos com visualizações em tempo real, casos IA e modo exame.",
+    items: [
+      { name: "Cadeia de Transporte de Eletrões", desc: "Fosforilação oxidativa, complexos I-IV, ATP sintase e inibidores", link: "/simuladores/cadeia-eletrons" },
+      { name: "Dissociação da Hemoglobina", desc: "Curva sigmoidal, efeito Bohr, mioglobina e moduladores alostéricos", link: "/simuladores/dissociacao-hemoglobina" },
+      { name: "Glicólise vs. Gliconeogénese", desc: "Metabolismo hepático: insulina vs glucagon e enzimas regulatórias", link: "/simuladores/glicolise-gliconeogenese" },
+      { name: "Cinética Enzimática Avançada", desc: "Inibição competitiva, não-competitiva e acompetitiva", link: "/simuladores/cinetica-avancada" },
+      { name: "Ciclo da Ureia", desc: "Deficiências enzimáticas, amónia e neurotoxicidade", link: "/simuladores/ciclo-ureia" },
+      { name: "Cascata do Ácido Araquidónico", desc: "COX, LOX, eicosanóides e bloqueios farmacológicos", link: "/simuladores/acido-araquidonico" },
+      { name: "Metabolismo das Lipoproteínas", desc: "VLDL, LDL, HDL, estatinas e iPCSK9", link: "/simuladores/lipoproteinas" },
+      { name: "Via das Pentoses Fosfato e G6PD", desc: "NADPH, glutationa, stresse oxidativo e hemólise", link: "/simuladores/pentoses-fosfato" },
+      { name: "Titulação de Aminoácidos", desc: "Curvas de titulação, pKa, pI e carga líquida", link: "/simuladores/titulacao-aminoacidos" },
+      { name: "Operão Lac", desc: "Regulação genética: CAP-cAMP, repressor LacI e β-galactosidase", link: "/simuladores/operon-lac" },
     ],
   },
   {

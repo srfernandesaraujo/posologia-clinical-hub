@@ -23,6 +23,7 @@
     "haveAccount": "I already have an account",
     "evidenceBased": "Evidence-based",
     "reviewedByDoctors": "Reviewed by physicians",
+    "freeToStart": "Free to get started",
     "stats": { "calculators": "Clinical Calculators", "simulators": "Clinical Simulators", "games": "Educational Games", "available": "Available" },
     "problemTitle": "The clinical routine can't wait",
     "problemSubtitle": "You need fast and reliable answers. We deliver exactly that.",

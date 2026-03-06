@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
   Clock, Brain, Heart, Activity, CheckCircle2, ArrowRight,
-  TrendingUp, BookOpen, Star, ChevronRight, DoorOpen,
+  TrendingUp, BookOpen, ChevronRight, DoorOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -97,9 +97,9 @@ export default function Home() {
                   <Shield className="h-4 w-4 text-emerald-400/60" />
                   {t("home.evidenceBased")}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-400/60" />
-                  {t("home.reviewedByDoctors")}
+              <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-400/60" />
+                  {t("home.freeToStart")}
                 </div>
               </div>
             </div>
@@ -295,20 +295,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer links */}
-      <footer className="border-t border-white/[0.06] bg-[#080C18] py-10">
-        <div className="container mx-auto px-4 text-center space-y-3">
+      {/* Documentation link before layout footer */}
+      <div className="border-t border-white/[0.06] bg-[#080C18] py-6">
+        <div className="container mx-auto px-4 text-center">
           <Link to="/documentacao" className="text-sm text-white/50 hover:text-white transition-colors">
             📖 Documentação
           </Link>
-          <p className="text-sm text-white/40">
-            {t("common.developedBy")} <span className="text-white/60 font-medium">{t("common.author")}</span> — <span className="text-white/60 font-medium">{t("common.company")}</span>
-          </p>
-          <p className="text-xs text-white/25">
-            © 2026 {t("common.brand")}. {t("common.footer")}
-          </p>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
