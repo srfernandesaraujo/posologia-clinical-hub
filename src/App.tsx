@@ -62,6 +62,9 @@ import SimuladorCineticaAvancada from "./pages/simuladores/bioquimica/SimuladorC
 import SimuladorCicloUreia from "./pages/simuladores/bioquimica/SimuladorCicloUreia";
 import SimuladorCascataAcidoAraquidonico from "./pages/simuladores/bioquimica/SimuladorCascataAcidoAraquidonico";
 import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipoproteinas";
+import SimuladorPentosesFosfato from "./pages/simuladores/bioquimica/SimuladorPentosesFosfato";
+import SimuladorTitulacaoAminoacidos from "./pages/simuladores/bioquimica/SimuladorTitulacaoAminoacidos";
+import SimuladorOperonLac from "./pages/simuladores/bioquimica/SimuladorOperonLac";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
