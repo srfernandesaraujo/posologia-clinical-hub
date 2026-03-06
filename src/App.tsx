@@ -49,6 +49,9 @@ import SimuladorSNA from "./pages/simuladores/fisiologia/SimuladorSNA";
 import SimuladorEletrofisiologiaCardiaca from "./pages/simuladores/fisiologia/SimuladorEletrofisiologiaCardiaca";
 import SimuladorDepuracaoRenal from "./pages/simuladores/fisiologia/SimuladorDepuracaoRenal";
 import SimuladorEquilibrioAcidoBase from "./pages/simuladores/fisiologia/SimuladorEquilibrioAcidoBase";
+import SimuladorRegulacaoGlicemica from "./pages/simuladores/fisiologia/SimuladorRegulacaoGlicemica";
+import SimuladorEixoHPA from "./pages/simuladores/fisiologia/SimuladorEixoHPA";
+import SimuladorCineticaEnzimatica from "./pages/simuladores/fisiologia/SimuladorCineticaEnzimatica";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -93,6 +96,9 @@ const App = () => (
               <Route path="/sala/simulador/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/sala/simulador/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
               <Route path="/sala/simulador/equilibrio-acido-base" element={<SimuladorEquilibrioAcidoBase />} />
+              <Route path="/sala/simulador/regulacao-glicemica" element={<SimuladorRegulacaoGlicemica />} />
+              <Route path="/sala/simulador/eixo-hpa" element={<SimuladorEixoHPA />} />
+              <Route path="/sala/simulador/cinetica-enzimatica" element={<SimuladorCineticaEnzimatica />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -112,6 +118,9 @@ const App = () => (
               <Route path="/simuladores/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/simuladores/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
               <Route path="/simuladores/equilibrio-acido-base" element={<SimuladorEquilibrioAcidoBase />} />
+              <Route path="/simuladores/regulacao-glicemica" element={<SimuladorRegulacaoGlicemica />} />
+              <Route path="/simuladores/eixo-hpa" element={<SimuladorEixoHPA />} />
+              <Route path="/simuladores/cinetica-enzimatica" element={<SimuladorCineticaEnzimatica />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
