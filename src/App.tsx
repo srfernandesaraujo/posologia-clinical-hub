@@ -157,6 +157,9 @@ const App = () => (
               <Route path="/simuladores/ciclo-ureia" element={<SimuladorCicloUreia />} />
               <Route path="/simuladores/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
               <Route path="/simuladores/lipoproteinas" element={<SimuladorLipoproteinas />} />
+              <Route path="/simuladores/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
+              <Route path="/simuladores/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
+              <Route path="/simuladores/operon-lac" element={<SimuladorOperonLac />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
