@@ -12,6 +12,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getGlicoliseGliconeogeneseChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "glicolise-gliconeogenese";
 
@@ -308,6 +310,11 @@ export default function SimuladorGlicoliseGliconeogenese() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getGlicoliseGliconeogeneseChallenges()}
+        simulatorState={{ fed, insulin, glucagon, insulinResistance }}
+      />
     </div>
   );
 }

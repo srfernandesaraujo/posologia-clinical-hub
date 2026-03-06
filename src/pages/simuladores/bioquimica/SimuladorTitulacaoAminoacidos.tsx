@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getTitulacaoAminoacidosChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "titulacao-aminoacidos";
 
@@ -300,6 +302,11 @@ export default function SimuladorTitulacaoAminoacidos() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getTitulacaoAminoacidosChallenges()}
+        simulatorState={{ selectedAA, currentpH }}
+      />
     </div>
   );
 }

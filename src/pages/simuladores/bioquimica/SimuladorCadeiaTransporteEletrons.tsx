@@ -12,6 +12,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getCadeiaTransporteEletronsChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cadeia-eletrons";
 
@@ -320,6 +322,11 @@ export default function SimuladorCadeiaTransporteEletrons() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCadeiaTransporteEletronsChallenges()}
+        simulatorState={{ nadh, fadh2, ...inhibitors }}
+      />
     </div>
   );
 }

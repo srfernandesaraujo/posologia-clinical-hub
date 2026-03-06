@@ -11,6 +11,8 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
+import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { getOperonLacChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "operon-lac";
 
@@ -368,6 +370,11 @@ export default function SimuladorOperonLac() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getOperonLacChallenges()}
+        simulatorState={{ glucose, lactose }}
+      />
     </div>
   );
 }
