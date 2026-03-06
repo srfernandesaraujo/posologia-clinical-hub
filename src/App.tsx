@@ -116,6 +116,9 @@ const App = () => (
               <Route path="/sala/simulador/dissociacao-hemoglobina" element={<SimuladorDissociacaoHemoglobina />} />
               <Route path="/sala/simulador/glicolise-gliconeogenese" element={<SimuladorGlicoliseGliconeogenese />} />
               <Route path="/sala/simulador/cinetica-avancada" element={<SimuladorCineticaAvancada />} />
+              <Route path="/sala/simulador/ciclo-ureia" element={<SimuladorCicloUreia />} />
+              <Route path="/sala/simulador/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
+              <Route path="/sala/simulador/lipoproteinas" element={<SimuladorLipoproteinas />} />
             </Route>
 
             {/* Authenticated routes */}
