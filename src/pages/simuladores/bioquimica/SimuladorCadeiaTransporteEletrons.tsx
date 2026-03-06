@@ -320,6 +320,11 @@ export default function SimuladorCadeiaTransporteEletrons() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCadeiaTransporteEletronsChallenges()}
+        simulatorState={{ nadh, fadh2, ...inhibitors }}
+      />
     </div>
   );
 }
