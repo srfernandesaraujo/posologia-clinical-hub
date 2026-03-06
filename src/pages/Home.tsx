@@ -295,20 +295,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer links */}
-      <footer className="border-t border-white/[0.06] bg-[#080C18] py-10">
-        <div className="container mx-auto px-4 text-center space-y-3">
+      {/* Documentation link before layout footer */}
+      <div className="border-t border-white/[0.06] bg-[#080C18] py-6">
+        <div className="container mx-auto px-4 text-center">
           <Link to="/documentacao" className="text-sm text-white/50 hover:text-white transition-colors">
             📖 Documentação
           </Link>
-          <p className="text-sm text-white/40">
-            {t("common.developedBy")} <span className="text-white/60 font-medium">{t("common.author")}</span> — <span className="text-white/60 font-medium">{t("common.company")}</span>
-          </p>
-          <p className="text-xs text-white/25">
-            © 2026 {t("common.brand")}. {t("common.footer")}
-          </p>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
