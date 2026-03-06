@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -22,6 +22,10 @@ const NATIVE_SIMULATORS = [
   { slug: "bomba-infusao", name: "Simulador de Bomba de Infusão", description: "Treinamento de programação de bombas de seringa/equipo com drug library e alarmes de segurança.", icon: HeartPulse, category: "Enfermagem / UTI" },
   { slug: "desmame-benzo", name: "Desmame de Benzodiazepínicos", description: "Planejamento de redução gradual baseado no Protocolo de Ashton com check-in de sintomas.", icon: PillBottle, category: "Psiquiatria" },
   { slug: "interacoes", name: "Interações Medicamentosas", description: "Analise interações entre fármacos com dados do RxNav (NIH) e cenários clínicos.", icon: Zap, category: "Farmacologia Clínica" },
+  { slug: "sna", name: "Sistema Nervoso Autônomo", description: "Manipule o tônus simpático e parassimpático e observe alterações na FC, PA, pupila e motilidade GI.", icon: Brain, category: "Fisiologia Humana" },
+  { slug: "eletrofisiologia-cardiaca", name: "Eletrofisiologia Cardíaca", description: "Altere a condutância de canais de Na⁺, K⁺ e Ca²⁺ e observe o potencial de ação cardíaco.", icon: Heart, category: "Fisiologia Humana" },
+  { slug: "depuracao-renal", name: "Depuração Renal e TFG", description: "Ajuste pressões arteriolares, hidratação e permeabilidade tubular para simular a função renal.", icon: Droplets, category: "Fisiologia Humana" },
+  { slug: "equilibrio-acido-base", name: "Equilíbrio Ácido-Base", description: "Injete distúrbios metabólicos/respiratórios e corrija o pH manipulando ventilação e excreção renal.", icon: Beaker, category: "Fisiologia Humana" },
 ];
 
 export default function Simuladores() {
