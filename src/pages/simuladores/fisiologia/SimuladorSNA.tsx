@@ -272,6 +272,11 @@ export default function SimuladorSNA() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getSNAChallenges()}
+        simulatorState={{ sympathetic, parasympathetic, fc: outputs.fc, pas: outputs.pas, pad: outputs.pad, giMotility: outputs.giMotility }}
+      />
     </div>
   );
 }
