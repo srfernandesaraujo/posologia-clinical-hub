@@ -29,6 +29,9 @@ const NATIVE_SIMULATORS = [
   { slug: "regulacao-glicemica", name: "Regulação Glicêmica", description: "Modele a interação entre carboidratos, insulina pancreática e captação muscular. Simule DM1, DM2 e resistência à insulina.", icon: Droplets, category: "Fisiologia Humana" },
   { slug: "eixo-hpa", name: "Eixo HPA", description: "Simule o feedback negativo hipotálamo-hipófise-adrenal com estresse e corticoides exógenos.", icon: Brain, category: "Fisiologia Humana" },
   { slug: "cinetica-enzimatica", name: "Cinética Enzimática", description: "Explore curvas de Michaelis-Menten e Lineweaver-Burk com inibidores competitivos e não-competitivos.", icon: FlaskConical, category: "Fisiologia Humana" },
+  { slug: "secrecao-gastrica", name: "Secreção Ácida Gástrica", description: "Ative e bloqueie receptores da célula parietal (H2, M3, CCK-B) e observe o impacto no pH gástrico.", icon: FlaskConical, category: "Fisiologia Humana" },
+  { slug: "cascata-coagulacao", name: "Cascata de Coagulação", description: "Desative fatores de coagulação e simule hemofilias, uso de varfarina, heparina e CIVD.", icon: Shield, category: "Fisiologia Humana" },
+  { slug: "compartimentos-adme", name: "Compartimentos ADME", description: "Modelo farmacocinético de 1 compartimento com absorção oral, metabolismo de primeira passagem e eliminação.", icon: Beaker, category: "Fisiologia Humana" },
 ];
 
 export default function Simuladores() {
