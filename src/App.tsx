@@ -59,6 +59,9 @@ import SimuladorCadeiaTransporteEletrons from "./pages/simuladores/bioquimica/Si
 import SimuladorDissociacaoHemoglobina from "./pages/simuladores/bioquimica/SimuladorDissociacaoHemoglobina";
 import SimuladorGlicoliseGliconeogenese from "./pages/simuladores/bioquimica/SimuladorGlicoliseGliconeogenese";
 import SimuladorCineticaAvancada from "./pages/simuladores/bioquimica/SimuladorCineticaAvancada";
+import SimuladorCicloUreia from "./pages/simuladores/bioquimica/SimuladorCicloUreia";
+import SimuladorCascataAcidoAraquidonico from "./pages/simuladores/bioquimica/SimuladorCascataAcidoAraquidonico";
+import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipoproteinas";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
