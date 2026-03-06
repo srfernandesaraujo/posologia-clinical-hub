@@ -55,6 +55,10 @@ import SimuladorCineticaEnzimatica from "./pages/simuladores/fisiologia/Simulado
 import SimuladorSecrecaoGastrica from "./pages/simuladores/fisiologia/SimuladorSecrecaoGastrica";
 import SimuladorCascataCoagulacao from "./pages/simuladores/fisiologia/SimuladorCascataCoagulacao";
 import SimuladorADME from "./pages/simuladores/fisiologia/SimuladorADME";
+import SimuladorCadeiaTransporteEletrons from "./pages/simuladores/bioquimica/SimuladorCadeiaTransporteEletrons";
+import SimuladorDissociacaoHemoglobina from "./pages/simuladores/bioquimica/SimuladorDissociacaoHemoglobina";
+import SimuladorGlicoliseGliconeogenese from "./pages/simuladores/bioquimica/SimuladorGlicoliseGliconeogenese";
+import SimuladorCineticaAvancada from "./pages/simuladores/bioquimica/SimuladorCineticaAvancada";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -105,6 +109,10 @@ const App = () => (
               <Route path="/sala/simulador/secrecao-gastrica" element={<SimuladorSecrecaoGastrica />} />
               <Route path="/sala/simulador/cascata-coagulacao" element={<SimuladorCascataCoagulacao />} />
               <Route path="/sala/simulador/compartimentos-adme" element={<SimuladorADME />} />
+              <Route path="/sala/simulador/cadeia-eletrons" element={<SimuladorCadeiaTransporteEletrons />} />
+              <Route path="/sala/simulador/dissociacao-hemoglobina" element={<SimuladorDissociacaoHemoglobina />} />
+              <Route path="/sala/simulador/glicolise-gliconeogenese" element={<SimuladorGlicoliseGliconeogenese />} />
+              <Route path="/sala/simulador/cinetica-avancada" element={<SimuladorCineticaAvancada />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -130,6 +138,10 @@ const App = () => (
               <Route path="/simuladores/secrecao-gastrica" element={<SimuladorSecrecaoGastrica />} />
               <Route path="/simuladores/cascata-coagulacao" element={<SimuladorCascataCoagulacao />} />
               <Route path="/simuladores/compartimentos-adme" element={<SimuladorADME />} />
+              <Route path="/simuladores/cadeia-eletrons" element={<SimuladorCadeiaTransporteEletrons />} />
+              <Route path="/simuladores/dissociacao-hemoglobina" element={<SimuladorDissociacaoHemoglobina />} />
+              <Route path="/simuladores/glicolise-gliconeogenese" element={<SimuladorGlicoliseGliconeogenese />} />
+              <Route path="/simuladores/cinetica-avancada" element={<SimuladorCineticaAvancada />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
