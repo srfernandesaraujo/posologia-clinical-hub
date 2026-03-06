@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
   Clock, Brain, Heart, Activity, CheckCircle2, ArrowRight,
-  TrendingUp, BookOpen, Star, ChevronRight, DoorOpen,
+  TrendingUp, BookOpen, ChevronRight, DoorOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
