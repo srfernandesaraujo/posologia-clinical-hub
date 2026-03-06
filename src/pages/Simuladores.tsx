@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -32,6 +32,10 @@ const NATIVE_SIMULATORS = [
   { slug: "secrecao-gastrica", name: "Secreção Ácida Gástrica", description: "Ative e bloqueie receptores da célula parietal (H2, M3, CCK-B) e observe o impacto no pH gástrico.", icon: FlaskConical, category: "Fisiologia Humana" },
   { slug: "cascata-coagulacao", name: "Cascata de Coagulação", description: "Desative fatores de coagulação e simule hemofilias, uso de varfarina, heparina e CIVD.", icon: Shield, category: "Fisiologia Humana" },
   { slug: "compartimentos-adme", name: "Compartimentos ADME", description: "Modelo farmacocinético de 1 compartimento com absorção oral, metabolismo de primeira passagem e eliminação.", icon: Beaker, category: "Fisiologia Humana" },
+  { slug: "cadeia-eletrons", name: "Cadeia de Transporte de Eletrões", description: "Fosforilação oxidativa, inibidores de complexos mitocondriais e desacopladores.", icon: Flame, category: "Bioquímica" },
+  { slug: "dissociacao-hemoglobina", name: "Dissociação da Hemoglobina", description: "Curva de saturação O₂, efeito Bohr, mioglobina e moduladores alostéricos (pH, pCO₂, BPG).", icon: Droplets, category: "Bioquímica" },
+  { slug: "glicolise-gliconeogenese", name: "Glicólise vs. Gliconeogénese", description: "Regulação do metabolismo hepático: insulina vs glucagon, enzimas-chave e fluxo de carbono.", icon: FlaskConical, category: "Bioquímica" },
+  { slug: "cinetica-avancada", name: "Cinética Enzimática Avançada", description: "Michaelis-Menten e Lineweaver-Burk com inibição competitiva, não-competitiva e acompetitiva.", icon: FlaskConical, category: "Bioquímica" },
 ];
 
 export default function Simuladores() {
