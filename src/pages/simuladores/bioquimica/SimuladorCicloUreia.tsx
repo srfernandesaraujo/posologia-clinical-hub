@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ const BUILT_IN_CASES: UreaCycleCase[] = [
     clinicalTip: "Na deficiência de CPS I, ao contrário da OTC, NÃO há acumulação de ácido orótico, pois o carbamil-fosfato não é formado. Este é o diagnóstico diferencial chave.",
   },
   {
-    title: "Deficiência de Argininossuccinato Sintase (Citrulinemia Tipo I)",
+    title: "Citrulinemia Tipo I (Deficiência de ASS)",
     difficulty: "Médio",
     patient: { name: "Pedro Costa", age: 8, weight: 25, diagnosis: "Citrulinemia com episódios de confusão após refeições proteicas" },
     scenario: "Criança com episódios de confusão mental após ingestão proteica elevada. A citrulina acumula-se no plasma por bloqueio da ASS.",
@@ -64,84 +64,63 @@ const ENZYMES = [
   { key: "arginase", name: "Arginase", fullName: "Arginase I", location: "Citoplasma", substrate: "Arginina", product: "Ureia + Ornitina" },
 ];
 
-const INTERMEDIATES = ["NH₃", "Carbamil-P", "Ornitina", "Citrulina", "Argininossuccinato", "Arginina", "Ureia"];
-
 export default function SimuladorCicloUreia() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isVirtualRoom = location.pathname.startsWith("/sala/");
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases(SLUG, BUILT_IN_CASES);
-  const { roomCase, isExamMode, examTimeLeft, handleFinishExam, showFeedback, feedback, closeFeedback, startExam } = useVirtualRoomCase(SLUG, allCases);
+  const isRoom = location.pathname.startsWith("/sala");
+  const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases(SLUG, []);
+  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
-  const [selectedCase, setSelectedCase] = useState<UreaCycleCase | null>(null);
+  const [activeCase, setActiveCase] = useState<UreaCycleCase | null>(null);
   const [deficiencies, setDeficiencies] = useState({ cpsI: false, otc: false, ass: false, asl: false, arginase: false });
 
-  const handleSelectCase = useCallback((c: UreaCycleCase) => {
-    setSelectedCase(c);
-    setDeficiencies(c.deficiencies);
-  }, []);
+  useEffect(() => {
+    if (virtualRoomCase) {
+      const cd = virtualRoomCase.case_data as any;
+      setActiveCase({
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        patient: cd.patient, scenario: cd.scenario,
+        deficiencies: cd.deficiencies ?? { cpsI: false, otc: false, ass: false, asl: false, arginase: false },
+        expectedAmmonia: cd.expectedAmmonia ?? [50, 200], clinicalTip: cd.clinicalTip ?? "",
+      });
+    }
+  }, [virtualRoomCase]);
+
+  useEffect(() => {
+    if (activeCase) {
+      setDeficiencies(activeCase.deficiencies);
+    }
+  }, [activeCase]);
 
   const toggleDeficiency = useCallback((key: string) => {
     setDeficiencies(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
   }, []);
 
   const model = useMemo(() => {
-    // Base production rates (arbitrary units per cycle turn)
-    const baseInput = 100; // NH3 input
-    let levels = { nh3: baseInput, carbamilP: 0, ornitina: 50, citrulina: 0, argininossuccinato: 0, arginina: 0, ureia: 0, fumarato: 0 };
+    const baseInput = 100;
+    let levels = { nh3: baseInput, carbamilP: 0, ornitina: 50, citrulina: 0, argininossuccinato: 0, arginina: 0, ureia: 0 };
 
-    // Step 1: CPS I - NH3 → Carbamil-P
-    if (!deficiencies.cpsI) {
-      levels.carbamilP = levels.nh3 * 0.9;
-      levels.nh3 *= 0.1;
-    }
+    if (!deficiencies.cpsI) { levels.carbamilP = levels.nh3 * 0.9; levels.nh3 *= 0.1; }
+    if (!deficiencies.otc && levels.carbamilP > 0) { levels.citrulina = Math.min(levels.carbamilP, levels.ornitina) * 0.9; levels.carbamilP *= 0.1; levels.ornitina *= 0.1; }
+    if (!deficiencies.ass && levels.citrulina > 0) { levels.argininossuccinato = levels.citrulina * 0.9; levels.citrulina *= 0.1; }
+    if (!deficiencies.asl && levels.argininossuccinato > 0) { levels.arginina = levels.argininossuccinato * 0.9; levels.argininossuccinato *= 0.1; }
+    if (!deficiencies.arginase && levels.arginina > 0) { levels.ureia = levels.arginina * 0.9; levels.ornitina += levels.arginina * 0.9; levels.arginina *= 0.1; }
 
-    // Step 2: OTC - Carbamil-P + Ornitina → Citrulina
-    if (!deficiencies.otc && levels.carbamilP > 0) {
-      levels.citrulina = Math.min(levels.carbamilP, levels.ornitina) * 0.9;
-      levels.carbamilP *= 0.1;
-      levels.ornitina *= 0.1;
-    }
-
-    // Step 3: ASS - Citrulina + Asp → Argininossuccinato
-    if (!deficiencies.ass && levels.citrulina > 0) {
-      levels.argininossuccinato = levels.citrulina * 0.9;
-      levels.citrulina *= 0.1;
-    }
-
-    // Step 4: ASL - Argininossuccinato → Arginina + Fumarato
-    if (!deficiencies.asl && levels.argininossuccinato > 0) {
-      levels.arginina = levels.argininossuccinato * 0.9;
-      levels.fumarato = levels.argininossuccinato * 0.9;
-      levels.argininossuccinato *= 0.1;
-    }
-
-    // Step 5: Arginase - Arginina → Ureia + Ornitina
-    if (!deficiencies.arginase && levels.arginina > 0) {
-      levels.ureia = levels.arginina * 0.9;
-      const recycledOrnitina = levels.arginina * 0.9;
-      levels.ornitina += recycledOrnitina;
-      levels.arginina *= 0.1;
-    }
-
-    // Ammonia toxicity level
     const ammoniaLevel = levels.nh3 + (deficiencies.otc ? levels.carbamilP * 0.3 : 0);
     const toxicity = ammoniaLevel > 80 ? "Crítica" : ammoniaLevel > 40 ? "Elevada" : ammoniaLevel > 15 ? "Moderada" : "Normal";
-
     return { levels, ammoniaLevel, toxicity, ureiaOutput: levels.ureia };
   }, [deficiencies]);
 
   const barData = [
-    { name: "NH₃", value: Math.round(model.levels.nh3), fill: "hsl(var(--destructive))" },
-    { name: "Carb-P", value: Math.round(model.levels.carbamilP), fill: "hsl(var(--chart-1))" },
-    { name: "Ornitina", value: Math.round(model.levels.ornitina), fill: "hsl(var(--chart-2))" },
-    { name: "Citrulina", value: Math.round(model.levels.citrulina), fill: "hsl(var(--chart-3))" },
-    { name: "Arg-Succ", value: Math.round(model.levels.argininossuccinato), fill: "hsl(var(--chart-4))" },
-    { name: "Arginina", value: Math.round(model.levels.arginina), fill: "hsl(var(--chart-5))" },
-    { name: "Ureia", value: Math.round(model.levels.ureia), fill: "hsl(var(--primary))" },
+    { name: "NH₃", value: Math.round(model.levels.nh3) },
+    { name: "Carb-P", value: Math.round(model.levels.carbamilP) },
+    { name: "Ornitina", value: Math.round(model.levels.ornitina) },
+    { name: "Citrulina", value: Math.round(model.levels.citrulina) },
+    { name: "Arg-Succ", value: Math.round(model.levels.argininossuccinato) },
+    { name: "Arginina", value: Math.round(model.levels.arginina) },
+    { name: "Ureia", value: Math.round(model.levels.ureia) },
   ];
 
-  // Neurotoxicity timeline simulation
   const neuroData = useMemo(() => {
     const points = [];
     for (let h = 0; h <= 24; h += 2) {
@@ -153,84 +132,80 @@ export default function SimuladorCicloUreia() {
     return points;
   }, [model.ammoniaLevel]);
 
-  if (!selectedCase && !roomCase) {
+  const handleFinish = useCallback(() => {
+    if (!activeCase || submitted) return;
+    const ammoniaOk = model.ammoniaLevel >= activeCase.expectedAmmonia[0] && model.ammoniaLevel <= activeCase.expectedAmmonia[1];
+    const s = ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5);
+    submitResults({ score: Math.round(s), actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+  }, [activeCase, model, deficiencies, submitted, submitResults]);
+
+  const loadAICase = (c: any) => {
+    setActiveCase({
+      id: c.id, title: c.title, difficulty: c.difficulty, isAI: true,
+      patient: c.patient, scenario: c.scenario,
+      deficiencies: c.deficiencies ?? { cpsI: false, otc: false, ass: false, asl: false, arginase: false },
+      expectedAmmonia: c.expectedAmmonia ?? [50, 200], clinicalTip: c.clinicalTip ?? "",
+    });
+  };
+
+  if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/sala" : "/simuladores")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
             <h1 className="text-2xl font-bold">Ciclo da Ureia e Toxicidade da Amónia</h1>
             <p className="text-muted-foreground">Simule deficiências enzimáticas e observe a acumulação de intermediários</p>
           </div>
         </div>
-
-        {!isVirtualRoom && (
-          <div className="flex gap-2">
-            <Button onClick={generateCase} disabled={isGenerating}>
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Gerar Caso com IA
+        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {BUILT_IN_CASES.map((c, i) => (
+              <button key={i} onClick={() => setActiveCase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><Badge variant="outline">{c.difficulty}</Badge></div>
+                <p className="text-sm text-muted-foreground">{c.patient.diagnosis}</p>
+              </button>
+            ))}
+            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
+              <button key={c.id} onClick={() => loadAICase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><div className="flex gap-2"><Badge variant="secondary">IA</Badge><Badge variant="outline">{c.difficulty}</Badge></div></div>
+                <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+              </button>
+            ))}
+            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
             </Button>
-          </div>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {allCases.map((c: any, i: number) => (
-            <Card key={c.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleSelectCase(c)}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{c.title}</CardTitle>
-                  <div className="flex gap-1">
-                    <Badge variant={c.difficulty === "Difícil" ? "destructive" : c.difficulty === "Médio" ? "default" : "secondary"}>{c.difficulty}</Badge>
-                    {c.isAI && <Badge variant="outline"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{c.scenario?.substring(0, 100)}...</p>
-                {c.isAI && <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const activeCase = roomCase || selectedCase!;
-
   return (
-    <div className="space-y-6 p-4 max-w-7xl mx-auto">
-      {isExamMode && <ExamBanner timeLeft={examTimeLeft} onFinish={handleFinishExam} />}
-      {showFeedback && <ExamFeedbackOverlay feedback={feedback} onClose={closeFeedback} />}
+    <div className="space-y-4">
+      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => roomCase ? navigate("/sala") : setSelectedCase(null)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Beaker className="h-5 w-5 text-primary" /> {activeCase.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{activeCase.patient?.name} — {activeCase.patient?.diagnosis}</p>
-        </div>
-        <Badge variant={activeCase.difficulty === "Difícil" ? "destructive" : "default"}>{activeCase.difficulty}</Badge>
+        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <h2 className="text-xl font-bold">{activeCase.title}</h2>
+        <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
 
       <Card>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 space-y-2">
+          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
           <p className="text-sm">{activeCase.scenario}</p>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Enzyme Controls */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Enzimas do Ciclo da Ureia</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardHeader><CardTitle className="text-lg">Enzimas do Ciclo</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
             {ENZYMES.map(enz => {
               const isDeficient = deficiencies[enz.key as keyof typeof deficiencies];
               return (
@@ -254,20 +229,15 @@ export default function SimuladorCicloUreia() {
           </CardContent>
         </Card>
 
-        {/* Results */}
+        {/* Indicators + Bar */}
         <div className="space-y-4">
-          {/* Ammonia & Urea indicators */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Indicadores</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Indicadores</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-xs text-muted-foreground">Amónia (NH₃)</p>
-                  <p className={`text-2xl font-bold ${model.ammoniaLevel > 40 ? "text-destructive" : "text-primary"}`}>
-                    {Math.round(model.ammoniaLevel)} µmol/L
-                  </p>
+                  <p className={`text-2xl font-bold ${model.ammoniaLevel > 40 ? "text-destructive" : "text-primary"}`}>{Math.round(model.ammoniaLevel)} µmol/L</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Ureia Produzida</p>
@@ -275,19 +245,14 @@ export default function SimuladorCicloUreia() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Neurotoxicidade</p>
-                  <Badge variant={model.toxicity === "Crítica" ? "destructive" : model.toxicity === "Elevada" ? "destructive" : "secondary"} className="text-lg">
-                    {model.toxicity}
-                  </Badge>
+                  <Badge variant={model.toxicity === "Crítica" || model.toxicity === "Elevada" ? "destructive" : "secondary"} className="text-lg">{model.toxicity}</Badge>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Intermediates Bar Chart */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Níveis de Intermediários</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Níveis de Intermediários</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={barData}>
@@ -295,7 +260,7 @@ export default function SimuladorCicloUreia() {
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" />
+                  <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -305,9 +270,7 @@ export default function SimuladorCicloUreia() {
 
       {/* Neurotoxicity Timeline */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Evolução da Neurotoxicidade (24h)</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-lg">Evolução da Neurotoxicidade (24h)</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={neuroData}>
@@ -324,7 +287,10 @@ export default function SimuladorCicloUreia() {
         </CardContent>
       </Card>
 
-      {/* Clinical Tip */}
+      <div className="flex gap-2">
+        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+      </div>
+
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold text-primary mb-1">💡 Dica Clínica</p>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const SLUG = "acido-araquidonico";
 
@@ -43,7 +43,7 @@ const BUILT_IN_CASES: AACase[] = [
     title: "Prevenção Cardiovascular — Aspirina",
     difficulty: "Médio",
     patient: { name: "Helena Duarte", age: 68, weight: 70, diagnosis: "Prevenção secundária pós-enfarte" },
-    scenario: "Paciente pós-enfarte em prevenção secundária. A aspirina em dose baixa inibe irreversivelmente a COX-1 plaquetária, reduzindo TXA2 (pró-agregante) sem afetar significativamente a prostaciclina endotelial.",
+    scenario: "Paciente pós-enfarte em prevenção secundária. A aspirina em dose baixa inibe irreversivelmente a COX-1 plaquetária, reduzindo TXA2 sem afetar significativamente a prostaciclina endotelial.",
     initialStimulus: 50,
     drugs: { aspirin: true, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false },
     expectedPGE2: [30, 60],
@@ -57,73 +57,77 @@ const BUILT_IN_CASES: AACase[] = [
     initialStimulus: 70,
     drugs: { aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: true, zileuton: false, montelukast: true },
     expectedPGE2: [5, 20],
-    clinicalTip: "Os corticosteróides inibem a fosfolipase A2 (via lipocortina), bloqueando ambas as vias COX e LOX. O montelukaste é antagonista do receptor CysLT1, bloqueando a ação dos leucotrienos cisteínicos.",
+    clinicalTip: "Os corticosteróides inibem a fosfolipase A2 (via lipocortina), bloqueando ambas as vias COX e LOX. O montelukaste é antagonista do recetor CysLT1.",
   },
 ];
 
 const DRUGS_INFO = [
-  { key: "aspirin", name: "Aspirina (AAS)", target: "COX-1 irreversível", color: "hsl(var(--chart-1))" },
-  { key: "ibuprofen", name: "Ibuprofeno", target: "COX-1/2 reversível", color: "hsl(var(--chart-2))" },
-  { key: "celecoxib", name: "Celecoxib", target: "COX-2 seletivo", color: "hsl(var(--chart-3))" },
-  { key: "corticosteroid", name: "Corticosteróide", target: "Fosfolipase A2 (↓ AA)", color: "hsl(var(--chart-4))" },
-  { key: "zileuton", name: "Zileuton", target: "5-LOX (↓ leucotrienos)", color: "hsl(var(--chart-5))" },
-  { key: "montelukast", name: "Montelukaste", target: "Receptor CysLT1", color: "hsl(var(--primary))" },
+  { key: "aspirin", name: "Aspirina (AAS)", target: "COX-1 irreversível" },
+  { key: "ibuprofen", name: "Ibuprofeno", target: "COX-1/2 reversível" },
+  { key: "celecoxib", name: "Celecoxib", target: "COX-2 seletivo" },
+  { key: "corticosteroid", name: "Corticosteróide", target: "Fosfolipase A2 (↓ AA)" },
+  { key: "zileuton", name: "Zileuton", target: "5-LOX (↓ leucotrienos)" },
+  { key: "montelukast", name: "Montelukaste", target: "Recetor CysLT1" },
 ];
 
 export default function SimuladorCascataAcidoAraquidonico() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isVirtualRoom = location.pathname.startsWith("/sala/");
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases(SLUG, BUILT_IN_CASES);
-  const { roomCase, isExamMode, examTimeLeft, handleFinishExam, showFeedback, feedback, closeFeedback, startExam } = useVirtualRoomCase(SLUG, allCases);
+  const isRoom = location.pathname.startsWith("/sala");
+  const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases(SLUG, []);
+  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
-  const [selectedCase, setSelectedCase] = useState<AACase | null>(null);
+  const [activeCase, setActiveCase] = useState<AACase | null>(null);
   const [stimulus, setStimulus] = useState(70);
   const [drugs, setDrugs] = useState({ aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false });
 
-  const handleSelectCase = useCallback((c: AACase) => {
-    setSelectedCase(c);
-    setStimulus(c.initialStimulus);
-    setDrugs(c.drugs);
-  }, []);
+  useEffect(() => {
+    if (virtualRoomCase) {
+      const cd = virtualRoomCase.case_data as any;
+      setActiveCase({
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        patient: cd.patient, scenario: cd.scenario, initialStimulus: cd.initialStimulus ?? 70,
+        drugs: cd.drugs ?? { aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false },
+        expectedPGE2: cd.expectedPGE2 ?? [10, 50], clinicalTip: cd.clinicalTip ?? "",
+      });
+    }
+  }, [virtualRoomCase]);
+
+  useEffect(() => {
+    if (activeCase) {
+      setStimulus(activeCase.initialStimulus);
+      setDrugs(activeCase.drugs);
+    }
+  }, [activeCase]);
 
   const toggleDrug = useCallback((key: string) => {
     setDrugs(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
   }, []);
 
   const model = useMemo(() => {
-    // Phospholipid → AA (blocked by corticosteroids)
     let aaRelease = stimulus;
     if (drugs.corticosteroid) aaRelease *= 0.15;
 
-    // COX pathway
     let cox1Activity = aaRelease;
     let cox2Activity = aaRelease;
-    if (drugs.aspirin) { cox1Activity *= 0.05; cox2Activity *= 0.7; } // irreversible COX-1
+    if (drugs.aspirin) { cox1Activity *= 0.05; cox2Activity *= 0.7; }
     if (drugs.ibuprofen) { cox1Activity *= 0.2; cox2Activity *= 0.25; }
-    if (drugs.celecoxib) { cox2Activity *= 0.1; } // selective COX-2
+    if (drugs.celecoxib) { cox2Activity *= 0.1; }
 
-    const pge2 = (cox1Activity * 0.3 + cox2Activity * 0.7); // PGE2 mainly from COX-2
-    const txa2 = cox1Activity * 0.8; // TXA2 mainly from COX-1 (platelets)
-    const pgi2 = cox2Activity * 0.6; // Prostacyclin mainly from COX-2 (endothelium)
+    const pge2 = (cox1Activity * 0.3 + cox2Activity * 0.7);
+    const txa2 = cox1Activity * 0.8;
+    const pgi2 = cox2Activity * 0.6;
 
-    // LOX pathway
     let lox5Activity = aaRelease;
     if (drugs.zileuton) lox5Activity *= 0.1;
-
-    let ltb4 = lox5Activity * 0.5;
-    let cysLTs = lox5Activity * 0.5; // LTC4, LTD4, LTE4
+    const ltb4 = lox5Activity * 0.5;
+    const cysLTs = lox5Activity * 0.5;
     let cysLTEffect = cysLTs;
-    if (drugs.montelukast) cysLTEffect *= 0.1; // receptor blockade
+    if (drugs.montelukast) cysLTEffect *= 0.1;
 
     return {
-      aaRelease: Math.round(aaRelease),
-      pge2: Math.round(pge2),
-      txa2: Math.round(txa2),
-      pgi2: Math.round(pgi2),
-      ltb4: Math.round(ltb4),
-      cysLTs: Math.round(cysLTs),
-      cysLTEffect: Math.round(cysLTEffect),
+      aaRelease: Math.round(aaRelease), pge2: Math.round(pge2), txa2: Math.round(txa2), pgi2: Math.round(pgi2),
+      ltb4: Math.round(ltb4), cysLTs: Math.round(cysLTs), cysLTEffect: Math.round(cysLTEffect),
       inflammation: Math.round((pge2 + ltb4 + cysLTEffect) / 3),
       thrombosis: Math.round(txa2 - pgi2),
       bronchoconstriction: Math.round(cysLTEffect),
@@ -139,100 +143,88 @@ export default function SimuladorCascataAcidoAraquidonico() {
     { name: "Ef. CysLTs", value: model.cysLTEffect },
   ];
 
-  if (!selectedCase && !roomCase) {
+  const handleFinish = useCallback(() => {
+    if (!activeCase || submitted) return;
+    const pge2Ok = model.pge2 >= activeCase.expectedPGE2[0] && model.pge2 <= activeCase.expectedPGE2[1];
+    const s = pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2);
+    submitResults({ score: Math.round(s), actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+  }, [activeCase, model, stimulus, drugs, submitted, submitResults]);
+
+  const loadAICase = (c: any) => {
+    setActiveCase({
+      id: c.id, title: c.title, difficulty: c.difficulty, isAI: true,
+      patient: c.patient, scenario: c.scenario, initialStimulus: c.initialStimulus ?? 70,
+      drugs: c.drugs ?? { aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false },
+      expectedPGE2: c.expectedPGE2 ?? [10, 50], clinicalTip: c.clinicalTip ?? "",
+    });
+  };
+
+  if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/sala" : "/simuladores")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
             <h1 className="text-2xl font-bold">Cascata do Ácido Araquidónico</h1>
             <p className="text-muted-foreground">Vias COX e LOX, eicosanóides e bloqueios farmacológicos</p>
           </div>
         </div>
-
-        {!isVirtualRoom && (
-          <div className="flex gap-2">
-            <Button onClick={generateCase} disabled={isGenerating}>
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Gerar Caso com IA
+        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Flame className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {BUILT_IN_CASES.map((c, i) => (
+              <button key={i} onClick={() => setActiveCase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><Badge variant="outline">{c.difficulty}</Badge></div>
+                <p className="text-sm text-muted-foreground">{c.patient.diagnosis}</p>
+              </button>
+            ))}
+            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
+              <button key={c.id} onClick={() => loadAICase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><div className="flex gap-2"><Badge variant="secondary">IA</Badge><Badge variant="outline">{c.difficulty}</Badge></div></div>
+                <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+              </button>
+            ))}
+            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
             </Button>
-          </div>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {allCases.map((c: any, i: number) => (
-            <Card key={c.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleSelectCase(c)}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{c.title}</CardTitle>
-                  <div className="flex gap-1">
-                    <Badge variant={c.difficulty === "Difícil" ? "destructive" : c.difficulty === "Médio" ? "default" : "secondary"}>{c.difficulty}</Badge>
-                    {c.isAI && <Badge variant="outline"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{c.scenario?.substring(0, 100)}...</p>
-                {c.isAI && <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const activeCase = roomCase || selectedCase!;
-
   return (
-    <div className="space-y-6 p-4 max-w-7xl mx-auto">
-      {isExamMode && <ExamBanner timeLeft={examTimeLeft} onFinish={handleFinishExam} />}
-      {showFeedback && <ExamFeedbackOverlay feedback={feedback} onClose={closeFeedback} />}
+    <div className="space-y-4">
+      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => roomCase ? navigate("/sala") : setSelectedCase(null)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Flame className="h-5 w-5 text-primary" /> {activeCase.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{activeCase.patient?.name} — {activeCase.patient?.diagnosis}</p>
-        </div>
-        <Badge variant={activeCase.difficulty === "Difícil" ? "destructive" : "default"}>{activeCase.difficulty}</Badge>
+        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <h2 className="text-xl font-bold">{activeCase.title}</h2>
+        <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
 
       <Card>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 space-y-2">
+          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
           <p className="text-sm">{activeCase.scenario}</p>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Controls */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Estímulo Inflamatório</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Estímulo Inflamatório</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Libertação de AA pela PLA₂</span>
-                  <span className="font-semibold">{stimulus}%</span>
-                </div>
-                <Slider value={[stimulus]} onValueChange={([v]) => setStimulus(v)} min={0} max={100} step={5} />
-                <p className="text-xs text-muted-foreground">AA disponível após bloqueio: {model.aaRelease}%</p>
-              </div>
+              <div className="flex justify-between text-sm mb-2"><span>Libertação de AA pela PLA₂</span><span className="font-semibold">{stimulus}%</span></div>
+              <Slider value={[stimulus]} onValueChange={([v]) => setStimulus(v)} min={0} max={100} step={5} />
+              <p className="text-xs text-muted-foreground mt-1">AA disponível após bloqueio: {model.aaRelease}%</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Fármacos</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Fármacos</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {DRUGS_INFO.map(d => {
                 const active = drugs[d.key as keyof typeof drugs];
@@ -250,12 +242,9 @@ export default function SimuladorCascataAcidoAraquidonico() {
           </Card>
         </div>
 
-        {/* Results */}
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Indicadores Clínicos</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Indicadores Clínicos</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
@@ -264,10 +253,9 @@ export default function SimuladorCascataAcidoAraquidonico() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Risco Trombótico</p>
-                  <p className={`text-2xl font-bold ${model.thrombosis > 30 ? "text-destructive" : model.thrombosis < 0 ? "text-chart-3" : "text-primary"}`}>
+                  <p className={`text-2xl font-bold ${model.thrombosis > 30 ? "text-destructive" : "text-primary"}`}>
                     {model.thrombosis > 0 ? "+" : ""}{model.thrombosis}
                   </p>
-                  <p className="text-xs text-muted-foreground">(TXA2 - PGI2)</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Broncoconstrição</p>
@@ -278,9 +266,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Eicosanóides Produzidos</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Eicosanóides Produzidos</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={eicosanoidData}>
@@ -294,11 +280,8 @@ export default function SimuladorCascataAcidoAraquidonico() {
             </CardContent>
           </Card>
 
-          {/* Pathway Diagram */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Via Resumida</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-lg">Via Resumida</CardTitle></CardHeader>
             <CardContent>
               <div className="text-xs space-y-2 font-mono">
                 <div className="p-2 rounded bg-muted/50 text-center">
@@ -327,6 +310,10 @@ export default function SimuladorCascataAcidoAraquidonico() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
