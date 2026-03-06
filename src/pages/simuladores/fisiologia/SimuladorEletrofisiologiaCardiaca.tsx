@@ -257,6 +257,11 @@ export default function SimuladorEletrofisiologiaCardiaca() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getEletrofisiologiaCardiacaChallenges()}
+        simulatorState={{ na, k, ca }}
+      />
     </div>
   );
 }

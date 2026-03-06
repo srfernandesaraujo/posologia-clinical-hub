@@ -355,6 +355,11 @@ export default function SimuladorCascataCoagulacao() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCascataCoagulacaoChallenges()}
+        simulatorState={{}}
+      />
     </div>
   );
 }

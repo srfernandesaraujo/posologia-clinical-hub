@@ -319,6 +319,11 @@ export default function SimuladorADME() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getADMEChallenges()}
+        simulatorState={{ bioavailability, vd, clearance, ka }}
+      />
     </div>
   );
 }

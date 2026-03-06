@@ -298,6 +298,11 @@ export default function SimuladorRegulacaoGlicemica() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getRegulacaoGlicemicaChallenges()}
+        simulatorState={{ carbIntake, insulinSensitivity, pancreaticFunction }}
+      />
     </div>
   );
 }

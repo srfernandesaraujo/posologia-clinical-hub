@@ -294,6 +294,11 @@ export default function SimuladorEquilibrioAcidoBase() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getEquilibrioAcidoBaseChallenges()}
+        simulatorState={{ pH: ph, pCO2: pco2, hco3 }}
+      />
     </div>
   );
 }
