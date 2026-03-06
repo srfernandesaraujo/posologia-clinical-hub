@@ -340,6 +340,11 @@ export default function SimuladorLipoproteinas() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getLipoproteinasChallenges()}
+        simulatorState={{ fatIntake, lplActivity, ldlReceptor, ...drugs }}
+      />
     </div>
   );
 }

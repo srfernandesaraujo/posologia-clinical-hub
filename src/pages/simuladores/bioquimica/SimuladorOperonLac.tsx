@@ -370,6 +370,11 @@ export default function SimuladorOperonLac() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getOperonLacChallenges()}
+        simulatorState={{ glucose, lactose }}
+      />
     </div>
   );
 }

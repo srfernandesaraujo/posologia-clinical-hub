@@ -299,6 +299,11 @@ export default function SimuladorCicloUreia() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCicloUreiaChallenges()}
+        simulatorState={{ ...deficiencies }}
+      />
     </div>
   );
 }

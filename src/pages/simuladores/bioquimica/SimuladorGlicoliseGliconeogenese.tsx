@@ -310,6 +310,11 @@ export default function SimuladorGlicoliseGliconeogenese() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getGlicoliseGliconeogeneseChallenges()}
+        simulatorState={{ fed, insulin, glucagon, insulinResistance }}
+      />
     </div>
   );
 }

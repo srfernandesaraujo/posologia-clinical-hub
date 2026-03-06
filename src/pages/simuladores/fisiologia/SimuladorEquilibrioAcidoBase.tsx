@@ -297,7 +297,7 @@ export default function SimuladorEquilibrioAcidoBase() {
 
       <SimulatorChallengeMode
         challengeSet={getEquilibrioAcidoBaseChallenges()}
-        simulatorState={{ pH: ph, pCO2: pco2, hco3 }}
+        simulatorState={{ pH: ab.ph, pCO2: ab.pCO2, hco3: ab.hco3 }}
       />
     </div>
   );

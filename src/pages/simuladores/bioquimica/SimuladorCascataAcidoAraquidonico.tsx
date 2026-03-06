@@ -324,6 +324,11 @@ export default function SimuladorCascataAcidoAraquidonico() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCascataAcidoAraquidonicoChallenges()}
+        simulatorState={{ stimulus, ...drugs }}
+      />
     </div>
   );
 }

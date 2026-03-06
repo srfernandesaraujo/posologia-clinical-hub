@@ -302,6 +302,11 @@ export default function SimuladorTitulacaoAminoacidos() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getTitulacaoAminoacidosChallenges()}
+        simulatorState={{ selectedAA, currentpH }}
+      />
     </div>
   );
 }

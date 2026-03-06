@@ -251,6 +251,11 @@ export default function SimuladorDissociacaoHemoglobina() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getDissociacaoHemoglobinaChallenges()}
+        simulatorState={{ pH, pCO2, temp, bpg }}
+      />
     </div>
   );
 }

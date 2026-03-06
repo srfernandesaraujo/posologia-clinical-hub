@@ -295,6 +295,11 @@ export default function SimuladorCineticaAvancada() {
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getCineticaAvancadaChallenges()}
+        simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki }}
+      />
     </div>
   );
 }

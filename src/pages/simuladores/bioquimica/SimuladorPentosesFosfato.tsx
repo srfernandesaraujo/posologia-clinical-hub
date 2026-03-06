@@ -306,6 +306,11 @@ export default function SimuladorPentosesFosfato() {
           <p className="text-sm">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+
+      <SimulatorChallengeMode
+        challengeSet={getPentosesFosfatoChallenges()}
+        simulatorState={{ g6pdDeficient, oxidantAgent, oxidantDose }}
+      />
     </div>
   );
 }
