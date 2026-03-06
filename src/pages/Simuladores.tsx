@@ -36,6 +36,9 @@ const NATIVE_SIMULATORS = [
   { slug: "dissociacao-hemoglobina", name: "Dissociação da Hemoglobina", description: "Curva de saturação O₂, efeito Bohr, mioglobina e moduladores alostéricos (pH, pCO₂, BPG).", icon: Droplets, category: "Bioquímica" },
   { slug: "glicolise-gliconeogenese", name: "Glicólise vs. Gliconeogénese", description: "Regulação do metabolismo hepático: insulina vs glucagon, enzimas-chave e fluxo de carbono.", icon: FlaskConical, category: "Bioquímica" },
   { slug: "cinetica-avancada", name: "Cinética Enzimática Avançada", description: "Michaelis-Menten e Lineweaver-Burk com inibição competitiva, não-competitiva e acompetitiva.", icon: FlaskConical, category: "Bioquímica" },
+  { slug: "ciclo-ureia", name: "Ciclo da Ureia", description: "Deficiências enzimáticas, acumulação de intermediários e neurotoxicidade da amónia.", icon: Beaker, category: "Bioquímica" },
+  { slug: "acido-araquidonico", name: "Cascata do Ácido Araquidónico", description: "Vias COX e LOX, eicosanóides e bloqueios farmacológicos (AINEs, corticosteróides, LOX-i).", icon: Flame, category: "Bioquímica" },
+  { slug: "lipoproteinas", name: "Metabolismo das Lipoproteínas", description: "Transporte de colesterol, vias exógena/endógena e efeito de estatinas, fibratos e iPCSK9.", icon: Heart, category: "Bioquímica" },
 ];
 
 export default function Simuladores() {

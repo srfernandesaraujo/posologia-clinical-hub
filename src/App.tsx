@@ -59,6 +59,9 @@ import SimuladorCadeiaTransporteEletrons from "./pages/simuladores/bioquimica/Si
 import SimuladorDissociacaoHemoglobina from "./pages/simuladores/bioquimica/SimuladorDissociacaoHemoglobina";
 import SimuladorGlicoliseGliconeogenese from "./pages/simuladores/bioquimica/SimuladorGlicoliseGliconeogenese";
 import SimuladorCineticaAvancada from "./pages/simuladores/bioquimica/SimuladorCineticaAvancada";
+import SimuladorCicloUreia from "./pages/simuladores/bioquimica/SimuladorCicloUreia";
+import SimuladorCascataAcidoAraquidonico from "./pages/simuladores/bioquimica/SimuladorCascataAcidoAraquidonico";
+import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipoproteinas";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -113,6 +116,9 @@ const App = () => (
               <Route path="/sala/simulador/dissociacao-hemoglobina" element={<SimuladorDissociacaoHemoglobina />} />
               <Route path="/sala/simulador/glicolise-gliconeogenese" element={<SimuladorGlicoliseGliconeogenese />} />
               <Route path="/sala/simulador/cinetica-avancada" element={<SimuladorCineticaAvancada />} />
+              <Route path="/sala/simulador/ciclo-ureia" element={<SimuladorCicloUreia />} />
+              <Route path="/sala/simulador/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
+              <Route path="/sala/simulador/lipoproteinas" element={<SimuladorLipoproteinas />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -142,6 +148,9 @@ const App = () => (
               <Route path="/simuladores/dissociacao-hemoglobina" element={<SimuladorDissociacaoHemoglobina />} />
               <Route path="/simuladores/glicolise-gliconeogenese" element={<SimuladorGlicoliseGliconeogenese />} />
               <Route path="/simuladores/cinetica-avancada" element={<SimuladorCineticaAvancada />} />
+              <Route path="/simuladores/ciclo-ureia" element={<SimuladorCicloUreia />} />
+              <Route path="/simuladores/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
+              <Route path="/simuladores/lipoproteinas" element={<SimuladorLipoproteinas />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
