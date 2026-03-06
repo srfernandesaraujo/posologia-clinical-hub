@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -26,6 +26,9 @@ const NATIVE_SIMULATORS = [
   { slug: "eletrofisiologia-cardiaca", name: "Eletrofisiologia Cardíaca", description: "Altere a condutância de canais de Na⁺, K⁺ e Ca²⁺ e observe o potencial de ação cardíaco.", icon: Heart, category: "Fisiologia Humana" },
   { slug: "depuracao-renal", name: "Depuração Renal e TFG", description: "Ajuste pressões arteriolares, hidratação e permeabilidade tubular para simular a função renal.", icon: Droplets, category: "Fisiologia Humana" },
   { slug: "equilibrio-acido-base", name: "Equilíbrio Ácido-Base", description: "Injete distúrbios metabólicos/respiratórios e corrija o pH manipulando ventilação e excreção renal.", icon: Beaker, category: "Fisiologia Humana" },
+  { slug: "regulacao-glicemica", name: "Regulação Glicêmica", description: "Modele a interação entre carboidratos, insulina pancreática e captação muscular. Simule DM1, DM2 e resistência à insulina.", icon: Droplets, category: "Fisiologia Humana" },
+  { slug: "eixo-hpa", name: "Eixo HPA", description: "Simule o feedback negativo hipotálamo-hipófise-adrenal com estresse e corticoides exógenos.", icon: Brain, category: "Fisiologia Humana" },
+  { slug: "cinetica-enzimatica", name: "Cinética Enzimática", description: "Explore curvas de Michaelis-Menten e Lineweaver-Burk com inibidores competitivos e não-competitivos.", icon: FlaskConical, category: "Fisiologia Humana" },
 ];
 
 export default function Simuladores() {
