@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -39,6 +39,9 @@ const NATIVE_SIMULATORS = [
   { slug: "ciclo-ureia", name: "Ciclo da Ureia", description: "Deficiências enzimáticas, acumulação de intermediários e neurotoxicidade da amónia.", icon: Beaker, category: "Bioquímica" },
   { slug: "acido-araquidonico", name: "Cascata do Ácido Araquidónico", description: "Vias COX e LOX, eicosanóides e bloqueios farmacológicos (AINEs, corticosteróides, LOX-i).", icon: Flame, category: "Bioquímica" },
   { slug: "lipoproteinas", name: "Metabolismo das Lipoproteínas", description: "Transporte de colesterol, vias exógena/endógena e efeito de estatinas, fibratos e iPCSK9.", icon: Heart, category: "Bioquímica" },
+  { slug: "pentoses-fosfato", name: "Via das Pentoses Fosfato e G6PD", description: "Stresse oxidativo, NADPH, glutationa e hemólise na deficiência de G6PD.", icon: Shield, category: "Bioquímica" },
+  { slug: "titulacao-aminoacidos", name: "Titulação de Aminoácidos", description: "Curvas de titulação em tempo real com pKa, pI e carga líquida dinâmica.", icon: TestTube, category: "Bioquímica" },
+  { slug: "operon-lac", name: "Operão Lac", description: "Regulação genética bacteriana: CAP-cAMP, repressor LacI e expressão de β-galactosidase.", icon: Dna, category: "Bioquímica" },
 ];
 
 export default function Simuladores() {

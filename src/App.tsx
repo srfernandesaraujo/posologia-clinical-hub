@@ -62,6 +62,9 @@ import SimuladorCineticaAvancada from "./pages/simuladores/bioquimica/SimuladorC
 import SimuladorCicloUreia from "./pages/simuladores/bioquimica/SimuladorCicloUreia";
 import SimuladorCascataAcidoAraquidonico from "./pages/simuladores/bioquimica/SimuladorCascataAcidoAraquidonico";
 import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipoproteinas";
+import SimuladorPentosesFosfato from "./pages/simuladores/bioquimica/SimuladorPentosesFosfato";
+import SimuladorTitulacaoAminoacidos from "./pages/simuladores/bioquimica/SimuladorTitulacaoAminoacidos";
+import SimuladorOperonLac from "./pages/simuladores/bioquimica/SimuladorOperonLac";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -119,6 +122,9 @@ const App = () => (
               <Route path="/sala/simulador/ciclo-ureia" element={<SimuladorCicloUreia />} />
               <Route path="/sala/simulador/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
               <Route path="/sala/simulador/lipoproteinas" element={<SimuladorLipoproteinas />} />
+              <Route path="/sala/simulador/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
+              <Route path="/sala/simulador/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
+              <Route path="/sala/simulador/operon-lac" element={<SimuladorOperonLac />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -151,6 +157,9 @@ const App = () => (
               <Route path="/simuladores/ciclo-ureia" element={<SimuladorCicloUreia />} />
               <Route path="/simuladores/acido-araquidonico" element={<SimuladorCascataAcidoAraquidonico />} />
               <Route path="/simuladores/lipoproteinas" element={<SimuladorLipoproteinas />} />
+              <Route path="/simuladores/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
+              <Route path="/simuladores/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
+              <Route path="/simuladores/operon-lac" element={<SimuladorOperonLac />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
