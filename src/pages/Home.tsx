@@ -97,9 +97,9 @@ export default function Home() {
                   <Shield className="h-4 w-4 text-emerald-400/60" />
                   {t("home.evidenceBased")}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-400/60" />
-                  {t("home.reviewedByDoctors")}
+              <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-400/60" />
+                  {t("home.freeToStart")}
                 </div>
               </div>
             </div>

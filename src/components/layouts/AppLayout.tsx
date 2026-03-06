@@ -76,12 +76,12 @@ export function AppLayout() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-4 gap-2 sticky top-0 h-screen">
-        <Link to="/dashboard" className="flex items-center gap-2 px-3 py-4 mb-4">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-4 gap-2 sticky top-0 h-screen overflow-hidden">
+        <Link to="/dashboard" className="flex items-center gap-2 px-3 py-4 mb-4 shrink-0">
           <Pill className="h-7 w-7 text-primary" />
           <span className="text-lg font-bold text-foreground">Posologia</span>
         </Link>
-        <nav className="flex flex-col gap-1 flex-1">
+        <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0">
           {allItems.map((item) => renderNavItem(item))}
         </nav>
         <SidebarContactForm />
