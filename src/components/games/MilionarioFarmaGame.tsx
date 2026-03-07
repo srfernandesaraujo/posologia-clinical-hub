@@ -422,8 +422,9 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
           <Badge
             key={i}
             variant={i === qIndex ? "default" : i < qIndex ? "secondary" : "outline"}
-            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""}`}
+            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""} ${safeHaven !== null && i === safeHaven - 1 ? "ring-2 ring-green-500 ring-offset-1" : ""}`}
           >
+            {safeHaven !== null && i === safeHaven - 1 && <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />}
             {i + 1}. {p}
           </Badge>
         ))}
