@@ -215,7 +215,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setQIndex(0); setSelected(null); setIsRevealing(false); setRevealed(false);
     setUsedFiftyFifty(false); setUsedPhone(false); setUsedAudience(false);
     setHiddenOptions(new Set()); setShowAudience(false); setScore(0); setErrors(0);
-    setFeedback(null); setStoppedEarly(false); setSafeHaven(null);
+    setFeedback(null); setStoppedEarly(false); setSafeHaven(null); setPendingSafeHaven(false);
   };
 
   const handleStop = () => {
