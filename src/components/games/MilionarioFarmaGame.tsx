@@ -476,9 +476,19 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
         </div>
       )}
 
-      {/* Stop button - always visible during play when not revealing */}
+      {/* Porto Seguro + Stop buttons */}
       {!isRevealing && !revealed && selected === null && score > 0 && (
-        <div className="flex justify-center animate-in fade-in">
+        <div className="flex justify-center gap-3 animate-in fade-in">
+          {safeHaven === null && (
+            <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-green-500/50 text-green-600 hover:bg-green-500/10">
+              <Shield className="h-4 w-4" /> Porto Seguro em {prizeValues[score - 1]}
+            </Button>
+          )}
+          {safeHaven !== null && (
+            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Porto Seguro: {prizeValues[safeHaven - 1]}
+            </Badge>
+          )}
           <Button size="lg" variant="outline" onClick={handleStop} className="gap-2 border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10">
             <Award className="h-4 w-4" /> Parar e Garantir {prizeValues[score - 1]}
           </Button>
