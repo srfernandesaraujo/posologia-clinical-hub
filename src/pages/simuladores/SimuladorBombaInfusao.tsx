@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
