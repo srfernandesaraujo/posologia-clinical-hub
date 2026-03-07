@@ -224,8 +224,8 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   };
 
   const handleSetSafeHaven = () => {
-    setSafeHaven(score);
-    toast.success(`Porto Seguro definido em ${prizeValues[score - 1]}! Se errar, você volta para esse valor.`, { duration: 5000 });
+    setPendingSafeHaven(true);
+    toast.info(`Porto Seguro ativado! Se você acertar esta pergunta, seu Porto Seguro será fixado em ${prizeValues[qIndex]}.`, { duration: 5000 });
   };
 
   const handleSelect = (i: number) => {
