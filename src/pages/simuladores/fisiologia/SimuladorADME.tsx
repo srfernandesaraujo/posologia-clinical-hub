@@ -178,6 +178,7 @@ export default function SimuladorADME() {
             <h1 className="text-2xl font-bold">Compartimentos ADME</h1>
             <p className="text-muted-foreground">Modelo farmacocinético de absorção, distribuição, metabolismo e excreção.</p>
             <AdminPromptViewer toolSlug="sim-adme" toolName="ADME" toolType="simulator" prompt={getNativePrompt("sim-adme") || ""} />
+          </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

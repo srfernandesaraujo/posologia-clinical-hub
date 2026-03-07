@@ -182,6 +182,7 @@ export default function SimuladorCascataCoagulacao() {
             <h1 className="text-2xl font-bold">Cascata de Coagulação</h1>
             <p className="text-muted-foreground">Explore as vias intrínseca, extrínseca e comum da hemostasia.</p>
             <AdminPromptViewer toolSlug="sim-cascata-coagulacao" toolName="Cascata de Coagulação" toolType="simulator" prompt={getNativePrompt("sim-cascata-coagulacao") || ""} />
+          </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

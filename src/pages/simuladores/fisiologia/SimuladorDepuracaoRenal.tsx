@@ -144,6 +144,7 @@ export default function SimuladorDepuracaoRenal() {
             <h1 className="text-2xl font-bold">Depuração Renal e TFG</h1>
             <p className="text-muted-foreground">Ajuste pressões arteriolares, hidratação e permeabilidade tubular.</p>
             <AdminPromptViewer toolSlug="sim-depuracao-renal" toolName="Depuração Renal" toolType="simulator" prompt={getNativePrompt("sim-depuracao-renal") || ""} />
+          </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

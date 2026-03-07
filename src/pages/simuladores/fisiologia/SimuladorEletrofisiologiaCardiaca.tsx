@@ -160,6 +160,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
             <h1 className="text-2xl font-bold">Eletrofisiologia Cardíaca</h1>
             <p className="text-muted-foreground">Manipule canais iônicos e observe o potencial de ação cardíaco.</p>
             <AdminPromptViewer toolSlug="sim-eletrofisiologia-cardiaca" toolName="Eletrofisiologia Cardíaca" toolType="simulator" prompt={getNativePrompt("sim-eletrofisiologia-cardiaca") || ""} />
+          </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>
