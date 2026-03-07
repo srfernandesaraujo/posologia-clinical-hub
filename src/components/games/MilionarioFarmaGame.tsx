@@ -175,7 +175,8 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   const [timer, setTimer] = useState(0);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; title: string; explanation: string; reference?: string; tip?: string } | null>(null);
   const [stoppedEarly, setStoppedEarly] = useState(false);
-  const [safeHaven, setSafeHaven] = useState<number | null>(null); // Porto Seguro: index of the safe question (score at that point)
+  const [safeHaven, setSafeHaven] = useState<number | null>(null); // Porto Seguro confirmado
+  const [pendingSafeHaven, setPendingSafeHaven] = useState(false); // Porto Seguro pendente (aguardando acerto)
 
   const config = difficultyConfig[difficulty];
   const currentContext = contexts.find((c) => c.id === selectedContext);
@@ -214,7 +215,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setQIndex(0); setSelected(null); setIsRevealing(false); setRevealed(false);
     setUsedFiftyFifty(false); setUsedPhone(false); setUsedAudience(false);
     setHiddenOptions(new Set()); setShowAudience(false); setScore(0); setErrors(0);
-    setFeedback(null); setStoppedEarly(false); setSafeHaven(null);
+    setFeedback(null); setStoppedEarly(false); setSafeHaven(null); setPendingSafeHaven(false);
   };
 
   const handleStop = () => {
@@ -223,8 +224,8 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   };
 
   const handleSetSafeHaven = () => {
-    setSafeHaven(score);
-    toast.success(`Porto Seguro definido em ${prizeValues[score - 1]}! Se errar, você volta para esse valor.`, { duration: 5000 });
+    setPendingSafeHaven(true);
+    toast.info(`Porto Seguro ativado! Se você acertar esta pergunta, seu Porto Seguro será fixado em ${prizeValues[qIndex]}.`, { duration: 5000 });
   };
 
   const handleSelect = (i: number) => {
@@ -243,8 +244,22 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       setIsRevealing(false);
       setSpotlightActive(false);
       const correct = selected === q.correctIndex;
-      if (correct) setScore(s => s + 1);
-      else setErrors(e => e + 1);
+      if (correct) {
+        setScore(s => s + 1);
+        // Se Porto Seguro estava pendente e acertou, confirma no nível após acerto
+        if (pendingSafeHaven) {
+          const newScore = score + 1; // score after this correct answer
+          setSafeHaven(newScore);
+          setPendingSafeHaven(false);
+          toast.success(`Porto Seguro confirmado em ${prizeValues[newScore - 1]}!`, { duration: 4000 });
+        }
+      } else {
+        setErrors(e => e + 1);
+        // Se Porto Seguro estava pendente mas errou, cancela
+        if (pendingSafeHaven) {
+          setPendingSafeHaven(false);
+        }
+      }
 
       // Show formative feedback
       setFeedback({
@@ -479,10 +494,15 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       {/* Porto Seguro + Stop buttons */}
       {!isRevealing && !revealed && selected === null && score > 0 && (
         <div className="flex justify-center gap-3 animate-in fade-in">
-          {safeHaven === null && (
+          {safeHaven === null && !pendingSafeHaven && (
             <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-green-500/50 text-green-600 hover:bg-green-500/10">
-              <Shield className="h-4 w-4" /> Porto Seguro em {prizeValues[score - 1]}
+              <Shield className="h-4 w-4" /> Ativar Porto Seguro
             </Button>
+          )}
+          {pendingSafeHaven && safeHaven === null && (
+            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5 animate-pulse border-amber-500/50">
+              <Shield className="h-3.5 w-3.5 text-amber-500" /> Porto Seguro pendente — acerte para confirmar em {prizeValues[qIndex]}
+            </Badge>
           )}
           {safeHaven !== null && (
             <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5">
