@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCascataCoagulacaoChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cascata-coagulacao";
