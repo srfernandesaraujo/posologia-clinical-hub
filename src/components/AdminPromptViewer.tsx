@@ -73,7 +73,7 @@ export default function AdminPromptViewer({ toolSlug, toolName, toolType, prompt
 
         <div className="flex gap-2 mb-2">
           <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-1.5">
-            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copiado" : "Copiar"}
           </Button>
           {!editing ? (
