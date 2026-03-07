@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -393,6 +395,7 @@ export default function SimuladorBombaInfusao() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Simulador de Bomba de Infusão</h1>
           <p className="text-muted-foreground">Treinamento de programação de bombas de seringa/equipo – Segurança do paciente</p>
+          <AdminPromptViewer toolSlug="sim-bomba-infusao" toolName="Simulador Bomba de Infusão" toolType="simulator" prompt={getNativePrompt("sim-bomba-infusao") || ""} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {allCases.map((cs: any, i: number) => (

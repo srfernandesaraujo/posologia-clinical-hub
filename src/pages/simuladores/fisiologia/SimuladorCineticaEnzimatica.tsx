@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCineticaEnzimaticaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cinetica-enzimatica";
@@ -159,6 +161,7 @@ export default function SimuladorCineticaEnzimatica() {
           <div>
             <h1 className="text-2xl font-bold">Cinética Enzimática</h1>
             <p className="text-muted-foreground">Explore curvas de Michaelis-Menten e Lineweaver-Burk com inibidores competitivos e não-competitivos.</p>
+            <AdminPromptViewer toolSlug="sim-cinetica-enzimatica" toolName="Cinética Enzimática" toolType="simulator" prompt={getNativePrompt("sim-cinetica-enzimatica") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

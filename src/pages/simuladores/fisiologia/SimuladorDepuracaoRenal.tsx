@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDepuracaoRenalChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "depuracao-renal";
@@ -141,6 +143,7 @@ export default function SimuladorDepuracaoRenal() {
           <div>
             <h1 className="text-2xl font-bold">Depuração Renal e TFG</h1>
             <p className="text-muted-foreground">Ajuste pressões arteriolares, hidratação e permeabilidade tubular.</p>
+            <AdminPromptViewer toolSlug="sim-depuracao-renal" toolName="Depuração Renal" toolType="simulator" prompt={getNativePrompt("sim-depuracao-renal") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

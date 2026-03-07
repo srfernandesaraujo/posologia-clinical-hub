@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getADMEChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "compartimentos-adme";
@@ -175,6 +177,7 @@ export default function SimuladorADME() {
           <div>
             <h1 className="text-2xl font-bold">Compartimentos ADME</h1>
             <p className="text-muted-foreground">Modelo farmacocinético de absorção, distribuição, metabolismo e excreção.</p>
+            <AdminPromptViewer toolSlug="sim-adme" toolName="ADME" toolType="simulator" prompt={getNativePrompt("sim-adme") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

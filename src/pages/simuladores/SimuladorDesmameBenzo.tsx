@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -335,6 +337,7 @@ export default function SimuladorDesmameBenzo() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Desmame de Benzodiazepínicos</h1>
           <p className="text-muted-foreground">Planejamento de redução gradual baseado no Protocolo de Ashton</p>
+          <AdminPromptViewer toolSlug="sim-desmame-benzo" toolName="Desmame de Benzodiazepínicos" toolType="simulator" prompt={getNativePrompt("sim-desmame-benzo") || ""} />
         </div>
 
         {/* Legal disclaimer */}

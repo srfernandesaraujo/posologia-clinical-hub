@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -234,6 +236,7 @@ export default function SimuladorInteracoes() {
           <div>
             <h1 className="text-2xl font-bold">Simulador de Interações Medicamentosas</h1>
             <p className="text-sm text-muted-foreground">Analise interações entre fármacos com dados do RxNav (NIH)</p>
+            <AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} />
           </div>
         </div>
 

@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getTitulacaoAminoacidosChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "titulacao-aminoacidos";
@@ -162,6 +164,7 @@ export default function SimuladorTitulacaoAminoacidos() {
           <div>
             <h1 className="text-2xl font-bold">Titulação de Aminoácidos</h1>
             <p className="text-muted-foreground">Curvas de titulação, pKa, pI e carga líquida</p>
+            <AdminPromptViewer toolSlug="sim-titulacao-aminoacidos" toolName="Titulação de Aminoácidos" toolType="simulator" prompt={getNativePrompt("sim-titulacao-aminoacidos") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

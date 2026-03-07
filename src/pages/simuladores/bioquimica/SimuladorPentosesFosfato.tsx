@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getPentosesFosfatoChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "pentoses-fosfato";
@@ -164,6 +166,7 @@ export default function SimuladorPentosesFosfato() {
           <div>
             <h1 className="text-2xl font-bold">Via das Pentoses Fosfato e G6PD</h1>
             <p className="text-muted-foreground">Stresse oxidativo, NADPH e hemólise na deficiência de G6PD</p>
+            <AdminPromptViewer toolSlug="sim-pentoses-fosfato" toolName="Via das Pentoses Fosfato" toolType="simulator" prompt={getNativePrompt("sim-pentoses-fosfato") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

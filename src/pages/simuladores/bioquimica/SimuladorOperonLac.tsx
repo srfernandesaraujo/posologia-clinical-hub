@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getOperonLacChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "operon-lac";
@@ -170,6 +172,7 @@ export default function SimuladorOperonLac() {
           <div>
             <h1 className="text-2xl font-bold">Operão Lac — Regulação Genética</h1>
             <p className="text-muted-foreground">Regulação positiva (CAP-cAMP) e negativa (repressor LacI) da transcrição</p>
+            <AdminPromptViewer toolSlug="sim-operon-lac" toolName="Operon Lac" toolType="simulator" prompt={getNativePrompt("sim-operon-lac") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

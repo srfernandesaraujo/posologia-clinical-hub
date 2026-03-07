@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEixoHPAChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "eixo-hpa";
@@ -158,6 +160,7 @@ export default function SimuladorEixoHPA() {
           <div>
             <h1 className="text-2xl font-bold">Eixo Hipotálamo-Hipófise-Adrenal</h1>
             <p className="text-muted-foreground">Simule o mecanismo de feedback negativo do eixo HPA com estresse e corticoides exógenos.</p>
+            <AdminPromptViewer toolSlug="sim-eixo-hpa" toolName="Eixo HPA" toolType="simulator" prompt={getNativePrompt("sim-eixo-hpa") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

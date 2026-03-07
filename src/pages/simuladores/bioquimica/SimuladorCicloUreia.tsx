@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCicloUreiaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "ciclo-ureia";
@@ -158,6 +160,7 @@ export default function SimuladorCicloUreia() {
           <div>
             <h1 className="text-2xl font-bold">Ciclo da Ureia e Toxicidade da Amónia</h1>
             <p className="text-muted-foreground">Simule deficiências enzimáticas e observe a acumulação de intermediários</p>
+            <AdminPromptViewer toolSlug="sim-ciclo-ureia" toolName="Ciclo da Ureia" toolType="simulator" prompt={getNativePrompt("sim-ciclo-ureia") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

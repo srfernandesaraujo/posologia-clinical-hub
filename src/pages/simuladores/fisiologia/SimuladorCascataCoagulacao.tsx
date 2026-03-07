@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCascataCoagulacaoChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cascata-coagulacao";
@@ -179,6 +181,7 @@ export default function SimuladorCascataCoagulacao() {
           <div>
             <h1 className="text-2xl font-bold">Cascata de Coagulação</h1>
             <p className="text-muted-foreground">Explore as vias intrínseca, extrínseca e comum da hemostasia.</p>
+            <AdminPromptViewer toolSlug="sim-cascata-coagulacao" toolName="Cascata de Coagulação" toolType="simulator" prompt={getNativePrompt("sim-cascata-coagulacao") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

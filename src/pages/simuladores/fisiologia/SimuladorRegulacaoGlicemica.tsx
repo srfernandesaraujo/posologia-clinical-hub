@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getRegulacaoGlicemicaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "regulacao-glicemica";
@@ -170,6 +172,7 @@ export default function SimuladorRegulacaoGlicemica() {
           <div>
             <h1 className="text-2xl font-bold">Regulação Glicêmica</h1>
             <p className="text-muted-foreground">Modele a interação entre ingestão de carboidratos, secreção de insulina e captação muscular de glicose.</p>
+            <AdminPromptViewer toolSlug="sim-regulacao-glicemica" toolName="Regulação Glicêmica" toolType="simulator" prompt={getNativePrompt("sim-regulacao-glicemica") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

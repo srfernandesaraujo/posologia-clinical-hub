@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,7 +195,7 @@ export default function SimuladorAcompanhamento() {
   if (screen === "dashboard") {
     return (
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Acompanhamento Farmacoterapêutico</h1><p className="text-muted-foreground">Monitore pacientes crônicos ao longo de várias consultas</p></div>
+        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Acompanhamento Farmacoterapêutico</h1><p className="text-muted-foreground">Monitore pacientes crônicos ao longo de várias consultas</p><AdminPromptViewer toolSlug="sim-acompanhamento" toolName="Simulador Acompanhamento" toolType="simulator" prompt={getNativePrompt("sim-acompanhamento") || ""} /></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>

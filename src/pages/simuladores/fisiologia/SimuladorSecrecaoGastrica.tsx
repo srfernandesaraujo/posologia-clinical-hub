@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getSecrecaoGastricaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "secrecao-gastrica";
@@ -186,6 +188,7 @@ export default function SimuladorSecrecaoGastrica() {
           <div>
             <h1 className="text-2xl font-bold">Secreção Ácida Gástrica</h1>
             <p className="text-muted-foreground">Explore as vias de estimulação da célula parietal e os mecanismos de bloqueio farmacológico.</p>
+            <AdminPromptViewer toolSlug="sim-secrecao-gastrica" toolName="Secreção Gástrica" toolType="simulator" prompt={getNativePrompt("sim-secrecao-gastrica") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

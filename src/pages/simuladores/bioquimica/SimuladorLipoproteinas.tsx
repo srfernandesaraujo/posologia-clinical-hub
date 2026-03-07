@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getLipoproteinasChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "lipoproteinas";
@@ -193,6 +195,7 @@ export default function SimuladorLipoproteinas() {
           <div>
             <h1 className="text-2xl font-bold">Metabolismo das Lipoproteínas</h1>
             <p className="text-muted-foreground">Transporte de colesterol, vias exógena/endógena e fármacos hipolipemiantes</p>
+            <AdminPromptViewer toolSlug="sim-lipoproteinas" toolName="Metabolismo das Lipoproteínas" toolType="simulator" prompt={getNativePrompt("sim-lipoproteinas") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

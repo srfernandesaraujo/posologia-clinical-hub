@@ -1,4 +1,6 @@
 import { useState } from "react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,7 +107,7 @@ export default function SimuladorAntimicrobianos() {
   if (screen === "dashboard") {
     return (
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Antimicrobial Stewardship</h1><p className="text-muted-foreground">Uso Racional de Antimicrobianos – Terapia empírica e descalonamento</p></div>
+        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Antimicrobial Stewardship</h1><p className="text-muted-foreground">Uso Racional de Antimicrobianos – Terapia empírica e descalonamento</p><AdminPromptViewer toolSlug="sim-antimicrobianos" toolName="Simulador Antimicrobianos" toolType="simulator" prompt={getNativePrompt("sim-antimicrobianos") || ""} /></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>

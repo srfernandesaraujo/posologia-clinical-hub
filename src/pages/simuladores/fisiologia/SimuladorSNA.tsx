@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getSNAChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "sna";
@@ -150,6 +152,7 @@ export default function SimuladorSNA() {
           <div>
             <h1 className="text-2xl font-bold">Sistema Nervoso Autônomo</h1>
             <p className="text-muted-foreground">Manipule o tônus simpático e parassimpático e observe alterações fisiológicas em tempo real.</p>
+            <AdminPromptViewer toolSlug="sim-sna" toolName="Sistema Nervoso Autônomo" toolType="simulator" prompt={getNativePrompt("sim-sna") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

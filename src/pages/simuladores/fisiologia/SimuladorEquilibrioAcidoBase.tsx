@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEquilibrioAcidoBaseChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "equilibrio-acido-base";
@@ -170,6 +172,7 @@ export default function SimuladorEquilibrioAcidoBase() {
           <div>
             <h1 className="text-2xl font-bold">Equilíbrio Ácido-Base</h1>
             <p className="text-muted-foreground">Manipule ventilação e excreção renal para corrigir distúrbios ácido-base.</p>
+            <AdminPromptViewer toolSlug="sim-equilibrio-acido-base" toolName="Equilíbrio Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-equilibrio-acido-base") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

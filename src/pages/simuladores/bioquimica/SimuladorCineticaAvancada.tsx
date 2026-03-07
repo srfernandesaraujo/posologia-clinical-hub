@@ -13,6 +13,8 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCineticaAvancadaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cinetica-avancada";
@@ -154,6 +156,7 @@ export default function SimuladorCineticaAvancada() {
           <div>
             <h1 className="text-2xl font-bold">Cinética Enzimática Avançada</h1>
             <p className="text-muted-foreground">Michaelis-Menten, Lineweaver-Burk e inibição competitiva, não-competitiva e acompetitiva.</p>
+            <AdminPromptViewer toolSlug="sim-cinetica-avancada" toolName="Cinética Enzimática Avançada" toolType="simulator" prompt={getNativePrompt("sim-cinetica-avancada") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

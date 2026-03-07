@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCadeiaTransporteEletronsChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "cadeia-eletrons";
@@ -182,6 +184,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
           <div>
             <h1 className="text-2xl font-bold">Cadeia de Transporte de Eletrões</h1>
             <p className="text-muted-foreground">Fosforilação oxidativa, inibidores de complexos e desacopladores.</p>
+            <AdminPromptViewer toolSlug="sim-cadeia-transporte-eletrons" toolName="Cadeia de Transporte de Elétrons" toolType="simulator" prompt={getNativePrompt("sim-cadeia-transporte-eletrons") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

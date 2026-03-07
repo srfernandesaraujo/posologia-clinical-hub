@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDissociacaoHemoglobinaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "dissociacao-hemoglobina";
@@ -146,6 +148,7 @@ export default function SimuladorDissociacaoHemoglobina() {
           <div>
             <h1 className="text-2xl font-bold">Dissociação da Hemoglobina</h1>
             <p className="text-muted-foreground">Curva de saturação O₂, efeito Bohr, mioglobina e moduladores alostéricos.</p>
+            <AdminPromptViewer toolSlug="sim-dissociacao-hemoglobina" toolName="Dissociação da Hemoglobina" toolType="simulator" prompt={getNativePrompt("sim-dissociacao-hemoglobina") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

@@ -13,6 +13,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEletrofisiologiaCardiacaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "eletrofisiologia-cardiaca";
@@ -157,6 +159,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
           <div>
             <h1 className="text-2xl font-bold">Eletrofisiologia Cardíaca</h1>
             <p className="text-muted-foreground">Manipule canais iônicos e observe o potencial de ação cardíaco.</p>
+            <AdminPromptViewer toolSlug="sim-eletrofisiologia-cardiaca" toolName="Eletrofisiologia Cardíaca" toolType="simulator" prompt={getNativePrompt("sim-eletrofisiologia-cardiaca") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
