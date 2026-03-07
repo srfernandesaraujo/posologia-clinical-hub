@@ -3,6 +3,8 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Brain, User, Stethoscope, AlertTriangle, Info } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from "recharts";
