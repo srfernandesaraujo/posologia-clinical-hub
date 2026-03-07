@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Stethoscope, Users, BookOpen, PhoneCall, Award, XCircle, ChevronRight, Sparkles, Zap } from "lucide-react";
+import { Stethoscope, Users, BookOpen, PhoneCall, Award, XCircle, ChevronRight, Sparkles, Zap, Shield, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
