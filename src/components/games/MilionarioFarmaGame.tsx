@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Stethoscope, Users, BookOpen, PhoneCall, Award, XCircle, ChevronRight, Sparkles, Zap } from "lucide-react";
+import { Stethoscope, Users, BookOpen, PhoneCall, Award, XCircle, ChevronRight, Sparkles, Zap, Shield, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -175,6 +175,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   const [timer, setTimer] = useState(0);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; title: string; explanation: string; reference?: string; tip?: string } | null>(null);
   const [stoppedEarly, setStoppedEarly] = useState(false);
+  const [safeHaven, setSafeHaven] = useState<number | null>(null); // Porto Seguro: index of the safe question (score at that point)
 
   const config = difficultyConfig[difficulty];
   const currentContext = contexts.find((c) => c.id === selectedContext);
@@ -213,12 +214,17 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setQIndex(0); setSelected(null); setIsRevealing(false); setRevealed(false);
     setUsedFiftyFifty(false); setUsedPhone(false); setUsedAudience(false);
     setHiddenOptions(new Set()); setShowAudience(false); setScore(0); setErrors(0);
-    setFeedback(null); setStoppedEarly(false);
+    setFeedback(null); setStoppedEarly(false); setSafeHaven(null);
   };
 
   const handleStop = () => {
     setStoppedEarly(true);
     setPhase("result");
+  };
+
+  const handleSetSafeHaven = () => {
+    setSafeHaven(score);
+    toast.success(`Porto Seguro definido em ${prizeValues[score - 1]}! Se errar, você volta para esse valor.`, { duration: 5000 });
   };
 
   const handleSelect = (i: number) => {
@@ -260,6 +266,12 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setShowAudience(false);
 
     if (!wasCorrect) {
+      // If wrong, score falls back to safe haven
+      if (safeHaven !== null && safeHaven > 0) {
+        setScore(safeHaven);
+      } else {
+        setScore(0);
+      }
       setPhase("result");
     } else if (qIndex >= questions.length - 1) {
       setPhase("result");
@@ -354,7 +366,9 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       : score === questions.length ? "Parabéns, Chefe de Clínica!" : score >= questions.length * 0.6 ? "Bom desempenho!" : "Continue estudando!";
     const resultSubtitle = stoppedEarly
       ? `Você parou na pergunta ${qIndex + 1} e garantiu o prêmio de ${score > 0 ? prizeValues[score - 1] : "R$ 0"}. Acertou ${score} de ${qIndex} perguntas respondidas.`
-      : `Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`;
+      : errors > 0 && safeHaven !== null && safeHaven > 0
+        ? `Você errou e voltou ao Porto Seguro: ${prizeValues[safeHaven - 1]}. Acertou ${safeHaven} de ${qIndex + 1} perguntas respondidas.`
+        : `Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`;
     return (
       <GameStarsResult
         score={score}
@@ -408,8 +422,9 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
           <Badge
             key={i}
             variant={i === qIndex ? "default" : i < qIndex ? "secondary" : "outline"}
-            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""}`}
+            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""} ${safeHaven !== null && i === safeHaven - 1 ? "ring-2 ring-green-500 ring-offset-1" : ""}`}
           >
+            {safeHaven !== null && i === safeHaven - 1 && <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />}
             {i + 1}. {p}
           </Badge>
         ))}
@@ -461,9 +476,19 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
         </div>
       )}
 
-      {/* Stop button - always visible during play when not revealing */}
+      {/* Porto Seguro + Stop buttons */}
       {!isRevealing && !revealed && selected === null && score > 0 && (
-        <div className="flex justify-center animate-in fade-in">
+        <div className="flex justify-center gap-3 animate-in fade-in">
+          {safeHaven === null && (
+            <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-green-500/50 text-green-600 hover:bg-green-500/10">
+              <Shield className="h-4 w-4" /> Porto Seguro em {prizeValues[score - 1]}
+            </Button>
+          )}
+          {safeHaven !== null && (
+            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Porto Seguro: {prizeValues[safeHaven - 1]}
+            </Badge>
+          )}
           <Button size="lg" variant="outline" onClick={handleStop} className="gap-2 border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10">
             <Award className="h-4 w-4" /> Parar e Garantir {prizeValues[score - 1]}
           </Button>
