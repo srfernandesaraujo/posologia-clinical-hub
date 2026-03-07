@@ -3,6 +3,8 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, Plus, X } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
