@@ -266,6 +266,12 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setShowAudience(false);
 
     if (!wasCorrect) {
+      // If wrong, score falls back to safe haven
+      if (safeHaven !== null && safeHaven > 0) {
+        setScore(safeHaven);
+      } else {
+        setScore(0);
+      }
       setPhase("result");
     } else if (qIndex >= questions.length - 1) {
       setPhase("result");
