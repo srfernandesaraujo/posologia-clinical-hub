@@ -152,6 +152,7 @@ export default function WellsScore() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="wells-score" toolName="Wells Score" />
+            <AdminPromptViewer toolSlug="wells-score" toolName="Wells Score" toolType="calculator" prompt={getNativePrompt("wells-score") || ""} />
             <CalculationHistory calculatorSlug="wells-score" />
             {resultado && (
               <SaveToHistoryButton

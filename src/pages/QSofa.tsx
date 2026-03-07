@@ -104,6 +104,7 @@ export default function QSofa() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="qsofa" toolName="qSOFA" />
+            <AdminPromptViewer toolSlug="qsofa" toolName="qSOFA" toolType="calculator" prompt={getNativePrompt("qsofa") || ""} />
             <CalculationHistory calculatorSlug="qsofa" />
             {resultado && (
               <SaveToHistoryButton

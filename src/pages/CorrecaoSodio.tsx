@@ -145,6 +145,7 @@ export default function CorrecaoSodio() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="correcao-sodio" toolName="Correção de Sódio" />
+            <AdminPromptViewer toolSlug="correcao-sodio" toolName="Correção de Sódio" toolType="calculator" prompt={getNativePrompt("correcao-sodio") || ""} />
             <CalculationHistory calculatorSlug="correcao-sodio" />
             {resultado && (
               <SaveToHistoryButton

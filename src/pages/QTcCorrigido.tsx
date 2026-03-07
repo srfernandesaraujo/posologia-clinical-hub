@@ -132,6 +132,7 @@ export default function QTcCorrigido() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="qtc-corrigido" toolName="QTc Corrigido" />
+            <AdminPromptViewer toolSlug="qtc-corrigido" toolName="QTc Corrigido" toolType="calculator" prompt={getNativePrompt("qtc-corrigido") || ""} />
             <CalculationHistory calculatorSlug="qtc-corrigido" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>

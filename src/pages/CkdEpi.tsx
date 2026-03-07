@@ -159,6 +159,7 @@ export default function CkdEpi() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="ckd-epi" toolName="CKD-EPI 2021" />
+            <AdminPromptViewer toolSlug="ckd-epi" toolName="CKD-EPI 2021" toolType="calculator" prompt={getNativePrompt("ckd-epi") || ""} />
             <CalculationHistory calculatorSlug="ckd-epi" />
             {resultado && (
               <SaveToHistoryButton

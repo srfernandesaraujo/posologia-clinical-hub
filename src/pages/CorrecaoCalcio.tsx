@@ -130,6 +130,7 @@ export default function CorrecaoCalcio() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="correcao-calcio" toolName="Correção de Cálcio" />
+            <AdminPromptViewer toolSlug="correcao-calcio" toolName="Correção de Cálcio" toolType="calculator" prompt={getNativePrompt("correcao-calcio") || ""} />
             <CalculationHistory calculatorSlug="correcao-calcio" />
             {resultado && (
               <SaveToHistoryButton
