@@ -366,7 +366,9 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       : score === questions.length ? "Parabéns, Chefe de Clínica!" : score >= questions.length * 0.6 ? "Bom desempenho!" : "Continue estudando!";
     const resultSubtitle = stoppedEarly
       ? `Você parou na pergunta ${qIndex + 1} e garantiu o prêmio de ${score > 0 ? prizeValues[score - 1] : "R$ 0"}. Acertou ${score} de ${qIndex} perguntas respondidas.`
-      : `Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`;
+      : errors > 0 && safeHaven !== null && safeHaven > 0
+        ? `Você errou e voltou ao Porto Seguro: ${prizeValues[safeHaven - 1]}. Acertou ${safeHaven} de ${qIndex + 1} perguntas respondidas.`
+        : `Você acertou ${score} de ${questions.length} perguntas em ${currentContext?.label}. Prêmio: ${score > 0 ? prizeValues[score - 1] : "R$ 0"}.`;
     return (
       <GameStarsResult
         score={score}
