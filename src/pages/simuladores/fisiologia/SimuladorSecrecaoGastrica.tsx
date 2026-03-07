@@ -188,7 +188,7 @@ export default function SimuladorSecrecaoGastrica() {
           <div>
             <h1 className="text-2xl font-bold">Secreção Ácida Gástrica</h1>
             <p className="text-muted-foreground">Explore as vias de estimulação da célula parietal e os mecanismos de bloqueio farmacológico.</p>
-          </div>
+            <AdminPromptViewer toolSlug="sim-secrecao-gastrica" toolName="Secreção Gástrica" toolType="simulator" prompt={getNativePrompt("sim-secrecao-gastrica") || ""} />
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

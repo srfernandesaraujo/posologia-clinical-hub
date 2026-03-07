@@ -161,7 +161,7 @@ export default function SimuladorCineticaEnzimatica() {
           <div>
             <h1 className="text-2xl font-bold">Cinética Enzimática</h1>
             <p className="text-muted-foreground">Explore curvas de Michaelis-Menten e Lineweaver-Burk com inibidores competitivos e não-competitivos.</p>
-          </div>
+            <AdminPromptViewer toolSlug="sim-cinetica-enzimatica" toolName="Cinética Enzimática" toolType="simulator" prompt={getNativePrompt("sim-cinetica-enzimatica") || ""} />
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

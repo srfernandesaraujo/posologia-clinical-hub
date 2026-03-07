@@ -160,7 +160,7 @@ export default function SimuladorEixoHPA() {
           <div>
             <h1 className="text-2xl font-bold">Eixo Hipotálamo-Hipófise-Adrenal</h1>
             <p className="text-muted-foreground">Simule o mecanismo de feedback negativo do eixo HPA com estresse e corticoides exógenos.</p>
-          </div>
+            <AdminPromptViewer toolSlug="sim-eixo-hpa" toolName="Eixo HPA" toolType="simulator" prompt={getNativePrompt("sim-eixo-hpa") || ""} />
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

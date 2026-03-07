@@ -172,7 +172,7 @@ export default function SimuladorRegulacaoGlicemica() {
           <div>
             <h1 className="text-2xl font-bold">Regulação Glicêmica</h1>
             <p className="text-muted-foreground">Modele a interação entre ingestão de carboidratos, secreção de insulina e captação muscular de glicose.</p>
-          </div>
+            <AdminPromptViewer toolSlug="sim-regulacao-glicemica" toolName="Regulação Glicêmica" toolType="simulator" prompt={getNativePrompt("sim-regulacao-glicemica") || ""} />
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>

@@ -172,7 +172,7 @@ export default function SimuladorEquilibrioAcidoBase() {
           <div>
             <h1 className="text-2xl font-bold">Equilíbrio Ácido-Base</h1>
             <p className="text-muted-foreground">Manipule ventilação e excreção renal para corrigir distúrbios ácido-base.</p>
-          </div>
+            <AdminPromptViewer toolSlug="sim-equilibrio-acido-base" toolName="Equilíbrio Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-equilibrio-acido-base") || ""} />
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card>
