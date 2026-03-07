@@ -175,6 +175,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
   const [timer, setTimer] = useState(0);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; title: string; explanation: string; reference?: string; tip?: string } | null>(null);
   const [stoppedEarly, setStoppedEarly] = useState(false);
+  const [safeHaven, setSafeHaven] = useState<number | null>(null); // Porto Seguro: index of the safe question (score at that point)
 
   const config = difficultyConfig[difficulty];
   const currentContext = contexts.find((c) => c.id === selectedContext);
