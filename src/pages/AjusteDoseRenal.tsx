@@ -355,6 +355,7 @@ export default function AjusteDoseRenal() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="ajuste-dose-renal" toolName="Calculadora de Ajuste de Dose Renal" />
+            <AdminPromptViewer toolSlug="ajuste-dose-renal" toolName="Ajuste de Dose Renal" toolType="calculator" prompt={getNativePrompt("ajuste-dose-renal") || ""} />
             <CalculationHistory calculatorSlug="ajuste-dose-renal" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>

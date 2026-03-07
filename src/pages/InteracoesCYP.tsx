@@ -132,6 +132,7 @@ export default function InteracoesCYP() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="interacoes-cyp" toolName="Interacoes CYP" />
+            <AdminPromptViewer toolSlug="interacoes-cyp" toolName="Interações CYP" toolType="calculator" prompt={getNativePrompt("interacoes-cyp") || ""} />
             <CalculationHistory calculatorSlug="interacoes-cyp" />
           </div>
         </div>

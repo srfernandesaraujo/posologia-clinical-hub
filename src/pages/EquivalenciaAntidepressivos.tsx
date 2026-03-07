@@ -282,6 +282,7 @@ export default function EquivalenciaAntidepressivos() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="equivalencia-antidepressivos" toolName="Calculadora de Equivalência de Antidepressivos" />
+            <AdminPromptViewer toolSlug="equivalencia-antidepressivos" toolName="Equivalência de Antidepressivos" toolType="calculator" prompt={getNativePrompt("equivalencia-antidepressivos") || ""} />
             <CalculationHistory calculatorSlug="equivalencia-antidepressivos" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>

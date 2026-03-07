@@ -613,6 +613,7 @@ export default function EquivalenciaOpioides() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="equivalencia-opioides" toolName="Calculadora de Equivalência de Opioides" />
+            <AdminPromptViewer toolSlug="equivalencia-opioides" toolName="Equivalência de Opioides" toolType="calculator" prompt={getNativePrompt("equivalencia-opioides") || ""} />
             <CalculationHistory calculatorSlug="equivalencia-opioides" />
             <span className="text-muted-foreground">Modo:</span>
             <button

@@ -607,6 +607,7 @@ export default function DesmaCorticoide() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="desmame-corticoide" toolName="Calculadora de Desmame de Corticoides" />
+            <AdminPromptViewer toolSlug="desmame-corticoide" toolName="Desmame de Corticoide" toolType="calculator" prompt={getNativePrompt("desmame-corticoide") || ""} />
             <CalculationHistory calculatorSlug="desmame-corticoide" />
             <span className="text-muted-foreground">Modo:</span>
             <button

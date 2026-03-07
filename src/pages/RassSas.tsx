@@ -72,6 +72,7 @@ export default function RassSas() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="rass-sedacao" toolName="RASS" />
+            <AdminPromptViewer toolSlug="rass-sas" toolName="RASS/SAS" toolType="calculator" prompt={getNativePrompt("rass-sas") || ""} />
             <CalculationHistory calculatorSlug="rass-sedacao" />
             <span className="text-muted-foreground">Modo:</span>
             <button onClick={() => setModo("clinico")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "clinico" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
