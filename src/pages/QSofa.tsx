@@ -3,6 +3,8 @@ import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Thermometer, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
@@ -102,6 +104,7 @@ export default function QSofa() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="qsofa" toolName="qSOFA" />
+            <AdminPromptViewer toolSlug="qsofa" toolName="qSOFA" toolType="calculator" prompt={getNativePrompt("qsofa") || ""} />
             <CalculationHistory calculatorSlug="qsofa" />
             {resultado && (
               <SaveToHistoryButton

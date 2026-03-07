@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
@@ -488,6 +490,7 @@ export default function RiscoCardiovascular() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="risco-cardiovascular" toolName="Calculadora de Risco Cardiovascular" />
+            <AdminPromptViewer toolSlug="risco-cardiovascular" toolName="Risco Cardiovascular" toolType="calculator" prompt={getNativePrompt("risco-cardiovascular") || ""} />
             <CalculationHistory calculatorSlug="risco-cardiovascular" />
             <span className="text-muted-foreground">Modo:</span>
             <button

@@ -3,6 +3,8 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { ArrowLeft, FileText, Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, Plus, X } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
@@ -611,6 +613,7 @@ export default function EquivalenciaOpioides() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="equivalencia-opioides" toolName="Calculadora de Equivalência de Opioides" />
+            <AdminPromptViewer toolSlug="equivalencia-opioides" toolName="Equivalência de Opioides" toolType="calculator" prompt={getNativePrompt("equivalencia-opioides") || ""} />
             <CalculationHistory calculatorSlug="equivalencia-opioides" />
             <span className="text-muted-foreground">Modo:</span>
             <button

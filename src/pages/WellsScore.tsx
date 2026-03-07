@@ -3,6 +3,8 @@ import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, HeartPulse, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
@@ -150,6 +152,7 @@ export default function WellsScore() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="wells-score" toolName="Wells Score" />
+            <AdminPromptViewer toolSlug="wells-score" toolName="Wells Score" toolType="calculator" prompt={getNativePrompt("wells-score") || ""} />
             <CalculationHistory calculatorSlug="wells-score" />
             {resultado && (
               <SaveToHistoryButton

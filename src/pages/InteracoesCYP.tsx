@@ -3,6 +3,8 @@ import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { ArrowLeft, Dna, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
@@ -130,6 +132,7 @@ export default function InteracoesCYP() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="interacoes-cyp" toolName="Interacoes CYP" />
+            <AdminPromptViewer toolSlug="interacoes-cyp" toolName="Interações CYP" toolType="calculator" prompt={getNativePrompt("interacoes-cyp") || ""} />
             <CalculationHistory calculatorSlug="interacoes-cyp" />
           </div>
         </div>

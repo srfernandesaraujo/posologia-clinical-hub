@@ -3,6 +3,8 @@ import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Beaker, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
@@ -157,6 +159,7 @@ export default function CkdEpi() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="ckd-epi" toolName="CKD-EPI 2021" />
+            <AdminPromptViewer toolSlug="ckd-epi" toolName="CKD-EPI 2021" toolType="calculator" prompt={getNativePrompt("ckd-epi") || ""} />
             <CalculationHistory calculatorSlug="ckd-epi" />
             {resultado && (
               <SaveToHistoryButton

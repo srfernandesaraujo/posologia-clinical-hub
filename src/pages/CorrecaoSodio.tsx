@@ -3,6 +3,8 @@ import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
 import { ArrowLeft, FileText, Droplets, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
@@ -143,6 +145,7 @@ export default function CorrecaoSodio() {
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <ShareToolButton toolSlug="correcao-sodio" toolName="Correção de Sódio" />
+            <AdminPromptViewer toolSlug="correcao-sodio" toolName="Correção de Sódio" toolType="calculator" prompt={getNativePrompt("correcao-sodio") || ""} />
             <CalculationHistory calculatorSlug="correcao-sodio" />
             {resultado && (
               <SaveToHistoryButton
