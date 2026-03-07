@@ -12,6 +12,8 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getOperonLacChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "operon-lac";
