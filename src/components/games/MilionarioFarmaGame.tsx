@@ -222,6 +222,11 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
     setPhase("result");
   };
 
+  const handleSetSafeHaven = () => {
+    setSafeHaven(score);
+    toast.success(`Porto Seguro definido em ${prizeValues[score - 1]}! Se errar, você volta para esse valor.`, { duration: 5000 });
+  };
+
   const handleSelect = (i: number) => {
     if (isRevealing || revealed || selected !== null || hiddenOptions.has(i)) return;
     setSelected(i);
