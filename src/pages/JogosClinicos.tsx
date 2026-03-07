@@ -35,6 +35,33 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
+
+/** Maps game page IDs to nativeSystemPrompts slugs */
+const gamePromptSlugMap: Record<string, string> = {
+  "rpg-tcc": "rpg-tcc",
+  "vila-saude": "vila-saude",
+  "laboratorio": "laboratorio-interacoes",
+  "detetive": "detetive-historico",
+  "resseccao": "resseccao-oncologica",
+  "milionario": "milionario-farma",
+  "domino": "domino-clinico",
+  "carreira": "carreira-clinica",
+  "plantao": "plantao-noturno",
+  "clearance": "gestor-clearance",
+  "alerta-vermelho": "alerta-vermelho",
+  "janela": "janela-terapeutica",
+  "labirinto": "labirinto-hemograma",
+  "bolsa": "bolsa-metabolica",
+  "insulina-birds": "insulina-birds",
+  "alex-kidd-has": "alex-kidd-hipertensao",
+  "pandemic-farma": "pandemic-farma",
+  "farmacia-plantao": "farmacia-plantao",
+  "codigo-azul": "codigo-azul",
+  "detetive-toxico": "detetive-toxicologico",
+  "batalha-naval": "batalha-naval-clinica",
+};
 
 type GameCategory = "all" | "farmacologia" | "investigacao" | "simulacao" | "acao" | "emergencia";
 
