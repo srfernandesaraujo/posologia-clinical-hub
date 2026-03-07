@@ -494,10 +494,15 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       {/* Porto Seguro + Stop buttons */}
       {!isRevealing && !revealed && selected === null && score > 0 && (
         <div className="flex justify-center gap-3 animate-in fade-in">
-          {safeHaven === null && (
+          {safeHaven === null && !pendingSafeHaven && (
             <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-green-500/50 text-green-600 hover:bg-green-500/10">
-              <Shield className="h-4 w-4" /> Porto Seguro em {prizeValues[score - 1]}
+              <Shield className="h-4 w-4" /> Ativar Porto Seguro
             </Button>
+          )}
+          {pendingSafeHaven && safeHaven === null && (
+            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5 animate-pulse border-amber-500/50">
+              <Shield className="h-3.5 w-3.5 text-amber-500" /> Porto Seguro pendente — acerte para confirmar em {prizeValues[qIndex]}
+            </Badge>
           )}
           {safeHaven !== null && (
             <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5">
