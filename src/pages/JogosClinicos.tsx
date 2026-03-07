@@ -630,6 +630,12 @@ export default function JogosClinicos() {
             <Badge variant="secondary">v{versionLabel}</Badge>
           </div>
           <p className="text-muted-foreground">{active.subtitle}</p>
+          <AdminPromptViewer
+            toolSlug={gamePromptSlugMap[activeGame] || activeGame}
+            toolName={active.title}
+            toolType="game"
+            prompt={getNativePrompt(gamePromptSlugMap[activeGame] || activeGame) || ""}
+          />
         </div>
 
         <GameHeader
