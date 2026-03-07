@@ -82,7 +82,7 @@ export default function AdminPromptViewer({ toolSlug, toolName, toolType, prompt
               Editar
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" onClick={handleSave} className="gap-1.5 text-green-600">
+            <Button variant="ghost" size="sm" onClick={handleSave} className="gap-1.5 text-primary">
               <Save className="h-4 w-4" />
               Salvar
             </Button>
