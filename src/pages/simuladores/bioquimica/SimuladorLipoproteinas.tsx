@@ -195,6 +195,7 @@ export default function SimuladorLipoproteinas() {
           <div>
             <h1 className="text-2xl font-bold">Metabolismo das Lipoproteínas</h1>
             <p className="text-muted-foreground">Transporte de colesterol, vias exógena/endógena e fármacos hipolipemiantes</p>
+            <AdminPromptViewer toolSlug="sim-lipoproteinas" toolName="Metabolismo das Lipoproteínas" toolType="simulator" prompt={getNativePrompt("sim-lipoproteinas") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

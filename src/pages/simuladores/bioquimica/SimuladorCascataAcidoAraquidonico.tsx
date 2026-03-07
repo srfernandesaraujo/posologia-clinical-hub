@@ -171,6 +171,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
           <div>
             <h1 className="text-2xl font-bold">Cascata do Ácido Araquidónico</h1>
             <p className="text-muted-foreground">Vias COX e LOX, eicosanóides e bloqueios farmacológicos</p>
+            <AdminPromptViewer toolSlug="sim-cascata-acido-araquidonico" toolName="Cascata do Ácido Araquidônico" toolType="simulator" prompt={getNativePrompt("sim-cascata-acido-araquidonico") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

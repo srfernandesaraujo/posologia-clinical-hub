@@ -148,6 +148,7 @@ export default function SimuladorDissociacaoHemoglobina() {
           <div>
             <h1 className="text-2xl font-bold">Dissociação da Hemoglobina</h1>
             <p className="text-muted-foreground">Curva de saturação O₂, efeito Bohr, mioglobina e moduladores alostéricos.</p>
+            <AdminPromptViewer toolSlug="sim-dissociacao-hemoglobina" toolName="Dissociação da Hemoglobina" toolType="simulator" prompt={getNativePrompt("sim-dissociacao-hemoglobina") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

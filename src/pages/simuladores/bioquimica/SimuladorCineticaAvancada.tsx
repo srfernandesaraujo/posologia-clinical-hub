@@ -156,6 +156,7 @@ export default function SimuladorCineticaAvancada() {
           <div>
             <h1 className="text-2xl font-bold">Cinética Enzimática Avançada</h1>
             <p className="text-muted-foreground">Michaelis-Menten, Lineweaver-Burk e inibição competitiva, não-competitiva e acompetitiva.</p>
+            <AdminPromptViewer toolSlug="sim-cinetica-avancada" toolName="Cinética Enzimática Avançada" toolType="simulator" prompt={getNativePrompt("sim-cinetica-avancada") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

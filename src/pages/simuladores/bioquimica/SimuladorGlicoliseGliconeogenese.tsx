@@ -163,6 +163,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
           <div>
             <h1 className="text-2xl font-bold">Glicólise vs. Gliconeogénese</h1>
             <p className="text-muted-foreground">Regulação do metabolismo hepático dos hidratos de carbono.</p>
+            <AdminPromptViewer toolSlug="sim-glicolise-gliconeogenese" toolName="Glicólise vs Gliconeogênese" toolType="simulator" prompt={getNativePrompt("sim-glicolise-gliconeogenese") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

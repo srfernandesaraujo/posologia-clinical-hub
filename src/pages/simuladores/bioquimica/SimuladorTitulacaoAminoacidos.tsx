@@ -164,6 +164,7 @@ export default function SimuladorTitulacaoAminoacidos() {
           <div>
             <h1 className="text-2xl font-bold">Titulação de Aminoácidos</h1>
             <p className="text-muted-foreground">Curvas de titulação, pKa, pI e carga líquida</p>
+            <AdminPromptViewer toolSlug="sim-titulacao-aminoacidos" toolName="Titulação de Aminoácidos" toolType="simulator" prompt={getNativePrompt("sim-titulacao-aminoacidos") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
