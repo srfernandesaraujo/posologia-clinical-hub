@@ -161,7 +161,7 @@ export default function SimuladorInsulina() {
   if (screen === "dashboard") {
     return (
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2 flex items-center gap-2"><BrainCircuit className="h-7 w-7 cursor-pointer" onClick={() => setScreen("dashboard")} />Simulador de Dose de Insulina</h1><p className="text-muted-foreground">Treinamento de insulinoterapia intensiva (Koda-Kimble)</p></div>
+        <div className="mb-8"><h1 className="text-3xl font-bold mb-2 flex items-center gap-2"><BrainCircuit className="h-7 w-7 cursor-pointer" onClick={() => setScreen("dashboard")} />Simulador de Dose de Insulina</h1><p className="text-muted-foreground">Treinamento de insulinoterapia intensiva (Koda-Kimble)</p><AdminPromptViewer toolSlug="sim-insulina" toolName="Simulador Insulina" toolType="simulator" prompt={getNativePrompt("sim-insulina") || ""} /></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>

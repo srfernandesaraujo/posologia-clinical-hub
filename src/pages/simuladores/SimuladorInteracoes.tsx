@@ -236,6 +236,7 @@ export default function SimuladorInteracoes() {
           <div>
             <h1 className="text-2xl font-bold">Simulador de Interações Medicamentosas</h1>
             <p className="text-sm text-muted-foreground">Analise interações entre fármacos com dados do RxNav (NIH)</p>
+            <AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} />
           </div>
         </div>
 
