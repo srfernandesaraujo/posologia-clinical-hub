@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
