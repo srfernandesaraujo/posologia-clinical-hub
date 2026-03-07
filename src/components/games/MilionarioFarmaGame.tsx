@@ -244,8 +244,22 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       setIsRevealing(false);
       setSpotlightActive(false);
       const correct = selected === q.correctIndex;
-      if (correct) setScore(s => s + 1);
-      else setErrors(e => e + 1);
+      if (correct) {
+        setScore(s => s + 1);
+        // Se Porto Seguro estava pendente e acertou, confirma no nível após acerto
+        if (pendingSafeHaven) {
+          const newScore = score + 1; // score after this correct answer
+          setSafeHaven(newScore);
+          setPendingSafeHaven(false);
+          toast.success(`Porto Seguro confirmado em ${prizeValues[newScore - 1]}!`, { duration: 4000 });
+        }
+      } else {
+        setErrors(e => e + 1);
+        // Se Porto Seguro estava pendente mas errou, cancela
+        if (pendingSafeHaven) {
+          setPendingSafeHaven(false);
+        }
+      }
 
       // Show formative feedback
       setFeedback({
