@@ -78,6 +78,13 @@ import JogosClinicos from "./pages/JogosClinicos";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
+import TermosDeServico from "./pages/TermosDeServico";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import PoliticaCookies from "./pages/PoliticaCookies";
+import Vitrine from "./pages/Vitrine";
+import DocumentacaoPublica from "./pages/DocumentacaoPublica";
+import ContatoPublico from "./pages/ContatoPublico";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
