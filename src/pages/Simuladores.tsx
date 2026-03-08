@@ -42,6 +42,14 @@ const NATIVE_SIMULATORS = [
   { slug: "pentoses-fosfato", name: "Via das Pentoses Fosfato e G6PD", description: "Stresse oxidativo, NADPH, glutationa e hemólise na deficiência de G6PD.", icon: Shield, category: "Bioquímica" },
   { slug: "titulacao-aminoacidos", name: "Titulação de Aminoácidos", description: "Curvas de titulação em tempo real com pKa, pI e carga líquida dinâmica.", icon: TestTube, category: "Bioquímica" },
   { slug: "operon-lac", name: "Operão Lac", description: "Regulação genética bacteriana: CAP-cAMP, repressor LacI e expressão de β-galactosidase.", icon: Dna, category: "Bioquímica" },
+  { slug: "dose-resposta", name: "Curva Dose-Resposta", description: "Potência (EC50) vs eficácia (Emax), agonistas parciais e antagonismo competitivo/não-competitivo.", icon: FlaskConical, category: "Farmacologia Básica" },
+  { slug: "transducao-sinal", name: "Transdução de Sinal", description: "Cascatas intracelulares GPCR (Gs, Gi, Gq), tirosina quinase, ionotrópico e nuclear com bloqueios farmacológicos.", icon: Brain, category: "Farmacologia Básica" },
+  { slug: "janela-terapeutica-farma", name: "Janela Terapêutica e Índice Terapêutico", description: "Compare DE50 vs DL50, calcule o IT e identifique fármacos de janela estreita vs ampla.", icon: Shield, category: "Farmacologia Básica" },
+  { slug: "vias-administracao", name: "Vias de Administração", description: "Compare perfis Cp×t para IV bolus, IV infusão, IM, SC, oral e sublingual lado a lado.", icon: Beaker, category: "Farmacologia Básica" },
+  { slug: "bloqueio-neuromuscular", name: "Bloqueio Neuromuscular", description: "Despolarizantes vs não-despolarizantes na placa motora, monitorização TOF e reversão com sugammadex/neostigmina.", icon: Zap, category: "Farmacologia Básica" },
+  { slug: "farmaco-autonomica", name: "Farmacologia Autonômica Aplicada", description: "Aplique atropina, fenilefrina, propranolol e pilocarpina e observe efeitos em órgãos-alvo.", icon: Heart, category: "Farmacologia Básica" },
+  { slug: "tolerancia-dependencia", name: "Tolerância, Dependência e Abstinência", description: "Simule uso crônico de opioides, BZD e álcool: downregulation, tolerância e síndrome de abstinência.", icon: Flame, category: "Farmacologia Básica" },
+  { slug: "farmacogenomica", name: "Farmacogenômica e Polimorfismos CYP", description: "Impacto de metabolizadores lentos/ultrarrápidos na curva Cp×t de pró-fármacos e fármacos ativos.", icon: Dna, category: "Farmacologia Básica" },
 ];
 
 export default function Simuladores() {
