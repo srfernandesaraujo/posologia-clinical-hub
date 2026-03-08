@@ -383,6 +383,7 @@ export default function Admin() {
             {unreadMessages > 0 && <span className="ml-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{unreadMessages}</span>}
           </TabsTrigger>
           <TabsTrigger value="analytics" className="gap-2"><BarChart3 className="h-4 w-4" />{t("admin.recentUsage")}</TabsTrigger>
+          <TabsTrigger value="cookie-analytics" className="gap-2"><Cookie className="h-4 w-4" />Cookie Analytics</TabsTrigger>
           <TabsTrigger value="ai-keys" className="gap-2"><Key className="h-4 w-4" />API Keys</TabsTrigger>
         </TabsList>
 
