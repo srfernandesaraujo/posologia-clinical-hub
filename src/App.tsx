@@ -67,6 +67,14 @@ import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipo
 import SimuladorPentosesFosfato from "./pages/simuladores/bioquimica/SimuladorPentosesFosfato";
 import SimuladorTitulacaoAminoacidos from "./pages/simuladores/bioquimica/SimuladorTitulacaoAminoacidos";
 import SimuladorOperonLac from "./pages/simuladores/bioquimica/SimuladorOperonLac";
+import SimuladorDoseResposta from "./pages/simuladores/farmacologia/SimuladorDoseResposta";
+import SimuladorTransducaoSinal from "./pages/simuladores/farmacologia/SimuladorTransducaoSinal";
+import SimuladorJanelaTerapeutica from "./pages/simuladores/farmacologia/SimuladorJanelaTerapeutica";
+import SimuladorViasAdministracao from "./pages/simuladores/farmacologia/SimuladorViasAdministracao";
+import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/SimuladorBloqueioNeuromuscular";
+import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
+import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
+import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
