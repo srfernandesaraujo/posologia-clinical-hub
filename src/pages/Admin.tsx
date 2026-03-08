@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   Shield, Plus, Pencil, Trash2, Users, Calculator, BarChart3,
   FlaskConical, Save, ToggleLeft, ToggleRight, Sparkles, Loader2, Wand2,
-  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare, UserPlus, Send, Infinity, Key,
+  Mail, CheckCircle, XCircle, Eye, EyeOff, MessageSquare, UserPlus, Send, Infinity, Key, Cookie,
 } from "lucide-react";
 import AdminApiKeys from "@/components/AdminApiKeys";
 import { Button } from "@/components/ui/button";
