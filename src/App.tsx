@@ -180,6 +180,14 @@ const App = () => (
               <Route path="/sala/simulador/granulometria" element={<SimuladorGranulometria />} />
               <Route path="/sala/simulador/compressao" element={<SimuladorCompressao />} />
               <Route path="/sala/simulador/tampao-farmaceutico" element={<SimuladorTampao />} />
+              <Route path="/sala/simulador/sar-explorer" element={<SimuladorSAR />} />
+              <Route path="/sala/simulador/lipinski" element={<SimuladorLipinski />} />
+              <Route path="/sala/simulador/bioisosterismo" element={<SimuladorBioisosterismo />} />
+              <Route path="/sala/simulador/metabolismo-farmacos" element={<SimuladorMetabolismo />} />
+              <Route path="/sala/simulador/docking-simplificado" element={<SimuladorDocking />} />
+              <Route path="/sala/simulador/quiralidade" element={<SimuladorQuiralidade />} />
+              <Route path="/sala/simulador/pka-absorcao" element={<SimuladorPkaAbsorcao />} />
+              <Route path="/sala/simulador/qsar-simplificado" element={<SimuladorQSAR />} />
             </Route>
 
             {/* Authenticated routes */}
