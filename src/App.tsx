@@ -101,6 +101,7 @@ import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
 import JogosClinicos from "./pages/JogosClinicos";
+import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
