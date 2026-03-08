@@ -101,8 +101,14 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
-              <Route path="/contato" element={<Contato />} />
+              <Route path="/contato" element={<ContatoPublico />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+              <Route path="/termos-de-servico" element={<TermosDeServico />} />
+              <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="/politica-cookies" element={<PoliticaCookies />} />
+              <Route path="/vitrine" element={<Vitrine />} />
+              <Route path="/docs" element={<DocumentacaoPublica />} />
+              <Route path="/planos" element={<Planos />} />
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
