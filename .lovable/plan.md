@@ -1,100 +1,99 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Simuladores de Química Farmacêutica
 
-## Visão Geral
+## Análise de Mercado
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+A Química Farmacêutica (Medicinal Chemistry) é disciplina central nos cursos de Farmácia e Química, mas quase 100% do ensino ainda depende de slides estáticos e livros. Não existe plataforma concorrente com simuladores interativos nesta área. Isso representa uma oportunidade única de posicionamento.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## 8 Simuladores Propostos
 
-## Simuladores por Lotes
+### 1. Relação Estrutura-Atividade (SAR Explorer)
+- Selecionar um scaffold (ex: benzodiazepínico, sulfonamida, fluoroquinolona)
+- Adicionar/remover substituintes (halogênios, OH, NH₂, CH₃, CF₃) em posições do anel
+- Observar em tempo real: variação de potência (pIC50), lipofilia (logP), solubilidade e seletividade
+- Gráfico: radar chart com propriedades + barra de potência relativa
+- **Diferencial**: nenhum concorrente permite manipulação SAR interativa
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 2. Propriedades Físico-Químicas e Regra de Lipinski
+- Inserir ou selecionar estruturas e calcular MW, logP, HBD, HBA, PSA, rotatable bonds
+- Visualizar "espaço de druglikeness" com Regra dos 5 de Lipinski e extensões (Veber, Ghose)
+- Gráfico: scatter plot MW vs logP com zona de druglikeness destacada
+- Comparar múltiplos fármacos simultaneamente
+- **Diferencial**: filtro de druglikeness visual e interativo para ensino de design de fármacos
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 3. Isosteria e Bioisosterismo
+- Selecionar grupo funcional original (ex: -COOH, -OH, éster, amida)
+- Explorar bioisósteros clássicos e não-clássicos com impacto em: pKa, logP, estabilidade metabólica
+- Gráfico comparativo: propriedades do original vs bioisóstero (barras agrupadas)
+- Casos reais: celecoxibe vs rofecoxibe, losartan vs valsartan
+- **Diferencial**: ensino visual de estratégias de otimização molecular
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 4. Metabolismo de Fármacos e Pró-Fármacos
+- Selecionar fármaco e visualizar reações de Fase I (CYP450: oxidação, redução, hidrólise) e Fase II (conjugação)
+- Manipular atividade de CYP específicas e ver metabólitos gerados
+- Simular pró-fármacos: ativação de enalapril→enalaprilato, codeína→morfina, clopidogrel→metabólito ativo
+- Gráfico: cinética de conversão pró-fármaco → fármaco ativo vs tempo
+- **Diferencial**: ponte visual entre química estrutural e farmacocinética clínica
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 5. Interação Fármaco-Receptor (Docking Simplificado)
+- Selecionar alvo (receptor, enzima) e ligante
+- Visualizar tipos de interação: ligação H, van der Waals, iônica, π-π stacking, hidrofóbica
+- Manipular distância e orientação do ligante e observar variação da afinidade (ΔG, Ki)
+- Gráfico: energia de ligação vs distância + diagrama de interações 2D
+- **Diferencial**: conceitos de drug design molecular sem precisar de software complexo
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 6. Quiralidade e Estereoquímica Farmacológica
+- Comparar enantiômeros R/S do mesmo fármaco (ex: omeprazol vs esomeprazol, ibuprofeno R vs S, talidomida)
+- Visualizar diferenças em: potência, seletividade, toxicidade e metabolismo
+- Gráficos: barras comparativas de atividade dos enantiômeros + distomer vs eutomer
+- Conceitos: razão eudísmica, switch quiral, racemato vs enantiômero puro
+- **Diferencial**: tema clássico mas sem ferramenta interativa de comparação
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 7. pKa, Ionização e Absorção de Fármacos
+- Selecionar fármaco (ácido fraco, base fraca, anfótero/zwitterion)
+- Manipular pH do meio (estômago pH 1.5, duodeno pH 6, sangue pH 7.4)
+- Calcular fração ionizada/não-ionizada (Henderson-Hasselbalch) e prever absorção
+- Gráfico: % forma não-ionizada vs pH com destaque dos compartimentos fisiológicos
+- **Diferencial**: conecta físico-química com biofarmácia de forma visual e imediata
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 8. Planejamento Racional de Fármacos (QSAR Simplificado)
+- Selecionar série congênere (ex: sulfonamidas, barbitúricos)
+- Manipular descritores (logP, σ Hammett, Es de Taft, MR)
+- Observar correlação com atividade biológica (equação de Hansch)
+- Gráfico: regressão logP vs log(1/C) com parabólica de Hansch e ponto ótimo
+- **Diferencial**: QSAR acessível e visual, sem necessidade de software estatístico
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+---
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+## Padrão Técnico (idêntico aos existentes)
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+Cada simulador seguirá a arquitetura consolidada:
+- Sliders interativos + gráficos Recharts em tempo real
+- 3 casos built-in + geração de casos com IA (`useSimulatorCases`)
+- Integração com salas virtuais (`useVirtualRoomCase`) e modo exame (`ExamBanner`/`ExamFeedbackOverlay`)
+- Desafios educativos (`SimulatorChallengeMode`) com 8-12 questões MCQ e ajuste de parâmetros
+- Prompt viewer para admin (`AdminPromptViewer`)
+- Categoria: **"Química Farmacêutica"** no catálogo
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+---
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+## Arquivos a criar/editar
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorSAR.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorLipinski.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorBioisosterismo.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorMetabolismo.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorDocking.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorQuiralidade.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorPkaAbsorcao.tsx` |
+| Criar | `src/pages/simuladores/quimica-farmaceutica/SimuladorQSAR.tsx` |
+| Editar | `src/pages/Simuladores.tsx` — adicionar 8 entradas na categoria "Química Farmacêutica" |
+| Editar | `src/App.tsx` — registrar 16 rotas (8 diretas + 8 sala virtual) |
+| Editar | `src/data/simulatorChallenges.ts` — desafios educativos para cada simulador |
+| Editar | `src/data/nativeSystemPrompts.ts` — prompts de geração IA para cada simulador |
 
