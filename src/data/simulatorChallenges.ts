@@ -491,6 +491,146 @@ export function getFarmacogenomicaChallenges(): ChallengeSet {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// FARMACOTÉCNICA
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function getEstabilidadeChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Estabilidade e Prazo de Validade",
+    description: "Teste conceitos de cinética de degradação, Arrhenius e cálculo de t90.",
+    challenges: [
+      { type: "mcq", question: "Na cinética de primeira ordem, o tempo de meia-vida (t½) depende da concentração inicial?", options: ["Sim, aumenta com [C₀]", "Não, t½ = 0.693/k (constante)", "Sim, diminui com [C₀]", "Depende da temperatura"], correctIndex: 1, explanation: "Na primeira ordem, t½ = ln2/k = 0.693/k, independente da concentração inicial. Na ordem zero, t½ = C₀/(2k).", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 12" },
+      { type: "mcq", question: "A equação de Arrhenius relaciona a constante de velocidade com:", options: ["Concentração e pressão", "Temperatura e energia de ativação", "pH e solvente", "Umidade e luz"], correctIndex: 1, explanation: "k = A·e^(-Ea/RT). A constante de velocidade aumenta exponencialmente com a temperatura.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 12" },
+      { type: "adjust", question: "Encontre a temperatura que resulta em t90 de aproximadamente 12 meses.", targetParams: { temp: { min: 20, max: 30, label: "Temperatura" } }, validator: (s) => { const t90 = s.t90 ?? 12; return (t90 >= 10 && t90 <= 14) ? { correct: true, feedback: "t90 ≈ 12 meses alcançado!" } : { correct: false, feedback: `t90 atual: ${t90} meses. Ajuste a temperatura.` }; }, explanation: "Armazenamento a 25°C (temperatura ambiente controlada) é o padrão farmacopeico para prazo de validade.", reference: "ICH Q1A(R2) Stability Testing" },
+      { type: "mcq", question: "O t90 representa:", options: ["Tempo para perder 90% do fármaco", "Tempo para restar 90% do fármaco", "Tempo de meia-vida", "Tempo de desintegração"], correctIndex: 1, explanation: "t90 é o tempo para o produto reter 90% da potência inicial. É o critério usual para definir prazo de validade.", reference: "USP <1150> Pharmaceutical Stability" },
+      { type: "mcq", question: "Em estudos de estabilidade acelerada (ICH), as condições são:", options: ["25°C/60% UR por 12 meses", "40°C/75% UR por 6 meses", "30°C/65% UR por 6 meses", "50°C/90% UR por 3 meses"], correctIndex: 1, explanation: "ICH Q1A: condição acelerada = 40±2°C / 75±5% UR por 6 meses. Se houver mudança significativa, testar intermediária (30°C/65%).", reference: "ICH Q1A(R2)" },
+      { type: "mcq", question: "A degradação de ordem zero é característica de:", options: ["Soluções diluídas", "Suspensões saturadas", "Reações enzimáticas em excesso de substrato", "B e C estão corretas"], correctIndex: 3, explanation: "Quando há excesso de substrato (saturação), a velocidade é constante (ordem zero). Suspensões mantêm concentração constante na solução.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 12" },
+      { type: "adjust", question: "Aumente a temperatura para 50°C e observe a aceleração da degradação.", targetParams: { temp: { min: 45, max: 60, label: "Temperatura" } }, validator: (s) => { const temp = s.temp ?? 25; return temp >= 45 ? { correct: true, feedback: "Degradação acelerada observada!" } : { correct: false, feedback: `Temperatura: ${temp}°C. Aumente para ≥45°C.` }; }, explanation: "Regra empírica: a cada 10°C de aumento, a velocidade de degradação duplica (Q10 ≈ 2).", reference: "Connors KA, Chemical Stability of Pharmaceuticals" },
+      { type: "mcq", question: "Qual parâmetro NÃO afeta a estabilidade química de fármacos?", options: ["Temperatura", "pH", "Cor da embalagem", "Umidade"], correctIndex: 2, explanation: "A cor da embalagem primária não afeta diretamente a estabilidade química (embora embalagens âmbar protejam contra fotodegradação).", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 12" },
+    ],
+  };
+}
+
+export function getLiberacaoFarmacosChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Sistemas de Liberação de Fármacos",
+    description: "Compare perfis de dissolução e modelos cinéticos de liberação.",
+    challenges: [
+      { type: "mcq", question: "O modelo de Higuchi descreve a liberação de fármacos a partir de:", options: ["Comprimidos revestidos", "Matrizes inertes (difusão)", "Sistemas osmóticos", "Comprimidos efervescentes"], correctIndex: 1, explanation: "Higuchi: Q = k√t. Descreve a difusão de fármaco a partir de matrizes insolúveis. A liberação é proporcional à raiz quadrada do tempo.", reference: "Higuchi T, J Pharm Sci 1963;52:1145" },
+      { type: "mcq", question: "Uma liberação de ordem zero significa:", options: ["Taxa de liberação proporcional à concentração", "Taxa de liberação constante ao longo do tempo", "Liberação dependente do pH", "Liberação imediata"], correctIndex: 1, explanation: "Ordem zero: Q = k₀t. Ideal para formas de liberação prolongada (concentração plasmática constante).", reference: "Lachman L, Theory and Practice of Industrial Pharmacy" },
+      { type: "mcq", question: "O revestimento entérico dissolve em:", options: ["pH < 2 (estômago)", "pH > 5.5 (intestino)", "Qualquer pH", "Apenas em solventes orgânicos"], correctIndex: 1, explanation: "Polímeros entéricos (Eudragit L, HPMCP) são insolúveis em pH ácido e dissolvem em pH > 5.5, protegendo fármacos ácido-lábeis.", reference: "Felton LA, Remington's Pharmaceutical Sciences" },
+      { type: "adjust", question: "Aumente a espessura do revestimento e observe o atraso (lag-time) na liberação entérica.", targetParams: { coating: { min: 60, max: 100, label: "Revestimento" } }, validator: (s) => { const c = s.coating ?? 50; return c >= 60 ? { correct: true, feedback: "Lag-time aumentado!" } : { correct: false, feedback: `Revestimento: ${c}%. Aumente para ≥60%.` }; }, explanation: "Maior espessura de revestimento entérico = maior lag-time antes da liberação no intestino.", reference: "Felton LA, Remington's Pharmaceutical Sciences" },
+      { type: "mcq", question: "O sistema OROS (oral osmotic system) utiliza:", options: ["Difusão passiva", "Pressão osmótica", "pH-dependência", "Erosão enzimática"], correctIndex: 1, explanation: "OROS: a água permeia a membrana semipermeável por osmose, criando pressão que empurra o fármaco por um orifício a laser.", reference: "Theeuwes F, J Pharm Sci 1975;64:1987" },
+      { type: "mcq", question: "O expoente n de Korsmeyer-Peppas indica:", options: ["A ordem da reação", "O mecanismo de liberação (difusão vs erosão)", "A solubilidade do fármaco", "A biodisponibilidade"], correctIndex: 1, explanation: "n=0.5: difusão Fickiana; 0.5<n<1: transporte anômalo; n=1: transporte Caso II (erosão). n>1: Super Caso II.", reference: "Korsmeyer RW et al. Int J Pharm 1983;15:25" },
+      { type: "mcq", question: "A liberação pulsátil é indicada para:", options: ["Dor contínua", "Ritmos circadianos (ex: asma noturna)", "Infecções urinárias", "Uso tópico"], correctIndex: 1, explanation: "Sistemas pulsáteis liberam doses em momentos programados, ideal para doenças com variação circadiana (asma, hipertensão matinal).", reference: "Maroni A et al. Int J Pharm 2010;394:1" },
+      { type: "mcq", question: "Patches transdérmicos de fentanil têm duração de:", options: ["12 horas", "24 horas", "72 horas", "7 dias"], correctIndex: 2, explanation: "Patches de fentanil (Duragesic) liberam por 72h. O reservoir ou a matriz controlam a taxa de liberação.", reference: "Berner B, Dinh SM, J Controlled Release 1992;18:195" },
+    ],
+  };
+}
+
+export function getDiluicaoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Diluição e Concentração",
+    description: "Resolva problemas práticos de diluição, conversão e isotonia.",
+    challenges: [
+      { type: "mcq", question: "Na fórmula C1V1 = C2V2, se C1 = 10% e V1 = 5 mL, qual C2 para V2 = 50 mL?", options: ["0.1%", "1%", "5%", "10%"], correctIndex: 1, explanation: "C2 = C1V1/V2 = 10×5/50 = 1%. Diluição de 10 vezes.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "mcq", question: "Diluição seriada 1:2 a partir de 128 µg/mL. Qual a concentração no 5º tubo?", options: ["16 µg/mL", "8 µg/mL", "4 µg/mL", "32 µg/mL"], correctIndex: 1, explanation: "128 → 64 → 32 → 16 → 8. No 5º tubo: 128/2⁴ = 8 µg/mL.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "mcq", question: "Uma solução 0.9% de NaCl contém:", options: ["0.9 g/L", "9 g/L", "90 g/L", "0.09 g/L"], correctIndex: 1, explanation: "0.9% = 0.9 g/100 mL = 9 g/1000 mL = 9 g/L. É a concentração isotônica com o plasma.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "adjust", question: "Dilua uma solução de C1=5 para obter C2 ≈ 0.5. Ajuste V2.", targetParams: { v2: { min: 45, max: 55, label: "Volume Final" } }, validator: (s) => { const c2 = s.c2 ?? 1; return (c2 >= 0.4 && c2 <= 0.6) ? { correct: true, feedback: "Diluição 1:10 correta!" } : { correct: false, feedback: `C2 = ${c2}. Ajuste o volume final.` }; }, explanation: "Para diluição 1:10: V2 = V1 × C1/C2 = V1 × 10.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "mcq", question: "O equivalente em NaCl de um fármaco é usado para:", options: ["Calcular a dose", "Ajustar a isotonia da solução", "Determinar a solubilidade", "Medir o pH"], correctIndex: 1, explanation: "O equivalente em NaCl indica quantos gramas de NaCl produzem o mesmo efeito osmótico que 1 g do fármaco.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "mcq", question: "A tonicidade ideal para soluções oftálmicas é equivalente a:", options: ["0.45% NaCl", "0.9% NaCl", "1.8% NaCl", "3% NaCl"], correctIndex: 1, explanation: "Soluções isotônicas (≈0.9% NaCl, 290 mOsm/L) são ideais. O olho tolera faixa de 0.5-1.8% sem desconforto significativo.", reference: "USP <785> Osmolality and Osmolarity" },
+      { type: "mcq", question: "1 mEq de Na⁺ corresponde a quantos mg de NaCl?", options: ["23 mg", "58.5 mg", "35.5 mg", "40 mg"], correctIndex: 1, explanation: "PM NaCl = 58.5 g/mol. Na⁺ é monovalente, então 1 mEq = 1 mmol = 58.5 mg de NaCl.", reference: "Ansel HC, Pharmaceutical Calculations" },
+      { type: "mcq", question: "Na conversão UI/mL para mg/mL de insulina, 100 UI/mL equivale a:", options: ["0.35 mg/mL", "3.47 mg/mL", "10 mg/mL", "100 mg/mL"], correctIndex: 1, explanation: "Insulina humana: ~28.8 UI/mg. Então 100 UI ≈ 3.47 mg. Esta conversão depende da atividade biológica específica.", reference: "WHO International Standards" },
+    ],
+  };
+}
+
+export function getReologiaChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Reologia e Viscosidade",
+    description: "Identifique comportamentos reológicos e suas aplicações farmacêuticas.",
+    challenges: [
+      { type: "mcq", question: "Um fluido newtoniano é caracterizado por:", options: ["Viscosidade que aumenta com o cisalhamento", "Viscosidade constante independente do cisalhamento", "Viscosidade que diminui com o tempo", "Viscosidade dependente da temperatura apenas"], correctIndex: 1, explanation: "Fluidos newtonianos: τ = η·γ̇, onde η (viscosidade) é constante. Exemplos: água, soluções diluídas, glicerina.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 19" },
+      { type: "mcq", question: "Pseudoplásticos (shear-thinning) são ideais para:", options: ["Suspensões orais", "Formulações tópicas (cremes/géis)", "Soluções injetáveis", "Comprimidos"], correctIndex: 1, explanation: "Pseudoplásticos têm alta viscosidade em repouso (boa retenção) e baixa durante aplicação (fácil espalhamento). Ideal para uso tópico.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 19" },
+      { type: "mcq", question: "Tixotropia se manifesta no reograma como:", options: ["Curva linear", "Histerese entre curvas ascendente e descendente", "Aumento exponencial", "Curva horizontal"], correctIndex: 1, explanation: "A área de histerese entre a curva de aumento e diminuição da taxa de cisalhamento indica a extensão da tixotropia.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 19" },
+      { type: "adjust", question: "Adicione espessante para aumentar a viscosidade em pelo menos 50%.", targetParams: { thickener: { min: 40, max: 100, label: "Espessante" } }, validator: (s) => { const t = s.thickener ?? 0; return t >= 40 ? { correct: true, feedback: "Viscosidade aumentada significativamente!" } : { correct: false, feedback: `Espessante: ${t}%. Aumente para ≥40%.` }; }, explanation: "Espessantes como carbômero, HPMC e goma xantana aumentam a viscosidade modificando o comportamento reológico.", reference: "Rowe RC, Handbook of Pharmaceutical Excipients" },
+      { type: "mcq", question: "O comportamento dilatante é INDESEJÁVEL porque:", options: ["Reduz a viscosidade", "Aumenta a viscosidade sob agitação, dificultando o processamento", "Causa separação de fases", "Reduz a estabilidade química"], correctIndex: 1, explanation: "Dilatantes se tornam mais viscosos quando agitados, dificultando agitação, bombeamento e envase industrial.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 19" },
+      { type: "mcq", question: "A equação de Ostwald-de Waele (power law) é: τ = K·γ̇ⁿ. Para pseudoplásticos, n é:", options: ["n = 1", "n > 1", "n < 1", "n = 0"], correctIndex: 2, explanation: "n<1: pseudoplástico; n=1: newtoniano; n>1: dilatante. K é o índice de consistência.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 19" },
+      { type: "mcq", question: "Qual viscosímetro é mais adequado para semissólidos?", options: ["Ostwald (capilar)", "Brookfield (rotacional)", "Saybolt", "Copa de Ford"], correctIndex: 1, explanation: "Viscosímetros rotacionais (Brookfield, cone-placa) permitem medir em diferentes taxas de cisalhamento, essencial para não-newtonianos.", reference: "USP <911> Viscosity" },
+      { type: "mcq", question: "A gelificação in situ é utilizada em:", options: ["Comprimidos", "Colírios que gelificam ao contato com o olho", "Cápsulas duras", "Supositórios"], correctIndex: 1, explanation: "Sistemas in situ (Gelrite/gelana) são líquidos que gelificam ao contato com íons lacrimais (Ca²⁺), aumentando o tempo de residência ocular.", reference: "Rozier A et al. Int J Pharm 1989;57:163" },
+    ],
+  };
+}
+
+export function getHLBChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: HLB e Formulação de Emulsões",
+    description: "Calcule HLB de misturas e otimize a estabilidade de emulsões.",
+    challenges: [
+      { type: "mcq", question: "O sistema HLB (Hydrophilic-Lipophilic Balance) varia de:", options: ["0 a 10", "0 a 20", "1 a 40", "-10 a +10"], correctIndex: 1, explanation: "HLB: 0 (totalmente lipofílico) a 20 (totalmente hidrofílico). Emulsões O/A: HLB 8-18. A/O: HLB 3-6.", reference: "Griffin WC, J Soc Cosmet Chem 1949;1:311" },
+      { type: "mcq", question: "Para calcular o HLB de uma mistura de tensoativos, usa-se:", options: ["Média geométrica", "Média ponderada (proporcional às frações)", "Sempre o menor valor", "A soma dos HLB"], correctIndex: 1, explanation: "HLB_mix = (f_A × HLB_A) + (f_B × HLB_B), onde f é a fração mássica de cada tensoativo.", reference: "Griffin WC, J Soc Cosmet Chem 1954;5:249" },
+      { type: "adjust", question: "Ajuste a proporção de Span 80/Tween 80 para obter HLB ≈ 10.5 (óleo mineral).", targetParams: { surfAPct: { min: 35, max: 50, label: "% Span 80" } }, validator: (s) => { const hlb = s.hlbMix ?? 10; return (hlb >= 9.5 && hlb <= 11.5) ? { correct: true, feedback: "HLB ideal para óleo mineral!" } : { correct: false, feedback: `HLB = ${hlb}. Ajuste a proporção.` }; }, explanation: "Span 80 (HLB 4.3) + Tween 80 (HLB 15.0). Para HLB 10.5: ~42% Span 80 e 58% Tween 80.", reference: "Griffin WC, J Soc Cosmet Chem 1954;5:249" },
+      { type: "mcq", question: "Instabilidades de emulsões incluem EXCETO:", options: ["Creaming", "Coalescência", "Inversão de fases", "Cristalização"], correctIndex: 3, explanation: "Instabilidades: creaming (separação por gravidade), floculação, coalescência (fusão de gotas), breaking (separação total) e inversão de fases.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 18" },
+      { type: "mcq", question: "Emulsões O/A são preferidas para:", options: ["Proteção solar resistente à água", "Cremes hidratantes de fácil absorção", "Formulações anidras", "Cold creams"], correctIndex: 1, explanation: "O/A: fase contínua aquosa, sensação leve, fácil lavagem. A/O: mais oclusiva, resistente à água, sensação mais pesada.", reference: "Felton LA, Remington's Pharmaceutical Sciences" },
+      { type: "mcq", question: "A regra de Bancroft afirma que:", options: ["A fase com mais volume é a contínua", "O emulsificante mais solúvel na fase contínua determina o tipo", "A temperatura determina o tipo de emulsão", "O pH controla o tipo de emulsão"], correctIndex: 1, explanation: "Regra de Bancroft: a fase em que o emulsificante é mais solúvel será a fase contínua. HLB alto → O/A; HLB baixo → A/O.", reference: "Bancroft WD, J Phys Chem 1913;17:501" },
+      { type: "mcq", question: "Lecitina é utilizada em emulsões injetáveis porque:", options: ["É um tensoativo sintético seguro", "É um fosfolipídeo natural biocompatível", "Tem HLB muito alto", "É um conservante"], correctIndex: 1, explanation: "Lecitina (fosfatidilcolina) é biocompatível, biodegradável e forma emulsões estáveis para uso IV (ex: Intralipid).", reference: "Collins-Gold LC et al. Adv Drug Deliv Rev 1990;5:189" },
+      { type: "mcq", question: "O método HLB requerido é determinado por:", options: ["O tipo de tensoativo", "A fase oleosa da emulsão", "O volume da fase aquosa", "A temperatura"], correctIndex: 1, explanation: "Cada fase oleosa tem um HLB requerido específico para formação de emulsão estável. É determinado empiricamente.", reference: "ICI, The HLB System, 1976" },
+    ],
+  };
+}
+
+export function getGranulometriaChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Granulometria",
+    description: "Analise distribuições de tamanho de partículas e seus impactos.",
+    challenges: [
+      { type: "mcq", question: "D50 representa:", options: ["50% do peso retido", "O diâmetro mediano (50% acima, 50% abaixo)", "A média aritmética", "O diâmetro modal"], correctIndex: 1, explanation: "D50 (mediana) é o diâmetro onde 50% das partículas são menores e 50% são maiores. É mais robusto que a média para distribuições assimétricas.", reference: "USP <786> Particle Size Distribution" },
+      { type: "mcq", question: "O span da distribuição é calculado como:", options: ["D90 - D10", "(D90 - D10) / D50", "D50 / D90", "D90 / D10"], correctIndex: 1, explanation: "Span = (D90 - D10) / D50. Mede a largura da distribuição. Menor span = distribuição mais estreita (mais uniforme).", reference: "USP <786> Particle Size Distribution" },
+      { type: "adjust", question: "Ajuste a moagem para obter D50 entre 100-200 µm (ideal para compressão direta).", targetParams: { mean: { min: 100, max: 200, label: "Tamanho Médio" } }, validator: (s) => { const d50 = s.d50 ?? 150; return (d50 >= 100 && d50 <= 200) ? { correct: true, feedback: "D50 ideal para compressão!" } : { correct: false, feedback: `D50 = ${d50} µm. Ajuste o tamanho médio.` }; }, explanation: "Para compressão direta, D50 de 100-200 µm oferece boa fluidez e compressibilidade.", reference: "Aulton ME, Pharmaceutics, Cap. 12" },
+      { type: "mcq", question: "Partículas para inalação pulmonar devem ter:", options: ["1-5 µm", "10-50 µm", "100-200 µm", "> 500 µm"], correctIndex: 0, explanation: "1-5 µm: deposição bronquial/alveolar. >5 µm: impacção orofaríngea. <1 µm: exaladas sem deposição.", reference: "Hickey AJ, Pharmaceutical Inhalation Aerosol Technology" },
+      { type: "mcq", question: "A análise granulométrica por difração a laser mede:", options: ["Massa das partículas", "Padrão de espalhamento de luz", "Contagem individual", "Sedimentação"], correctIndex: 1, explanation: "Difração a laser (Mie/Fraunhofer) analisa o padrão de difração para calcular a distribuição de tamanho volumétrico.", reference: "ISO 13320 Particle Size Analysis" },
+      { type: "mcq", question: "A lei de Stokes relaciona a velocidade de sedimentação com:", options: ["pH e temperatura", "Tamanho da partícula ao quadrado e diferença de densidade", "Pressão osmótica", "Concentração do fármaco"], correctIndex: 1, explanation: "v = (2r²Δρg)/(9η). A velocidade é proporcional a r² (raio ao quadrado) e Δρ (diferença de densidade).", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 18" },
+      { type: "mcq", question: "Micronização por jet mill produz partículas na faixa de:", options: ["1-10 µm", "50-100 µm", "200-500 µm", "1-5 mm"], correctIndex: 0, explanation: "Jet mills (moagem por jato de ar) produzem partículas de 1-10 µm. Usados para APIs de inalação e micronização.", reference: "Lachman L, Theory and Practice of Industrial Pharmacy" },
+      { type: "mcq", question: "Uma distribuição bimodal indica:", options: ["Partículas uniformes", "Duas populações de tamanhos distintos", "Contaminação", "Erro de medição"], correctIndex: 1, explanation: "Bimodal = dois picos no histograma, indicando mistura de dois lotes ou processo de moagem incompleto.", reference: "USP <786> Particle Size Distribution" },
+    ],
+  };
+}
+
+export function getCompressaoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Compressão de Comprimidos",
+    description: "Otimize parâmetros de compressão usando modelos de Heckel e Kawakita.",
+    challenges: [
+      { type: "mcq", question: "O gráfico de Heckel (ln[1/(1-D)] vs P) permite determinar:", options: ["O tempo de desintegração", "A yield pressure (Py) do material", "A solubilidade do fármaco", "O perfil de dissolução"], correctIndex: 1, explanation: "A inclinação da porção linear = 1/Py. Py baixo = material plástico (deforma facilmente). Py alto = material frágil (fragmenta).", reference: "Heckel RW, Trans Metal Soc AIME 1961;221:671" },
+      { type: "mcq", question: "O estearato de magnésio em excesso pode causar:", options: ["Aumento da dureza", "Retardo na desintegração e dissolução", "Melhora na fluidez", "Aumento da resistência à friabilidade"], correctIndex: 1, explanation: "O estearato de Mg é hidrofóbico. Em excesso, forma filme nas partículas, reduzindo a penetração de água e retardando a desintegração.", reference: "Aulton ME, Pharmaceutics, Cap. 30" },
+      { type: "adjust", question: "Encontre a força de compressão que resulta em dureza de 6-10 kp.", targetParams: { force: { min: 40, max: 70, label: "Força" } }, validator: (s) => { const h = s.hardness ?? 5; return (h >= 6 && h <= 10) ? { correct: true, feedback: "Dureza ideal alcançada!" } : { correct: false, feedback: `Dureza: ${h} kp. Ajuste a força.` }; }, explanation: "A maioria dos comprimidos convencionais requer dureza de 4-10 kp para resistir ao manuseio sem comprometer a desintegração.", reference: "Aulton ME, Pharmaceutics, Cap. 30" },
+      { type: "mcq", question: "Friabilidade aceitável pela USP é:", options: ["< 0.5%", "< 1%", "< 2%", "< 5%"], correctIndex: 1, explanation: "USP <1216>: friabilidade ≤ 1% para comprimidos não revestidos. Perda > 1% indica fragilidade excessiva.", reference: "USP <1216> Tablet Friability" },
+      { type: "mcq", question: "Compressão direta vs granulação úmida: a vantagem da compressão direta é:", options: ["Maior dureza", "Menos etapas e menor custo", "Melhor uniformidade de conteúdo", "Maior compressibilidade"], correctIndex: 1, explanation: "Compressão direta elimina as etapas de granulação e secagem, reduzindo tempo, custo e exposição ao calor/umidade.", reference: "Shangraw RF, Pharm Dosage Forms: Tablets" },
+      { type: "mcq", question: "Capping (separação da coroa do comprimido) é causado por:", options: ["Excesso de lubrificante", "Ar preso no comprimido durante a compressão", "Tamanho de partícula muito grande", "Excesso de desintegrante"], correctIndex: 1, explanation: "Capping ocorre quando ar não escapa durante a compressão. Soluções: pré-compressão, redução da velocidade, deareação do pó.", reference: "Aulton ME, Pharmaceutics, Cap. 30" },
+      { type: "mcq", question: "O modelo de Kawakita (P/C vs P) é mais adequado para:", options: ["Altas pressões", "Baixas a moderadas pressões", "Líquidos", "Gases"], correctIndex: 1, explanation: "Kawakita descreve bem a compressão em baixas pressões. Os parâmetros a e b indicam compressibilidade e resistência à compressão.", reference: "Kawakita K, Tsutsumi Y, Bull Chem Soc Jpn 1966;39:1364" },
+      { type: "mcq", question: "Superdesintegrantes (croscarmelose, crospovidona) atuam por:", options: ["Dissolução no estômago", "Absorção de água e expansão (wicking/swelling)", "Reação química com ácido", "Efervescência"], correctIndex: 1, explanation: "Superdesintegrantes absorvem água rapidamente, expandem e rompem a estrutura do comprimido. Usados em 2-5% da formulação.", reference: "Rowe RC, Handbook of Pharmaceutical Excipients" },
+    ],
+  };
+}
+
+export function getTampaoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Tampão Farmacêutico e pH",
+    description: "Aplique Henderson-Hasselbalch e calcule capacidade tamponante.",
+    challenges: [
+      { type: "mcq", question: "A equação de Henderson-Hasselbalch é:", options: ["pH = pKa + log([HA]/[A⁻])", "pH = pKa + log([A⁻]/[HA])", "pH = -log[H⁺]", "pH = pKa × [A⁻]/[HA]"], correctIndex: 1, explanation: "pH = pKa + log([A⁻]/[HA]). Quando [A⁻] = [HA], pH = pKa e a capacidade tamponante é máxima.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "A zona útil de tamponamento é:", options: ["pH = pKa", "pKa ± 0.5", "pKa ± 1", "pKa ± 2"], correctIndex: 2, explanation: "A capacidade tamponante efetiva ocorre na faixa de pKa ± 1 unidade de pH. Fora dessa faixa, o tampão é ineficaz.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "adjust", question: "Ajuste a razão [A⁻]/[HA] para obter pH ≈ 7.2 usando tampão fosfato (pKa = 7.2).", targetParams: { ratio: { min: 8, max: 12, label: "Razão [A⁻]/[HA]" } }, validator: (s) => { const ph = s.pH ?? 7; return (ph >= 7.0 && ph <= 7.4) ? { correct: true, feedback: "pH ≈ 7.2 alcançado!" } : { correct: false, feedback: `pH = ${ph}. Ajuste a razão para ≈1 (log(1)=0, pH=pKa).` }; }, explanation: "Quando razão = 1, log(1) = 0 e pH = pKa. Para pH = pKa, use quantidades equimolares de ácido e base conjugada.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "A capacidade tamponante (β) é definida como:", options: ["Quantidade de ácido/base para mudar 1 unidade de pH", "ΔB/ΔpH (moles de base forte por variação de pH)", "pH × concentração", "pKa / concentração"], correctIndex: 1, explanation: "β = ΔB/ΔpH. Maior β = maior resistência à mudança de pH. Máximo quando pH = pKa.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "Qual tampão é mais adequado para pH 5.0?", options: ["Fosfato (pKa 7.2)", "Acetato (pKa 4.76)", "Borato (pKa 9.24)", "Citrato (pKa 6.4)"], correctIndex: 1, explanation: "pH 5.0 está dentro da zona útil do acetato (4.76 ± 1 = 3.76-5.76). Fosfato seria ineficaz neste pH.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "Aumentar a concentração total do tampão:", options: ["Muda o pH", "Aumenta a capacidade tamponante sem mudar o pH", "Diminui a capacidade tamponante", "Não tem efeito"], correctIndex: 1, explanation: "A concentração afeta β mas não o pH (que depende apenas da razão [A⁻]/[HA]). Mais concentrado = mais resistente.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "Para soluções injetáveis, a capacidade tamponante deve ser:", options: ["Máxima possível", "Baixa (para não resistir ao tamponamento do sangue)", "Zero", "Igual à do sangue"], correctIndex: 1, explanation: "Injetáveis devem ter baixa capacidade tamponante para que o sangue (β alto) rapidamente ajuste o pH à faixa fisiológica.", reference: "USP <1112> Application of Water Activity" },
+      { type: "mcq", question: "O tampão fosfato USP pH 6.8 é usado como:", options: ["Fluido de dissolução intestinal simulado", "Conservante", "Antioxidante", "Solubilizante"], correctIndex: 0, explanation: "Tampão fosfato pH 6.8 simula o pH do intestino delgado proximal. Usado em testes de dissolução (USP) para formas entéricas.", reference: "USP <711> Dissolution" },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HELPER: Get challenges by simulator slug
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -524,6 +664,14 @@ export function getChallengesBySlug(slug: string): ChallengeSet | null {
     "farmaco-autonomica": getFarmacoAutonomicaChallenges,
     "tolerancia-dependencia": getToleranciaDependenciaChallenges,
     "farmacogenomica": getFarmacogenomicaChallenges,
+    "estabilidade": getEstabilidadeChallenges,
+    "liberacao-farmacos": getLiberacaoFarmacosChallenges,
+    "diluicao": getDiluicaoChallenges,
+    "reologia": getReologiaChallenges,
+    "hlb-emulsoes": getHLBChallenges,
+    "granulometria": getGranulometriaChallenges,
+    "compressao": getCompressaoChallenges,
+    "tampao-farmaceutico": getTampaoChallenges,
   };
   const fn = map[slug];
   return fn ? fn() : null;

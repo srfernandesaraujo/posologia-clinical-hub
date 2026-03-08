@@ -1351,6 +1351,73 @@ REQUISITOS:
 - Curvas Cp×t para fármaco original e metabólito ativo
 - Casos: codeína/CYP2D6, varfarina/CYP2C9, clopidogrel/CYP2C19
 REFERÊNCIAS: CPIC Guidelines; Crews KR et al. Clin Pharmacol Ther 2014`,
+
+  // ===================== SIMULADORES DE FARMACOTÉCNICA =====================
+
+  "sim-estabilidade": `Você é um especialista em estabilidade farmacêutica. Crie um simulador de cinética de degradação e prazo de validade.
+REQUISITOS:
+- Ordens de reação: zero, primeira e segunda ordem
+- Equação de Arrhenius: k(T) = A·exp(-Ea/RT) com sliders de temperatura
+- Cálculo de t90 (tempo para 90% de potência) em tempo real
+- Gráfico concentração vs tempo sob diferentes condições
+- Cenários: suspensões (ordem zero), soluções (primeira ordem), estudos acelerados
+REFERÊNCIAS: ICH Q1A(R2); Sinko PJ, Martin's Physical Pharmacy, Cap. 12; USP <1150>`,
+
+  "sim-liberacao-farmacos": `Você é um especialista em tecnologia farmacêutica. Crie um simulador de sistemas de liberação de fármacos.
+REQUISITOS:
+- Perfis: imediata, prolongada (ordem zero), entérica (lag-time), pulsátil e transdérmica
+- Modelos cinéticos: Higuchi, Korsmeyer-Peppas, ordem zero
+- Controles: espessura de revestimento, tamanho de partícula, tipo de polímero
+- Gráfico: % liberada vs tempo com múltiplas curvas sobrepostas
+REFERÊNCIAS: Higuchi T, J Pharm Sci 1963; Korsmeyer RW, Int J Pharm 1983; Lachman L, Industrial Pharmacy`,
+
+  "sim-diluicao": `Você é um especialista em cálculos farmacêuticos. Crie um simulador de diluição e concentração.
+REQUISITOS:
+- Diluição simples (C1V1 = C2V2) com sliders interativos
+- Diluição seriada (1:2, 1:10) com visualização em barras
+- Conversão de unidades: %, mg/mL, mEq/L, mmol/L, UI/mL
+- Cálculos de isotonia (método do equivalente em NaCl)
+REFERÊNCIAS: Ansel HC, Pharmaceutical Calculations; USP <785> Osmolality`,
+
+  "sim-reologia": `Você é um especialista em reologia farmacêutica. Crie um simulador de viscosidade e comportamento reológico.
+REQUISITOS:
+- Comportamentos: newtoniano, pseudoplástico, dilatante, tixotrópico
+- Reograma interativo: tensão de cisalhamento vs taxa de cisalhamento
+- Equação de Ostwald-de Waele (power law): τ = K·γ̇ⁿ
+- Efeito de espessantes (carbômero, HPMC, goma xantana)
+REFERÊNCIAS: Sinko PJ, Martin's Physical Pharmacy, Cap. 19; USP <911> Viscosity`,
+
+  "sim-hlb-emulsoes": `Você é um especialista em formulação de emulsões. Crie um simulador de equilíbrio HLB.
+REQUISITOS:
+- Fases oleosas com HLB requerido (óleo mineral, vaselina, cera de abelha, etc.)
+- Mistura de tensoativos Span/Tween com cálculo de HLB ponderado
+- Visualização de estabilidade vs HLB com zona ótima
+- Cenários: O/A, A/O, emulsões injetáveis
+REFERÊNCIAS: Griffin WC, J Soc Cosmet Chem 1949; Sinko PJ, Martin's Physical Pharmacy, Cap. 18`,
+
+  "sim-granulometria": `Você é um especialista em controle de qualidade farmacêutico. Crie um simulador de granulometria.
+REQUISITOS:
+- Distribuição log-normal com controles de média e dispersão
+- Histograma de frequência e curva acumulativa
+- Cálculo de D10, D50, D90 e span
+- Aplicações: compressão direta, inalação, suspensões
+REFERÊNCIAS: USP <786> Particle Size Distribution; ISO 13320; Aulton ME, Pharmaceutics`,
+
+  "sim-compressao": `Você é um especialista em tecnologia de comprimidos. Crie um simulador de compressão.
+REQUISITOS:
+- Controles: força de compressão, tamanho de grânulo, concentração de lubrificante
+- Gráficos de Heckel (ln[1/(1-D)] vs P) e Kawakita (P/C vs P)
+- Saídas: dureza (kp), friabilidade (%), tempo de desintegração (min)
+- Cenários: compressão direta, ODT, liberação prolongada
+REFERÊNCIAS: Heckel RW, Trans Metal Soc AIME 1961; USP <1216> Friability; Aulton ME, Pharmaceutics`,
+
+  "sim-tampao-farmaceutico": `Você é um especialista em físico-química farmacêutica. Crie um simulador de tampão e pH.
+REQUISITOS:
+- Sistemas: fosfato, citrato, acetato, borato com pKa específicos
+- Henderson-Hasselbalch interativo: pH = pKa + log([A⁻]/[HA])
+- Capacidade tamponante (β) vs pH com gráfico
+- Curva de titulação com adição de ácido/base
+REFERÊNCIAS: Sinko PJ, Martin's Physical Pharmacy, Cap. 7; USP <711>; USP <1112>`,
 };
 
 
