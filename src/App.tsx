@@ -75,6 +75,14 @@ import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/Sim
 import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
 import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
 import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
+import SimuladorEstabilidade from "./pages/simuladores/farmacotecnica/SimuladorEstabilidade";
+import SimuladorLiberacaoFarmacos from "./pages/simuladores/farmacotecnica/SimuladorLiberacaoFarmacos";
+import SimuladorDiluicao from "./pages/simuladores/farmacotecnica/SimuladorDiluicao";
+import SimuladorReologia from "./pages/simuladores/farmacotecnica/SimuladorReologia";
+import SimuladorHLB from "./pages/simuladores/farmacotecnica/SimuladorHLB";
+import SimuladorGranulometria from "./pages/simuladores/farmacotecnica/SimuladorGranulometria";
+import SimuladorCompressao from "./pages/simuladores/farmacotecnica/SimuladorCompressao";
+import SimuladorTampao from "./pages/simuladores/farmacotecnica/SimuladorTampao";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
