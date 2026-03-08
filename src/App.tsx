@@ -218,8 +218,10 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieConsentBanner />
         </BrowserRouter>
       </TooltipProvider>
+      </CookieConsentProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

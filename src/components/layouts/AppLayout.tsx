@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { SidebarContactForm } from "@/components/SidebarContactForm";
+import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 
 export function AppLayout() {
+  useCookieAnalytics();
   const { signOut, isAdmin, isProfessor } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
