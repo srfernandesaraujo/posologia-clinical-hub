@@ -15,24 +15,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth check
+    // Auth check — optional for public contact form
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let isAuthenticated = false;
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: userData } = await supabase.auth.getUser();
+      isAuthenticated = !!userData?.user;
     }
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Allow both authenticated and unauthenticated contact submissions
 
     const { name, email, subject, message } = await req.json();
 
