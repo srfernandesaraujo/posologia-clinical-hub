@@ -1,100 +1,99 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Simuladores de Farmacotécnica
 
-## Visão Geral
+## Análise de Mercado
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+A Farmacotécnica (Tecnologia Farmacêutica) é disciplina obrigatória em todos os cursos de Farmácia e extremamente carente de ferramentas digitais interativas. Os concorrentes oferecem no máximo vídeos ou PDFs — **nenhum** tem simuladores com gráficos em tempo real e manipulação de variáveis. Isso cria uma oportunidade enorme.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## 8 Simuladores Propostos
 
-## Simuladores por Lotes
+### 1. Estabilidade e Prazo de Validade (Cinética de Degradação)
+- Simular degradação de ordem zero, primeira ordem e segunda ordem
+- Manipular temperatura (Arrhenius), pH e concentração inicial
+- Calcular t90 (prazo de validade) em tempo real com sliders
+- Gráfico Recharts: concentração residual vs tempo sob diferentes condições
+- **Diferencial**: substituir cálculos manuais de Arrhenius por visualização instantânea
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 2. Sistemas de Liberação de Fármacos (Release Profiles)
+- Comparar perfis de liberação: imediata, prolongada, entérica, pulsátil e transdérmica
+- Modelos cinéticos: Higuchi, Korsmeyer-Peppas, ordem zero
+- Manipular espessura de revestimento, polímero, tamanho de partícula
+- Gráfico: % liberada vs tempo com múltiplas curvas sobrepostas
+- **Diferencial**: visualizar como cada parâmetro da formulação altera o perfil de liberação
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 3. Cálculos de Diluição e Concentração
+- Diluição simples (C1V1 = C2V2) e seriada
+- Conversão entre %, mg/mL, mEq/L, mmol/L, UI/mL
+- Cálculos de isotonia (método do equivalente em NaCl)
+- Interface: sliders + campos numéricos com resultado em tempo real
+- **Diferencial**: ferramenta prática para bancada, resolve dúvidas do dia-a-dia
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 4. Reologia e Viscosidade de Semissólidos
+- Simular comportamentos reológicos: newtoniano, pseudoplástico, dilatante, tixotrópico
+- Manipular taxa de cisalhamento e observar viscosidade aparente
+- Aplicar espessantes (carbômero, HPMC) e ver mudança no reograma
+- Gráfico: tensão de cisalhamento vs taxa de cisalhamento (reograma)
+- **Diferencial**: único simulador interativo de reologia farmacêutica no mercado
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 5. Equilíbrio HLB e Formulação de Emulsões
+- Selecionar fase oleosa e calcular HLB requerido
+- Misturar tensoativos (Span/Tween) para atingir HLB alvo (método de Griffin)
+- Visualizar estabilidade: separação de fases, creaming, coalescência
+- Gráfico: estabilidade vs HLB com zona ótima destacada
+- **Diferencial**: tornar o sistema HLB intuitivo com feedback visual imediato
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 6. Granulometria e Distribuição de Tamanho de Partículas
+- Simular peneiramento com diferentes malhas (mesh/Tyler)
+- Gráficos: histograma de frequência e curva acumulativa log-normal
+- Calcular D10, D50, D90 e span (dispersão)
+- Manipular parâmetros de moagem e ver impacto na distribuição
+- **Diferencial**: laboratório virtual de controle de qualidade de pós
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 7. Compressão de Comprimidos (Heckel e Kawakita)
+- Simular processo de compressão direta e granulação úmida
+- Manipular força de compressão, tamanho de grânulo e lubrificante
+- Gráficos de Heckel (ln[1/(1-D)] vs P) e Kawakita (P/C vs P)
+- Observar dureza, friabilidade e tempo de desintegração resultantes
+- **Diferencial**: substitui equipamento de laboratório caro por simulação fiel
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 8. Tampão Farmacêutico e pH de Formulações
+- Preparar sistemas tampão (fosfato, citrato, acetato, borato)
+- Equação de Henderson-Hasselbalch interativa com sliders
+- Calcular capacidade tamponante (β) e zona útil de tamponamento
+- Simular adição de ácido/base e observar variação do pH
+- **Diferencial**: essencial para formulação de injetáveis e colírios, sem concorrente interativo
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+---
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+## Padrão Técnico (idêntico aos existentes)
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+Cada simulador seguirá a mesma arquitetura:
+- Sliders interativos + gráficos Recharts em tempo real
+- 3 casos clínicos built-in + geração de casos com IA (`useSimulatorCases`)
+- Integração com salas virtuais (`useVirtualRoomCase`) e modo exame (`ExamBanner`/`ExamFeedbackOverlay`)
+- Desafios educativos (`SimulatorChallengeMode`) com 8-12 questões MCQ e ajuste de parâmetros
+- Prompt viewer para admin (`AdminPromptViewer`)
+- Categoria: **"Farmacotécnica"** no catálogo
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+---
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+## Arquivos a criar/editar
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorEstabilidade.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorLiberacaoFarmacos.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorDiluicao.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorReologia.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorHLB.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorGranulometria.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorCompressao.tsx` |
+| Criar | `src/pages/simuladores/farmacotecnica/SimuladorTampao.tsx` |
+| Editar | `src/pages/Simuladores.tsx` — adicionar 8 entradas na categoria "Farmacotécnica" |
+| Editar | `src/App.tsx` — registrar 16 rotas (8 diretas + 8 sala virtual) |
+| Editar | `src/data/simulatorChallenges.ts` — desafios educativos |
+| Editar | `src/data/nativeSystemPrompts.ts` — prompts de geração IA |
 
