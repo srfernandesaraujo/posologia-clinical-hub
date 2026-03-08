@@ -237,7 +237,7 @@ export default function SimuladorPkaAbsorcao() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesForSimulator(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} />
     </div>
   );
 }
