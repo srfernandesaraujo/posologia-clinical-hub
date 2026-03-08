@@ -1,100 +1,94 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Sistema de Consentimento e Coleta de Cookies
 
 ## Visão Geral
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Implementar um sistema completo de consentimento de cookies (LGPD-compliant) com: banner de consentimento, gerenciamento granular por categoria, persistência das preferências, e coleta de dados de uso que o admin pode consultar para decisões de negócio.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## Categorias de Cookies
 
-## Simuladores por Lotes
+| Categoria | Sempre ativo? | O que coleta | Como usar a seu favor |
+|-----------|--------------|-------------|----------------------|
+| **Essenciais** | Sim | Auth token, sessão, CSRF | Necessário para funcionar |
+| **Preferências** | Opcional | Idioma, tema, banners dispensados | Personalizar experiência do usuário |
+| **Desempenho/Analytics** | Opcional | Páginas visitadas, tempo de uso, calculadoras/jogos/simuladores mais usados, cliques em CTAs | **Dados valiosos**: saber quais ferramentas são mais populares, otimizar conversão, priorizar desenvolvimento |
+| **Marketing** | Opcional | Origem do visitante, páginas vistas antes de cadastro | **Funil de vendas**: entender jornada do visitante até virar assinante |
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+---
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+## O que será implementado
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 1. Cookie Consent Context (`src/contexts/CookieConsentContext.tsx`)
+- Context global com estado das preferências (essenciais, preferências, analytics, marketing)
+- Persiste no `localStorage` com chave `cookie-consent`
+- Expõe: `consent`, `updateConsent()`, `hasConsented`, `isAllowed(category)`
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 2. Cookie Consent Banner (`src/components/CookieConsentBanner.tsx`)
+- Banner fixo no rodapé da tela, aparece na primeira visita
+- Dois botões principais: **"Aceitar Todos"** e **"Gerenciar Preferências"**
+- Modal de preferências com toggles por categoria (essenciais sempre ativo e desabilitado)
+- Link para a página `/politica-cookies`
+- Design consistente com o tema escuro do sistema
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 3. Hook de Analytics (`src/hooks/useCookieAnalytics.ts`)
+- Só coleta dados se o usuário aceitou a categoria "analytics"
+- Rastreia: página atual, tempo na página, ferramenta utilizada (slug), timestamp
+- Salva eventos no Supabase (tabela `analytics_events`)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 4. Tabela Supabase: `analytics_events`
+```sql
+create table public.analytics_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  session_id text not null,
+  event_type text not null,        -- 'page_view', 'tool_use', 'cta_click'
+  page_path text,
+  tool_slug text,
+  metadata jsonb default '{}',
+  created_at timestamptz default now()
+);
+```
+- RLS: insert para todos (anônimos inclusos), select apenas admin
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 5. Integração no App
+- Envolver `App.tsx` com `CookieConsentProvider`
+- Renderizar `CookieConsentBanner` dentro do provider (aparece em todas as rotas)
+- Hook `useCookieAnalytics` chamado no `AppLayout` e `PublicLayout` para rastrear page views
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+### 6. Painel Admin: aba Analytics
+- Na página `/admin`, adicionar aba "Analytics de Uso"
+- Métricas: ferramentas mais acessadas, páginas mais visitadas, taxa de aceitação de cookies, visitantes únicos por dia
+- Gráficos com Recharts (já instalado)
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+### 7. Atualizar página de Política de Cookies
+- Adicionar botão "Gerenciar minhas preferências" que reabre o modal de consentimento
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+---
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+## Como usar os dados a seu favor
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+1. **Priorização de produto**: saber quais calculadoras/jogos/simuladores são mais usados para investir neles
+2. **Conversão**: ver quais páginas os visitantes acessam antes de criar conta — otimizar CTAs nessas páginas
+3. **Retenção**: identificar ferramentas subutilizadas para melhorar ou promover
+4. **Precificação**: dados de uso justificam valor dos planos premium
+5. **Marketing**: saber de onde vêm os visitantes (referrer) para direcionar esforços
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+---
 
-## Alterações em arquivos existentes
+## Arquivos a criar/editar
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/contexts/CookieConsentContext.tsx` |
+| Criar | `src/components/CookieConsentBanner.tsx` |
+| Criar | `src/hooks/useCookieAnalytics.ts` |
+| Editar | `src/App.tsx` — adicionar provider e banner |
+| Editar | `src/components/layouts/AppLayout.tsx` — hook analytics |
+| Editar | `src/components/layouts/PublicLayout.tsx` — hook analytics |
+| Editar | `src/pages/PoliticaCookies.tsx` — botão de gerenciar |
+| Editar | `src/pages/Admin.tsx` — aba analytics |
+| Migration | Tabela `analytics_events` + RLS |
 
