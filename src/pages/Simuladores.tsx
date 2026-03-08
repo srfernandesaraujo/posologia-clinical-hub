@@ -50,6 +50,14 @@ const NATIVE_SIMULATORS = [
   { slug: "farmaco-autonomica", name: "Farmacologia Autonômica Aplicada", description: "Aplique atropina, fenilefrina, propranolol e pilocarpina e observe efeitos em órgãos-alvo.", icon: Heart, category: "Farmacologia Básica" },
   { slug: "tolerancia-dependencia", name: "Tolerância, Dependência e Abstinência", description: "Simule uso crônico de opioides, BZD e álcool: downregulation, tolerância e síndrome de abstinência.", icon: Flame, category: "Farmacologia Básica" },
   { slug: "farmacogenomica", name: "Farmacogenômica e Polimorfismos CYP", description: "Impacto de metabolizadores lentos/ultrarrápidos na curva Cp×t de pró-fármacos e fármacos ativos.", icon: Dna, category: "Farmacologia Básica" },
+  { slug: "estabilidade", name: "Estabilidade e Prazo de Validade", description: "Cinética de degradação (ordem zero, 1ª e 2ª), equação de Arrhenius e cálculo de t90.", icon: FlaskConical, category: "Farmacotécnica" },
+  { slug: "liberacao-farmacos", name: "Sistemas de Liberação de Fármacos", description: "Compare perfis: imediata, prolongada, entérica, pulsátil e transdérmica com modelos de Higuchi e Korsmeyer-Peppas.", icon: Beaker, category: "Farmacotécnica" },
+  { slug: "diluicao", name: "Diluição e Concentração", description: "Diluição simples (C1V1=C2V2), seriada, conversão de unidades e cálculos de isotonia.", icon: Droplets, category: "Farmacotécnica" },
+  { slug: "reologia", name: "Reologia e Viscosidade", description: "Reogramas interativos: newtoniano, pseudoplástico, dilatante e tixotrópico com espessantes.", icon: FlaskConical, category: "Farmacotécnica" },
+  { slug: "hlb-emulsoes", name: "Equilíbrio HLB e Emulsões", description: "Calcule o HLB de misturas Span/Tween e otimize a estabilidade de emulsões O/A e A/O.", icon: Beaker, category: "Farmacotécnica" },
+  { slug: "granulometria", name: "Granulometria e Distribuição de Partículas", description: "Histograma, curva acumulativa, D10, D50, D90 e span para controle de qualidade de pós.", icon: TestTube, category: "Farmacotécnica" },
+  { slug: "compressao", name: "Compressão de Comprimidos", description: "Gráficos de Heckel e Kawakita, dureza, friabilidade e tempo de desintegração.", icon: Shield, category: "Farmacotécnica" },
+  { slug: "tampao-farmaceutico", name: "Tampão Farmacêutico e pH", description: "Henderson-Hasselbalch interativo, capacidade tamponante (β) e curvas de titulação.", icon: Beaker, category: "Farmacotécnica" },
 ];
 
 export default function Simuladores() {

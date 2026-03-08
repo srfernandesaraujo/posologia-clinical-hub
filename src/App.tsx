@@ -75,6 +75,14 @@ import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/Sim
 import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
 import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
 import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
+import SimuladorEstabilidade from "./pages/simuladores/farmacotecnica/SimuladorEstabilidade";
+import SimuladorLiberacaoFarmacos from "./pages/simuladores/farmacotecnica/SimuladorLiberacaoFarmacos";
+import SimuladorDiluicao from "./pages/simuladores/farmacotecnica/SimuladorDiluicao";
+import SimuladorReologia from "./pages/simuladores/farmacotecnica/SimuladorReologia";
+import SimuladorHLB from "./pages/simuladores/farmacotecnica/SimuladorHLB";
+import SimuladorGranulometria from "./pages/simuladores/farmacotecnica/SimuladorGranulometria";
+import SimuladorCompressao from "./pages/simuladores/farmacotecnica/SimuladorCompressao";
+import SimuladorTampao from "./pages/simuladores/farmacotecnica/SimuladorTampao";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -156,6 +164,14 @@ const App = () => (
               <Route path="/sala/simulador/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
               <Route path="/sala/simulador/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
               <Route path="/sala/simulador/farmacogenomica" element={<SimuladorFarmacogenomica />} />
+              <Route path="/sala/simulador/estabilidade" element={<SimuladorEstabilidade />} />
+              <Route path="/sala/simulador/liberacao-farmacos" element={<SimuladorLiberacaoFarmacos />} />
+              <Route path="/sala/simulador/diluicao" element={<SimuladorDiluicao />} />
+              <Route path="/sala/simulador/reologia" element={<SimuladorReologia />} />
+              <Route path="/sala/simulador/hlb-emulsoes" element={<SimuladorHLB />} />
+              <Route path="/sala/simulador/granulometria" element={<SimuladorGranulometria />} />
+              <Route path="/sala/simulador/compressao" element={<SimuladorCompressao />} />
+              <Route path="/sala/simulador/tampao-farmaceutico" element={<SimuladorTampao />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -199,6 +215,14 @@ const App = () => (
               <Route path="/simuladores/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
               <Route path="/simuladores/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
               <Route path="/simuladores/farmacogenomica" element={<SimuladorFarmacogenomica />} />
+              <Route path="/simuladores/estabilidade" element={<SimuladorEstabilidade />} />
+              <Route path="/simuladores/liberacao-farmacos" element={<SimuladorLiberacaoFarmacos />} />
+              <Route path="/simuladores/diluicao" element={<SimuladorDiluicao />} />
+              <Route path="/simuladores/reologia" element={<SimuladorReologia />} />
+              <Route path="/simuladores/hlb-emulsoes" element={<SimuladorHLB />} />
+              <Route path="/simuladores/granulometria" element={<SimuladorGranulometria />} />
+              <Route path="/simuladores/compressao" element={<SimuladorCompressao />} />
+              <Route path="/simuladores/tampao-farmaceutico" element={<SimuladorTampao />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
