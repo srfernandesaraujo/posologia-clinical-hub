@@ -1285,6 +1285,72 @@ REFERÊNCIAS:
 - Stockley's Drug Interactions. 13th ed.
 - RxNav API (National Library of Medicine)
 - Hansten PD, Horn JR. Drug Interactions Analysis and Management`,
+
+  // ===================== SIMULADORES DE FARMACOLOGIA BÁSICA =====================
+
+  "sim-dose-resposta": `Você é um especialista em farmacologia. Crie um simulador interativo de curva dose-resposta.
+REQUISITOS:
+- Controles: EC50, Emax, agonista parcial, antagonista competitivo, antagonista não-competitivo, [antagonista]
+- Saída: curva log-dose vs efeito em tempo real, EC50 e Emax efetivos
+- Demonstrar deslocamento da curva (competitivo) vs redução de Emax (não-competitivo/parcial)
+- Casos clínicos: buprenorfina, naloxona, fenoxibenzamina
+REFERÊNCIAS: Rang & Dale Cap. 2; Katzung Cap. 2; Goodman & Gilman Cap. 3`,
+
+  "sim-transducao-sinal": `Você é um especialista em farmacologia molecular. Crie um simulador de transdução de sinal.
+REQUISITOS:
+- Seleção de receptor: GPCR-Gs, Gi, Gq, tirosina quinase, ionotrópico, nuclear
+- Visualização da cascata intracelular com barras de atividade por etapa
+- Bloqueio farmacológico em qualquer etapa da cascata com intensidade variável
+- Casos clínicos: salbutamol (Gs), atropina (Gq), insulina (RTK)
+REFERÊNCIAS: Rang & Dale Cap. 3; Goodman & Gilman Cap. 3`,
+
+  "sim-janela-terapeutica-farma": `Você é um especialista em toxicologia e farmacologia. Crie um simulador de janela terapêutica.
+REQUISITOS:
+- Controles: dose, DE50, DL50
+- Saída: curvas populacionais de efeito terapêutico e tóxico, índice terapêutico (DL50/DE50)
+- Comparar fármacos de janela estreita (digoxina, lítio) vs ampla (amoxicilina)
+- Visualização da faixa terapêutica como área entre as curvas
+REFERÊNCIAS: Katzung Cap. 4; Goodman & Gilman Cap. 4`,
+
+  "sim-vias-administracao": `Você é um especialista em farmacocinética. Crie um simulador de vias de administração.
+REQUISITOS:
+- Vias: IV bolus, IV infusão, IM, SC, oral, sublingual (ativáveis individualmente)
+- Perfis Cp×t sobrepostos para comparação lado a lado
+- Controles: dose, biodisponibilidade global, taxa de eliminação
+- Parâmetros por via: F, Tmax, taxa de absorção
+REFERÊNCIAS: Goodman & Gilman Cap. 2; Rowland & Tozer Cap. 7`,
+
+  "sim-bloqueio-neuromuscular": `Você é um especialista em anestesiologia e farmacologia. Crie um simulador de bloqueio neuromuscular.
+REQUISITOS:
+- Tipos: despolarizante (succinilcolina) vs não-despolarizante (rocurônio)
+- Monitorização TOF (Train-of-Four) em tempo real
+- Reversão: nenhuma, neostigmina+atropina, sugammadex
+- Fasciculações para despolarizantes, fade para não-despolarizantes
+REFERÊNCIAS: Stoelting's Cap. 12; Miller's Anesthesia Cap. 34`,
+
+  "sim-farmaco-autonomica": `Você é um especialista em farmacologia autonômica. Crie um simulador de agonistas e antagonistas do SNA.
+REQUISITOS:
+- Fármacos: atropina, fenilefrina, propranolol, pilocarpina, noradrenalina, isoproterenol
+- Efeitos em órgãos: FC, PA, pupila, motilidade GI, tônus brônquico
+- Gráfico de barras comparando valor atual vs basal
+- Cenários clínicos: bradicardia, feocromocitoma, glaucoma
+REFERÊNCIAS: Rang & Dale Cap. 13; Katzung Cap. 9-10`,
+
+  "sim-tolerancia-dependencia": `Você é um especialista em farmacologia da dependência. Crie um simulador de tolerância e abstinência.
+REQUISITOS:
+- Classes: opioides, benzodiazepínicos, álcool
+- Controles: semanas de uso, escalação de dose
+- Saída: curvas temporais de densidade de receptores, efeito clínico e severidade de abstinência
+- Timeline de abstinência com marcos clínicos
+REFERÊNCIAS: Rang & Dale Cap. 42; Ashton Manual; Harrison's Cap. 448`,
+
+  "sim-farmacogenomica": `Você é um especialista em farmacogenômica. Crie um simulador de polimorfismos CYP.
+REQUISITOS:
+- Fenótipos: ultrarrápido, extensivo, intermediário, lento
+- Tipos: pró-fármaco (ativação) vs fármaco ativo (inativação)
+- Curvas Cp×t para fármaco original e metabólito ativo
+- Casos: codeína/CYP2D6, varfarina/CYP2C9, clopidogrel/CYP2C19
+REFERÊNCIAS: CPIC Guidelines; Crews KR et al. Clin Pharmacol Ther 2014`,
 };
 
 

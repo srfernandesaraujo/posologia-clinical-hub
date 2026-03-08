@@ -67,6 +67,14 @@ import SimuladorLipoproteinas from "./pages/simuladores/bioquimica/SimuladorLipo
 import SimuladorPentosesFosfato from "./pages/simuladores/bioquimica/SimuladorPentosesFosfato";
 import SimuladorTitulacaoAminoacidos from "./pages/simuladores/bioquimica/SimuladorTitulacaoAminoacidos";
 import SimuladorOperonLac from "./pages/simuladores/bioquimica/SimuladorOperonLac";
+import SimuladorDoseResposta from "./pages/simuladores/farmacologia/SimuladorDoseResposta";
+import SimuladorTransducaoSinal from "./pages/simuladores/farmacologia/SimuladorTransducaoSinal";
+import SimuladorJanelaTerapeutica from "./pages/simuladores/farmacologia/SimuladorJanelaTerapeutica";
+import SimuladorViasAdministracao from "./pages/simuladores/farmacologia/SimuladorViasAdministracao";
+import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/SimuladorBloqueioNeuromuscular";
+import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
+import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
+import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -140,6 +148,14 @@ const App = () => (
               <Route path="/sala/simulador/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
               <Route path="/sala/simulador/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
               <Route path="/sala/simulador/operon-lac" element={<SimuladorOperonLac />} />
+              <Route path="/sala/simulador/dose-resposta" element={<SimuladorDoseResposta />} />
+              <Route path="/sala/simulador/transducao-sinal" element={<SimuladorTransducaoSinal />} />
+              <Route path="/sala/simulador/janela-terapeutica-farma" element={<SimuladorJanelaTerapeutica />} />
+              <Route path="/sala/simulador/vias-administracao" element={<SimuladorViasAdministracao />} />
+              <Route path="/sala/simulador/bloqueio-neuromuscular" element={<SimuladorBloqueioNeuromuscular />} />
+              <Route path="/sala/simulador/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
+              <Route path="/sala/simulador/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
+              <Route path="/sala/simulador/farmacogenomica" element={<SimuladorFarmacogenomica />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -175,6 +191,14 @@ const App = () => (
               <Route path="/simuladores/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
               <Route path="/simuladores/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
               <Route path="/simuladores/operon-lac" element={<SimuladorOperonLac />} />
+              <Route path="/simuladores/dose-resposta" element={<SimuladorDoseResposta />} />
+              <Route path="/simuladores/transducao-sinal" element={<SimuladorTransducaoSinal />} />
+              <Route path="/simuladores/janela-terapeutica-farma" element={<SimuladorJanelaTerapeutica />} />
+              <Route path="/simuladores/vias-administracao" element={<SimuladorViasAdministracao />} />
+              <Route path="/simuladores/bloqueio-neuromuscular" element={<SimuladorBloqueioNeuromuscular />} />
+              <Route path="/simuladores/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
+              <Route path="/simuladores/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
+              <Route path="/simuladores/farmacogenomica" element={<SimuladorFarmacogenomica />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
