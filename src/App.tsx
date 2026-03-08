@@ -84,7 +84,6 @@ import PoliticaCookies from "./pages/PoliticaCookies";
 import Vitrine from "./pages/Vitrine";
 import DocumentacaoPublica from "./pages/DocumentacaoPublica";
 import ContatoPublico from "./pages/ContatoPublico";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
