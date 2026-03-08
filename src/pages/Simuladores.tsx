@@ -58,6 +58,14 @@ const NATIVE_SIMULATORS = [
   { slug: "granulometria", name: "Granulometria e Distribuição de Partículas", description: "Histograma, curva acumulativa, D10, D50, D90 e span para controle de qualidade de pós.", icon: TestTube, category: "Farmacotécnica" },
   { slug: "compressao", name: "Compressão de Comprimidos", description: "Gráficos de Heckel e Kawakita, dureza, friabilidade e tempo de desintegração.", icon: Shield, category: "Farmacotécnica" },
   { slug: "tampao-farmaceutico", name: "Tampão Farmacêutico e pH", description: "Henderson-Hasselbalch interativo, capacidade tamponante (β) e curvas de titulação.", icon: Beaker, category: "Farmacotécnica" },
+  { slug: "sar-explorer", name: "Relação Estrutura-Atividade (SAR)", description: "Manipule substituintes em scaffolds e observe alterações em potência, lipofilia e seletividade.", icon: FlaskConical, category: "Química Farmacêutica" },
+  { slug: "lipinski", name: "Regra de Lipinski e Druglikeness", description: "Avalie MW, logP, HBD, HBA e visualize o espaço de druglikeness com Lipinski e Veber.", icon: TestTube, category: "Química Farmacêutica" },
+  { slug: "bioisosterismo", name: "Isosteria e Bioisosterismo", description: "Compare grupos funcionais e bioisósteros em pKa, logP, estabilidade e absorção.", icon: Beaker, category: "Química Farmacêutica" },
+  { slug: "metabolismo-farmacos", name: "Metabolismo de Fármacos e Pró-Fármacos", description: "Cinética de ativação de pró-fármacos, CYP450 e polimorfismos metabólicos.", icon: FlaskConical, category: "Química Farmacêutica" },
+  { slug: "docking-simplificado", name: "Interação Fármaco-Receptor (Docking)", description: "Simule ligações H, van der Waals, π-π e calcule ΔG e Ki.", icon: Brain, category: "Química Farmacêutica" },
+  { slug: "quiralidade", name: "Quiralidade e Estereoquímica", description: "Compare enantiômeros: eutômero vs distômero, razão eudísmica e chiral switch.", icon: Dna, category: "Química Farmacêutica" },
+  { slug: "pka-absorcao", name: "pKa, Ionização e Absorção", description: "Henderson-Hasselbalch interativo com compartimentos fisiológicos e ion trapping.", icon: Droplets, category: "Química Farmacêutica" },
+  { slug: "qsar-simplificado", name: "QSAR Simplificado (Hansch)", description: "Equação de Hansch parabólica: logP, σ Hammett e correlação com atividade biológica.", icon: FlaskConical, category: "Química Farmacêutica" },
 ];
 
 export default function Simuladores() {

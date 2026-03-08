@@ -1418,6 +1418,76 @@ REQUISITOS:
 - Capacidade tamponante (β) vs pH com gráfico
 - Curva de titulação com adição de ácido/base
 REFERÊNCIAS: Sinko PJ, Martin's Physical Pharmacy, Cap. 7; USP <711>; USP <1112>`,
+
+  // ===================== SIMULADORES DE QUÍMICA FARMACÊUTICA =====================
+
+  "sim-sar-explorer": `Você é um especialista em química medicinal e SAR. Crie um simulador de Relação Estrutura-Atividade.
+REQUISITOS:
+- Scaffolds: benzodiazepínico, sulfonamida, fluoroquinolona
+- Substituintes manipuláveis: halogênios, -OH, -CH₃, -CF₃ com impacto em potência, logP, solubilidade, seletividade
+- Gráfico radar de propriedades + gráfico de barras de contribuição dos substituintes
+- Cenários com otimização de hits e leads
+REFERÊNCIAS: Wermuth CG, The Practice of Medicinal Chemistry; Patrick GL, An Introduction to Medicinal Chemistry`,
+
+  "sim-lipinski": `Você é um especialista em drug design e druglikeness. Crie um simulador da Regra de Lipinski.
+REQUISITOS:
+- Propriedades: MW, logP, HBD, HBA, PSA, rotatable bonds
+- Regras: Lipinski (Ro5), Veber, Ghose
+- Scatter plot MW vs logP com zona de druglikeness
+- Comparação com fármacos conhecidos
+- Cenários: design de novo, otimização hit-to-lead, beyond Ro5
+REFERÊNCIAS: Lipinski CA et al., Adv Drug Deliv Rev 2001; Veber DF et al., J Med Chem 2002`,
+
+  "sim-bioisosterismo": `Você é um especialista em química medicinal e bioisosterismo. Crie um simulador de substituição bioisostérica.
+REQUISITOS:
+- Grupos funcionais: -COOH, -OH, éster, amida, sulfonamida
+- Bioisósteros clássicos e não-clássicos com impacto em pKa, logP, estabilidade, absorção
+- Gráfico comparativo de barras agrupadas
+- Casos reais: losartan (tetrazol), celecoxibe (sulfonamida)
+REFERÊNCIAS: Meanwell NA, J Med Chem 2011; Patani GA, LaVoie EJ, Chem Rev 1996`,
+
+  "sim-metabolismo-farmacos": `Você é um especialista em metabolismo de fármacos e farmacogenômica. Crie um simulador de metabolismo e pró-fármacos.
+REQUISITOS:
+- Pró-fármacos: enalapril, clopidogrel, codeína, valaciclovir
+- Manipulação de atividade CYP (10-300%): metabolizador lento, normal, ultra-rápido
+- Gráfico cinético: pró-fármaco → ativo → metabólito inativo vs tempo
+- Cenários de farmacogenômica: CYP2C19*2/*2, CYP2D6 duplicação
+REFERÊNCIAS: Guengerich FP, Chem Res Toxicol 2008; Relling MV, Klein TE, Clin Pharmacol Ther 2011`,
+
+  "sim-docking-simplificado": `Você é um especialista em modelagem molecular e drug design. Crie um simulador simplificado de docking.
+REQUISITOS:
+- Alvos: COX-2, ECA, HIV protease, receptor β₂
+- Tipos de interação: ligação H, iônica, van der Waals, π-π, hidrofóbica
+- Gráfico: energia vs distância + contribuições por tipo de interação
+- Cálculo de ΔG e Ki estimado
+REFERÊNCIAS: Kuntz ID et al., PNAS 1999; Klebe G, Drug Design 2013`,
+
+  "sim-quiralidade": `Você é um especialista em estereoquímica farmacológica. Crie um simulador de quiralidade.
+REQUISITOS:
+- Fármacos: omeprazol/esomeprazol, ibuprofeno R/S, talidomida, metotrexato
+- Comparação eutômero vs distômero: potência, toxicidade, metabolismo
+- Excesso enantiomérico (ee%) com slider
+- Razão eudísmica e conceito de chiral switch
+- Cenários: racemização in vivo (talidomida), inversão quiral (ibuprofeno)
+REFERÊNCIAS: Ariëns EJ, Eur J Clin Pharmacol 1984; Brooks WH et al., Molecules 2011`,
+
+  "sim-pka-absorcao": `Você é um especialista em biofarmácia e físico-química. Crie um simulador de pKa e absorção.
+REQUISITOS:
+- Tipos: ácido fraco, base fraca, zwitterion
+- Henderson-Hasselbalch interativo com sliders de pKa e pH
+- Compartimentos: estômago (1.5), duodeno (6), jejuno (7), sangue (7.4)
+- Curva de ionização com zonas fisiológicas destacadas
+- Cenários: aspirina, morfina (ion trapping), propranolol vs atenolol
+REFERÊNCIAS: Avdeef A, Absorption and Drug Development 2003; Katzung BG, Basic & Clinical Pharmacology`,
+
+  "sim-qsar-simplificado": `Você é um especialista em QSAR e modelagem molecular. Crie um simulador de QSAR simplificado (Hansch).
+REQUISITOS:
+- Séries congêneres: sulfonamidas, barbitúricos, fenóis
+- Descritores: logP, σ Hammett com sliders
+- Parábola de Hansch: log(1/C) = a(logP)² + b(logP) + ρσ + c
+- Ponto ótimo (logP₀) destacado no gráfico
+- Cenários históricos de Hansch
+REFERÊNCIAS: Hansch C, Fujita T, JACS 1964; Kubinyi H, QSAR: Hansch Analysis 1993`,
 };
 
 

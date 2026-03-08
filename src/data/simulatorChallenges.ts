@@ -672,7 +672,142 @@ export function getChallengesBySlug(slug: string): ChallengeSet | null {
     "granulometria": getGranulometriaChallenges,
     "compressao": getCompressaoChallenges,
     "tampao-farmaceutico": getTampaoChallenges,
+    "sar-explorer": getSARExplorerChallenges,
+    "lipinski": getLipinskiChallenges,
+    "bioisosterismo": getBioisosterismoChallenges,
+    "metabolismo-farmacos": getMetabolismoFarmacosChallenges,
+    "docking-simplificado": getDockingSimplificadoChallenges,
+    "quiralidade": getQuiralidadeChallenges,
+    "pka-absorcao": getPkaAbsorcaoChallenges,
+    "qsar-simplificado": getQSARSimplificadoChallenges,
   };
   const fn = map[slug];
   return fn ? fn() : null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUÍMICA FARMACÊUTICA
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function getSARExplorerChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Relação Estrutura-Atividade",
+    description: "Teste seus conhecimentos sobre como substituintes alteram propriedades farmacológicas.",
+    challenges: [
+      { type: "mcq", question: "Qual substituinte geralmente aumenta a lipofilia de um fármaco?", options: ["-OH (hidroxila)", "-CF₃ (trifluormetil)", "-NH₂ (amina)", "-COOH (carboxila)"], correctIndex: 1, explanation: "O grupo CF₃ é altamente lipofílico e resistente ao metabolismo. Aumenta logP em ~1 unidade.", reference: "Meanwell NA, J Med Chem 2018" },
+      { type: "mcq", question: "A adição de flúor na posição 6 do ácido nalidíxico resultou em:", options: ["Perda de atividade", "Aumento de espectro (fluoroquinolonas)", "Redução de biodisponibilidade", "Maior nefrotoxicidade"], correctIndex: 1, explanation: "O F na posição 6 aumentou a potência 10×, ampliou o espectro para Gram-positivos e melhorou a biodisponibilidade oral.", reference: "Andriole VT, Clin Infect Dis 2005" },
+      { type: "mcq", question: "O conceito de 'scaffold hopping' em SAR refere-se a:", options: ["Adicionar substituintes ao mesmo scaffold", "Trocar o scaffold mantendo a atividade", "Remover todos os substituintes", "Aumentar o tamanho molecular"], correctIndex: 1, explanation: "Scaffold hopping substitui o núcleo molecular por outro quimicamente diferente mas que mantém o perfil de interação com o alvo.", reference: "Böhm HJ et al., Drug Discov Today 2004" },
+      { type: "adjust", question: "Maximize a potência do benzodiazepínico: ajuste halogen >70% e CF₃ >50%.", targetParams: { halogen: { min: 70, max: 100, label: "Halogen" }, cf3: { min: 50, max: 100, label: "CF₃" } }, validator: (s) => { const p = s.potency ?? 0; return p >= 80 ? { correct: true, feedback: "Potência maximizada!" } : { correct: false, feedback: `Potência: ${p}%. Aumente halogen e CF₃.` }; }, explanation: "Halogênios e CF₃ aumentam interações hidrofóbicas no sítio alostérico GABA-A.", reference: "Sternbach LH, J Med Chem 1979" },
+      { type: "mcq", question: "Qual propriedade o grupo -OH tende a melhorar?", options: ["Lipofilia", "Solubilidade aquosa", "Estabilidade metabólica", "Penetração na BHE"], correctIndex: 1, explanation: "O -OH é polar e forma ligações H com água, aumentando a solubilidade aquosa mas reduzindo a permeabilidade de membrana.", reference: "Lipinski CA et al., Adv Drug Deliv Rev 2001" },
+      { type: "mcq", question: "O conceito de 'molecular matched pairs' é utilizado para:", options: ["Comparar racematos", "Isolar o efeito de uma mudança estrutural específica", "Calcular o QSAR", "Prever toxicidade"], correctIndex: 1, explanation: "Pares moleculares comparados diferem em apenas um substituinte, permitindo isolar a contribuição dessa mudança para a atividade.", reference: "Griffen EJ et al., J Med Chem 2011" },
+      { type: "mcq", question: "Grupos bioisósteros do -COOH incluem:", options: ["Apenas -OH", "Tetrazol, acilsulfonamida, fosfonato", "Apenas ésteres", "-NH₂ e -SH"], correctIndex: 1, explanation: "Tetrazol (pKa ~4.9), acilsulfonamida e fosfonato mimetizam a acidez e geometria do carboxilato.", reference: "Meanwell NA, J Med Chem 2011" },
+      { type: "adjust", question: "Otimize a solubilidade: aumente -OH >60% mantendo potência >50%.", targetParams: { oh: { min: 60, max: 100, label: "OH" } }, validator: (s) => { const sol = s.solubility ?? 0; const pot = s.potency ?? 0; return (sol >= 60 && pot >= 50) ? { correct: true, feedback: "Equilíbrio solubilidade-potência alcançado!" } : { correct: false, feedback: `Solubilidade: ${sol}%, Potência: ${pot}%.` }; }, explanation: "O desafio do drug design é balancear solubilidade (para absorção) com lipofilia (para permeabilidade).", reference: "Leeson PD, Springthorpe B, Nat Rev Drug Discov 2007" },
+    ],
+  };
+}
+
+export function getLipinskiChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Regra de Lipinski",
+    description: "Avalie druglikeness e propriedades físico-químicas de candidatos a fármacos.",
+    challenges: [
+      { type: "mcq", question: "Qual NÃO é um critério da Regra dos 5 de Lipinski?", options: ["MW ≤ 500", "logP ≤ 5", "HBD ≤ 5", "PSA ≤ 140"], correctIndex: 3, explanation: "PSA ≤ 140 é critério de Veber, não de Lipinski. A Regra dos 5 inclui: MW ≤ 500, logP ≤ 5, HBD ≤ 5, HBA ≤ 10.", reference: "Lipinski CA et al., Adv Drug Deliv Rev 2001" },
+      { type: "adjust", question: "Projete um composto drug-like: MW ≤ 500, logP ≤ 5, HBD ≤ 5, HBA ≤ 10.", targetParams: { mw: { min: 150, max: 500, label: "MW" }, logP: { min: -1, max: 5, label: "logP" } }, validator: (s) => { const v = s.violations ?? 5; return v === 0 ? { correct: true, feedback: "Zero violações de Lipinski!" } : { correct: false, feedback: `${v} violação(ões). Ajuste as propriedades.` }; }, explanation: "Compostos com 0-1 violações têm ~90% de probabilidade de boa absorção oral.", reference: "Lipinski CA, Drug Discov Today Technol 2004" },
+      { type: "mcq", question: "A ciclosporina (MW=1203, logP=2.9) funciona oralmente apesar de violar Lipinski porque:", options: ["É uma exceção aleatória", "Possui conformações camaleônicas que mascaram polaridade", "É administrada apenas IV", "Tem logP muito alto"], correctIndex: 1, explanation: "Moléculas 'beyond Ro5' como ciclosporina adotam conformações que internalizam NH e C=O em solventes apolares (membranas).", reference: "Doak BC et al., Chem Biol 2014" },
+      { type: "mcq", question: "O critério de Veber adiciona:", options: ["MW ≤ 300", "PSA ≤ 140 Å² e rotatable bonds ≤ 10", "logP ≤ 3", "HBA ≤ 5"], correctIndex: 1, explanation: "Veber demonstrou que PSA e flexibilidade (rotatable bonds) são preditores independentes de biodisponibilidade oral em ratos.", reference: "Veber DF et al., J Med Chem 2002" },
+      { type: "mcq", question: "Qual fármaco é um exemplo clássico de violação 'permitida' de Lipinski?", options: ["Aspirina", "Atorvastatina (MW=559)", "Paracetamol", "Metformina"], correctIndex: 1, explanation: "Atorvastatina viola MW>500 mas tem BD oral ~14%. Lipinski permite 1 violação. Estatinas são substratos de OATP (transporte ativo).", reference: "Lipinski CA, J Pharmacol Toxicol Methods 2000" },
+      { type: "mcq", question: "O conceito de 'lead-likeness' propõe filtros mais rigorosos que Lipinski:", options: ["MW ≤ 300, logP ≤ 3", "MW ≤ 600, logP ≤ 7", "Apenas HBD ≤ 3", "PSA > 200"], correctIndex: 0, explanation: "Lead-like (Oprea): MW ≤ 350-450, logP ≤ 3-4. Permite otimização sem ultrapassar Lipinski. 'Molecular obesity' deve ser evitada.", reference: "Oprea TI, J Comput-Aided Mol Des 2000" },
+    ],
+  };
+}
+
+export function getBioisosterismoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Bioisosterismo",
+    description: "Teste estratégias de substituição bioisostérica em química medicinal.",
+    challenges: [
+      { type: "mcq", question: "O tetrazol é bioisóstero de qual grupo funcional?", options: ["-OH", "-NH₂", "-COOH", "-CHO"], correctIndex: 2, explanation: "O tetrazol (pKa ~4.9) mimetiza -COOH (pKa ~4.2): mesma geometria planar, ionizável em pH fisiológico, mas mais lipofílico.", reference: "Meanwell NA, J Med Chem 2011" },
+      { type: "mcq", question: "Bioisósteros clássicos compartilham:", options: ["Mesmo peso molecular exato", "Mesmo número de átomos e valência eletrônica", "Mesma cor", "Mesmo logP"], correctIndex: 1, explanation: "Grimm e Langmuir: isósteros clássicos têm mesmo número de átomos, mesma valência total (ex: -CH₃ e -NH₂, -F e -OH).", reference: "Patani GA, LaVoie EJ, Chem Rev 1996" },
+      { type: "mcq", question: "A troca de éster por amida geralmente:", options: ["Aumenta susceptibilidade à hidrólise", "Aumenta estabilidade metabólica", "Reduz a solubilidade", "Não tem efeito"], correctIndex: 1, explanation: "Amidas são ~1000× mais estáveis que ésteres frente a hidrólise enzimática. Útil quando se quer evitar ativação de pró-fármaco.", reference: "Böhm HJ, Stahl M, Drug Design Methodology 2014" },
+      { type: "mcq", question: "No losartan, o tetrazol substituiu -COOH para:", options: ["Reduzir potência", "Melhorar absorção oral mantendo interação com AT1", "Aumentar a toxicidade", "Facilitar a síntese"], correctIndex: 1, explanation: "O tetrazol do losartan é 10× mais lipofílico que -COOH, melhorando a absorção oral, mantendo a interação iônica com Arg167 do receptor AT1.", reference: "Carini DJ et al., J Med Chem 1991" },
+      { type: "mcq", question: "O 1,2,3-triazol é frequentemente usado como bioisóstero de:", options: ["-CF₃", "Ligação amida", "-NO₂", "-SO₃H"], correctIndex: 1, explanation: "O 1,2,3-triazol mimetiza a geometria planar e o momento dipolar da amida, com maior estabilidade metabólica e facilidade sintética (click chemistry).", reference: "Tron GC et al., J Med Chem 2008" },
+      { type: "mcq", question: "A substituição de -F por -H é considerada:", options: ["Bioisóstero clássico", "Nunca utilizada", "Apenas válida para compostos aromáticos", "Bioisóstero não-clássico"], correctIndex: 0, explanation: "F e H são bioisósteros clássicos (van der Waals similar: H=1.2Å, F=1.35Å). F bloqueia metabolismo CYP sem alterar muito o tamanho.", reference: "Böhm HJ et al., ChemMedChem 2004" },
+    ],
+  };
+}
+
+export function getMetabolismoFarmacosChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Metabolismo de Fármacos",
+    description: "Teste conhecimentos sobre biotransformação, CYP450 e pró-fármacos.",
+    challenges: [
+      { type: "mcq", question: "A principal família enzimática do metabolismo de Fase I é:", options: ["Glucuronosiltransferases", "Citocromo P450 (CYP)", "Glutationa-S-transferases", "N-acetiltransferases"], correctIndex: 1, explanation: "CYP450 catalisa ~75% das reações de Fase I (oxidação, redução, hidrólise). CYP3A4 sozinha metaboliza ~50% dos fármacos.", reference: "Guengerich FP, Chem Res Toxicol 2008" },
+      { type: "adjust", question: "Simule um metabolizador lento CYP2C19: reduza a atividade CYP para ≤30%.", targetParams: { cypActivity: { min: 10, max: 30, label: "CYP" } }, validator: (s) => { const cyp = s.cypActivity ?? 100; return cyp <= 30 ? { correct: true, feedback: "Fenótipo metabolizador lento simulado!" } : { correct: false, feedback: `CYP: ${cyp}%. Reduza para ≤30%.` }; }, explanation: "Metabolizadores lentos CYP2C19 (*2/*2) têm ativação reduzida de clopidogrel → risco de trombose de stent.", reference: "Mega JL et al., NEJM 2009" },
+      { type: "mcq", question: "Qual pró-fármaco é ativado por esterases hepáticas?", options: ["Clopidogrel", "Enalapril", "Codeína", "Tamoxifeno"], correctIndex: 1, explanation: "Enalapril (éster etílico) → enalaprilato (ácido dicarboxílico ativo) por hidrólise de esterases hepáticas.", reference: "Patchett AA et al., Nature 1980" },
+      { type: "mcq", question: "A glicuronidação (Fase II) é catalisada por:", options: ["CYP3A4", "UGT (UDP-glucuronosiltransferases)", "MAO", "COMT"], correctIndex: 1, explanation: "UGTs conjugam ácido glucurônico a -OH, -COOH, -NH₂, -SH. Produz metabólitos hidrossolúveis para excreção renal/biliar.", reference: "Rowland A et al., Int J Biochem Cell Biol 2013" },
+      { type: "mcq", question: "Metabolizadores ultra-rápidos CYP2D6 + codeína podem causar:", options: ["Falta de efeito", "Toxicidade por excesso de morfina", "Alergia", "Indução enzimática"], correctIndex: 1, explanation: "Ultra-rápidos convertem >40% de codeína em morfina (vs ~10% normal). Em crianças, pode causar depressão respiratória fatal.", reference: "Crews KR et al., Clin Pharmacol Ther 2014" },
+      { type: "mcq", question: "O efeito de primeira passagem é maior para fármacos administrados por via:", options: ["Intravenosa", "Oral", "Sublingual", "Transdérmica"], correctIndex: 1, explanation: "Via oral: fármaco passa pelo fígado (veia porta) antes de atingir a circulação sistêmica. Sublingual e transdérmica evitam primeira passagem.", reference: "Rowland M, Tozer TN, Clinical PK 2011" },
+      { type: "adjust", question: "Simule ultra-metabolizador: aumente CYP para ≥200% e observe o pico de metabólito ativo.", targetParams: { cypActivity: { min: 200, max: 300, label: "CYP" } }, validator: (s) => { const cyp = s.cypActivity ?? 100; return cyp >= 200 ? { correct: true, feedback: "Fenótipo ultra-rápido simulado!" } : { correct: false, feedback: `CYP: ${cyp}%. Aumente para ≥200%.` }; }, explanation: "Ultra-rápidos (*1/*1xN, duplicação gênica) têm AUC aumentada do metabólito ativo e reduzida do pró-fármaco.", reference: "Ingelman-Sundberg M, Pharmacogenomics J 2005" },
+    ],
+  };
+}
+
+export function getDockingSimplificadoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Docking Molecular",
+    description: "Teste conceitos de interações fármaco-receptor e design racional.",
+    challenges: [
+      { type: "mcq", question: "A força de uma ligação de hidrogênio típica fármaco-receptor é:", options: ["0.1-0.5 kcal/mol", "1-5 kcal/mol", "10-20 kcal/mol", "50-100 kcal/mol"], correctIndex: 1, explanation: "Ligações H contribuem ~1-5 kcal/mol cada. São direcionais (ângulo ~180°) e distância ótima de 2.5-3.5 Å.", reference: "Bissantz C et al., J Med Chem 2010" },
+      { type: "mcq", question: "Interações π-π stacking são importantes para fármacos que contêm:", options: ["Apenas grupos alifáticos", "Anéis aromáticos", "Grupos sulfônicos", "Cadeias longas de ácidos graxos"], correctIndex: 1, explanation: "π-π stacking (~1-3 kcal/mol) ocorre entre anéis aromáticos do fármaco e resíduos Phe, Tyr, Trp, His do receptor.", reference: "Meyer EA et al., Angew Chem Int Ed 2003" },
+      { type: "adjust", question: "Otimize o docking: ajuste distância para 2.5-3.5 Å para maximizar ΔG.", targetParams: { distance: { min: 2.5, max: 3.5, label: "Distância" } }, validator: (s) => { const dg = s.deltaG ?? 0; return dg < -5 ? { correct: true, feedback: `ΔG = ${dg} kcal/mol — boa afinidade!` } : { correct: false, feedback: `ΔG = ${dg} kcal/mol. Otimize a distância.` }; }, explanation: "A distância ótima para interações não-covalentes é 2.5-4.0 Å. Muito perto: repulsão estérica. Muito longe: interação fraca.", reference: "Klebe G, Drug Design 2013" },
+      { type: "mcq", question: "ΔG mais negativo indica:", options: ["Ligação mais fraca", "Ligação mais forte", "Nenhuma interação", "Ligação covalente"], correctIndex: 1, explanation: "ΔG = -RT ln(1/Ki). Quanto mais negativo, maior a afinidade. ΔG = -10 kcal/mol → Ki ≈ nM.", reference: "Kuntz ID et al., Proc Natl Acad Sci 1999" },
+      { type: "mcq", question: "A contribuição entrópica no binding é geralmente:", options: ["Sempre favorável", "Desfavorável (perda de graus de liberdade)", "Irrelevante", "Igual à entálpica"], correctIndex: 1, explanation: "O ligante perde liberdade rotacional/translacional ao se ligar (-TΔS desfavorável). Compensado pela contribuição entálpica (ΔH) e efeito hidrofóbico.", reference: "Freire E, Drug Discov Today 2008" },
+      { type: "mcq", question: "O 'pharmacophore' de um fármaco é:", options: ["Sua fórmula molecular", "O arranjo 3D mínimo de features necessárias para atividade", "O peso molecular", "A dose terapêutica"], correctIndex: 1, explanation: "Pharmacophore: conjunto mínimo de features estéricas/eletrônicas (HBD, HBA, hidrofóbico, aromático) necessárias para interação com o alvo.", reference: "Wermuth CG et al., Pure Appl Chem 1998" },
+    ],
+  };
+}
+
+export function getQuiralidadeChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Quiralidade Farmacológica",
+    description: "Teste conhecimentos sobre estereoquímica e sua importância farmacológica.",
+    challenges: [
+      { type: "mcq", question: "O eutômero é definido como:", options: ["O enantiômero menos ativo", "O enantiômero mais ativo farmacologicamente", "O racemato", "O metabólito ativo"], correctIndex: 1, explanation: "Eutômero = enantiômero com maior atividade desejada. Distômero = menos ativo ou responsável por efeitos adversos.", reference: "Ariëns EJ, Eur J Clin Pharmacol 1984" },
+      { type: "mcq", question: "A razão eudísmica é:", options: ["Potência do eutômero / potência do distômero", "MW do R / MW do S", "logP do R / logP do S", "Dose do eutômero / dose do distômero"], correctIndex: 0, explanation: "Razão eudísmica = atividade(eutômero)/atividade(distômero). Quanto maior, mais enantioseletiva é a interação fármaco-receptor.", reference: "Lehmann F et al., Chirality 2003" },
+      { type: "mcq", question: "A talidomida racemiza in vivo porque:", options: ["CYP450 a converte", "O carbono quiral é adjacente a carbonila (enolização)", "A reação é enzimática", "Não racemiza"], correctIndex: 1, explanation: "O H no centro quiral da talidomida é ácido (adjacente a 2 carbonilas). Em pH fisiológico, enoliza e racemiza (t½ ~4h).", reference: "Eriksson T et al., Chirality 1998" },
+      { type: "mcq", question: "O 'chiral switch' comercial mais famoso é:", options: ["Ibuprofeno → Dexibuprofeno", "Omeprazol → Esomeprazol", "Codeína → Morfina", "Anfetamina → Metanfetamina"], correctIndex: 1, explanation: "Esomeprazol (AstraZeneca): S-omeprazol com menor metabolismo CYP2C19 de primeira passagem → AUC ~65% maior.", reference: "Scott LJ, Dunn CJ, Drugs 2002" },
+      { type: "mcq", question: "O R-ibuprofeno é convertido em S-ibuprofeno in vivo por:", options: ["CYP2D6", "Isomerase unidirecional (R→S)", "Racemização espontânea", "Glicuronidação"], correctIndex: 1, explanation: "A enzima 2-arilpropionil-CoA epimerase converte R→S unidirecionalmente (~60%). Por isso, o racemato é eficaz.", reference: "Brune K, Patrignani P, J Pain Res 2015" },
+      { type: "adjust", question: "Compare racemato vs enantiômero puro: ajuste ee para 0% (racemato) e observe a mistura.", targetParams: { ee: { min: 0, max: 10, label: "ee%" } }, validator: (s) => { const ee = s.ee ?? 100; return ee <= 10 ? { correct: true, feedback: "Racemato simulado — 50:50 eutômero:distômero!" } : { correct: false, feedback: `ee = ${ee}%. Reduza para ≤10%.` }; }, explanation: "No racemato (ee=0%), a atividade observada é a média ponderada dos enantiômeros. Se RE >> 1, o eutômero puro é mais eficiente.", reference: "Ariëns EJ, Med Res Rev 1986" },
+    ],
+  };
+}
+
+export function getPkaAbsorcaoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: pKa e Absorção",
+    description: "Aplique Henderson-Hasselbalch para prever absorção de fármacos.",
+    challenges: [
+      { type: "mcq", question: "Para um ácido fraco (pKa 4.0) em pH gástrico (1.5), a fração não-ionizada é:", options: ["~0.3%", "~50%", "~99.7%", "~10%"], correctIndex: 2, explanation: "Ácido fraco: %NI = 100/(1+10^(pH-pKa)) = 100/(1+10^(1.5-4.0)) = 100/(1+10^(-2.5)) ≈ 99.7%.", reference: "Avdeef A, Absorption and Drug Development, 2003" },
+      { type: "mcq", question: "O fenômeno de 'ion trapping' ocorre quando:", options: ["Um fármaco ionizado acumula em compartimento de pH oposto", "O fármaco precipita", "O fármaco é metabolizado", "O fármaco se liga a proteínas"], correctIndex: 0, explanation: "Base fraca acumula no compartimento ácido (estômago): a forma ionizada não atravessa membranas e fica 'presa'.", reference: "Katzung BG, Basic & Clinical Pharmacology, Cap. 1" },
+      { type: "adjust", question: "Encontre o pH onde aspirina (pKa 3.5) está 50% ionizada.", targetParams: { pH: { min: 3.0, max: 4.0, label: "pH" } }, validator: (s) => { const ph = s.pH ?? 1.5; return (ph >= 3.3 && ph <= 3.7) ? { correct: true, feedback: "pH = pKa → 50% ionizado!" } : { correct: false, feedback: `pH = ${ph}. Quando pH = pKa, o fármaco está 50% ionizado.` }; }, explanation: "Pela equação de Henderson-Hasselbalch, quando pH = pKa, a fração ionizada = fração não-ionizada = 50%.", reference: "Sinko PJ, Martin's Physical Pharmacy, Cap. 7" },
+      { type: "mcq", question: "Mesmo com fração não-ionizada >99% no estômago, a maioria da absorção de ácidos fracos ocorre no:", options: ["Estômago", "Duodeno/jejuno", "Cólon", "Esôfago"], correctIndex: 1, explanation: "Apesar da ionização desfavorável, o duodeno/jejuno tem área de superfície ~200× maior que o estômago → maior absorção total.", reference: "Dressman JB et al., J Pharm Sci 1998" },
+      { type: "mcq", question: "A morfina (base fraca, pKa 8.0) no estômago (pH 1.5) está:", options: ["99.99% não-ionizada", "50% ionizada", ">99.99% ionizada (protonada)", "Precipitada"], correctIndex: 2, explanation: "Base fraca: %NI = 100/(1+10^(pKa-pH)) = 100/(1+10^(8.0-1.5)) = 100/(1+10^6.5) ≈ 0.00003%. Praticamente toda ionizada.", reference: "Rowland M, Tozer TN, Clinical PK 2011" },
+      { type: "mcq", question: "Fármacos zwitteriônicos (anfóteros) como ampicilina:", options: ["São sempre não-ionizados", "Têm ponto isoelétrico onde a carga líquida é zero", "Não podem ser absorvidos oralmente", "Têm logP muito alto"], correctIndex: 1, explanation: "No pI (ponto isoelétrico), as cargas positiva e negativa se anulam. A solubilidade é mínima no pI.", reference: "Avdeef A, Curr Top Med Chem 2001" },
+    ],
+  };
+}
+
+export function getQSARSimplificadoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: QSAR (Hansch)",
+    description: "Teste conceitos de relações quantitativas estrutura-atividade.",
+    challenges: [
+      { type: "mcq", question: "A equação de Hansch clássica correlaciona atividade biológica com:", options: ["Apenas MW", "logP (lipofilia) + σ Hammett (efeito eletrônico) + Es (efeito estérico)", "Apenas solubilidade", "Apenas pKa"], correctIndex: 1, explanation: "Hansch: log(1/C) = a(logP)² + b(logP) + ρσ + δEs + c. Parábola de lipofilia + efeitos eletrônicos e estéricos.", reference: "Hansch C, Fujita T, JACS 1964" },
+      { type: "mcq", question: "A relação parabólica logP vs atividade indica que:", options: ["Mais lipofílico = mais ativo sempre", "Existe um logP ótimo", "logP não importa", "Só compostos hidrofílicos são ativos"], correctIndex: 1, explanation: "O logP ótimo (logP₀) maximiza absorção + distribuição. Acima: sequestro em gordura/membranas. Abaixo: baixa permeabilidade.", reference: "Hansch C, Leo AJ, Substituent Constants for Correlation Analysis 1979" },
+      { type: "adjust", question: "Encontre o logP ótimo: ajuste logP para o máximo da parábola.", targetParams: { logP: { min: 0.5, max: 1.5, label: "logP" } }, validator: (s) => { const opt = s.optimalLogP ?? 1.0; const lp = s.logP ?? 0; return Math.abs(lp - opt) < 0.3 ? { correct: true, feedback: `logP ≈ logP₀ (${opt})!` } : { correct: false, feedback: `Seu logP: ${lp}. logP₀ ≈ ${opt}. Ajuste para o pico.` }; }, explanation: "No ponto máximo da parábola, dlog(1/C)/d(logP) = 0 → logP₀ = -b/(2a).", reference: "Hansch C, Drug Design Vol. 1, 1971" },
+      { type: "mcq", question: "O σ de Hammett positivo indica um substituinte:", options: ["Doador de elétrons", "Retirador de elétrons", "Estérico", "Lipofílico"], correctIndex: 1, explanation: "σ > 0: retirador de elétrons (NO₂ = +0.78, CF₃ = +0.54). σ < 0: doador (NH₂ = -0.66, OCH₃ = -0.27).", reference: "Hammett LP, JACS 1937" },
+      { type: "mcq", question: "R² = 0.95 em um modelo QSAR indica:", options: ["Modelo ruim", "95% da variância da atividade é explicada pelos descritores", "95% dos compostos são ativos", "O modelo é sempre preditivo"], correctIndex: 1, explanation: "R² mede a fração da variância explicada. R²=0.95 é excelente, mas validação cruzada (Q²) e conjunto teste são necessários.", reference: "Tropsha A, Mol Inform 2010" },
+      { type: "mcq", question: "O parâmetro Es de Taft mede:", options: ["Efeito eletrônico", "Efeito estérico", "Lipofilia", "Solubilidade"], correctIndex: 1, explanation: "Es (Taft) quantifica o efeito estérico de substituintes. Valores mais negativos = maior impedimento estérico.", reference: "Taft RW, JACS 1952" },
+    ],
+  };
 }
