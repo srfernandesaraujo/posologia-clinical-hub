@@ -827,6 +827,17 @@ export default function Admin() {
           </div>
         </TabsContent>
 
+        {/* Cookie Analytics Tab */}
+        <TabsContent value="cookie-analytics">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              <Cookie className="h-5 w-5 text-primary" />
+              Analytics de Uso (Cookies)
+            </h2>
+            <AdminCookieAnalytics />
+          </div>
+        </TabsContent>
+
         {/* AI API Keys Tab */}
         <TabsContent value="ai-keys">
           <div className="rounded-2xl border border-border bg-card p-6">
