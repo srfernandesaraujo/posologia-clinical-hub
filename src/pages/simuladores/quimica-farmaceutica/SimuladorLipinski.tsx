@@ -14,7 +14,7 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Responsive
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
-import { getChallengesForSimulator } from "@/data/simulatorChallenges";
+import { getChallengesBySlug } from "@/data/simulatorChallenges";
 
 const SLUG = "lipinski";
 
