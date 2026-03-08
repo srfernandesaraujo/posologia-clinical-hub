@@ -191,6 +191,14 @@ const App = () => (
               <Route path="/simuladores/pentoses-fosfato" element={<SimuladorPentosesFosfato />} />
               <Route path="/simuladores/titulacao-aminoacidos" element={<SimuladorTitulacaoAminoacidos />} />
               <Route path="/simuladores/operon-lac" element={<SimuladorOperonLac />} />
+              <Route path="/simuladores/dose-resposta" element={<SimuladorDoseResposta />} />
+              <Route path="/simuladores/transducao-sinal" element={<SimuladorTransducaoSinal />} />
+              <Route path="/simuladores/janela-terapeutica-farma" element={<SimuladorJanelaTerapeutica />} />
+              <Route path="/simuladores/vias-administracao" element={<SimuladorViasAdministracao />} />
+              <Route path="/simuladores/bloqueio-neuromuscular" element={<SimuladorBloqueioNeuromuscular />} />
+              <Route path="/simuladores/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
+              <Route path="/simuladores/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
+              <Route path="/simuladores/farmacogenomica" element={<SimuladorFarmacogenomica />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
