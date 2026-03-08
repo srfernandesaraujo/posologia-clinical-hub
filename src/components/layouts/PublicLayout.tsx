@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Pill, Mail } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginPopover } from "@/components/LoginPopover";
+import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 
 export function PublicLayout() {
   const { t } = useTranslation();
+  useCookieAnalytics();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0F1C]">

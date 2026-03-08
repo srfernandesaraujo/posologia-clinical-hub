@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import { Pill, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useCookieConsent } from "@/contexts/CookieConsentContext";
 
 export default function PoliticaCookies() {
+  const { openPreferences } = useCookieConsent();
+
   return (
     <div className="min-h-screen bg-[#0A0F1C] text-white/80">
       <div className="container mx-auto px-4 py-16 max-w-3xl">
@@ -31,14 +35,18 @@ export default function PoliticaCookies() {
                 <p className="text-sm">Armazenam suas preferências como idioma selecionado (i18next) e tema da interface. Melhoram sua experiência de uso.</p>
               </div>
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
-                <h3 className="text-white/80 font-medium mb-1">Cookies de Desempenho</h3>
-                <p className="text-sm">Coletam informações sobre como você usa a plataforma para que possamos melhorar nossos serviços. Dados agregados e anônimos.</p>
+                <h3 className="text-white/80 font-medium mb-1">Cookies de Desempenho / Analytics</h3>
+                <p className="text-sm">Coletam informações sobre como você usa a plataforma (páginas visitadas, ferramentas mais usadas, tempo de uso) para que possamos melhorar nossos serviços. Dados agregados e anônimos.</p>
+              </div>
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
+                <h3 className="text-white/80 font-medium mb-1">Cookies de Marketing</h3>
+                <p className="text-sm">Registram a origem do visitante e a jornada de navegação para otimizar comunicações e a experiência de conversão.</p>
               </div>
             </div>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-white/90 mb-3">3. LocalStorage</h2>
-            <p>Além de cookies, utilizamos o localStorage do navegador para armazenar: token de autenticação, preferência de idioma e dados de sessão. Esses dados permanecem no seu dispositivo e podem ser apagados nas configurações do navegador.</p>
+            <p>Além de cookies, utilizamos o localStorage do navegador para armazenar: token de autenticação, preferência de idioma, suas preferências de consentimento de cookies e dados de sessão. Esses dados permanecem no seu dispositivo e podem ser apagados nas configurações do navegador.</p>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-white/90 mb-3">4. Cookies de Terceiros</h2>
@@ -46,7 +54,10 @@ export default function PoliticaCookies() {
           </section>
           <section>
             <h2 className="text-lg font-semibold text-white/90 mb-3">5. Gerenciamento de Cookies</h2>
-            <p>Você pode controlar e/ou excluir cookies nas configurações do seu navegador. A desativação de cookies essenciais pode impedir o funcionamento adequado da plataforma. Para mais informações, consulte a documentação do seu navegador.</p>
+            <p className="mb-4">Você pode controlar e/ou excluir cookies nas configurações do seu navegador. A desativação de cookies essenciais pode impedir o funcionamento adequado da plataforma. Para mais informações, consulte a documentação do seu navegador.</p>
+            <Button onClick={openPreferences} variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+              Gerenciar minhas preferências de cookies
+            </Button>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-white/90 mb-3">6. Contato</h2>
