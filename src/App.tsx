@@ -101,6 +101,7 @@ import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
 import JogosClinicos from "./pages/JogosClinicos";
+import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
@@ -277,6 +278,7 @@ const App = () => (
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
               <Route path="/jogos-clinicos" element={<JogosClinicos />} />
+              <Route path="/agente-feedback" element={<AgenteFeedback />} />
               <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 
