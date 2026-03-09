@@ -36,6 +36,7 @@ Use patógenos reais, antibiogramas coerentes. Varie entre ITU, PAC, infecção 
 
   tdm: `Gere um caso clínico COMPLETO para o Simulador de TDM (Monitoramento Terapêutico de Fármacos).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, sex, serumCreatinine, creatinineClearance }
 - infection: descrição da infecção/indicação
 - currentPrescription: { drug, dose, interval, route }
