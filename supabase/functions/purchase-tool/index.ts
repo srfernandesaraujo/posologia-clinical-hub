@@ -147,7 +147,7 @@ serve(async (req) => {
             customer: sellerCustomerId,
             amount: -newCreditCents,
             currency: "brl",
-            description: `Venda Marketplace: ${tool.name}`,
+            description: `Venda Marketplace: ${itemName}`,
           });
           sellerCredited = true;
           log("Seller credited", { amount: -newCreditCents });
