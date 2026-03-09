@@ -89,7 +89,7 @@ export default function SimuladorMetabolismo() {
   const navigate = useNavigate();
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
-  const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases(SLUG, []);
+  const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<MetabCase | null>(null);
