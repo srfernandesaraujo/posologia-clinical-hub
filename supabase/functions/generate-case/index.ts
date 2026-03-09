@@ -92,6 +92,7 @@ O caso deve conter:
 
   "desmame-benzo": `Gere um caso clínico COMPLETO para o Simulador de Desmame de Benzodiazepínicos (Protocolo de Ashton).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, sex, diagnosis, clinicalContext }
 - drugName: nome do BZD atual ("Alprazolam", "Clonazepam", "Lorazepam", "Bromazepam", "Diazepam", "Nitrazepam", "Flunitrazepam", "Midazolam")
 - dailyDose: dose diária em mg

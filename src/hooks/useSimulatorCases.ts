@@ -5,6 +5,28 @@ import { toast } from "sonner";
 
 const SIMULATOR_SLUGS = ["tdm", "prm", "antimicrobianos", "acompanhamento", "insulina", "bomba-infusao", "desmame-benzo", "interacoes", "sna", "eletrofisiologia-cardiaca", "depuracao-renal", "equilibrio-acido-base", "regulacao-glicemica", "eixo-hpa", "cinetica-enzimatica", "secrecao-gastrica", "cascata-coagulacao", "compartimentos-adme", "cadeia-eletrons", "dissociacao-hemoglobina", "glicolise-gliconeogenese", "cinetica-avancada", "ciclo-ureia", "acido-araquidonico", "lipoproteinas", "pentoses-fosfato", "titulacao-aminoacidos", "operon-lac", "dose-resposta", "transducao-sinal", "janela-terapeutica-farma", "vias-administracao", "bloqueio-neuromuscular", "farmaco-autonomica", "tolerancia-dependencia", "farmacogenomica", "estabilidade", "liberacao-farmacos", "diluicao", "reologia", "hlb-emulsoes", "granulometria", "compressao", "tampao-farmaceutico", "sar-explorer", "lipinski", "bioisosterismo", "metabolismo-farmacos", "docking-simplificado", "quiralidade", "pka-absorcao", "qsar-simplificado"];
 
+/** Extract a short description from case_data for display */
+function extractDescription(caseData: any): string {
+  if (!caseData) return "";
+  // scenario field (most simulators)
+  if (caseData.scenario) return caseData.scenario;
+  // PRM
+  if (caseData.history?.mainComplaint) return caseData.history.mainComplaint;
+  // Antimicrobianos
+  if (caseData.day1?.clinicalDescription) return caseData.day1.clinicalDescription;
+  // TDM
+  if (caseData.infection) return caseData.infection;
+  // Insulina
+  if (caseData.patient?.clinicalSummary) return caseData.patient.clinicalSummary;
+  // Acompanhamento
+  if (caseData.consultations?.[0]?.symptoms) return caseData.consultations[0].symptoms;
+  // Desmame benzo
+  if (caseData.patient?.clinicalContext) return caseData.patient.clinicalContext;
+  // Fallback patient_summary
+  if (caseData.patient_summary) return caseData.patient_summary;
+  return "";
+}
+
 export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -27,15 +49,41 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
         isAI: true,
         created_by: c.created_by,
         is_marketplace: c.is_marketplace,
+        _description: extractDescription(c.case_data),
       }));
     },
   });
 
-  const allCases = [...builtInCases, ...dbCases];
+  // Fetch author profiles for AI cases
+  const authorIds = [...new Set(dbCases.filter(c => c.created_by).map(c => c.created_by))];
+  const { data: authorProfiles = [] } = useQuery({
+    queryKey: ["case-author-profiles", authorIds.join(",")],
+    queryFn: async () => {
+      if (authorIds.length === 0) return [];
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", authorIds);
+      return (data || []) as { user_id: string; full_name: string | null }[];
+    },
+    enabled: authorIds.length > 0,
+  });
+
+  const authorMap = new Map(authorProfiles.map(p => [p.user_id, p.full_name || "Autor"]));
+
+  const enrichedDbCases = dbCases.map(c => ({
+    ...c,
+    _authorName: c.created_by ? (authorMap.get(c.created_by) || "Autor") : null,
+  }));
+
+  const allCases = [...builtInCases, ...enrichedDbCases];
 
   const generateCase = async () => {
     setIsGenerating(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Você precisa estar logado para gerar casos");
+
       const { data, error } = await supabase.functions.invoke("generate-case", {
         body: { simulator_slug: simulatorSlug },
       });
@@ -52,6 +100,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
           difficulty: generated.difficulty,
           case_data: generated.case_data,
           is_ai_generated: true,
+          created_by: user.id,
         } as any);
       
       if (insertError) throw insertError;
@@ -98,7 +147,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
 
   const copyCase = async (caseId: string, targetSlug: string) => {
     try {
-      // Fetch the original case
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: original, error: fetchError } = await supabase
         .from("simulator_cases" as any)
         .select("*")
@@ -115,6 +164,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
           difficulty: orig.difficulty,
           case_data: orig.case_data,
           is_ai_generated: orig.is_ai_generated,
+          created_by: user?.id,
         } as any);
       if (insertError) throw insertError;
 
