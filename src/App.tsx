@@ -303,7 +303,9 @@ const App = () => (
             </Route>
 
             {/* Smart Planos route - renders with sidebar for logged-in users */}
-            <Route path="/planos" element={<SmartPlanosRoute />} />
+            <Route path="/planos" element={<SmartPlanosRoute />}>
+              <Route index element={<Planos />} />
+            </Route>
 
             {/* Public embed route */}
             <Route path="/embed/:token" element={<EmbedTool />} />
