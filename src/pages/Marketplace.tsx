@@ -54,7 +54,7 @@ export default function Marketplace() {
 
   // Clinical cases from marketplace
   const { data: marketplaceCases = [], isLoading: casesLoading } = useQuery({
-    queryKey: ["marketplace-cases", search],
+    queryKey: ["marketplace-cases", search, search],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("list-marketplace-cases", {
         body: { search: search || null },
@@ -65,7 +65,7 @@ export default function Marketplace() {
     },
   });
 
-  // Collect all creator IDs (tools + cases)
+  // creator IDs for tools+ cases)
   const creatorIds = useMemo(() => {
     const ids = new Set<string>();
     tools.filter((t: any) => t.created_by).forEach((t: any) => ids.add(t.created_by));

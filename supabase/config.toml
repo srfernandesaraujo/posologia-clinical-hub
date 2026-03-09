@@ -47,3 +47,9 @@ verify_jwt = false
 
 [functions.feedback-agent]
 verify_jwt = false
+
+[functions.case-authors]
+verify_jwt = false
+
+[functions.list-marketplace-cases]
+verify_jwt = false
