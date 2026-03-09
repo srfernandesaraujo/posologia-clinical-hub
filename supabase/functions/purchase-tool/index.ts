@@ -113,7 +113,7 @@ serve(async (req) => {
       customer: buyerCustomerId,
       amount: pricing.price,
       currency: "brl",
-      description: `Marketplace: ${tool.name}`,
+      description: `Marketplace: ${itemName}`,
     });
     log("Buyer charged", { amount: pricing.price });
 
