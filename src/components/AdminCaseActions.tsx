@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil, Trash2, Copy } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Pencil, Trash2, Copy, Store, StoreIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminCaseActionsProps {
@@ -13,6 +13,7 @@ interface AdminCaseActionsProps {
   onUpdate: (id: string, updates: { title: string; difficulty: string }) => Promise<void>;
   onCopy: (id: string, targetSlug: string) => Promise<void>;
   availableTargets: string[];
+  onToggleMarketplace?: (id: string, currentValue: boolean) => Promise<void>;
 }
 
 const SLUG_LABELS: Record<string, string> = {
@@ -23,7 +24,7 @@ const SLUG_LABELS: Record<string, string> = {
   insulina: "Insulina",
 };
 
-export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availableTargets }: AdminCaseActionsProps) {
+export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availableTargets, onToggleMarketplace }: AdminCaseActionsProps) {
   const { isAdmin, user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(caseItem.title);
@@ -68,6 +69,19 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          {onToggleMarketplace && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onToggleMarketplace(caseItem.id, !!caseItem.is_marketplace)}>
+                {caseItem.is_marketplace ? (
+                  <><StoreIcon className="h-4 w-4 mr-2" />Remover do Marketplace</>
+                ) : (
+                  <><Store className="h-4 w-4 mr-2" />Publicar no Marketplace</>
+                )}
+              </DropdownMenuItem>
+            </>
+          )}
+          <DropdownMenuSeparator />
           <DropdownMenuItem className="text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="h-4 w-4 mr-2" />Excluir
           </DropdownMenuItem>
