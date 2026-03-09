@@ -9,6 +9,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // RLS already filters: created_by IS NULL OR created_by = auth.uid() OR is_marketplace = true
   const { data: dbCases = [] } = useQuery({
     queryKey: ["simulator-cases", simulatorSlug],
     queryFn: async () => {
@@ -24,6 +25,8 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
         title: c.title,
         difficulty: c.difficulty,
         isAI: true,
+        created_by: c.created_by,
+        is_marketplace: c.is_marketplace,
       }));
     },
   });
