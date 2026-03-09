@@ -8,8 +8,8 @@ import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
-import { AdminCaseActions } from "@/components/AdminCaseActions";
-import { CaseCardMeta } from "@/components/CaseCardMeta";
+import { NativeCaseCard } from "@/components/NativeCaseCard";
+import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -170,17 +170,10 @@ export default function SimuladorCineticaEnzimatica() {
           <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {BUILT_IN_CASES.map((c, i) => (
-              <button key={i} onClick={() => setActiveCase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><Badge variant="outline">{c.difficulty}</Badge></div>
-                <p className="text-sm text-muted-foreground">{c.patient.diagnosis}</p>
-              </button>
+              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
             ))}
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <button key={c.id} onClick={() => loadAICase(c)} className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                <div className="flex items-center justify-between mb-1"><span className="font-semibold">{c.title}</span><div className="flex gap-2"><Badge variant="secondary">IA</Badge><Badge variant="outline">{c.difficulty}</Badge></div></div>
-                <CaseCardMeta caseItem={c} />
-                <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-              </button>
+              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
             <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
