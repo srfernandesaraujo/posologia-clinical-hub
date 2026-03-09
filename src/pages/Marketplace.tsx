@@ -54,7 +54,7 @@ export default function Marketplace() {
 
   // Clinical cases from marketplace
   const { data: marketplaceCases = [], isLoading: casesLoading } = useQuery({
-    queryKey: ["marketplace-cases"],
+    queryKey: ["marketplace-cases", search],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("list-marketplace-cases", {
         body: { search: search || null },
