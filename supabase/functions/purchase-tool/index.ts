@@ -8,10 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PRICES = {
+const PRICES: Record<string, { price: number; credit: number }> = {
   calculadora: { price: 500, credit: 300 },
   simulador: { price: 1000, credit: 600 },
-} as const;
+  caso_clinico: { price: 200, credit: 100 },
+};
 
 const SUBSCRIPTION_PRICE_BRL = 2990; // R$ 29,90
 
