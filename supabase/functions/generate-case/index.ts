@@ -51,6 +51,7 @@ Use fármacos como Vancomicina, Gentamicina, Fenitoína, Lítio, Digoxina. Varie
 
   acompanhamento: `Gere um caso clínico COMPLETO para o Simulador de Acompanhamento Farmacoterapêutico.
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, diagnoses (array) }
 - consultations: array de pelo menos 3 consultas, cada uma com:
   - month: número do mês (0, 3, 6)
