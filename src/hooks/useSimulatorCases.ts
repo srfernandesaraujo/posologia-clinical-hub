@@ -57,6 +57,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
         created_by: c.created_by,
         is_marketplace: c.is_marketplace,
         _description: extractDescription(c.case_data),
+        _diagnosis: extractDiagnosis(c.case_data),
       }));
     },
   });
