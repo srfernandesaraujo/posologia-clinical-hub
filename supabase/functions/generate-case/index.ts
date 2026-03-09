@@ -108,494 +108,518 @@ O caso deve conter:
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
-  // ===================== FISIOLOGIA HUMANA =====================
-  sna: `Gere um caso clínico para o Simulador do Sistema Nervoso Autônomo.
-O caso deve conter:
+  // ===================== FISIOLOGIA =====================
+  sna: `Gere um caso para o Simulador do Sistema Nervoso Autônomo.
+O JSON deve conter EXATAMENTE estes campos (sem campos extras):
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição do cenário fisiológico (ex: estresse, exercício, digestão)
-- sympatheticTone: valor inicial do tônus simpático (0-100)
-- parasympatheticTone: valor inicial do tônus parassimpático (0-100)
-- expectedEffects: { heartRate, bloodPressure, pupilDiameter, bronchialTone, giMotility, bladderTone }
-- pharmacologicalChallenge: { drug, mechanism, expectedChanges }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica detalhada
+- initialSympathetic: número 0-100 (tônus simpático inicial, ex: 40)
+- initialParasympathetic: número 0-100 (tônus parassimpático inicial, ex: 50)
+- expectedFC: [min, max] frequência cardíaca esperada (ex: [60, 80])
+- expectedPAS: [min, max] pressão arterial sistólica esperada (ex: [110, 130])
+- clinicalTip: dica clínica educativa
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "eletrofisiologia-cardiaca": `Gere um caso para o Simulador de Eletrofisiologia Cardíaca.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: bradiarritmia, taquicardia, bloqueio AV)
-- initialParams: { heartRate, prInterval, qrsDuration, qtInterval }
-- ionChannelModifications: { sodiumConductance, potassiumConductance, calciumConductance } (% do normal)
-- pharmacologicalChallenge: { drug, class, expectedECGChanges }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialNa: número 0-100 (atividade canal Na+, ex: 100)
+- initialK: número 0-100 (atividade canal K+, ex: 100)
+- initialCa: número 0-100 (atividade canal Ca2+, ex: 100)
+- cellType: "ventricular" | "nodal" | "atrial" | "purkinje"
+- expectedPhase: fase do potencial de ação mais afetada (ex: "fase 0")
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "depuracao-renal": `Gere um caso para o Simulador de Depuração Renal.
-O caso deve conter:
-- patient: { name, age, weight, sex, serumCreatinine, clinicalContext }
-- scenario: descrição (ex: IRA, DRC, nefrotoxicidade)
-- initialGFR: taxa de filtração glomerular inicial (mL/min)
-- tubularFunction: { reabsorption, secretion } (% do normal)
-- pharmacologicalChallenge: { drug, renalElimination, doseAdjustment }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- initialAfferent: número 0-100 (tônus arteriolar aferente, ex: 70)
+- initialEfferent: número 0-100 (tônus arteriolar eferente, ex: 60)
+- initialHydration: número 0-100 (hidratação, ex: 80)
+- initialPermeability: número 0-100 (permeabilidade tubular, ex: 100)
+- expectedTFG: [min, max] taxa filtração glomerular esperada (ex: [60, 120])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "equilibrio-acido-base": `Gere um caso para o Simulador de Equilíbrio Ácido-Base.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: cetoacidose diabética, DPOC, intoxicação)
-- initialABG: { pH, pCO2, HCO3, pO2, BE, AG }
-- expectedDiagnosis: diagnóstico ácido-base (ex: "acidose metabólica com AG elevado")
-- compensation: { type, expected, actual }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialPH: número (pH arterial, ex: 7.4)
+- initialPCO2: número (pCO2 em mmHg, ex: 40)
+- initialHCO3: número (HCO3 em mEq/L, ex: 24)
+- expectedClassification: classificação esperada (ex: "acidose metabólica")
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "regulacao-glicemica": `Gere um caso para o Simulador de Regulação Glicêmica.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: DM1 pós-prandial, jejum prolongado, estresse)
-- initialGlucose: glicemia inicial em mg/dL
-- insulinSensitivity: sensibilidade à insulina (% do normal)
-- betaCellFunction: função das células beta (% do normal)
-- mealChallenge: { carbsGrams, glycemicIndex }
-- expectedResponse: { peakGlucose, timeToBaseline, insulinCurve }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialCarbIntake: número 0-100 (ingestão de carboidratos, ex: 50)
+- initialInsulinSensitivity: número 0-100 (sensibilidade à insulina, ex: 80)
+- initialPancreaticFunction: número 0-100 (função pancreática, ex: 95)
+- expectedGlycemia: [min, max] glicemia esperada (ex: [70, 140])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "eixo-hpa": `Gere um caso para o Simulador do Eixo HPA.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: Cushing, Addison, uso crônico de corticoides)
-- initialLevels: { crh, acth, cortisol }
-- feedbackIntegrity: { hypothalamic, pituitary, adrenal } (% do normal)
-- pharmacologicalChallenge: { drug, dose, expectedChanges }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialStress: número 0-100 (nível de estresse, ex: 30)
+- initialExogenousCortisol: número 0-100 (corticoide exógeno, ex: 0)
+- expectedCortisol: [min, max] cortisol esperado (ex: [5, 25])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "cinetica-enzimatica": `Gere um caso para o Simulador de Cinética Enzimática.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: deficiência enzimática, inibição competitiva por fármaco)
-- enzyme: { name, km, vmax, substrate }
-- inhibitor: { name, type ("competitive"|"noncompetitive"|"uncompetitive"), ki }
-- substrateConcentrations: array de números para plotar curva
-- expectedResults: { apparentKm, apparentVmax }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialVmax: número (velocidade máxima, ex: 100)
+- initialKm: número (Km em µM, ex: 50)
+- expectedVmax: [min, max] Vmax esperado (ex: [90, 110])
+- expectedKm: [min, max] Km esperado (ex: [45, 55])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "secrecao-gastrica": `Gere um caso para o Simulador de Secreção Gástrica.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: DRGE, úlcera péptica, Zollinger-Ellison)
-- initialSecretion: { basalAcid, stimulatedAcid, gastricPH }
-- stimuli: { histamine, acetylcholine, gastrin } (% atividade)
-- pharmacologicalChallenge: { drug, mechanism, expectedPHChange }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialHistamine: boolean (histamina ativa, ex: true)
+- initialAcetylcholine: boolean (acetilcolina ativa, ex: true)
+- initialGastrin: boolean (gastrina ativa, ex: true)
+- initialBlockPPI: boolean (IBP ativo, ex: false)
+- initialBlockH2: boolean (bloqueador H2 ativo, ex: false)
+- initialBlockAnticholinergic: boolean (anticolinérgico ativo, ex: false)
+- expectedPH: [min, max] pH gástrico esperado (ex: [4, 7])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "cascata-coagulacao": `Gere um caso para o Simulador da Cascata de Coagulação.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: hemofilia, CIVD, anticoagulação)
-- initialFactors: objeto com fatores { I, II, V, VII, VIII, IX, X, XI, XII, XIII } (% atividade)
-- expectedLabs: { PT, aPTT, INR, fibrinogen, dDimer }
-- pharmacologicalChallenge: { drug, mechanism, affectedFactors }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- disabledFactors: array de strings com fatores desativados (ex: ["VIII"] para hemofilia A, ["II","VII","IX","X"] para varfarina)
+- expectedTP: [min, max] tempo de protrombina esperado em segundos (ex: [10, 14])
+- expectedINR: [min, max] INR esperado (ex: [0.8, 1.2])
+- expectedTTPa: [min, max] TTPa esperado em segundos (ex: [25, 35])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
-  "compartimentos-adme": `Gere um caso para o Simulador de Modelos Farmacocinéticos (ADME).
-O caso deve conter:
-- patient: { name, age, weight, sex, clinicalContext }
-- drug: { name, bioavailability, vd, clearance, halfLife, proteinBinding }
-- administration: { route, dose, interval }
-- expectedCurve: { cmax, tmax, auc, css }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+  "compartimentos-adme": `Gere um caso para o Simulador de Compartimentos ADME.
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- initialBioavailability: número 0-100 (biodisponibilidade %, ex: 85)
+- initialVd: número 0-100 (volume de distribuição, ex: 50)
+- initialClearance: número 0-100 (depuração, ex: 20)
+- initialKa: número 0-100 (velocidade de absorção, ex: 70)
+- initialFirstPass: boolean (efeito de primeira passagem ativo, ex: true)
+- expectedCmax: [min, max] concentração máxima esperada (ex: [5, 30])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   // ===================== BIOQUÍMICA =====================
   "cadeia-eletrons": `Gere um caso para o Simulador da Cadeia de Transporte de Elétrons.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: intoxicação por cianeto, deficiência de CoQ10, uso de metformina)
-- complexActivities: { complexI, complexII, complexIII, complexIV, atpSynthase } (% atividade)
-- expectedATP: produção esperada de ATP (% do normal)
-- pharmacologicalChallenge: { substance, targetComplex, mechanism }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialNADH: número 0-100 (produção de NADH %, ex: 60)
+- initialFADH2: número 0-100 (produção de FADH2 %, ex: 40)
+- inhibitors: { rotenone: boolean, antimycinA: boolean, cyanide: boolean, dnp: boolean }
+- expectedATP: [min, max] ATP produzido esperado (ex: [20, 38])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "dissociacao-hemoglobina": `Gere um caso para o Simulador de Dissociação da Hemoglobina.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: anemia falciforme, intoxicação por CO, acidose)
-- initialParams: { pH, temperature, pCO2, diphosphoglycerate }
-- expectedP50: P50 esperado (mmHg)
-- curveShift: "left" | "right" | "normal"
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialPH: número (pH sanguíneo, ex: 7.40)
+- initialPCO2: número (pCO2 em mmHg, ex: 40)
+- initialTemp: número (temperatura em °C, ex: 37)
+- initialBPG: número (2,3-BPG em mM, ex: 5)
+- expectedP50: [min, max] P50 esperado em mmHg (ex: [24, 28])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "glicolise-gliconeogenese": `Gere um caso para o Simulador de Glicólise vs Gliconeogênese.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: jejum prolongado, exercício intenso, diabetes)
-- metabolicState: "fed" | "fasting" | "exercise"
-- enzymeActivities: { hexokinase, pfk1, pyruvateKinase, pepck, fbpase, g6pase } (% atividade)
-- hormonalProfile: { insulin, glucagon, cortisol } (% do normal)
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialFed: boolean (estado alimentado, ex: true)
+- initialInsulin: número 0-100 (insulina %, ex: 60)
+- initialGlucagon: número 0-100 (glucagon %, ex: 30)
+- expectedFlux: "glycolysis" | "gluconeogenesis" (fluxo metabólico esperado)
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "cinetica-avancada": `Gere um caso para o Simulador de Cinética Enzimática Avançada.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: inibição acompetitiva, substrato suicida)
-- enzyme: { name, km, vmax }
-- inhibitor: { name, type ("uncompetitive"|"mixed"|"suicide"), ki, alphaKi }
-- expectedPlots: { lineweaver_slope, lineweaver_intercept }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialVmax: número (Vmax, ex: 100)
+- initialKm: número (Km, ex: 10)
+- inhibitorType: "none" | "competitive" | "noncompetitive" | "uncompetitive"
+- expectedKmApp: [min, max] Km aparente esperado (ex: [8, 12])
+- expectedVmaxApp: [min, max] Vmax aparente esperado (ex: [90, 110])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "ciclo-ureia": `Gere um caso para o Simulador do Ciclo da Ureia.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: deficiência de OTC, hiperamonemia neonatal)
-- enzymeActivities: { cps1, otc, ass, asl, arginase } (% atividade)
-- metaboliteLevels: { ammonia, citrulline, argininosuccinate, arginine, urea }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- deficiencies: { cpsI: boolean, otc: boolean, ass: boolean, asl: boolean, arginase: boolean }
+- expectedAmmonia: [min, max] amônia esperada em µmol/L (ex: [50, 200])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "acido-araquidonico": `Gere um caso para o Simulador da Cascata do Ácido Araquidônico.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: asma, inflamação, uso de AINEs)
-- enzymeActivities: { pla2, cox1, cox2, lox5, lox12 } (% atividade)
-- expectedEicosanoids: { pge2, pgi2, txa2, ltb4, ltc4 } (% do normal)
-- pharmacologicalChallenge: { drug, target, expectedEffect }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialStimulus: número 0-100 (estímulo inflamatório, ex: 70)
+- drugs: { aspirin: boolean, ibuprofen: boolean, celecoxib: boolean, corticosteroid: boolean, zileuton: boolean, montelukast: boolean }
+- expectedPGE2: [min, max] PGE2 esperada (% do normal, ex: [10, 50])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   lipoproteinas: `Gere um caso para o Simulador de Metabolismo de Lipoproteínas.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: hipercolesterolemia familiar, uso de estatinas)
-- lipidProfile: { totalCholesterol, ldl, hdl, vldl, triglycerides }
-- receptorActivity: { ldlReceptor, srb1, lpl } (% atividade)
-- pharmacologicalChallenge: { drug, mechanism, expectedChanges }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- initialFatIntake: número 0-100 (ingestão de gordura, ex: 50)
+- initialLPL: número 0-100 (atividade LPL, ex: 80)
+- initialLDLReceptor: número 0-100 (atividade receptor LDL, ex: 80)
+- drugs: { statin: boolean, resin: boolean, ezetimibe: boolean, pcsk9i: boolean, fibrate: boolean }
+- expectedLDL: [min, max] LDL esperado (ex: [70, 130])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "pentoses-fosfato": `Gere um caso para o Simulador da Via das Pentoses Fosfato.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: deficiência de G6PD, anemia hemolítica por fármaco)
-- g6pdActivity: atividade da G6PD (% do normal)
-- oxidativeStress: nível de estresse oxidativo (0-100)
-- nadphProduction: produção de NADPH (% do normal)
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- g6pdDeficient: boolean (deficiência de G6PD, ex: false)
+- oxidantAgent: string (agente oxidante, ex: "primaquina", "dapsona", "sulfonamida", "fava")
+- oxidantDose: número 0-100 (dose do oxidante, ex: 50)
+- expectedHemolysis: [min, max] hemólise esperada (% ex: [0, 50])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "titulacao-aminoacidos": `Gere um caso para o Simulador de Titulação de Aminoácidos.
-O caso deve conter:
-- aminoacid: { name, pka1, pka2, pkaR (or null), pI, classification }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
 - scenario: descrição educativa
-- titrationPoints: array de { pH, charge, dominantForm }
-- clinicalRelevance: relevância clínica do aminoácido
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- aminoAcidIndex: número (índice do aminoácido na lista do simulador, 0-9)
+- startpH: número (pH inicial da titulação, ex: 1.0)
+- clinicalTip: dica clínica sobre o aminoácido
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "operon-lac": `Gere um caso para o Simulador do Operon Lac.
-O caso deve conter:
-- scenario: descrição (ex: presença/ausência de lactose e glicose)
-- conditions: { lactosePresent, glucosePresent, campLevels }
-- geneExpression: { lacZ, lacY, lacA } (% expressão)
-- regulatoryState: { repressorBound, capBound, rnaPolBound }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição educativa
+- initialGlucose: número 0-100 (concentração de glicose, ex: 50)
+- initialLactose: número 0-100 (concentração de lactose, ex: 50)
+- expectedTranscription: [min, max] nível de transcrição esperado (% ex: [0, 100])
+- clinicalTip: dica educativa
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   // ===================== FARMACOLOGIA BÁSICA =====================
   "dose-resposta": `Gere um caso para o Simulador de Curva Dose-Resposta.
-O caso deve conter:
-- drug: { name, ec50, emax, hillCoefficient }
-- antagonist: { name, type ("competitive"|"noncompetitive"|"irreversible"), kb, concentration }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, weight, diagnosis }
 - scenario: descrição clínica
-- expectedShift: deslocamento esperado da curva
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- initialEC50: número (EC50 inicial, ex: 50)
+- initialEmax: número (Emax inicial %, ex: 100)
+- expectedEC50: [min, max] EC50 esperado (ex: [40, 60])
+- expectedEmax: [min, max] Emax esperado (ex: [90, 110])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "transducao-sinal": `Gere um caso para o Simulador de Transdução de Sinal.
-O caso deve conter:
-- receptor: { name, type ("GPCR"|"RTK"|"ion_channel"|"nuclear"), ligand }
-- pathway: array de { step, molecule, activity } (% do normal)
-- pharmacologicalChallenge: { drug, target, mechanism }
-- expectedCellularResponse: descrição da resposta celular
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- targetReceptor: string (tipo de receptor, ex: "gpcr-gs", "gpcr-gq", "rtk", "canal-ionico")
+- expectedBlockStep: número (-1 se nenhum bloqueio, ou índice da etapa bloqueada)
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "janela-terapeutica-farma": `Gere um caso para o Simulador de Janela Terapêutica.
-O caso deve conter:
-- drug: { name, ed50, td50, therapeuticIndex, mec, mtc }
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- doseRange: array de doses para simular
-- expectedSafetyProfile: { safetyMargin, riskLevel }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- drugName: nome do fármaco (ex: "Lítio", "Digoxina", "Fenitoína")
+- de50: número (DE50, ex: 30)
+- dl50: número (DL50, ex: 65)
+- expectedDose: [min, max] dose segura esperada (ex: [20, 40])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "vias-administracao": `Gere um caso para o Simulador de Vias de Administração.
-O caso deve conter:
-- drug: { name, molecularWeight, logP, pKa }
-- routes: array de { route, bioavailability, tmax, cmax, onset, duration }
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- optimalRoute: via ideal com justificativa
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- expectedRoute: string (via ótima, ex: "oral", "iv", "im", "sc", "sl")
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "bloqueio-neuromuscular": `Gere um caso para o Simulador de Bloqueio Neuromuscular.
-O caso deve conter:
-- patient: { name, age, weight, sex, clinicalContext }
-- drug: { name, type ("depolarizing"|"nondepolarizing"), ed95, onsetTime, duration }
-- scenario: descrição (ex: intubação, cirurgia, reversão)
-- tofRatio: valor inicial de TOF
-- pharmacologicalChallenge: { reversal, drug, dose }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- expectedAgent: string (tipo de agente, ex: "despolarizante", "nao-despolarizante")
+- expectedReversal: string (agente reversor, ex: "nenhum", "neostigmina", "sugammadex")
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "farmaco-autonomica": `Gere um caso para o Simulador de Farmacologia Autonômica.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- scenario: descrição (ex: crise hipertensiva, bradicardia, broncoespasmo)
-- drug: { name, class, receptorAffinity }
-- autonomicEffects: { heartRate, bloodPressure, bronchialTone, pupilSize, giMotility }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- expectedDrug: string (fármaco esperado, ex: "atropina", "propranolol", "fenilefrina", "salbutamol")
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "tolerancia-dependencia": `Gere um caso para o Simulador de Tolerância e Dependência.
-O caso deve conter:
+O JSON deve conter EXATAMENTE estes campos:
 - patient: { name, age, sex, clinicalContext }
-- drug: { name, class, halfLife }
-- exposureProfile: { durationWeeks, doseEscalation }
-- toleranceMechanisms: { receptorDownregulation, metabolicTolerance, learningTolerance } (% contribuição)
-- withdrawalSymptoms: array de { symptom, severity, onset }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- scenario: descrição clínica
+- drugClass: string (classe do fármaco, ex: "opioide", "benzodiazepínico", "álcool", "anfetamina")
+- expectedWeeks: [min, max] semanas para tolerância (ex: [4, 12])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   farmacogenomica: `Gere um caso para o Simulador de Farmacogenômica.
-O caso deve conter:
-- patient: { name, age, sex, ethnicity, clinicalContext }
-- drug: { name, metabolizingEnzyme, pathway }
-- genotype: { gene, variant, phenotype ("poor"|"intermediate"|"normal"|"ultrarapid") }
-- expectedPK: { clearance, halfLife, auc } (% do metabolizador normal)
-- doseAdjustment: recomendação de ajuste de dose
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- drugType: "pro-farmaco" | "farmaco-ativo" (tipo de fármaco)
+- enzyme: string (enzima CYP, ex: "CYP2D6", "CYP2C19", "CYP3A4")
+- expectedPhenotype: "lento" | "intermediario" | "extensivo" | "ultra-rapido"
+- expectedDoseAdjust: [min, max] ajuste de dose (% do normal, ex: [80, 120])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   // ===================== FARMACOTÉCNICA =====================
   estabilidade: `Gere um caso para o Simulador de Estabilidade de Fármacos.
-O caso deve conter:
-- drug: { name, degradationOrder (0|1|2), activationEnergy, shelfLife25C }
-- conditions: { temperature, pH, humidity, lightExposure }
-- stabilityData: array de { timeMonths, potencyPercent }
-- expectedShelfLife: prazo de validade esperado (meses)
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário farmacotécnico
+- initialConcentration: número (concentração inicial, ex: 100)
+- initialTemp: número (temperatura em °C, ex: 25)
+- initialOrder: "zero" | "first" | "second" (ordem da reação de degradação)
+- expectedT90Range: [min, max] t90 esperado em meses (ex: [5, 15])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "liberacao-farmacos": `Gere um caso para o Simulador de Liberação de Fármacos.
-O caso deve conter:
-- formulation: { name, type ("immediate"|"sustained"|"enteric"|"matrix"), drug }
-- releaseModel: "zero_order" | "first_order" | "higuchi" | "korsmeyer_peppas"
-- releaseParams: { k, n (para Korsmeyer-Peppas), t50 }
-- dissolutionData: array de { timeHours, percentReleased }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialCoating: número 0-100 (espessura do revestimento, ex: 50)
+- initialParticleSize: número 0-100 (tamanho de partícula, ex: 50)
+- expectedT80Range: [min, max] tempo para 80% de liberação em horas (ex: [4, 12])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   diluicao: `Gere um caso para o Simulador de Diluição Farmacêutica.
-O caso deve conter:
-- preparation: { name, initialConcentration, initialVolume, unit }
-- targetConcentration: concentração desejada
-- targetVolume: volume final desejado
-- diluentOptions: array de { name, compatible (boolean) }
-- expectedCalculation: { diluentVolume, finalConcentration }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialC1: número (concentração inicial em mg/mL, ex: 1)
+- initialV1: número (volume inicial em mL, ex: 1)
+- expectedC2Range: [min, max] concentração final esperada (ex: [0.05, 0.15])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   reologia: `Gere um caso para o Simulador de Reologia Farmacêutica.
-O caso deve conter:
-- formulation: { name, type ("cream"|"gel"|"suspension"|"solution") }
-- flowBehavior: "newtonian" | "pseudoplastic" | "dilatant" | "plastic"
-- rheologyParams: { viscosity, yieldStress, powerLawIndex }
-- shearRateData: array de { shearRate, shearStress, apparentViscosity }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialBehavior: "newtonian" | "pseudoplastic" | "dilatant" | "bingham" (comportamento reológico)
+- initialViscosity: número 0-100 (viscosidade, ex: 70)
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "hlb-emulsoes": `Gere um caso para o Simulador de HLB e Emulsões.
-O caso deve conter:
-- formulation: { name, oilPhase, waterPhase, targetType ("O/W"|"W/O") }
-- surfactants: array de { name, hlb, concentration }
-- requiredHLB: HLB requerido para a fase oleosa
-- calculatedHLB: HLB da mistura de tensoativos
-- emulsionStability: { stable (boolean), reason }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- expectedHLBRange: [min, max] HLB requerido (ex: [9, 12])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   granulometria: `Gere um caso para o Simulador de Granulometria.
-O caso deve conter:
-- powder: { name, application }
-- sieveData: array de { meshSize, apertureMm, retainedPercent, cumulativePercent }
-- expectedParams: { d10, d50, d90, span, uniformityIndex }
-- flowProperties: { angleOfRepose, carrIndex, hausnerRatio, flowability }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialMean: número (diâmetro médio em µm, ex: 150)
+- initialSpread: número 0-100 (dispersão granulométrica, ex: 30)
+- expectedD50Range: [min, max] D50 esperado em µm (ex: [100, 200])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   compressao: `Gere um caso para o Simulador de Compressão de Comprimidos.
-O caso deve conter:
-- tablet: { name, drug, targetWeight, targetHardness }
-- compressionParams: { force, speed, punchDiameter }
-- heckelData: array de { pressure, porosity, lnPorosity }
-- expectedResults: { hardness, friability, disintegrationTime, weightVariation }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialForce: número 0-100 (força de compressão, ex: 50)
+- initialGranuleSize: número 0-100 (tamanho do grânulo, ex: 50)
+- initialLubricant: número 0-100 (concentração de lubrificante, ex: 20)
+- expectedHardnessRange: [min, max] dureza esperada em kP (ex: [6, 10])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   "tampao-farmaceutico": `Gere um caso para o Simulador de Tampão Farmacêutico.
-O caso deve conter:
-- buffer: { name, acidComponent, baseComponent, pKa }
-- targetPH: pH desejado
-- targetConcentration: concentração total do tampão (M)
-- expectedRatio: razão [A-]/[HA] (Henderson-Hasselbalch)
-- bufferCapacity: capacidade tampão (mol/L/pH)
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialBuffer: string (nome do tampão, ex: "Fosfato", "Acetato", "Citrato")
+- targetpH: número (pH alvo, ex: 7.0)
+- expectedpHRange: [min, max] pH esperado (ex: [6.5, 7.5])
+- clinicalTip: dica farmacotécnica
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
 
   // ===================== QUÍMICA FARMACÊUTICA =====================
   "sar-explorer": `Gere um caso para o Simulador de Relação Estrutura-Atividade (SAR).
-O caso deve conter:
-- scaffold: { name, baseStructure, therapeuticClass }
-- positions: array de { position, currentSubstituent }
-- substituents: array de { name, effects: { potency, logP, solubility, selectivity } }
-- optimalCombination: { substituents, expectedPotency, rationale }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, scaffold, drugClass } (scaffold deve ser "benzodiazepine", "sulfonamide" ou "fluoroquinolone")
+- scenario: descrição do projeto SAR
+- initialHalogen: número 0-100 (substituinte halogênio %, ex: 50)
+- initialOH: número 0-100 (substituinte hidroxila %, ex: 20)
+- initialCH3: número 0-100 (substituinte metila %, ex: 30)
+- initialCF3: número 0-100 (substituinte trifluorometila %, ex: 10)
+- expectedPotencyRange: [min, max] potência esperada (ex: [60, 90])
+- clinicalTip: dica sobre a relação estrutura-atividade
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
+- title: título descritivo`,
 
-Use scaffolds reais: benzodiazepínicos, sulfonamidas, fluoroquinolonas, barbitúricos.`,
-
-  lipinski: `Gere um caso para o Simulador de Regra de Lipinski e Druglikeness.
-O caso deve conter:
-- drugs: array de { name, mw, logP, hbd, hba, psa, rotatableBonds, isDruglike }
+  lipinski: `Gere um caso para o Simulador de Regra de Lipinski.
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
 - scenario: descrição do cenário de design de fármacos
-- comparisonTask: { drugA, drugB, preferredDrug, rationale }
-- rules: { lipinski, veber, ghose } resultados para cada fármaco
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+- initialMW: número (peso molecular, ex: 350)
+- initialLogP: número (LogP, ex: 2.5)
+- initialHBD: número (doadores de ligação H, ex: 2)
+- initialHBA: número (aceitadores de ligação H, ex: 5)
+- expectedViolations: número (violações Lipinski esperadas, ex: 0)
+- clinicalTip: dica sobre druglikeness
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
-
-Use fármacos reais e compare druglikeness.`,
+- title: título descritivo`,
 
   bioisosterismo: `Gere um caso para o Simulador de Bioisosterismo.
-O caso deve conter:
-- originalGroup: { name, structure, pKa, logP, metabolicStability }
-- bioisosteres: array de { name, type ("classical"|"nonclassical"), pKa, logP, metabolicStability, rationale }
-- realWorldExample: { originalDrug, modifiedDrug, groupChanged, clinicalOutcome }
-- optimalBioisostere: { name, rationale }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário
+- initialGroup: string (grupo funcional original, ex: "cooh", "ester", "amide", "oh", "halogen")
+- initialBioisostere: string (bioisóstero sugerido, ex: "tetrazole", "oxadiazole", "sulfonamide", "hydroxamic")
+- bestBioisostere: string (melhor bioisóstero para o caso)
+- clinicalTip: dica sobre bioisosterismo
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
+- title: título descritivo`,
 
-Use exemplos reais: celecoxibe/rofecoxibe, losartan/valsartan.`,
-
-  "metabolismo-farmacos": `Gere um caso para o Simulador de Metabolismo de Fármacos e Pró-Fármacos.
-O caso deve conter:
-- drug: { name, type ("drug"|"prodrug"), activeForm }
-- metabolicPathway: { phase1: array de { reaction, enzyme, metabolite }, phase2: array de { reaction, enzyme, conjugate } }
-- cypActivity: { cyp3a4, cyp2d6, cyp2c19, cyp1a2 } (% atividade)
-- kineticParams: { activationRate, inactivationRate, halfLifeActive }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+  "metabolismo-farmacos": `Gere um caso para o Simulador de Metabolismo de Fármacos.
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- initialProdrug: string (pró-fármaco, ex: "enalapril", "clopidogrel", "codeina", "valaciclovir")
+- initialCypActivity: número 0-200 (atividade CYP %, ex: 100)
+- expectedActiveRange: [min, max] nível do metabólito ativo esperado (ex: [30, 70])
+- clinicalTip: dica clínica
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
-
-Use pró-fármacos reais: enalapril, clopidogrel, codeína, valaciclovir.`,
+- title: título descritivo`,
 
   "docking-simplificado": `Gere um caso para o Simulador de Docking Simplificado.
-O caso deve conter:
-- target: { name, type ("enzyme"|"receptor"|"channel"), bindingSiteResidues }
-- ligand: { name, functionalGroups }
-- interactions: array de { type ("hydrogen"|"ionic"|"hydrophobic"|"pi_pi"|"vanderwaals"), residue, strength }
-- bindingEnergy: deltaG em kcal/mol
-- optimalDistance: distância ótima em Angstroms
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário de docking
+- initialTarget: string (alvo molecular, ex: "cox2", "ace", "hmgcoa", "opioide")
+- initialDistance: número (distância ligando-sítio em Å, ex: 3.5)
+- expectedDeltaGRange: [min, max] energia de ligação esperada em kcal/mol (ex: [-12, -8])
+- clinicalTip: dica sobre docking molecular
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
+- title: título descritivo`,
 
-Use alvos reais: COX-2, ACE, HMG-CoA redutase, receptores opioides.`,
-
-  quiralidade: `Gere um caso para o Simulador de Quiralidade e Estereoquímica Farmacológica.
-O caso deve conter:
-- drug: { name, racemate, rEnantiomer, sEnantiomer }
-- comparison: { rPotency, sPotency, rToxicity, sToxicity, rMetabolism, sMetabolism }
-- eudismicRatio: razão eudísmica
-- chiralSwitch: { exists (boolean), pureEnantiomer, clinicalAdvantage }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+  quiralidade: `Gere um caso para o Simulador de Quiralidade.
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- initialDrug: string (fármaco quiral, ex: "omeprazol", "ibuprofeno", "cetirizina", "talidomida")
+- initialEnantiomericExcess: número 0-100 (excesso enantiomérico %, ex: 100)
+- expectedAnswer: "eutomer" | "distomer" | "racemato" (resposta esperada)
+- clinicalTip: dica sobre quiralidade
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
+- title: título descritivo`,
 
-Use exemplos reais: omeprazol/esomeprazol, ibuprofeno R/S, talidomida, cetirizina/levocetirizina.`,
-
-  "pka-absorcao": `Gere um caso para o Simulador de pKa, Ionização e Absorção.
-O caso deve conter:
-- drug: { name, type ("weak_acid"|"weak_base"|"amphoteric"), pKa, pKa2 (or null), logP }
-- compartments: array de { name, pH, fractionUnionized, absorptionPotential }
-- hendersonHasselbalch: { equation, calculation }
-- ionTrapping: { compartment, mechanism, clinicalRelevance }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+  "pka-absorcao": `Gere um caso para o Simulador de pKa e Absorção.
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição clínica
+- initialPka: número (pKa do fármaco, ex: 3.5)
+- initialType: "weak_acid" | "weak_base" (tipo do fármaco)
+- initialPH: número (pH do compartimento, ex: 1.5)
+- expectedAbsorptionSite: string (local de absorção esperado, ex: "estomago", "intestino")
+- clinicalTip: dica sobre ionização e absorção
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
-
-Use fármacos reais: aspirina, diazepam, anfetamina, metformina.`,
+- title: título descritivo`,
 
   "qsar-simplificado": `Gere um caso para o Simulador de QSAR (Hansch).
-O caso deve conter:
-- series: { name, scaffold, therapeuticTarget }
-- congeners: array de { name, logP, sigmaHammett, esTaft, mr, logInvC }
-- hanschEquation: { coefficients: { a, b, c, d }, r2, logPOptimal }
-- optimalCompound: { name, predictedActivity, rationale }
-- clinicalQuestions: array de { question, correctAnswer, explanation }
+O JSON deve conter EXATAMENTE estes campos:
+- patient: { name, age, sex, clinicalContext }
+- scenario: descrição do cenário QSAR
+- initialSeries: string (série congênere, ex: "sulfonamides", "barbiturates", "phenols", "benzoics")
+- initialLogP: número (LogP inicial, ex: 1.0)
+- initialSigma: número (constante de Hammett σ, ex: 0)
+- expectedOptimalLogPRange: [min, max] LogP ótimo (ex: [0.7, 1.2])
+- clinicalTip: dica sobre QSAR
 - difficulty: "Fácil"|"Médio"|"Difícil"
-- title: título descritivo
-
-Use séries congêneres reais: sulfonamidas, barbitúricos, fenóis, ácidos benzoicos.`,
-};
+- title: título descritivo`,
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
