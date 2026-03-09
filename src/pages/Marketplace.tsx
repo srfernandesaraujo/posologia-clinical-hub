@@ -69,9 +69,8 @@ export default function Marketplace() {
   const creatorIds = useMemo(() => {
     const ids = new Set<string>();
     tools.filter((t: any) => t.created_by).forEach((t: any) => ids.add(t.created_by));
-    marketplaceCases.filter((c: any) => c.created_by).forEach((c: any) => ids.add(c.created_by));
     return [...ids];
-  }, [tools, marketplaceCases]);
+  }, [tools]);
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["marketplace-profiles", creatorIds],
