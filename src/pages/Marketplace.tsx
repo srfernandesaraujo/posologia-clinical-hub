@@ -54,25 +54,23 @@ export default function Marketplace() {
 
   // Clinical cases from marketplace
   const { data: marketplaceCases = [], isLoading: casesLoading } = useQuery({
-    queryKey: ["marketplace-cases"],
+    queryKey: ["marketplace-cases", search, search],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("simulator_cases" as any)
-        .select("id, title, difficulty, simulator_slug, created_by, created_at, is_marketplace")
-        .eq("is_marketplace", true)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.functions.invoke("list-marketplace-cases", {
+        body: { search: search || null },
+      });
       if (error) throw error;
-      return data as any[];
+      if (data?.error) throw new Error(data.error);
+      return (data?.cases || []) as any[];
     },
   });
 
-  // Collect all creator IDs (tools + cases)
+  // creator IDs for tools+ cases)
   const creatorIds = useMemo(() => {
     const ids = new Set<string>();
     tools.filter((t: any) => t.created_by).forEach((t: any) => ids.add(t.created_by));
-    marketplaceCases.filter((c: any) => c.created_by).forEach((c: any) => ids.add(c.created_by));
     return [...ids];
-  }, [tools, marketplaceCases]);
+  }, [tools]);
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["marketplace-profiles", creatorIds],
@@ -120,10 +118,7 @@ export default function Marketplace() {
     return tools.filter((t: any) => t.name.toLowerCase().includes(q) || t.short_description?.toLowerCase().includes(q));
   }, [tools, search]);
 
-  const filteredCases = useMemo(() => {
-    const q = search.toLowerCase();
-    return marketplaceCases.filter((c: any) => c.title.toLowerCase().includes(q) || c.simulator_slug?.toLowerCase().includes(q));
-  }, [marketplaceCases, search]);
+  const filteredCases = useMemo(() => marketplaceCases, [marketplaceCases]);
 
   const calculadoras = filtered.filter((t: any) => t.type === "calculadora");
   const simuladores = filtered.filter((t: any) => t.type === "simulador");
@@ -291,7 +286,7 @@ export default function Marketplace() {
 
   /* ─── Case Card ─── */
   const CaseCard = ({ caseItem }: { caseItem: any }) => {
-    const authorName = caseItem.created_by ? (profileMap[caseItem.created_by] || "Usuário") : "Sistema";
+    const authorName = caseItem.author_name || (caseItem.created_by ? (profileMap[caseItem.created_by] || "Usuário") : "Sistema");
     const actionLabel = getCaseActionLabel(caseItem);
     const actionVariant = getActionVariant(caseItem, "caso_clinico");
 

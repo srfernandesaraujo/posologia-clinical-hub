@@ -68,6 +68,15 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
     queryKey: ["case-author-profiles", authorIds.join(",")],
     queryFn: async () => {
       if (authorIds.length === 0) return [];
+
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke("case-authors", {
+        body: { userIds: authorIds },
+      });
+
+      if (!edgeError && edgeData?.authors) {
+        return edgeData.authors as { user_id: string; full_name: string | null }[];
+      }
+
       const { data } = await supabase
         .from("profiles")
         .select("user_id, full_name")
