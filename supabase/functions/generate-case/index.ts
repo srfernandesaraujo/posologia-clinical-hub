@@ -66,6 +66,7 @@ Use doenças crônicas reais: DM2, HAS, dislipidemia, hipotireoidismo, IC, asma.
 
   insulina: `Gere um caso clínico COMPLETO para o Simulador de Dose de Insulina (Koda-Kimble).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, sex, diagnosis, hba1c, fastingGlucose, bp, lipidProfile: { ldl, hdl, tg }, clinicalSummary }
 - glycemicProfile: array de 4 números (07h, 12h, 17h, 23h em mg/dL)
 - initialTDD: dose total diária sugerida (0.45 * peso)
