@@ -5,24 +5,31 @@ import { toast } from "sonner";
 
 const SIMULATOR_SLUGS = ["tdm", "prm", "antimicrobianos", "acompanhamento", "insulina", "bomba-infusao", "desmame-benzo", "interacoes", "sna", "eletrofisiologia-cardiaca", "depuracao-renal", "equilibrio-acido-base", "regulacao-glicemica", "eixo-hpa", "cinetica-enzimatica", "secrecao-gastrica", "cascata-coagulacao", "compartimentos-adme", "cadeia-eletrons", "dissociacao-hemoglobina", "glicolise-gliconeogenese", "cinetica-avancada", "ciclo-ureia", "acido-araquidonico", "lipoproteinas", "pentoses-fosfato", "titulacao-aminoacidos", "operon-lac", "dose-resposta", "transducao-sinal", "janela-terapeutica-farma", "vias-administracao", "bloqueio-neuromuscular", "farmaco-autonomica", "tolerancia-dependencia", "farmacogenomica", "estabilidade", "liberacao-farmacos", "diluicao", "reologia", "hlb-emulsoes", "granulometria", "compressao", "tampao-farmaceutico", "sar-explorer", "lipinski", "bioisosterismo", "metabolismo-farmacos", "docking-simplificado", "quiralidade", "pka-absorcao", "qsar-simplificado"];
 
+/** Extract diagnosis from case_data */
+function extractDiagnosis(caseData: any): string {
+  if (!caseData) return "";
+  if (caseData.diagnosis) return caseData.diagnosis;
+  // PRM: from diseases
+  if (caseData.history?.diseases?.length) return caseData.history.diseases.join(", ");
+  // Antimicrobianos: from suspected diagnosis
+  if (caseData.day1?.suspectedDiagnosis) return caseData.day1.suspectedDiagnosis;
+  // TDM: infection
+  if (caseData.infection) return caseData.infection;
+  // Insulina: from patient diagnosis
+  if (caseData.patient?.diagnosis) return caseData.patient.diagnosis;
+  // Desmame: from patient diagnosis
+  if (caseData.patient?.clinicalContext) return caseData.patient.clinicalContext;
+  return "";
+}
+
 /** Extract a short description from case_data for display */
 function extractDescription(caseData: any): string {
   if (!caseData) return "";
-  // scenario field (most simulators)
   if (caseData.scenario) return caseData.scenario;
-  // PRM
   if (caseData.history?.mainComplaint) return caseData.history.mainComplaint;
-  // Antimicrobianos
   if (caseData.day1?.clinicalDescription) return caseData.day1.clinicalDescription;
-  // TDM
-  if (caseData.infection) return caseData.infection;
-  // Insulina
   if (caseData.patient?.clinicalSummary) return caseData.patient.clinicalSummary;
-  // Acompanhamento
   if (caseData.consultations?.[0]?.symptoms) return caseData.consultations[0].symptoms;
-  // Desmame benzo
-  if (caseData.patient?.clinicalContext) return caseData.patient.clinicalContext;
-  // Fallback patient_summary
   if (caseData.patient_summary) return caseData.patient_summary;
   return "";
 }
