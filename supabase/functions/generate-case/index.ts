@@ -620,6 +620,7 @@ O JSON deve conter EXATAMENTE estes campos:
 - clinicalTip: dica sobre QSAR
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
