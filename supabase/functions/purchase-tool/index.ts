@@ -118,7 +118,7 @@ serve(async (req) => {
     log("Buyer charged", { amount: pricing.price });
 
     // Credit seller
-    const { data: sellerAuth } = await supabaseAdmin.auth.admin.getUserById(tool.created_by);
+    const { data: sellerAuth } = await supabaseAdmin.auth.admin.getUserById(itemCreatedBy);
     const sellerEmail = sellerAuth?.user?.email;
 
     let sellerCredited = false;
