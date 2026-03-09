@@ -56,13 +56,12 @@ export default function Marketplace() {
   const { data: marketplaceCases = [], isLoading: casesLoading } = useQuery({
     queryKey: ["marketplace-cases"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("simulator_cases" as any)
-        .select("id, title, difficulty, simulator_slug, created_by, created_at, is_marketplace")
-        .eq("is_marketplace", true)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.functions.invoke("list-marketplace-cases", {
+        body: { search: search || null },
+      });
       if (error) throw error;
-      return data as any[];
+      if (data?.error) throw new Error(data.error);
+      return (data?.cases || []) as any[];
     },
   });
 
