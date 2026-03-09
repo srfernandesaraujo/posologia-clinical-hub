@@ -23,6 +23,7 @@ Inclua pelo menos 2 PRMs reais baseados em evidências. Varie entre idosos, pedi
 
   antimicrobianos: `Gere um caso clínico COMPLETO para o Simulador de Antimicrobial Stewardship.
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, comorbidities (array), allergies (array), vitalSigns: { bp, hr, temp, spo2 } }
 - day1: { clinicalDescription, suspectedDiagnosis }
 - day3: { evolution, cultureResult, organism, antibiogram: array de { antibiotic, result ("S"|"R"), mic (string) } }
