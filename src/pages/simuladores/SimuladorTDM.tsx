@@ -131,7 +131,10 @@ export default function SimuladorTDM() {
                 </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>
-              <CardContent><p className="text-sm text-muted-foreground">{cs.patient?.name} | {cs.currentPrescription?.drug}</p></CardContent>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{cs.patient?.name} | {cs.currentPrescription?.drug}</p>
+                {cs.scenario && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{cs.scenario}</p>}
+              </CardContent>
             </Card>
           ))}
           <Card className="border-dashed cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
