@@ -172,7 +172,7 @@ export default function SimuladorPRM() {
                   </Badge>
                   <div className="flex items-center gap-1">
                     {c.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
-                    <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                    <AdminCaseActions caseItem={c} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
                   </div>
                 </div>
                 <CardTitle className="text-lg mt-2">{c.title}</CardTitle>
