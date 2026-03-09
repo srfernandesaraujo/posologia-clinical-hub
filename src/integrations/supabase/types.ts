@@ -479,6 +479,7 @@ export type Database = {
           difficulty: string
           id: string
           is_ai_generated: boolean
+          is_marketplace: boolean
           simulator_slug: string
           title: string
         }
@@ -489,6 +490,7 @@ export type Database = {
           difficulty?: string
           id?: string
           is_ai_generated?: boolean
+          is_marketplace?: boolean
           simulator_slug: string
           title: string
         }
@@ -499,6 +501,7 @@ export type Database = {
           difficulty?: string
           id?: string
           is_ai_generated?: boolean
+          is_marketplace?: boolean
           simulator_slug?: string
           title?: string
         }

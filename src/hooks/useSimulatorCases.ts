@@ -9,6 +9,7 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // RLS already filters: created_by IS NULL OR created_by = auth.uid() OR is_marketplace = true
   const { data: dbCases = [] } = useQuery({
     queryKey: ["simulator-cases", simulatorSlug],
     queryFn: async () => {
@@ -24,6 +25,8 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
         title: c.title,
         difficulty: c.difficulty,
         isAI: true,
+        created_by: c.created_by,
+        is_marketplace: c.is_marketplace,
       }));
     },
   });
@@ -123,7 +126,21 @@ export function useSimulatorCases(simulatorSlug: string, builtInCases: any[]) {
     }
   };
 
+  const toggleCaseMarketplace = async (caseId: string, current: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("simulator_cases" as any)
+        .update({ is_marketplace: !current } as any)
+        .eq("id", caseId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases", simulatorSlug] });
+      toast.success(!current ? "Caso publicado no Marketplace!" : "Caso removido do Marketplace");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar caso");
+    }
+  };
+
   const availableTargets = SIMULATOR_SLUGS.filter(s => s !== simulatorSlug);
 
-  return { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets };
+  return { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace };
 }

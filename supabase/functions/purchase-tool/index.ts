@@ -8,10 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PRICES = {
+const PRICES: Record<string, { price: number; credit: number }> = {
   calculadora: { price: 500, credit: 300 },
   simulador: { price: 1000, credit: 600 },
-} as const;
+  caso_clinico: { price: 200, credit: 100 },
+};
 
 const SUBSCRIPTION_PRICE_BRL = 2990; // R$ 29,90
 
@@ -40,22 +41,44 @@ serve(async (req) => {
     const buyer = userData.user;
     log("Buyer authenticated", { id: buyer.id, email: buyer.email });
 
-    const { toolId } = await req.json();
+    const { toolId, toolType: requestedType } = await req.json();
     if (!toolId) throw new Error("toolId é obrigatório");
 
-    // Get tool
-    const { data: tool, error: toolErr } = await supabaseAdmin
-      .from("tools")
-      .select("id, name, type, created_by, is_marketplace")
-      .eq("id", toolId)
-      .single();
-    if (toolErr || !tool) throw new Error("Ferramenta não encontrada");
-    if (!tool.is_marketplace) throw new Error("Ferramenta não está no marketplace");
-    if (!tool.created_by) throw new Error("Ferramenta não possui autor");
-    if (tool.created_by === buyer.id) throw new Error("Você não pode comprar sua própria ferramenta");
+    let itemName: string;
+    let itemCreatedBy: string;
+    let toolType: string;
 
-    const toolType = tool.type as "calculadora" | "simulador";
-    if (!PRICES[toolType]) throw new Error("Tipo de ferramenta inválido");
+    if (requestedType === "caso_clinico") {
+      // Purchase a clinical case from simulator_cases
+      const { data: caseItem, error: caseErr } = await supabaseAdmin
+        .from("simulator_cases")
+        .select("id, title, created_by, is_marketplace")
+        .eq("id", toolId)
+        .single();
+      if (caseErr || !caseItem) throw new Error("Caso clínico não encontrado");
+      if (!caseItem.is_marketplace) throw new Error("Caso não está no marketplace");
+      if (!caseItem.created_by) throw new Error("Caso não possui autor");
+      if (caseItem.created_by === buyer.id) throw new Error("Você não pode comprar seu próprio caso");
+      itemName = caseItem.title;
+      itemCreatedBy = caseItem.created_by;
+      toolType = "caso_clinico";
+    } else {
+      // Purchase a tool (calculator/simulator)
+      const { data: tool, error: toolErr } = await supabaseAdmin
+        .from("tools")
+        .select("id, name, type, created_by, is_marketplace")
+        .eq("id", toolId)
+        .single();
+      if (toolErr || !tool) throw new Error("Ferramenta não encontrada");
+      if (!tool.is_marketplace) throw new Error("Ferramenta não está no marketplace");
+      if (!tool.created_by) throw new Error("Ferramenta não possui autor");
+      if (tool.created_by === buyer.id) throw new Error("Você não pode comprar sua própria ferramenta");
+      itemName = tool.name;
+      itemCreatedBy = tool.created_by;
+      toolType = tool.type;
+    }
+
+    if (!PRICES[toolType]) throw new Error("Tipo de item inválido");
 
     // Check duplicate
     const { data: existing } = await supabaseAdmin
@@ -90,12 +113,12 @@ serve(async (req) => {
       customer: buyerCustomerId,
       amount: pricing.price,
       currency: "brl",
-      description: `Marketplace: ${tool.name}`,
+      description: `Marketplace: ${itemName}`,
     });
     log("Buyer charged", { amount: pricing.price });
 
     // Credit seller
-    const { data: sellerAuth } = await supabaseAdmin.auth.admin.getUserById(tool.created_by);
+    const { data: sellerAuth } = await supabaseAdmin.auth.admin.getUserById(itemCreatedBy);
     const sellerEmail = sellerAuth?.user?.email;
 
     let sellerCredited = false;
@@ -108,7 +131,7 @@ serve(async (req) => {
         const { data: pendingCredits } = await supabaseAdmin
           .from("marketplace_purchases")
           .select("seller_credit")
-          .eq("seller_id", tool.created_by)
+          .eq("seller_id", itemCreatedBy)
           .eq("seller_credited", false);
 
         const totalCredits = (pendingCredits || []).reduce(
@@ -124,7 +147,7 @@ serve(async (req) => {
             customer: sellerCustomerId,
             amount: -newCreditCents,
             currency: "brl",
-            description: `Venda Marketplace: ${tool.name}`,
+            description: `Venda Marketplace: ${itemName}`,
           });
           sellerCredited = true;
           log("Seller credited", { amount: -newCreditCents });
@@ -138,7 +161,7 @@ serve(async (req) => {
     const { error: insertErr } = await supabaseAdmin.from("marketplace_purchases").insert({
       tool_id: toolId,
       buyer_id: buyer.id,
-      seller_id: tool.created_by,
+      seller_id: itemCreatedBy,
       tool_type: toolType,
       price_brl: pricing.price / 100,
       seller_credit: pricing.credit / 100,
