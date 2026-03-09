@@ -412,6 +412,7 @@ export default function SimuladorBombaInfusao() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{cs.patient?.name} · {cs.drugName || cs.scenario?.substring(0, 50)}</p>
+                {cs.scenario && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{cs.scenario}</p>}
               </CardContent>
             </Card>
           ))}

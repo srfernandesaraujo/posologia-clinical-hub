@@ -267,7 +267,7 @@ function SimulatorRenderer({ formula, toolName, toolId, toolSlug, authorName, ha
                 <CardTitle className="text-lg mt-2">{c.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{c.patient_summary || "Caso clínico"}</p>
+                <p className="text-sm text-muted-foreground">{c.patient_summary || c.scenario || "Caso clínico"}</p>
               </CardContent>
             </Card>
           ))}

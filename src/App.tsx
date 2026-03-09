@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
@@ -114,6 +114,21 @@ import ContatoPublico from "./pages/ContatoPublico";
 
 const queryClient = new QueryClient();
 
+function SmartPlanosRoute() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+  if (user) {
+    return <AppLayout />;
+  }
+  return <PublicLayout />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -135,7 +150,7 @@ const App = () => (
               <Route path="/politica-cookies" element={<PoliticaCookies />} />
               <Route path="/vitrine" element={<Vitrine />} />
               <Route path="/docs" element={<DocumentacaoPublica />} />
-              <Route path="/planos" element={<Planos />} />
+              {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
@@ -272,7 +287,7 @@ const App = () => (
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
-              <Route path="/planos" element={<Planos />} />
+              {/* /planos is handled as a standalone route below */}
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
@@ -285,6 +300,11 @@ const App = () => (
             {/* Admin routes */}
             <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
               <Route path="/admin" element={<Admin />} />
+            </Route>
+
+            {/* Smart Planos route - renders with sidebar for logged-in users */}
+            <Route path="/planos" element={<SmartPlanosRoute />}>
+              <Route index element={<Planos />} />
             </Route>
 
             {/* Public embed route */}

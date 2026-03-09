@@ -275,6 +275,7 @@ export default function SimuladorInteracoes() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">{c.drugs ? `${c.drugs.length} medicamentos` : "Caso clínico"}</p>
+                {c.scenario && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.scenario}</p>}
               </CardContent>
             </Card>
           ))}
