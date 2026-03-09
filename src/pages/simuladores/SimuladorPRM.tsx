@@ -89,7 +89,7 @@ const BUILT_IN_CASES: CaseData[] = [
 const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividade: "Efetividade", Indicacao: "Indicação", Adesao: "Adesão" };
 
 export default function SimuladorPRM() {
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("prm", BUILT_IN_CASES);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("prm", BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("prm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
