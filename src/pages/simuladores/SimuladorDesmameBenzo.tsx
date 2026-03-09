@@ -374,7 +374,8 @@ export default function SimuladorDesmameBenzo() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{cs.patient?.name} · {cs.drugName} {cs.dailyDose}mg/dia</p>
-                {cs.scenario && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{cs.scenario}</p>}
+                {(cs._description || cs.scenario) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{cs._description || cs.scenario}</p>}
+                {cs._authorName && <p className="text-xs text-muted-foreground/70 mt-1">Por {cs._authorName}</p>}
               </CardContent>
             </Card>
           ))}
