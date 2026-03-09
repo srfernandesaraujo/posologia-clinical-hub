@@ -28,7 +28,7 @@ export function AppLayout() {
     { label: t("nav.calculators"), to: "/calculadoras", icon: Calculator },
     { label: t("nav.simulators"), to: "/simuladores", icon: FlaskConical },
     { label: t("nav.games"), to: "/jogos-clinicos", icon: Gamepad2 },
-    { label: "Agente de Feedback", to: "/agente-feedback", icon: MessageSquare },
+    { label: "Feedback de Simulação", to: "/agente-feedback", icon: MessageSquare },
     { label: t("nav.myAccount"), to: "/minha-conta", icon: User },
     { label: t("nav.plans"), to: "/planos", icon: Crown },
     { label: "Documentação", to: "/documentacao", icon: FileText },
