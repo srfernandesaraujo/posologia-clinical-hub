@@ -117,12 +117,21 @@ serve(async (req) => {
     });
     log("Buyer charged", { amount: pricing.price });
 
-    // Credit seller
+    // Credit seller (skip if seller is admin — admins don't pay subscription)
     const { data: sellerAuth } = await supabaseAdmin.auth.admin.getUserById(itemCreatedBy);
     const sellerEmail = sellerAuth?.user?.email;
 
+    // Check if seller is admin
+    const { data: sellerRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", itemCreatedBy)
+      .eq("role", "admin")
+      .limit(1);
+    const sellerIsAdmin = (sellerRoles && sellerRoles.length > 0);
+
     let sellerCredited = false;
-    if (sellerEmail) {
+    if (sellerEmail && !sellerIsAdmin) {
       const sellerCustomers = await stripe.customers.list({ email: sellerEmail, limit: 1 });
       if (sellerCustomers.data.length > 0) {
         const sellerCustomerId = sellerCustomers.data[0].id;
@@ -155,6 +164,8 @@ serve(async (req) => {
           log("Seller credit cap reached", { totalCredits, maxDiscount: maxDiscount / 100 });
         }
       }
+    } else if (sellerIsAdmin) {
+      log("Seller is admin — skipping credit (no subscription)");
     }
 
     // Record purchase
