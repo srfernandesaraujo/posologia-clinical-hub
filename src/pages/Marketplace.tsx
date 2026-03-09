@@ -286,7 +286,7 @@ export default function Marketplace() {
 
   /* ─── Case Card ─── */
   const CaseCard = ({ caseItem }: { caseItem: any }) => {
-    const authorName = caseItem.created_by ? (profileMap[caseItem.created_by] || "Usuário") : "Sistema";
+    const authorName = caseItem.author_name || (caseItem.created_by ? (profileMap[caseItem.created_by] || "Usuário") : "Sistema");
     const actionLabel = getCaseActionLabel(caseItem);
     const actionVariant = getActionVariant(caseItem, "caso_clinico");
 
