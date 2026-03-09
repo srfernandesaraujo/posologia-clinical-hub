@@ -41,22 +41,44 @@ serve(async (req) => {
     const buyer = userData.user;
     log("Buyer authenticated", { id: buyer.id, email: buyer.email });
 
-    const { toolId } = await req.json();
+    const { toolId, toolType: requestedType } = await req.json();
     if (!toolId) throw new Error("toolId é obrigatório");
 
-    // Get tool
-    const { data: tool, error: toolErr } = await supabaseAdmin
-      .from("tools")
-      .select("id, name, type, created_by, is_marketplace")
-      .eq("id", toolId)
-      .single();
-    if (toolErr || !tool) throw new Error("Ferramenta não encontrada");
-    if (!tool.is_marketplace) throw new Error("Ferramenta não está no marketplace");
-    if (!tool.created_by) throw new Error("Ferramenta não possui autor");
-    if (tool.created_by === buyer.id) throw new Error("Você não pode comprar sua própria ferramenta");
+    let itemName: string;
+    let itemCreatedBy: string;
+    let toolType: string;
 
-    const toolType = tool.type as "calculadora" | "simulador";
-    if (!PRICES[toolType]) throw new Error("Tipo de ferramenta inválido");
+    if (requestedType === "caso_clinico") {
+      // Purchase a clinical case from simulator_cases
+      const { data: caseItem, error: caseErr } = await supabaseAdmin
+        .from("simulator_cases")
+        .select("id, title, created_by, is_marketplace")
+        .eq("id", toolId)
+        .single();
+      if (caseErr || !caseItem) throw new Error("Caso clínico não encontrado");
+      if (!caseItem.is_marketplace) throw new Error("Caso não está no marketplace");
+      if (!caseItem.created_by) throw new Error("Caso não possui autor");
+      if (caseItem.created_by === buyer.id) throw new Error("Você não pode comprar seu próprio caso");
+      itemName = caseItem.title;
+      itemCreatedBy = caseItem.created_by;
+      toolType = "caso_clinico";
+    } else {
+      // Purchase a tool (calculator/simulator)
+      const { data: tool, error: toolErr } = await supabaseAdmin
+        .from("tools")
+        .select("id, name, type, created_by, is_marketplace")
+        .eq("id", toolId)
+        .single();
+      if (toolErr || !tool) throw new Error("Ferramenta não encontrada");
+      if (!tool.is_marketplace) throw new Error("Ferramenta não está no marketplace");
+      if (!tool.created_by) throw new Error("Ferramenta não possui autor");
+      if (tool.created_by === buyer.id) throw new Error("Você não pode comprar sua própria ferramenta");
+      itemName = tool.name;
+      itemCreatedBy = tool.created_by;
+      toolType = tool.type;
+    }
+
+    if (!PRICES[toolType]) throw new Error("Tipo de item inválido");
 
     // Check duplicate
     const { data: existing } = await supabaseAdmin
