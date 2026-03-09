@@ -131,7 +131,7 @@ serve(async (req) => {
         const { data: pendingCredits } = await supabaseAdmin
           .from("marketplace_purchases")
           .select("seller_credit")
-          .eq("seller_id", tool.created_by)
+          .eq("seller_id", itemCreatedBy)
           .eq("seller_credited", false);
 
         const totalCredits = (pendingCredits || []).reduce(
