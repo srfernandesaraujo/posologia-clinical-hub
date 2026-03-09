@@ -1,100 +1,55 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Privacidade de Casos Clínicos, Descrição e Controle de Autoria
 
-## Visão Geral
+## Problemas Identificados
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+1. **Sem descrição nos cards**: O card exibe `c.scenario` mas o campo `scenario` não existe nos dados gerados pela IA. Cada simulador usa campos diferentes (`history.mainComplaint`, `infection`, `day1.clinicalDescription`, etc.)
+2. **Todos veem todos os casos**: O INSERT em `useSimulatorCases.ts` (linha 47-55) não define `created_by`, então fica `NULL` e a política RLS `created_by IS NULL` trata como caso nativo, visível para todos
+3. **AdminCaseActions só aparece para admin**: Linha 35 do componente faz `if (!isAdmin || !caseItem.isAI) return null`, impedindo que o autor (não-admin) edite/exclua seus próprios casos
+4. **Compras no Marketplace não protegem cópia**: Se o autor deletar o caso, o comprador perde acesso
 
-## Arquitetura
+## Mudanças
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+### 1. `src/hooks/useSimulatorCases.ts`
+- Adicionar `created_by: (await supabase.auth.getUser()).data.user?.id` no INSERT do `generateCase`
+- Gerar um campo `description` a partir dos dados do caso (extrair de `case_data` os campos relevantes) e armazená-lo junto
 
-## Simuladores por Lotes
+### 2. `supabase/functions/generate-case/index.ts`
+- Adicionar campo `scenario` (breve descrição do caso) em TODOS os prompts dos simuladores, para que o JSON gerado sempre inclua esse campo
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 3. `src/components/AdminCaseActions.tsx`
+- Renomear para `CaseActions` (ou manter nome mas alterar lógica)
+- Remover restrição `!isAdmin`: mostrar ações para o autor (`caseItem.created_by === user?.id`) OU admin
+- Passar `currentUserId` como prop para controlar visibilidade
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 4. Cards dos simuladores (todos os ~52 arquivos que usam `AdminCaseActions`)
+- Exibir descrição: usar `c.scenario || c.history?.mainComplaint || c.infection || c.day1?.clinicalDescription || ""` como fallback
+- Exibir nome do autor nos cards de casos IA (buscar via profiles)
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 5. Migração SQL — proteger compras
+- Criar trigger ou lógica no `purchase-tool` edge function: ao comprar um `caso_clinico`, duplicar o registro em `simulator_cases` com `created_by = buyer_id` e `is_ai_generated = true`, `is_marketplace = false`. Isso garante que o comprador tem sua própria cópia independente
+- Atualizar RLS se necessário
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 6. `src/pages/Marketplace.tsx`
+- Na seção de casos clínicos, exibir autor via `profileMap`
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+## Arquivos a editar
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+| Arquivo | Ação |
+|---------|------|
+| `src/hooks/useSimulatorCases.ts` | Adicionar `created_by` no insert, buscar perfis de autores |
+| `src/components/AdminCaseActions.tsx` | Permitir ações para autor (não apenas admin) |
+| `supabase/functions/generate-case/index.ts` | Adicionar `scenario` a todos os prompts |
+| `supabase/functions/purchase-tool/index.ts` | Duplicar caso para comprador ao comprar `caso_clinico` |
+| ~10 simuladores com dashboard cards | Exibir descrição e autor nos cards |
+| Migração SQL | Garantir `created_by` NOT NULL para novos casos |
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+## Fluxo resultante
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
-
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
-
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
-
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
-
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
-
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+1. Usuário gera caso IA → `created_by` = seu ID → só ele vê
+2. Publica no Marketplace → `is_marketplace = true` → aparece no Marketplace
+3. Outro usuário compra → cópia independente criada com `created_by` do comprador
+4. Autor deleta original → cópia do comprador permanece intacta
+5. Apenas autor ou admin podem editar/copiar/excluir
 
