@@ -11,6 +11,7 @@ const SIMULATOR_PROMPTS: Record<string, string> = {
   // ===================== CLÍNICOS =====================
   prm: `Gere um caso clínico COMPLETO para o Simulador de PRM (Problemas Relacionados a Medicamentos).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, height, sex }
 - history: { diseases (array), mainComplaint, allergies (array), creatinineClearance (number or null), vitalSigns: { bp, hr, temp, spo2 } }
 - prescription: array de { drug, dose, route, frequency }
