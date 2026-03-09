@@ -179,7 +179,8 @@ export default function SimuladorPRM() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{c.patient?.name}, {c.patient?.age} anos</p>
-                {c.scenario && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.scenario}</p>}
+                {(c._description || c.scenario) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c._description || c.scenario}</p>}
+                {c._authorName && <p className="text-xs text-muted-foreground/70 mt-1">Por {c._authorName}</p>}
               </CardContent>
             </Card>
           ))}

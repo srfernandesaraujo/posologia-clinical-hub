@@ -170,6 +170,27 @@ serve(async (req) => {
     });
     if (insertErr) throw insertErr;
 
+    // For clinical cases, duplicate the case for the buyer so they keep it even if original is deleted
+    if (toolType === "caso_clinico") {
+      const { data: originalCase } = await supabaseAdmin
+        .from("simulator_cases")
+        .select("*")
+        .eq("id", toolId)
+        .single();
+      if (originalCase) {
+        await supabaseAdmin.from("simulator_cases").insert({
+          simulator_slug: originalCase.simulator_slug,
+          title: originalCase.title,
+          difficulty: originalCase.difficulty,
+          case_data: originalCase.case_data,
+          is_ai_generated: true,
+          is_marketplace: false,
+          created_by: buyer.id,
+        });
+        log("Case duplicated for buyer");
+      }
+    }
+
     log("Purchase recorded successfully");
 
     return new Response(

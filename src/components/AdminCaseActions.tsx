@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -26,13 +24,15 @@ const SLUG_LABELS: Record<string, string> = {
 };
 
 export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availableTargets }: AdminCaseActionsProps) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(caseItem.title);
   const [editDifficulty, setEditDifficulty] = useState(caseItem.difficulty);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (!isAdmin || !caseItem.isAI) return null;
+  // Show actions for: admin, or the case author (only for AI-generated cases)
+  const isOwner = caseItem.created_by && user?.id === caseItem.created_by;
+  if (!caseItem.isAI || (!isAdmin && !isOwner)) return null;
 
   const handleUpdate = async () => {
     await onUpdate(caseItem.id, { title: editTitle, difficulty: editDifficulty });

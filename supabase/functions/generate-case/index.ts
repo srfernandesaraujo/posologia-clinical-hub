@@ -11,6 +11,7 @@ const SIMULATOR_PROMPTS: Record<string, string> = {
   // ===================== CLÍNICOS =====================
   prm: `Gere um caso clínico COMPLETO para o Simulador de PRM (Problemas Relacionados a Medicamentos).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, height, sex }
 - history: { diseases (array), mainComplaint, allergies (array), creatinineClearance (number or null), vitalSigns: { bp, hr, temp, spo2 } }
 - prescription: array de { drug, dose, route, frequency }
@@ -22,6 +23,7 @@ Inclua pelo menos 2 PRMs reais baseados em evidências. Varie entre idosos, pedi
 
   antimicrobianos: `Gere um caso clínico COMPLETO para o Simulador de Antimicrobial Stewardship.
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, comorbidities (array), allergies (array), vitalSigns: { bp, hr, temp, spo2 } }
 - day1: { clinicalDescription, suspectedDiagnosis }
 - day3: { evolution, cultureResult, organism, antibiogram: array de { antibiotic, result ("S"|"R"), mic (string) } }
@@ -34,6 +36,7 @@ Use patógenos reais, antibiogramas coerentes. Varie entre ITU, PAC, infecção 
 
   tdm: `Gere um caso clínico COMPLETO para o Simulador de TDM (Monitoramento Terapêutico de Fármacos).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, sex, serumCreatinine, creatinineClearance }
 - infection: descrição da infecção/indicação
 - currentPrescription: { drug, dose, interval, route }
@@ -48,6 +51,7 @@ Use fármacos como Vancomicina, Gentamicina, Fenitoína, Lítio, Digoxina. Varie
 
   acompanhamento: `Gere um caso clínico COMPLETO para o Simulador de Acompanhamento Farmacoterapêutico.
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, diagnoses (array) }
 - consultations: array de pelo menos 3 consultas, cada uma com:
   - month: número do mês (0, 3, 6)
@@ -62,6 +66,7 @@ Use doenças crônicas reais: DM2, HAS, dislipidemia, hipotireoidismo, IC, asma.
 
   insulina: `Gere um caso clínico COMPLETO para o Simulador de Dose de Insulina (Koda-Kimble).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, weight, sex, diagnosis, hba1c, fastingGlucose, bp, lipidProfile: { ldl, hdl, tg }, clinicalSummary }
 - glycemicProfile: array de 4 números (07h, 12h, 17h, 23h em mg/dL)
 - initialTDD: dose total diária sugerida (0.45 * peso)
@@ -87,6 +92,7 @@ O caso deve conter:
 
   "desmame-benzo": `Gere um caso clínico COMPLETO para o Simulador de Desmame de Benzodiazepínicos (Protocolo de Ashton).
 O caso deve conter:
+- scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)
 - patient: { name, age, sex, diagnosis, clinicalContext }
 - drugName: nome do BZD atual ("Alprazolam", "Clonazepam", "Lorazepam", "Bromazepam", "Diazepam", "Nitrazepam", "Flunitrazepam", "Midazolam")
 - dailyDose: dose diária em mg
