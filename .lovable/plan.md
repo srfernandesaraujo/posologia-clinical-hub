@@ -1,100 +1,48 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Agente de Feedback Especializado em Simulações
 
-## Visão Geral
+## Objetivo
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Transformar o Agente de Feedback em um agente especializado que acessa as salas virtuais do professor, carrega dados de desempenho dos alunos (submissions, scores, ações) e gera feedback individualizado por aluno usando instrumentos validados.
 
-## Arquitetura
+## Fluxo do Agente
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+1. **Listar salas virtuais** do usuário logado ao iniciar a conversa
+2. Usuário **seleciona uma sala** (por nome ou número)
+3. O frontend **busca dados completos** da sala: participantes, submissions, activities
+4. Esses dados são injetados no contexto da conversa como mensagem de sistema
+5. O agente segue o fluxo de feedback (escolha de tipo, instrumento, perguntas) mas agora **aplicado ao desempenho real dos alunos**
+6. O agente pode dar feedback individual por aluno ou geral da turma
 
-## Simuladores por Lotes
+## Mudanças Técnicas
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 1. Frontend — `src/pages/AgenteFeedback.tsx`
+- Ao iniciar, buscar as salas virtuais do usuário (`virtual_rooms` + `room_participants` + `room_submissions` + `room_activities`)
+- Exibir lista de salas como cards clicáveis antes do chat
+- Quando o usuário seleciona uma sala, montar um contexto JSON com:
+  - Nome da sala, simulador, atividades
+  - Lista de alunos com seus scores, ações e tempo gasto
+- Enviar esse contexto como parte do body para o edge function
+- Manter a interface de chat existente após seleção da sala
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 2. Backend — `supabase/functions/feedback-agent/index.ts`
+- Aceitar campo opcional `roomContext` no body
+- Quando `roomContext` está presente, injetar uma mensagem de sistema adicional com os dados de desempenho dos alunos
+- Atualizar o `SYSTEM_PROMPT` para incluir instruções sobre como analisar dados de simulação:
+  - Identificar alunos com baixo desempenho
+  - Analisar padrões de erros nas ações
+  - Gerar feedback individual estruturado
+  - Comparar desempenho entre alunos
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 3. Edições no `AppLayout.tsx`
+- Atualizar o label do item de menu para "Feedback de Simulação"
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+## Arquivos a editar
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
-
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
-
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
-
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
-
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
-
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
-
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
-
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
-
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/AgenteFeedback.tsx` | Reescrever com seleção de sala + injeção de contexto |
+| `supabase/functions/feedback-agent/index.ts` | Adicionar suporte a `roomContext` e prompt especializado |
+| `src/components/layouts/AppLayout.tsx` | Atualizar label do menu |
 
