@@ -57,7 +57,7 @@ function calcISF(tdd: number, isAnalog: boolean) { return Math.round((isAnalog ?
 function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) => a + b, 0) / glycemics.length; return Math.round(((avg + 46.7) / 28.7) * 10) / 10; }
 
 export default function SimuladorInsulina() {
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("insulina", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("insulina", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("insulina");
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
