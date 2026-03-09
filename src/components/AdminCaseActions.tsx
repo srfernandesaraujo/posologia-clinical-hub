@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Pencil, Trash2, Copy, Store, StoreIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AdminCaseActionsProps {
   caseItem: any;
@@ -26,6 +29,7 @@ const SLUG_LABELS: Record<string, string> = {
 
 export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availableTargets, onToggleMarketplace }: AdminCaseActionsProps) {
   const { isAdmin, user } = useAuth();
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(caseItem.title);
   const [editDifficulty, setEditDifficulty] = useState(caseItem.difficulty);
@@ -43,6 +47,27 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
   const handleDelete = async () => {
     await onDelete(caseItem.id);
     setConfirmDelete(false);
+  };
+
+  const handleToggleMarketplace = async () => {
+    try {
+      if (onToggleMarketplace) {
+        await onToggleMarketplace(caseItem.id, !!caseItem.is_marketplace);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("simulator_cases" as any)
+        .update({ is_marketplace: !caseItem.is_marketplace } as any)
+        .eq("id", caseItem.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases"] });
+      toast.success(!caseItem.is_marketplace ? "Caso publicado no Marketplace!" : "Caso removido do Marketplace");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar Marketplace");
+    }
   };
 
   return (
@@ -69,18 +94,14 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          {onToggleMarketplace && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onToggleMarketplace(caseItem.id, !!caseItem.is_marketplace)}>
-                {caseItem.is_marketplace ? (
-                  <><StoreIcon className="h-4 w-4 mr-2" />Remover do Marketplace</>
-                ) : (
-                  <><Store className="h-4 w-4 mr-2" />Publicar no Marketplace</>
-                )}
-              </DropdownMenuItem>
-            </>
-          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleToggleMarketplace}>
+            {caseItem.is_marketplace ? (
+              <><StoreIcon className="h-4 w-4 mr-2" />Remover do Marketplace</>
+            ) : (
+              <><Store className="h-4 w-4 mr-2" />Publicar no Marketplace</>
+            )}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="h-4 w-4 mr-2" />Excluir
