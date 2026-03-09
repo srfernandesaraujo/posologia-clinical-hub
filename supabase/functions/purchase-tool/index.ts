@@ -161,7 +161,7 @@ serve(async (req) => {
     const { error: insertErr } = await supabaseAdmin.from("marketplace_purchases").insert({
       tool_id: toolId,
       buyer_id: buyer.id,
-      seller_id: tool.created_by,
+      seller_id: itemCreatedBy,
       tool_type: toolType,
       price_brl: pricing.price / 100,
       seller_credit: pricing.credit / 100,
