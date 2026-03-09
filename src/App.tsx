@@ -287,6 +287,9 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
             </Route>
 
+            {/* Smart Planos route - renders with sidebar for logged-in users */}
+            <Route path="/planos" element={<SmartPlanosRoute />} />
+
             {/* Public embed route */}
             <Route path="/embed/:token" element={<EmbedTool />} />
 
