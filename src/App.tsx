@@ -135,7 +135,7 @@ const App = () => (
               <Route path="/politica-cookies" element={<PoliticaCookies />} />
               <Route path="/vitrine" element={<Vitrine />} />
               <Route path="/docs" element={<DocumentacaoPublica />} />
-              <Route path="/planos" element={<Planos />} />
+              {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
