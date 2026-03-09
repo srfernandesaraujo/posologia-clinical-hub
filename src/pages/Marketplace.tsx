@@ -118,10 +118,7 @@ export default function Marketplace() {
     return tools.filter((t: any) => t.name.toLowerCase().includes(q) || t.short_description?.toLowerCase().includes(q));
   }, [tools, search]);
 
-  const filteredCases = useMemo(() => {
-    const q = search.toLowerCase();
-    return marketplaceCases.filter((c: any) => c.title.toLowerCase().includes(q) || c.simulator_slug?.toLowerCase().includes(q));
-  }, [marketplaceCases, search]);
+  const filteredCases = useMemo(() => marketplaceCases, [marketplaceCases]);
 
   const calculadoras = filtered.filter((t: any) => t.type === "calculadora");
   const simuladores = filtered.filter((t: any) => t.type === "simulador");
