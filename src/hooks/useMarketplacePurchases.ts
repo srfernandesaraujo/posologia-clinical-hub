@@ -42,11 +42,14 @@ export function useMarketplacePurchases() {
     },
   });
 
+  const purchaseTool = (toolId: string, toolType?: string) =>
+    purchaseMutation.mutateAsync({ toolId, toolType });
+
   return {
     purchases,
     isLoading,
     hasPurchased,
-    purchaseTool: purchaseMutation.mutateAsync,
+    purchaseTool,
     isPurchasing: purchaseMutation.isPending,
   };
 }
