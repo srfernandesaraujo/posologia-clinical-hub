@@ -77,7 +77,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 }
 
 export default function SimuladorTDM() {
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets } = useSimulatorCases("tdm", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("tdm", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tdm");
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
@@ -126,15 +126,17 @@ export default function SimuladorTDM() {
                   <Badge variant={cs.difficulty === "Fácil" ? "secondary" : cs.difficulty === "Difícil" ? "destructive" : "default"}>{cs.difficulty}</Badge>
                   <div className="flex items-center gap-1">
                     {cs.isAI && <Badge variant="outline" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />IA</Badge>}
-                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} />
+                    <AdminCaseActions caseItem={cs} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
                   </div>
                 </div>
                 <CardTitle className="text-lg mt-2">{cs.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{cs.patient?.name} | {cs.currentPrescription?.drug}</p>
+                {cs._diagnosis && <p className="text-sm text-muted-foreground mt-1"><span className="font-semibold">Diagnóstico:</span> {cs._diagnosis}</p>}
                 {(cs._description || cs.scenario) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{cs._description || cs.scenario}</p>}
                 {cs._authorName && <p className="text-xs text-muted-foreground/70 mt-1">Por {cs._authorName}</p>}
+                {cs.is_marketplace && <span className="inline-block mt-1 text-xs text-primary font-medium">📢 Marketplace</span>}
               </CardContent>
             </Card>
           ))}
