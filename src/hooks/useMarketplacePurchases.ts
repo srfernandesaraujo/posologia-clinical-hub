@@ -25,9 +25,9 @@ export function useMarketplacePurchases() {
   const hasPurchased = (toolId: string) => purchasedToolIds.has(toolId);
 
   const purchaseMutation = useMutation({
-    mutationFn: async (toolId: string) => {
+    mutationFn: async ({ toolId, toolType }: { toolId: string; toolType?: string }) => {
       const { data, error } = await supabase.functions.invoke("purchase-tool", {
-        body: { toolId },
+        body: { toolId, toolType },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
