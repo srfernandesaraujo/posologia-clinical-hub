@@ -272,7 +272,7 @@ const App = () => (
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
-              <Route path="/planos" element={<Planos />} />
+              {/* /planos is handled as a standalone route below */}
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
