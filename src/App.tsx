@@ -156,6 +156,9 @@ const App = () => (
               {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
+              <Route path="/sala/simulador/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/sala/simulador/mai" element={<SimuladorMAI />} />
+              <Route path="/sala/simulador/cascata-prescricao" element={<SimuladorCascataPrescricao />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
               <Route path="/sala/simulador/tdm" element={<SimuladorTDM />} />
               <Route path="/sala/simulador/acompanhamento" element={<SimuladorAcompanhamento />} />
