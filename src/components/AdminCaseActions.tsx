@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil, Trash2, Copy, Store, StoreIcon } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Copy, Store, StoreIcon, Code, Check, Save, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +35,10 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
   const [editTitle, setEditTitle] = useState(caseItem.title);
   const [editDifficulty, setEditDifficulty] = useState(caseItem.difficulty);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [promptEditing, setPromptEditing] = useState(false);
+  const [promptText, setPromptText] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // Show actions for: admin, or the case author (only for AI-generated cases)
   const isOwner = caseItem.created_by && user?.id === caseItem.created_by;
@@ -70,6 +75,37 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
     }
   };
 
+  const handleOpenPrompt = () => {
+    const data = caseItem.case_data || caseItem;
+    setPromptText(typeof data === "string" ? data : JSON.stringify(data, null, 2));
+    setPromptEditing(false);
+    setPromptOpen(true);
+  };
+
+  const handleCopyPrompt = async () => {
+    await navigator.clipboard.writeText(promptText);
+    setPromptCopied(true);
+    toast.success("Prompt copiado!");
+    setTimeout(() => setPromptCopied(false), 2000);
+  };
+
+  const handleSavePrompt = async () => {
+    try {
+      const parsed = JSON.parse(promptText);
+      const { error } = await supabase
+        .from("simulator_cases" as any)
+        .update({ case_data: parsed } as any)
+        .eq("id", caseItem.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["simulator-cases"] });
+      toast.success("Prompt do caso atualizado!");
+      setPromptEditing(false);
+      setPromptOpen(false);
+    } catch (e: any) {
+      toast.error(e.message?.includes("JSON") ? "JSON inválido" : (e.message || "Erro ao salvar"));
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -79,6 +115,9 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem onClick={handleOpenPrompt}>
+            <Code className="h-4 w-4 mr-2" />Ver Prompt
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => { setEditTitle(caseItem.title); setEditDifficulty(caseItem.difficulty); setEditOpen(true); }}>
             <Pencil className="h-4 w-4 mr-2" />Editar
           </DropdownMenuItem>
@@ -108,6 +147,47 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Prompt Viewer Dialog */}
+      <Dialog open={promptOpen} onOpenChange={(v) => { setPromptOpen(v); if (!v) setPromptEditing(false); }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5 text-primary" />
+              Prompt do Caso Clínico
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">{caseItem.title}</p>
+          </DialogHeader>
+          <div className="flex gap-2 mb-2">
+            <Button variant="ghost" size="sm" onClick={handleCopyPrompt} className="gap-1.5">
+              {promptCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+              {promptCopied ? "Copiado" : "Copiar"}
+            </Button>
+            {!promptEditing ? (
+              <Button variant="ghost" size="sm" onClick={() => setPromptEditing(true)} className="gap-1.5">
+                <Eye className="h-4 w-4" />Editar
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={handleSavePrompt} className="gap-1.5 text-primary">
+                <Save className="h-4 w-4" />Salvar
+              </Button>
+            )}
+          </div>
+          <div className="flex-1 overflow-auto min-h-0">
+            {promptEditing ? (
+              <Textarea
+                value={promptText}
+                onChange={(e) => setPromptText(e.target.value)}
+                className="min-h-[400px] font-mono text-xs leading-relaxed resize-none"
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed bg-muted/50 rounded-lg p-4 border overflow-auto max-h-[60vh]">
+                {promptText}
+              </pre>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
