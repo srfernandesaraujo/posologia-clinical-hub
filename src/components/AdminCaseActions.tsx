@@ -115,9 +115,11 @@ export function AdminCaseActions({ caseItem, onDelete, onUpdate, onCopy, availab
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem onClick={handleOpenPrompt}>
-            <Code className="h-4 w-4 mr-2" />Ver Prompt
-          </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem onClick={handleOpenPrompt}>
+              <Code className="h-4 w-4 mr-2" />Ver Prompt
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => { setEditTitle(caseItem.title); setEditDifficulty(caseItem.difficulty); setEditOpen(true); }}>
             <Pencil className="h-4 w-4 mr-2" />Editar
           </DropdownMenuItem>
