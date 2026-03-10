@@ -133,7 +133,38 @@ export default function SimuladorMAI() {
     setScreen("sim");
   }
 
-  const currentCase = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
+  const rawCase = isVirtualRoom && virtualRoomCase ? virtualRoomCase as any : (allCases[caseIdx] as any | undefined);
+
+  // Normalize AI-generated cases: map "medications" with "expectedMAI" to "drugs" with "correctRatings"/"justifications"
+  const currentCase: CaseData | undefined = rawCase ? (() => {
+    if (rawCase.drugs) return rawCase as CaseData;
+    if (rawCase.medications) {
+      const MAI_KEYS = ["indication", "effectiveness", "dose", "directions", "practicality", "drugInteractions", "diseaseInteractions", "duplication", "duration", "costBenefit"];
+      const MAI_KEY_TO_LABEL: Record<string, string> = {
+        indication: "Indicação", effectiveness: "Efetividade", dose: "Dose", directions: "Direções corretas",
+        practicality: "Praticidade", drugInteractions: "Interações medicamentosas", diseaseInteractions: "Interações droga-doença",
+        duplication: "Duplicidade", duration: "Duração", costBenefit: "Custo-benefício",
+      };
+      return {
+        ...rawCase,
+        drugs: rawCase.medications.map((m: any) => {
+          const correctRatings: Record<string, MAIRating> = {};
+          const justifications: Record<string, string> = {};
+          if (m.expectedMAI) {
+            MAI_KEYS.forEach(k => {
+              const label = MAI_KEY_TO_LABEL[k];
+              if (label && m.expectedMAI[k]) {
+                correctRatings[label] = m.expectedMAI[k].score || "A";
+                if (m.expectedMAI[k].justification) justifications[label] = m.expectedMAI[k].justification;
+              }
+            });
+          }
+          return { drug: m.drug, dose: m.dose, route: m.route, frequency: m.frequency, indication: m.indication, correctRatings, justifications };
+        }),
+      } as CaseData;
+    }
+    return rawCase as CaseData;
+  })() : undefined;
 
   const startCase = (i: number) => {
     setCaseIdx(i);
