@@ -811,3 +811,58 @@ export function getQSARSimplificadoChallenges(): ChallengeSet {
     ],
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FARMÁCIA CLÍNICA — SOAP, MAI, CASCATA DE PRESCRIÇÃO
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function getSOAPChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Método SOAP",
+    description: "Teste seus conhecimentos sobre documentação clínica estruturada com o método SOAP.",
+    challenges: [
+      { type: "mcq", question: "A seção 'S' (Subjetivo) do SOAP deve conter:", options: ["Resultados de exames laboratoriais", "Queixas e relatos do paciente", "Diagnósticos médicos", "Plano terapêutico"], correctIndex: 1, explanation: "O Subjetivo registra informações relatadas pelo paciente: queixas, sintomas, história da doença atual, percepções e preocupações.", reference: "Weed LL, Medical Records, Medical Education, and Patient Care, 1971" },
+      { type: "mcq", question: "Qual informação pertence à seção 'O' (Objetivo)?", options: ["Dor referida pelo paciente", "PA: 140/90 mmHg", "Suspeita de interação medicamentosa", "Proposta de troca de medicamento"], correctIndex: 1, explanation: "O Objetivo inclui dados mensuráveis e verificáveis: sinais vitais, exames laboratoriais, exame físico, escalas validadas.", reference: "Weed LL, 1971" },
+      { type: "mcq", question: "Na seção 'A' (Avaliação), o farmacêutico deve:", options: ["Apenas listar os medicamentos", "Analisar PRMs, interações e adequação da terapia", "Registrar as queixas do paciente", "Prescrever novos medicamentos"], correctIndex: 1, explanation: "A Avaliação é o julgamento clínico: identificação de PRMs, análise de efetividade, segurança, indicação e adesão.", reference: "ACCP, Pharmacotherapy 2005" },
+      { type: "mcq", question: "O 'P' (Plano) deve incluir:", options: ["Apenas o nome dos medicamentos", "Intervenções, monitoramento e orientações", "Somente o diagnóstico", "Apenas a dose dos medicamentos"], correctIndex: 1, explanation: "O Plano detalha as ações: ajustes de dose, suspensão/troca de fármacos, parâmetros de monitoramento, orientações e prazo de retorno.", reference: "SOAP Notes in Clinical Pharmacy Practice, ASHP" },
+      { type: "mcq", question: "Um paciente relata 'dor no peito ao esforço'. Em qual seção isso deve ser registrado?", options: ["Objetivo", "Avaliação", "Subjetivo", "Plano"], correctIndex: 2, explanation: "Sintomas relatados pelo paciente são sempre Subjetivos, mesmo que sugiram gravidade clínica. O exame complementar vai ao Objetivo.", reference: "Weed LL, 1971" },
+      { type: "mcq", question: "Troponina I: 0.8 ng/mL (elevada). Em qual seção registrar?", options: ["Subjetivo", "Objetivo", "Plano", "Avaliação"], correctIndex: 1, explanation: "Resultados de exames laboratoriais são dados objetivos, mensuráveis e reproduzíveis.", reference: "SOAP Documentation Guidelines, ASHP" },
+      { type: "mcq", question: "'Possível nefrotoxicidade por gentamicina (Cr subindo)' pertence a:", options: ["Subjetivo", "Objetivo", "Avaliação", "Plano"], correctIndex: 2, explanation: "A interpretação clínica dos dados e a identificação de problemas são parte da Avaliação farmacêutica.", reference: "ACCP Guidelines" },
+      { type: "mcq", question: "'Solicitar dosagem de vancocinemia vale/pico' pertence a:", options: ["Subjetivo", "Objetivo", "Avaliação", "Plano"], correctIndex: 3, explanation: "Solicitações de exames, ajustes e ações futuras são registradas no Plano.", reference: "ASHP Guidelines on Pharmacist Documentation" },
+    ],
+  };
+}
+
+export function getMAIChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Medication Appropriateness Index",
+    description: "Teste seus conhecimentos sobre os 10 critérios de adequação medicamentosa do MAI.",
+    challenges: [
+      { type: "mcq", question: "Quantos critérios compõem o Medication Appropriateness Index (MAI)?", options: ["5", "8", "10", "12"], correctIndex: 2, explanation: "O MAI avalia 10 critérios: indicação, efetividade, dose, direções corretas, praticidade, interações MM, interações droga-doença, duplicidade, duração e custo-benefício.", reference: "Hanlon JT et al., J Clin Epidemiol 1992" },
+      { type: "mcq", question: "Um medicamento sem indicação clínica clara deve ser classificado como:", options: ["A (Apropriado)", "B (Marginalmente)", "C (Inapropriado)", "Depende do custo"], correctIndex: 2, explanation: "Se não há indicação documentada para o medicamento, ele é classificado como C (inapropriado) no critério 'Indicação'.", reference: "Hanlon JT et al., 1992" },
+      { type: "mcq", question: "No critério 'Duplicidade', avalia-se:", options: ["Se o paciente toma o medicamento 2x/dia", "Se há dois medicamentos da mesma classe sem justificativa", "Se a dose é o dobro do recomendado", "Se o medicamento está duplicado na receita"], correctIndex: 1, explanation: "Duplicidade terapêutica ocorre quando dois fármacos da mesma classe são prescritos sem justificativa clínica clara.", reference: "Samsa GP et al., 1994" },
+      { type: "mcq", question: "Glibenclamida em paciente com ClCr 25 mL/min é classificada como C em qual critério?", options: ["Indicação", "Custo-benefício", "Interação droga-doença", "Praticidade"], correctIndex: 2, explanation: "Glibenclamida é contraindicada em DRC avançada pelo risco de hipoglicemia prolongada — interação droga-doença inapropriada.", reference: "Critérios de Beers 2023, AGS" },
+      { type: "mcq", question: "O critério 'Praticidade' do MAI avalia:", options: ["Se o medicamento é barato", "Se o regime posológico é viável para o paciente", "Se o medicamento está disponível na farmácia", "Se há genérico disponível"], correctIndex: 1, explanation: "Praticidade avalia se o regime (posologia, via, forma farmacêutica) é factível e aceitável para o paciente em sua rotina.", reference: "Hanlon JT et al., 1992" },
+      { type: "mcq", question: "Varfarina + AAS sem indicação clara para dupla antiagregação. Qual critério MAI é mais afetado?", options: ["Dose", "Interações medicamentosas", "Duração", "Direções corretas"], correctIndex: 1, explanation: "A combinação aumenta significativamente o risco de sangramento — interação medicamentosa relevante.", reference: "Hanlon JT et al., 1992" },
+      { type: "mcq", question: "Uma classificação 'B' (Marginalmente apropriado) no MAI significa:", options: ["O medicamento é totalmente adequado", "Há ressalvas, mas pode ser aceitável com ajustes", "O medicamento deve ser suspenso imediatamente", "Não há evidência suficiente"], correctIndex: 1, explanation: "B indica que há preocupações, mas o uso pode ser justificável. Requer monitoramento ou ajuste.", reference: "Hanlon JT et al., 1992" },
+      { type: "mcq", question: "O MAI foi validado originalmente para qual população?", options: ["Pediátrica", "Gestantes", "Idosos ambulatoriais", "Pacientes em UTI"], correctIndex: 2, explanation: "O MAI foi desenvolvido e validado para avaliar a adequação de medicamentos em idosos ambulatoriais com polifarmácia.", reference: "Hanlon JT et al., J Clin Epidemiol 1992" },
+    ],
+  };
+}
+
+export function getCascataPrescricaoChallenges(): ChallengeSet {
+  return {
+    title: "Desafio: Cascata de Prescrição",
+    description: "Teste seus conhecimentos sobre cascatas iatrogênicas e prescrição em cascata.",
+    challenges: [
+      { type: "mcq", question: "O que é uma cascata de prescrição?", options: ["Prescrever múltiplos medicamentos simultaneamente", "Prescrever um medicamento para tratar o efeito adverso de outro", "Aumentar a dose progressivamente", "Trocar um medicamento por outro da mesma classe"], correctIndex: 1, explanation: "A cascata de prescrição ocorre quando um novo medicamento é prescrito para tratar o efeito adverso de outro, criando uma cadeia de problemas.", reference: "Rochon PA, Gurwitz JH. BMJ 1997;315:1096-1099" },
+      { type: "mcq", question: "Qual é o exemplo clássico de cascata: AINE → ?", options: ["Antibiótico", "Anti-hipertensivo por edema", "Antidepressivo", "Anticoagulante"], correctIndex: 1, explanation: "AINEs causam retenção hídrica (inibição de prostaglandinas renais), levando a edema, que é frequentemente tratado com diuréticos.", reference: "Rochon PA, Gurwitz JH. BMJ 1997" },
+      { type: "mcq", question: "Metoclopramida pode causar cascata de prescrição ao induzir:", options: ["Hipertensão", "Sintomas extrapiramidais/parkinsonianos", "Hiperglicemia", "Broncoespasmo"], correctIndex: 1, explanation: "Metoclopramida é antagonista D2 e pode causar rigidez, tremor e parkinsonismo, especialmente em idosos, levando à prescrição de anticolinérgicos.", reference: "Avorn J, Gurwitz JH. Ann Intern Med 1995" },
+      { type: "mcq", question: "A principal estratégia para prevenir cascatas de prescrição é:", options: ["Adicionar mais medicamentos protetores", "Questionar se cada novo sintoma pode ser efeito adverso de um fármaco em uso", "Aumentar as doses dos medicamentos atuais", "Trocar todos os medicamentos simultaneamente"], correctIndex: 1, explanation: "Antes de prescrever um novo medicamento, sempre avaliar se o sintoma pode ser efeito adverso de um fármaco já em uso ('Think Cascade').", reference: "Rochon PA. Drug Saf 2017;40(1):1-2" },
+      { type: "mcq", question: "Tiazídicos podem iniciar uma cascata ao causar:", options: ["Hepatotoxicidade", "Hiperuricemia → tratamento com alopurinol", "Broncoespasmo", "Nefrotoxicidade aguda"], correctIndex: 1, explanation: "Tiazídicos elevam o ácido úrico, podendo precipitar gota e levar à prescrição de alopurinol — uma cascata metabólica.", reference: "Gurwitz JH et al. J Am Geriatr Soc 1997" },
+      { type: "mcq", question: "Em idosos, qual classe de medicamentos é mais associada a cascatas?", options: ["Antibióticos", "Medicamentos cardiovasculares e psicotrópicos", "Vitaminas", "Antifúngicos"], correctIndex: 1, explanation: "Cardiovasculares (diuréticos, anti-hipertensivos) e psicotrópicos (antipsicóticos, BZD) são os mais envolvidos em cascatas em idosos.", reference: "Kalisch LM et al. JAGS 2011" },
+      { type: "mcq", question: "Inibidor de colinesterase → incontinência urinária → oxibutinina. Isso é:", options: ["Prescrição racional", "Cascata de prescrição", "Desprescrição", "Reconciliação medicamentosa"], correctIndex: 1, explanation: "O inibidor de colinesterase aumenta a atividade colinérgica, causando urgência urinária. A oxibutinina (anticolinérgico) anula parcialmente o efeito terapêutico.", reference: "Gill SS et al. Arch Intern Med 2005" },
+      { type: "mcq", question: "A 'desprescrição' é a principal ferramenta para:", options: ["Aumentar o número de medicamentos", "Reverter cascatas e reduzir polifarmácia inapropriada", "Substituir genéricos por referência", "Adicionar medicamentos preventivos"], correctIndex: 1, explanation: "Desprescrição é o processo de retirada ou redução de medicamentos desnecessários, incluindo aqueles originados em cascatas.", reference: "Scott IA et al. JAMA Intern Med 2015" },
+    ],
+  };
+}

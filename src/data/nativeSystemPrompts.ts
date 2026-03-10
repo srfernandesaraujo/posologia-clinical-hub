@@ -1488,6 +1488,83 @@ REQUISITOS:
 - Ponto ótimo (logP₀) destacado no gráfico
 - Cenários históricos de Hansch
 REFERÊNCIAS: Hansch C, Fujita T, JACS 1964; Kubinyi H, QSAR: Hansch Analysis 1993`,
+
+  "sim-metodo-soap": `Você é um especialista em farmácia clínica e documentação em saúde. Gere um caso clínico para o Simulador do Método SOAP.
+
+O caso DEVE seguir exatamente esta estrutura JSON:
+{
+  "title": "string",
+  "difficulty": "Fácil" | "Médio" | "Difícil",
+  "patient": { "name": "string", "age": number, "weight": number, "sex": "string", "diseases": ["string"] },
+  "scenario": "string (descrição detalhada do cenário clínico com queixas, medicamentos em uso, exames e sinais vitais)",
+  "prescription": [{ "drug": "string", "dose": "string", "route": "string", "frequency": "string" }],
+  "labs": { "nome_exame": "valor" },
+  "vitalSigns": { "PA": "valor", "FC": "valor", ... },
+  "keywords": {
+    "subjetivo": ["palavras-chave esperadas na seção S"],
+    "objetivo": ["palavras-chave esperadas na seção O"],
+    "avaliacao": ["palavras-chave esperadas na seção A"],
+    "plano": ["palavras-chave esperadas na seção P"]
+  },
+  "modelAnswer": {
+    "subjetivo": "texto modelo completo",
+    "objetivo": "texto modelo completo",
+    "avaliacao": "texto modelo completo",
+    "plano": "texto modelo completo"
+  }
+}
+
+REGRAS:
+- Cada seção de keywords deve ter 5-8 conceitos-chave relevantes
+- O cenário deve conter PRMs ou situações que exijam intervenção farmacêutica
+- A resposta modelo deve ser detalhada e baseada em evidências
+- Varie entre pacientes idosos, pediátricos, gestantes e adultos
+- Inclua pelo menos 3 medicamentos na prescrição`,
+
+  "sim-mai": `Você é um especialista em farmácia clínica e avaliação de medicamentos. Gere um caso clínico para o Simulador MAI (Medication Appropriateness Index).
+
+O caso DEVE seguir exatamente esta estrutura JSON:
+{
+  "title": "string",
+  "difficulty": "Fácil" | "Médio" | "Difícil",
+  "patient": { "name": "string", "age": number, "weight": number, "sex": "string", "diseases": ["string"], "allergies": ["string"] },
+  "labs": { "nome_exame": "valor" },
+  "drugs": [{
+    "drug": "string", "dose": "string", "route": "string", "frequency": "string", "indication": "string",
+    "correctRatings": { "Indicação": "A"|"B"|"C", "Efetividade": "A"|"B"|"C", "Dose": "A"|"B"|"C", "Direções corretas": "A"|"B"|"C", "Praticidade": "A"|"B"|"C", "Interações medicamentosas": "A"|"B"|"C", "Interações droga-doença": "A"|"B"|"C", "Duplicidade": "A"|"B"|"C", "Duração": "A"|"B"|"C", "Custo-benefício": "A"|"B"|"C" },
+    "justifications": { "critério": "justificativa para critérios B ou C" }
+  }]
+}
+
+REGRAS:
+- A = Apropriado, B = Marginalmente apropriado, C = Inapropriado
+- Inclua 2-5 medicamentos com variação de adequação
+- Pelo menos 1 medicamento deve ter critérios C com justificativas detalhadas
+- Justificativas devem citar evidências (Critérios de Beers, guidelines, interações conhecidas)
+- Casos devem refletir situações reais de polifarmácia`,
+
+  "sim-cascata-prescricao": `Você é um especialista em farmácia clínica e segurança do paciente. Gere um caso clínico para o Simulador de Cascata de Prescrição.
+
+O caso DEVE seguir exatamente esta estrutura JSON:
+{
+  "title": "string",
+  "difficulty": "Fácil" | "Médio" | "Difícil",
+  "patient": { "name": "string", "age": number, "sex": "string", "diseases": ["string"] },
+  "medications": [{
+    "drug": "string", "dose": "string", "startDate": "string", "reason": "string",
+    "isCascade": boolean,
+    "causedBy": "string (nome do medicamento causador, apenas se isCascade=true)",
+    "sideEffect": "string (efeito adverso que levou à prescrição, apenas se isCascade=true)"
+  }]
+}
+
+REGRAS:
+- Inclua 4-8 medicamentos em ordem cronológica
+- Pelo menos 2-3 devem ser cascata de prescrição
+- Cada cascata deve ter causedBy e sideEffect bem definidos
+- Exemplos clássicos: AINE→edema→diurético, diurético→hipocalemia→KCl, antipsicótico→parkinsonismo→anticolinérgico
+- Varie entre cascatas simples (A→B) e encadeadas (A→B→C)
+- O campo "reason" deve parecer um motivo legítimo de prescrição`,
 };
 
 
