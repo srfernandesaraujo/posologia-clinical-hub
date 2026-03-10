@@ -1,100 +1,75 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: 3 Novos Simuladores Clínicos (SOAP, MAI, Cascata de Prescrição)
 
-## Visão Geral
+## Resumo
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Criar 3 simuladores clínicos seguindo exatamente o padrão existente: dashboard com casos nativos + geração IA, tela de simulação interativa, tela de relatório com pontuação, integração com salas virtuais, modo exame e desafios educativos.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## 1. Simulador do Método SOAP
 
-## Simuladores por Lotes
+**Slug:** `metodo-soap` | **Categoria:** Farmácia Clínica
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+**Mecânica:** O aluno recebe um caso clínico completo (paciente, história, exames, prescrição) e deve preencher as 4 seções do prontuário SOAP:
+- **S (Subjetivo):** Queixas do paciente, história colhida
+- **O (Objetivo):** Dados clínicos, exames laboratoriais, sinais vitais
+- **A (Avaliação):** Análise farmacoterapêutica, PRMs identificados, diagnóstico
+- **P (Plano):** Intervenções propostas, monitoramento, orientações
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+Cada seção tem um gabarito com palavras-chave/conceitos esperados. Pontuação por seção (0-100%) baseada em checklist de itens obrigatórios. 3 casos nativos com dificuldades Fácil, Médio, Difícil.
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+**Interface:** 4 `Textarea` em abas (Tabs), com dicas visuais do que é esperado. Relatório compara resposta do aluno com gabarito.
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+---
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+## 2. Simulador MAI (Medication Appropriateness Index)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+**Slug:** `mai` | **Categoria:** Farmácia Clínica
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+**Mecânica:** O aluno avalia cada medicamento de uma prescrição usando os 10 critérios do MAI:
+1. Indicação, 2. Efetividade, 3. Dose, 4. Direções corretas, 5. Praticidade, 6. Interações medicamentosas, 7. Interações droga-doença, 8. Duplicidade, 9. Duração, 10. Custo-benefício
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+Cada critério recebe nota: **A** (Apropriado), **B** (Marginalmente apropriado), **C** (Inapropriado). Score total ponderado por medicamento. Gabarito com justificativas. 3 casos nativos.
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+**Interface:** Card por medicamento, RadioGroup para cada critério (A/B/C), relatório com score MAI total e por fármaco.
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+---
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+## 3. Simulador de Cascata de Prescrição
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+**Slug:** `cascata-prescricao` | **Categoria:** Farmácia Clínica
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+**Mecânica:** O aluno recebe um paciente com lista de medicamentos em ordem cronológica. Deve identificar quais medicamentos foram prescritos para tratar efeitos adversos de outros (a cascata). Para cada medicamento, o aluno indica: "Início de tratamento" ou "Cascata de prescrição" e, se cascata, identifica o medicamento causador.
 
-## Alterações em arquivos existentes
+Exemplo: AINE → edema → furosemida → hipocalemia → KCl → náusea → metoclopramida...
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+3 casos nativos com cadeias de 4-8 medicamentos. Pontuação pela identificação correta das cascatas.
 
-## Detalhes Técnicos
+**Interface:** Lista cronológica de medicamentos, para cada um: RadioGroup (Original/Cascata) + Select do medicamento causador. Relatório mostra a cadeia correta com setas visuais.
 
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+---
+
+## Arquivos a criar (por simulador, padrão idêntico aos existentes)
+
+Para **cada** simulador:
+
+1. **Página do simulador** — `src/pages/simuladores/SimuladorSOAP.tsx`, `SimuladorMAI.tsx`, `SimuladorCascataPrescricao.tsx`
+   - Casos nativos (BUILT_IN), interfaces TypeScript, dashboard com cards (NativeCaseCard/AICaseCard), tela de simulação, relatório
+   - Hooks: `useSimulatorCases(slug)`, `useVirtualRoomCase(slug)`, `AdminCaseActions`, `ExamBanner`, `ExamFeedbackOverlay`, `AdminPromptViewer`
+
+2. **System prompt para IA** — Adicionar em `src/data/nativeSystemPrompts.ts` as entradas `sim-metodo-soap`, `sim-mai`, `sim-cascata-prescricao`
+
+3. **Desafios educativos** — Adicionar em `src/data/simulatorChallenges.ts` funções `getSOAPChallenges()`, `getMAIChallenges()`, `getCascataPrescricaoChallenges()`
+
+4. **Registro no catálogo** — Adicionar 3 entradas no array `NATIVE_SIMULATORS` em `src/pages/Simuladores.tsx`
+
+5. **Rotas** — Adicionar em `src/App.tsx` as rotas `/simuladores/metodo-soap`, `/simuladores/mai`, `/simuladores/cascata-prescricao` (+ rotas `/sala/simulador/...`)
+
+---
+
+## Estimativa
+
+~6 arquivos novos + edições em 4 arquivos existentes. Implementação em lote seguindo o padrão consolidado do projeto.
 
