@@ -626,6 +626,61 @@ O JSON deve conter EXATAMENTE estes campos:
 - clinicalTip: dica sobre QSAR
 - difficulty: "Fácil"|"Médio"|"Difícil"
 - title: título descritivo`,
+
+  // ===================== CLÍNICOS ESPECIALIZADOS =====================
+  "metodo-soap": `Gere um caso clínico COMPLETO para o Simulador do Método SOAP (prontuário farmacêutico).
+O caso deve conter:
+- scenario: breve descrição do cenário clínico (1-2 frases)
+- patient: { name, age, weight, height, sex, diseases (array), allergies (array), vitalSigns: { bp, hr, temp, spo2 } }
+- prescription: array de { drug, dose, route, frequency }
+- labs: objeto com exames laboratoriais relevantes (ex: { creatinina: "1.2 mg/dL", glicemia: "180 mg/dL" })
+- mainComplaint: queixa principal do paciente
+- expectedSOAP: {
+    subjetivo: array de strings (palavras-chave esperadas na seção Subjetivo, ex: ["queixa de dor", "há 3 dias", "uso crônico de AINE"]),
+    objetivo: array de strings (palavras-chave esperadas na seção Objetivo, ex: ["PA 150/90", "creatinina 1.2", "glicemia 180"]),
+    avaliacao: array de strings (palavras-chave esperadas na seção Avaliação, ex: ["PRM de segurança", "nefrotoxicidade por AINE", "HAS não controlada"]),
+    plano: array de strings (palavras-chave esperadas na seção Plano, ex: ["suspender AINE", "monitorar função renal", "orientar paciente"])
+  }
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo
+
+Inclua pelo menos 2 PRMs identificáveis. Use cenários realistas de farmácia clínica.`,
+
+  mai: `Gere um caso clínico COMPLETO para o Simulador MAI (Medication Appropriateness Index).
+O caso deve conter:
+- scenario: breve descrição do cenário clínico (1-2 frases)
+- patient: { name, age, weight, sex, diseases (array), allergies (array) }
+- medications: array de objetos, cada um com:
+  - drug: nome do medicamento
+  - dose: dose prescrita
+  - route: via de administração
+  - frequency: frequência
+  - indication: indicação clínica
+  - expectedMAI: objeto com os 10 critérios do MAI, cada um com:
+    - score: "A" (Apropriado) | "B" (Marginalmente apropriado) | "C" (Inapropriado)
+    - justification: justificativa clínica
+  Os 10 critérios são: indication, effectiveness, dose, directions, practicality, drugInteractions, diseaseInteractions, duplication, duration, costBenefit
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo
+
+Inclua 3-5 medicamentos. Pelo menos 1 deve ter problemas significativos (scores "C"). Use polifarmácia realista em idosos.`,
+
+  "cascata-prescricao": `Gere um caso clínico COMPLETO para o Simulador de Cascata de Prescrição.
+O caso deve conter:
+- scenario: breve descrição do cenário clínico (1-2 frases)
+- patient: { name, age, sex, diseases (array), allergies (array) }
+- medications: array CRONOLÓGICO de objetos, cada um com:
+  - drug: nome do medicamento
+  - dose: dose
+  - startDate: data de início (formato "DD/MM/AAAA")
+  - indication: motivo da prescrição
+  - isCascade: boolean (true se é cascata de prescrição)
+  - causedBy: string | null (nome do medicamento causador, se isCascade=true)
+  - adverseEffect: string | null (efeito adverso que motivou a prescrição, se isCascade=true)
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo
+
+Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas identificáveis. Exemplo: AINE→edema→furosemida→hipocalemia→KCl. Varie entre idosos polimedicados.`,
 };
 
 serve(async (req) => {
