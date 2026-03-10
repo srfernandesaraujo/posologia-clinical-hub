@@ -91,6 +91,9 @@ import SimuladorDocking from "./pages/simuladores/quimica-farmaceutica/Simulador
 import SimuladorQuiralidade from "./pages/simuladores/quimica-farmaceutica/SimuladorQuiralidade";
 import SimuladorPkaAbsorcao from "./pages/simuladores/quimica-farmaceutica/SimuladorPkaAbsorcao";
 import SimuladorQSAR from "./pages/simuladores/quimica-farmaceutica/SimuladorQSAR";
+import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
+import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
+import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";

@@ -14,6 +14,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const NATIVE_SIMULATORS = [
+  { slug: "metodo-soap", name: "Simulador do Método SOAP", description: "Treine a documentação clínica estruturada: Subjetivo, Objetivo, Avaliação e Plano.", icon: ClipboardList, category: "Farmácia Clínica" },
+  { slug: "mai", name: "Simulador MAI", description: "Medication Appropriateness Index – Avalie a adequação de cada medicamento em 10 critérios.", icon: ClipboardList, category: "Farmácia Clínica" },
+  { slug: "cascata-prescricao", name: "Simulador de Cascata de Prescrição", description: "Identifique medicamentos prescritos para tratar efeitos adversos de outros.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "prm", name: "Simulador de PRM", description: "Problemas Relacionados a Medicamentos – Avalie prescrições e identifique erros.", icon: Pill, category: "Farmácia Clínica" },
   { slug: "antimicrobianos", name: "Simulador de Antimicrobial Stewardship", description: "Terapia empírica e descalonamento baseado em antibiograma.", icon: Bug, category: "Infectologia" },
   { slug: "tdm", name: "Simulador TDM", description: "Monitoramento Terapêutico de Fármacos – Ajuste de doses de medicamentos de baixo índice terapêutico.", icon: Activity, category: "Farmacocinética" },
