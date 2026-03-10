@@ -91,6 +91,9 @@ import SimuladorDocking from "./pages/simuladores/quimica-farmaceutica/Simulador
 import SimuladorQuiralidade from "./pages/simuladores/quimica-farmaceutica/SimuladorQuiralidade";
 import SimuladorPkaAbsorcao from "./pages/simuladores/quimica-farmaceutica/SimuladorPkaAbsorcao";
 import SimuladorQSAR from "./pages/simuladores/quimica-farmaceutica/SimuladorQSAR";
+import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
+import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
+import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -153,6 +156,9 @@ const App = () => (
               {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
+              <Route path="/sala/simulador/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/sala/simulador/mai" element={<SimuladorMAI />} />
+              <Route path="/sala/simulador/cascata-prescricao" element={<SimuladorCascataPrescricao />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
               <Route path="/sala/simulador/tdm" element={<SimuladorTDM />} />
               <Route path="/sala/simulador/acompanhamento" element={<SimuladorAcompanhamento />} />
@@ -212,6 +218,9 @@ const App = () => (
               <Route path="/calculadoras" element={<Calculadoras />} />
               <Route path="/simuladores" element={<Simuladores />} />
               <Route path="/simuladores/prm" element={<SimuladorPRM />} />
+              <Route path="/simuladores/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/simuladores/mai" element={<SimuladorMAI />} />
+              <Route path="/simuladores/cascata-prescricao" element={<SimuladorCascataPrescricao />} />
               <Route path="/simuladores/antimicrobianos" element={<SimuladorAntimicrobianos />} />
               <Route path="/simuladores/tdm" element={<SimuladorTDM />} />
               <Route path="/simuladores/acompanhamento" element={<SimuladorAcompanhamento />} />
