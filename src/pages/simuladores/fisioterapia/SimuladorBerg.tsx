@@ -233,7 +233,7 @@ export default function SimuladorBerg() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Equilíbrio — Escala de Berg" sections={reportSections} />}
+      <LabReportPanel benchTitle="Escala de Equilíbrio de Berg" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

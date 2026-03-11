@@ -204,7 +204,7 @@ export default function SimuladorEletroterapia() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Eletroterapia" sections={reportSections} />}
+      <LabReportPanel benchTitle="Eletroterapia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

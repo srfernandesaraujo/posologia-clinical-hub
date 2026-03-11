@@ -174,7 +174,7 @@ export default function SimuladorAvaliacaoPostural() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Avaliação Postural" sections={reportSections} />}
+      <LabReportPanel benchTitle="Avaliação Postural" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

@@ -179,7 +179,7 @@ export default function SimuladorRespiratorio() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Fisioterapia Respiratória" sections={reportSections} />}
+      <LabReportPanel benchTitle="Fisioterapia Respiratória" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

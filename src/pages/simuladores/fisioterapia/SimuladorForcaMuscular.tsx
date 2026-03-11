@@ -208,7 +208,7 @@ export default function SimuladorForcaMuscular() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Força Muscular" sections={reportSections} />}
+      <LabReportPanel benchTitle="Força Muscular (Oxford/MRC)" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

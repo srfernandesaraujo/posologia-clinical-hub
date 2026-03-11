@@ -307,12 +307,7 @@ export default function SimuladorGoniometria() {
       </div>
 
       {/* M5 — Relatório */}
-      {completedModules.has(4) && (
-        <LabReportPanel
-          title="Relatório de Goniometria Articular"
-          sections={reportSections}
-        />
-      )}
+      <LabReportPanel benchTitle="Goniometria Articular" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

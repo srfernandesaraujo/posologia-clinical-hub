@@ -189,7 +189,7 @@ export default function SimuladorDermatomos() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Avaliação Sensitiva" sections={reportSections} />}
+      <LabReportPanel benchTitle="Dermátomos e Avaliação Sensitiva" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

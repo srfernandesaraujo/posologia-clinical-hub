@@ -212,7 +212,7 @@ export default function SimuladorTestesOrtopedicos() {
         </Card>
       </div>
 
-      {completedModules.has(4) && <LabReportPanel title="Relatório de Testes Ortopédicos" sections={reportSections} />}
+      <LabReportPanel benchTitle="Testes Ortopédicos Especiais" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }
