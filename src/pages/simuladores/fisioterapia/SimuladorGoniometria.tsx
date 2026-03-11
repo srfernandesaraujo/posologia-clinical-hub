@@ -140,10 +140,10 @@ export default function SimuladorGoniometria() {
       const meas = userMeasurements[m.name];
       if (!meas) return `${m.name}: não avaliado`;
       const deficit = classifyDeficit(meas.active, m.normal);
-      return `${m.name}: ADM ativa ${meas.active}° / passiva ${meas.passive}° (ref: ${m.normal}°) → Déficit ${deficit.label}`;
-    }).join("\n") },
-    { title: "Plano Terapêutico", content: selectedTechniques.map(id => TECHNIQUES.find(t => t.id === id)?.name).join(", ") || "Nenhuma técnica selecionada" },
-  ] : [];
+      return `${m.name}: ${meas.active}°/${meas.passive}° (ref ${m.normal}°) ${deficit.label}`;
+    }).join("; "),
+    "Plano Terapêutico": selectedTechniques.map(id => TECHNIQUES.find(t => t.id === id)?.name).join(", ") || "Nenhum",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
