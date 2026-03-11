@@ -1,100 +1,114 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Melhorias nos Simuladores: "Como Usar", Feedback Final, Fluxo Pedagógico e Infraestrutura
 
-## Visão Geral
+## Resumo
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Três frentes de trabalho: (1) botão "Como Usar" em todos os simuladores, (2) reescrita dos 8 simuladores de odontologia com melhorias de fluxo pedagógico + feedback final de decisões, (3) adição de infraestrutura faltante (botão voltar, geração IA, system prompts) nos simuladores de odontologia e fisioterapia.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## 1. Componente "Como Usar" (Shared)
 
-## Simuladores por Lotes
+Criar `src/components/simulators/SimulatorHowToUse.tsx` — um Dialog com ícone `HelpCircle` que recebe `title` e `steps: string[]` como props. Cada simulador passará suas instruções específicas. O botão ficará ao lado do título do simulador.
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+---
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+## 2. Melhorias de Fluxo nos 8 Simuladores de Odontologia
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 2.1 Odontograma Interativo
+- **M1**: Adicionar uma "radiografia SVG" esquemática do paciente ao selecionar, para que o aluno veja os achados esperados e possa marcar no odontograma baseado no RX
+- **M3**: Transformar de simples confirmação para quiz — o sistema mostra os achados e o aluno escolhe o diagnóstico ICDAS correto para cada lesão (múltipla escolha). Pontuação por acerto
+- **M4**: Após confirmar, exibir painel de feedback comparando escolhas do aluno vs plano ideal (verde = acertou, vermelho = errou/faltou), com explicação clínica
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 2.2 Anatomia Dental (Endodontia)
+- Após M4 (confirmar restauração), exibir painel de feedback com prognóstico calculado, adequação da terapia à lesão, e consequências clínicas da escolha (ex: "Pulpotomia em necrose = falha terapêutica")
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 2.3 Periodontograma
+- Feedback final após M4: comparar tratamento escolhido vs recomendação baseada no estágio/grau. Mostrar consequências (ex: "RAR isolada em Estágio IV = insuficiente")
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 2.4 Anestesiologia
+- **M3**: Peso do paciente fixo (determinado pelo caso). O aluno escolhe anestésico e calcula dose para aquele peso
+- **M4**: Complicação apresentada pelo sistema (baseada nas escolhas — ex: vasoconstritor em cardiopata = risco intravascular). O aluno escolhe a conduta para resolver
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 2.5 Cefalometria
+- Feedback final após M4: projeção de perfil pós-tratamento e avaliação da adequação (ex: "Classe III com ANB -4 → alinhadores insuficientes, cirurgia ortognática indicada")
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+### 2.6 Radiografia
+- **M3**: Em vez de apenas marcar patologias na lista, o aluno deve classificar cada patologia (tipo: radiolúcida/radiopaca/mista + diagnóstico diferencial com múltipla escolha). Pontuação por acurácia
+- Feedback final após M4: pontuação do laudo + lista do que faltou identificar
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+### 2.7 Farmacologia Odontológica
+- **M3**: Após ver os gauges de risco, o aluno decide se mantém ou altera a prescrição (trocar fármaco, ajustar dose, remover). O sistema recalcula os riscos em tempo real
+- **M4**: Em vez de apenas validar, o sistema apresenta um cenário clínico resultante (ex: "Ibuprofeno em nefropata → piora de TFG em 72h") e o aluno deve confirmar ou alterar
+- Feedback final: resumo do que aconteceria com o paciente baseado nas decisões
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+### 2.8 Cirurgia e Exodontia
+- **M3**: Complicação determinada pelo sistema baseada nas escolhas de M2 (ex: não fez osteotomia em Classe III → fratura mandibular). O aluno escolhe a conduta para resolver
+- **M4**: Feedback do protocolo medicamentoso vs ideal
+- Feedback final: resumo cirúrgico com avaliação
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+---
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+## 3. Painel de Feedback Final (Componente Compartilhado)
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+Criar `src/components/simulators/SimulatorFeedback.tsx` — exibe ao final de todos os módulos (antes do relatório):
+- Score geral (0-100%) com gauge visual
+- Lista de decisões tomadas vs decisões ideais (verde/vermelho)
+- Texto narrativo: "O que aconteceria com o paciente" baseado nas decisões
+- Badge de classificação: "Excelente", "Bom", "Precisa melhorar"
 
-## Alterações em arquivos existentes
+Este componente será usado em todos os 8 simuladores de odontologia.
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+---
 
-## Detalhes Técnicos
+## 4. Infraestrutura Faltante (Odontologia + Fisioterapia)
 
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+### 4.1 Botão Voltar
+Adicionar botão `ArrowLeft` que navega para `/simuladores` em todos os 16 simuladores (8 odonto + 8 fisio).
+
+### 4.2 System Prompts
+Adicionar entries em `src/data/nativeSystemPrompts.ts` para os 16 simuladores (8 odonto + 8 fisio) com prompts que descrevem cada simulador e seus módulos.
+
+### 4.3 AdminPromptViewer
+Importar e exibir `AdminPromptViewer` no header de cada um dos 16 simuladores.
+
+### 4.4 Geração de Casos com IA
+Integrar o padrão existente (useSimulatorCases, NativeCaseCard, AICaseCard, botão "Gerar Caso com IA") nos 16 simuladores. Cada simulador terá:
+- Tela de seleção de caso (built-in + AI) como dashboard inicial
+- Botão voltar para `/simuladores`
+- Botão "Gerar Caso com IA" (admin only)
+
+Isso requer refatorar cada simulador para ter dois estados: (1) dashboard de casos e (2) simulação ativa com os módulos M1-M5.
+
+---
+
+## Arquivos Afetados
+
+**Novos** (2):
+- `src/components/simulators/SimulatorHowToUse.tsx`
+- `src/components/simulators/SimulatorFeedback.tsx`
+
+**Reescrita** (8 odontologia):
+- `src/pages/simuladores/odontologia/SimuladorOdontograma.tsx`
+- `src/pages/simuladores/odontologia/SimuladorAnatomiaEndodontia.tsx`
+- `src/pages/simuladores/odontologia/SimuladorPeriodontograma.tsx`
+- `src/pages/simuladores/odontologia/SimuladorAnestesiologia.tsx`
+- `src/pages/simuladores/odontologia/SimuladorCefalometria.tsx`
+- `src/pages/simuladores/odontologia/SimuladorRadiografia.tsx`
+- `src/pages/simuladores/odontologia/SimuladorFarmacologiaOdonto.tsx`
+- `src/pages/simuladores/odontologia/SimuladorCirurgiaExodontia.tsx`
+
+**Reescrita** (8 fisioterapia — adicionar voltar, prompts, IA, "como usar"):
+- `src/pages/simuladores/fisioterapia/SimuladorGoniometria.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorAvaliacaoPostural.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorForcaMuscular.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorDermatomos.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorRespiratorio.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorEletroterapia.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorBerg.tsx`
+
+**Edição** (1):
+- `src/data/nativeSystemPrompts.ts` — 16 novos prompts
 
