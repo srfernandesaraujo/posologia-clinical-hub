@@ -106,6 +106,14 @@ import SimuladorCefalometria from "./pages/simuladores/odontologia/SimuladorCefa
 import SimuladorRadiografia from "./pages/simuladores/odontologia/SimuladorRadiografia";
 import SimuladorFarmacologiaOdonto from "./pages/simuladores/odontologia/SimuladorFarmacologiaOdonto";
 import SimuladorCirurgiaExodontia from "./pages/simuladores/odontologia/SimuladorCirurgiaExodontia";
+import SimuladorGoniometria from "./pages/simuladores/fisioterapia/SimuladorGoniometria";
+import SimuladorAvaliacaoPostural from "./pages/simuladores/fisioterapia/SimuladorAvaliacaoPostural";
+import SimuladorForcaMuscular from "./pages/simuladores/fisioterapia/SimuladorForcaMuscular";
+import SimuladorDermatomos from "./pages/simuladores/fisioterapia/SimuladorDermatomos";
+import SimuladorRespiratorioFisio from "./pages/simuladores/fisioterapia/SimuladorRespiratorio";
+import SimuladorEletroterapia from "./pages/simuladores/fisioterapia/SimuladorEletroterapia";
+import SimuladorTestesOrtopedicos from "./pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos";
+import SimuladorBerg from "./pages/simuladores/fisioterapia/SimuladorBerg";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
