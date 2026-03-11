@@ -109,7 +109,7 @@ const benches: BenchCard[] = [
       "Mapa de plasmídeo, gel SDS-PAGE simulado, otimização de expressão proteica e Western blot.",
     icon: <TestTubes className="h-8 w-8" />,
     route: "/laboratorio-virtual/biotecnologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(172 66% 50%)",
   },
 ];
