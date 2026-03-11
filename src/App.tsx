@@ -91,6 +91,13 @@ import SimuladorDocking from "./pages/simuladores/quimica-farmaceutica/Simulador
 import SimuladorQuiralidade from "./pages/simuladores/quimica-farmaceutica/SimuladorQuiralidade";
 import SimuladorPkaAbsorcao from "./pages/simuladores/quimica-farmaceutica/SimuladorPkaAbsorcao";
 import SimuladorQSAR from "./pages/simuladores/quimica-farmaceutica/SimuladorQSAR";
+import SimuladorFeedbackFormativo from "./pages/simuladores/docencia/SimuladorFeedbackFormativo";
+import SimuladorElaboracaoQuestoes from "./pages/simuladores/docencia/SimuladorElaboracaoQuestoes";
+import SimuladorConducaoCaso from "./pages/simuladores/docencia/SimuladorConducaoCaso";
+import SimuladorPlanejamentoAula from "./pages/simuladores/docencia/SimuladorPlanejamentoAula";
+import SimuladorGestaoSala from "./pages/simuladores/docencia/SimuladorGestaoSala";
+import SimuladorAvaliacaoRubrica from "./pages/simuladores/docencia/SimuladorAvaliacaoRubrica";
+import SimuladorPreceptoriaClinica from "./pages/simuladores/docencia/SimuladorPreceptoriaClinica";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -281,6 +288,13 @@ const App = () => (
               <Route path="/simuladores/quiralidade" element={<SimuladorQuiralidade />} />
               <Route path="/simuladores/pka-absorcao" element={<SimuladorPkaAbsorcao />} />
               <Route path="/simuladores/qsar-simplificado" element={<SimuladorQSAR />} />
+              <Route path="/simuladores/feedback-formativo" element={<SimuladorFeedbackFormativo />} />
+              <Route path="/simuladores/elaboracao-questoes" element={<SimuladorElaboracaoQuestoes />} />
+              <Route path="/simuladores/conducao-caso-pbl" element={<SimuladorConducaoCaso />} />
+              <Route path="/simuladores/planejamento-aula" element={<SimuladorPlanejamentoAula />} />
+              <Route path="/simuladores/gestao-sala" element={<SimuladorGestaoSala />} />
+              <Route path="/simuladores/avaliacao-rubrica-osce" element={<SimuladorAvaliacaoRubrica />} />
+              <Route path="/simuladores/preceptoria-clinica" element={<SimuladorPreceptoriaClinica />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
