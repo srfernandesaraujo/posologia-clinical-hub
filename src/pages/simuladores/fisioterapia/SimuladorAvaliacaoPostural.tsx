@@ -85,13 +85,13 @@ export default function SimuladorAvaliacaoPostural() {
   const completeModule = (n: number) => setCompletedModules(prev => new Set(prev).add(n));
   const allMarked = markedPoints.size === 8;
 
-  const reportSections = caseData ? [
-    { title: "Caso", content: `${caseData.name} — ${caseData.description}` },
-    { title: "Pontos Marcados", content: `${markedPoints.size}/8 pontos anatômicos identificados` },
-    { title: "Desvios Identificados", content: caseData.deviations.join("\n") },
-    { title: "Ângulo de Cobb", content: caseData.cobbEstimate ? `Estimado: ${caseData.cobbEstimate}°` : "N/A" },
-    { title: "Programa Corretivo", content: selectedCorrections.map(id => CORRECTIONS.find(c => c.id === id)?.name).join(", ") || "Nenhum" },
-  ] : [];
+  const expSummary = caseData ? {
+    "Caso": `${caseData.name} — ${caseData.description}`,
+    "Pontos Marcados": `${markedPoints.size}/8 pontos anatômicos identificados`,
+    "Desvios Identificados": caseData.deviations.join("; "),
+    "Ângulo de Cobb": caseData.cobbEstimate ? `Estimado: ${caseData.cobbEstimate}°` : "N/A",
+    "Programa Corretivo": selectedCorrections.map(id => CORRECTIONS.find(c => c.id === id)?.name).join(", ") || "Nenhum",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
