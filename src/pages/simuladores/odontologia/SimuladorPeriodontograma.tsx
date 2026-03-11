@@ -187,9 +187,10 @@ export default function SimuladorPeriodontograma() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wrench className="h-4 w-4 text-primary" /> 4. Plano Terapêutico {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{TREATMENTS.map(t => { const checked = selectedTreatments.includes(t.id); return (<label key={t.id} className="flex items-start gap-2 p-2 rounded border border-border hover:bg-muted/30 cursor-pointer text-sm"><input type="checkbox" checked={checked} onChange={() => setSelectedTreatments(prev => checked ? prev.filter(x => x !== t.id) : [...prev, t.id])} className="mt-1 rounded" /><div><p className="font-medium">{t.label}</p><p className="text-xs text-muted-foreground">{t.desc}</p></div></label>); })}<Button onClick={confirmTreatment} disabled={selectedTreatments.length === 0 || completedModules.has(4)} className="w-full">Confirmar Tratamento</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Periodontograma" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Periodontograma" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

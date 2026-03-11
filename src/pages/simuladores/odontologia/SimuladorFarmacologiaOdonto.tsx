@@ -81,35 +81,47 @@ export default function SimuladorFarmacologiaOdonto() {
   const [selectedAINE, setSelectedAINE] = useState("");
   const [selectedAntibiotic, setSelectedAntibiotic] = useState("");
   const [m3Decision, setM3Decision] = useState("");
+  const [m3AltAnalgesic, setM3AltAnalgesic] = useState("");
+  const [m3AltAINE, setM3AltAINE] = useState("");
+  const [m3AltAntibiotic, setM3AltAntibiotic] = useState("");
   const [m4Conduta, setM4Conduta] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
 
   const patient = PATIENTS.find(p => p.id === selectedPatient);
-  const analgesic = ANALGESICS.find(a => a.id === selectedAnalgesic);
-  const aine = AINES.find(a => a.id === selectedAINE);
-  const antibiotic = ANTIBIOTICS.find(a => a.id === selectedAntibiotic);
+  // Use altered prescription if M3 decision was "alterar" and alternatives were selected
+  const effectiveAnalgesic = m3Decision === "alterar" && m3AltAnalgesic ? m3AltAnalgesic : selectedAnalgesic;
+  const effectiveAINE = m3Decision === "alterar" && m3AltAINE ? m3AltAINE : selectedAINE;
+  const effectiveAntibiotic = m3Decision === "alterar" && m3AltAntibiotic ? m3AltAntibiotic : selectedAntibiotic;
+
+  const analgesic = ANALGESICS.find(a => a.id === effectiveAnalgesic);
+  const aine = AINES.find(a => a.id === effectiveAINE);
+  const antibiotic = ANTIBIOTICS.find(a => a.id === effectiveAntibiotic);
   const completeModule = (n: number) => setCompletedModules(prev => new Set(prev).add(n));
 
   const adjustedRisks = patient ? { ...patient.risks } : { renal: 0, hepatic: 0, cardiovascular: 0, gastric: 0 };
-  if (selectedAINE === "ibuprofeno") { adjustedRisks.renal += 20; adjustedRisks.gastric += 25; }
-  if (selectedAINE === "nimesulida") { adjustedRisks.hepatic += 15; }
-  if (selectedAnalgesic === "paracetamol") { adjustedRisks.hepatic += 10; }
+  if (effectiveAINE === "ibuprofeno") { adjustedRisks.renal += 20; adjustedRisks.gastric += 25; }
+  if (effectiveAINE === "nimesulida") { adjustedRisks.hepatic += 15; }
+  if (effectiveAnalgesic === "paracetamol") { adjustedRisks.hepatic += 10; }
 
   const hasContraindication = patient && (
     (patient.contraindications.some(c => c.includes("AINEs")) && selectedAINE && selectedAINE !== "dexametasona") ||
     (patient.id === "p3" && selectedAntibiotic === "azitromicina")
   );
 
-  const confirmM3 = () => { if (m3Decision) completeModule(3); };
+  const confirmM3 = () => {
+    if (!m3Decision) return;
+    if (m3Decision === "alterar" && !m3AltAnalgesic && !m3AltAINE && !m3AltAntibiotic) return;
+    completeModule(3);
+  };
   const confirmM4 = () => { completeModule(4); setShowFeedback(true); };
 
   const calcFeedback = () => {
     if (!patient) return { score: 0, decisions: [] as FeedbackDecision[], narrative: "" };
     const decisions: FeedbackDecision[] = [];
-    decisions.push({ label: "Analgésico", userChoice: analgesic?.name || "-", idealChoice: ANALGESICS.find(a => a.id === patient.idealAnalgesic)?.name || "-", correct: selectedAnalgesic === patient.idealAnalgesic });
-    decisions.push({ label: "Anti-inflamatório", userChoice: aine?.name || "-", idealChoice: AINES.find(a => a.id === patient.idealAINE)?.name || "-", correct: selectedAINE === patient.idealAINE });
+    decisions.push({ label: "Analgésico", userChoice: analgesic?.name || "-", idealChoice: ANALGESICS.find(a => a.id === patient.idealAnalgesic)?.name || "-", correct: effectiveAnalgesic === patient.idealAnalgesic });
+    decisions.push({ label: "Anti-inflamatório", userChoice: aine?.name || "-", idealChoice: AINES.find(a => a.id === patient.idealAINE)?.name || "-", correct: effectiveAINE === patient.idealAINE });
     if (patient.idealAntibiotic) {
-      decisions.push({ label: "Antibiótico", userChoice: antibiotic?.name || "Não prescrito", idealChoice: ANTIBIOTICS.find(a => a.id === patient.idealAntibiotic)?.name || "-", correct: selectedAntibiotic === patient.idealAntibiotic });
+      decisions.push({ label: "Antibiótico", userChoice: antibiotic?.name || "Não prescrito", idealChoice: ANTIBIOTICS.find(a => a.id === patient.idealAntibiotic)?.name || "-", correct: effectiveAntibiotic === patient.idealAntibiotic });
     }
     decisions.push({ label: "Decisão no M3", userChoice: m3Decision === "manter" ? "Manteve" : "Alterou", idealChoice: hasContraindication ? "Alterou" : "Manteve", correct: hasContraindication ? m3Decision === "alterar" : m3Decision === "manter" });
     const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
@@ -142,7 +154,7 @@ export default function SimuladorFarmacologiaOdonto() {
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedAnalgesic(""); setSelectedAINE(""); setSelectedAntibiotic(""); setM3Decision(""); setM4Conduta(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedAnalgesic(""); setSelectedAINE(""); setSelectedAntibiotic(""); setM3Decision(""); setM3AltAnalgesic(""); setM3AltAINE(""); setM3AltAntibiotic(""); setM4Conduta(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1"><h1 className="text-2xl font-bold">Farmacologia Odontológica</h1></div>
         <SimulatorHowToUse title="Farmacologia" steps={HOW_TO} />
       </div>
@@ -151,13 +163,14 @@ export default function SimuladorFarmacologiaOdonto() {
 
         <Card className="relative">{!completedModules.has(1) && <LockedOverlay module={1} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Pill className="h-4 w-4 text-primary" /> 2. Prescrição {completedModules.has(2) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div><label className="text-xs font-medium text-muted-foreground">Analgésico:</label><Select value={selectedAnalgesic} onValueChange={setSelectedAnalgesic}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{ANALGESICS.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select>{analgesic && <p className="text-xs text-muted-foreground mt-1">{analgesic.posology}</p>}</div><div><label className="text-xs font-medium text-muted-foreground">Anti-inflamatório:</label><Select value={selectedAINE} onValueChange={setSelectedAINE}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{AINES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select>{aine && <p className="text-xs text-muted-foreground mt-1">{aine.posology}</p>}</div><div><label className="text-xs font-medium text-muted-foreground">Antibiótico:</label><Select value={selectedAntibiotic} onValueChange={setSelectedAntibiotic}><SelectTrigger><SelectValue placeholder="Selecione ou deixe em branco..." /></SelectTrigger><SelectContent>{ANTIBIOTICS.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div><Button onClick={() => completeModule(2)} disabled={!selectedAnalgesic || completedModules.has(2)} className="w-full">Confirmar Prescrição</Button></CardContent></Card>
 
-        <Card className="relative">{!completedModules.has(2) && <LockedOverlay module={2} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> 3. Análise de Risco — Decisão {completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-4 gap-2"><RiskGaugeSVG label="Renal" value={Math.min(adjustedRisks.renal, 100)} /><RiskGaugeSVG label="Hepático" value={Math.min(adjustedRisks.hepatic, 100)} /><RiskGaugeSVG label="Cardiov." value={Math.min(adjustedRisks.cardiovascular, 100)} /><RiskGaugeSVG label="Gástrico" value={Math.min(adjustedRisks.gastric, 100)} /></div>{hasContraindication && <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">⚠️ Contraindicação detectada! Avalie se deve manter ou alterar a prescrição.</div>}<div className="space-y-1.5"><p className="text-sm font-medium">Com base na análise de risco, qual sua decisão?</p><label className={`block p-2 rounded border text-sm cursor-pointer ${m3Decision === "manter" ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m3" value="manter" checked={m3Decision === "manter"} onChange={() => setM3Decision("manter")} className="sr-only" />Manter prescrição atual — os riscos são aceitáveis</label><label className={`block p-2 rounded border text-sm cursor-pointer ${m3Decision === "alterar" ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m3" value="alterar" checked={m3Decision === "alterar"} onChange={() => setM3Decision("alterar")} className="sr-only" />Alterar prescrição — há contraindicação ou risco elevado</label></div><Button onClick={confirmM3} disabled={!m3Decision || completedModules.has(3)} className="w-full">Confirmar Decisão</Button></CardContent></Card>
+        <Card className="relative">{!completedModules.has(2) && <LockedOverlay module={2} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> 3. Análise de Risco — Decisão {completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-4 gap-2"><RiskGaugeSVG label="Renal" value={Math.min(adjustedRisks.renal, 100)} /><RiskGaugeSVG label="Hepático" value={Math.min(adjustedRisks.hepatic, 100)} /><RiskGaugeSVG label="Cardiov." value={Math.min(adjustedRisks.cardiovascular, 100)} /><RiskGaugeSVG label="Gástrico" value={Math.min(adjustedRisks.gastric, 100)} /></div>{hasContraindication && <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">⚠️ Contraindicação detectada! Avalie se deve manter ou alterar a prescrição.</div>}<div className="space-y-1.5"><p className="text-sm font-medium">Com base na análise de risco, qual sua decisão?</p><label className={`block p-2 rounded border text-sm cursor-pointer ${m3Decision === "manter" ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m3" value="manter" checked={m3Decision === "manter"} onChange={() => setM3Decision("manter")} className="sr-only" />Manter prescrição atual — os riscos são aceitáveis</label><label className={`block p-2 rounded border text-sm cursor-pointer ${m3Decision === "alterar" ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m3" value="alterar" checked={m3Decision === "alterar"} onChange={() => setM3Decision("alterar")} className="sr-only" />Alterar prescrição — há contraindicação ou risco elevado</label></div>{m3Decision === "alterar" && !completedModules.has(3) && (<div className="space-y-3 border-t border-border pt-3 mt-2"><p className="text-sm font-medium text-primary">Nova prescrição:</p><div><label className="text-xs font-medium text-muted-foreground">Analgésico:</label><Select value={m3AltAnalgesic} onValueChange={setM3AltAnalgesic}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{ANALGESICS.filter(a => a.id !== selectedAnalgesic).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div><div><label className="text-xs font-medium text-muted-foreground">Anti-inflamatório:</label><Select value={m3AltAINE} onValueChange={setM3AltAINE}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{AINES.filter(a => a.id !== selectedAINE).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div><div><label className="text-xs font-medium text-muted-foreground">Antibiótico:</label><Select value={m3AltAntibiotic} onValueChange={setM3AltAntibiotic}><SelectTrigger><SelectValue placeholder="Manter ou trocar..." /></SelectTrigger><SelectContent>{ANTIBIOTICS.filter(a => a.id !== selectedAntibiotic).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div></div>)}<Button onClick={confirmM3} disabled={!m3Decision || (m3Decision === "alterar" && !m3AltAnalgesic && !m3AltAINE && !m3AltAntibiotic) || completedModules.has(3)} className="w-full">Confirmar Decisão</Button></CardContent></Card>
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> 4. Cenário Clínico em 72h {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{patient && <div className={`rounded-lg p-3 text-sm ${hasContraindication && m3Decision === "manter" ? "bg-destructive/10 border border-destructive/20" : "bg-green-500/10 border border-green-500/20"}`}><p className="font-medium mb-1">{hasContraindication && m3Decision === "manter" ? "⚠️ Cenário adverso em 72h:" : "✓ Evolução favorável em 72h:"}</p><p className="text-muted-foreground">{hasContraindication && m3Decision === "manter" ? patient.scenario72h : "Paciente evolui bem. Dor controlada, sem sinais de infecção ou efeitos adversos."}</p></div>}<div className="space-y-1.5"><p className="text-sm font-medium">Conduta final:</p>{M4_CONDUTAS.map(c => (<label key={c.id} className={`block p-2 rounded border text-sm cursor-pointer ${m4Conduta === c.id ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m4" value={c.id} checked={m4Conduta === c.id} onChange={() => setM4Conduta(c.id)} className="sr-only" /><p className="font-medium text-xs">{c.label}</p><p className="text-[10px] text-muted-foreground">{c.desc}</p></label>))}</div><Button onClick={confirmM4} disabled={!m4Conduta || completedModules.has(4)} className="w-full">Confirmar Conduta</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

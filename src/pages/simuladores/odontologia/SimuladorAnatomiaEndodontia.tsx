@@ -232,9 +232,10 @@ export default function SimuladorAnatomiaEndodontia() {
           </CardContent>
         </Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Anatomia Dental — Endodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Anatomia Dental — Endodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

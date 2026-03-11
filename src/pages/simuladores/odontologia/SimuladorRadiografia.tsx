@@ -180,9 +180,10 @@ export default function SimuladorRadiografia() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> 4. Laudo Radiográfico {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><Textarea placeholder="Redija o laudo radiográfico descrevendo: tipo de exame, estruturas, achados patológicos e conclusão..." value={reportText} onChange={(e) => setReportText(e.target.value)} rows={6} /><Button onClick={confirmReport} disabled={reportText.length < 20 || completedModules.has(4)} className="w-full">Finalizar Laudo</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Radiografia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Radiografia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

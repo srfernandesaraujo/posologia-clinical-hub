@@ -359,12 +359,13 @@ export default function SimuladorOdontograma() {
           </CardContent>
         </Card>
 
-        {/* Feedback */}
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-
-        {/* M5 — Relatório */}
-        <LabReportPanel benchTitle="Odontograma Interativo" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      {/* Feedback */}
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+
+      {/* M5 — Relatório */}
+      <LabReportPanel benchTitle="Odontograma Interativo" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }
