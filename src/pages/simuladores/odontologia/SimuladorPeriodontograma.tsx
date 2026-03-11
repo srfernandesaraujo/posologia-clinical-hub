@@ -70,7 +70,7 @@ export default function SimuladorPeriodontograma() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const prompt = getNativePrompt("sim-periodontograma") || "";
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("periodontograma", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("periodontograma", BUILT_IN);
 
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
