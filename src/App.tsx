@@ -106,6 +106,13 @@ import Gamificacao from "./pages/Gamificacao";
 import JogosClinicos from "./pages/JogosClinicos";
 import LaboratorioVirtual from "./pages/LaboratorioVirtual";
 import BancadaFarmacos from "./pages/lab-virtual/BancadaFarmacos";
+import BancadaMicrobiologia from "./pages/lab-virtual/BancadaMicrobiologia";
+import BancadaToxicologia from "./pages/lab-virtual/BancadaToxicologia";
+import BancadaFarmacogenomica from "./pages/lab-virtual/BancadaFarmacogenomica";
+import BancadaEstabilidade from "./pages/lab-virtual/BancadaEstabilidade";
+import BancadaControleQualidade from "./pages/lab-virtual/BancadaControleQualidade";
+import BancadaEpidemiologia from "./pages/lab-virtual/BancadaEpidemiologia";
+import BancadaBiotecnologia from "./pages/lab-virtual/BancadaBiotecnologia";
 import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
@@ -307,6 +314,13 @@ const App = () => (
               <Route path="/agente-feedback" element={<AgenteFeedback />} />
               <Route path="/laboratorio-virtual" element={<LaboratorioVirtual />} />
               <Route path="/laboratorio-virtual/farmacos" element={<BancadaFarmacos />} />
+              <Route path="/laboratorio-virtual/microbiologia" element={<BancadaMicrobiologia />} />
+              <Route path="/laboratorio-virtual/toxicologia" element={<BancadaToxicologia />} />
+              <Route path="/laboratorio-virtual/farmacogenomica" element={<BancadaFarmacogenomica />} />
+              <Route path="/laboratorio-virtual/estabilidade" element={<BancadaEstabilidade />} />
+              <Route path="/laboratorio-virtual/controle-qualidade" element={<BancadaControleQualidade />} />
+              <Route path="/laboratorio-virtual/epidemiologia" element={<BancadaEpidemiologia />} />
+              <Route path="/laboratorio-virtual/biotecnologia" element={<BancadaBiotecnologia />} />
               <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 

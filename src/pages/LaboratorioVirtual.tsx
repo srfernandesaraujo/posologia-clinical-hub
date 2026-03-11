@@ -43,7 +43,7 @@ const benches: BenchCard[] = [
       "Antibiograma com halos de inibição, curvas de crescimento bacteriano, classificação S/I/R e índice FIC.",
     icon: <Microscope className="h-8 w-8" />,
     route: "/laboratorio-virtual/microbiologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(142 71% 45%)",
   },
   {
@@ -54,7 +54,7 @@ const benches: BenchCard[] = [
       "Curvas dose-resposta sigmoidais, cálculo de LD50/ED50, índice terapêutico e classificação de Hodge & Sterner.",
     icon: <Skull className="h-8 w-8" />,
     route: "/laboratorio-virtual/toxicologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(0 72% 51%)",
   },
   {
@@ -65,7 +65,7 @@ const benches: BenchCard[] = [
       "Simulação de curvas PK por genótipo CYP450, distribuição de AUC na população, ANOVA entre fenótipos.",
     icon: <Dna className="h-8 w-8" />,
     route: "/laboratorio-virtual/farmacogenomica",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(262 83% 58%)",
   },
   {
@@ -76,7 +76,7 @@ const benches: BenchCard[] = [
       "Cinética de degradação, extrapolação de Arrhenius, determinação de prazo de validade (t90) e zonas climáticas ICH.",
     icon: <Clock className="h-8 w-8" />,
     route: "/laboratorio-virtual/estabilidade",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(25 95% 53%)",
   },
   {
@@ -87,7 +87,7 @@ const benches: BenchCard[] = [
       "Curva de calibração, LOD/LOQ, uniformidade de conteúdo e validação analítica conforme ICH Q2.",
     icon: <ClipboardCheck className="h-8 w-8" />,
     route: "/laboratorio-virtual/controle-qualidade",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(199 89% 48%)",
   },
   {
@@ -98,7 +98,7 @@ const benches: BenchCard[] = [
       "Desenho de coorte/caso-controle, cálculo de OR/RR, regressão logística e relatório STROBE.",
     icon: <Activity className="h-8 w-8" />,
     route: "/laboratorio-virtual/epidemiologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(340 82% 52%)",
   },
   {
@@ -109,7 +109,7 @@ const benches: BenchCard[] = [
       "Mapa de plasmídeo, gel SDS-PAGE simulado, otimização de expressão proteica e Western blot.",
     icon: <TestTubes className="h-8 w-8" />,
     route: "/laboratorio-virtual/biotecnologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(172 66% 50%)",
   },
 ];
