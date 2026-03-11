@@ -155,9 +155,10 @@ export default function SimuladorFarmacologiaOdonto() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> 4. Cenário Clínico em 72h {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{patient && <div className={`rounded-lg p-3 text-sm ${hasContraindication && m3Decision === "manter" ? "bg-destructive/10 border border-destructive/20" : "bg-green-500/10 border border-green-500/20"}`}><p className="font-medium mb-1">{hasContraindication && m3Decision === "manter" ? "⚠️ Cenário adverso em 72h:" : "✓ Evolução favorável em 72h:"}</p><p className="text-muted-foreground">{hasContraindication && m3Decision === "manter" ? patient.scenario72h : "Paciente evolui bem. Dor controlada, sem sinais de infecção ou efeitos adversos."}</p></div>}<div className="space-y-1.5"><p className="text-sm font-medium">Conduta final:</p>{M4_CONDUTAS.map(c => (<label key={c.id} className={`block p-2 rounded border text-sm cursor-pointer ${m4Conduta === c.id ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="m4" value={c.id} checked={m4Conduta === c.id} onChange={() => setM4Conduta(c.id)} className="sr-only" /><p className="font-medium text-xs">{c.label}</p><p className="text-[10px] text-muted-foreground">{c.desc}</p></label>))}</div><Button onClick={confirmM4} disabled={!m4Conduta || completedModules.has(4)} className="w-full">Confirmar Conduta</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

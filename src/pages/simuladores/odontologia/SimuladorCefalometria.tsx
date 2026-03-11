@@ -149,9 +149,10 @@ export default function SimuladorCefalometria() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wrench className="h-4 w-4 text-primary" /> 4. Plano de Tratamento {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{TREATMENTS.map(t => (<label key={t.id} className={`block p-3 rounded border cursor-pointer ${selectedTreatment === t.id ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="treatment" value={t.id} checked={selectedTreatment === t.id} onChange={() => setSelectedTreatment(t.id)} className="sr-only" /><p className="text-sm font-medium">{t.label}</p><p className="text-xs text-muted-foreground">{t.desc}</p></label>))}<Button onClick={confirmTreatment} disabled={!selectedTreatment || completedModules.has(4)} className="w-full">Confirmar Tratamento</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Cefalometria Ortodôntica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Cefalometria Ortodôntica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

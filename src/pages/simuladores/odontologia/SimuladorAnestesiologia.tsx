@@ -190,9 +190,10 @@ export default function SimuladorAnestesiologia() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" /> 4. Complicação {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{complication && <><div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm"><p className="font-medium text-destructive">⚠️ {complication.title}</p><p className="text-muted-foreground mt-1">{complication.desc}</p></div><p className="text-sm font-medium">Qual a conduta adequada?</p>{complication.options.map((opt, i) => (<label key={i} className={`block p-2 rounded border text-sm cursor-pointer ${complicationAnswer === opt.label ? (completedModules.has(4) ? (opt.correct ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10") : "border-primary bg-primary/5") : "border-border hover:bg-muted/30"}`}><input type="radio" name="comp" value={opt.label} checked={complicationAnswer === opt.label} onChange={() => setComplicationAnswer(opt.label)} className="sr-only" />{opt.label}</label>))}</>}<Button onClick={confirmComplication} disabled={!complicationAnswer || completedModules.has(4)} className="w-full">Confirmar Conduta</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Anestesiologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Anestesiologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }

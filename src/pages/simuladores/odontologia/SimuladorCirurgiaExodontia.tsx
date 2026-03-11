@@ -140,9 +140,10 @@ export default function SimuladorCirurgiaExodontia() {
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Pill className="h-4 w-4 text-primary" /> 4. Protocolo Medicamentoso {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div><p className="text-sm font-medium mb-2">Pré-operatório:</p>{PRE_OP_MEDS.map(m => (<label key={m} className="flex items-center gap-2 p-1.5 text-sm cursor-pointer"><input type="checkbox" checked={preOpMeds.includes(m)} onChange={() => setPreOpMeds(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])} className="rounded" />{m}</label>))}</div><div><p className="text-sm font-medium mb-2">Pós-operatório:</p>{POST_OP_MEDS.map(m => (<label key={m} className="flex items-center gap-2 p-1.5 text-sm cursor-pointer"><input type="checkbox" checked={postOpMeds.includes(m)} onChange={() => setPostOpMeds(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])} className="rounded" />{m}</label>))}</div><Button onClick={confirmProtocol} disabled={(preOpMeds.length === 0 && postOpMeds.length === 0) || completedModules.has(4)} className="w-full">Confirmar Protocolo</Button></CardContent></Card>
 
-        <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-        <LabReportPanel benchTitle="Cirurgia e Exodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
       </div>
+
+      <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
+      <LabReportPanel benchTitle="Cirurgia e Exodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
     </div>
   );
 }
