@@ -4,24 +4,36 @@ import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
   Clock, Brain, Heart, Activity, CheckCircle2, ArrowRight,
-  TrendingUp, BookOpen, ChevronRight, DoorOpen,
+  TrendingUp, BookOpen, ChevronRight, DoorOpen, Gamepad2,
+  Microscope, GraduationCap, Beaker,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const toolExamples = [
-  { name: "Clearance de Creatinina", category: "Nefrologia", icon: Activity, color: "bg-blue-500/10 text-blue-500" },
-  { name: "CHA₂DS₂-VASc", category: "Cardiologia", icon: Heart, color: "bg-red-500/10 text-red-500" },
-  { name: "Escala de Glasgow", category: "Neurologia", icon: Brain, color: "bg-purple-500/10 text-purple-500" },
-  { name: "MELD Score", category: "Hepatologia", icon: Activity, color: "bg-amber-500/10 text-amber-500" },
-  { name: "CURB-65", category: "Pneumologia", icon: Activity, color: "bg-emerald-500/10 text-emerald-500" },
-  { name: "Wells Score", category: "Emergência", icon: Zap, color: "bg-orange-500/10 text-orange-500" },
+const featureShowcase = [
+  { name: "Calculadoras Clínicas", desc: "20+ scores e fórmulas validadas", icon: Calculator, color: "bg-blue-500/10 text-blue-500", link: "/calculadoras" },
+  { name: "Simuladores Interativos", desc: "60+ simuladores em 8 categorias", icon: FlaskConical, color: "bg-cyan-500/10 text-cyan-500", link: "/simuladores" },
+  { name: "Laboratório Virtual", desc: "8 bancadas modulares de pesquisa", icon: Microscope, color: "bg-purple-500/10 text-purple-500", link: "/laboratorio-virtual" },
+  { name: "Jogos Educativos", desc: "20+ jogos gamificados com ranking", icon: Gamepad2, color: "bg-amber-500/10 text-amber-500", link: "/jogos-clinicos" },
+  { name: "Formação Docente", desc: "7 simuladores pedagógicos", icon: GraduationCap, color: "bg-rose-500/10 text-rose-500", link: "/simuladores" },
+  { name: "Salas Virtuais", desc: "Atividades com PIN para turmas", icon: DoorOpen, color: "bg-emerald-500/10 text-emerald-500", link: "/salas-virtuais" },
+];
+
+const simulatorCategories = [
+  { name: "Farmácia Clínica", count: 11, icon: Pill },
+  { name: "Fisiologia Humana", count: 10, icon: Heart },
+  { name: "Bioquímica", count: 10, icon: Beaker },
+  { name: "Farmacologia Básica", count: 8, icon: Brain },
+  { name: "Farmacotécnica", count: 7, icon: FlaskConical },
+  { name: "Química Farmacêutica", count: 8, icon: Activity },
+  { name: "Formação Docente", count: 7, icon: GraduationCap },
 ];
 
 export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [roomPin, setRoomPin] = useState("");
+
   const painPoints = [
     { icon: Clock, problem: t("painPoints.p1"), solution: t("painPoints.s1") },
     { icon: Brain, problem: t("painPoints.p2"), solution: t("painPoints.s2") },
@@ -35,9 +47,9 @@ export default function Home() {
 
   const stats = [
     { value: "20+", label: t("home.stats.calculators") },
-    { value: "8+", label: t("home.stats.simulators") },
+    { value: "60+", label: t("home.stats.simulators") },
+    { value: "8", label: t("home.stats.labBenches") },
     { value: "20+", label: t("home.stats.games") },
-    { value: "24/7", label: t("home.stats.available") },
   ];
 
   return (
@@ -97,7 +109,7 @@ export default function Home() {
                   <Shield className="h-4 w-4 text-emerald-400/60" />
                   {t("home.evidenceBased")}
                 </div>
-              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-amber-400/60" />
                   {t("home.freeToStart")}
                 </div>
@@ -107,18 +119,18 @@ export default function Home() {
             <div className="hidden lg:block relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-emerald-500/10 to-purple-500/10 rounded-3xl blur-3xl" />
               <div className="relative space-y-3">
-                {toolExamples.slice(0, 4).map((tool, i) => (
+                {featureShowcase.slice(0, 5).map((item, i) => (
                   <div
-                    key={tool.name}
+                    key={item.name}
                     className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-4 hover:bg-white/[0.06] transition-colors"
                     style={{ marginLeft: `${i % 2 === 0 ? 0 : 40}px` }}
                   >
-                    <div className={`rounded-xl p-2.5 ${tool.color}`}>
-                      <tool.icon className="h-5 w-5" />
+                    <div className={`rounded-xl p-2.5 ${item.color}`}>
+                      <item.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm">{tool.name}</p>
-                      <p className="text-white/40 text-xs">{tool.category}</p>
+                      <p className="text-white font-medium text-sm">{item.name}</p>
+                      <p className="text-white/40 text-xs">{item.desc}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-white/20 ml-auto" />
                   </div>
@@ -127,7 +139,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Virtual Room PIN – full width */}
+          {/* Virtual Room PIN */}
           <div id="sala-virtual" className="mt-12 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-8 md:p-10">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-3 mb-3">
@@ -194,7 +206,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tools showcase */}
+      {/* Features showcase */}
       <section className="bg-[#0A0F1C] py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
@@ -203,19 +215,37 @@ export default function Home() {
             <p className="text-white/50 text-lg max-w-2xl mx-auto">{t("home.toolsSubtitle")}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
-            {toolExamples.map((tool) => (
-              <div key={tool.name} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 hover:border-emerald-500/20 hover:bg-white/[0.05] transition-all">
-                <div className={`rounded-xl p-2.5 shrink-0 ${tool.color}`}>
-                  <tool.icon className="h-5 w-5" />
+            {featureShowcase.map((item) => (
+              <Link key={item.name} to={item.link} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 hover:border-emerald-500/20 hover:bg-white/[0.05] transition-all">
+                <div className={`rounded-xl p-2.5 shrink-0 ${item.color}`}>
+                  <item.icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-medium text-sm truncate">{tool.name}</p>
-                  <p className="text-white/40 text-xs">{tool.category}</p>
+                  <p className="text-white font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-white/40 text-xs">{item.desc}</p>
                 </div>
-              </div>
+                <ChevronRight className="h-4 w-4 text-white/20 ml-auto shrink-0" />
+              </Link>
             ))}
           </div>
-          <div className="text-center">
+
+          {/* Simulator categories breakdown */}
+          <div className="max-w-4xl mx-auto mt-12">
+            <h3 className="text-lg font-bold text-white mb-6 text-center">Categorias de Simuladores</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {simulatorCategories.map((cat) => (
+                <div key={cat.name} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <cat.icon className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-white/80 text-xs font-medium truncate">{cat.name}</p>
+                    <p className="text-white/30 text-[10px]">{cat.count} simuladores</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mt-10">
             <Link to="/cadastro" className="inline-flex items-center gap-2 text-emerald-400 font-semibold text-sm hover:text-emerald-300 transition-colors">
               {t("home.viewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -295,7 +325,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Documentation link before layout footer */}
+      {/* Documentation link */}
       <div className="border-t border-white/[0.06] bg-[#080C18] py-6">
         <div className="container mx-auto px-4 text-center">
           <Link to="/documentacao" className="text-sm text-white/50 hover:text-white transition-colors">
