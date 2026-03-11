@@ -98,7 +98,7 @@ const benches: BenchCard[] = [
       "Desenho de coorte/caso-controle, cálculo de OR/RR, regressão logística e relatório STROBE.",
     icon: <Activity className="h-8 w-8" />,
     route: "/laboratorio-virtual/epidemiologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(340 82% 52%)",
   },
   {
