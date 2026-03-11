@@ -288,6 +288,13 @@ const App = () => (
               <Route path="/simuladores/quiralidade" element={<SimuladorQuiralidade />} />
               <Route path="/simuladores/pka-absorcao" element={<SimuladorPkaAbsorcao />} />
               <Route path="/simuladores/qsar-simplificado" element={<SimuladorQSAR />} />
+              <Route path="/simuladores/feedback-formativo" element={<SimuladorFeedbackFormativo />} />
+              <Route path="/simuladores/elaboracao-questoes" element={<SimuladorElaboracaoQuestoes />} />
+              <Route path="/simuladores/conducao-caso-pbl" element={<SimuladorConducaoCaso />} />
+              <Route path="/simuladores/planejamento-aula" element={<SimuladorPlanejamentoAula />} />
+              <Route path="/simuladores/gestao-sala" element={<SimuladorGestaoSala />} />
+              <Route path="/simuladores/avaliacao-rubrica-osce" element={<SimuladorAvaliacaoRubrica />} />
+              <Route path="/simuladores/preceptoria-clinica" element={<SimuladorPreceptoriaClinica />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
