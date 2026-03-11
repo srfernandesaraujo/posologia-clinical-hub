@@ -154,7 +154,7 @@ export default function SimuladorFarmacologiaOdonto() {
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedAnalgesic(""); setSelectedAINE(""); setSelectedAntibiotic(""); setM3Decision(""); setM4Conduta(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedAnalgesic(""); setSelectedAINE(""); setSelectedAntibiotic(""); setM3Decision(""); setM3AltAnalgesic(""); setM3AltAINE(""); setM3AltAntibiotic(""); setM4Conduta(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1"><h1 className="text-2xl font-bold">Farmacologia Odontológica</h1></div>
         <SimulatorHowToUse title="Farmacologia" steps={HOW_TO} />
       </div>
