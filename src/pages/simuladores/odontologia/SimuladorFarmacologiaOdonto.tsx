@@ -118,10 +118,10 @@ export default function SimuladorFarmacologiaOdonto() {
   const calcFeedback = () => {
     if (!patient) return { score: 0, decisions: [] as FeedbackDecision[], narrative: "" };
     const decisions: FeedbackDecision[] = [];
-    decisions.push({ label: "Analgésico", userChoice: analgesic?.name || "-", idealChoice: ANALGESICS.find(a => a.id === patient.idealAnalgesic)?.name || "-", correct: selectedAnalgesic === patient.idealAnalgesic });
-    decisions.push({ label: "Anti-inflamatório", userChoice: aine?.name || "-", idealChoice: AINES.find(a => a.id === patient.idealAINE)?.name || "-", correct: selectedAINE === patient.idealAINE });
+    decisions.push({ label: "Analgésico", userChoice: analgesic?.name || "-", idealChoice: ANALGESICS.find(a => a.id === patient.idealAnalgesic)?.name || "-", correct: effectiveAnalgesic === patient.idealAnalgesic });
+    decisions.push({ label: "Anti-inflamatório", userChoice: aine?.name || "-", idealChoice: AINES.find(a => a.id === patient.idealAINE)?.name || "-", correct: effectiveAINE === patient.idealAINE });
     if (patient.idealAntibiotic) {
-      decisions.push({ label: "Antibiótico", userChoice: antibiotic?.name || "Não prescrito", idealChoice: ANTIBIOTICS.find(a => a.id === patient.idealAntibiotic)?.name || "-", correct: selectedAntibiotic === patient.idealAntibiotic });
+      decisions.push({ label: "Antibiótico", userChoice: antibiotic?.name || "Não prescrito", idealChoice: ANTIBIOTICS.find(a => a.id === patient.idealAntibiotic)?.name || "-", correct: effectiveAntibiotic === patient.idealAntibiotic });
     }
     decisions.push({ label: "Decisão no M3", userChoice: m3Decision === "manter" ? "Manteve" : "Alterou", idealChoice: hasContraindication ? "Alterou" : "Manteve", correct: hasContraindication ? m3Decision === "alterar" : m3Decision === "manter" });
     const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
