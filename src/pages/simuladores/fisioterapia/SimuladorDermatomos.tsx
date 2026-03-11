@@ -88,11 +88,11 @@ export default function SimuladorDermatomos() {
     setActivePoint(null);
   };
 
-  const reportSections = caseData ? [
-    { title: "Caso", content: `${caseData.name} — ${caseData.description}` },
-    { title: "Mapa Sensitivo", content: DERMATOMES.map(d => `${d.label} (${d.side}): ${userSens[d.id] ?? "não testado"}`).join("\n") },
-    { title: "Correlação", content: caseData.asiaLevel ? `Nível ASIA: ${caseData.asiaLevel} — Grau: ${caseData.asiaGrade}` : "Padrão periférico — não se aplica ASIA" },
-  ] : [];
+  const expSummary = caseData ? {
+    "Caso": `${caseData.name} — ${caseData.description}`,
+    "Mapa": DERMATOMES.map(d => `${d.label}: ${userSens[d.id] ?? "?"}`).join("; "),
+    "Correlação": caseData.asiaLevel ? `ASIA ${caseData.asiaLevel} ${caseData.asiaGrade}` : "Padrão periférico",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">

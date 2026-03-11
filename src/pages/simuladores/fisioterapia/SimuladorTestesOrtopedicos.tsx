@@ -107,12 +107,12 @@ export default function SimuladorTestesOrtopedicos() {
     }, 1500);
   };
 
-  const reportSections = jointData ? [
-    { title: "Articulação", content: `${jointData.name} — ${jointData.complaint}` },
-    { title: "Testes Realizados", content: jointData.tests.map(t => `${t.name} (${t.target}): ${testedResults[t.id] ? "POSITIVO" : "negativo"}`).join("\n") },
-    { title: "Diagnóstico", content: jointData.diagnosis },
-    { title: "Reabilitação", content: selectedPhases.join("\n") || "Nenhuma fase selecionada" },
-  ] : [];
+  const expSummary = jointData ? {
+    "Articulação": `${jointData.name} — ${jointData.complaint}`,
+    "Testes": jointData.tests.map(t => `${t.name}: ${testedResults[t.id] ? "+" : "-"}`).join("; "),
+    "Diagnóstico": jointData.diagnosis,
+    "Reabilitação": selectedPhases.join("; ") || "Nenhuma",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">

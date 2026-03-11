@@ -91,12 +91,12 @@ export default function SimuladorEletroterapia() {
 
   const waveData = modality ? generateWaveData(freq, pulseWidth, selectedModality) : [];
 
-  const reportSections = caseData && modality ? [
-    { title: "Caso", content: `${caseData.name} — Objetivo: ${caseData.objective}` },
-    { title: "Modalidade", content: `${modality.name} — ${modality.desc}` },
-    { title: "Parâmetros", content: `Frequência: ${freq} Hz\nLargura de pulso: ${pulseWidth} μs\nIntensidade: ${intensity} mA\nTempo ON/OFF: ${timeOn}s / ${timeOff}s` },
-    { title: "Posicionamento", content: `Eletrodos posicionados na região ${caseData.region}` },
-  ] : [];
+  const expSummary = caseData && modality ? {
+    "Caso": `${caseData.name} — ${caseData.objective}`,
+    "Modalidade": modality.name,
+    "Parâmetros": `${freq}Hz | ${pulseWidth}μs | ${intensity}mA | ON${timeOn}s/OFF${timeOff}s`,
+    "Região": caseData.region,
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">

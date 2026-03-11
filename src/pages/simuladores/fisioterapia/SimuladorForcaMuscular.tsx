@@ -94,12 +94,12 @@ export default function SimuladorForcaMuscular() {
   const muscles = caseData ? Object.keys(caseData.muscles) : [];
   const allGraded = muscles.length > 0 && muscles.every(m => grades[m] !== null && grades[m] !== undefined);
 
-  const reportSections = caseData ? [
-    { title: "Caso", content: `${caseData.name} — Nível: ${caseData.level}` },
-    { title: "Força Muscular (Oxford/MRC)", content: muscles.map(m => `${m}: Grau ${grades[m] ?? "?"}/5 — ${OXFORD_LABELS[grades[m] ?? 0]}`).join("\n") },
-    { title: "Padrão", content: caseData.id === "c1" ? "Hemiparesia direita (gradiente distal)" : caseData.id === "c2" ? "Tetraparesia nível C6" : "Déficit peroneal (pé caído)" },
-    { title: "Programa", content: selectedExercises.map(id => EXERCISES[caseData.limb].find(e => e.id === id)?.name).join(", ") || "Nenhum" },
-  ] : [];
+  const expSummary = caseData ? {
+    "Caso": `${caseData.name} — Nível: ${caseData.level}`,
+    "Força": muscles.map(m => `${m}: ${grades[m] ?? "?"}/5`).join("; "),
+    "Padrão": caseData.id === "c1" ? "Hemiparesia" : caseData.id === "c2" ? "Tetraparesia C6" : "Peroneal",
+    "Programa": selectedExercises.map(id => EXERCISES[caseData.limb].find(e => e.id === id)?.name).join(", ") || "Nenhum",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">

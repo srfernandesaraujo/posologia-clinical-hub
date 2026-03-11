@@ -83,12 +83,12 @@ export default function SimuladorRespiratorio() {
     setAuscultated(prev => ({ ...prev, [id]: caseData.auscultation[id] }));
   };
 
-  const reportSections = caseData ? [
-    { title: "Caso", content: `${caseData.name} — ${caseData.desc}` },
-    { title: "Ausculta", content: LUNG_ZONES.map(z => `${z.label}: ${auscultated[z.id] ?? "-"}`).join("\n") },
-    { title: "Problema", content: caseData.issue },
-    { title: "Técnicas Selecionadas", content: selectedTechniques.map(id => TECHNIQUES.find(t => t.id === id)?.name).join(", ") || "Nenhuma" },
-  ] : [];
+  const expSummary = caseData ? {
+    "Caso": `${caseData.name} — ${caseData.desc}`,
+    "Ausculta": LUNG_ZONES.map(z => `${z.label}: ${auscultated[z.id] ?? "-"}`).join("; "),
+    "Problema": caseData.issue,
+    "Técnicas": selectedTechniques.map(id => TECHNIQUES.find(t => t.id === id)?.name).join(", ") || "Nenhuma",
+  } : undefined;
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">

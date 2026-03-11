@@ -123,11 +123,11 @@ export default function SimuladorBerg() {
     fullMark: 4,
   }));
 
-  const reportSections = caseData ? [
-    { title: "Paciente", content: `${caseData.name}, ${caseData.age} anos — ${caseData.desc}` },
-    { title: "Score Total", content: `${totalScore}/56 — ${riskLevel}` },
-    { title: "Itens", content: BERG_ITEMS.map((item, i) => `${item.id}. ${item.name}: ${userScores[i]}/4`).join("\n") },
-    { title: "Programa", content: selectedExercises.map(id => EXERCISES.find(e => e.id === id)?.name).join(", ") || "Nenhum" },
+  const expSummary = caseData ? {
+    "Paciente": `${caseData.name}, ${caseData.age}a — ${caseData.desc}`,
+    "Score": `${totalScore}/56 — ${riskLevel}`,
+    "Programa": selectedExercises.map(id => EXERCISES.find(e => e.id === id)?.name).join(", ") || "Nenhum",
+  } : undefined;
   ] : [];
 
   return (
