@@ -184,9 +184,9 @@ export default function SimuladorTriagemNutricional() {
                   <SelectTrigger><SelectValue placeholder="Pontuar" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="0">0 — Normal</SelectItem>
-                    <SelectItem value="1">1 — Perda > 5% em 3m ou ingestão 50-75%</SelectItem>
-                    <SelectItem value="2">2 — Perda > 5% em 2m ou IMC 18.5-20.5 + estado geral</SelectItem>
-                    <SelectItem value="3">3 — Perda > 5% em 1m ou IMC < 18.5 + estado geral</SelectItem>
+                    <SelectItem value="1">{"1 — Perda > 5% em 3m ou ingestão 50-75%"}</SelectItem>
+                    <SelectItem value="2">{"2 — Perda > 5% em 2m ou IMC 18.5-20.5 + estado geral"}</SelectItem>
+                    <SelectItem value="3">{"3 — Perda > 5% em 1m ou IMC < 18.5 + estado geral"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
