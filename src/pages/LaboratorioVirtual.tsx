@@ -14,6 +14,7 @@ export default function LaboratorioVirtual() {
     hba: 5,
   });
   const [selectedTarget, setSelectedTarget] = useState<{ id: string; name: string } | null>(null);
+  const [designMode, setDesignMode] = useState<"sliders" | "smiles">("sliders");
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -38,8 +39,17 @@ export default function LaboratorioVirtual() {
       {/* Modules grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TargetValidationPanel onTargetSelected={setSelectedTarget} />
-        <DrugDesignPanel properties={drugProperties} onChange={setDrugProperties} />
-        <DockingADMEPanel drugProperties={drugProperties} hasTarget={!!selectedTarget} />
+        <DrugDesignPanel
+          properties={drugProperties}
+          onChange={setDrugProperties}
+          activeTab={designMode}
+          onTabChange={setDesignMode}
+        />
+        <DockingADMEPanel
+          drugProperties={drugProperties}
+          hasTarget={!!selectedTarget}
+          designMode={designMode}
+        />
         <ClinicalTrialPanel drugProperties={drugProperties} hasTarget={!!selectedTarget} />
       </div>
     </div>

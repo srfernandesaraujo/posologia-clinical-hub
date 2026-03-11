@@ -1,45 +1,100 @@
 
 
-# Plano: Aba "Docking" no Módulo 3 + Interdependência com Módulo 2
+# Plano: Simuladores de Bioquímica
 
-## Resumo
+## Visão Geral
 
-Adicionar uma segunda aba "Docking" no Módulo 3 (a versão atual vira aba "Rápido"). A aba Docking terá animação de carregamento com mensagens dinâmicas, métricas expandidas (ΔG, Kd, Score circular), radar ADME-Tox e veredito textual. Quando o usuário selecionar a aba "SMILES" no Módulo 2, a aba "Docking" no Módulo 3 será automaticamente selecionada (e vice-versa: aba "Sliders" → aba "Rápido").
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-## Arquivos a editar
+## Arquitetura
 
-### 1. `src/pages/LaboratorioVirtual.tsx`
-- Adicionar state `designMode: "sliders" | "smiles"` compartilhado entre Módulo 2 e Módulo 3.
-- Passar `designMode` / `onDesignModeChange` ao `DrugDesignPanel` e `DockingADMEPanel`.
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-### 2. `src/components/lab-virtual/DrugDesignPanel.tsx`
-- Aceitar `activeTab` / `onTabChange` props para controle externo da aba ativa.
-- Propagar mudança de aba para o parent.
+## Simuladores por Lotes
 
-### 3. `src/components/lab-virtual/DockingADMEPanel.tsx`
-- Refatorar para conter `Tabs` com duas abas:
-  - **"Rápido"**: Conteúdo atual (simulação simples com 1.2s delay).
-  - **"Docking"**: Nova versão com:
-    - Botão largo "Simular Interação Fármaco-Receptor (Docking)"
-    - Overlay de carregamento 3s com mensagens rotativas: "Otimizando conformação 3D...", "Calculando energia livre de Gibbs...", "Avaliando interações hidrofóbicas..."
-    - Cards de métricas: ΔG (verde se < -8, laranja se ≥ -8), Kd (nM/µM), Score de Afinidade (barra circular 0-100% via SVG)
-    - Radar ADME-Tox com eixo "Baixa Toxicidade" (invertido do atual "Toxicidade") — valores conectados aos sliders/Lipinski
-    - Caixa de "Veredito do Protótipo" com texto dinâmico baseado em ΔG + violações Lipinski
-- Aceitar `activeTab` prop controlada pelo parent (sincronizada com designMode).
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-## Lógica de interdependência
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-- Módulo 2 muda para "smiles" → parent seta `designMode = "smiles"` → Módulo 3 muda para aba "docking"
-- Módulo 2 muda para "sliders" → parent seta `designMode = "sliders"` → Módulo 3 muda para aba "rapido"
-- Usuário pode mudar aba do Módulo 3 manualmente (sem forçar mudança no Módulo 2)
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-## Detalhes da aba Docking
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-- **Score circular**: SVG com `stroke-dasharray` / `stroke-dashoffset` para criar progress ring
-- **Mensagens de loading**: Array de 3 strings, rotação a cada 1s durante os 3s de simulação
-- **Veredito**: Lógica condicional:
-  - ΔG < -8 + sem violações Lipinski → "Candidato promissor com boa afinidade e perfil farmacocinético favorável"
-  - ΔG < -8 + violações Lipinski → "Excelente afinidade teórica, mas problemas de biodisponibilidade oral. Considere otimizar..."
-  - ΔG ≥ -8 + sem violações → "Afinidade moderada. Considere modificações estruturais para melhorar a interação..."
-  - ΔG ≥ -8 + violações → "Candidato desfavorável. Baixa afinidade e problemas farmacocinéticos significativos."
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
+
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
+
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
+
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
+
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
+
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
+
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
+
+## Alterações em arquivos existentes
+
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 
