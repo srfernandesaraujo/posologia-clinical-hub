@@ -107,7 +107,7 @@ export default function SimuladorAnatomiaEndodontia() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const prompt = getNativePrompt("sim-anatomia-endodontia") || "";
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("anatomia-endodontia", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("anatomia-endodontia", BUILT_IN);
 
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
