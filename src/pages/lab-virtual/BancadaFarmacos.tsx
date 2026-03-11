@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TargetValidationPanel } from "@/components/lab-virtual/TargetValidationPanel";
 import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/DrugDesignPanel";
