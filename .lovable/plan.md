@@ -1,37 +1,100 @@
 
 
-# Plano: Aba SMILES no Módulo 2
+# Plano: Simuladores de Bioquímica
 
-## Resumo
+## Visão Geral
 
-Adicionar uma segunda versão do Módulo 2 (aba "SMILES") que permite entrada de notação SMILES com visualização 2D da molécula e sliders manuais para propriedades + validação Lipinski. A versão atual vira a aba "Sliders". Ambas compartilham o mesmo `DrugProperties` state.
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-## Abordagem
+## Arquitetura
 
-### Estrutura
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-- **`DrugDesignPanel.tsx`**: Adicionar `Tabs` (Radix) com duas abas: "Sliders" (conteúdo atual) e "SMILES" (novo conteúdo).
-- O conteúdo SMILES fica dentro do mesmo componente para manter coesão e compartilhar `properties`/`onChange`.
+## Simuladores por Lotes
 
-### Aba SMILES — Layout em duas colunas
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-**Painel Esquerdo:**
-- Input de texto para SMILES
-- 3 botões de exemplo rápido: Aspirina (`CC(=O)Oc1ccccc1C(=O)O`), Ibuprofeno (`CC(C)Cc1ccc(cc1)C(C)C(=O)O`), Paracetamol (`CC(=O)Nc1ccc(O)cc1`)
-- Visualização 2D da molécula via **API do PubChem** (imagem PNG): `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{smiles}/PNG` — abordagem mais segura que SmilesDrawer (que pode ter problemas de build). Se a imagem falhar, exibe placeholder.
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-**Painel Direito:**
-- 4 sliders idênticos ao modo Sliders, mas com ranges ajustados conforme spec (MW 0-1000, LogP -5 a 10, HBD 0-15, HBA 0-20)
-- Indicadores Lipinski (reutiliza componentes existentes)
-- Banner amarelo de alerta se >1 violação
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-### Detalhes técnicos
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-- A imagem PubChem é buscada com debounce (~500ms) ao digitar no input SMILES. O SMILES é URL-encoded.
-- Ambas as abas escrevem no mesmo `properties` state → Módulos 3 e 4 reagem automaticamente.
-- Sem novas dependências — usa fetch + img tag para renderizar a molécula 2D.
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-## Arquivo a editar
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
 
-1. **`src/components/lab-virtual/DrugDesignPanel.tsx`** — Refatorar para conter Tabs com aba "Sliders" (código atual) e aba "SMILES" (novo).
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
+
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
+
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
+
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
+
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
+
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
+
+## Alterações em arquivos existentes
+
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 
