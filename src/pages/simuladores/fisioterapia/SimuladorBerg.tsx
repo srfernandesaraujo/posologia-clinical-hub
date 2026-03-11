@@ -128,7 +128,6 @@ export default function SimuladorBerg() {
     "Score": `${totalScore}/56 — ${riskLevel}`,
     "Programa": selectedExercises.map(id => EXERCISES.find(e => e.id === id)?.name).join(", ") || "Nenhum",
   } : undefined;
-  ] : [];
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
