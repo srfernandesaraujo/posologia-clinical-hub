@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const CASES = [
   { id: "c1", classe: "Classe I", profile: "Perfil reto, relação molar normal", points: { S: { x: 140, y: 55 }, N: { x: 170, y: 50 }, A: { x: 185, y: 110 }, B: { x: 178, y: 150 }, Gn: { x: 175, y: 195 }, Go: { x: 80, y: 175 } }, sna: 82, snb: 80, anb: 2, idealClassification: "Classe I (ANB 0-4°)", idealTreatment: "fixo", consequence: { correct: "Tratamento ortodôntico convencional adequado. A Classe I esquelética permite correção apenas dentária, com bom prognóstico e resultado estético previsível.", wrong: "Tratamento excessivo ou inadequado para o padrão esquelético. Intervenção cirúrgica em Classe I é desnecessária e a correção excessiva pode comprometer o perfil facial." } },
