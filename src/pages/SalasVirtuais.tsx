@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,113 +11,124 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
-const SIMULATOR_OPTIONS = [
+interface SimulatorOption {
+  slug: string;
+  label: string;
+  category: string;
+}
+
+const SIMULATOR_OPTIONS: SimulatorOption[] = [
   // Farmácia Clínica
-  { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos" },
-  { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship" },
-  { slug: "tdm", label: "TDM – Monitoramento Terapêutico" },
-  { slug: "acompanhamento", label: "Acompanhamento Farmacoterapêutico" },
-  { slug: "insulina", label: "Dose de Insulina" },
-  { slug: "metodo-soap", label: "Simulador do Método SOAP" },
-  { slug: "mai", label: "Simulador MAI" },
-  { slug: "cascata-prescricao", label: "Cascata de Prescrição" },
-  { slug: "bomba-infusao", label: "Bomba de Infusão" },
-  { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos" },
-  { slug: "interacoes", label: "Interações Medicamentosas" },
+  { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos", category: "Farmácia Clínica" },
+  { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Farmácia Clínica" },
+  { slug: "tdm", label: "TDM – Monitoramento Terapêutico", category: "Farmácia Clínica" },
+  { slug: "acompanhamento", label: "Acompanhamento Farmacoterapêutico", category: "Farmácia Clínica" },
+  { slug: "insulina", label: "Dose de Insulina", category: "Farmácia Clínica" },
+  { slug: "metodo-soap", label: "Simulador do Método SOAP", category: "Farmácia Clínica" },
+  { slug: "mai", label: "Simulador MAI", category: "Farmácia Clínica" },
+  { slug: "cascata-prescricao", label: "Cascata de Prescrição", category: "Farmácia Clínica" },
+  { slug: "bomba-infusao", label: "Bomba de Infusão", category: "Farmácia Clínica" },
+  { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos", category: "Farmácia Clínica" },
+  { slug: "interacoes", label: "Interações Medicamentosas", category: "Farmácia Clínica" },
   // Fisiologia Humana
-  { slug: "sna", label: "Sistema Nervoso Autônomo" },
-  { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca" },
-  { slug: "depuracao-renal", label: "Depuração Renal e TFG" },
-  { slug: "equilibrio-acido-base", label: "Equilíbrio Ácido-Base" },
-  { slug: "regulacao-glicemica", label: "Regulação Glicêmica" },
-  { slug: "eixo-hpa", label: "Eixo HPA" },
-  { slug: "cinetica-enzimatica", label: "Cinética Enzimática" },
-  { slug: "secrecao-gastrica", label: "Secreção Ácida Gástrica" },
-  { slug: "cascata-coagulacao", label: "Cascata de Coagulação" },
-  { slug: "compartimentos-adme", label: "Compartimentos ADME" },
+  { slug: "sna", label: "Sistema Nervoso Autônomo", category: "Fisiologia Humana" },
+  { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca", category: "Fisiologia Humana" },
+  { slug: "depuracao-renal", label: "Depuração Renal e TFG", category: "Fisiologia Humana" },
+  { slug: "equilibrio-acido-base", label: "Equilíbrio Ácido-Base", category: "Fisiologia Humana" },
+  { slug: "regulacao-glicemica", label: "Regulação Glicêmica", category: "Fisiologia Humana" },
+  { slug: "eixo-hpa", label: "Eixo HPA", category: "Fisiologia Humana" },
+  { slug: "cinetica-enzimatica", label: "Cinética Enzimática", category: "Fisiologia Humana" },
+  { slug: "secrecao-gastrica", label: "Secreção Ácida Gástrica", category: "Fisiologia Humana" },
+  { slug: "cascata-coagulacao", label: "Cascata de Coagulação", category: "Fisiologia Humana" },
+  { slug: "compartimentos-adme", label: "Compartimentos ADME", category: "Fisiologia Humana" },
   // Bioquímica
-  { slug: "cadeia-eletrons", label: "Cadeia de Transporte de Eletrões" },
-  { slug: "dissociacao-hemoglobina", label: "Dissociação da Hemoglobina" },
-  { slug: "glicolise-gliconeogenese", label: "Glicólise vs. Gliconeogénese" },
-  { slug: "cinetica-avancada", label: "Cinética Enzimática Avançada" },
-  { slug: "ciclo-ureia", label: "Ciclo da Ureia" },
-  { slug: "acido-araquidonico", label: "Cascata do Ácido Araquidónico" },
-  { slug: "lipoproteinas", label: "Metabolismo das Lipoproteínas" },
-  { slug: "pentoses-fosfato", label: "Via das Pentoses Fosfato e G6PD" },
-  { slug: "titulacao-aminoacidos", label: "Titulação de Aminoácidos" },
-  { slug: "operon-lac", label: "Operão Lac" },
+  { slug: "cadeia-eletrons", label: "Cadeia de Transporte de Eletrões", category: "Bioquímica" },
+  { slug: "dissociacao-hemoglobina", label: "Dissociação da Hemoglobina", category: "Bioquímica" },
+  { slug: "glicolise-gliconeogenese", label: "Glicólise vs. Gliconeogénese", category: "Bioquímica" },
+  { slug: "cinetica-avancada", label: "Cinética Enzimática Avançada", category: "Bioquímica" },
+  { slug: "ciclo-ureia", label: "Ciclo da Ureia", category: "Bioquímica" },
+  { slug: "acido-araquidonico", label: "Cascata do Ácido Araquidónico", category: "Bioquímica" },
+  { slug: "lipoproteinas", label: "Metabolismo das Lipoproteínas", category: "Bioquímica" },
+  { slug: "pentoses-fosfato", label: "Via das Pentoses Fosfato e G6PD", category: "Bioquímica" },
+  { slug: "titulacao-aminoacidos", label: "Titulação de Aminoácidos", category: "Bioquímica" },
+  { slug: "operon-lac", label: "Operão Lac", category: "Bioquímica" },
   // Farmacologia Básica
-  { slug: "dose-resposta", label: "Curva Dose-Resposta" },
-  { slug: "transducao-sinal", label: "Transdução de Sinal" },
-  { slug: "janela-terapeutica-farma", label: "Janela Terapêutica" },
-  { slug: "vias-administracao", label: "Vias de Administração" },
-  { slug: "bloqueio-neuromuscular", label: "Bloqueio Neuromuscular" },
-  { slug: "farmaco-autonomica", label: "Farmacologia Autonômica" },
-  { slug: "tolerancia-dependencia", label: "Tolerância e Dependência" },
-  { slug: "farmacogenomica", label: "Farmacogenômica CYP" },
+  { slug: "dose-resposta", label: "Curva Dose-Resposta", category: "Farmacologia Básica" },
+  { slug: "transducao-sinal", label: "Transdução de Sinal", category: "Farmacologia Básica" },
+  { slug: "janela-terapeutica-farma", label: "Janela Terapêutica", category: "Farmacologia Básica" },
+  { slug: "vias-administracao", label: "Vias de Administração", category: "Farmacologia Básica" },
+  { slug: "bloqueio-neuromuscular", label: "Bloqueio Neuromuscular", category: "Farmacologia Básica" },
+  { slug: "farmaco-autonomica", label: "Farmacologia Autonômica", category: "Farmacologia Básica" },
+  { slug: "tolerancia-dependencia", label: "Tolerância e Dependência", category: "Farmacologia Básica" },
+  { slug: "farmacogenomica", label: "Farmacogenômica CYP", category: "Farmacologia Básica" },
   // Farmacotécnica
-  { slug: "estabilidade", label: "Estabilidade e Prazo de Validade" },
-  { slug: "liberacao-farmacos", label: "Sistemas de Liberação" },
-  { slug: "diluicao", label: "Diluição e Concentração" },
-  { slug: "reologia", label: "Reologia e Viscosidade" },
-  { slug: "hlb-emulsoes", label: "Equilíbrio HLB e Emulsões" },
-  { slug: "granulometria", label: "Granulometria" },
-  { slug: "compressao", label: "Compressão de Comprimidos" },
-  { slug: "tampao-farmaceutico", label: "Tampão Farmacêutico" },
+  { slug: "estabilidade", label: "Estabilidade e Prazo de Validade", category: "Farmacotécnica" },
+  { slug: "liberacao-farmacos", label: "Sistemas de Liberação", category: "Farmacotécnica" },
+  { slug: "diluicao", label: "Diluição e Concentração", category: "Farmacotécnica" },
+  { slug: "reologia", label: "Reologia e Viscosidade", category: "Farmacotécnica" },
+  { slug: "hlb-emulsoes", label: "Equilíbrio HLB e Emulsões", category: "Farmacotécnica" },
+  { slug: "granulometria", label: "Granulometria", category: "Farmacotécnica" },
+  { slug: "compressao", label: "Compressão de Comprimidos", category: "Farmacotécnica" },
+  { slug: "tampao-farmaceutico", label: "Tampão Farmacêutico", category: "Farmacotécnica" },
   // Química Farmacêutica
-  { slug: "sar-explorer", label: "Relação Estrutura-Atividade (SAR)" },
-  { slug: "lipinski", label: "Regra de Lipinski" },
-  { slug: "bioisosterismo", label: "Bioisosterismo" },
-  { slug: "metabolismo-farmacos", label: "Metabolismo de Fármacos" },
-  { slug: "docking-simplificado", label: "Docking Fármaco-Receptor" },
-  { slug: "quiralidade", label: "Quiralidade e Estereoquímica" },
-  { slug: "pka-absorcao", label: "pKa, Ionização e Absorção" },
-  { slug: "qsar-simplificado", label: "QSAR (Hansch)" },
+  { slug: "sar-explorer", label: "Relação Estrutura-Atividade (SAR)", category: "Química Farmacêutica" },
+  { slug: "lipinski", label: "Regra de Lipinski", category: "Química Farmacêutica" },
+  { slug: "bioisosterismo", label: "Bioisosterismo", category: "Química Farmacêutica" },
+  { slug: "metabolismo-farmacos", label: "Metabolismo de Fármacos", category: "Química Farmacêutica" },
+  { slug: "docking-simplificado", label: "Docking Fármaco-Receptor", category: "Química Farmacêutica" },
+  { slug: "quiralidade", label: "Quiralidade e Estereoquímica", category: "Química Farmacêutica" },
+  { slug: "pka-absorcao", label: "pKa, Ionização e Absorção", category: "Química Farmacêutica" },
+  { slug: "qsar-simplificado", label: "QSAR (Hansch)", category: "Química Farmacêutica" },
   // Formação Docente
-  { slug: "feedback-formativo", label: "Feedback Formativo" },
-  { slug: "elaboracao-questoes", label: "Elaboração de Questões (Bloom)" },
-  { slug: "conducao-caso-pbl", label: "Condução de Caso (PBL/TBL)" },
-  { slug: "planejamento-aula", label: "Planejamento de Aula" },
-  { slug: "gestao-sala", label: "Gestão de Sala" },
-  { slug: "avaliacao-rubrica-osce", label: "Avaliação por Rubrica (OSCE)" },
-  { slug: "preceptoria-clinica", label: "Preceptoria Clínica" },
+  { slug: "feedback-formativo", label: "Feedback Formativo", category: "Formação Docente" },
+  { slug: "elaboracao-questoes", label: "Elaboração de Questões (Bloom)", category: "Formação Docente" },
+  { slug: "conducao-caso-pbl", label: "Condução de Caso (PBL/TBL)", category: "Formação Docente" },
+  { slug: "planejamento-aula", label: "Planejamento de Aula", category: "Formação Docente" },
+  { slug: "gestao-sala", label: "Gestão de Sala", category: "Formação Docente" },
+  { slug: "avaliacao-rubrica-osce", label: "Avaliação por Rubrica (OSCE)", category: "Formação Docente" },
+  { slug: "preceptoria-clinica", label: "Preceptoria Clínica", category: "Formação Docente" },
   // Odontologia
-  { slug: "odontograma", label: "Odontograma Interativo" },
-  { slug: "anatomia-endodontia", label: "Anatomia Dental (Endodontia)" },
-  { slug: "periodontograma", label: "Periodontograma" },
-  { slug: "anestesiologia-odonto", label: "Anestesiologia Odontológica" },
-  { slug: "cefalometria", label: "Cefalometria" },
-  { slug: "radiografia-odonto", label: "Radiografia Odontológica" },
-  { slug: "farmacologia-odonto", label: "Farmacologia Odontológica" },
-  { slug: "cirurgia-exodontia", label: "Cirurgia e Exodontia" },
+  { slug: "odontograma", label: "Odontograma Interativo", category: "Odontologia" },
+  { slug: "anatomia-endodontia", label: "Anatomia Dental (Endodontia)", category: "Odontologia" },
+  { slug: "periodontograma", label: "Periodontograma", category: "Odontologia" },
+  { slug: "anestesiologia-odonto", label: "Anestesiologia Odontológica", category: "Odontologia" },
+  { slug: "cefalometria", label: "Cefalometria", category: "Odontologia" },
+  { slug: "radiografia-odonto", label: "Radiografia Odontológica", category: "Odontologia" },
+  { slug: "farmacologia-odonto", label: "Farmacologia Odontológica", category: "Odontologia" },
+  { slug: "cirurgia-exodontia", label: "Cirurgia e Exodontia", category: "Odontologia" },
   // Fisioterapia
-  { slug: "goniometria", label: "Goniometria Articular" },
-  { slug: "avaliacao-postural", label: "Avaliação Postural" },
-  { slug: "forca-muscular", label: "Força Muscular (Oxford/MRC)" },
-  { slug: "dermatomos", label: "Dermátomos e Avaliação Sensitiva" },
-  { slug: "respiratorio", label: "Fisioterapia Respiratória" },
-  { slug: "eletroterapia", label: "Eletroterapia" },
-  { slug: "testes-ortopedicos", label: "Testes Ortopédicos Especiais" },
-  { slug: "berg", label: "Escala de Equilíbrio de Berg" },
+  { slug: "goniometria", label: "Goniometria Articular", category: "Fisioterapia" },
+  { slug: "avaliacao-postural", label: "Avaliação Postural", category: "Fisioterapia" },
+  { slug: "forca-muscular", label: "Força Muscular (Oxford/MRC)", category: "Fisioterapia" },
+  { slug: "dermatomos", label: "Dermátomos e Avaliação Sensitiva", category: "Fisioterapia" },
+  { slug: "respiratorio", label: "Fisioterapia Respiratória", category: "Fisioterapia" },
+  { slug: "eletroterapia", label: "Eletroterapia", category: "Fisioterapia" },
+  { slug: "testes-ortopedicos", label: "Testes Ortopédicos Especiais", category: "Fisioterapia" },
+  { slug: "berg", label: "Escala de Equilíbrio de Berg", category: "Fisioterapia" },
   // Nutrição
-  { slug: "avaliacao-nutricional", label: "Avaliação Nutricional Antropométrica" },
-  { slug: "triagem-nutricional", label: "Triagem Nutricional (NRS-2002)" },
-  { slug: "necessidades-energeticas", label: "Necessidades Energéticas" },
-  { slug: "tne", label: "Terapia Nutricional Enteral (TNE)" },
-  { slug: "tnp", label: "Terapia Nutricional Parenteral (TNP)" },
-  { slug: "disfagia", label: "Avaliação de Disfagia" },
-  { slug: "nutricao-renal", label: "Nutrição Renal Crônica" },
-  { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil" },
+  { slug: "avaliacao-nutricional", label: "Avaliação Nutricional Antropométrica", category: "Nutrição" },
+  { slug: "triagem-nutricional", label: "Triagem Nutricional (NRS-2002)", category: "Nutrição" },
+  { slug: "necessidades-energeticas", label: "Necessidades Energéticas", category: "Nutrição" },
+  { slug: "tne", label: "Terapia Nutricional Enteral (TNE)", category: "Nutrição" },
+  { slug: "tnp", label: "Terapia Nutricional Parenteral (TNP)", category: "Nutrição" },
+  { slug: "disfagia", label: "Avaliação de Disfagia", category: "Nutrição" },
+  { slug: "nutricao-renal", label: "Nutrição Renal Crônica", category: "Nutrição" },
+  { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil", category: "Nutrição" },
 ];
 
+const CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+
 interface ActivityItem {
+  category: string;
   simulatorSlug: string;
   caseId: string;
+  instruction: string;
 }
 
 function generatePin(): string {
@@ -130,7 +141,8 @@ export default function SalasVirtuais() {
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
-  const [activities, setActivities] = useState<ActivityItem[]>([{ simulatorSlug: "", caseId: "" }]);
+  const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
+  const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
@@ -148,7 +160,6 @@ export default function SalasVirtuais() {
     },
   });
 
-  // Fetch activities for detail room
   const { data: roomActivities = [] } = useQuery({
     queryKey: ["room-activities", detailRoom?.id],
     enabled: !!detailRoom,
@@ -163,8 +174,7 @@ export default function SalasVirtuais() {
     },
   });
 
-  // Fetch cases for all unique simulator slugs in activities
-  const uniqueSlugs = [...new Set(activities.map(a => a.simulatorSlug).filter(Boolean))];
+  const uniqueSlugs = useMemo(() => [...new Set(activities.map(a => a.simulatorSlug).filter(Boolean))], [activities]);
   const { data: allCases = [] } = useQuery({
     queryKey: ["simulator-cases-for-rooms", uniqueSlugs],
     enabled: uniqueSlugs.length > 0,
@@ -213,8 +223,6 @@ export default function SalasVirtuais() {
       if (validActivities.length === 0) throw new Error("Adicione pelo menos uma atividade");
 
       const pin = generatePin();
-
-      // For single activity, keep legacy compatibility
       const isLegacy = validActivities.length === 1;
 
       const { data: roomData, error: roomError } = await supabase
@@ -226,12 +234,12 @@ export default function SalasVirtuais() {
           case_id: isLegacy ? (validActivities[0].caseId || null) : null,
           created_by: user!.id,
           expires_at: expiresAt || null,
+          description: isLegacy ? validActivities[0].instruction || null : null,
         })
         .select("id")
         .single();
       if (roomError) throw roomError;
 
-      // Always insert room_activities for consistency
       const activityRows = validActivities.map((a, i) => ({
         room_id: roomData.id,
         simulator_slug: a.simulatorSlug,
@@ -247,10 +255,7 @@ export default function SalasVirtuais() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
       toast.success("Sala criada com sucesso!");
-      setCreateOpen(false);
-      setTitle("");
-      setActivities([{ simulatorSlug: "", caseId: "" }]);
-      setExpiresAt("");
+      resetForm();
     },
     onError: (err: any) => toast.error(err.message || "Erro ao criar sala"),
   });
@@ -274,20 +279,33 @@ export default function SalasVirtuais() {
     },
   });
 
+  const resetForm = () => {
+    setCreateOpen(false);
+    setTitle("");
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setExpiresAt("");
+    setIsExamMode(false);
+  };
+
   const copyPin = (pin: string) => {
     navigator.clipboard.writeText(pin);
     toast.success(`PIN ${pin} copiado!`);
   };
 
-  const addActivity = () => setActivities([...activities, { simulatorSlug: "", caseId: "" }]);
+  const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const removeActivity = (i: number) => {
     if (activities.length <= 1) return;
     setActivities(activities.filter((_, idx) => idx !== i));
   };
   const updateActivity = (i: number, field: keyof ActivityItem, value: string) => {
     const copy = [...activities];
-    copy[i] = { ...copy[i], [field]: value };
-    if (field === "simulatorSlug") copy[i].caseId = "";
+    if (field === "category") {
+      copy[i] = { ...copy[i], category: value, simulatorSlug: "", caseId: "", instruction: copy[i].instruction };
+    } else if (field === "simulatorSlug") {
+      copy[i] = { ...copy[i], simulatorSlug: value, caseId: "" };
+    } else {
+      copy[i] = { ...copy[i], [field]: value };
+    }
     setActivities(copy);
   };
   const moveActivity = (i: number, dir: -1 | 1) => {
@@ -299,11 +317,18 @@ export default function SalasVirtuais() {
   };
 
   const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
+  const getSimulatorsForCategory = (cat: string) => SIMULATOR_OPTIONS.filter(s => s.category === cat);
 
   const getSimulatorLabel = (slug: string) =>
     SIMULATOR_OPTIONS.find(s => s.slug === slug)?.label || slug;
 
-  const isExam = (room: any) => !room.simulator_slug;
+  const isRoomExam = (room: any) => !room.simulator_slug;
+
+  // When switching modes, reset activities
+  const handleModeChange = (exam: boolean) => {
+    setIsExamMode(exam);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+  };
 
   if (!canUseVirtualRooms) {
     return (
@@ -351,7 +376,7 @@ export default function SalasVirtuais() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
-                    {isExam(room) && (
+                    {isRoomExam(room) && (
                       <Badge variant="outline" className="text-xs">
                         <ClipboardList className="h-3 w-3 mr-1" />Prova
                       </Badge>
@@ -401,7 +426,7 @@ export default function SalasVirtuais() {
       )}
 
       {/* Create Room Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog open={createOpen} onOpenChange={(open) => { if (!open) resetForm(); else setCreateOpen(true); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Criar Nova Sala Virtual</DialogTitle></DialogHeader>
           <div className="space-y-4">
@@ -412,54 +437,113 @@ export default function SalasVirtuais() {
 
             <Separator />
 
+            {/* Mode Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div>
+                <p className="font-medium text-sm">Tipo de Atividade</p>
+                <p className="text-xs text-muted-foreground">
+                  {isExamMode ? "Atividade Simulada — múltiplos simuladores com enunciados" : "Simulação Unitária — um simulador e um caso clínico"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium ${!isExamMode ? "text-primary" : "text-muted-foreground"}`}>Unitária</span>
+                <Switch checked={isExamMode} onCheckedChange={handleModeChange} />
+                <span className={`text-xs font-medium ${isExamMode ? "text-primary" : "text-muted-foreground"}`}>Simulada</span>
+              </div>
+            </div>
+
+            {/* Activities */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">Atividades da Prova</Label>
-                <Button variant="outline" size="sm" onClick={addActivity}>
-                  <Plus className="h-4 w-4 mr-1" />Adicionar Atividade
-                </Button>
+                <Label className="text-base font-semibold">
+                  {isExamMode ? "Atividades da Prova" : "Simulador"}
+                </Label>
+                {isExamMode && (
+                  <Button variant="outline" size="sm" onClick={addActivity}>
+                    <Plus className="h-4 w-4 mr-1" />Adicionar Atividade
+                  </Button>
+                )}
               </div>
               <div className="space-y-3">
                 {activities.map((act, i) => {
+                  const simulatorsInCategory = getSimulatorsForCategory(act.category);
                   const casesForSlug = getCasesForSlug(act.simulatorSlug);
                   return (
                     <Card key={i} className="border-dashed">
                       <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-muted-foreground">Atividade {i + 1}</span>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, -1)} disabled={i === 0}>
-                              <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, 1)} disabled={i === activities.length - 1}>
-                              <ArrowDown className="h-3 w-3" />
-                            </Button>
-                            {activities.length > 1 && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeActivity(i)}>
-                                <X className="h-3 w-3 text-destructive" />
+                        {isExamMode && (
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-muted-foreground">Atividade {i + 1}</span>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, -1)} disabled={i === 0}>
+                                <ArrowUp className="h-3 w-3" />
                               </Button>
-                            )}
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(i, 1)} disabled={i === activities.length - 1}>
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                              {activities.length > 1 && (
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeActivity(i)}>
+                                  <X className="h-3 w-3 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        )}
+
+                        <div className="space-y-3">
+                          {/* Step 1: Category */}
                           <div>
-                            <Label className="text-xs">Simulador</Label>
-                            <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
-                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                            <Label className="text-xs">Categoria</Label>
+                            <Select value={act.category} onValueChange={v => updateActivity(i, "category", v)}>
+                              <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                               <SelectContent>
-                                {SIMULATOR_OPTIONS.map(s => <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>)}
+                                {CATEGORIES.map(cat => (
+                                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
+
+                          {/* Step 2: Simulator (only after category) */}
+                          {act.category && (
+                            <div>
+                              <Label className="text-xs">Simulador</Label>
+                              <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
+                                <SelectTrigger><SelectValue placeholder="Selecione o simulador" /></SelectTrigger>
+                                <SelectContent>
+                                  {simulatorsInCategory.map(s => (
+                                    <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {/* Step 3: Case (only after simulator) */}
                           {act.simulatorSlug && casesForSlug.length > 0 && (
                             <div>
                               <Label className="text-xs">Caso Clínico (opcional)</Label>
                               <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
                                 <SelectTrigger><SelectValue placeholder="Qualquer caso" /></SelectTrigger>
                                 <SelectContent>
-                                  {casesForSlug.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>)}
+                                  {casesForSlug.map((c: any) => (
+                                    <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
+                            </div>
+                          )}
+
+                          {/* Step 4: Instruction (only in exam mode, after simulator selected) */}
+                          {isExamMode && act.simulatorSlug && (
+                            <div>
+                              <Label className="text-xs">Enunciado / Comando para o aluno</Label>
+                              <Textarea
+                                value={act.instruction}
+                                onChange={e => updateActivity(i, "instruction", e.target.value)}
+                                placeholder="Ex: Analise o caso clínico a seguir e identifique os PRMs..."
+                                className="min-h-[60px] text-sm"
+                              />
                             </div>
                           )}
                         </div>
@@ -493,8 +577,7 @@ export default function SalasVirtuais() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{detailRoom?.title} – Detalhes</DialogTitle></DialogHeader>
 
-          {/* Show activities if exam */}
-          {detailRoom && isExam(detailRoom) && roomActivities.length > 0 && (
+          {detailRoom && isRoomExam(detailRoom) && roomActivities.length > 0 && (
             <div className="mb-4">
               <h3 className="text-sm font-semibold mb-2">Atividades da Prova</h3>
               <div className="space-y-1">
@@ -546,7 +629,6 @@ export default function SalasVirtuais() {
                           <Separator className="my-2" />
                           <div className="space-y-1">
                             {pSubmissions.map((s: any) => {
-                              // Find activity info if available
                               const activity = roomActivities.find((a: any) => a.id === s.activity_id);
                               const actLabel = activity
                                 ? `${getSimulatorLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
