@@ -1,100 +1,81 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Simuladores Educacionais para Treinamento de Professores
 
-## Visão Geral
+## Contexto
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+A plataforma já possui um ecossistema robusto de simuladores para alunos (farmácia clínica, fisiologia, bioquímica, farmacologia, etc.) e infraestrutura de Salas Virtuais para professores. O que falta é treinar o professor enquanto educador — como ensinar, avaliar, dar feedback e conduzir aulas de forma eficaz. Isso é um diferencial de mercado enorme porque praticamente nenhuma edtech de saúde foca no docente como aprendiz.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## Simuladores Propostos
 
-## Simuladores por Lotes
+### 1. Simulador de Feedback Formativo (Pendleton / R2C2 / ALOBA)
+- **O que treina**: A habilidade de dar feedback construtivo a alunos após avaliações clínicas
+- **Mecânica**: O professor recebe um cenário (aluno X fez Y no simulador com score Z e erros específicos). Deve estruturar seu feedback seguindo um modelo validado (Pendleton, R2C2 ou ALOBA). A cada etapa do modelo, escolhe entre opções de frases — algumas empáticas e produtivas, outras punitivas ou vagas. O sistema pontua a qualidade do feedback
+- **Impacto**: Professores frequentemente dão feedback ineficaz (genérico, punitivo ou omisso). Este simulador treina a competência mais crítica do docente clínico
+- **Conexão com o sistema**: Usa dados reais da estrutura de Salas Virtuais como cenários
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 2. Simulador de Elaboração de Questões (Taxonomia de Bloom)
+- **O que treina**: Criar questões de avaliação em diferentes níveis cognitivos
+- **Mecânica**: O professor recebe um objetivo de aprendizagem e deve elaborar questões que atendam a um nível específico de Bloom (Lembrar → Compreender → Aplicar → Analisar → Avaliar → Criar). O sistema apresenta questões-exemplo e o professor deve classificá-las ou reescrevê-las para subir de nível taxonômico. Inclui análise automática de verbos-chave
+- **Impacto**: A maioria dos docentes cria questões apenas nos níveis "Lembrar" e "Compreender". Este simulador força a prática de níveis superiores
+- **Diferencial**: Nenhum sistema no mercado oferece treinamento prático de elaboração de questões com feedback imediato
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 3. Simulador de Condução de Caso Clínico (Team-Based Learning / PBL)
+- **O que treina**: A habilidade de facilitar discussões em grupo sem dar a resposta diretamente
+- **Mecânica**: O professor é colocado como facilitador de um caso PBL/TBL com "alunos virtuais" que fazem perguntas, dão respostas erradas ou ficam em silêncio. O professor deve escolher entre intervenções: fazer perguntas socráticas, redirecionar, provocar debate entre pares, ou intervir diretamente. O sistema avalia se o professor está sendo facilitador (bom) ou palestrante disfarçado (ruim)
+- **Impacto**: PBL/TBL é amplamente adotado mas mal executado — professores não sabem facilitar sem "dar aula"
+- **Diferencial**: Simula a dinâmica de grupo com personas de alunos com diferentes perfis (tímido, dominante, errado-mas-confiante)
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 4. Simulador de Planejamento de Aula por Competências (DCNs)
+- **O que treina**: Construir planos de aula alinhados às Diretrizes Curriculares Nacionais
+- **Mecânica**: O professor seleciona uma competência das DCNs de Farmácia (ou área correlata), define objetivo de aprendizagem, escolhe metodologias ativas (sala invertida, TBL, simulação, estudo de caso) e métodos avaliativos. O sistema verifica o alinhamento construtivo (Biggs): objetivo ↔ metodologia ↔ avaliação. Pontua coerência e sugere ajustes
+- **Impacto**: Obrigatório para credenciamento MEC mas raramente treinado de forma prática
+- **Diferencial**: Automatiza a verificação de alinhamento construtivo — algo que coordenadores de curso fazem manualmente
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 5. Simulador de Gestão de Sala de Aula (Incidentes Críticos)
+- **O que treina**: Responder a situações difíceis em tempo real durante uma aula
+- **Mecânica**: O professor está "dando aula" e recebe incidentes aleatórios: aluno questiona a competência do professor, dois alunos discutem, aluno apresenta sinais de crise emocional, aluno cola na prova, turma inteira não fez a leitura prévia. O professor escolhe entre 3-4 respostas possíveis. O sistema avalia assertividade, empatia e manutenção do ambiente de aprendizagem
+- **Impacto**: Professores iniciantes frequentemente não sabem lidar com conflitos em sala
+- **Diferencial**: Gamificação de soft skills docentes — inexistente no mercado
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 6. Simulador de Avaliação por Rubrica (OSCE / Mini-CEX)
+- **O que treina**: Avaliar desempenho clínico de alunos de forma objetiva e padronizada
+- **Mecânica**: O professor assiste a um "vídeo descritivo" (narrativa textual com dados) de um aluno realizando uma estação OSCE (ex: dispensação, anamnese farmacêutica). Deve preencher uma rubrica com critérios pré-definidos (comunicação, raciocínio clínico, técnica). O sistema compara a avaliação do professor com um gabarito de especialistas e calcula o índice de concordância (kappa)
+- **Impacto**: A variabilidade entre avaliadores é o maior problema do OSCE. Treinar calibração é essencial
+- **Diferencial**: Substitui workshops presenciais caros de calibração de avaliadores
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 7. Simulador de Preceptoria Clínica (One-Minute Preceptor)
+- **O que treina**: O modelo de ensino clínico rápido em ambiente de estágio/residência
+- **Mecânica**: O professor está em um cenário de preceptoria: o aluno/residente apresenta um caso em 2 minutos. O professor deve seguir os 5 passos do One-Minute Preceptor: (1) comprometer-se com uma hipótese, (2) sondar evidências, (3) ensinar regras gerais, (4) reforçar acertos, (5) corrigir erros. A cada passo, escolhe entre abordagens e o sistema avalia aderência ao modelo
+- **Impacto**: Preceptores clínicos raramente recebem treinamento pedagógico formal
+- **Diferencial**: Único simulador de preceptoria clínica no mercado brasileiro
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+---
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+## Arquitetura Técnica
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+- **Categoria**: "Formação Docente" no catálogo de simuladores, com ícone dedicado (GraduationCap)
+- **Padrão**: Mesma arquitetura dos simuladores existentes — steps/panels, pontuação, integração com Salas Virtuais e modo exame
+- **Dados**: Todos os cenários são estáticos no frontend (arrays de incidentes, rubricas, modelos de feedback) — sem necessidade de IA ou backend adicional
+- **Integração**: Professores com role `professor` ou `admin` veem a categoria destacada. Alunos de licenciatura ou pós-graduação também podem acessar
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+---
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+## Prioridade de Implementação Sugerida
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+1. **Feedback Formativo** — conecta diretamente ao Agente de Feedback já existente
+2. **Elaboração de Questões (Bloom)** — alta demanda, baixa complexidade
+3. **Preceptoria Clínica (OMP)** — diferencial único
+4. **Avaliação por Rubrica (OSCE)** — complementa Salas Virtuais
+5. **Condução de Caso (PBL/TBL)** — mais complexo, maior impacto
+6. **Planejamento de Aula (DCNs)** — valor institucional
+7. **Gestão de Sala (Incidentes)** — gamificação de soft skills
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+---
 
-## Alterações em arquivos existentes
+## Diferencial de Mercado
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+Nenhuma plataforma edtech de saúde no Brasil (ou globalmente) oferece simuladores dedicados ao treinamento pedagógico do professor. Plataformas como Lecturio, Osmosis, Geeky Medics e Sanar focam exclusivamente no aluno. Ter uma vertical de "Formação Docente" posiciona o sistema como solução institucional completa — não apenas para alunos, mas para o desenvolvimento docente exigido pelo MEC (Resolução CNE/CES nº 7/2018).
 
