@@ -681,9 +681,42 @@ O caso deve conter:
 - title: título descritivo
 
 Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas identificáveis. Exemplo: AINE→edema→furosemida→hipocalemia→KCl. Varie entre idosos polimedicados.`,
+
+  // ===================== ODONTOLOGIA =====================
+  odontograma: `Gere um caso clínico para o Simulador de Odontograma Interativo. O caso deve conter: title, difficulty, patient (name, age, sex), teeth (array de {number, findings: array de {type, icdas, description}}), idealTreatments (array de {tooth, treatment, justification}). Inclua 3-6 dentes com achados variados (cáries ICDAS 1-6, restaurações infiltradas, lesões endodônticas). Varie entre pacientes pediátricos e adultos.`,
+
+  "anatomia-endodontia": `Gere um caso clínico para o Simulador de Anatomia Dental (Endodontia). O caso deve conter: title, difficulty, patient (name, age), tooth (number, type, canals: array de {name, curvature, length}), diagnosis (pulpite reversível/irreversível/necrose), idealTherapy (pulpotomia/pulpectomia/necropulpectomia), prognosis, clinicalConsequences. Varie entre dentes anteriores e posteriores com anatomias complexas.`,
+
+  periodontograma: `Gere um caso clínico para o Simulador de Periodontograma. O caso deve conter: title, difficulty, patient (name, age, smoker: boolean, diabetic: boolean), depths (array de 6 números para sítios MV,V,DV,ML,L,DL), bop (array de 6 booleans), boneLoss (percentual), idealStage (I-IV), idealGrade (A-C), idealTreatments (array: rasp, antibio, cirurgia, regeneracao), consequence ({correct, wrong}). Use classificação AAP/EFP 2018.`,
+
+  "anestesiologia-odonto": `Gere um caso clínico para o Simulador de Anestesiologia Odontológica. O caso deve conter: title, difficulty, patient (name, age, weight, comorbidities), procedure (description, region, nerve), idealTechnique, idealAnesthetic, maxDoseMgKg, complication ({title, desc, correctConduct}). Varie entre bloqueios e infiltrativas, pacientes cardiopatas e saudáveis.`,
+
+  cefalometria: `Gere um caso clínico para o Simulador de Cefalometria. O caso deve conter: title, difficulty, patient (name, age, sex), classe (I/II/III), profile, sna, snb, anb, points ({S,N,A,B,Gn,Go} com x,y), idealClassification, idealTreatment (fixo/alinhadores/ortognatica/expansor), consequence ({correct, wrong}). Varie ANB entre -6 e +10.`,
+
+  "radiografia-odonto": `Gere um caso clínico para o Simulador de Radiografia Odontológica. O caso deve conter: title, difficulty, exam (periapical/panoramica/interproximal), structures (array de nomes), pathologies (array de {name, type: radiolúcida/radiopaca/mista, classification, distractors: array}), idealDiagnosis, consequence ({correct, wrong}). Inclua diagnósticos diferenciais realistas.`,
+
+  "farmacologia-odonto": `Gere um caso clínico para o Simulador de Farmacologia Odontológica. O caso deve conter: title, difficulty, patient (name, age, weight, profile, comorbidities, contraindications), procedure, idealAnalgesic, idealAINE, idealAntibiotic, risks ({renal, hepatic, cardiovascular, gastric}), scenario72h (texto descritivo do cenário adverso se prescrição inadequada). Varie entre nefropatas, cardiopatas, gestantes.`,
+
+  "cirurgia-exodontia": `Gere um caso clínico para o Simulador de Cirurgia e Exodontia. O caso deve conter: title, difficulty, position (Mesioangular/Vertical/Horizontal/Distoangular), winter, pellGregory ({class: I-III, pos: A-C}), needsOsteotomy, needsOdontosection, complication ({title, desc, options: array de {label, correct}}), idealPreOp, idealPostOp (arrays de medicamentos), consequence ({correct, wrong}).`,
+
+  // ===================== FISIOTERAPIA =====================
+  goniometria: `Gere um caso clínico para o Simulador de Goniometria Articular. O caso deve conter: title, difficulty, patient (name, age, diagnosis), joint, movements (array de {name, measured, normal, deficit}), idealClassifications (array de {movement, classification: leve/moderado/grave}), idealTechniques (array), consequence ({correct, wrong}). Varie entre ombro, joelho, tornozelo, quadril.`,
+
+  "avaliacao-postural": `Gere um caso clínico para o Simulador de Avaliação Postural. O caso deve conter: title, difficulty, patient (name, age, complaint), correctLandmarks (array de 8 pontos), distractorLandmarks (array de 4 pontos), deviations (array de {name, description}), primaryDeviation, diagnosisOptions (array com 1 correta + 3 distratores), idealProgram (array de exercícios), consequence ({correct, wrong}).`,
+
+  "forca-muscular": `Gere um caso clínico para o Simulador de Força Muscular Oxford/MRC. O caso deve conter: title, difficulty, patient (name, age, diagnosis), muscles (array de {name, grade: 0-5, nerve}), pattern (hemiparesia/tetraparesia/radicular/miopatia), lesionLevel, idealProgram (array de exercícios), consequence ({correct, wrong}). Varie entre AVE, lesão medular, neuropatia.`,
+
+  dermatomos: `Gere um caso clínico para o Simulador de Dermátomos. O caso deve conter: title, difficulty, patient (name, age, complaint), dermatomes (array de {level, sensitivity: normal/diminuída/ausente/aumentada}), lesionLevel, pattern (central/periférico), asiaClassification (A-E ou null), diagnosisOptions (array com 1 correta + distratores), consequence ({correct, wrong}).`,
+
+  respiratorio: `Gere um caso clínico para o Simulador de Fisioterapia Respiratória. O caso deve conter: title, difficulty, patient (name, age, diagnosis, gasometry: {pH, pCO2, pO2, HCO3, SaO2}), auscultation (array de {region, sound}), idealTechniques (array), reevaluation ({improved: boolean, newFindings}), idealNextConduct (manter/trocar/vni/intubacao), consequence ({correct, wrong}).`,
+
+  eletroterapia: `Gere um caso clínico para o Simulador de Eletroterapia. O caso deve conter: title, difficulty, patient (name, age, diagnosis, indication), idealModality, idealParameters ({frequency, intensity, time, modulation}), idealElectrodePlacement, contraindications (array), consequence ({correct, wrong}). Varie entre TENS, FES, corrente russa, interferencial.`,
+
+  "testes-ortopedicos": `Gere um caso clínico para o Simulador de Testes Ortopédicos. O caso deve conter: title, difficulty, patient (name, age, complaint, mechanism), availableTests (array de {name, result: positivo/negativo, interpretation}), correctDiagnosis, diagnosisOptions (array com 1 correta + 3-4 distratores), idealRehab (array), consequence ({correct, wrong}). Varie entre ombro, joelho, tornozelo, coluna.`,
+
+  berg: `Gere um caso clínico para o Simulador de Escala de Berg. O caso deve conter: title, difficulty, patient (name, age, diagnosis, history), items (array de 14 objetos com {task, score: 0-4}), totalScore, riskLevel (alto/moderado/baixo), idealProgram (array de exercícios de prevenção de quedas), consequence ({correct, wrong}). Varie entre Parkinson, pós-AVE, fragilidade.`,
 };
 
-serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

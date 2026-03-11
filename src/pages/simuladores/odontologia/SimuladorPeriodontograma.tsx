@@ -44,7 +44,7 @@ const TREATMENTS = [
 
 const SITES = ["MV", "V", "DV", "ML", "L", "DL"] as const;
 
-function ProbeSVG({ depths, bopFlags }: { depths: number[]; bopFlags: boolean[] }) {
+function ProbeSVG({ depths, bopFlags, probedSites, onSiteClick }: { depths: number[]; bopFlags: boolean[]; probedSites: Set<number>; onSiteClick?: (index: number) => void }) {
   const w = 300, h = 200, toothX = 150, gumLine = 60;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full">
@@ -52,18 +52,38 @@ function ProbeSVG({ depths, bopFlags }: { depths: number[]; bopFlags: boolean[] 
       <rect x={toothX - 40} y={30} width={80} height={140} rx={6} fill="#f5f0e8" stroke="hsl(var(--border))" strokeWidth={1.5} />
       <rect x={toothX - 40} y={30} width={80} height={35} rx={6} fill="#ebe5d9" stroke="hsl(var(--border))" strokeWidth={1} />
       <path d={`M 30 ${gumLine} Q ${toothX - 50} ${gumLine + 5} ${toothX - 40} ${gumLine + 3} Q ${toothX} ${gumLine - 5} ${toothX + 40} ${gumLine + 3} Q ${toothX + 50} ${gumLine + 5} ${w - 30} ${gumLine} L ${w - 30} ${gumLine + 20} Q ${toothX} ${gumLine + 25} 30 ${gumLine + 20} Z`} fill="#f472b6" opacity={0.5} stroke="#ec4899" strokeWidth={0.8} />
-      {depths.map((d, i) => {
+      {SITES.map((site, i) => {
         const siteX = toothX - 35 + (i * 14);
+        const probed = probedSites.has(i);
+        const d = depths[i] || 0;
         const probeEnd = gumLine + d * 8;
         const isBleeding = bopFlags[i];
-        return (<g key={i}><line x1={siteX} y1={gumLine - 5} x2={siteX} y2={probeEnd} stroke={d >= 5 ? "#ef4444" : d >= 4 ? "#f59e0b" : "#22c55e"} strokeWidth={2} strokeLinecap="round" /><text x={siteX} y={probeEnd + 12} textAnchor="middle" fontSize={8} fill={d >= 5 ? "#ef4444" : "hsl(var(--foreground))"} fontWeight="bold">{d}</text>{isBleeding && <circle cx={siteX} cy={gumLine} r={3} fill="#ef4444" />}<text x={siteX} y={gumLine - 12} textAnchor="middle" fontSize={6} fill="hsl(var(--muted-foreground))">{SITES[i]}</text></g>);
+        return (
+          <g key={i} className={onSiteClick && !probed ? "cursor-pointer" : ""} onClick={() => onSiteClick && !probed && onSiteClick(i)}>
+            {probed ? (
+              <>
+                <line x1={siteX} y1={gumLine - 5} x2={siteX} y2={probeEnd} stroke={d >= 5 ? "#ef4444" : d >= 4 ? "#f59e0b" : "#22c55e"} strokeWidth={2} strokeLinecap="round" />
+                <text x={siteX} y={probeEnd + 12} textAnchor="middle" fontSize={8} fill={d >= 5 ? "#ef4444" : "hsl(var(--foreground))"} fontWeight="bold">{d}</text>
+                {isBleeding && <circle cx={siteX} cy={gumLine} r={3} fill="#ef4444" />}
+              </>
+            ) : (
+              <>
+                <line x1={siteX} y1={gumLine - 5} x2={siteX} y2={gumLine + 15} stroke="hsl(var(--primary))" strokeWidth={1.5} strokeDasharray="3 2" opacity={0.5} />
+                <circle cx={siteX} cy={gumLine + 18} r={4} fill="hsl(var(--primary))" opacity={0.3}>
+                  <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+              </>
+            )}
+            <text x={siteX} y={gumLine - 12} textAnchor="middle" fontSize={6} fill="hsl(var(--muted-foreground))">{site}</text>
+          </g>
+        );
       })}
       <g transform={`translate(20, ${h - 18})`}><circle cx={5} cy={5} r={3} fill="#22c55e" /><text x={12} y={8} fontSize={7} fill="hsl(var(--foreground))">≤3mm</text><circle cx={55} cy={5} r={3} fill="#f59e0b" /><text x={62} y={8} fontSize={7} fill="hsl(var(--foreground))">4mm</text><circle cx={95} cy={5} r={3} fill="#ef4444" /><text x={102} y={8} fontSize={7} fill="hsl(var(--foreground))">≥5mm</text><circle cx={145} cy={5} r={3} fill="#ef4444" /><text x={152} y={8} fontSize={7} fill="hsl(var(--foreground))">BOP</text></g>
     </svg>
   );
 }
 
-const HOW_TO = ["Selecione o caso clínico no Módulo 1.", "Inicie a sondagem periodontal no Módulo 2 e analise os dados.", "Classifique a doença (Estágio e Grau AAP/EFP 2018) no Módulo 3.", "Selecione o plano terapêutico no Módulo 4.", "O Feedback mostrará o resultado das suas decisões clínicas."];
+const HOW_TO = ["Selecione o caso clínico no Módulo 1.", "No Módulo 2, clique em cada sítio (MV, V, DV, ML, L, DL) para realizar a sondagem. A profundidade e sangramento são revelados ao clicar.", "Classifique a doença (Estágio e Grau AAP/EFP 2018) no Módulo 3.", "Selecione o plano terapêutico no Módulo 4.", "O Feedback mostrará o resultado das suas decisões clínicas."];
 const BUILT_IN = CASES.map(c => ({ id: c.id, title: c.name, difficulty: c.boneLoss > 50 ? "Difícil" : "Médio", patient: { diagnosis: c.desc } }));
 
 export default function SimuladorPeriodontograma() {
@@ -75,8 +95,9 @@ export default function SimuladorPeriodontograma() {
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
   const [selectedCase, setSelectedCase] = useState("");
-  const [probedDepths, setProbedDepths] = useState<number[]>([]);
-  const [bopFlags, setBopFlags] = useState<boolean[]>([]);
+  const [probedSites, setProbedSites] = useState<Set<number>>(new Set());
+  const [revealedDepths, setRevealedDepths] = useState<number[]>([0,0,0,0,0,0]);
+  const [revealedBop, setRevealedBop] = useState<boolean[]>([false,false,false,false,false,false]);
   const [selectedStage, setSelectedStage] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
@@ -85,18 +106,21 @@ export default function SimuladorPeriodontograma() {
   const caseData = CASES.find(c => c.id === selectedCase);
   const completeModule = (n: number) => setCompletedModules(prev => new Set(prev).add(n));
 
-  const startProbing = () => {
+  const handleSiteClick = (index: number) => {
     if (!caseData) return;
-    const depths = caseData.depths.map(d => d + Math.round((Math.random() - 0.5) * 1));
-    setProbedDepths(depths);
-    setBopFlags(caseData.bop);
-    completeModule(2);
+    const depth = caseData.depths[index] + Math.round((Math.random() - 0.5) * 1);
+    const bop = caseData.bop[index];
+    setProbedSites(prev => new Set(prev).add(index));
+    setRevealedDepths(prev => { const n = [...prev]; n[index] = depth; return n; });
+    setRevealedBop(prev => { const n = [...prev]; n[index] = bop; return n; });
   };
 
+  const allSitesProbed = probedSites.size === 6;
+  const confirmProbing = () => { if (allSitesProbed) completeModule(2); };
   const confirmTreatment = () => { completeModule(4); setShowFeedback(true); };
 
-  const bopPercent = bopFlags.length > 0 ? Math.round(bopFlags.filter(Boolean).length / bopFlags.length * 100) : 0;
-  const maxDepth = probedDepths.length > 0 ? Math.max(...probedDepths) : 0;
+  const bopPercent = allSitesProbed ? Math.round(revealedBop.filter(Boolean).length / 6 * 100) : 0;
+  const maxDepth = allSitesProbed ? Math.max(...revealedDepths) : 0;
 
   const calcFeedback = () => {
     if (!caseData) return { score: 0, decisions: [] as FeedbackDecision[], narrative: "" };
@@ -139,14 +163,25 @@ export default function SimuladorPeriodontograma() {
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setProbedDepths([]); setBopFlags([]); setSelectedStage(""); setSelectedGrade(""); setSelectedTreatments([]); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setProbedSites(new Set()); setRevealedDepths([0,0,0,0,0,0]); setRevealedBop([false,false,false,false,false,false]); setSelectedStage(""); setSelectedGrade(""); setSelectedTreatments([]); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1"><h1 className="text-2xl font-bold">Periodontograma e Classificação</h1></div>
         <SimulatorHowToUse title="Periodontograma" steps={HOW_TO} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card><CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> 1. Caso Clínico {completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><Select value={selectedCase} onValueChange={setSelectedCase}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{CASES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>{caseData && <div className="bg-muted/50 rounded-lg p-3 text-sm"><p>{caseData.desc}</p><p className="text-muted-foreground mt-1">Perda óssea estimada: {caseData.boneLoss}%</p></div>}<Button onClick={() => completeModule(1)} disabled={!caseData || completedModules.has(1)} className="w-full">Confirmar Caso</Button></CardContent></Card>
 
-        <Card className="relative">{!completedModules.has(1) && <LockedOverlay module={1} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Ruler className="h-4 w-4 text-primary" /> 2. Sondagem {completedModules.has(2) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{probedDepths.length > 0 ? <><ProbeSVG depths={probedDepths} bopFlags={bopFlags} /><div className="grid grid-cols-3 gap-2 text-center text-sm"><div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">Prof. Máx.</p><p className="font-bold text-lg">{maxDepth}mm</p></div><div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">BOP</p><p className="font-bold text-lg">{bopPercent}%</p></div><div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">Sítios ≥5mm</p><p className="font-bold text-lg">{probedDepths.filter(d => d >= 5).length}</p></div></div></> : <p className="text-sm text-muted-foreground text-center py-8">Clique para iniciar a sondagem</p>}<Button onClick={startProbing} disabled={completedModules.has(2)} className="w-full">{probedDepths.length > 0 ? "Sondagem Concluída" : "Iniciar Sondagem"}</Button></CardContent></Card>
+        <Card className="relative">{!completedModules.has(1) && <LockedOverlay module={1} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Ruler className="h-4 w-4 text-primary" /> 2. Sondagem Interativa {completedModules.has(2) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground text-center">Clique em cada sítio para realizar a sondagem ({probedSites.size}/6 sítios sondados)</p>
+          <ProbeSVG depths={revealedDepths} bopFlags={revealedBop} probedSites={probedSites} onSiteClick={completedModules.has(2) ? undefined : handleSiteClick} />
+          {allSitesProbed && (
+            <div className="grid grid-cols-3 gap-2 text-center text-sm">
+              <div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">Prof. Máx.</p><p className="font-bold text-lg">{maxDepth}mm</p></div>
+              <div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">BOP</p><p className="font-bold text-lg">{bopPercent}%</p></div>
+              <div className="bg-muted/50 rounded p-2"><p className="text-muted-foreground text-xs">Sítios ≥5mm</p><p className="font-bold text-lg">{revealedDepths.filter(d => d >= 5).length}</p></div>
+            </div>
+          )}
+          <Button onClick={confirmProbing} disabled={!allSitesProbed || completedModules.has(2)} className="w-full">Confirmar Sondagem</Button>
+        </CardContent></Card>
 
         <Card className="relative">{!completedModules.has(2) && <LockedOverlay module={2} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> 3. Classificação {completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div><p className="text-sm font-medium mb-2">Estágio (AAP/EFP 2018):</p><div className="space-y-1.5">{CLASSIFICATION.map(c => (<label key={c.stage} className={`block p-2 rounded border text-sm cursor-pointer ${selectedStage === c.stage ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="stage" value={c.stage} checked={selectedStage === c.stage} onChange={() => setSelectedStage(c.stage)} className="sr-only" />{c.label}</label>))}</div></div><div><p className="text-sm font-medium mb-2">Grau:</p><div className="space-y-1.5">{GRADES.map(g => (<label key={g.grade} className={`block p-2 rounded border text-sm cursor-pointer ${selectedGrade === g.grade ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="grade" value={g.grade} checked={selectedGrade === g.grade} onChange={() => setSelectedGrade(g.grade)} className="sr-only" />{g.label}</label>))}</div></div><Button onClick={() => completeModule(3)} disabled={!selectedStage || !selectedGrade || completedModules.has(3)} className="w-full">Confirmar Classificação</Button></CardContent></Card>
 

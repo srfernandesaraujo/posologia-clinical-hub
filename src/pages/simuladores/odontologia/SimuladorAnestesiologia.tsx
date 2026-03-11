@@ -16,10 +16,10 @@ import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
 
 const PROCEDURES = [
-  { id: "exo38", label: "Exodontia do 38", region: "Mandíbula posterior esquerda", nerve: "Alveolar inferior + lingual", weight: 75, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", complication: "intravascular" },
-  { id: "rest16", label: "Restauração do 16", region: "Maxila posterior direita", nerve: "Alveolar superior posterior", weight: 65, idealTech: "infiltrativa", idealAnesthetic: "arti4-epi", complication: "falha" },
-  { id: "rest11", label: "Restauração do 11 — paciente cardiopata", region: "Maxila anterior", nerve: "Alveolar superior anterior (infiltrativa)", weight: 80, idealTech: "infiltrativa", idealAnesthetic: "mepi3", complication: "intravascular" },
-  { id: "exo46", label: "Exodontia do 46", region: "Mandíbula posterior direita", nerve: "Alveolar inferior + bucal", weight: 70, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", complication: "parestesia" },
+  { id: "exo38", label: "Exodontia do 38", region: "Mandíbula posterior esquerda", nerve: "Alveolar inferior + lingual", weight: 75, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", idealDoseOption: 2, complication: "intravascular" },
+  { id: "rest16", label: "Restauração do 16", region: "Maxila posterior direita", nerve: "Alveolar superior posterior", weight: 65, idealTech: "infiltrativa", idealAnesthetic: "arti4-epi", idealDoseOption: 1, complication: "falha" },
+  { id: "rest11", label: "Restauração do 11 — paciente cardiopata", region: "Maxila anterior", nerve: "Alveolar superior anterior (infiltrativa)", weight: 80, idealTech: "infiltrativa", idealAnesthetic: "mepi3", idealDoseOption: 1, complication: "intravascular" },
+  { id: "exo46", label: "Exodontia do 46", region: "Mandíbula posterior direita", nerve: "Alveolar inferior + bucal", weight: 70, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", idealDoseOption: 2, complication: "parestesia" },
 ];
 
 const TECHNIQUES = [
@@ -33,7 +33,7 @@ const ANESTHETICS = [
   { id: "lido2-epi", label: "Lidocaína 2% + Epinefrina 1:100.000", mgPerTubete: 36, maxDoseMgKg: 7, vasoconstrictor: true },
   { id: "arti4-epi", label: "Articaína 4% + Epinefrina 1:100.000", mgPerTubete: 72, maxDoseMgKg: 7, vasoconstrictor: true },
   { id: "mepi3", label: "Mepivacaína 3% (sem vaso)", mgPerTubete: 54, maxDoseMgKg: 6.6, vasoconstrictor: false },
-  { id: "prilo3-feli", label: "Prilocaína 3% + Felipressina", mgPerTubete: 54, maxDoseMgKg: 6, vasoconstrictor: true },
+  { id: "prilo3-feli", label: "Prilocaína 3% + Felipressina", mgPerTubete: 54, maxDoseMgKg: 6, vasoconstrictor: false },
 ];
 
 const COMPLICATIONS: Record<string, { title: string; desc: string; options: { label: string; correct: boolean }[] }> = {
@@ -41,6 +41,21 @@ const COMPLICATIONS: Record<string, { title: string; desc: string; options: { la
   intravascular: { title: "Injeção intravascular acidental", desc: "Aspiração positiva com retorno de sangue no tubete.", options: [{ label: "Recuar a agulha, reposicionar e re-aspirar", correct: true }, { label: "Injetar rapidamente para dispersar", correct: false }, { label: "Cancelar definitivamente o procedimento", correct: false }] },
   parestesia: { title: "Parestesia pós-anestésica", desc: "Paciente retorna com dormência persistente no lábio após 48h.", options: [{ label: "Orientar, monitorar e encaminhar se >8 semanas", correct: true }, { label: "Prescrever corticoides imediatamente", correct: false }, { label: "Considerar normal e dispensar o paciente", correct: false }] },
 };
+
+function generateDoseOptions(anesthetic: typeof ANESTHETICS[0], weight: number) {
+  const correctMaxDose = anesthetic.maxDoseMgKg * weight;
+  const correctMaxTubetes = Math.floor(correctMaxDose / anesthetic.mgPerTubete);
+  
+  // Generate 4 options: 1 correct + 3 wrong
+  const options = [
+    { id: 0, doseMg: Math.round(correctMaxDose * 0.5), tubetes: Math.floor((correctMaxDose * 0.5) / anesthetic.mgPerTubete), label: `${Math.round(correctMaxDose * 0.5)} mg (${Math.floor((correctMaxDose * 0.5) / anesthetic.mgPerTubete)} tubetes)`, correct: false, explanation: "Subdosagem — dose máxima calculada incorretamente (fator 0.5x)" },
+    { id: 1, doseMg: Math.round(correctMaxDose), tubetes: correctMaxTubetes, label: `${Math.round(correctMaxDose)} mg (${correctMaxTubetes} tubetes)`, correct: true, explanation: `Correto: ${anesthetic.maxDoseMgKg} mg/kg × ${weight} kg = ${Math.round(correctMaxDose)} mg` },
+    { id: 2, doseMg: Math.round(correctMaxDose * 1.5), tubetes: Math.floor((correctMaxDose * 1.5) / anesthetic.mgPerTubete), label: `${Math.round(correctMaxDose * 1.5)} mg (${Math.floor((correctMaxDose * 1.5) / anesthetic.mgPerTubete)} tubetes)`, correct: false, explanation: "Sobredosagem — excede a dose máxima segura em 50%" },
+    { id: 3, doseMg: Math.round(anesthetic.mgPerTubete * 10), tubetes: 10, label: `${Math.round(anesthetic.mgPerTubete * 10)} mg (10 tubetes)`, correct: false, explanation: "Dose fixa sem considerar o peso do paciente — abordagem incorreta" },
+  ];
+  // Shuffle
+  return options.sort(() => Math.random() - 0.5);
+}
 
 function JawSVG({ selectedTechnique }: { selectedTechnique: string }) {
   const tech = TECHNIQUES.find(t => t.id === selectedTechnique);
@@ -53,12 +68,11 @@ function JawSVG({ selectedTechnique }: { selectedTechnique: string }) {
       <circle cx={120} cy={150} r={4} fill="#fbbf24" stroke="#f59e0b" strokeWidth={1}><title>Forame mentual</title></circle>
       <path d="M40 85 Q80 75 130 70 Q180 75 220 85" fill="none" stroke="#a78bfa" strokeWidth={1.5} strokeDasharray="4 3"><title>Nervo lingual</title></path>
       {tech && (<g><line x1={tech.insertionPoint.x} y1={tech.insertionPoint.y - 30} x2={tech.insertionPoint.x} y2={tech.insertionPoint.y} stroke="#ef4444" strokeWidth={2} /><circle cx={tech.insertionPoint.x} cy={tech.insertionPoint.y} r={5} fill="#ef4444" opacity={0.5}><animate attributeName="r" values="5;8;5" dur="1.5s" repeatCount="indefinite" /></circle></g>)}
-      <defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" /></marker></defs>
     </svg>
   );
 }
 
-const HOW_TO = ["Selecione o procedimento no Módulo 1. O peso do paciente é fixo para cada caso.", "Escolha a técnica anestésica no Módulo 2 e observe o ponto de inserção no SVG.", "No Módulo 3, selecione o anestésico e calcule a dose máxima para o peso do paciente.", "No Módulo 4, o sistema apresentará uma complicação baseada nas suas escolhas. Escolha a conduta adequada.", "O Feedback mostrará o resultado final."];
+const HOW_TO = ["Selecione o procedimento no Módulo 1. O peso do paciente é fixo para cada caso.", "Escolha a técnica anestésica no Módulo 2 e observe o ponto de inserção no SVG.", "No Módulo 3, selecione o anestésico e escolha a dose máxima correta entre as opções.", "No Módulo 4, o sistema apresentará uma complicação. Escolha a conduta adequada.", "O Feedback mostrará o resultado final."];
 const BUILT_IN = PROCEDURES.map(p => ({ id: p.id, title: p.label, difficulty: p.weight > 75 ? "Difícil" : "Médio", patient: { diagnosis: p.region } }));
 
 export default function SimuladorAnestesiologia() {
@@ -72,6 +86,8 @@ export default function SimuladorAnestesiologia() {
   const [selectedProcedure, setSelectedProcedure] = useState("");
   const [selectedTechnique, setSelectedTechnique] = useState("");
   const [selectedAnesthetic, setSelectedAnesthetic] = useState("");
+  const [selectedDoseOption, setSelectedDoseOption] = useState<number | null>(null);
+  const [doseOptions, setDoseOptions] = useState<ReturnType<typeof generateDoseOptions>>([]);
   const [complicationAnswer, setComplicationAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -81,8 +97,20 @@ export default function SimuladorAnestesiologia() {
   const completeModule = (n: number) => setCompletedModules(prev => new Set(prev).add(n));
 
   const patientWeight = procedure?.weight || 70;
-  const maxDoseMg = anesthetic ? anesthetic.maxDoseMgKg * patientWeight : 0;
-  const maxTubetes = anesthetic ? Math.floor(maxDoseMg / anesthetic.mgPerTubete) : 0;
+
+  // Generate dose options when anesthetic changes
+  const handleAnestheticChange = (value: string) => {
+    setSelectedAnesthetic(value);
+    setSelectedDoseOption(null);
+    const anesth = ANESTHETICS.find(a => a.id === value);
+    if (anesth && procedure) {
+      setDoseOptions(generateDoseOptions(anesth, procedure.weight));
+    }
+  };
+
+  const confirmDose = () => {
+    if (selectedDoseOption !== null) completeModule(3);
+  };
 
   const confirmComplication = () => { completeModule(4); setShowFeedback(true); };
 
@@ -91,10 +119,12 @@ export default function SimuladorAnestesiologia() {
     const decisions: FeedbackDecision[] = [];
     decisions.push({ label: "Técnica anestésica", userChoice: TECHNIQUES.find(t => t.id === selectedTechnique)?.label || "-", idealChoice: TECHNIQUES.find(t => t.id === procedure.idealTech)?.label || "-", correct: selectedTechnique === procedure.idealTech });
     decisions.push({ label: "Anestésico", userChoice: anesthetic?.label || "-", idealChoice: ANESTHETICS.find(a => a.id === procedure.idealAnesthetic)?.label || "-", correct: selectedAnesthetic === procedure.idealAnesthetic, explanation: procedure.id === "rest11" && selectedAnesthetic !== "mepi3" ? "Para paciente cardiopata, mepivacaína sem vasoconstritor é mais segura" : undefined });
+    const selectedOption = doseOptions.find(o => o.id === selectedDoseOption);
+    decisions.push({ label: "Cálculo de dose", userChoice: selectedOption?.label || "-", idealChoice: doseOptions.find(o => o.correct)?.label || "-", correct: selectedOption?.correct || false, explanation: selectedOption?.explanation });
     const correctAnswer = complication?.options.find(o => o.correct)?.label;
     decisions.push({ label: "Conduta na complicação", userChoice: complicationAnswer || "-", idealChoice: correctAnswer || "-", correct: complicationAnswer === correctAnswer });
     const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
-    const narrative = score >= 80 ? "Excelente manejo anestésico. A técnica e anestésico escolhidos são adequados para o procedimento e perfil do paciente. A complicação foi manejada corretamente, sem risco adicional." : score >= 50 ? "Algumas escolhas inadequadas podem comprometer a segurança do procedimento. Revise a indicação de técnica e anestésico para cada perfil de paciente." : "Decisões inadequadas colocariam o paciente em risco significativo. Em pacientes com comorbidades, a escolha errada do anestésico pode causar eventos cardiovasculares graves.";
+    const narrative = score >= 80 ? "Excelente manejo anestésico. A técnica, anestésico e dosagem escolhidos são adequados para o procedimento e perfil do paciente. A complicação foi manejada corretamente." : score >= 50 ? "Algumas escolhas inadequadas podem comprometer a segurança. Revise o cálculo de dose máxima e a indicação por perfil do paciente." : "Decisões inadequadas colocariam o paciente em risco significativo. Em pacientes com comorbidades, a escolha errada do anestésico ou cálculo incorreto da dose pode causar eventos graves.";
     return { score, decisions, narrative };
   };
 
@@ -118,12 +148,13 @@ export default function SimuladorAnestesiologia() {
   }
 
   const LockedOverlay = ({ module }: { module: number }) => (<div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-xl"><Lock className="h-6 w-6 text-muted-foreground" /><p className="text-xs text-muted-foreground font-medium">Complete o módulo {module}</p></div>);
-  const expSummary = { "Procedimento": procedure?.label || "-", "Técnica": TECHNIQUES.find(t => t.id === selectedTechnique)?.label || "-", "Anestésico": anesthetic?.label || "-", "Peso": `${patientWeight} kg`, "Dose máx.": `${maxDoseMg.toFixed(0)} mg (${maxTubetes} tubetes)`, "Pontuação": `${feedback.score}%` };
+  const selectedOption = doseOptions.find(o => o.id === selectedDoseOption);
+  const expSummary = { "Procedimento": procedure?.label || "-", "Técnica": TECHNIQUES.find(t => t.id === selectedTechnique)?.label || "-", "Anestésico": anesthetic?.label || "-", "Peso": `${patientWeight} kg`, "Dose escolhida": selectedOption?.label || "-", "Pontuação": `${feedback.score}%` };
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedTechnique(""); setSelectedAnesthetic(""); setComplicationAnswer(null); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedTechnique(""); setSelectedAnesthetic(""); setSelectedDoseOption(null); setDoseOptions([]); setComplicationAnswer(null); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1"><h1 className="text-2xl font-bold">Anestesiologia Odontológica</h1></div>
         <SimulatorHowToUse title="Anestesiologia" steps={HOW_TO} />
       </div>
@@ -132,7 +163,30 @@ export default function SimuladorAnestesiologia() {
 
         <Card className="relative">{!completedModules.has(1) && <LockedOverlay module={1} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Syringe className="h-4 w-4 text-primary" /> 2. Técnica {completedModules.has(2) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="space-y-1.5">{TECHNIQUES.map(t => (<label key={t.id} className={`block p-2 rounded border text-sm cursor-pointer ${selectedTechnique === t.id ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="tech" value={t.id} checked={selectedTechnique === t.id} onChange={() => setSelectedTechnique(t.id)} className="sr-only" /><p className="font-medium">{t.label}</p><p className="text-xs text-muted-foreground">{t.desc}</p></label>))}</div><JawSVG selectedTechnique={selectedTechnique} /><Button onClick={() => completeModule(2)} disabled={!selectedTechnique || completedModules.has(2)} className="w-full">Confirmar Técnica</Button></CardContent></Card>
 
-        <Card className="relative">{!completedModules.has(2) && <LockedOverlay module={2} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Syringe className="h-4 w-4 text-primary" /> 3. Cálculo de Dose {completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="bg-muted/50 rounded-lg p-2 text-sm"><strong>Peso do paciente:</strong> {patientWeight} kg (fixo para este caso)</div><Select value={selectedAnesthetic} onValueChange={setSelectedAnesthetic}><SelectTrigger><SelectValue placeholder="Selecione o anestésico..." /></SelectTrigger><SelectContent>{ANESTHETICS.map(a => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}</SelectContent></Select>{anesthetic && <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1"><p><strong>mg/tubete:</strong> {anesthetic.mgPerTubete}</p><p><strong>Dose máx.:</strong> {anesthetic.maxDoseMgKg} mg/kg = <span className="font-bold">{maxDoseMg.toFixed(0)} mg</span></p><p><strong>Tubetes máx.:</strong> <span className="font-bold text-lg">{maxTubetes}</span></p>{!anesthetic.vasoconstrictor && <Badge variant="outline" className="text-[10px]">Sem vasoconstritor — indicado para cardiopatas</Badge>}</div>}<Button onClick={() => completeModule(3)} disabled={!anesthetic || completedModules.has(3)} className="w-full">Calcular e Confirmar</Button></CardContent></Card>
+        <Card className="relative">{!completedModules.has(2) && <LockedOverlay module={2} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Syringe className="h-4 w-4 text-primary" /> 3. Cálculo de Dose {completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">
+          <div className="bg-muted/50 rounded-lg p-2 text-sm"><strong>Peso do paciente:</strong> {patientWeight} kg (fixo para este caso)</div>
+          <Select value={selectedAnesthetic} onValueChange={handleAnestheticChange}><SelectTrigger><SelectValue placeholder="Selecione o anestésico..." /></SelectTrigger><SelectContent>{ANESTHETICS.map(a => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}</SelectContent></Select>
+          {anesthetic && (
+            <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+              <p><strong>Concentração:</strong> {anesthetic.mgPerTubete} mg/tubete</p>
+              <p><strong>Dose máx.:</strong> {anesthetic.maxDoseMgKg} mg/kg</p>
+              {!anesthetic.vasoconstrictor && <Badge variant="outline" className="text-[10px]">Sem vasoconstritor — indicado para cardiopatas</Badge>}
+            </div>
+          )}
+          {doseOptions.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium">Qual a dose máxima segura para este paciente?</p>
+              {doseOptions.map(opt => (
+                <label key={opt.id} className={`block p-2 rounded border text-sm cursor-pointer ${selectedDoseOption === opt.id ? (completedModules.has(3) ? (opt.correct ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10") : "border-primary bg-primary/5") : "border-border"}`}>
+                  <input type="radio" name="dose" value={opt.id} checked={selectedDoseOption === opt.id} onChange={() => setSelectedDoseOption(opt.id)} className="sr-only" />
+                  {opt.label}
+                  {completedModules.has(3) && selectedDoseOption === opt.id && !opt.correct && <p className="text-xs text-destructive mt-1">{opt.explanation}</p>}
+                </label>
+              ))}
+            </div>
+          )}
+          <Button onClick={confirmDose} disabled={selectedDoseOption === null || completedModules.has(3)} className="w-full">Confirmar Dose</Button>
+        </CardContent></Card>
 
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" /> 4. Complicação {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{complication && <><div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm"><p className="font-medium text-destructive">⚠️ {complication.title}</p><p className="text-muted-foreground mt-1">{complication.desc}</p></div><p className="text-sm font-medium">Qual a conduta adequada?</p>{complication.options.map((opt, i) => (<label key={i} className={`block p-2 rounded border text-sm cursor-pointer ${complicationAnswer === opt.label ? (completedModules.has(4) ? (opt.correct ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10") : "border-primary bg-primary/5") : "border-border hover:bg-muted/30"}`}><input type="radio" name="comp" value={opt.label} checked={complicationAnswer === opt.label} onChange={() => setComplicationAnswer(opt.label)} className="sr-only" />{opt.label}</label>))}</>}<Button onClick={confirmComplication} disabled={!complicationAnswer || completedModules.has(4)} className="w-full">Confirmar Conduta</Button></CardContent></Card>
 
