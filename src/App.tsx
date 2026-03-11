@@ -98,6 +98,14 @@ import SimuladorPlanejamentoAula from "./pages/simuladores/docencia/SimuladorPla
 import SimuladorGestaoSala from "./pages/simuladores/docencia/SimuladorGestaoSala";
 import SimuladorAvaliacaoRubrica from "./pages/simuladores/docencia/SimuladorAvaliacaoRubrica";
 import SimuladorPreceptoriaClinica from "./pages/simuladores/docencia/SimuladorPreceptoriaClinica";
+import SimuladorOdontograma from "./pages/simuladores/odontologia/SimuladorOdontograma";
+import SimuladorAnatomiaEndodontia from "./pages/simuladores/odontologia/SimuladorAnatomiaEndodontia";
+import SimuladorPeriodontograma from "./pages/simuladores/odontologia/SimuladorPeriodontograma";
+import SimuladorAnestesiologia from "./pages/simuladores/odontologia/SimuladorAnestesiologia";
+import SimuladorCefalometria from "./pages/simuladores/odontologia/SimuladorCefalometria";
+import SimuladorRadiografia from "./pages/simuladores/odontologia/SimuladorRadiografia";
+import SimuladorFarmacologiaOdonto from "./pages/simuladores/odontologia/SimuladorFarmacologiaOdonto";
+import SimuladorCirurgiaExodontia from "./pages/simuladores/odontologia/SimuladorCirurgiaExodontia";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
