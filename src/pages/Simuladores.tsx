@@ -69,6 +69,13 @@ const NATIVE_SIMULATORS = [
   { slug: "quiralidade", name: "Quiralidade e Estereoquímica", description: "Compare enantiômeros: eutômero vs distômero, razão eudísmica e chiral switch.", icon: Dna, category: "Química Farmacêutica" },
   { slug: "pka-absorcao", name: "pKa, Ionização e Absorção", description: "Henderson-Hasselbalch interativo com compartimentos fisiológicos e ion trapping.", icon: Droplets, category: "Química Farmacêutica" },
   { slug: "qsar-simplificado", name: "QSAR Simplificado (Hansch)", description: "Equação de Hansch parabólica: logP, σ Hammett e correlação com atividade biológica.", icon: FlaskConical, category: "Química Farmacêutica" },
+  { slug: "feedback-formativo", name: "Feedback Formativo (Pendleton/R2C2/ALOBA)", description: "Treine a habilidade de dar feedback construtivo usando modelos validados de comunicação pedagógica.", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "elaboracao-questoes", name: "Elaboração de Questões (Bloom)", description: "Crie questões em diferentes níveis cognitivos da Taxonomia de Bloom revisada.", icon: BookOpen, category: "Formação Docente" },
+  { slug: "conducao-caso-pbl", name: "Condução de Caso (PBL/TBL)", description: "Treine a facilitação de discussões em grupo sem dar a resposta diretamente.", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "planejamento-aula", name: "Planejamento de Aula por Competências", description: "Alinhamento construtivo de Biggs: objetivo ↔ metodologia ↔ avaliação, com DCNs.", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "gestao-sala", name: "Gestão de Sala — Incidentes Críticos", description: "Responda a situações difíceis em tempo real: conflitos, crises emocionais, integridade acadêmica.", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "avaliacao-rubrica-osce", name: "Avaliação por Rubrica (OSCE)", description: "Treine calibração como avaliador clínico com índice de concordância (kappa).", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "preceptoria-clinica", name: "Preceptoria Clínica (One-Minute Preceptor)", description: "Modelo de ensino clínico rápido em 5 passos para estágios e residência.", icon: ClipboardList, category: "Formação Docente" },
 ];
 
 export default function Simuladores() {
