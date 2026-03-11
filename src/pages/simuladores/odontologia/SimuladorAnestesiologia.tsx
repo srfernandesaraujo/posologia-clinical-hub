@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const PROCEDURES = [
   { id: "exo38", label: "Exodontia do 38", region: "Mandíbula posterior esquerda", nerve: "Alveolar inferior + lingual", weight: 75, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", idealDoseOption: 2, complication: "intravascular" },
@@ -129,6 +132,11 @@ export default function SimuladorAnestesiologia() {
   };
 
   const feedback = calcFeedback();
+  const location = useLocation();
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("anestesiologia-odonto");
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedProcedure(PROCEDURES[0]?.id || ""); }
+  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
 
   if (!activeCase) {
     return (

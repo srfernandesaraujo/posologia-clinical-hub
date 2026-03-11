@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const PATIENTS = [
   { id: "p1", name: "João Silva", age: 45, complaint: "Dor ao mastigar no lado direito", history: "Hipertensão controlada, fumante", xray: "RX periapical: radiolucidez oclusal em 46 e distal em 26. Elemento 16 com restauração extensa. Elementos 18, 28, 38, 48 ausentes.", findings: { 16: { O: "carie", M: "restauracao" }, 26: { D: "carie" }, 36: { absent: true }, 46: { V: "fratura", O: "carie" }, 18: { absent: true }, 28: { absent: true }, 38: { absent: true }, 48: { absent: true } }, idealDiagnoses: { "46-O": "ICDAS 4", "46-V": "Fratura coronária", "26-D": "ICDAS 3", "16-O": "ICDAS 5" }, idealPlan: ["46-V", "46-O", "26-D", "16-O"] },
@@ -155,6 +158,11 @@ export default function SimuladorOdontograma() {
   };
 
   const feedback = calcFeedback();
+  const location = useLocation();
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("odontograma");
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
+  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
 
   // Dashboard mode
   if (!activeCase) {

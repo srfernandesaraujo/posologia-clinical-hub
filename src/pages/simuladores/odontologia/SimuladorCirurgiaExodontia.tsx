@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const CASES = [
   { id: "m1", position: "Mesioangular", winter: "Mesioangulado", pellGregory: { class: "II", pos: "B" }, difficulty: "Moderada", needsOsteotomy: true, needsOdontosection: true, complicationId: "alveolite", idealPreOp: ["Dexametasona 8mg VO 1h antes"], idealPostOp: ["Dipirona 500mg 6/6h por 3 dias", "Ibuprofeno 600mg 8/8h por 3 dias", "Digluconato de clorexidina 0,12% bochechos"], consequence: { correct: "Planejamento cirúrgico adequado com osteotomia e odontossecção em mesioangular Classe II-B. Complicação manejada corretamente. Pós-operatório previsível.", wrong: "Falha no planejamento cirúrgico pode resultar em fraturas, lesão nervosa ou alveolite por trauma excessivo." } },
@@ -103,6 +106,11 @@ export default function SimuladorCirurgiaExodontia() {
   };
 
   const feedback = calcFeedback();
+  const location = useLocation();
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("cirurgia-exodontia");
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); }
+  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
 
   if (!activeCase) {
     return (
