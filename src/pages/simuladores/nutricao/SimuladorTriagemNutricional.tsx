@@ -198,7 +198,7 @@ export default function SimuladorTriagemNutricional() {
                     <SelectItem value="0">0 — Necessidades normais</SelectItem>
                     <SelectItem value="1">1 — Fratura de quadril, crônico com complicação</SelectItem>
                     <SelectItem value="2">2 — Cirurgia abdominal grande, AVC, pneumonia</SelectItem>
-                    <SelectItem value="3">3 — TCE, transplante, UTI (APACHE > 10)</SelectItem>
+                    <SelectItem value="3">{"3 — TCE, transplante, UTI (APACHE > 10)"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
