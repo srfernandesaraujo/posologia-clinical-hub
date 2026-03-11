@@ -19,6 +19,8 @@ export interface DrugProperties {
 interface DrugDesignPanelProps {
   properties: DrugProperties;
   onChange: (props: DrugProperties) => void;
+  activeTab: "sliders" | "smiles";
+  onTabChange: (tab: "sliders" | "smiles") => void;
 }
 
 const SMILES_EXAMPLES = [
@@ -112,55 +114,19 @@ function LipinskiSection({ properties }: { properties: DrugProperties }) {
   );
 }
 
-function SlidersTab({ properties, onChange }: DrugDesignPanelProps) {
+function SlidersTab({ properties, onChange }: { properties: DrugProperties; onChange: (p: DrugProperties) => void }) {
   return (
     <div className="space-y-5">
-      <PropertySlider
-        label="Peso Molecular"
-        tooltip="Moléculas com MW > 500 g/mol têm menor absorção oral. A Regra de Lipinski limita a 500."
-        value={properties.mw}
-        min={100}
-        max={800}
-        step={10}
-        unit="g/mol"
-        onChange={(v) => onChange({ ...properties, mw: v })}
-      />
-      <PropertySlider
-        label="LogP (Lipofilicidade)"
-        tooltip="Mede a partição entre fase lipídica e aquosa. LogP > 5 indica excesso de lipofilicidade, dificultando solubilidade e distribuição."
-        value={properties.logP}
-        min={-2}
-        max={7}
-        step={0.1}
-        unit=""
-        onChange={(v) => onChange({ ...properties, logP: Math.round(v * 10) / 10 })}
-      />
-      <PropertySlider
-        label="Doadores de Ligação H"
-        tooltip="Grupos -OH e -NH que doam hidrogênio em ligações de hidrogênio. Mais de 5 doadores reduz a permeabilidade pela membrana biológica."
-        value={properties.hbd}
-        min={0}
-        max={10}
-        step={1}
-        unit=""
-        onChange={(v) => onChange({ ...properties, hbd: v })}
-      />
-      <PropertySlider
-        label="Aceitadores de Ligação H"
-        tooltip="Átomos com pares de elétrons isolados (O, N). Mais de 10 aceitadores pode comprometer a biodisponibilidade oral."
-        value={properties.hba}
-        min={0}
-        max={15}
-        step={1}
-        unit=""
-        onChange={(v) => onChange({ ...properties, hba: v })}
-      />
+      <PropertySlider label="Peso Molecular" tooltip="Moléculas com MW > 500 g/mol têm menor absorção oral. A Regra de Lipinski limita a 500." value={properties.mw} min={100} max={800} step={10} unit="g/mol" onChange={(v) => onChange({ ...properties, mw: v })} />
+      <PropertySlider label="LogP (Lipofilicidade)" tooltip="Mede a partição entre fase lipídica e aquosa. LogP > 5 indica excesso de lipofilicidade, dificultando solubilidade e distribuição." value={properties.logP} min={-2} max={7} step={0.1} unit="" onChange={(v) => onChange({ ...properties, logP: Math.round(v * 10) / 10 })} />
+      <PropertySlider label="Doadores de Ligação H" tooltip="Grupos -OH e -NH que doam hidrogênio em ligações de hidrogênio. Mais de 5 doadores reduz a permeabilidade pela membrana biológica." value={properties.hbd} min={0} max={10} step={1} unit="" onChange={(v) => onChange({ ...properties, hbd: v })} />
+      <PropertySlider label="Aceitadores de Ligação H" tooltip="Átomos com pares de elétrons isolados (O, N). Mais de 10 aceitadores pode comprometer a biodisponibilidade oral." value={properties.hba} min={0} max={15} step={1} unit="" onChange={(v) => onChange({ ...properties, hba: v })} />
       <LipinskiSection properties={properties} />
     </div>
   );
 }
 
-function SmilesTab({ properties, onChange }: DrugDesignPanelProps) {
+function SmilesTab({ properties, onChange }: { properties: DrugProperties; onChange: (p: DrugProperties) => void }) {
   const [smiles, setSmiles] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
@@ -190,45 +156,19 @@ function SmilesTab({ properties, onChange }: DrugDesignPanelProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Left: SMILES input + 2D viz */}
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">
-            Insira a notação SMILES do candidato a fármaco
-          </label>
-          <Input
-            value={smiles}
-            onChange={(e) => setSmiles(e.target.value)}
-            placeholder="Ex: CC(=O)Oc1ccccc1C(=O)O"
-            className="font-mono text-sm bg-muted/30 border-border"
-          />
+          <label className="text-xs font-medium text-muted-foreground">Insira a notação SMILES do candidato a fármaco</label>
+          <Input value={smiles} onChange={(e) => setSmiles(e.target.value)} placeholder="Ex: CC(=O)Oc1ccccc1C(=O)O" className="font-mono text-sm bg-muted/30 border-border" />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {SMILES_EXAMPLES.map((ex) => (
-            <Button
-              key={ex.name}
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => handleExample(ex.smiles)}
-            >
-              {ex.name}
-            </Button>
+            <Button key={ex.name} variant="outline" size="sm" className="text-xs h-7" onClick={() => handleExample(ex.smiles)}>{ex.name}</Button>
           ))}
         </div>
         <div className="rounded-lg border border-border bg-muted/20 flex items-center justify-center min-h-[220px] overflow-hidden">
           {imageUrl && !imageError ? (
-            <img
-              src={imageUrl}
-              alt="Estrutura 2D da molécula"
-              className="max-w-full max-h-[220px] object-contain"
-              onLoad={() => setImageLoading(false)}
-              onError={() => {
-                setImageError(true);
-                setImageLoading(false);
-              }}
-              style={{ filter: "invert(0.85) hue-rotate(180deg)" }}
-            />
+            <img src={imageUrl} alt="Estrutura 2D da molécula" className="max-w-full max-h-[220px] object-contain" onLoad={() => setImageLoading(false)} onError={() => { setImageError(true); setImageLoading(false); }} style={{ filter: "invert(0.85) hue-rotate(180deg)" }} />
           ) : imageError ? (
             <div className="text-center text-muted-foreground text-xs p-4">
               <Atom className="h-8 w-8 mx-auto mb-2 opacity-40" />
@@ -243,59 +183,19 @@ function SmilesTab({ properties, onChange }: DrugDesignPanelProps) {
           )}
         </div>
       </div>
-
-      {/* Right: Sliders + Lipinski */}
       <div className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          Ajuste manualmente as propriedades físico-químicas teóricas da molécula inserida.
-        </p>
-        <PropertySlider
-          label="Peso Molecular"
-          tooltip="Moléculas com MW > 500 Da têm menor absorção oral."
-          value={properties.mw}
-          min={0}
-          max={1000}
-          step={10}
-          unit="Da"
-          onChange={(v) => onChange({ ...properties, mw: v })}
-        />
-        <PropertySlider
-          label="LogP (Lipofilicidade)"
-          tooltip="Mede a partição entre fase lipídica e aquosa. LogP > 5 dificulta solubilidade."
-          value={properties.logP}
-          min={-5}
-          max={10}
-          step={0.1}
-          unit=""
-          onChange={(v) => onChange({ ...properties, logP: Math.round(v * 10) / 10 })}
-        />
-        <PropertySlider
-          label="Doadores de Ligação H"
-          tooltip="Grupos -OH e -NH. Mais de 5 doadores reduz a permeabilidade de membrana."
-          value={properties.hbd}
-          min={0}
-          max={15}
-          step={1}
-          unit=""
-          onChange={(v) => onChange({ ...properties, hbd: v })}
-        />
-        <PropertySlider
-          label="Aceitadores de Ligação H"
-          tooltip="Átomos com pares de elétrons isolados (O, N). Mais de 10 compromete a biodisponibilidade oral."
-          value={properties.hba}
-          min={0}
-          max={20}
-          step={1}
-          unit=""
-          onChange={(v) => onChange({ ...properties, hba: v })}
-        />
+        <p className="text-xs text-muted-foreground">Ajuste manualmente as propriedades físico-químicas teóricas da molécula inserida.</p>
+        <PropertySlider label="Peso Molecular" tooltip="Moléculas com MW > 500 Da têm menor absorção oral." value={properties.mw} min={0} max={1000} step={10} unit="Da" onChange={(v) => onChange({ ...properties, mw: v })} />
+        <PropertySlider label="LogP (Lipofilicidade)" tooltip="Mede a partição entre fase lipídica e aquosa. LogP > 5 dificulta solubilidade." value={properties.logP} min={-5} max={10} step={0.1} unit="" onChange={(v) => onChange({ ...properties, logP: Math.round(v * 10) / 10 })} />
+        <PropertySlider label="Doadores de Ligação H" tooltip="Grupos -OH e -NH. Mais de 5 doadores reduz a permeabilidade de membrana." value={properties.hbd} min={0} max={15} step={1} unit="" onChange={(v) => onChange({ ...properties, hbd: v })} />
+        <PropertySlider label="Aceitadores de Ligação H" tooltip="Átomos com pares de elétrons isolados (O, N). Mais de 10 compromete a biodisponibilidade oral." value={properties.hba} min={0} max={20} step={1} unit="" onChange={(v) => onChange({ ...properties, hba: v })} />
         <LipinskiSection properties={properties} />
       </div>
     </div>
   );
 }
 
-export function DrugDesignPanel({ properties, onChange }: DrugDesignPanelProps) {
+export function DrugDesignPanel({ properties, onChange, activeTab, onTabChange }: DrugDesignPanelProps) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3">
@@ -305,7 +205,7 @@ export function DrugDesignPanel({ properties, onChange }: DrugDesignPanelProps) 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="sliders" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => onTabChange(v as "sliders" | "smiles")} className="w-full">
           <TabsList className="mb-4 w-full">
             <TabsTrigger value="sliders" className="flex-1">Sliders</TabsTrigger>
             <TabsTrigger value="smiles" className="flex-1">SMILES</TabsTrigger>
