@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const PATIENTS = [
   { id: "p1", name: "Adulto saudável (35 anos)", profile: "Sem comorbidades", weight: 70, contraindications: [], risks: { renal: 0, hepatic: 0, cardiovascular: 0, gastric: 10 }, idealAnalgesic: "dipirona", idealAINE: "ibuprofeno", idealAntibiotic: "", scenario72h: "Paciente evolui bem. Dor controlada, sem sinais de infecção." },
