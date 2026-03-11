@@ -76,6 +76,14 @@ const NATIVE_SIMULATORS = [
   { slug: "gestao-sala", name: "Gestão de Sala — Incidentes Críticos", description: "Responda a situações difíceis em tempo real: conflitos, crises emocionais, integridade acadêmica.", icon: ClipboardList, category: "Formação Docente" },
   { slug: "avaliacao-rubrica-osce", name: "Avaliação por Rubrica (OSCE)", description: "Treine calibração como avaliador clínico com índice de concordância (kappa).", icon: ClipboardList, category: "Formação Docente" },
   { slug: "preceptoria-clinica", name: "Preceptoria Clínica (One-Minute Preceptor)", description: "Modelo de ensino clínico rápido em 5 passos para estágios e residência.", icon: ClipboardList, category: "Formação Docente" },
+  { slug: "odontograma", name: "Odontograma Interativo", description: "Registro clínico com arcada SVG interativa (32 dentes, 5 faces) e diagnóstico ICDAS.", icon: Scan, category: "Odontologia" },
+  { slug: "anatomia-endodontia", name: "Anatomia Dental em Corte (Endodontia)", description: "Anatomia interna do dente com testes de vitalidade e decisão terapêutica endodôntica.", icon: Scan, category: "Odontologia" },
+  { slug: "periodontograma", name: "Periodontograma e Classificação Periodontal", description: "Sondagem periodontal com régua animada e classificação AAP/EFP 2018.", icon: Scan, category: "Odontologia" },
+  { slug: "anestesiologia-odonto", name: "Anestesiologia Odontológica", description: "Técnicas de bloqueio anestésico com anatomia nervosa SVG e cálculo de dose máxima.", icon: Syringe, category: "Odontologia" },
+  { slug: "cefalometria", name: "Cefalometria e Classificação de Angle", description: "Marcação cefalométrica interativa com cálculo automático de SNA, SNB e ANB.", icon: Scan, category: "Odontologia" },
+  { slug: "radiografia-odonto", name: "Radiografia e Interpretação de Imagens", description: "Leitura de radiografias odontológicas esquemáticas com identificação de estruturas e patologias.", icon: Scan, category: "Odontologia" },
+  { slug: "farmacologia-odonto", name: "Farmacologia Odontológica e Prescrição", description: "Prescrição segura em odontologia com gauges de risco por perfil do paciente.", icon: Pill, category: "Odontologia" },
+  { slug: "cirurgia-exodontia", name: "Cirurgia e Exodontia — Pell & Gregory", description: "Classificação de terceiros molares inclusos e planejamento cirúrgico com SVG interativo.", icon: Scan, category: "Odontologia" },
 ];
 
 export default function Simuladores() {
