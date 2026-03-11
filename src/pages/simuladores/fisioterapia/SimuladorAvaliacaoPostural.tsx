@@ -159,6 +159,11 @@ export default function SimuladorAvaliacaoPostural() {
   };
 
   const feedback = calcFeedback();
+  const location = useLocation();
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("avaliacao-postural");
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); }
+  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
 
   if (!activeCase) {
     return (
