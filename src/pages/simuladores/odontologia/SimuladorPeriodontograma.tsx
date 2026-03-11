@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const CASES = [
   { id: "g1", name: "Gengivite", desc: "Inflamação gengival reversível, sem perda óssea", depths: [2,2,3,2,2,3], bop: [true,false,true,false,true,false], boneLoss: 0, idealStage: "I", idealGrade: "A", idealTreatments: ["rasp"], consequence: { correct: "A raspagem supragengival resolve a gengivite. Em 2-4 semanas o BOP normaliza e a gengiva volta ao tom rosado saudável.", wrong: "Tratamento insuficiente ou excessivo. Gengivite não tratada adequadamente pode progredir para periodontite com perda óssea irreversível." } },
