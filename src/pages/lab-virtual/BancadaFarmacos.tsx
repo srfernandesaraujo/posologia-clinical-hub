@@ -66,6 +66,20 @@ export default function BancadaFarmacos() {
         />
         <ClinicalTrialPanel drugProperties={drugProperties} hasTarget={!!selectedTarget} />
       </div>
+
+      {/* M5 — Mini-Relatório */}
+      <LabReportPanel
+        benchTitle="Desenvolvimento de F\u00e1rmacos"
+        isUnlocked={!!selectedTarget}
+        experimentSummary={selectedTarget ? {
+          "Alvo": `${selectedTarget.name} (${selectedTarget.id})`,
+          "MW": `${drugProperties.mw}`,
+          "LogP": `${drugProperties.logP}`,
+          "HBD": `${drugProperties.hbd}`,
+          "HBA": `${drugProperties.hba}`,
+          "Modo de design": designMode,
+        } : undefined}
+      />
     </div>
   );
 }
