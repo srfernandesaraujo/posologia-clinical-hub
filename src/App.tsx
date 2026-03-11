@@ -105,6 +105,7 @@ import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
 import JogosClinicos from "./pages/JogosClinicos";
 import LaboratorioVirtual from "./pages/LaboratorioVirtual";
+import BancadaFarmacos from "./pages/lab-virtual/BancadaFarmacos";
 import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
