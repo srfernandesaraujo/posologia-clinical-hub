@@ -520,17 +520,21 @@ export default function SalasVirtuais() {
                           )}
 
                           {/* Step 3: Case (only after simulator) */}
-                          {act.simulatorSlug && casesForSlug.length > 0 && (
+                          {act.simulatorSlug && (
                             <div>
-                              <Label className="text-xs">Caso Clínico (opcional)</Label>
-                              <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Qualquer caso" /></SelectTrigger>
-                                <SelectContent>
-                                  {casesForSlug.map((c: any) => (
-                                    <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Label className="text-xs">Caso Clínico</Label>
+                              {casesForSlug.length > 0 ? (
+                                <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
+                                  <SelectTrigger><SelectValue placeholder="Selecione o caso clínico" /></SelectTrigger>
+                                  <SelectContent>
+                                    {casesForSlug.map((c: any) => (
+                                      <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <p className="text-xs text-muted-foreground italic py-2">Nenhum caso clínico disponível para este simulador. Crie casos na página do simulador primeiro.</p>
+                              )}
                             </div>
                           )}
 
