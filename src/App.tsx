@@ -98,6 +98,14 @@ import SimuladorPlanejamentoAula from "./pages/simuladores/docencia/SimuladorPla
 import SimuladorGestaoSala from "./pages/simuladores/docencia/SimuladorGestaoSala";
 import SimuladorAvaliacaoRubrica from "./pages/simuladores/docencia/SimuladorAvaliacaoRubrica";
 import SimuladorPreceptoriaClinica from "./pages/simuladores/docencia/SimuladorPreceptoriaClinica";
+import SimuladorOdontograma from "./pages/simuladores/odontologia/SimuladorOdontograma";
+import SimuladorAnatomiaEndodontia from "./pages/simuladores/odontologia/SimuladorAnatomiaEndodontia";
+import SimuladorPeriodontograma from "./pages/simuladores/odontologia/SimuladorPeriodontograma";
+import SimuladorAnestesiologia from "./pages/simuladores/odontologia/SimuladorAnestesiologia";
+import SimuladorCefalometria from "./pages/simuladores/odontologia/SimuladorCefalometria";
+import SimuladorRadiografia from "./pages/simuladores/odontologia/SimuladorRadiografia";
+import SimuladorFarmacologiaOdonto from "./pages/simuladores/odontologia/SimuladorFarmacologiaOdonto";
+import SimuladorCirurgiaExodontia from "./pages/simuladores/odontologia/SimuladorCirurgiaExodontia";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -226,6 +234,14 @@ const App = () => (
               <Route path="/sala/simulador/quiralidade" element={<SimuladorQuiralidade />} />
               <Route path="/sala/simulador/pka-absorcao" element={<SimuladorPkaAbsorcao />} />
               <Route path="/sala/simulador/qsar-simplificado" element={<SimuladorQSAR />} />
+              <Route path="/sala/simulador/odontograma" element={<SimuladorOdontograma />} />
+              <Route path="/sala/simulador/anatomia-endodontia" element={<SimuladorAnatomiaEndodontia />} />
+              <Route path="/sala/simulador/periodontograma" element={<SimuladorPeriodontograma />} />
+              <Route path="/sala/simulador/anestesiologia-odonto" element={<SimuladorAnestesiologia />} />
+              <Route path="/sala/simulador/cefalometria" element={<SimuladorCefalometria />} />
+              <Route path="/sala/simulador/radiografia-odonto" element={<SimuladorRadiografia />} />
+              <Route path="/sala/simulador/farmacologia-odonto" element={<SimuladorFarmacologiaOdonto />} />
+              <Route path="/sala/simulador/cirurgia-exodontia" element={<SimuladorCirurgiaExodontia />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -295,6 +311,14 @@ const App = () => (
               <Route path="/simuladores/gestao-sala" element={<SimuladorGestaoSala />} />
               <Route path="/simuladores/avaliacao-rubrica-osce" element={<SimuladorAvaliacaoRubrica />} />
               <Route path="/simuladores/preceptoria-clinica" element={<SimuladorPreceptoriaClinica />} />
+              <Route path="/simuladores/odontograma" element={<SimuladorOdontograma />} />
+              <Route path="/simuladores/anatomia-endodontia" element={<SimuladorAnatomiaEndodontia />} />
+              <Route path="/simuladores/periodontograma" element={<SimuladorPeriodontograma />} />
+              <Route path="/simuladores/anestesiologia-odonto" element={<SimuladorAnestesiologia />} />
+              <Route path="/simuladores/cefalometria" element={<SimuladorCefalometria />} />
+              <Route path="/simuladores/radiografia-odonto" element={<SimuladorRadiografia />} />
+              <Route path="/simuladores/farmacologia-odonto" element={<SimuladorFarmacologiaOdonto />} />
+              <Route path="/simuladores/cirurgia-exodontia" element={<SimuladorCirurgiaExodontia />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />

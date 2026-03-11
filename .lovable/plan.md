@@ -1,120 +1,100 @@
 
 
-# Simuladores de Odontologia — Plano Estratégico
+# Plano: Simuladores de Bioquímica
 
 ## Visão Geral
 
-Criar uma nova categoria **"Odontologia"** no catálogo de simuladores, com módulos que exploram recursos visuais SVG interativos (seguindo o padrão da Placa de Petri da Microbiologia). Cada simulador terá visualizações anatômicas renderizadas em SVG inline — arcadas dentárias, dentes em corte, tecidos periodontais, radiografias esquemáticas — onde o aluno interage visualmente e observa consequências das suas escolhas.
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
----
+## Arquitetura
 
-## Simuladores Propostos (8 módulos)
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-### 1. Odontograma Interativo e Diagnóstico
-- **O que treina**: Registro clínico odontológico padronizado e diagnóstico visual
-- **Visual SVG**: Arcada dentária superior e inferior completa (32 dentes). Cada dente é clicável e dividido em 5 faces (vestibular, lingual, mesial, distal, oclusal). O aluno clica para marcar condições: cárie, restauração, ausência, fratura, implante
-- **Fluxo modular**:
-  - M1: Seleção do paciente (perfil com queixa principal, idade, histórico)
-  - M2: Exame clínico visual — arcada SVG interativa onde o aluno marca achados face a face
-  - M3: Classificação diagnóstica — sistema cruza os achados e o aluno confirma diagnósticos (ICDAS para cáries, classificação periodontal)
-  - M4: Plano de tratamento — priorização de procedimentos baseada nos achados de M2+M3
-  - M5: Mini-Relatório
+## Simuladores por Lotes
 
-### 2. Anatomia Dental em Corte (Endodontia)
-- **O que treina**: Conhecimento da anatomia interna do dente e tomada de decisão endodôntica
-- **Visual SVG**: Dente em corte longitudinal mostrando esmalte, dentina, polpa, cemento, ligamento periodontal e osso alveolar. Camadas colorizadas e interativas
-- **Fluxo modular**:
-  - M1: Seleção do dente e tipo de lesão (cárie profunda, trauma, necrose pulpar)
-  - M2: Teste de vitalidade — o aluno escolhe testes (frio, calor, elétrico, percussão) e recebe resultados baseados na lesão de M1. SVG mostra zona afetada
-  - M3: Decisão terapêutica — capeamento direto/indireto, pulpotomia ou endodontia. O SVG atualiza mostrando o procedimento escolhido (remoção de polpa, obturação do canal)
-  - M4: Obturação e restauração — escolha de material (guta-percha, MTA, resina) com impacto no prognóstico. Visualização SVG do dente restaurado
-  - M5: Mini-Relatório
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-### 3. Periodontograma e Classificação Periodontal
-- **O que treina**: Sondagem periodontal, classificação de doença e plano terapêutico
-- **Visual SVG**: Dente com tecido gengival, sulco/bolsa, nível ósseo e ligamento. Régua de sondagem animada
-- **Fluxo modular**:
-  - M1: Seleção do caso clínico (gengivite, periodontite leve/moderada/severa)
-  - M2: Sondagem — o aluno clica em 6 sítios por dente na arcada SVG. Uma régua milimetrada desce e mostra a profundidade. Registra sangramento à sondagem (BOP)
-  - M3: Classificação — baseada nas profundidades de M2, o sistema pede ao aluno classificar (Estágio I-IV, Grau A-C conforme AAP/EFP 2018). O aluno escolhe e recebe feedback
-  - M4: Plano terapêutico — raspagem, cirurgia, antibioticoterapia adjuvante. O SVG mostra o tecido antes/depois do tratamento proposto
-  - M5: Mini-Relatório
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-### 4. Anestesiologia Odontológica
-- **O que treina**: Técnicas de bloqueio anestésico e cálculo de dose máxima
-- **Visual SVG**: Mandíbula/maxila em vista lateral com nervos (alveolar inferior, mentoniano, infraorbitário, palatino maior). Trajeto da agulha animado
-- **Fluxo modular**:
-  - M1: Seleção do procedimento e região (exodontia de 38, restauração de 16, etc.)
-  - M2: Escolha da técnica — bloqueio do nervo alveolar inferior, infiltrativa, intraligamentar. O SVG destaca o nervo-alvo e mostra o ponto de inserção da agulha com animação
-  - M3: Cálculo de dose — peso do paciente, tipo de anestésico (lidocaína 2%, articaína 4%, mepivacaína 3%), com/sem vasoconstritor. Cálculo de dose máxima (mg/kg) e número de tubetes
-  - M4: Complicações — cenários de falha anestésica, injeção intravascular, parestesia. O aluno decide a conduta
-  - M5: Mini-Relatório
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-### 5. Classificação de Angle e Cefalometria Simplificada (Ortodontia)
-- **O que treina**: Diagnóstico ortodôntico e análise cefalométrica básica
-- **Visual SVG**: Crânio em perfil (cefalometria lateral) com pontos cefalométricos (S, N, A, B, Gn, Go) e planos (SN, FH, mandibular). Linhas e ângulos desenhados dinamicamente
-- **Fluxo modular**:
-  - M1: Seleção do caso — Classe I, II (div 1, div 2) ou III de Angle, com perfil facial
-  - M2: Marcação cefalométrica — o aluno clica para posicionar pontos no SVG do crânio. O sistema calcula SNA, SNB, ANB automaticamente
-  - M3: Análise — classificação esquelética (I, II ou III), discrepância de modelo, necessidade de extrações. Gráficos de Steiner/Ricketts
-  - M4: Plano de tratamento — aparelho fixo, alinhadores, cirurgia ortognática. O SVG mostra projeção do perfil pós-tratamento
-  - M5: Mini-Relatório
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-### 6. Radiografia e Interpretação de Imagens
-- **O que treina**: Leitura e interpretação de radiografias odontológicas
-- **Visual SVG**: Radiografia panorâmica e periapical esquemáticas em tons de cinza/azul, com estruturas anatômicas (dentes, osso, seio maxilar, canal mandibular) renderizadas como shapes SVG com opacidades variadas
-- **Fluxo modular**:
-  - M1: Seleção do tipo de exame (periapical, panorâmica, interproximal) e caso clínico
-  - M2: Identificação de estruturas — o aluno clica nas estruturas anatômicas no SVG e as nomeia (canal mandibular, forame mentual, seio maxilar, processo estilóide)
-  - M3: Identificação de patologias — o aluno marca lesões (radiolúcidas, radiopacas, mistas) e classifica (cisto, granuloma, tumor, cárie, reabsorção)
-  - M4: Laudo radiográfico — redação guiada do laudo com campos estruturados. O sistema pontua completude e acurácia
-  - M5: Mini-Relatório
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-### 7. Farmacologia Odontológica e Prescrição
-- **O que treina**: Prescrição segura em odontologia (analgésicos, anti-inflamatórios, antibióticos)
-- **Visual**: Tabelas comparativas e gauges de risco (sem SVG anatômico — usa Recharts como os simuladores clínicos existentes)
-- **Fluxo modular**:
-  - M1: Caso clínico — perfil do paciente (gestante, cardiopata, nefropata, criança, idoso) + procedimento realizado
-  - M2: Prescrição — o aluno seleciona analgésico, AINE, antibiótico e posologia. O sistema verifica interações e contraindicações baseadas no perfil de M1
-  - M3: Análise de risco — gauges de risco renal, hepático, cardiovascular e gástrico. Alertas de dose máxima pediátrica
-  - M4: Receituário final — geração do receituário com validação (legislação, DCB, via de administração)
-  - M5: Mini-Relatório
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
 
-### 8. Cirurgia e Exodontia — Classificação de Pell & Gregory
-- **O que treina**: Classificação de terceiros molares e planejamento cirúrgico
-- **Visual SVG**: Mandíbula com terceiro molar em diferentes posições (mesioangular, vertical, horizontal, distoangular). Relação com ramo mandibular e plano oclusal desenhada dinamicamente
-- **Fluxo modular**:
-  - M1: Caso clínico — radiografia SVG mostrando o terceiro molar. O aluno identifica a posição (Winter) e classificação (Pell & Gregory: Classe I/II/III, Posição A/B/C)
-  - M2: Planejamento — escolha de retalho, osteotomia (sim/não), odontossecção (sim/não). O SVG anima o passo escolhido
-  - M3: Complicações — cenários pós-operatórios (alveolite, parestesia, fratura). O aluno decide conduta
-  - M4: Protocolo medicamentoso — prescrição pré e pós-operatória vinculada ao perfil do paciente
-  - M5: Mini-Relatório
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
 
----
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
 
-## Padrão Visual SVG
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
 
-Seguindo o exemplo da Placa de Petri (imagem de referência), todos os SVGs serão:
-- Renderizados inline como `<svg viewBox="...">` dentro dos cards
-- Fundo escuro consistente com o tema da plataforma (background do card)
-- Cores sólidas suaves para estruturas anatômicas (tons de bege/creme para dentes, rosa para gengiva, cinza para osso)
-- Elementos interativos com `cursor-pointer` e hover states
-- Marcadores coloridos (verde/amarelo/vermelho) para classificações como no padrão S/I/R
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
 
----
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
 
-## Arquitetura Técnica
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
 
-- **8 novos arquivos** em `src/pages/simuladores/odontologia/`
-- **Nova categoria** "Odontologia" adicionada ao array `NATIVE_SIMULATORS` em `Simuladores.tsx` com ícone dedicado (pode usar `Stethoscope` ou criar com SVG)
-- **8 novas rotas** em `App.tsx`
-- **Padrão modular** idêntico às bancadas do laboratório virtual: `completedModules: Set<number>`, `LockedOverlay`, botão de execução por módulo
-- **LabReportPanel** reutilizado como M5 em cada simulador
-- **Dados estáticos** — todos os casos, classificações e parâmetros são arrays no frontend
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
 
----
+## Alterações em arquivos existentes
 
-## Diferencial de Mercado
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
 
-Nenhuma plataforma edtech oferece simuladores de odontologia com SVGs interativos para odontograma, periodontograma, cefalometria e anatomia endodôntica. Ferramentas existentes (DentalSim, Simodont) são hardwares caros ou softwares de desktop. Ter isso em browser com fluxo modular educativo é um diferencial enorme para cursos de graduação e pós-graduação em odontologia.
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 
