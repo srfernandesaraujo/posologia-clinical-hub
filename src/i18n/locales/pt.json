@@ -114,7 +114,7 @@
     "systemCalculators": "Calculadoras do Sistema"
   },
   "simulators": {
-    "title": "Simuladores Clínicos",
+    "title": "Simuladores",
     "subtitle": "Selecione um simulador para começar.",
     "search": "Buscar simulador...",
     "noResults": "Nenhum simulador encontrado.",
