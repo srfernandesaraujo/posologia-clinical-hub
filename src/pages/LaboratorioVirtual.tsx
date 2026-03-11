@@ -43,7 +43,7 @@ const benches: BenchCard[] = [
       "Antibiograma com halos de inibição, curvas de crescimento bacteriano, classificação S/I/R e índice FIC.",
     icon: <Microscope className="h-8 w-8" />,
     route: "/laboratorio-virtual/microbiologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(142 71% 45%)",
   },
   {
