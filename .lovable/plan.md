@@ -1,100 +1,78 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Melhorias nos 8 Simuladores de Fisioterapia + Infraestrutura
 
-## Visão Geral
+## Resumo
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Reescrever os 8 simuladores de fisioterapia para: (1) melhorar módulos onde o aluno apenas confirma sem decidir, (2) adicionar feedback final com desfecho clínico, (3) adicionar botão voltar, Como Usar, AdminPromptViewer, geração de casos IA, e (4) adicionar system prompts.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+## Melhorias por Simulador
 
-## Simuladores por Lotes
+### 1. Goniometria Articular
+- **M3**: Em vez de apenas ver a tabela e confirmar, o aluno deve **classificar o déficit** (leve/moderado/grave) para cada movimento. O sistema compara com a classificação real e pontua acertos
+- **Feedback final**: Desfecho clínico baseado nas técnicas escolhidas vs déficits encontrados
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### 2. Avaliação Postural
+- **M2**: Em vez de marcar todos os 8 pontos (todos alunos fariam igual), o sistema apresenta **12 pontos possíveis** (8 corretos + 4 distratores). O aluno decide quais são relevantes baseado no caso de M1
+- **M3**: Em vez de apenas ver desvios, o aluno deve **selecionar entre opções de diagnóstico** (múltipla escolha com distratores). Ex: "Qual o desvio principal?" com 4 opções
+- **Feedback final**: Previsão de evolução postural baseada no programa de correção escolhido
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### 3. Força Muscular (Oxford/MRC)
+- **M2**: O aluno clica no músculo, simula o teste (animação), e o **sistema determina a força medida** baseado no caso clínico (não o aluno que escolhe o grau)
+- **M3**: Em vez de apenas ver o mapa, o aluno deve **identificar o padrão neurológico** (múltipla escolha: hemiparesia, tetraparesia, padrão radicular, etc.) e o **nível da lesão**
+- **Feedback final**: Prognóstico funcional baseado no programa de fortalecimento
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### 4. Dermátomos
+- **M2**: Ao clicar no dermátomo, a sensibilidade é **medida automaticamente pelo sistema** (simulando o teste real). O aluno observa o resultado mas não o define
+- **M3**: Em vez de confirmar correlação, o aluno deve **escolher o nível lesional** e o **padrão** (central vs periférico) em múltipla escolha
+- **M4**: O aluno deve **decidir a classificação ASIA** (para medulares) ou o **diagnóstico diferencial** entre opções com distratores
+- **Feedback final**: Prognóstico neurológico e funcional
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### 5. Fisioterapia Respiratória
+- **M4**: Em vez de apenas clicar "Nova Ausculta" e ver que melhorou, o aluno deve **decidir a conduta seguinte**: manter técnicas, trocar, ajustar parâmetros de ventilação, ou encaminhar para intubação. O sistema apresenta a reavaliação com resultado variável baseado nas técnicas de M3
+- **Feedback final**: Evolução respiratória do paciente
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 6. Eletroterapia
+- Fluxo atual está bom, apenas adicionar **feedback final** com avaliação da adequação dos parâmetros e desfecho (analgesia alcançada? contração efetiva? edema reduzido?)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 7. Testes Ortopédicos
+- **M3**: Em vez de mostrar o diagnóstico pronto, apresentar **4-5 opções de diagnóstico** para o aluno escolher baseado nos testes positivos/negativos de M2
+- **Feedback final**: Prognóstico de reabilitação
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 8. Escala de Berg
+- **M3**: Em vez de mostrar score + risco prontos, o aluno vê apenas o **gráfico radar** e deve **decidir o score total** (campo numérico) e a **classificação de risco** (alto/moderado/baixo). O sistema compara com os valores reais
+- **Feedback final**: Risco de queda projetado e evolução funcional
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+---
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+## Infraestrutura (todos os 8 simuladores)
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+1. **Botão Voltar** (`ArrowLeft` → `/simuladores`)
+2. **SimulatorHowToUse** com steps específicos por simulador
+3. **AdminPromptViewer** com prompt do simulador
+4. **Dashboard de casos** (NativeCaseCard + geração IA com `useSimulatorCases`)
+5. **SimulatorFeedback** antes do LabReportPanel
+6. **16 system prompts** em `nativeSystemPrompts.ts` (8 fisio + os 8 odonto que podem estar faltando)
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+---
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+## Arquivos Afetados
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+**Reescrita** (8):
+- `src/pages/simuladores/fisioterapia/SimuladorGoniometria.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorAvaliacaoPostural.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorForcaMuscular.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorDermatomos.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorRespiratorio.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorEletroterapia.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos.tsx`
+- `src/pages/simuladores/fisioterapia/SimuladorBerg.tsx`
 
-## Alterações em arquivos existentes
+**Edição** (1):
+- `src/data/nativeSystemPrompts.ts` — 16 novos prompts (8 odonto + 8 fisio)
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+**Correção** (4 odonto com erro de build):
+- Corrigir uso de `AICaseCard` nos 4 simuladores de odontologia (adicionar props faltantes `onDelete`, `onUpdate`, `onCopy`, `availableTargets`)
 
