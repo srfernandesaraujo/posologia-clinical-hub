@@ -314,6 +314,13 @@ const App = () => (
               <Route path="/agente-feedback" element={<AgenteFeedback />} />
               <Route path="/laboratorio-virtual" element={<LaboratorioVirtual />} />
               <Route path="/laboratorio-virtual/farmacos" element={<BancadaFarmacos />} />
+              <Route path="/laboratorio-virtual/microbiologia" element={<BancadaMicrobiologia />} />
+              <Route path="/laboratorio-virtual/toxicologia" element={<BancadaToxicologia />} />
+              <Route path="/laboratorio-virtual/farmacogenomica" element={<BancadaFarmacogenomica />} />
+              <Route path="/laboratorio-virtual/estabilidade" element={<BancadaEstabilidade />} />
+              <Route path="/laboratorio-virtual/controle-qualidade" element={<BancadaControleQualidade />} />
+              <Route path="/laboratorio-virtual/epidemiologia" element={<BancadaEpidemiologia />} />
+              <Route path="/laboratorio-virtual/biotecnologia" element={<BancadaBiotecnologia />} />
               <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 
