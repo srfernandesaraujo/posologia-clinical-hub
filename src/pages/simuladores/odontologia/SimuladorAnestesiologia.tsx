@@ -65,7 +65,7 @@ export default function SimuladorAnestesiologia() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const prompt = getNativePrompt("sim-anestesiologia") || "";
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("anestesiologia-odonto", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("anestesiologia-odonto", BUILT_IN);
 
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
