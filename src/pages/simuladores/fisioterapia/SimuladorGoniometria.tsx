@@ -133,10 +133,10 @@ export default function SimuladorGoniometria() {
 
   const allMeasured = joint ? joint.movements.every(m => userMeasurements[m.name]) : false;
 
-  const reportSections = patient && joint ? [
-    { title: "Paciente", content: `${patient.name}, ${patient.age} anos — ${patient.injury}` },
-    { title: "Articulação", content: joint.name },
-    { title: "Goniometria", content: joint.movements.map(m => {
+  const expSummary = patient && joint ? {
+    "Paciente": `${patient.name}, ${patient.age} anos — ${patient.injury}`,
+    "Articulação": joint.name,
+    "Goniometria": joint.movements.map(m => {
       const meas = userMeasurements[m.name];
       if (!meas) return `${m.name}: não avaliado`;
       const deficit = classifyDeficit(meas.active, m.normal);
