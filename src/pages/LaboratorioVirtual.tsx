@@ -87,7 +87,7 @@ const benches: BenchCard[] = [
       "Curva de calibração, LOD/LOQ, uniformidade de conteúdo e validação analítica conforme ICH Q2.",
     icon: <ClipboardCheck className="h-8 w-8" />,
     route: "/laboratorio-virtual/controle-qualidade",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(199 89% 48%)",
   },
   {
