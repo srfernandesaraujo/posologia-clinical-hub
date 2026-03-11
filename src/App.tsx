@@ -114,6 +114,14 @@ import SimuladorRespiratorioFisio from "./pages/simuladores/fisioterapia/Simulad
 import SimuladorEletroterapia from "./pages/simuladores/fisioterapia/SimuladorEletroterapia";
 import SimuladorTestesOrtopedicos from "./pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos";
 import SimuladorBerg from "./pages/simuladores/fisioterapia/SimuladorBerg";
+import SimuladorAvaliacaoNutricional from "./pages/simuladores/nutricao/SimuladorAvaliacaoNutricional";
+import SimuladorTriagemNutricional from "./pages/simuladores/nutricao/SimuladorTriagemNutricional";
+import SimuladorNecessidadesEnergeticas from "./pages/simuladores/nutricao/SimuladorNecessidadesEnergeticas";
+import SimuladorTNE from "./pages/simuladores/nutricao/SimuladorTNE";
+import SimuladorTNP from "./pages/simuladores/nutricao/SimuladorTNP";
+import SimuladorDisfagia from "./pages/simuladores/nutricao/SimuladorDisfagia";
+import SimuladorNutricaoRenal from "./pages/simuladores/nutricao/SimuladorNutricaoRenal";
+import SimuladorNutricaoMaternoInfantil from "./pages/simuladores/nutricao/SimuladorNutricaoMaternoInfantil";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
