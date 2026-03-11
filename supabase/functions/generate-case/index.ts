@@ -717,6 +717,7 @@ Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas iden
   berg: `Gere um caso clínico para o Simulador de Escala de Berg. O caso deve conter: title, difficulty, patient (name, age, diagnosis, history), items (array de 14 objetos com {task, score: 0-4}), totalScore, riskLevel (alto/moderado/baixo), idealProgram (array de exercícios de prevenção de quedas), consequence ({correct, wrong}). Varie entre Parkinson, pós-AVE, fragilidade.`,
 };
 
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
