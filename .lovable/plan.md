@@ -1,100 +1,106 @@
 
 
-# Plano: Simuladores de Bioquímica
+# Plano: Laboratório Virtual de Desenvolvimento de Fármacos
 
-## Visão Geral
+## Resumo
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Criar uma nova seção "Laboratório Virtual" no sistema — uma ferramenta standalone (não um simulador clínico com casos) com 4 módulos interativos: Validação do Alvo (visualização 3D via AlphaFold), Design do Protótipo (Lipinski), Simulação de Docking/ADME e Ensaios Clínicos Simulados. Tema escuro, dashboard científico.
+
+---
 
 ## Arquitetura
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+O Laboratório Virtual é uma **página independente** (não segue o padrão dos simuladores clínicos com casos nativos/IA). É uma ferramenta interativa contínua onde os módulos se comunicam em tempo real.
 
-## Simuladores por Lotes
+```text
+┌─────────────────────────────────────────────────────┐
+│  LaboratorioVirtual.tsx (página principal)           │
+│  ┌─────────────┐  ┌──────────────┐                  │
+│  │ TargetPanel  │  │ DrugDesign   │                  │
+│  │ (Módulo 1)   │  │ Panel (Mód2) │                  │
+│  └─────────────┘  └──────────────┘                  │
+│  ┌─────────────┐  ┌──────────────┐                  │
+│  │ DockingADME  │  │ ClinicalTrial│                  │
+│  │ Panel (Mód3) │  │ Panel (Mód4) │                  │
+│  └─────────────┘  └──────────────┘                  │
+└─────────────────────────────────────────────────────┘
+```
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+---
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+## Módulo 1: Validação do Alvo (AlphaFold)
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+**Componente:** `src/components/lab-virtual/TargetValidationPanel.tsx`
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+- **Dropdown (Select)** com 9 proteínas pré-programadas:
+  - Receptor Beta-1 Adrenérgico (P08588)
+  - Receptor Opioide Mi (P35372)
+  - Receptor de Glicocorticoides (P04150)
+  - COX-2 (P35354)
+  - ECA (P12821)
+  - HMG-CoA Redutase (P04035)
+  - Acetilcolinesterase (P22303)
+  - Protease Mpro SARS-CoV-2 (P0DTD1)
+  - PBP2 S. aureus (P0A050)
+- Campo de busca livre para IDs UniProt customizados
+- Fetch da API pública AlphaFold: `https://alphafold.ebi.ac.uk/api/prediction/{uniprotId}`
+- Visualização 3D via **3Dmol.js** (carregada via CDN/script tag, sem pacote npm — é a abordagem mais compatível com React)
+- Spinner durante carregamento, exibição de metadados da proteína (nome, organismo, confiança)
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+## Módulo 2: Design do Protótipo (Lipinski)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+**Componente:** `src/components/lab-virtual/DrugDesignPanel.tsx`
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+- 4 Sliders (Radix UI Slider já existente):
+  - Peso Molecular (100–800 g/mol)
+  - LogP (-2 a 7)
+  - Doadores HB (0–10)
+  - Aceitadores HB (0–15)
+- Validação Lipinski em tempo real com indicadores verde/vermelho (Badge)
+- Tooltips explicativos em cada termo técnico
+- Estado compartilhado com Módulo 3 via props/state lifting
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+## Módulo 3: Simulação de Docking e ADME
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+**Componente:** `src/components/lab-virtual/DockingADMEPanel.tsx`
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+- Botão "Simular Interação Fármaco-Receptor"
+- Cálculo mock com lógica matemática plausível baseada nos inputs do Módulo 2:
+  - ΔG (energia de ligação) derivado de MW, LogP, HBD, HBA
+  - Scores ADME (Absorção, Distribuição, Metabolismo, Excreção, Toxicidade) calculados por fórmulas heurísticas
+- Gráfico de Radar ADME via **Recharts** (já instalado)
+- Card com ΔG e Ki estimados
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+## Módulo 4: Ensaios Clínicos Simulados
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+**Componente:** `src/components/lab-virtual/ClinicalTrialPanel.tsx`
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+- Simulação de eficácia em "população virtual" com variação genética
+- Inputs: tamanho da amostra, fases (I/II/III)
+- Resultados mock: taxa de resposta, efeitos adversos, curva de Kaplan-Meier simplificada (Recharts AreaChart)
+- Variação genética: metabolizadores lentos/rápidos/ultrarrápidos afetam outcomes
 
-## Alterações em arquivos existentes
+---
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+## Arquivos a criar
 
-## Detalhes Técnicos
+1. **`src/pages/LaboratorioVirtual.tsx`** — Página principal com layout grid 2x2, tema escuro forçado, state management central
+2. **`src/components/lab-virtual/TargetValidationPanel.tsx`** — Módulo 1
+3. **`src/components/lab-virtual/DrugDesignPanel.tsx`** — Módulo 2
+4. **`src/components/lab-virtual/DockingADMEPanel.tsx`** — Módulo 3
+5. **`src/components/lab-virtual/ClinicalTrialPanel.tsx`** — Módulo 4
+6. **`src/components/lab-virtual/MoleculeViewer.tsx`** — Wrapper React para 3Dmol.js
 
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+## Arquivos a editar
+
+1. **`src/App.tsx`** — Adicionar rota `/laboratorio-virtual` (protegida)
+2. **`src/components/layouts/AppLayout.tsx`** — Adicionar item "Laboratório Virtual" no menu/sidebar
+3. **`index.html`** — Adicionar script CDN do 3Dmol.js: `<script src="https://3Dmol.org/build/3Dmol-min.js"></script>`
+
+## Detalhes técnicos
+
+- **3Dmol.js**: Carregado via CDN no index.html. O wrapper React usa `useRef` + `useEffect` para criar o viewer (`$3Dmol.createViewer`). Busca o PDB/CIF da API AlphaFold e renderiza em ribbon/surface com toggle.
+- **Estado compartilhado**: A página principal mantém `drugProperties` (MW, LogP, HBD, HBA) e `selectedTarget` como state. Módulo 2 atualiza as props, Módulo 3 lê para recalcular quando o botão é clicado.
+- **Tema escuro**: Classes Tailwind `bg-gray-950 text-gray-100` no container principal, cards com `bg-gray-900 border-gray-800`.
+- **Sem dependências novas** além do CDN do 3Dmol.js — usa Recharts (já instalado), Radix Slider/Select/Tooltip (já instalados).
 
