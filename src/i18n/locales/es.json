@@ -24,7 +24,7 @@
     "evidenceBased": "Basado en evidencia",
     "reviewedByDoctors": "Revisado por médicos",
     "freeToStart": "Gratis para empezar",
-    "stats": { "calculators": "Calculadoras Clínicas", "simulators": "Simuladores Clínicos", "games": "Juegos Educativos", "available": "Disponible" },
+    "stats": { "calculators": "Calculadoras Clínicas", "simulators": "Simuladores Interactivos", "games": "Juegos Educativos", "available": "Disponible", "labBenches": "Bancadas de Laboratorio" },
     "problemTitle": "La rutina clínica no puede esperar",
     "problemSubtitle": "Necesitas respuestas rápidas y confiables. Entregamos exactamente eso.",
     "problemSolve": "El problema que resolvemos",

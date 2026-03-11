@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
-  BookOpen, Search, ArrowRight, Pill, Shield, Settings,
-  ChevronDown, ChevronRight, HelpCircle, Zap, Star,
-  Monitor, UserPlus, LogIn, DoorOpen,
+  BookOpen, Search, ArrowRight, Shield,
+  ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const sections: DocSection[] = [
   {
     id: "inicio", title: "Primeiros Passos", icon: UserPlus, color: "text-emerald-400 bg-emerald-500/10",
     items: [
-      { q: "Como criar uma conta?", a: "Clique em 'Criar Conta' na página inicial, preencha seu nome, e-mail e senha. Após o cadastro, um administrador irá aprovar seu acesso. Você receberá uma notificação quando sua conta for ativada." },
+      { q: "Como criar uma conta?", a: "Clique em 'Criar Conta' na página inicial, preencha seu nome, e-mail e senha. Após o cadastro, um administrador irá aprovar seu acesso." },
       { q: "Como fazer login?", a: "Acesse a página de Login e utilize seu e-mail e senha cadastrados, ou faça login com sua conta Google." },
       { q: "O que acontece após o cadastro?", a: "Novos cadastros ficam com status 'Pendente' até a aprovação de um administrador. Após aprovação, você terá acesso ao plano Gratuito com limite diário de uso." },
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
@@ -30,46 +30,63 @@ const sections: DocSection[] = [
   {
     id: "calculadoras", title: "Calculadoras Clínicas", icon: Calculator, color: "text-blue-400 bg-blue-500/10",
     items: [
-      { q: "O que são as calculadoras?", a: "São ferramentas de apoio à decisão clínica que calculam scores, índices e fórmulas validadas pela literatura científica. Exemplos: CKD-EPI, Wells Score, MELD, CHA₂DS₂-VASc, entre outros." },
+      { q: "O que são as calculadoras?", a: "São ferramentas de apoio à decisão clínica que calculam scores, índices e fórmulas validadas pela literatura. Exemplos: CKD-EPI, Wells Score, MELD, CHA₂DS₂-VASc, Vancomicina AUC/MIC, entre outros." },
       { q: "Quantas calculadoras estão disponíveis?", a: "Atualmente a plataforma conta com mais de 20 calculadoras clínicas cobrindo áreas como nefrologia, cardiologia, emergência, farmacologia e pediatria." },
-      { q: "Posso salvar os resultados?", a: "Sim! Usuários autenticados podem salvar cálculos no histórico pessoal, incluindo nome do paciente e data, facilitando o acompanhamento." },
-      { q: "Existe limite de uso?", a: "No plano Gratuito há um limite diário de uso das calculadoras. O plano Premium oferece uso ilimitado de todas as ferramentas." },
+      { q: "Posso salvar os resultados?", a: "Sim! Usuários autenticados podem salvar cálculos no histórico pessoal, incluindo nome do paciente e data." },
+      { q: "Existe limite de uso?", a: "No plano Gratuito há um limite diário. O plano Premium oferece uso ilimitado." },
     ],
   },
   {
     id: "simuladores", title: "Simuladores Interativos", icon: FlaskConical, color: "text-cyan-400 bg-cyan-500/10",
     items: [
-      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos reais, permitindo prática segura de raciocínio farmacoterapêutico e fisiológico. Incluem simuladores de PRM, TDM, interações medicamentosas, bomba de infusão e muito mais." },
-      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores são organizados em 3 categorias: Farmácia Clínica (8 simuladores), Fisiologia (10 simuladores) e Bioquímica (10 simuladores), totalizando 28 simuladores." },
-      { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade, garantindo uma experiência nova a cada sessão." },
-      { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades exclusivas do plano Premium. Usuários gratuitos podem visualizar a lista, mas o acesso completo requer assinatura." },
+      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 60 simuladores." },
+      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 8 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (7), Química Farmacêutica (8), Formação Docente (7), além de simuladores criados pelo usuário." },
+      { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
+      { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium. Usuários gratuitos podem visualizar a lista." },
     ],
   },
   {
-    id: "jogos", title: "Jogos Clínicos", icon: Gamepad2, color: "text-purple-400 bg-purple-500/10",
+    id: "formacao-docente", title: "Formação Docente", icon: GraduationCap, color: "text-rose-400 bg-rose-500/10",
     items: [
-      { q: "O que são os Jogos Clínicos?", a: "São jogos educativos com mecânicas diversas (quiz, tabuleiro, aventura, RPG) que testam conhecimentos em farmacologia, fisiologia e clínica médica de forma divertida e engajante." },
-      { q: "Quantos jogos estão disponíveis?", a: "A plataforma possui mais de 20 jogos com mecânicas diferentes, como Milionário da Farmacologia, Código Azul, Detetive Toxicológico, Batalha Naval Clínica, entre outros." },
-      { q: "Os jogos utilizam IA?", a: "Sim, os jogos utilizam IA para gerar perguntas, narrativas e cenários dinâmicos, oferecendo uma experiência única a cada partida." },
-      { q: "Existe ranking?", a: "Sim! Os jogos possuem sistema de pontuação e ranking, integrando-se ao sistema de gamificação da plataforma." },
+      { q: "O que é a categoria Formação Docente?", a: "São 7 simuladores exclusivos para treinamento pedagógico de professores, cobrindo feedback formativo (Pendleton/R2C2/ALOBA), elaboração de questões (Bloom), condução de caso PBL/TBL, planejamento de aula por competências (DCNs), gestão de sala com incidentes críticos, avaliação por rubrica OSCE e preceptoria clínica (One-Minute Preceptor)." },
+      { q: "Preciso ser professor para usar?", a: "Não! Embora focados em docentes, os simuladores de formação podem ser usados por qualquer aluno de licenciatura, pós-graduação em docência ou profissional interessado em pedagogia da saúde." },
+      { q: "Como funciona a pontuação?", a: "Cada simulador avalia as escolhas do usuário em critérios pedagógicos específicos (empatia, assertividade, alinhamento construtivo, calibração) e atribui uma pontuação percentual." },
     ],
   },
   {
-    id: "salas", title: "Salas Virtuais", icon: Users, color: "text-amber-400 bg-amber-500/10",
+    id: "laboratorio", title: "Laboratório Virtual", icon: Microscope, color: "text-purple-400 bg-purple-500/10",
     items: [
-      { q: "O que são Salas Virtuais?", a: "São ambientes colaborativos onde professores podem criar sessões de simulação para que alunos participem em tempo real. Cada sala possui um PIN de 6 dígitos para acesso." },
-      { q: "Como os alunos acessam?", a: "Alunos não precisam de conta! Basta inserir o PIN da sala na página inicial e informar seu nome para participar da atividade." },
-      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem acesso a um dashboard com os resultados de cada aluno, incluindo pontuação, ações realizadas e tempo gasto." },
-      { q: "Quem pode criar salas?", a: "A criação de salas é exclusiva para usuários com plano Premium, professores convidados e administradores." },
+      { q: "O que é o Laboratório Virtual?", a: "É um ambiente com 8 bancadas de pesquisa modulares onde o usuário conduz experimentos sequenciais — cada módulo depende dos resultados do anterior, simulando uma experiência real de bancada." },
+      { q: "Quais bancadas estão disponíveis?", a: "Desenvolvimento de Fármacos, Microbiologia, Toxicologia, Farmacogenômica, Estabilidade, Controle de Qualidade, Epidemiologia e Biotecnologia." },
+      { q: "Como funciona o fluxo modular?", a: "Cada bancada tem 4 módulos experimentais + 1 módulo de mini-relatório. O módulo 2 só desbloqueia após completar o módulo 1, e assim por diante. Suas escolhas iniciais impactam diretamente os resultados dos módulos seguintes." },
+      { q: "O que é o mini-relatório?", a: "É o módulo final de cada bancada onde você escreve hipótese, resultados e conclusão sobre o experimento realizado. Pode exportar o relatório completo em PDF com os dados de todos os módulos." },
+    ],
+  },
+  {
+    id: "jogos", title: "Jogos Clínicos", icon: Gamepad2, color: "text-amber-400 bg-amber-500/10",
+    items: [
+      { q: "O que são os Jogos Clínicos?", a: "São jogos educativos com mecânicas diversas (quiz, tabuleiro, aventura, RPG) que testam conhecimentos em farmacologia, fisiologia e clínica de forma divertida." },
+      { q: "Quantos jogos estão disponíveis?", a: "A plataforma possui mais de 20 jogos incluindo Milionário da Farmacologia, Código Azul, Detetive Toxicológico, Batalha Naval Clínica, entre outros." },
+      { q: "Os jogos utilizam IA?", a: "Sim, os jogos utilizam IA para gerar perguntas, narrativas e cenários dinâmicos." },
+      { q: "Existe ranking?", a: "Sim! Os jogos possuem ranking e integram-se ao sistema de gamificação (pontos, badges e streaks)." },
+    ],
+  },
+  {
+    id: "salas", title: "Salas Virtuais", icon: DoorOpen, color: "text-teal-400 bg-teal-500/10",
+    items: [
+      { q: "O que são Salas Virtuais?", a: "São ambientes colaborativos onde professores criam sessões de simulação para que alunos participem em tempo real. Cada sala possui um PIN de 6 dígitos." },
+      { q: "Como os alunos acessam?", a: "Alunos não precisam de conta! Basta inserir o PIN da sala na página inicial e informar seu nome." },
+      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem um dashboard com resultados de cada aluno incluindo pontuação, ações e tempo gasto." },
+      { q: "Quem pode criar salas?", a: "Criação exclusiva para usuários Premium, professores convidados e administradores." },
     ],
   },
   {
     id: "planos", title: "Planos e Pagamento", icon: CreditCard, color: "text-green-400 bg-green-500/10",
     items: [
-      { q: "Quais planos estão disponíveis?", a: "Oferecemos dois planos: Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a todas as ferramentas: calculadoras, simuladores, jogos, salas virtuais e relatórios PDF)." },
-      { q: "Como faço upgrade para Premium?", a: "Acesse a página de Planos no menu lateral e clique em 'Assinar Premium'. O pagamento é processado de forma segura pelo Stripe." },
-      { q: "Posso cancelar a qualquer momento?", a: "Sim, o cancelamento pode ser solicitado a qualquer momento pelo portal do cliente Stripe, com efeito ao final do período já pago." },
-      { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos cartão de crédito e débito através do Stripe, com suporte a bandeiras internacionais." },
+      { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 60+ simuladores, laboratório virtual, jogos, salas virtuais, formação docente e relatórios PDF)." },
+      { q: "Como faço upgrade para Premium?", a: "Acesse a página de Planos no menu lateral e clique em 'Assinar Premium'. Pagamento seguro pelo Stripe." },
+      { q: "Posso cancelar a qualquer momento?", a: "Sim, o cancelamento pode ser solicitado pelo portal do cliente Stripe." },
+      { q: "Quais formas de pagamento são aceitas?", a: "Cartão de crédito e débito via Stripe, com suporte a bandeiras internacionais." },
     ],
   },
 ];
@@ -105,7 +122,7 @@ export default function DocumentacaoPublica() {
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Central de Ajuda</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Documentação do Posologia Clinical Hub</h1>
-          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma.</p>
+          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, simuladores, laboratório virtual, jogos, formação docente e mais.</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input
