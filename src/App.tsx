@@ -106,6 +106,14 @@ import SimuladorCefalometria from "./pages/simuladores/odontologia/SimuladorCefa
 import SimuladorRadiografia from "./pages/simuladores/odontologia/SimuladorRadiografia";
 import SimuladorFarmacologiaOdonto from "./pages/simuladores/odontologia/SimuladorFarmacologiaOdonto";
 import SimuladorCirurgiaExodontia from "./pages/simuladores/odontologia/SimuladorCirurgiaExodontia";
+import SimuladorGoniometria from "./pages/simuladores/fisioterapia/SimuladorGoniometria";
+import SimuladorAvaliacaoPostural from "./pages/simuladores/fisioterapia/SimuladorAvaliacaoPostural";
+import SimuladorForcaMuscular from "./pages/simuladores/fisioterapia/SimuladorForcaMuscular";
+import SimuladorDermatomos from "./pages/simuladores/fisioterapia/SimuladorDermatomos";
+import SimuladorRespiratorioFisio from "./pages/simuladores/fisioterapia/SimuladorRespiratorio";
+import SimuladorEletroterapia from "./pages/simuladores/fisioterapia/SimuladorEletroterapia";
+import SimuladorTestesOrtopedicos from "./pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos";
+import SimuladorBerg from "./pages/simuladores/fisioterapia/SimuladorBerg";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -242,6 +250,14 @@ const App = () => (
               <Route path="/sala/simulador/radiografia-odonto" element={<SimuladorRadiografia />} />
               <Route path="/sala/simulador/farmacologia-odonto" element={<SimuladorFarmacologiaOdonto />} />
               <Route path="/sala/simulador/cirurgia-exodontia" element={<SimuladorCirurgiaExodontia />} />
+              <Route path="/sala/simulador/goniometria" element={<SimuladorGoniometria />} />
+              <Route path="/sala/simulador/avaliacao-postural" element={<SimuladorAvaliacaoPostural />} />
+              <Route path="/sala/simulador/forca-muscular" element={<SimuladorForcaMuscular />} />
+              <Route path="/sala/simulador/dermatomos" element={<SimuladorDermatomos />} />
+              <Route path="/sala/simulador/respiratorio" element={<SimuladorRespiratorioFisio />} />
+              <Route path="/sala/simulador/eletroterapia" element={<SimuladorEletroterapia />} />
+              <Route path="/sala/simulador/testes-ortopedicos" element={<SimuladorTestesOrtopedicos />} />
+              <Route path="/sala/simulador/berg" element={<SimuladorBerg />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -319,6 +335,14 @@ const App = () => (
               <Route path="/simuladores/radiografia-odonto" element={<SimuladorRadiografia />} />
               <Route path="/simuladores/farmacologia-odonto" element={<SimuladorFarmacologiaOdonto />} />
               <Route path="/simuladores/cirurgia-exodontia" element={<SimuladorCirurgiaExodontia />} />
+              <Route path="/simuladores/goniometria" element={<SimuladorGoniometria />} />
+              <Route path="/simuladores/avaliacao-postural" element={<SimuladorAvaliacaoPostural />} />
+              <Route path="/simuladores/forca-muscular" element={<SimuladorForcaMuscular />} />
+              <Route path="/simuladores/dermatomos" element={<SimuladorDermatomos />} />
+              <Route path="/simuladores/respiratorio" element={<SimuladorRespiratorioFisio />} />
+              <Route path="/simuladores/eletroterapia" element={<SimuladorEletroterapia />} />
+              <Route path="/simuladores/testes-ortopedicos" element={<SimuladorTestesOrtopedicos />} />
+              <Route path="/simuladores/berg" element={<SimuladorBerg />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />

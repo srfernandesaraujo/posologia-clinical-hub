@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna, BookOpen, Scan } from "lucide-react";
+import { FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2, HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna, BookOpen, Scan, Accessibility } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -84,6 +84,14 @@ const NATIVE_SIMULATORS = [
   { slug: "radiografia-odonto", name: "Radiografia e Interpretação de Imagens", description: "Leitura de radiografias odontológicas esquemáticas com identificação de estruturas e patologias.", icon: Scan, category: "Odontologia" },
   { slug: "farmacologia-odonto", name: "Farmacologia Odontológica e Prescrição", description: "Prescrição segura em odontologia com gauges de risco por perfil do paciente.", icon: Pill, category: "Odontologia" },
   { slug: "cirurgia-exodontia", name: "Cirurgia e Exodontia — Pell & Gregory", description: "Classificação de terceiros molares inclusos e planejamento cirúrgico com SVG interativo.", icon: Scan, category: "Odontologia" },
+  { slug: "goniometria", name: "Goniometria Articular Interativa", description: "Medição de ADM com goniômetro virtual e comparação com valores AAOS.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "avaliacao-postural", name: "Avaliação Postural (Simetrógrafo)", description: "Análise postural com marcação de pontos anatômicos e fio de prumo virtual.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "forca-muscular", name: "Teste de Força Muscular (Oxford/MRC)", description: "Avaliação manual de força muscular com graduação 0-5 e mapa de calor.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "dermatomos", name: "Dermátomos e Avaliação Sensitiva", description: "Mapeamento de sensibilidade corporal e correlação com nível de lesão neurológica.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "respiratorio", name: "Fisioterapia Respiratória", description: "Ausculta virtual, técnicas de higiene brônquica e reexpansão pulmonar.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "eletroterapia", name: "Eletroterapia e Parâmetros de Corrente", description: "Programação de TENS, FES, corrente russa e interferencial com visualização de onda.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "testes-ortopedicos", name: "Testes Ortopédicos Especiais", description: "Execução e interpretação de testes provocativos com animação SVG da manobra.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "berg", name: "Escala de Equilíbrio de Berg", description: "Avaliação funcional de equilíbrio com 14 itens, gráfico radar e risco de queda.", icon: Accessibility, category: "Fisioterapia" },
 ];
 
 export default function Simuladores() {
