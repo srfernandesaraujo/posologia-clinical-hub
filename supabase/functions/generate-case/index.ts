@@ -715,6 +715,23 @@ Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas iden
   "testes-ortopedicos": `Gere um caso clínico para o Simulador de Testes Ortopédicos. O caso deve conter: title, difficulty, patient (name, age, complaint, mechanism), availableTests (array de {name, result: positivo/negativo, interpretation}), correctDiagnosis, diagnosisOptions (array com 1 correta + 3-4 distratores), idealRehab (array), consequence ({correct, wrong}). Varie entre ombro, joelho, tornozelo, coluna.`,
 
   berg: `Gere um caso clínico para o Simulador de Escala de Berg. O caso deve conter: title, difficulty, patient (name, age, diagnosis, history), items (array de 14 objetos com {task, score: 0-4}), totalScore, riskLevel (alto/moderado/baixo), idealProgram (array de exercícios de prevenção de quedas), consequence ({correct, wrong}). Varie entre Parkinson, pós-AVE, fragilidade.`,
+
+  // ===================== NUTRIÇÃO =====================
+  "avaliacao-nutricional": `Gere um caso clínico para o Simulador de Avaliação Nutricional Antropométrica. O caso deve conter: title, difficulty, patient (name, age, sex, weight, height, waist, hip, triceps, subscapular, suprailiac), idealBMIClass (desnutricao-grave/desnutricao-moderada/desnutricao-leve/eutrofico/sobrepeso/obesidade-i/obesidade-ii/obesidade-iii), idealRiskIndicators (array de: waist/whRatio/triceps/bodyFat), idealGoal (perda-intensa/perda-moderada/manutencao/ganho-moderado/ganho-rapido), consequence ({correct, wrong}). Varie entre idosos, obesos, desnutridos, adolescentes.`,
+
+  "triagem-nutricional": `Gere um caso clínico para o Simulador de Triagem Nutricional NRS-2002. O caso deve conter: title, difficulty, patient (name, age, admission), nrsIdeal ({nutritional: 0-3, severity: 0-3, ageBonus: 0-1}), idealRiskClass (sem-risco/em-risco/alto-risco), idealConduct (monitorar/plano-nutricional/tn-precoce), idealRoute (oral/sng/sne/snj/npt), consequence ({correct, wrong}). Varie entre cirúrgico, oncológico, geriátrico, UTI.`,
+
+  "necessidades-energeticas": `Gere um caso clínico para o Simulador de Necessidades Energéticas. O caso deve conter: title, difficulty, patient (name, age, sex, weight, height, condition), idealEquation (harris-benedict/mifflin), idealGET (número em kcal), getOptions (array de 4 números), idealPTN (%), idealCHO (%), idealLIP (%), idealDiet (hipercalorica/hiperproteica/hipossodica/padrao), consequence ({correct, wrong}). Varie entre queimadura, sepse, pós-operatório, politrauma.`,
+
+  tne: `Gere um caso clínico para o Simulador de TNE. O caso deve conter: title, difficulty, patient (name, age, scenario), idealFormula (polimerica/oligomerica/elementar/especializada), idealVia (sng/sne/snj/gastrostomia), idealProtocol (progressao-rapida/progressao-padrao/progressao-lenta/bolus), complication (texto), idealComplicationAction (procinético/reduzir-velocidade/suspender/repor-fosforo/trocar-sonda), consequence ({correct, wrong}).`,
+
+  tnp: `Gere um caso clínico para o Simulador de TNP. O caso deve conter: title, difficulty, patient (name, age, scenario), idealGlucose (%), idealAA (%), idealLipid (%), idealAccess (periferico/central), idealCompatDrugs (array), labAlteration (texto), idealLabAction (reduzir-glicose/suspender-lipideos/repor-fosforo/manter), consequence ({correct, wrong}).`,
+
+  disfagia: `Gere um caso clínico para o Simulador de Disfagia. O caso deve conter: title, difficulty, patient (name, age, scenario), idealTests (array de agua/ausculta/oximetria), testResults ({agua, ausculta, oximetria}), idealFOIS (1-7), idealConsistency (liquido-fino/nectar/mel/pudim/macio), idealStrategies (array de queixo/supraglotica/espessamento), idealExam (videofluoroscopia/nasofibro/nenhum), consequence ({correct, wrong}).`,
+
+  "nutricao-renal": `Gere um caso clínico para o Simulador de Nutrição Renal. O caso deve conter: title, difficulty, patient (name, age, scenario, labs: {ureia, creatinina, K, P, Ca, albumina}), idealProtein (0.6-0.8/0.8-1.0/1.0-1.2/1.2-1.5), idealK/idealP/idealNa/idealLiquido (sem-restricao/moderado/restrito/muito-restrito), idealFoodIssues (array), idealSupplements (array), consequence ({correct, wrong}).`,
+
+  "nutricao-materno-infantil": `Gere um caso clínico para o Simulador de Nutrição Materno-Infantil. O caso deve conter: title, difficulty, patient (name, age, ig, imcPreGest, currentWeight, preWeight, height, labs), idealAtalah (baixo-peso/adequado/sobrepeso/obesidade), idealGainRange, idealSupplements ({acidoFolico, ferro, calcio, vitD, omega3}), complication (texto), idealCompAction (aumentar-ferro/dieta-dmg/restringir-sodio/manter), consequence ({correct, wrong}).`,
 };
 
 serve(async (req) => {
