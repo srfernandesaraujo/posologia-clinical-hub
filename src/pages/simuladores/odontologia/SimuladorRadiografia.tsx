@@ -15,6 +15,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const CASES = [
   { id: "r1", exam: "periapical", title: "Lesão periapical em 21", structures: ["Raiz do 21", "Osso alveolar", "Lâmina dura", "Espaço do ligamento periodontal"],
