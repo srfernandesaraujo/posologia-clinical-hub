@@ -15,6 +15,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const HOW_TO = [
   "Selecione um caso clínico para calcular as necessidades energéticas.",
