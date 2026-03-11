@@ -76,7 +76,7 @@ const benches: BenchCard[] = [
       "Cinética de degradação, extrapolação de Arrhenius, determinação de prazo de validade (t90) e zonas climáticas ICH.",
     icon: <Clock className="h-8 w-8" />,
     route: "/laboratorio-virtual/estabilidade",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(25 95% 53%)",
   },
   {
