@@ -203,20 +203,20 @@
     "enter": "Entrar"
   },
   "painPoints": {
-    "p1": "Calculando scores manualmente?",
-    "s1": "Resultados instantâneos com fórmulas validadas. Sem erros, sem perda de tempo.",
-    "p2": "Inseguro na tomada de decisão?",
-    "s2": "Simuladores clínicos que treinam seu raciocínio com cenários reais.",
-    "p3": "Fórmulas espalhadas em livros e apps?",
-    "s3": "Tudo centralizado: dezenas de calculadoras organizadas por especialidade."
+    "p1": "Estudantes sem prática antes do estágio?",
+    "s1": "Mais de 60 simuladores interativos para treinar raciocínio clínico, fisiologia e bioquímica em ambiente seguro.",
+    "p2": "Professores sem ferramentas de ensino ativo?",
+    "s2": "Salas Virtuais com PIN, simuladores de formação docente e laboratório virtual modular.",
+    "p3": "Conteúdo espalhado em dezenas de apps?",
+    "s3": "Tudo centralizado: calculadoras, simuladores, jogos, laboratório e formação docente em uma só plataforma."
   },
   "benefits": {
-    "b1": "Economize até 10 minutos por paciente em cálculos",
-    "b2": "Fórmulas atualizadas conforme diretrizes vigentes",
-    "b3": "Interface limpa e pensada para uso rápido no plantão",
-    "b4": "Explicação didática abaixo de cada ferramenta",
-    "b5": "Novos scores adicionados frequentemente",
-    "b6": "Acesso em qualquer dispositivo — desktop, tablet ou celular"
+    "b1": "60+ simuladores em 8 categorias: clínica, fisiologia, bioquímica, farmacologia, farmacotécnica, química farmacêutica, formação docente e mais",
+    "b2": "Laboratório Virtual com 8 bancadas modulares e exportação de relatório PDF",
+    "b3": "Salas Virtuais para professores com PIN, grupos e dashboard em tempo real",
+    "b4": "20+ jogos educativos gamificados com ranking e sistema de pontos",
+    "b5": "20+ calculadoras clínicas com fórmulas validadas e referências atualizadas",
+    "b6": "Marketplace para criar e compartilhar ferramentas com IA generativa"
   },
   "games": {
     "title": "Jogos Clínicos",
