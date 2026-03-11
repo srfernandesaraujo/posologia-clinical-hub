@@ -140,8 +140,8 @@ export function ClinicalTrialPanel({ drugProperties, hasTarget }: ClinicalTrialP
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={result.curve}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 20%, 16%)" />
-                    <XAxis dataKey="semana" tick={{ fill: "hsl(210, 20%, 60%)", fontSize: 10 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "hsl(210, 20%, 60%)", fontSize: 10 }} />
+                    <XAxis dataKey="semana" tick={{ fill: "hsl(210, 20%, 60%)", fontSize: 10 }} label={{ value: "Tempo (semanas)", position: "insideBottom", offset: -2, fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "hsl(210, 20%, 60%)", fontSize: 10 }} label={{ value: "Sobrevida (%)", angle: -90, position: "insideLeft", offset: 10, fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Area type="monotone" dataKey="Grupo Tratamento" stroke="hsl(168, 80%, 42%)" fill="hsl(168, 80%, 42%)" fillOpacity={0.2} />
                     <Area type="monotone" dataKey="Grupo Placebo" stroke="hsl(0, 62%, 50%)" fill="hsl(0, 62%, 50%)" fillOpacity={0.15} />
