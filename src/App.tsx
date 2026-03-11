@@ -266,6 +266,14 @@ const App = () => (
               <Route path="/sala/simulador/eletroterapia" element={<SimuladorEletroterapia />} />
               <Route path="/sala/simulador/testes-ortopedicos" element={<SimuladorTestesOrtopedicos />} />
               <Route path="/sala/simulador/berg" element={<SimuladorBerg />} />
+              <Route path="/sala/simulador/avaliacao-nutricional" element={<SimuladorAvaliacaoNutricional />} />
+              <Route path="/sala/simulador/triagem-nutricional" element={<SimuladorTriagemNutricional />} />
+              <Route path="/sala/simulador/necessidades-energeticas" element={<SimuladorNecessidadesEnergeticas />} />
+              <Route path="/sala/simulador/tne" element={<SimuladorTNE />} />
+              <Route path="/sala/simulador/tnp" element={<SimuladorTNP />} />
+              <Route path="/sala/simulador/disfagia" element={<SimuladorDisfagia />} />
+              <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
+              <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
             </Route>
 
             {/* Authenticated routes */}
