@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const PATIENTS = [
   { id: "p1", name: "João Silva", age: 45, complaint: "Dor ao mastigar no lado direito", history: "Hipertensão controlada, fumante", xray: "RX periapical: radiolucidez oclusal em 46 e distal em 26. Elemento 16 com restauração extensa. Elementos 18, 28, 38, 48 ausentes.", findings: { 16: { O: "carie", M: "restauracao" }, 26: { D: "carie" }, 36: { absent: true }, 46: { V: "fratura", O: "carie" }, 18: { absent: true }, 28: { absent: true }, 38: { absent: true }, 48: { absent: true } }, idealDiagnoses: { "46-O": "ICDAS 4", "46-V": "Fratura coronária", "26-D": "ICDAS 3", "16-O": "ICDAS 5" }, idealPlan: ["46-V", "46-O", "26-D", "16-O"] },
