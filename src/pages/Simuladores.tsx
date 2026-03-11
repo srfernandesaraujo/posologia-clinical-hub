@@ -92,6 +92,14 @@ const NATIVE_SIMULATORS = [
   { slug: "eletroterapia", name: "Eletroterapia e Parâmetros de Corrente", description: "Programação de TENS, FES, corrente russa e interferencial com visualização de onda.", icon: Accessibility, category: "Fisioterapia" },
   { slug: "testes-ortopedicos", name: "Testes Ortopédicos Especiais", description: "Execução e interpretação de testes provocativos com animação SVG da manobra.", icon: Accessibility, category: "Fisioterapia" },
   { slug: "berg", name: "Escala de Equilíbrio de Berg", description: "Avaliação funcional de equilíbrio com 14 itens, gráfico radar e risco de queda.", icon: Accessibility, category: "Fisioterapia" },
+  { slug: "avaliacao-nutricional", name: "Avaliação Nutricional Antropométrica", description: "IMC, composição corporal e classificação de risco metabólico.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "triagem-nutricional", name: "Triagem Nutricional (NRS-2002)", description: "Aplicação de ferramentas de triagem e decisão de conduta nutricional.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "necessidades-energeticas", name: "Cálculo de Necessidades Energéticas", description: "Harris-Benedict, Mifflin e distribuição de macronutrientes.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "tne", name: "Terapia Nutricional Enteral (TNE)", description: "Fórmulas enterais, vias de acesso e manejo de complicações.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "tnp", name: "Terapia Nutricional Parenteral (TNP)", description: "Prescrição parenteral, compatibilidade e manejo metabólico.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "disfagia", name: "Avaliação e Conduta em Disfagia", description: "Testes à beira-leito, FOIS e manejo de consistências alimentares.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "nutricao-renal", name: "Nutrição no Paciente Renal Crônico", description: "Prescrição dietética, restrições e suplementação na DRC.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "nutricao-materno-infantil", name: "Nutrição Materno-Infantil", description: "Curva de Atalah, suplementação e manejo de intercorrências gestacionais.", icon: ClipboardList, category: "Nutrição" },
 ];
 
 export default function Simuladores() {

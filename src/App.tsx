@@ -114,6 +114,14 @@ import SimuladorRespiratorioFisio from "./pages/simuladores/fisioterapia/Simulad
 import SimuladorEletroterapia from "./pages/simuladores/fisioterapia/SimuladorEletroterapia";
 import SimuladorTestesOrtopedicos from "./pages/simuladores/fisioterapia/SimuladorTestesOrtopedicos";
 import SimuladorBerg from "./pages/simuladores/fisioterapia/SimuladorBerg";
+import SimuladorAvaliacaoNutricional from "./pages/simuladores/nutricao/SimuladorAvaliacaoNutricional";
+import SimuladorTriagemNutricional from "./pages/simuladores/nutricao/SimuladorTriagemNutricional";
+import SimuladorNecessidadesEnergeticas from "./pages/simuladores/nutricao/SimuladorNecessidadesEnergeticas";
+import SimuladorTNE from "./pages/simuladores/nutricao/SimuladorTNE";
+import SimuladorTNP from "./pages/simuladores/nutricao/SimuladorTNP";
+import SimuladorDisfagia from "./pages/simuladores/nutricao/SimuladorDisfagia";
+import SimuladorNutricaoRenal from "./pages/simuladores/nutricao/SimuladorNutricaoRenal";
+import SimuladorNutricaoMaternoInfantil from "./pages/simuladores/nutricao/SimuladorNutricaoMaternoInfantil";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -258,6 +266,14 @@ const App = () => (
               <Route path="/sala/simulador/eletroterapia" element={<SimuladorEletroterapia />} />
               <Route path="/sala/simulador/testes-ortopedicos" element={<SimuladorTestesOrtopedicos />} />
               <Route path="/sala/simulador/berg" element={<SimuladorBerg />} />
+              <Route path="/sala/simulador/avaliacao-nutricional" element={<SimuladorAvaliacaoNutricional />} />
+              <Route path="/sala/simulador/triagem-nutricional" element={<SimuladorTriagemNutricional />} />
+              <Route path="/sala/simulador/necessidades-energeticas" element={<SimuladorNecessidadesEnergeticas />} />
+              <Route path="/sala/simulador/tne" element={<SimuladorTNE />} />
+              <Route path="/sala/simulador/tnp" element={<SimuladorTNP />} />
+              <Route path="/sala/simulador/disfagia" element={<SimuladorDisfagia />} />
+              <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
+              <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -343,6 +359,14 @@ const App = () => (
               <Route path="/simuladores/eletroterapia" element={<SimuladorEletroterapia />} />
               <Route path="/simuladores/testes-ortopedicos" element={<SimuladorTestesOrtopedicos />} />
               <Route path="/simuladores/berg" element={<SimuladorBerg />} />
+              <Route path="/simuladores/avaliacao-nutricional" element={<SimuladorAvaliacaoNutricional />} />
+              <Route path="/simuladores/triagem-nutricional" element={<SimuladorTriagemNutricional />} />
+              <Route path="/simuladores/necessidades-energeticas" element={<SimuladorNecessidadesEnergeticas />} />
+              <Route path="/simuladores/tne" element={<SimuladorTNE />} />
+              <Route path="/simuladores/tnp" element={<SimuladorTNP />} />
+              <Route path="/simuladores/disfagia" element={<SimuladorDisfagia />} />
+              <Route path="/simuladores/nutricao-renal" element={<SimuladorNutricaoRenal />} />
+              <Route path="/simuladores/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
