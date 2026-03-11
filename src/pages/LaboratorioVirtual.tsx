@@ -54,7 +54,7 @@ const benches: BenchCard[] = [
       "Curvas dose-resposta sigmoidais, cálculo de LD50/ED50, índice terapêutico e classificação de Hodge & Sterner.",
     icon: <Skull className="h-8 w-8" />,
     route: "/laboratorio-virtual/toxicologia",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(0 72% 51%)",
   },
   {
