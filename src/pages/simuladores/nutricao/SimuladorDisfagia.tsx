@@ -152,6 +152,11 @@ export default function SimuladorDisfagia() {
   };
 
   const feedback = calcFeedback();
+  const location = useLocation();
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("disfagia");
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
+  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
 
   if (!activeCase) {
     return (
