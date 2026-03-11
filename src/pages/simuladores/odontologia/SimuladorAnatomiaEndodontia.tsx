@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const CASES = [
   { id: "c1", tooth: "Molar inferior (46)", lesion: "Cárie profunda", pulpStatus: "Pulpite reversível", tests: { cold: "Dor aguda que cessa em 5s", heat: "Sem dor", electric: "Resposta normal (40µA)", percussion: "Sem dor" }, idealTherapy: "cap-indireto", idealMaterial: "ionômero" },
