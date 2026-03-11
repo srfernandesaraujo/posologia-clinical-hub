@@ -107,7 +107,7 @@ export default function SimuladorAnatomiaEndodontia() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const prompt = getNativePrompt("sim-anatomia-endodontia") || "";
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("anatomia-endodontia", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("anatomia-endodontia", BUILT_IN);
 
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
@@ -155,7 +155,7 @@ export default function SimuladorAnatomiaEndodontia() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {allCases.map((c: any) => c.isAI
-            ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} />
+            ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />
           )}
         </div>
