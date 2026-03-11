@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
-  Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2,
+  Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
   User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
