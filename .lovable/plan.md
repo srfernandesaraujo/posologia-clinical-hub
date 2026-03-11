@@ -1,98 +1,100 @@
 
 
-# Laboratório Virtual de Pesquisa — Potenciais Bancadas
+# Plano: Simuladores de Bioquímica
 
-## Conceito Central
+## Visão Geral
 
-O Laboratório Virtual deixa de ser apenas "Desenvolvimento de Fármacos" e se torna um **hub de pesquisa** com múltiplas bancadas temáticas. A diferença fundamental em relação aos simuladores: aqui o aluno conduz um **projeto de pesquisa completo** — formula hipótese, desenha experimento, coleta dados, analisa resultados, valida estatisticamente e gera um relatório publicável.
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-## Estrutura da Página Inicial
+## Arquitetura
 
-A página `/laboratorio-virtual` se torna um painel de seleção com cards de bancadas. A bancada atual (Desenvolvimento de Fármacos) vira uma das opções. Cada bancada segue o mesmo fluxo metodológico:
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-```text
-Hipótese → Desenho Experimental → Execução → Análise → Validação → Publicação
-```
+## Simuladores por Lotes
 
----
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-## Bancadas Propostas
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-### 1. Desenvolvimento de Fármacos (já implementada)
-Pipeline atual: alvo molecular → protótipo → docking → ensaio clínico.
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-### 2. Bancada de Microbiologia — Antibiograma e Resistência
-- **Hipótese**: "Este antibiótico é eficaz contra esta cepa?"
-- **Experimento**: Selecionar bactéria (E. coli, S. aureus MRSA, K. pneumoniae KPC...), escolher antibióticos, definir concentrações (MIC)
-- **Execução**: Visualização de placa de Petri com halos de inibição gerados algoritmicamente. Curvas de crescimento bacteriano (OD600 vs tempo) com Recharts
-- **Análise**: Classificação S/I/R segundo breakpoints CLSI/EUCAST. Comparação entre monoterapia e combinações (checkerboard assay simplificado, índice FIC)
-- **Validação**: Teste estatístico de significância entre grupos. Cálculo de poder amostral
-- **Publicação**: Relatório formatado com tabelas de MIC, gráficos de curva de morte bacteriana e conclusão sobre perfil de sensibilidade
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-### 3. Bancada de Toxicologia — Dose-Resposta e LD50
-- **Hipótese**: "Qual a dose letal mediana desta substância?"
-- **Experimento**: Selecionar substância (biblioteca de compostos), modelo animal (in silico), definir doses crescentes
-- **Execução**: Curvas dose-resposta sigmoidais (modelo de Hill) com parâmetros ajustáveis. Visualização de mortalidade por dose
-- **Análise**: Cálculo de LD50, ED50, índice terapêutico (LD50/ED50). Classificação de toxicidade (Hodge & Sterner)
-- **Validação**: Análise probit. Intervalos de confiança 95%. Comparação com dados de referência
-- **Publicação**: Relatório com curvas dose-resposta, tabela de parâmetros toxicológicos, classificação de risco
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-### 4. Bancada de Farmacogenômica — Variabilidade Genética e Resposta
-- **Hipótese**: "Polimorfismos de CYP2D6 afetam a resposta a este fármaco?"
-- **Experimento**: Selecionar fármaco metabolizado por CYP450, definir população com distribuição de fenótipos (PM, IM, EM, UM), configurar doses
-- **Execução**: Simulação de curvas farmacocinéticas individualizadas por genótipo. Distribuição de AUC na população
-- **Análise**: Comparação de AUC, Cmax, clearance entre fenótipos. Box plots por grupo genético
-- **Validação**: ANOVA entre grupos, teste post-hoc. Cálculo de tamanho de efeito
-- **Publicação**: Relatório com recomendações de ajuste de dose por genótipo, tabelas de parâmetros PK por fenótipo
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
 
-### 5. Bancada de Estabilidade — Degradação e Shelf Life
-- **Hipótese**: "Este medicamento mantém potência após X meses em condição Y?"
-- **Experimento**: Selecionar formulação, definir condições de armazenamento (temperatura, umidade, luz — zonas climáticas ICH), definir tempos de coleta
-- **Execução**: Curvas de degradação (ordem zero, primeira ordem, segunda ordem) com fitting automático. Teor residual vs tempo
-- **Análise**: Determinação de prazo de validade (t90). Energia de ativação (Arrhenius) para estudos acelerados → extrapolação para longa duração
-- **Validação**: Coeficiente de determinação (R²) do modelo. Análise de resíduos
-- **Publicação**: Relatório com cinética de degradação, prazo de validade estimado, recomendação de condições de armazenamento
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
 
-### 6. Bancada de Controle de Qualidade — Análise Quantitativa
-- **Hipótese**: "Este lote está dentro da especificação farmacopeica?"
-- **Experimento**: Selecionar método analítico (UV-Vis, HPLC simulado, titulação), preparar curva de calibração com padrões, analisar amostras
-- **Execução**: Gráfico de curva de calibração (absorbância/área vs concentração). Leitura de amostras com variação analítica simulada
-- **Análise**: Regressão linear (R², slope, intercept). Cálculo de LOD/LOQ. Teor da amostra. Teste de uniformidade de conteúdo (RSD)
-- **Validação**: Validação de método: linearidade, precisão (intra/inter-dia), exatidão (recuperação), robustez
-- **Publicação**: Relatório de validação analítica completo, conforme ICH Q2
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
 
-### 7. Bancada de Epidemiologia — Estudo Observacional
-- **Hipótese**: "Existe associação entre exposição X e desfecho Y?"
-- **Experimento**: Definir tipo de estudo (coorte, caso-controle, transversal), selecionar variáveis de exposição e desfecho, definir tamanho amostral e confundidores
-- **Execução**: Geração de dataset sintético respeitando prevalências e odds ratios configurados. Tabelas 2x2
-- **Análise**: Cálculo de OR, RR, NNT/NNH. Regressão logística multivariada para ajuste de confundidores
-- **Validação**: Intervalos de confiança. Teste de Hosmer-Lemeshow. Análise de sensibilidade
-- **Publicação**: Relatório no formato STROBE com tabelas de características basais, medidas de associação e forest plot
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
 
-### 8. Bancada de Biotecnologia — Clonagem e Expressão de Proteínas
-- **Hipótese**: "Este vetor é capaz de expressar a proteína-alvo em E. coli com rendimento adequado?"
-- **Experimento**: Selecionar gene-alvo, vetor de expressão (pET, pGEX), cepa hospedeira, condições de indução (IPTG, temperatura)
-- **Execução**: Mapa do plasmídeo (visualização circular SVG). Simulação de gel SDS-PAGE com bandas de proteína. Curva de expressão vs tempo/concentração de indutor
-- **Análise**: Rendimento estimado (mg/L). Solubilidade (fração solúvel vs corpos de inclusão). Western blot simulado
-- **Validação**: Comparação com rendimentos de referência. Otimização de condições (DoE simplificado)
-- **Publicação**: Relatório com mapa do constructo, gel de expressão, condições otimizadas e rendimento final
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
 
----
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
 
-## Elemento Transversal: Motor de Publicação
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
 
-Todas as bancadas convergem para um **gerador de relatório científico** padronizado com seções:
-- Introdução e Hipótese
-- Materiais e Métodos (gerado automaticamente a partir das escolhas do aluno)
-- Resultados (gráficos e tabelas exportados do experimento)
-- Discussão (template com campos editáveis)
-- Conclusão
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
 
-O aluno pode exportar como PDF (jsPDF já instalado) com formatação acadêmica.
+## Alterações em arquivos existentes
 
----
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
 
-## Viabilidade Técnica
+## Detalhes Técnicos
 
-Todas as bancadas usam exclusivamente cálculos no frontend (modelos matemáticos, distribuições estatísticas, geração de dados sintéticos) com Recharts para visualização. Nenhuma requer backend adicional ou APIs externas. O padrão de componentes já estabelecido na bancada de Fármacos (painéis em grid, sliders, botões de simulação com loading) se replica para cada nova bancada.
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 
