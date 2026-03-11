@@ -1,102 +1,100 @@
 
 
-# Refatoração das 7 Bancadas — Fluxo Modular + Mini-Relatório
+# Plano: Simuladores de Bioquímica
 
-## Problema
+## Visão Geral
 
-As bancadas 2-8 seguem o padrão "configure tudo → clique executar → veja tudo". Na bancada de Fármacos, cada módulo é um componente independente cujo estado alimenta o próximo, e o usuário interage com cada módulo separadamente. Isso cria uma experiência de pesquisa real onde escolhas em cada etapa impactam visivelmente as etapas seguintes.
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-## Padrão-alvo (Fármacos)
+## Arquitetura
 
-```text
-Módulo 1: Escolha/configuração inicial → gera dados parciais
-Módulo 2: Ajuste de parâmetros (influenciados por M1) → execução parcial
-Módulo 3: Análise (usa dados de M1+M2) → execução independente
-Módulo 4: Validação/Ensaio final (usa dados de M1+M2+M3)
-Módulo 5: Mini-Relatório (novo, comum a todas as bancadas)
-```
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-Cada módulo tem seu próprio botão de execução. Módulos posteriores ficam desabilitados ou mostram "aguardando módulo anterior" até que o módulo precedente tenha sido executado.
+## Simuladores por Lotes
 
-## Redesign por Bancada
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-### Microbiologia (4 módulos + relatório)
-- **M1 — Seleção do Microrganismo**: Escolher bactéria, ver ficha (Gram, mecanismos de resistência conhecidos, habitat). Botão "Confirmar Cepa".
-- **M2 — Painel de Antibióticos**: Desbloqueado após M1. Selecionar antibióticos e concentração do teste. O painel mostra dicas sobre quais classes são naturalmente ineficazes contra o Gram selecionado. Botão "Iniciar Incubação".
-- **M3 — Placa de Petri + Tabela S/I/R**: Gerado após M2. Visualização SVG dos halos e tabela com MIC/classificação. Botão "Gerar Curva de Crescimento" para a curva OD600.
-- **M4 — Curva de Crescimento**: Gerada a partir do primeiro antibiótico sensível (ou o selecionado) de M3. Usuário pode trocar o antibiótico plotado e ajustar a concentração para ver impacto em tempo real.
-- **M5 — Mini-Relatório**: Textarea para o usuário escrever conclusões.
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-### Toxicologia (4 módulos + relatório)
-- **M1 — Seleção da Substância**: Escolher composto, ver ficha técnica (estrutura, uso clínico, mecanismo de toxicidade). Botão "Confirmar Substância".
-- **M2 — Desenho do Ensaio**: Desbloqueado após M1. Configurar número de doses, modelo animal, faixa de doses. Informações adaptadas à substância selecionada. Botão "Administrar Doses".
-- **M3 — Curvas Dose-Resposta**: Gráfico sigmoidal com linhas de efeito e mortalidade. Linhas de referência ED50/LD50. Botão "Calcular Parâmetros".
-- **M4 — Parâmetros Toxicológicos**: LD50, ED50, IT, classificação Hodge & Sterner. Exibe análise de segurança baseada nas curvas de M3.
-- **M5 — Mini-Relatório**.
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-### Farmacogenômica (4 módulos + relatório)
-- **M1 — Seleção do Fármaco**: Escolher fármaco, ver enzima metabolizadora, tipo (pró-fármaco vs ativo), parâmetros PK base. Botão "Confirmar Fármaco".
-- **M2 — Configuração da População**: Desbloqueado após M1. Definir dose e distribuição de fenótipos na população (sliders para % PM/IM/EM/UM). Botão "Genotipar População".
-- **M3 — Curvas PK por Genótipo**: Gráficos de concentração x tempo por fenótipo. Usuário pode ativar/desativar fenótipos.
-- **M4 — Comparação de AUC**: Bar chart + tabela comparativa com Cmax, AUC, clearance. Veredito clínico.
-- **M5 — Mini-Relatório**.
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-### Estabilidade (4 módulos + relatório)
-- **M1 — Seleção da Formulação**: Escolher formulação, ver ordem cinética, energia de ativação, concentração inicial. Botão "Confirmar Formulação".
-- **M2 — Condições de Armazenamento**: Desbloqueado após M1. Selecionar condições ICH e duração do estudo. Botão "Iniciar Estudo".
-- **M3 — Curvas de Degradação**: Gráfico teor vs tempo para cada condição. Usuário pode clicar em uma condição para ver detalhes (k, R², t90).
-- **M4 — Extrapolação Arrhenius**: Gráfico ln(k) vs 1/T e cálculo do prazo de validade a 25°C. Comparação entre condições.
-- **M5 — Mini-Relatório**.
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-### Controle de Qualidade (4 módulos + relatório)
-- **M1 — Seleção do Método e Analito**: Escolher método analítico e analito. Ver ficha com λ, especificação farmacopeica. Botão "Confirmar Análise".
-- **M2 — Curva de Calibração**: Desbloqueado após M1. Definir número de pontos, executar. Gráfico scatter com linha de regressão. Exibe slope, intercept, R². Botão "Preparar Amostras".
-- **M3 — Quantificação das Amostras**: Definir número de réplicas, executar leituras. Tabela com respostas, concentrações back-calculadas e recuperação.
-- **M4 — Validação Analítica**: LOD/LOQ, RSD, recuperação média, laudo APROVADO/REPROVADO conforme ICH Q2.
-- **M5 — Mini-Relatório**.
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
 
-### Epidemiologia (4 módulos + relatório)
-- **M1 — Desenho do Estudo**: Escolher tipo (coorte, caso-controle, transversal). Ver características metodológicas. Botão "Confirmar Desenho".
-- **M2 — Variáveis e Amostra**: Desbloqueado após M1. Selecionar exposição, desfecho, tamanho amostral. Parâmetros adaptativos ao tipo de estudo (ex: caso-controle não mostra RR). Botão "Coletar Dados".
-- **M3 — Tabela 2x2 e Medidas**: Tabela de contingência, OR/RR, IC 95%, p-valor. Botão "Análise Ajustada".
-- **M4 — Forest Plot Ajustado**: Análise multivariada com ajuste por confundidores. Visualização forest plot.
-- **M5 — Mini-Relatório**.
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
 
-### Biotecnologia (4 módulos + relatório)
-- **M1 — Desenho do Constructo**: Escolher gene, vetor, cepa. Ver mapa do plasmídeo (SVG atualizado em tempo real). Botão "Confirmar Constructo".
-- **M2 — Condições de Indução**: Desbloqueado após M1. Ajustar temperatura e IPTG. Sliders com dicas baseadas no gene selecionado (ex: "Temp ≤25°C melhora solubilidade para proteínas grandes"). Botão "Induzir Expressão".
-- **M3 — Rendimento e SDS-PAGE**: Métricas de rendimento, solubilidade, gel SDS-PAGE simulado. Botão "Analisar Curva de Expressão".
-- **M4 — Curva de Expressão**: Gráfico OD600 + expressão proteica vs tempo. Veredito com recomendações.
-- **M5 — Mini-Relatório**.
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
 
-## Módulo 5 — Mini-Relatório (componente compartilhado)
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
 
-Um componente reutilizável `LabReportPanel` com:
-- **Título do experimento** (preenchido automaticamente com nome da bancada)
-- **Hipótese** (textarea — o que o usuário esperava encontrar)
-- **Principais resultados** (textarea — resumo dos achados)
-- **Conclusão** (textarea — interpretação e significância)
-- **Botão "Exportar PDF"** usando jsPDF — gera documento com cabeçalho, seções, e dados dos módulos anteriores inseridos automaticamente (parâmetros selecionados, métricas calculadas)
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
 
-O painel fica desabilitado até que pelo menos M3 tenha sido executado. Ocupa a largura total do grid (col-span-2).
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
 
-## Implementação Técnica
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
 
-- Cada bancada mantém estado de progresso: `completedModules: Set<number>` que controla quais módulos foram executados
-- O estado flui entre módulos via props no componente pai (como já funciona em `BancadaFarmacos`)
-- Módulos bloqueados mostram overlay com ícone de cadeado e texto "Complete o módulo X para desbloquear"
-- Os 7 arquivos de bancada serão reescritos mantendo os mesmos modelos matemáticos e dados, mas reestruturando o fluxo
-- O componente `LabReportPanel` será criado em `src/components/lab-virtual/LabReportPanel.tsx`
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
 
-## Arquivos afetados
+## Alterações em arquivos existentes
 
-- **Novo**: `src/components/lab-virtual/LabReportPanel.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaMicrobiologia.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaToxicologia.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaFarmacogenomica.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaEstabilidade.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaControleQualidade.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaEpidemiologia.tsx`
-- **Reescrita**: `src/pages/lab-virtual/BancadaBiotecnologia.tsx`
-- **Edição**: `src/pages/lab-virtual/BancadaFarmacos.tsx` (adicionar M5 relatório)
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TargetValidationPanel } from "@/components/lab-virtual/TargetValidationPanel";
 import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/DrugDesignPanel";
 import { DockingADMEPanel } from "@/components/lab-virtual/DockingADMEPanel";
 import { ClinicalTrialPanel } from "@/components/lab-virtual/ClinicalTrialPanel";
+import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
@@ -65,6 +66,20 @@ export default function BancadaFarmacos() {
         />
         <ClinicalTrialPanel drugProperties={drugProperties} hasTarget={!!selectedTarget} />
       </div>
+
+      {/* M5 — Mini-Relatório */}
+      <LabReportPanel
+        benchTitle="Desenvolvimento de F\u00e1rmacos"
+        isUnlocked={!!selectedTarget}
+        experimentSummary={selectedTarget ? {
+          "Alvo": `${selectedTarget.name} (${selectedTarget.id})`,
+          "MW": `${drugProperties.mw}`,
+          "LogP": `${drugProperties.logP}`,
+          "HBD": `${drugProperties.hbd}`,
+          "HBA": `${drugProperties.hba}`,
+          "Modo de design": designMode,
+        } : undefined}
+      />
     </div>
   );
 }

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, TestTubes, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, TestTubes, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 
 const GENES = [
   { id: "gfp", name: "GFP (Green Fluorescent Protein)", mw: 27, optimalTemp: 30, optimalIPTG: 0.5 },
@@ -47,79 +48,81 @@ function generateExpressionCurve(gene: typeof GENES[0], vector: typeof VECTORS[0
   return points;
 }
 
-// Simulated SDS-PAGE gel bands
-function generateGelBands(gene: typeof GENES[0], totalYield: number, solubility: number) {
-  const marker = [250, 150, 100, 75, 50, 37, 25, 20, 15, 10];
-  const bands = marker.map((mw) => ({
-    mw,
-    isMarker: true,
-    intensity: 0.5,
-  }));
-  // Target band
-  bands.push({ mw: gene.mw, isMarker: false, intensity: Math.min(1, totalYield / 50) });
-  return bands;
-}
-
 export default function BancadaBiotecnologia() {
   const navigate = useNavigate();
+  const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
+
+  // M1
   const [gene, setGene] = useState("gfp");
   const [vector, setVector] = useState("pet28");
   const [strain, setStrain] = useState("bl21");
+  // M2
   const [temp, setTemp] = useState([30]);
   const [iptg, setIptg] = useState([0.5]);
-  const [running, setRunning] = useState(false);
-  const [results, setResults] = useState<null | {
-    expressionCurve: any[];
-    totalYield: number;
-    solubility: number;
-    solubleYield: number;
-    gelBands: any[];
-    vectorSize: number;
-    geneInsert: number;
-  }>(null);
+  // M3
+  const [expressionResults, setExpressionResults] = useState<{ totalYield: number; solubility: number; solubleYield: number } | null>(null);
+  // M4
+  const [expressionCurve, setExpressionCurve] = useState<any[] | null>(null);
 
   const selectedGene = GENES.find((g) => g.id === gene)!;
   const selectedVector = VECTORS.find((v) => v.id === vector)!;
   const selectedStrain = STRAINS.find((s) => s.id === strain)!;
+  const geneInsert = Math.round(selectedGene.mw * 30 * 3);
+  const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
-  const runExperiment = () => {
-    setRunning(true);
-    setTimeout(() => {
-      const curve = generateExpressionCurve(selectedGene, selectedVector, selectedStrain, temp[0], iptg[0]);
-      const { totalYield, solubility } = calcExpression(selectedGene, selectedVector, selectedStrain, temp[0], iptg[0]);
-      const gelBands = generateGelBands(selectedGene, totalYield, solubility);
-      const geneInsert = Math.round(selectedGene.mw * 30 * 3); // approx bp
-      setResults({
-        expressionCurve: curve,
-        totalYield,
-        solubility,
-        solubleYield: parseFloat((totalYield * solubility).toFixed(1)),
-        gelBands,
-        vectorSize: selectedVector.size,
-        geneInsert,
-      });
-      setRunning(false);
-    }, 2500);
+  const confirmConstruct = () => {
+    setCompletedModules(new Set([1]));
+    setExpressionResults(null);
+    setExpressionCurve(null);
   };
+
+  const induceExpression = () => {
+    const { totalYield, solubility } = calcExpression(selectedGene, selectedVector, selectedStrain, temp[0], iptg[0]);
+    setExpressionResults({ totalYield, solubility, solubleYield: parseFloat((totalYield * solubility).toFixed(1)) });
+    setExpressionCurve(null);
+    completeModule(2);
+  };
+
+  const analyzeCurve = () => {
+    const curve = generateExpressionCurve(selectedGene, selectedVector, selectedStrain, temp[0], iptg[0]);
+    setExpressionCurve(curve);
+    completeModule(3);
+  };
+
+  const LockedOverlay = ({ req }: { req: number }) => (
+    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-lg">
+      <Lock className="h-6 w-6 text-muted-foreground" /><p className="text-xs text-muted-foreground">Complete o módulo {req}</p>
+    </div>
+  );
+  const ModuleBadge = ({ n }: { n: number }) => completedModules.has(n) ? <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" /> : null;
+
+  const experimentSummary: Record<string, string> = {
+    Gene: selectedGene.name,
+    Vetor: `${selectedVector.name} (${selectedVector.tag})`,
+    Cepa: selectedStrain.name,
+    Temperatura: `${temp[0]}°C`,
+    IPTG: `${iptg[0]} mM`,
+  };
+  if (expressionResults) {
+    experimentSummary["Rendimento total"] = `${expressionResults.totalYield} mg/L`;
+    experimentSummary["Solubilidade"] = `${(expressionResults.solubility * 100).toFixed(0)}%`;
+    experimentSummary["Fração solúvel"] = `${expressionResults.solubleYield} mg/L`;
+  }
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <TestTubes className="h-7 w-7 text-primary" />
-            Bancada de Biotecnologia
-          </h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><TestTubes className="h-7 w-7 text-primary" /> Bancada de Biotecnologia</h1>
           <p className="text-sm text-muted-foreground">Clonagem, expressão proteica e otimização de produção</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* M1 — Constructo */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">1. Desenho do Constructo</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">1. Desenho do Constructo <ModuleBadge n={1} /></CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium">Gene-alvo</label>
@@ -142,6 +145,41 @@ export default function BancadaBiotecnologia() {
                 <SelectContent>{STRAINS.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <Button onClick={confirmConstruct} className="w-full">Confirmar Constructo</Button>
+          </CardContent>
+        </Card>
+
+        {/* Plasmid Map (always visible, updates in real-time) */}
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Mapa do Plasmídeo</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <svg viewBox="0 0 260 260" className="w-56 h-56">
+                <circle cx="130" cy="130" r="100" fill="none" stroke="hsl(var(--primary))" strokeWidth="6" opacity={0.3} />
+                <path d="M 130 30 A 100 100 0 0 1 220 90" fill="none" stroke="hsl(142 71% 45%)" strokeWidth="8" strokeLinecap="round" />
+                <text x="195" y="55" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedVector.promoter}</text>
+                <path d="M 220 90 A 100 100 0 0 1 200 210" fill="none" stroke="hsl(199 89% 48%)" strokeWidth="8" strokeLinecap="round" />
+                <text x="220" y="155" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedGene.name.split(" ")[0]}</text>
+                <path d="M 200 210 A 100 100 0 0 1 130 230" fill="none" stroke="hsl(25 95% 53%)" strokeWidth="8" strokeLinecap="round" />
+                <text x="145" y="248" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedVector.tag}</text>
+                <path d="M 130 230 A 100 100 0 0 1 40 170" fill="none" stroke="hsl(0 72% 51%)" strokeWidth="8" strokeLinecap="round" />
+                <text x="10" y="205" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">AmpR</text>
+                <path d="M 40 170 A 100 100 0 0 1 40 90" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="8" strokeLinecap="round" />
+                <text x="10" y="125" fontSize="9" fill="hsl(var(--muted-foreground))" fontWeight="500">ori</text>
+                <path d="M 40 90 A 100 100 0 0 1 130 30" fill="none" stroke="hsl(262 83% 58%)" strokeWidth="8" strokeLinecap="round" />
+                <text x="55" y="50" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">lacI</text>
+                <text x="130" y="125" textAnchor="middle" fontSize="10" fill="hsl(var(--foreground))" fontWeight="600">{selectedVector.name}</text>
+                <text x="130" y="140" textAnchor="middle" fontSize="9" fill="hsl(var(--muted-foreground))">{selectedVector.size + geneInsert} bp</text>
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* M2 — Indução */}
+        <Card className="relative">
+          {!completedModules.has(1) && <LockedOverlay req={1} />}
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">2. Condições de Indução <ModuleBadge n={2} /></CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium">Temperatura de indução: {temp[0]}°C</label>
               <Slider value={temp} onValueChange={setTemp} min={16} max={42} step={1} className="mt-2" />
@@ -150,141 +188,87 @@ export default function BancadaBiotecnologia() {
               <label className="text-sm font-medium">IPTG: {iptg[0]} mM</label>
               <Slider value={iptg} onValueChange={setIptg} min={0.05} max={2} step={0.05} className="mt-2" />
             </div>
-            <Button onClick={runExperiment} disabled={running} className="w-full">
-              {running ? (
-                <span className="flex items-center gap-2"><RotateCcw className="h-4 w-4 animate-spin" /> Induzindo expressão...</span>
-              ) : (
-                <span className="flex items-center gap-2"><Play className="h-4 w-4" /> Executar Expressão</span>
-              )}
-            </Button>
+            {selectedGene.mw > 50 && temp[0] > 25 && (
+              <p className="text-[10px] text-amber-500">⚠ Temp ≤25°C melhora solubilidade para proteínas grandes ({selectedGene.mw} kDa)</p>
+            )}
+            <Button onClick={induceExpression} className="w-full">Induzir Expressão</Button>
           </CardContent>
         </Card>
 
-        {/* Plasmid Map */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">2. Mapa do Plasmídeo</CardTitle></CardHeader>
+        {/* M3 — Rendimento + SDS-PAGE */}
+        <Card className="relative">
+          {!completedModules.has(2) && <LockedOverlay req={2} />}
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">3. Rendimento e SDS-PAGE <ModuleBadge n={2} /></CardTitle></CardHeader>
           <CardContent>
-            <div className="flex justify-center">
-              <svg viewBox="0 0 260 260" className="w-56 h-56">
-                <circle cx="130" cy="130" r="100" fill="none" stroke="hsl(var(--primary))" strokeWidth="6" opacity={0.3} />
-                {/* Promoter region */}
-                <path d="M 130 30 A 100 100 0 0 1 220 90" fill="none" stroke="hsl(142 71% 45%)" strokeWidth="8" strokeLinecap="round" />
-                <text x="195" y="55" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedVector.promoter}</text>
-                {/* Gene insert */}
-                <path d="M 220 90 A 100 100 0 0 1 200 210" fill="none" stroke="hsl(199 89% 48%)" strokeWidth="8" strokeLinecap="round" />
-                <text x="220" y="155" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedGene.name.split(" ")[0]}</text>
-                {/* Tag */}
-                <path d="M 200 210 A 100 100 0 0 1 130 230" fill="none" stroke="hsl(25 95% 53%)" strokeWidth="8" strokeLinecap="round" />
-                <text x="145" y="248" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">{selectedVector.tag}</text>
-                {/* Resistance */}
-                <path d="M 130 230 A 100 100 0 0 1 40 170" fill="none" stroke="hsl(0 72% 51%)" strokeWidth="8" strokeLinecap="round" />
-                <text x="10" y="205" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">AmpR</text>
-                {/* ori */}
-                <path d="M 40 170 A 100 100 0 0 1 40 90" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="8" strokeLinecap="round" />
-                <text x="10" y="125" fontSize="9" fill="hsl(var(--muted-foreground))" fontWeight="500">ori</text>
-                {/* Close */}
-                <path d="M 40 90 A 100 100 0 0 1 130 30" fill="none" stroke="hsl(262 83% 58%)" strokeWidth="8" strokeLinecap="round" />
-                <text x="55" y="50" fontSize="9" fill="hsl(var(--foreground))" fontWeight="500">lacI</text>
-                {/* Center label */}
-                <text x="130" y="125" textAnchor="middle" fontSize="10" fill="hsl(var(--foreground))" fontWeight="600">{selectedVector.name}</text>
-                <text x="130" y="140" textAnchor="middle" fontSize="9" fill="hsl(var(--muted-foreground))">{results ? `${results.vectorSize + results.geneInsert} bp` : `${selectedVector.size} bp`}</text>
-              </svg>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Results */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">3. Rendimento e Solubilidade</CardTitle></CardHeader>
-          <CardContent>
-            {!results ? (
-              <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">Aguardando expressão</div>
+            {!expressionResults ? (
+              <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">Aguardando indução</div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-muted/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Rendimento Total</p>
-                    <p className="text-lg font-bold">{results.totalYield}</p>
-                    <p className="text-[10px] text-muted-foreground">mg/L</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Solubilidade</p>
-                    <p className="text-lg font-bold">{(results.solubility * 100).toFixed(0)}%</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Fração Solúvel</p>
-                    <p className="text-lg font-bold">{results.solubleYield}</p>
-                    <p className="text-[10px] text-muted-foreground">mg/L</p>
-                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center"><p className="text-xs text-muted-foreground">Total</p><p className="text-lg font-bold">{expressionResults.totalYield}</p><p className="text-[10px] text-muted-foreground">mg/L</p></div>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center"><p className="text-xs text-muted-foreground">Solubilidade</p><p className="text-lg font-bold">{(expressionResults.solubility * 100).toFixed(0)}%</p></div>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center"><p className="text-xs text-muted-foreground">Solúvel</p><p className="text-lg font-bold">{expressionResults.solubleYield}</p><p className="text-[10px] text-muted-foreground">mg/L</p></div>
                 </div>
-                {/* SDS-PAGE visualization */}
                 <div>
                   <p className="text-xs font-medium mb-2">SDS-PAGE Simulado</p>
                   <div className="flex gap-4 bg-blue-950 rounded-lg p-3 justify-center">
-                    {/* Marker lane */}
                     <div className="flex flex-col items-center gap-0.5 w-8">
                       <p className="text-[8px] text-blue-300 mb-1">M</p>
-                      {[250, 150, 100, 75, 50, 37, 25, 20, 15, 10].map((mw) => (
-                        <div key={mw} className="w-full h-1 bg-blue-300 rounded-full opacity-60" />
-                      ))}
+                      {[250, 150, 100, 75, 50, 37, 25, 20, 15, 10].map((mw) => <div key={mw} className="w-full h-1 bg-blue-300 rounded-full opacity-60" />)}
                     </div>
-                    {/* Sample lanes */}
                     {["NI", "Ind", "Sol", "Ins"].map((label, li) => (
-                      <div key={label} className="flex flex-col items-center gap-0.5 w-8 relative">
+                      <div key={label} className="flex flex-col items-center gap-0.5 w-8">
                         <p className="text-[8px] text-blue-300 mb-1">{label}</p>
                         {[250, 150, 100, 75, 50, 37, 25, 20, 15, 10].map((mw) => {
                           const isTarget = Math.abs(mw - selectedGene.mw) < 5;
                           const showTarget = isTarget && li >= 1;
-                          const intensity = showTarget ? (li === 1 ? 1 : li === 2 ? results.solubility : 1 - results.solubility) : 0.1;
-                          return (
-                            <div
-                              key={mw}
-                              className="w-full h-1 rounded-full"
-                              style={{
-                                backgroundColor: showTarget ? `rgba(100, 200, 255, ${intensity})` : `rgba(100, 150, 255, ${0.05 + Math.random() * 0.1})`,
-                                height: showTarget ? "3px" : "1px",
-                              }}
-                            />
-                          );
+                          const intensity = showTarget ? (li === 1 ? 1 : li === 2 ? expressionResults.solubility : 1 - expressionResults.solubility) : 0.1;
+                          return <div key={mw} className="w-full rounded-full" style={{ backgroundColor: showTarget ? `rgba(100, 200, 255, ${intensity})` : `rgba(100, 150, 255, ${0.05 + Math.random() * 0.1})`, height: showTarget ? "3px" : "1px" }} />;
                         })}
                       </div>
                     ))}
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1 text-center">M = Marcador · NI = Não induzido · Ind = Induzido · Sol = Solúvel · Ins = Insolúvel</p>
                 </div>
+                <Button onClick={analyzeCurve} className="w-full">Analisar Curva de Expressão</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* M4 — Curva de Expressão */}
+        <Card className="lg:col-span-2 relative">
+          {!completedModules.has(3) && <LockedOverlay req={3} />}
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">4. Curva de Expressão <ModuleBadge n={3} /></CardTitle></CardHeader>
+          <CardContent>
+            {!expressionCurve ? (
+              <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Aguardando análise</div>
+            ) : (
+              <div className="space-y-3">
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={expressionCurve}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="hora" label={{ value: "Tempo (h)", position: "insideBottom", offset: -2, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="od" orientation="left" label={{ value: "OD600", angle: -90, position: "insideLeft", offset: 10, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="exp" orientation="right" label={{ value: "Expressão (mg/L)", angle: 90, position: "insideRight", offset: 10, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line yAxisId="od" type="monotone" dataKey="od600" stroke="hsl(var(--muted-foreground))" name="Crescimento (OD600)" dot={false} strokeDasharray="5 5" />
+                    <Line yAxisId="exp" type="monotone" dataKey="expressao" stroke="hsl(var(--primary))" name="Expressão proteica" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
                 <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
                   <strong className="text-foreground">Veredito:</strong>{" "}
-                  {results.solubility >= 0.6
-                    ? `Expressão bem-sucedida com boa solubilidade (${(results.solubility * 100).toFixed(0)}%). Rendimento de fração solúvel de ${results.solubleYield} mg/L é adequado para purificação por cromatografia de afinidade (${selectedVector.tag}).`
-                    : `Baixa solubilidade (${(results.solubility * 100).toFixed(0)}%). A maior parte da proteína forma corpos de inclusão. Recomenda-se reduzir a temperatura de indução (18-20°C) e/ou a concentração de IPTG.`}
+                  {expressionResults && expressionResults.solubility >= 0.6
+                    ? `Expressão bem-sucedida com boa solubilidade (${(expressionResults.solubility * 100).toFixed(0)}%). Rendimento de ${expressionResults.solubleYield} mg/L é adequado para purificação por ${selectedVector.tag}.`
+                    : `Baixa solubilidade (${expressionResults ? (expressionResults.solubility * 100).toFixed(0) : 0}%). Recomenda-se reduzir temperatura (18-20°C) e/ou IPTG.`}
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Expression curve */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">4. Curva de Expressão</CardTitle></CardHeader>
-          <CardContent>
-            {!results ? (
-              <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Aguardando dados</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={results.expressionCurve}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="hora" label={{ value: "Tempo (h)", position: "insideBottom", offset: -2, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis yAxisId="od" orientation="left" label={{ value: "OD600", angle: -90, position: "insideLeft", offset: 10, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis yAxisId="exp" orientation="right" label={{ value: "Expressão (mg/L)", angle: 90, position: "insideRight", offset: 10, fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line yAxisId="od" type="monotone" dataKey="od600" stroke="hsl(var(--muted-foreground))" name="Crescimento (OD600)" dot={false} strokeDasharray="5 5" />
-                  <Line yAxisId="exp" type="monotone" dataKey="expressao" stroke="hsl(var(--primary))" name="Expressão proteica" dot={false} strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <LabReportPanel benchTitle="Bancada de Biotecnologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
       </div>
     </div>
   );
