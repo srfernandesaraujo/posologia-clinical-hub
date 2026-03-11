@@ -14,6 +14,9 @@ import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 const PROCEDURES = [
   { id: "exo38", label: "Exodontia do 38", region: "Mandíbula posterior esquerda", nerve: "Alveolar inferior + lingual", weight: 75, idealTech: "bloqueio-ai", idealAnesthetic: "lido2-epi", idealDoseOption: 2, complication: "intravascular" },
