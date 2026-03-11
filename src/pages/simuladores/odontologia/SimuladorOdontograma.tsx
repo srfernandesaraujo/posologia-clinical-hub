@@ -86,7 +86,7 @@ export default function SimuladorOdontograma() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const prompt = getNativePrompt("sim-odontograma") || "";
-  const { allCases, generateCase, isGenerating } = useSimulatorCases("odontograma", BUILT_IN);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("odontograma", BUILT_IN);
 
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
