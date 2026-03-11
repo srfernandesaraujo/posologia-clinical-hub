@@ -311,6 +311,14 @@ const App = () => (
               <Route path="/simuladores/gestao-sala" element={<SimuladorGestaoSala />} />
               <Route path="/simuladores/avaliacao-rubrica-osce" element={<SimuladorAvaliacaoRubrica />} />
               <Route path="/simuladores/preceptoria-clinica" element={<SimuladorPreceptoriaClinica />} />
+              <Route path="/simuladores/odontograma" element={<SimuladorOdontograma />} />
+              <Route path="/simuladores/anatomia-endodontia" element={<SimuladorAnatomiaEndodontia />} />
+              <Route path="/simuladores/periodontograma" element={<SimuladorPeriodontograma />} />
+              <Route path="/simuladores/anestesiologia-odonto" element={<SimuladorAnestesiologia />} />
+              <Route path="/simuladores/cefalometria" element={<SimuladorCefalometria />} />
+              <Route path="/simuladores/radiografia-odonto" element={<SimuladorRadiografia />} />
+              <Route path="/simuladores/farmacologia-odonto" element={<SimuladorFarmacologiaOdonto />} />
+              <Route path="/simuladores/cirurgia-exodontia" element={<SimuladorCirurgiaExodontia />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
