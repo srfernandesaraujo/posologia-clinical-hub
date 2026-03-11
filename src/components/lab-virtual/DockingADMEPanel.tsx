@@ -325,7 +325,12 @@ function DockingTab({ drugProperties, hasTarget }: { drugProperties: DrugPropert
 /* ─── Main component ─── */
 
 export function DockingADMEPanel({ drugProperties, hasTarget, designMode }: DockingADMEPanelProps) {
-  const dockingTab = designMode === "smiles" ? "docking" : "rapido";
+  const [localTab, setLocalTab] = useState<"rapido" | "docking">(designMode === "smiles" ? "docking" : "rapido");
+
+  // Sync when designMode changes from parent
+  useEffect(() => {
+    setLocalTab(designMode === "smiles" ? "docking" : "rapido");
+  }, [designMode]);
 
   return (
     <Card className="border-border bg-card">
@@ -336,10 +341,10 @@ export function DockingADMEPanel({ drugProperties, hasTarget, designMode }: Dock
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={dockingTab} className="w-full">
+        <Tabs value={localTab} onValueChange={(v) => setLocalTab(v as "rapido" | "docking")} className="w-full">
           <TabsList className="mb-4 w-full">
-            <TabsTrigger value="rapido" className="flex-1" disabled>Rápido</TabsTrigger>
-            <TabsTrigger value="docking" className="flex-1" disabled>Docking</TabsTrigger>
+            <TabsTrigger value="rapido" className="flex-1">Rápido</TabsTrigger>
+            <TabsTrigger value="docking" className="flex-1">Docking</TabsTrigger>
           </TabsList>
           <TabsContent value="rapido">
             <RapidoTab drugProperties={drugProperties} hasTarget={hasTarget} />
