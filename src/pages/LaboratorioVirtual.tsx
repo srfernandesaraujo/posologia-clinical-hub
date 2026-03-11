@@ -65,7 +65,7 @@ const benches: BenchCard[] = [
       "Simulação de curvas PK por genótipo CYP450, distribuição de AUC na população, ANOVA entre fenótipos.",
     icon: <Dna className="h-8 w-8" />,
     route: "/laboratorio-virtual/farmacogenomica",
-    status: "em-breve",
+    status: "disponivel",
     color: "hsl(262 83% 58%)",
   },
   {
