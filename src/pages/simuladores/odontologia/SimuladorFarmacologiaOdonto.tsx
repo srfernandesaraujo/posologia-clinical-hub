@@ -81,26 +81,38 @@ export default function SimuladorFarmacologiaOdonto() {
   const [selectedAINE, setSelectedAINE] = useState("");
   const [selectedAntibiotic, setSelectedAntibiotic] = useState("");
   const [m3Decision, setM3Decision] = useState("");
+  const [m3AltAnalgesic, setM3AltAnalgesic] = useState("");
+  const [m3AltAINE, setM3AltAINE] = useState("");
+  const [m3AltAntibiotic, setM3AltAntibiotic] = useState("");
   const [m4Conduta, setM4Conduta] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
 
   const patient = PATIENTS.find(p => p.id === selectedPatient);
-  const analgesic = ANALGESICS.find(a => a.id === selectedAnalgesic);
-  const aine = AINES.find(a => a.id === selectedAINE);
-  const antibiotic = ANTIBIOTICS.find(a => a.id === selectedAntibiotic);
+  // Use altered prescription if M3 decision was "alterar" and alternatives were selected
+  const effectiveAnalgesic = m3Decision === "alterar" && m3AltAnalgesic ? m3AltAnalgesic : selectedAnalgesic;
+  const effectiveAINE = m3Decision === "alterar" && m3AltAINE ? m3AltAINE : selectedAINE;
+  const effectiveAntibiotic = m3Decision === "alterar" && m3AltAntibiotic ? m3AltAntibiotic : selectedAntibiotic;
+
+  const analgesic = ANALGESICS.find(a => a.id === effectiveAnalgesic);
+  const aine = AINES.find(a => a.id === effectiveAINE);
+  const antibiotic = ANTIBIOTICS.find(a => a.id === effectiveAntibiotic);
   const completeModule = (n: number) => setCompletedModules(prev => new Set(prev).add(n));
 
   const adjustedRisks = patient ? { ...patient.risks } : { renal: 0, hepatic: 0, cardiovascular: 0, gastric: 0 };
-  if (selectedAINE === "ibuprofeno") { adjustedRisks.renal += 20; adjustedRisks.gastric += 25; }
-  if (selectedAINE === "nimesulida") { adjustedRisks.hepatic += 15; }
-  if (selectedAnalgesic === "paracetamol") { adjustedRisks.hepatic += 10; }
+  if (effectiveAINE === "ibuprofeno") { adjustedRisks.renal += 20; adjustedRisks.gastric += 25; }
+  if (effectiveAINE === "nimesulida") { adjustedRisks.hepatic += 15; }
+  if (effectiveAnalgesic === "paracetamol") { adjustedRisks.hepatic += 10; }
 
   const hasContraindication = patient && (
     (patient.contraindications.some(c => c.includes("AINEs")) && selectedAINE && selectedAINE !== "dexametasona") ||
     (patient.id === "p3" && selectedAntibiotic === "azitromicina")
   );
 
-  const confirmM3 = () => { if (m3Decision) completeModule(3); };
+  const confirmM3 = () => {
+    if (!m3Decision) return;
+    if (m3Decision === "alterar" && !m3AltAnalgesic && !m3AltAINE && !m3AltAntibiotic) return;
+    completeModule(3);
+  };
   const confirmM4 = () => { completeModule(4); setShowFeedback(true); };
 
   const calcFeedback = () => {
