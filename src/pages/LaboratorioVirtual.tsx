@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Activity,
   TestTubes,
+  Stethoscope,
 } from "lucide-react";
 
 interface BenchCard {
@@ -111,6 +112,17 @@ const benches: BenchCard[] = [
     route: "/laboratorio-virtual/biotecnologia",
     status: "disponivel",
     color: "hsl(172 66% 50%)",
+  },
+  {
+    id: "simulacao-realistica",
+    title: "Simulação Realística",
+    subtitle: "Decisão Clínica Ramificada",
+    description:
+      "Prontuário de paciente virtual com decisões passo a passo: análise de exames, condutas, interações e ajuste de dose. Cada escolha altera o estado do paciente.",
+    icon: <Stethoscope className="h-8 w-8" />,
+    route: "/laboratorio-virtual/simulacao-realistica",
+    status: "disponivel",
+    color: "hsl(45 93% 47%)",
   },
 ];
 

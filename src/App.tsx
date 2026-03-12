@@ -144,6 +144,7 @@ import BancadaEstabilidade from "./pages/lab-virtual/BancadaEstabilidade";
 import BancadaControleQualidade from "./pages/lab-virtual/BancadaControleQualidade";
 import BancadaEpidemiologia from "./pages/lab-virtual/BancadaEpidemiologia";
 import BancadaBiotecnologia from "./pages/lab-virtual/BancadaBiotecnologia";
+import BancadaSimulacaoRealistica from "./pages/lab-virtual/BancadaSimulacaoRealistica";
 import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
@@ -274,6 +275,7 @@ const App = () => (
               <Route path="/sala/simulador/disfagia" element={<SimuladorDisfagia />} />
               <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
+              <Route path="/sala/simulador/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
             </Route>
 
             {/* Authenticated routes */}
@@ -407,6 +409,7 @@ const App = () => (
               <Route path="/laboratorio-virtual/controle-qualidade" element={<BancadaControleQualidade />} />
               <Route path="/laboratorio-virtual/epidemiologia" element={<BancadaEpidemiologia />} />
               <Route path="/laboratorio-virtual/biotecnologia" element={<BancadaBiotecnologia />} />
+              <Route path="/laboratorio-virtual/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
               <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 
