@@ -11,6 +11,7 @@ import {
   Activity,
   TestTubes,
   Stethoscope,
+  Shield,
 } from "lucide-react";
 
 interface BenchCard {
