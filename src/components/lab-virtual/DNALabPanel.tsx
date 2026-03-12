@@ -2,40 +2,68 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Dna, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dna, ClipboardCheck, Loader2, AlertTriangle } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { ForensicScenario, DNAProfile } from "@/data/forensicScenarios";
+import { LOCI } from "@/data/forensicScenarios";
 
 interface DNALabPanelProps {
   scenario: ForensicScenario;
   isUnlocked: boolean;
-  onComplete: (result: { matchedSuspect: string; correct: boolean }) => void;
+  onComplete: (result: {
+    matchedSuspect: string;
+    locusComparison: Record<string, Record<string, boolean>>;
+  }) => void;
 }
 
 function profileToChartData(profile: DNAProfile) {
-  const data: { locus: string; allele1: number; allele2: number }[] = [];
-  for (const p of profile.peaks) {
-    data.push({ locus: p.locus, allele1: p.alleles[0], allele2: p.alleles[1] });
-  }
-  return data;
+  return profile.peaks.map((p) => ({
+    locus: p.locus,
+    allele1: p.alleles[0],
+    allele2: p.alleles[1] ?? 0,
+    ...(p.alleles[2] ? { allele3: p.alleles[2] } : {}),
+  }));
 }
 
-function ElectropherogramChart({ profile, color, highlight }: { profile: DNAProfile; color: string; highlight?: boolean }) {
+function ElectropherogramChart({ profile, color, highlight, degradedLoci, mixtureLoci }: {
+  profile: DNAProfile; color: string; highlight?: boolean;
+  degradedLoci?: string[]; mixtureLoci?: string[];
+}) {
   const data = profileToChartData(profile);
+
   return (
     <div className={`bg-muted/30 rounded-lg p-2 border ${highlight ? "border-primary ring-1 ring-primary/30" : "border-border/50"}`}>
-      <p className="text-[11px] font-semibold text-muted-foreground mb-1">{profile.label}</p>
+      <div className="flex items-center gap-2 mb-1">
+        <p className="text-[11px] font-semibold text-muted-foreground">{profile.label}</p>
+        {mixtureLoci && mixtureLoci.length > 0 && (
+          <Badge variant="outline" className="text-[9px] h-4">
+            <AlertTriangle className="h-2 w-2 mr-0.5" /> Possível mistura
+          </Badge>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={100}>
         <BarChart data={data} barGap={2} barSize={12}>
           <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
           <XAxis dataKey="locus" tick={{ fontSize: 9 }} />
           <YAxis hide domain={[0, 30]} />
-          <Tooltip formatter={(v: number) => [v, "Alelo"]} />
+          <Tooltip
+            formatter={(v: number, name: string) => [v, name === "allele1" ? "Alelo 1" : name === "allele2" ? "Alelo 2" : "Alelo 3"]}
+            labelFormatter={(l) => {
+              if (degradedLoci?.includes(l as string)) return `${l} ⚠ DEGRADADO`;
+              if (mixtureLoci?.includes(l as string)) return `${l} ⚠ MISTURA`;
+              return l;
+            }}
+          />
           <Bar dataKey="allele1" fill={color} radius={[2, 2, 0, 0]} />
           <Bar dataKey="allele2" fill={`${color}99`} radius={[2, 2, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+      {degradedLoci && degradedLoci.length > 0 && (
+        <p className="text-[9px] text-amber-600 dark:text-amber-400 mt-0.5">
+          ⚠ Loci degradados (sem resultado confiável): {degradedLoci.join(", ")}
+        </p>
+      )}
     </div>
   );
 }
@@ -47,9 +75,12 @@ export function DNALabPanel({ scenario, isUnlocked, onComplete }: DNALabPanelPro
   const [extractingSuspects, setExtractingSuspects] = useState(false);
   const [selectedSuspect, setSelectedSuspect] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  // Locus-by-locus comparison: { "suspectIndex-locus": true/false }
+  const [locusChecks, setLocusChecks] = useState<Record<string, boolean>>({});
 
   const dna = scenario.dnaAnalysis;
+  const activeLoci = LOCI.filter((l) => !dna.degradedLoci.includes(l));
 
   const extractScene = () => {
     setExtractingScene(true);
@@ -61,12 +92,28 @@ export function DNALabPanel({ scenario, isUnlocked, onComplete }: DNALabPanelPro
     setTimeout(() => { setSuspectsExtracted(true); setExtractingSuspects(false); }, 2000);
   };
 
+  const toggleLocusCheck = (suspectIdx: number, locus: string) => {
+    const key = `${suspectIdx}-${locus}`;
+    setLocusChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const confirmMatch = () => {
     if (selectedSuspect === null) return;
-    const correct = selectedSuspect === dna.correctSuspectIndex;
-    setIsCorrect(correct);
     setConfirmed(true);
-    onComplete({ matchedSuspect: dna.suspects[selectedSuspect].label, correct });
+
+    // Build comparison data
+    const comparison: Record<string, Record<string, boolean>> = {};
+    dna.suspects.forEach((s, i) => {
+      comparison[s.label] = {};
+      activeLoci.forEach((locus) => {
+        comparison[s.label][locus] = locusChecks[`${i}-${locus}`] || false;
+      });
+    });
+
+    onComplete({
+      matchedSuspect: dna.suspects[selectedSuspect].label,
+      locusComparison: comparison,
+    });
   };
 
   if (!isUnlocked) {
@@ -84,7 +131,7 @@ export function DNALabPanel({ scenario, isUnlocked, onComplete }: DNALabPanelPro
         <CardTitle className="text-base flex items-center gap-2">
           <Dna className="h-4 w-4 text-violet-500" />
           Laboratório de DNA — Perfil Genético
-          {confirmed && <Badge variant={isCorrect ? "default" : "destructive"} className="ml-auto text-xs">{isCorrect ? "✓ Match" : "✗ Exclusão"}</Badge>}
+          {confirmed && <Badge variant="secondary" className="ml-auto text-xs">✓ Resposta registrada</Badge>}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -104,44 +151,134 @@ export function DNALabPanel({ scenario, isUnlocked, onComplete }: DNALabPanelPro
         {sceneExtracted && (
           <div>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Amostra da Cena do Crime</h4>
-            <ElectropherogramChart profile={dna.sceneSample} color="hsl(262, 83%, 58%)" />
+            <ElectropherogramChart
+              profile={dna.sceneSample}
+              color="hsl(262, 83%, 58%)"
+              degradedLoci={dna.degradedLoci}
+              mixtureLoci={dna.mixtureLoci}
+            />
           </div>
         )}
 
         {/* Suspects electropherograms */}
         {suspectsExtracted && sceneExtracted && (
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase">Perfis dos Suspeitos — Clique para selecionar</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase">Perfis dos Suspeitos</h4>
             {dna.suspects.map((s, i) => (
-              <div
-                key={i}
-                onClick={() => !confirmed && setSelectedSuspect(i)}
-                className={`cursor-pointer transition-all rounded-lg ${
-                  selectedSuspect === i ? "ring-2 ring-primary" : ""
-                } ${confirmed ? "pointer-events-none" : ""}`}
-              >
-                <ElectropherogramChart
-                  profile={s}
-                  color={selectedSuspect === i ? "hsl(142, 71%, 45%)" : "hsl(215, 20%, 65%)"}
-                  highlight={selectedSuspect === i}
-                />
-              </div>
+              <ElectropherogramChart key={i} profile={s} color="hsl(215, 20%, 65%)" />
             ))}
           </div>
         )}
 
-        {/* Confirm */}
-        {sceneExtracted && suspectsExtracted && !confirmed && (
-          <Button onClick={confirmMatch} disabled={selectedSuspect === null} size="sm" className="w-full">
-            <CheckCircle2 className="h-3 w-3 mr-1" /> Confirmar Match
-          </Button>
+        {/* Locus-by-locus comparison form */}
+        {suspectsExtracted && sceneExtracted && !confirmed && (
+          <div className="bg-background rounded-lg p-3 border border-border/50 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Comparação Locus-por-Locus</p>
+            <p className="text-xs text-muted-foreground">
+              Compare os alelos de cada locus entre a amostra da cena e cada suspeito. Marque os loci onde há coincidência de AMBOS os alelos.
+            </p>
+
+            {dna.degradedLoci.length > 0 && (
+              <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-400">
+                ⚠ Loci degradados ({dna.degradedLoci.join(", ")}): sem resultado confiável — desconsidere na comparação.
+              </div>
+            )}
+
+            {dna.mixtureLoci.length > 0 && (
+              <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-400">
+                ⚠ Possível mistura de DNA nos loci: {dna.mixtureLoci.join(", ")}. Pode conter alelos de mais de um contribuidor.
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left py-1 pr-2 font-semibold text-muted-foreground">Locus</th>
+                    <th className="text-center py-1 px-2 font-semibold text-muted-foreground">Cena</th>
+                    {dna.suspects.map((s, i) => (
+                      <th key={i} className="text-center py-1 px-1 font-semibold text-muted-foreground min-w-[80px]">
+                        <span className="block">{s.label.split("—")[0]?.trim()}</span>
+                        <span className="block text-[9px] font-normal">{s.label.split("—")[1]?.trim()}</span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {LOCI.map((locus) => {
+                    const isDegraded = dna.degradedLoci.includes(locus);
+                    const isMixture = dna.mixtureLoci.includes(locus);
+                    const sceneAlleles = dna.sceneSample.peaks.find((p) => p.locus === locus)?.alleles || [];
+
+                    return (
+                      <tr key={locus} className={`border-b border-border/20 ${isDegraded ? "opacity-50" : ""}`}>
+                        <td className="py-2 pr-2 font-medium">
+                          {locus}
+                          {isDegraded && <span className="text-amber-500 ml-1">⚠</span>}
+                          {isMixture && <span className="text-amber-500 ml-1">⚠</span>}
+                        </td>
+                        <td className="py-2 px-2 text-center font-mono">
+                          {isDegraded ? "—" : sceneAlleles.join(" / ")}
+                        </td>
+                        {dna.suspects.map((suspect, si) => {
+                          const suspectAlleles = suspect.peaks.find((p) => p.locus === locus)?.alleles || [];
+                          return (
+                            <td key={si} className="py-2 px-1 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="font-mono text-[10px]">{suspectAlleles.join("/")}</span>
+                                {!isDegraded && (
+                                  <Checkbox
+                                    checked={locusChecks[`${si}-${locus}`] || false}
+                                    onCheckedChange={() => toggleLocusCheck(si, locus)}
+                                    className="h-3.5 w-3.5"
+                                  />
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-medium">Com base na comparação, qual suspeito apresenta match?</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                {dna.suspects.map((s, i) => {
+                  const matchCount = activeLoci.filter((l) => locusChecks[`${i}-${l}`]).length;
+                  return (
+                    <Button
+                      key={i}
+                      variant={selectedSuspect === i ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs h-auto py-2 flex-col items-start"
+                      onClick={() => setSelectedSuspect(i)}
+                    >
+                      <span className="font-medium">{s.label.split("—")[1]?.trim() || s.label}</span>
+                      <span className="text-[10px] opacity-70">{matchCount}/{activeLoci.length} loci marcados</span>
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button onClick={confirmMatch} disabled={selectedSuspect === null} size="sm" className="w-full">
+                <ClipboardCheck className="h-3 w-3 mr-1" /> Registrar Análise
+              </Button>
+            </div>
+          </div>
         )}
 
         {confirmed && (
-          <div className={`p-3 rounded-lg border ${isCorrect ? "border-green-500/30 bg-green-500/10" : "border-destructive/30 bg-destructive/10"}`}>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              {isCorrect ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
-              {isCorrect ? "Identidade Confirmada! Os perfis genéticos coincidem." : `Exclusão de Autoria. O match correto era ${dna.suspects[dna.correctSuspectIndex].label}.`}
+          <div className="p-3 rounded-lg border border-border bg-muted/20">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <ClipboardCheck className="h-4 w-4" />
+              Resposta registrada. O resultado será revelado na conclusão pericial.
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              <p>Suspeito selecionado: <span className="font-medium">{selectedSuspect !== null ? dna.suspects[selectedSuspect].label : "—"}</span></p>
             </div>
           </div>
         )}
