@@ -144,6 +144,7 @@ import BancadaEstabilidade from "./pages/lab-virtual/BancadaEstabilidade";
 import BancadaControleQualidade from "./pages/lab-virtual/BancadaControleQualidade";
 import BancadaEpidemiologia from "./pages/lab-virtual/BancadaEpidemiologia";
 import BancadaBiotecnologia from "./pages/lab-virtual/BancadaBiotecnologia";
+import BancadaSimulacaoRealistica from "./pages/lab-virtual/BancadaSimulacaoRealistica";
 import AgenteFeedback from "./pages/AgenteFeedback";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
