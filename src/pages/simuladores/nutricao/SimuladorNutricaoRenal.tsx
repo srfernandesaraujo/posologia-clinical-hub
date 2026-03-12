@@ -245,7 +245,7 @@ export default function SimuladorNutricaoRenal() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Nutrição Renal" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Proteína": PROTEIN_OPTIONS.find(o => o.value === protein)?.label || "—", "Inadequações": foodIssues.map(f => FOOD_ISSUES.find(i => i.id === f)?.label).join(", ") || "—", "Suplementação": supplements.map(s => SUPPLEMENT_OPTIONS.find(o => o.id === s)?.label).join(", ") || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Nutrição Renal" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Proteína": PROTEIN_OPTIONS.find(o => o.value === protein)?.label || "—", "Inadequações": foodIssues.map(f => FOOD_ISSUES.find(i => i.id === f)?.label).join(", ") || "—", "Suplementação": supplements.map(s => SUPPLEMENT_OPTIONS.find(o => o.id === s)?.label).join(", ") || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

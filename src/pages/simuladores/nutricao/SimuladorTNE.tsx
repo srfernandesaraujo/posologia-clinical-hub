@@ -213,7 +213,7 @@ export default function SimuladorTNE() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Terapia Nutricional Enteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Fórmula": FORMULA_OPTIONS.find(o => o.value === formula)?.label || "—", "Via": VIA_OPTIONS.find(o => o.value === via)?.label || "—", "Protocolo": PROTOCOL_OPTIONS.find(o => o.value === protocol)?.label || "—", "Complicação": patient.complication, "Conduta": COMPLICATION_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Terapia Nutricional Enteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Fórmula": FORMULA_OPTIONS.find(o => o.value === formula)?.label || "—", "Via": VIA_OPTIONS.find(o => o.value === via)?.label || "—", "Protocolo": PROTOCOL_OPTIONS.find(o => o.value === protocol)?.label || "—", "Complicação": patient.complication, "Conduta": COMPLICATION_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

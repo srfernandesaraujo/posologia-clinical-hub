@@ -237,7 +237,7 @@ export default function SimuladorNecessidadesEnergeticas() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Necessidades Energéticas" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Equação": EQUATION_OPTIONS.find(o => o.value === equation)?.label || "—", "GET": `${selectedGET} kcal/dia`, "Macro": `PTN ${ptn}% / CHO ${cho}% / LIP ${lip}%`, "Dieta": DIET_OPTIONS.find(o => o.value === diet)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Necessidades Energéticas" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Equação": EQUATION_OPTIONS.find(o => o.value === equation)?.label || "—", "GET": `${selectedGET} kcal/dia`, "Macro": `PTN ${ptn}% / CHO ${cho}% / LIP ${lip}%`, "Dieta": DIET_OPTIONS.find(o => o.value === diet)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

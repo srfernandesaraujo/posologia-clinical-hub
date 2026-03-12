@@ -245,7 +245,7 @@ export default function SimuladorNutricaoMaternoInfantil() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Nutrição Materno-Infantil" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a — IG ${patient.ig}sem`, "Atalah": ATALAH_OPTIONS.find(o => o.value === atalah)?.label || "—", "Ganho": GAIN_OPTIONS.find(o => o.value === gainRange)?.label || "—", "Intercorrência": patient.complication, "Conduta": COMP_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Nutrição Materno-Infantil" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a — IG ${patient.ig}sem`, "Atalah": ATALAH_OPTIONS.find(o => o.value === atalah)?.label || "—", "Ganho": GAIN_OPTIONS.find(o => o.value === gainRange)?.label || "—", "Intercorrência": patient.complication, "Conduta": COMP_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

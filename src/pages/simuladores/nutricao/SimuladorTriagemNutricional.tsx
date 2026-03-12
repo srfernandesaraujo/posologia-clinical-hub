@@ -263,7 +263,7 @@ export default function SimuladorTriagemNutricional() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Triagem Nutricional" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "NRS-2002": `${userNRSTotal}`, "Risco": RISK_OPTIONS.find(o => o.value === riskClass)?.label || "—", "Conduta": CONDUCT_OPTIONS.find(o => o.value === conduct)?.label || "—", "Via": ROUTE_OPTIONS.find(o => o.value === route)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Triagem Nutricional" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "NRS-2002": `${userNRSTotal}`, "Risco": RISK_OPTIONS.find(o => o.value === riskClass)?.label || "—", "Conduta": CONDUCT_OPTIONS.find(o => o.value === conduct)?.label || "—", "Via": ROUTE_OPTIONS.find(o => o.value === route)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

@@ -258,7 +258,7 @@ export default function SimuladorDisfagia() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Avaliação de Disfagia" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "FOIS": FOIS_OPTIONS.find(o => o.value === fois)?.label || "—", "Consistência": CONSISTENCY_OPTIONS.find(o => o.value === consistency)?.label || "—", "Exame": EXAM_OPTIONS.find(o => o.value === exam)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Avaliação de Disfagia" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "FOIS": FOIS_OPTIONS.find(o => o.value === fois)?.label || "—", "Consistência": CONSISTENCY_OPTIONS.find(o => o.value === consistency)?.label || "—", "Exame": EXAM_OPTIONS.find(o => o.value === exam)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

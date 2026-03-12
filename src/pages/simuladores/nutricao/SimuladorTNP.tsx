@@ -235,7 +235,7 @@ export default function SimuladorTNP() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Nutrição Parenteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Composição": `Glic ${glucose}% / AA ${aa}% / Lip ${lipid}%`, "Acesso": ACCESS_OPTIONS.find(o => o.value === access)?.label || "—", "Alteração": patient.labAlteration, "Ajuste": LAB_ACTION_OPTIONS.find(o => o.value === labAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Nutrição Parenteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Composição": `Glic ${glucose}% / AA ${aa}% / Lip ${lipid}%`, "Acesso": ACCESS_OPTIONS.find(o => o.value === access)?.label || "—", "Alteração": patient.labAlteration, "Ajuste": LAB_ACTION_OPTIONS.find(o => o.value === labAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }
