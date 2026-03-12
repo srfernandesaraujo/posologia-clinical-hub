@@ -1,100 +1,56 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Reformulação do Laboratório de Perícia Forense — Investigação CSI
 
-## Visão Geral
+### Problema Atual
+1. **Respostas óbvias**: O Lab Químico mostra percentuais de similaridade (97% Estricnina) — basta escolher o maior. O Lab Toxicológico indica exatamente o tempo de retenção do pico e lista as substâncias com seus tempos — basta fazer match direto.
+2. **Feedback imediato**: Cada lab mostra "Correto/Incorreto" ao confirmar, eliminando a necessidade de raciocínio investigativo acumulado.
+3. **Falta de desafio**: Não exige conhecimento real de química forense, toxicologia ou genética.
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+### Solução Proposta
 
-## Arquitetura
+#### 1. Lab Químico — Reformulação Investigativa
+- **Remover** a tabela de similaridade com percentuais (o "Comparação com Banco de Dados" com barras de progresso)
+- **Substituir por**: O aluno vê APENAS o espectro de massa bruto. Abaixo, uma tabela de referência mostra os **picos moleculares característicos** de cada substância (sem percentuais), ex: "Estricnina: pico base m/z 334, fragmentos 264, 282" / "Brucina: pico base m/z 394, fragmentos 264, 324"
+- O aluno deve **analisar os picos do espectro**, identificar o pico base e os fragmentos, e **comparar manualmente** com a tabela de referência
+- Adicionar **perguntas intermediárias**: "Qual é o pico base (m/z) do espectro?" (input numérico) + "Qual substância corresponde a este padrão de fragmentação?" (seleção)
+- Adicionar mais **amostras-distração** com espectros diferentes para que o aluno precise escolher qual amostra analisar primeiro
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+#### 2. Lab Toxicológico — Reformulação Investigativa
+- **Remover** a indicação do pico principal e seu tempo de retenção exato
+- **Remover** os tempos de retenção da biblioteca de padrões no dropdown
+- O aluno vê o cromatograma bruto e deve **identificar visualmente o pico principal** e **estimar o tempo de retenção** lendo o eixo X do gráfico
+- Depois, consulta uma **tabela de referência separada** (sem dropdown direto) que lista faixas de tempo de retenção por substância (ex: "Alcaloides: 3.8-4.5 min", "Opioides: 5.0-6.0 min")
+- Perguntas: "Qual o tempo de retenção estimado do pico principal?" (input numérico) + "Com base na faixa, qual classe de substância?" + "Qual substância específica?"
+- A escolha de **matriz e reagente** afeta a qualidade do cromatograma (picos mais ou menos definidos, ruído de fundo)
 
-## Simuladores por Lotes
+#### 3. Lab DNA — Reformulação Investigativa
+- Tornar a comparação **menos visualmente óbvia**: adicionar **loci parcialmente coincidentes** entre suspeitos (alguns alelos iguais, outros diferentes), forçando análise locus-por-locus
+- Adicionar um **formulário de comparação manual**: para cada locus, o aluno marca se há match ou não entre a cena e cada suspeito
+- Adicionar conceitos como **mistura de DNA** (perfil da cena com mais de 2 alelos em alguns loci) e **degradação parcial** (alguns loci sem resultado)
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+#### 4. Feedback Diferido — Apenas no Final
+- **Remover** os badges "Correto/Incorreto" e mensagens de feedback de todos os 3 labs
+- Cada lab apenas registra a resposta do aluno e exibe "Resposta registrada ✓" com ícone neutro
+- No **Painel de Conclusão**, após o aluno acusar o suspeito:
+  - Revelar **todas as respostas** lado a lado: "Sua resposta" vs "Resposta correta" para cada lab
+  - Mostrar explicação detalhada de cada etapa (por que era aquela substância, por que aquela matriz, qual o DNA correto)
+  - Score final ponderado
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+### Arquivos a Editar
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+| Arquivo | Mudanças |
+|---------|----------|
+| `src/components/lab-virtual/ChemicalLabPanel.tsx` | Remover similaridade%, adicionar tabela de referência de picos, perguntas de pico base, feedback neutro |
+| `src/components/lab-virtual/ToxicologyLabPanel.tsx` | Remover indicação de pico/tR, adicionar input de estimativa, tabela de faixas, feedback neutro |
+| `src/components/lab-virtual/DNALabPanel.tsx` | Adicionar comparação locus-por-locus manual, perfis mais ambíguos, feedback neutro |
+| `src/components/lab-virtual/ForensicConclusionPanel.tsx` | Revelar todas as respostas corretas vs escolhidas com explicações detalhadas |
+| `src/data/forensicScenarios.ts` | Reformular dados: espectros com picos mais ambíguos, perfis DNA com sobreposições parciais, adicionar campos de explicação por etapa, tabelas de referência |
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### Detalhes Técnicos
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
-
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
-
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
-
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
-
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
-
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
-
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
-
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
-
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+- Interfaces de `ForensicScenario` ganham novos campos: `chemicalExplanation`, `toxExplanation`, `dnaExplanation`, `referenceTable` (picos de referência por substância), `retentionRanges` (faixas de tempo por classe)
+- Os callbacks `onComplete` dos labs passam apenas as respostas do aluno (sem calcular `correct` — isso será calculado no `ForensicConclusionPanel`)
+- Os espectros serão redesenhados com picos mais ambíguos: substâncias com fragmentos sobrepostos, picos secundários relevantes
+- Os perfis de DNA terão loci com alelos parcialmente coincidentes entre 2 suspeitos, exigindo análise de todos os 5 loci
 
