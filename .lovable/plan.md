@@ -1,100 +1,105 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Laboratório Virtual de Perícia Forense — Plano de Implementação
 
-## Visão Geral
+### Visão Geral
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Criar uma nova bancada **"Perícia Forense"** no hub do Laboratório Virtual, composta por **3 laboratórios interligados** que compartilham um **caso criminal central**. O aluno recebe a cena do crime e amostras coletadas; cada laboratório analisa evidências diferentes, e os resultados convergem para solucionar o caso no final.
 
-## Arquitetura
+### Arquitetura do Fluxo
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+```text
+┌─────────────────────────────────────────────────────────┐
+│  CASO CRIMINAL (Painel fixo no topo)                     │
+│  Narrativa da cena, vítima, suspeitos, amostras coletadas│
+└──────────────────────┬──────────────────────────────────┘
+                       │
+       ┌───────────────┼───────────────┐
+       ▼               ▼               ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ Lab Químico  │ │ Lab Toxicol. │ │ Lab DNA      │
+│ Espectrômetro│ │ HPLC         │ │ Eletrofero-  │
+│ de Massa     │ │ Cromatograma │ │ grama        │
+│ ID substância│ │ ID veneno    │ │ Match alelos │
+└──────┬───────┘ └──────┬───────┘ └──────┬───────┘
+       │               │               │
+       └───────────────┼───────────────┘
+                       ▼
+        ┌──────────────────────────┐
+        │ PAINEL DE CONCLUSÃO      │
+        │ Cruzar evidências        │
+        │ Acusar suspeito          │
+        │ Score + LabReportPanel   │
+        └──────────────────────────┘
+```
 
-## Simuladores por Lotes
+### Casos Pré-definidos (6 cenários nativos)
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+Cada caso define: narrativa, vítima, 3 suspeitos (A/B/C), amostras químicas, matrizes biológicas, perfis de DNA e o culpado correto.
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+1. **Envenenamento no Jantar** — Estricnina no vinho
+2. **Incêndio Criminoso** — Acelerante identificado em resíduos
+3. **Overdose Suspeita** — Mistura de substâncias no sangue
+4. **Falsificação de Medicamentos** — Comprimido adulterado
+5. **Homicídio por Intoxicação Crônica** — Metal pesado em amostras de cabelo
+6. **Acidente ou Crime?** — Substância no conteúdo estomacal
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+### Laboratório 1 — Químico (Espectrômetro de Massa)
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+- **Painel esquerdo**: Lista de amostras coletadas na cena (ex: "Pó branco", "Líquido inflamável", "Resíduo de tinta")
+- **Painel direito**: Interface do Espectrômetro de Massa
+  - Selecionar amostra → "Iniciar Análise" → animação de processamento
+  - Gráfico Recharts `LineChart` simulando espectro com picos em m/z específicos por substância
+  - Card de resultado comparando assinatura com banco de dados → identifica a substância
+- **Decisão**: O aluno deve interpretar os picos e confirmar a identificação
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### Laboratório 2 — Toxicológico (HPLC)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+- **Formulário de preparação**: Selecionar matriz biológica (Sangue/Urina/Conteúdo Estomacal) + reagente de extração
+- **Animação**: Barra de progresso simulando corrida cromatográfica
+- **Gráfico**: `AreaChart` Recharts — Tempo de Retenção (X) × Absorbância (Y)
+- **Mini-game de interpretação**: Ler o pico mais alto → selecionar no dropdown "Biblioteca de Padrões" qual substância corresponde ao tempo de retenção
+- **Decisão**: Match correto confirma a substância tóxica
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### Laboratório 3 — Análise de DNA (Perfil Genético)
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+- **Botões**: "Extrair DNA (Cena)" e "Extrair DNA (Suspeitos)"
+- **Mesa de Comparação**: Eletroferogramas com barras verticais simulando picos de alelos em loci genéticos (vWA, TH01, TPOX, D13S317, FGA)
+- **Layout**: Gráfico da amostra da cena no topo; gráficos dos Suspeitos A, B, C abaixo
+- **Interação**: Aluno analisa visualmente os picos coincidentes e clica "Confirmar Match" no suspeito correto
+- **Resultado**: "Identidade Confirmada" ou "Exclusão de Autoria"
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+### Painel de Conclusão Final
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+- Resumo cruzado das 3 análises (substância identificada + veneno detectado + DNA match)
+- Aluno seleciona o suspeito culpado com base nas evidências convergentes
+- Score ponderado: Lab Químico (25%) + Lab Toxicológico (30%) + Lab DNA (25%) + Conclusão (20%)
+- `LabReportPanel` reutilizado para mini-relatório e exportação/envio VR
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+### Arquivos a Criar/Editar
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/pages/lab-virtual/BancadaPericiaForense.tsx` | Página principal — orquestra caso, 3 labs e conclusão |
+| `src/components/lab-virtual/ForensicCasePanel.tsx` | Painel do caso criminal (narrativa, vítima, suspeitos, amostras) |
+| `src/components/lab-virtual/ChemicalLabPanel.tsx` | Lab Químico — espectrômetro de massa + espectro Recharts |
+| `src/components/lab-virtual/ToxicologyLabPanel.tsx` | Lab Toxicológico — HPLC + cromatograma + mini-game |
+| `src/components/lab-virtual/DNALabPanel.tsx` | Lab DNA — eletroferogramas + comparação de alelos |
+| `src/components/lab-virtual/ForensicConclusionPanel.tsx` | Painel de conclusão — cruzamento de evidências + acusação |
+| `src/pages/LaboratorioVirtual.tsx` | Adicionar card da bancada Perícia Forense |
+| `src/App.tsx` | Adicionar rota `/laboratorio-virtual/pericia-forense` |
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+### Integração com Salas Virtuais
 
-## Alterações em arquivos existentes
+- Hook `useVirtualRoomCase` para modo VR
+- Botão "Enviar Resultados" no `LabReportPanel`
+- Decisões estruturadas enviadas ao Analytics (identificação química, match toxicológico, match DNA, acusação final)
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+### Detalhes Técnicos
 
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+- **Estado compartilhado**: O componente pai (`BancadaPericiaForense`) mantém o caso selecionado e distribui dados para os 3 labs. Resultados de cada lab são coletados e passados ao painel de conclusão.
+- **Dados estáticos**: Os 6 cenários são objetos TypeScript com espectros, cromatogramas e perfis genéticos pré-calculados — sem necessidade de IA para gerar.
+- **Recharts**: `LineChart` para espectro de massa, `AreaChart` para cromatograma HPLC, `BarChart` para eletroferogramas de DNA.
+- **Fluxo sequencial**: Labs desbloqueiam progressivamente (Químico → Toxicológico → DNA → Conclusão) via `completedModules`.
+- **Score**: Cada lab contribui com pontos por decisões corretas; score final é a média ponderada.
 
