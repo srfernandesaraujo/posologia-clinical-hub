@@ -116,21 +116,29 @@ function ParticipantDetail({ submission }: { submission: any }) {
                 </div>
               ))}
               {/* Mini radar for decision accuracy per category */}
-              {decisions.length >= 3 && (
-                <div className="mt-2">
-                  <ResponsiveContainer width="100%" height={180}>
-                    <RadarChart data={decisions.map((d: any) => ({
-                      label: d.label?.length > 15 ? d.label.substring(0, 15) + "…" : d.label,
-                      acerto: d.correct ? 100 : 0,
-                    }))}>
-                      <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="label" tick={{ fontSize: 9 }} />
-                      <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                      <Radar dataKey="acerto" fill="hsl(var(--primary))" fillOpacity={0.3} stroke="hsl(var(--primary))" strokeWidth={1.5} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+              {decisions.length >= 3 && (() => {
+                const radarData = decisions.map((d: any) => ({
+                  label: d.label?.length > 18 ? d.label.substring(0, 18) + "…" : (d.label || "—"),
+                  acerto: (d.correct === true || d.correct === "true" || d.correct === 1) ? 100 : 0,
+                }));
+                const hasAnyData = radarData.some(r => r.acerto > 0);
+                const correctCount = radarData.filter(r => r.acerto > 0).length;
+                return (
+                  <div className="mt-2">
+                    <p className="text-[10px] text-muted-foreground text-center mb-1">
+                      Acertos: {correctCount}/{decisions.length} decisões
+                    </p>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                        <PolarGrid stroke="hsl(var(--border))" />
+                        <PolarAngleAxis dataKey="label" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                        <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar dataKey="acerto" fill={hasAnyData ? "hsl(var(--primary))" : "hsl(var(--destructive))"} fillOpacity={hasAnyData ? 0.4 : 0.15} stroke={hasAnyData ? "hsl(var(--primary))" : "hsl(var(--destructive))"} strokeWidth={2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
