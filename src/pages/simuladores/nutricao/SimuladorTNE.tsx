@@ -129,10 +129,10 @@ export default function SimuladorTNE() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tne");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tne");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -213,7 +213,7 @@ export default function SimuladorTNE() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Terapia Nutricional Enteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Fórmula": FORMULA_OPTIONS.find(o => o.value === formula)?.label || "—", "Via": VIA_OPTIONS.find(o => o.value === via)?.label || "—", "Protocolo": PROTOCOL_OPTIONS.find(o => o.value === protocol)?.label || "—", "Complicação": patient.complication, "Conduta": COMPLICATION_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Terapia Nutricional Enteral" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Fórmula": FORMULA_OPTIONS.find(o => o.value === formula)?.label || "—", "Via": VIA_OPTIONS.find(o => o.value === via)?.label || "—", "Protocolo": PROTOCOL_OPTIONS.find(o => o.value === protocol)?.label || "—", "Complicação": patient.complication, "Conduta": COMPLICATION_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

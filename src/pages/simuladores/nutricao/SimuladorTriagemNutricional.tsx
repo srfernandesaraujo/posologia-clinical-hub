@@ -135,10 +135,10 @@ export default function SimuladorTriagemNutricional() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("triagem-nutricional");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("triagem-nutricional");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -263,7 +263,7 @@ export default function SimuladorTriagemNutricional() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Triagem Nutricional" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "NRS-2002": `${userNRSTotal}`, "Risco": RISK_OPTIONS.find(o => o.value === riskClass)?.label || "—", "Conduta": CONDUCT_OPTIONS.find(o => o.value === conduct)?.label || "—", "Via": ROUTE_OPTIONS.find(o => o.value === route)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Triagem Nutricional" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "NRS-2002": `${userNRSTotal}`, "Risco": RISK_OPTIONS.find(o => o.value === riskClass)?.label || "—", "Conduta": CONDUCT_OPTIONS.find(o => o.value === conduct)?.label || "—", "Via": ROUTE_OPTIONS.find(o => o.value === route)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

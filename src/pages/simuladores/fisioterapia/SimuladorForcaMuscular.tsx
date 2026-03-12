@@ -154,10 +154,10 @@ export default function SimuladorForcaMuscular() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("forca-muscular");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("forca-muscular");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedCase(CASES[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -258,7 +258,7 @@ export default function SimuladorForcaMuscular() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Força Muscular (Oxford/MRC)" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
+      <LabReportPanel benchTitle="Força Muscular (Oxford/MRC)" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

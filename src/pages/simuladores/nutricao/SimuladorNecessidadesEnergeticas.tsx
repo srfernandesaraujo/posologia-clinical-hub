@@ -128,10 +128,10 @@ export default function SimuladorNecessidadesEnergeticas() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("necessidades-energeticas");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("necessidades-energeticas");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -237,7 +237,7 @@ export default function SimuladorNecessidadesEnergeticas() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Necessidades Energéticas" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Equação": EQUATION_OPTIONS.find(o => o.value === equation)?.label || "—", "GET": `${selectedGET} kcal/dia`, "Macro": `PTN ${ptn}% / CHO ${cho}% / LIP ${lip}%`, "Dieta": DIET_OPTIONS.find(o => o.value === diet)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Necessidades Energéticas" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Equação": EQUATION_OPTIONS.find(o => o.value === equation)?.label || "—", "GET": `${selectedGET} kcal/dia`, "Macro": `PTN ${ptn}% / CHO ${cho}% / LIP ${lip}%`, "Dieta": DIET_OPTIONS.find(o => o.value === diet)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

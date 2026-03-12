@@ -153,10 +153,10 @@ export default function SimuladorDisfagia() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("disfagia");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("disfagia");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -258,7 +258,7 @@ export default function SimuladorDisfagia() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Avaliação de Disfagia" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "FOIS": FOIS_OPTIONS.find(o => o.value === fois)?.label || "—", "Consistência": CONSISTENCY_OPTIONS.find(o => o.value === consistency)?.label || "—", "Exame": EXAM_OPTIONS.find(o => o.value === exam)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Avaliação de Disfagia" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "FOIS": FOIS_OPTIONS.find(o => o.value === fois)?.label || "—", "Consistência": CONSISTENCY_OPTIONS.find(o => o.value === consistency)?.label || "—", "Exame": EXAM_OPTIONS.find(o => o.value === exam)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

@@ -142,10 +142,10 @@ export default function SimuladorNutricaoRenal() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("nutricao-renal");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("nutricao-renal");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -245,7 +245,7 @@ export default function SimuladorNutricaoRenal() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Nutrição Renal" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Proteína": PROTEIN_OPTIONS.find(o => o.value === protein)?.label || "—", "Inadequações": foodIssues.map(f => FOOD_ISSUES.find(i => i.id === f)?.label).join(", ") || "—", "Suplementação": supplements.map(s => SUPPLEMENT_OPTIONS.find(o => o.id === s)?.label).join(", ") || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Nutrição Renal" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "Proteína": PROTEIN_OPTIONS.find(o => o.value === protein)?.label || "—", "Inadequações": foodIssues.map(f => FOOD_ISSUES.find(i => i.id === f)?.label).join(", ") || "—", "Suplementação": supplements.map(s => SUPPLEMENT_OPTIONS.find(o => o.id === s)?.label).join(", ") || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

@@ -153,10 +153,10 @@ export default function SimuladorNutricaoMaternoInfantil() {
 
   const feedback = calcFeedback();
   const location = useLocation();
-  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("nutricao-materno-infantil");
+  const { virtualRoomCase, isVirtualRoom: isVR, goBack: vrGoBack, submitResults: submitVRResults, submitted, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("nutricao-materno-infantil");
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); setSelectedPatient(PATIENTS[0]?.id || ""); }
-  useEffect(() => { if (isVR && showFeedback) { submitVRResults({ score: feedback.score, actions: feedback.decisions, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
   if (!activeCase) {
     return (
@@ -245,7 +245,7 @@ export default function SimuladorNutricaoMaternoInfantil() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Nutrição Materno-Infantil" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a — IG ${patient.ig}sem`, "Atalah": ATALAH_OPTIONS.find(o => o.value === atalah)?.label || "—", "Ganho": GAIN_OPTIONS.find(o => o.value === gainRange)?.label || "—", "Intercorrência": patient.complication, "Conduta": COMP_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} />
+      <LabReportPanel benchTitle="Nutrição Materno-Infantil" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a — IG ${patient.ig}sem`, "Atalah": ATALAH_OPTIONS.find(o => o.value === atalah)?.label || "—", "Ganho": GAIN_OPTIONS.find(o => o.value === gainRange)?.label || "—", "Intercorrência": patient.complication, "Conduta": COMP_OPTIONS.find(o => o.value === compAction)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }
