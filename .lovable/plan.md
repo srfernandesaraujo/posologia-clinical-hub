@@ -1,100 +1,94 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Laboratório de Simulação Realística — Plano de Implementação
 
-## Visão Geral
+### Visão Geral
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Criar uma nova bancada no Laboratório Virtual chamada **"Simulação Realística"** onde o aluno recebe o prontuário de um paciente virtual e toma decisões clínicas passo a passo (análise de exames, escolha de condutas, verificação de interações, ajuste de dose). Cada decisão altera o estado do paciente em tempo real, criando uma árvore de decisão ramificada.
 
-## Arquitetura
+### Arquitetura
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+A bancada será composta por **5 painéis modulares** (mesmo padrão do lab de Fármacos), com integração à **Lovable AI** para gerar cenários ramificados dinamicamente:
 
-## Simuladores por Lotes
+```text
+┌─────────────────────────────────────────────────────┐
+│  Bancada: Simulação Realística                       │
+│                                                       │
+│  ┌──────────────────┐  ┌──────────────────────────┐  │
+│  │ M1 — Prontuário  │  │ M2 — Painel de Decisão   │  │
+│  │ (Patient Record) │  │ (Branching Choices)       │  │
+│  │ - Dados pessoais │  │ - 3-4 opções por etapa   │  │
+│  │ - Sinais vitais  │  │ - Feedback por escolha   │  │
+│  │ - Medicações     │  │ - Timer opcional         │  │
+│  │ - Exames labs    │  │ - Justificativa clínica  │  │
+│  └──────────────────┘  └──────────────────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────────────┐  │
+│  │ M3 — Monitor do  │  │ M4 — Linha do Tempo      │  │
+│  │ Paciente         │  │ (Decision Tree)          │  │
+│  │ - Sinais vitais  │  │ - Caminho percorrido     │  │
+│  │   em tempo real  │  │ - Score acumulado        │  │
+│  │ - Gráficos       │  │ - Branches disponíveis   │  │
+│  │ - Alertas        │  │ - Progress bar           │  │
+│  └──────────────────┘  └──────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐ │
+│  │ M5 — Mini-Relatório (LabReportPanel reutilizado) │ │
+│  └──────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+```
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+### Integração com IA (Lovable AI)
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+Uma **edge function** `generate-simulation-scenario` usará a Lovable AI Gateway para gerar cenários completos de simulação realística com árvore de decisão. O professor pode escolher entre cenários pré-definidos ou gerar novos via IA informando especialidade, complexidade e tema.
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+A IA retornará via **tool calling** um JSON estruturado contendo:
+- Dados do paciente (nome, idade, queixa, histórico, medicamentos, exames)
+- Árvore de etapas com 4-6 nós de decisão, cada um com 3-4 opções
+- Efeitos de cada escolha nos sinais vitais do paciente
+- Score e feedback por decisão
+- Desfecho final baseado no caminho percorrido
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+### Cenários Pré-definidos
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+8 cenários nativos cobrindo áreas-chave:
+1. Emergência Hipertensiva
+2. Choque Séptico
+3. Cetoacidose Diabética  
+4. Intoxicação Medicamentosa
+5. Reação Anafilática
+6. Insuficiência Renal Aguda
+7. Dor Torácica (diagnóstico diferencial)
+8. Politerapia no Idoso (cascata de prescrição)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### Integração com API Externa — OpenFDA
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+Para enriquecer o laboratório com dados reais, integrar à **OpenFDA API** (gratuita, sem chave):
+- `api.fda.gov/drug/label.json` — Buscar bulas e interações por nome do fármaco
+- `api.fda.gov/drug/event.json` — Eventos adversos reportados
+- Quando o aluno prescreve um medicamento, o sistema consulta automaticamente a OpenFDA para alertas de interação e efeitos adversos reais
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+### Arquivos a Criar/Editar
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+1. **`src/pages/lab-virtual/BancadaSimulacaoRealistica.tsx`** — Página principal da bancada (similar a BancadaFarmacos)
+2. **`src/components/lab-virtual/PatientRecordPanel.tsx`** — M1: Prontuário do paciente com dados dinâmicos
+3. **`src/components/lab-virtual/BranchingDecisionPanel.tsx`** — M2: Painel de decisão ramificada com opções e feedback
+4. **`src/components/lab-virtual/PatientMonitorPanel.tsx`** — M3: Monitor de sinais vitais com gráficos Recharts em tempo real
+5. **`src/components/lab-virtual/DecisionTimelinePanel.tsx`** — M4: Linha do tempo com árvore de decisões e score
+6. **`supabase/functions/generate-simulation-scenario/index.ts`** — Edge function para geração de cenários via Lovable AI
+7. **`src/pages/LaboratorioVirtual.tsx`** — Adicionar card da nova bancada
+8. **`src/App.tsx`** — Adicionar rota `/laboratorio-virtual/simulacao-realistica`
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+### Integração com Salas Virtuais
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+A bancada seguirá o mesmo padrão dos demais simuladores:
+- Hook `useVirtualRoomCase` para modo sala virtual
+- Botão "Enviar Resultados" via `LabReportPanel` em modo VR
+- Score baseado na porcentagem de decisões corretas
+- Decisões estruturadas enviadas ao Analytics (label, escolha do aluno, escolha ideal, correto/incorreto)
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+### Detalhes Técnicos
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+- **Estado do paciente**: Objeto reativo que muda a cada decisão (sinais vitais, exames, alertas). Os gráficos do Monitor atualizam automaticamente.
+- **Score**: Cada decisão tem peso; score final = soma ponderada de acertos / total possível * 100.
+- **OpenFDA**: Chamadas client-side diretas (API pública, sem CORS issues, sem chave necessária).
+- **IA**: Edge function com `LOVABLE_API_KEY`, modelo `google/gemini-3-flash-preview`, retorno via tool calling estruturado.
 
