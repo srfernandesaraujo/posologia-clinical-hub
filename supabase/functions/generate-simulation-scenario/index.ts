@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { callAI } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +11,6 @@ serve(async (req) => {
 
   try {
     const { title, specialty, difficulty } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const systemPrompt = `Você é um gerador de cenários clínicos para simulação realística em saúde. Gere cenários detalhados, clinicamente precisos e educativos.
 
@@ -30,127 +29,106 @@ Dificuldade: ${difficulty}
 
 O cenário deve incluir um paciente completo com dados demográficos, sinais vitais, medicações, exames laboratoriais e uma árvore de decisões clínicas ramificadas.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "create_scenario",
-              description: "Create a complete clinical simulation scenario with branching decisions",
-              parameters: {
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "create_scenario",
+          description: "Create a complete clinical simulation scenario with branching decisions",
+          parameters: {
+            type: "object",
+            properties: {
+              patient: {
                 type: "object",
                 properties: {
-                  patient: {
+                  name: { type: "string" },
+                  age: { type: "number" },
+                  sex: { type: "string" },
+                  weight: { type: "number" },
+                  height: { type: "number" },
+                  chiefComplaint: { type: "string" },
+                  history: { type: "string" },
+                  medications: { type: "array", items: { type: "string" } },
+                  allergies: { type: "array", items: { type: "string" } },
+                  vitals: {
                     type: "object",
                     properties: {
-                      name: { type: "string" },
-                      age: { type: "number" },
-                      sex: { type: "string" },
-                      weight: { type: "number" },
-                      height: { type: "number" },
-                      chiefComplaint: { type: "string" },
-                      history: { type: "string" },
-                      medications: { type: "array", items: { type: "string" } },
-                      allergies: { type: "array", items: { type: "string" } },
-                      vitals: {
-                        type: "object",
-                        properties: {
-                          fc: { type: "number" },
-                          pas: { type: "number" },
-                          pad: { type: "number" },
-                          fr: { type: "number" },
-                          temp: { type: "number" },
-                          spo2: { type: "number" },
-                          glasgow: { type: "number" },
-                        },
-                        required: ["fc", "pas", "pad", "fr", "temp", "spo2", "glasgow"],
-                      },
-                      labs: {
-                        type: "object",
-                        additionalProperties: { type: "string" },
-                      },
+                      fc: { type: "number" },
+                      pas: { type: "number" },
+                      pad: { type: "number" },
+                      fr: { type: "number" },
+                      temp: { type: "number" },
+                      spo2: { type: "number" },
+                      glasgow: { type: "number" },
                     },
-                    required: ["name", "age", "sex", "weight", "height", "chiefComplaint", "history", "medications", "allergies", "vitals", "labs"],
+                    required: ["fc", "pas", "pad", "fr", "temp", "spo2", "glasgow"],
                   },
-                  nodes: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        stage: { type: "number" },
-                        title: { type: "string" },
-                        context: { type: "string" },
-                        weight: { type: "number" },
-                        options: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              id: { type: "string" },
-                              label: { type: "string" },
-                              description: { type: "string" },
-                              isCorrect: { type: "boolean" },
-                              feedback: { type: "string" },
-                              vitalEffects: {
-                                type: "object",
-                                additionalProperties: { type: "number" },
-                              },
-                            },
-                            required: ["id", "label", "description", "isCorrect", "feedback"],
-                          },
-                        },
-                      },
-                      required: ["id", "stage", "title", "context", "weight", "options"],
-                    },
-                  },
-                  outcome: {
+                  labs: {
                     type: "object",
-                    properties: {
-                      good: { type: "string" },
-                      bad: { type: "string" },
-                    },
-                    required: ["good", "bad"],
+                    additionalProperties: { type: "string" },
                   },
                 },
-                required: ["patient", "nodes", "outcome"],
+                required: ["name", "age", "sex", "weight", "height", "chiefComplaint", "history", "medications", "allergies", "vitals", "labs"],
+              },
+              nodes: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    stage: { type: "number" },
+                    title: { type: "string" },
+                    context: { type: "string" },
+                    weight: { type: "number" },
+                    options: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          label: { type: "string" },
+                          description: { type: "string" },
+                          isCorrect: { type: "boolean" },
+                          feedback: { type: "string" },
+                          vitalEffects: {
+                            type: "object",
+                            additionalProperties: { type: "number" },
+                          },
+                        },
+                        required: ["id", "label", "description", "isCorrect", "feedback"],
+                      },
+                    },
+                  },
+                  required: ["id", "stage", "title", "context", "weight", "options"],
+                },
+              },
+              outcome: {
+                type: "object",
+                properties: {
+                  good: { type: "string" },
+                  bad: { type: "string" },
+                },
+                required: ["good", "bad"],
               },
             },
+            required: ["patient", "nodes", "outcome"],
           },
-        ],
-        tool_choice: { type: "function", function: { name: "create_scenario" } },
-      }),
+        },
+      },
+    ];
+
+    const { data: result, provider } = await callAI({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      tools,
+      tool_choice: { type: "function", function: { name: "create_scenario" } },
+      promptType: "simulation-scenario",
     });
 
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", status, t);
-      throw new Error(`AI gateway error: ${status}`);
-    }
+    console.log(`[generate-simulation-scenario] Generated via ${provider}`);
 
-    const result = await response.json();
     const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
 
@@ -161,8 +139,10 @@ O cenário deve incluir um paciente completo com dados demográficos, sinais vit
     });
   } catch (e) {
     console.error("generate-simulation-scenario error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    const status = msg.includes("Limite") ? 429 : msg.includes("Créditos") ? 402 : 500;
+    return new Response(JSON.stringify({ error: msg }), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
