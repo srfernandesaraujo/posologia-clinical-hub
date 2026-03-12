@@ -3,14 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FlaskConical, Play, CheckCircle2, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FlaskConical, Play, ClipboardCheck, Info } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { ForensicScenario, ForensicSample } from "@/data/forensicScenarios";
 
 interface ChemicalLabPanelProps {
   scenario: ForensicScenario;
   isUnlocked: boolean;
-  onComplete: (result: { identifiedSubstance: string; correct: boolean }) => void;
+  onComplete: (result: { identifiedSubstance: string; basePeakAnswer: number }) => void;
 }
 
 export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalLabPanelProps) {
@@ -18,9 +19,9 @@ export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalL
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showSpectrum, setShowSpectrum] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<string>("");
+  const [basePeakInput, setBasePeakInput] = useState("");
+  const [selectedSubstance, setSelectedSubstance] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
   const analysis = scenario.chemicalAnalysis;
 
@@ -44,10 +45,11 @@ export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalL
   };
 
   const confirmIdentification = () => {
-    const correct = selectedMatch === analysis.correctSubstance;
-    setIsCorrect(correct);
     setConfirmed(true);
-    onComplete({ identifiedSubstance: selectedMatch, correct });
+    onComplete({
+      identifiedSubstance: selectedSubstance,
+      basePeakAnswer: parseFloat(basePeakInput) || 0,
+    });
   };
 
   if (!isUnlocked) {
@@ -65,7 +67,7 @@ export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalL
         <CardTitle className="text-base flex items-center gap-2">
           <FlaskConical className="h-4 w-4 text-primary" />
           Laboratório Químico — Espectrômetro de Massa
-          {confirmed && <Badge variant={isCorrect ? "default" : "destructive"} className="ml-auto text-xs">{isCorrect ? "✓ Correto" : "✗ Incorreto"}</Badge>}
+          {confirmed && <Badge variant="secondary" className="ml-auto text-xs">✓ Resposta registrada</Badge>}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -93,9 +95,39 @@ export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalL
                 {analyzing ? <><Progress value={progress} className="h-2 w-24 mr-2" /> Analisando...</> : <><Play className="h-3 w-3 mr-1" /> Iniciar Análise</>}
               </Button>
             )}
+
+            {/* Reference Table - shown after spectrum */}
+            {showSpectrum && (
+              <div className="mt-3 bg-muted/30 rounded-lg p-3 border border-border/50">
+                <div className="flex items-center gap-1 mb-2">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                  <p className="text-xs font-semibold text-muted-foreground">Tabela de Referência — Padrões Conhecidos</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="text-left py-1 pr-2 font-semibold text-muted-foreground">Substância</th>
+                        <th className="text-center py-1 px-2 font-semibold text-muted-foreground">Pico Base (m/z)</th>
+                        <th className="text-left py-1 pl-2 font-semibold text-muted-foreground">Fragmentos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analysis.referenceTable.map((ref) => (
+                        <tr key={ref.substance} className="border-b border-border/20">
+                          <td className="py-1.5 pr-2 font-medium">{ref.substance}</td>
+                          <td className="py-1.5 px-2 text-center font-mono">{ref.basePeak}</td>
+                          <td className="py-1.5 pl-2 text-muted-foreground font-mono">{ref.fragments.join(", ")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right: Spectrum + Result */}
+          {/* Right: Spectrum + Questions */}
           <div className="space-y-3">
             {analyzing && (
               <div className="space-y-2">
@@ -107,58 +139,70 @@ export function ChemicalLabPanel({ scenario, isUnlocked, onComplete }: ChemicalL
             {showSpectrum && (
               <>
                 <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Espectro de Massa — m/z vs Intensidade</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Espectro de Massa — m/z vs Intensidade Relativa (%)</p>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={analysis.spectrum}>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="mz" label={{ value: "m/z", position: "insideBottom", offset: -5 }} tick={{ fontSize: 10 }} />
-                      <YAxis label={{ value: "%", angle: -90, position: "insideLeft" }} tick={{ fontSize: 10 }} />
+                      <YAxis label={{ value: "%", angle: -90, position: "insideLeft" }} tick={{ fontSize: 10 }} domain={[0, 100]} />
                       <Tooltip formatter={(v: number) => [`${v}%`, "Intensidade"]} labelFormatter={(l) => `m/z = ${l}`} />
                       <Line type="monotone" dataKey="intensity" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
-                <div className="bg-background rounded-lg p-3 border border-border/50 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">Comparação com Banco de Dados</p>
-                  {analysis.dbMatches.map((m) => (
-                    <div key={m.substance} className="flex items-center justify-between text-sm">
-                      <span>{m.substance}</span>
-                      <div className="flex items-center gap-2">
-                        <Progress value={m.similarity} className="h-1.5 w-20" />
-                        <span className="text-xs text-muted-foreground w-8">{m.similarity}%</span>
+                {!confirmed && (
+                  <div className="space-y-3 bg-background rounded-lg p-3 border border-border/50">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Análise do Espectro</p>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">1. Qual é o pico base (m/z) do espectro? <span className="text-muted-foreground">(maior intensidade)</span></label>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 334"
+                        value={basePeakInput}
+                        onChange={(e) => setBasePeakInput(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">2. Com base no pico base e nos fragmentos, qual substância corresponde?</label>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {analysis.referenceTable.map((ref) => (
+                          <Button
+                            key={ref.substance}
+                            variant={selectedSubstance === ref.substance ? "default" : "outline"}
+                            size="sm"
+                            className="text-xs justify-start h-auto py-1.5"
+                            onClick={() => setSelectedSubstance(ref.substance)}
+                          >
+                            {ref.substance}
+                          </Button>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {!confirmed && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold">Selecione a substância identificada:</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {analysis.dbMatches.map((m) => (
-                        <Button
-                          key={m.substance}
-                          variant={selectedMatch === m.substance ? "default" : "outline"}
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => setSelectedMatch(m.substance)}
-                        >
-                          {m.substance}
-                        </Button>
-                      ))}
-                    </div>
-                    <Button onClick={confirmIdentification} disabled={!selectedMatch} size="sm" className="w-full">
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> Confirmar Identificação
+                    <Button
+                      onClick={confirmIdentification}
+                      disabled={!selectedSubstance || !basePeakInput}
+                      size="sm"
+                      className="w-full"
+                    >
+                      <ClipboardCheck className="h-3 w-3 mr-1" /> Registrar Análise
                     </Button>
                   </div>
                 )}
 
                 {confirmed && (
-                  <div className={`p-3 rounded-lg border ${isCorrect ? "border-green-500/30 bg-green-500/10" : "border-destructive/30 bg-destructive/10"}`}>
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      {isCorrect ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                      {isCorrect ? "Identificação correta!" : `Incorreto. A substância é ${analysis.correctSubstance}.`}
+                  <div className="p-3 rounded-lg border border-border bg-muted/20">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <ClipboardCheck className="h-4 w-4" />
+                      Resposta registrada. O resultado será revelado na conclusão pericial.
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                      <p>Pico base informado: <span className="font-mono font-medium">{basePeakInput} m/z</span></p>
+                      <p>Substância selecionada: <span className="font-medium">{selectedSubstance}</span></p>
                     </div>
                   </div>
                 )}

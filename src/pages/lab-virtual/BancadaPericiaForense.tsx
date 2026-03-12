@@ -14,11 +14,22 @@ import { ForensicConclusionPanel } from "@/components/lab-virtual/ForensicConclu
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
-interface LabResult {
-  identifiedSubstance?: string;
-  identifiedToxin?: string;
-  matchedSuspect?: string;
-  correct?: boolean;
+interface ChemResult {
+  identifiedSubstance: string;
+  basePeakAnswer: number;
+}
+
+interface ToxResult {
+  matrix: string;
+  reagent: string;
+  estimatedRT: number;
+  selectedClass: string;
+  identifiedToxin: string;
+}
+
+interface DnaResult {
+  matchedSuspect: string;
+  locusComparison: Record<string, Record<string, boolean>>;
 }
 
 export default function BancadaPericiaForense() {
@@ -29,9 +40,9 @@ export default function BancadaPericiaForense() {
 
   const [selectedId, setSelectedId] = useState("");
   const [scenario, setScenario] = useState<ForensicScenario | null>(null);
-  const [chemResult, setChemResult] = useState<LabResult | null>(null);
-  const [toxResult, setToxResult] = useState<LabResult | null>(null);
-  const [dnaResult, setDnaResult] = useState<LabResult | null>(null);
+  const [chemResult, setChemResult] = useState<ChemResult | null>(null);
+  const [toxResult, setToxResult] = useState<ToxResult | null>(null);
+  const [dnaResult, setDnaResult] = useState<DnaResult | null>(null);
   const [conclusionResult, setConclusionResult] = useState<{ accusedIndex: number; correct: boolean; score: number } | null>(null);
   const startTimeRef = useRef(Date.now());
 
