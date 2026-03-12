@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, DoorOpen, Lock, Crown, ClipboardList } from "lucide-react";
+import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,7 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Legend,
+  LineChart, Line, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 
 const SIMULATOR_LABELS: Record<string, string> = {
@@ -22,6 +23,33 @@ const SIMULATOR_LABELS: Record<string, string> = {
   "bomba-infusao": "Bomba de Infusão",
   "desmame-benzo": "Desmame Benzo",
   interacoes: "Interações",
+  goniometria: "Goniometria",
+  "avaliacao-postural": "Avaliação Postural",
+  berg: "Escala de Berg",
+  dermatomos: "Dermátomos",
+  eletroterapia: "Eletroterapia",
+  "forca-muscular": "Força Muscular",
+  respiratorio: "Fisio. Respiratória",
+  "testes-ortopedicos": "Testes Ortopédicos",
+  "avaliacao-nutricional": "Aval. Nutricional",
+  disfagia: "Disfagia",
+  "necessidades-energeticas": "Nec. Energéticas",
+  "nutricao-materno-infantil": "Nutrição M.I.",
+  "nutricao-renal": "Nutrição Renal",
+  tne: "TNE",
+  tnp: "TNP",
+  "triagem-nutricional": "Triagem Nutricional",
+  "anatomia-endodontia": "Endodontia",
+  "anestesiologia-odonto": "Anestesiologia",
+  cefalometria: "Cefalometria",
+  "cirurgia-exodontia": "Cirurgia/Exodontia",
+  "farmacologia-odonto": "Farmacologia Odonto",
+  odontograma: "Odontograma",
+  periodontograma: "Periodontograma",
+  "radiografia-odonto": "Radiografia",
+  soap: "SOAP",
+  mai: "MAI",
+  "cascata-prescricao": "Cascata",
 };
 
 const CHART_COLORS = [
@@ -46,9 +74,112 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
+/** Expandable participant detail showing decisions + report */
+function ParticipantDetail({ submission }: { submission: any }) {
+  const [open, setOpen] = useState(false);
+  const actions = submission.actions;
+
+  // Support both old format (array of decisions) and new format ({ decisions, report })
+  const decisions: any[] = Array.isArray(actions)
+    ? actions
+    : actions?.decisions || [];
+  const report = !Array.isArray(actions) ? actions?.report : null;
+  const hasDetails = decisions.length > 0 || report;
+
+  if (!hasDetails) return null;
+
+  return (
+    <div className="mt-2">
+      <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 px-2" onClick={() => setOpen(!open)}>
+        <Eye className="h-3 w-3" />
+        {open ? "Ocultar detalhes" : "Ver detalhes"}
+        {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </Button>
+      {open && (
+        <div className="mt-2 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
+          {/* Decisions breakdown */}
+          {decisions.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decisões Clínicas</p>
+              {decisions.map((d: any, i: number) => (
+                <div key={i} className={`rounded-md p-2 text-xs border ${d.correct ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"}`}>
+                  <div className="flex items-start gap-1.5">
+                    {d.correct
+                      ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                      : <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium">{d.label}</span>
+                      <span className="text-muted-foreground ml-1">— {d.userChoice}</span>
+                      {!d.correct && <span className="ml-1 text-green-600 dark:text-green-400">(ideal: {d.idealChoice})</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {/* Mini radar for decision accuracy per category */}
+              {decisions.length >= 3 && (
+                <div className="mt-2">
+                  <ResponsiveContainer width="100%" height={180}>
+                    <RadarChart data={decisions.map((d: any) => ({
+                      label: d.label?.length > 15 ? d.label.substring(0, 15) + "…" : d.label,
+                      acerto: d.correct ? 100 : 0,
+                    }))}>
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="label" tick={{ fontSize: 9 }} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                      <Radar dataKey="acerto" fill="hsl(var(--primary))" fillOpacity={0.3} stroke="hsl(var(--primary))" strokeWidth={1.5} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Report section */}
+          {report && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <FileText className="h-3 w-3" /> Mini-Relatório do Aluno
+              </p>
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-xs">
+                {report.hypothesis && (
+                  <div>
+                    <span className="font-semibold text-foreground">Hipótese:</span>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">{report.hypothesis}</p>
+                  </div>
+                )}
+                {report.results && (
+                  <div>
+                    <span className="font-semibold text-foreground">Resultados:</span>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">{report.results}</p>
+                  </div>
+                )}
+                {report.conclusion && (
+                  <div>
+                    <span className="font-semibold text-foreground">Conclusão:</span>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">{report.conclusion}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Analytics() {
   const { user } = useAuth();
   const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade, loading } = useFeatureGating();
+  const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
+
+  const toggleRoom = (id: string) => {
+    setExpandedRooms(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const { data: logs = [] } = useQuery({
     queryKey: ["analytics-logs", user?.id],
@@ -130,11 +261,8 @@ export default function Analytics() {
     : 0;
 
   // --- Chart data ---
-
-  // Average score per simulator (from activities + legacy rooms)
   const scoreBySimulator = Object.entries(
     allSubmissions.reduce((acc: any, s: any) => {
-      // Try to get slug from activity first, then from room
       const activity = allActivities.find((a: any) => a.id === s.activity_id);
       const room = rooms.find((r: any) => r.id === s.room_id);
       const slug = activity?.simulator_slug || room?.simulator_slug || "outro";
@@ -148,7 +276,6 @@ export default function Analytics() {
     media: Math.round(v.total / v.count),
   }));
 
-  // Ranking of students by avg score
   const studentScores: Record<string, { name: string; total: number; count: number }> = {};
   allSubmissions.forEach((s: any) => {
     const p = allParticipants.find((p: any) => p.id === s.participant_id);
@@ -162,7 +289,6 @@ export default function Analytics() {
     .sort((a, b) => b.media - a.media)
     .slice(0, 10);
 
-  // Temporal evolution (submissions per day)
   const submissionsByDay: Record<string, { date: string; score: number; count: number }> = {};
   allSubmissions.forEach((s: any) => {
     const day = new Date(s.submitted_at).toLocaleDateString("pt-BR");
@@ -174,7 +300,6 @@ export default function Analytics() {
     .map(v => ({ date: v.date, media: Math.round(v.score / v.count) }))
     .reverse();
 
-  // Accuracy by step
   const stepScores: Record<number, { total: number; count: number }> = {};
   allSubmissions.forEach((s: any) => {
     const step = s.step_index;
@@ -186,7 +311,6 @@ export default function Analytics() {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([step, v]) => ({ name: `Etapa ${Number(step) + 1}`, acerto: Math.round(v.total / v.count) }));
 
-  // Tool usage chart data
   const toolUsage: Record<string, number> = {};
   logs.forEach((l: any) => {
     const name = l.tools?.name || "Removida";
@@ -196,7 +320,6 @@ export default function Analytics() {
     .map(([name, count]) => ({ name, usos: count }))
     .sort((a, b) => b.usos - a.usos);
 
-  // Usage over time
   const usageByDay: Record<string, number> = {};
   logs.forEach((l: any) => {
     const day = new Date(l.created_at).toLocaleDateString("pt-BR");
@@ -206,16 +329,13 @@ export default function Analytics() {
     .map(([date, count]) => ({ date, usos: count }))
     .reverse();
 
-  // Pie data for simulators distribution
   const simDistribution = Object.entries(
     (() => {
       const acc: Record<string, number> = {};
-      // Count from activities
       allActivities.forEach((a: any) => {
         const label = SIMULATOR_LABELS[a.simulator_slug] || a.simulator_slug;
         acc[label] = (acc[label] || 0) + 1;
       });
-      // Count from legacy rooms (rooms without activities)
       const roomsWithActivities = new Set(allActivities.map((a: any) => a.room_id));
       rooms.forEach((r: any) => {
         if (!roomsWithActivities.has(r.id) && r.simulator_slug) {
@@ -229,9 +349,7 @@ export default function Analytics() {
 
   const handleUpgrade = () => showUpgrade("Analytics completo é exclusivo do plano Premium");
 
-  // Helper to get activities for a room
   const getRoomActivities = (roomId: string) => allActivities.filter((a: any) => a.room_id === roomId);
-  const isExamRoom = (roomId: string) => getRoomActivities(roomId).length > 0;
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -255,7 +373,6 @@ export default function Analytics() {
 
         {/* ===== SALAS VIRTUAIS TAB ===== */}
         <TabsContent value="rooms" className="space-y-6">
-          {/* Summary Cards - always visible */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
@@ -283,12 +400,10 @@ export default function Analytics() {
             </Card>
           </div>
 
-          {/* Charts section - gated */}
           <div className="relative">
             {!isPremium && <PremiumOverlay onUpgrade={handleUpgrade} />}
             <div className={!isPremium ? "pointer-events-none select-none filter blur-sm" : ""}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Média por Simulador */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Média por Simulador</CardTitle></CardHeader>
                   <CardContent>
@@ -296,7 +411,7 @@ export default function Analytics() {
                       <ResponsiveContainer width="100%" height={260}>
                         <BarChart data={scoreBySimulator}>
                           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                           <Tooltip />
                           <Bar dataKey="media" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Média (%)" />
@@ -306,7 +421,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Ranking */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Ranking de Alunos (Top 10)</CardTitle></CardHeader>
                   <CardContent>
@@ -324,7 +438,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Evolução Temporal */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Evolução Temporal da Média</CardTitle></CardHeader>
                   <CardContent>
@@ -342,7 +455,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Taxa de Acerto por Etapa */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Taxa de Acerto por Etapa</CardTitle></CardHeader>
                   <CardContent>
@@ -360,7 +472,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Distribuição de Simuladores */}
                 <Card className="lg:col-span-2">
                   <CardHeader><CardTitle className="text-base">Distribuição de Salas por Simulador</CardTitle></CardHeader>
                   <CardContent>
@@ -393,10 +504,19 @@ export default function Analytics() {
                     const rAvg = rSubmissions.length > 0 ? Math.round(rSubmissions.reduce((a: number, s: any) => a + s.score, 0) / rSubmissions.length) : null;
                     const roomActs = getRoomActivities(room.id);
                     const isExam = roomActs.length > 0;
+                    const isExpanded = expandedRooms.has(room.id);
+
+                    // Per-room score distribution for mini bar chart
+                    const scoreDistribution = rSubmissions.length > 0 ? [
+                      { range: "0-39%", count: rSubmissions.filter((s: any) => s.score < 40).length },
+                      { range: "40-59%", count: rSubmissions.filter((s: any) => s.score >= 40 && s.score < 60).length },
+                      { range: "60-79%", count: rSubmissions.filter((s: any) => s.score >= 60 && s.score < 80).length },
+                      { range: "80-100%", count: rSubmissions.filter((s: any) => s.score >= 80).length },
+                    ] : [];
 
                     return (
-                      <Card key={room.id}>
-                        <CardHeader className="pb-2">
+                      <Card key={room.id} className="overflow-hidden">
+                        <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleRoom(room.id)}>
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base flex items-center gap-2">
                               {room.title}
@@ -405,91 +525,139 @@ export default function Analytics() {
                                   <ClipboardList className="h-3 w-3 mr-1" />Prova · {roomActs.length} atividades
                                 </Badge>
                               )}
-                            </CardTitle>
-                            <div className="flex items-center gap-2">
                               {!isExam && room.simulator_slug && (
                                 <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
                               )}
+                            </CardTitle>
+                            <div className="flex items-center gap-2">
                               <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
+                              {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground">PIN: {room.pin} · {rParticipants.length} participantes · {rSubmissions.length} submissões{rAvg !== null ? ` · Média: ${rAvg}%` : ""}</p>
+                          <p className="text-xs text-muted-foreground">
+                            PIN: {room.pin} · {rParticipants.length} participantes · {rSubmissions.length} submissões{rAvg !== null ? ` · Média: ${rAvg}%` : ""}
+                          </p>
                         </CardHeader>
 
-                        {/* Show activities list for exam rooms */}
-                        {isExam && (
-                          <CardContent className="pb-2">
-                            <div className="flex flex-wrap gap-2">
-                              {roomActs.map((act: any, i: number) => {
-                                const actSubs = rSubmissions.filter((s: any) => s.activity_id === act.id);
-                                const actAvg = actSubs.length > 0 ? Math.round(actSubs.reduce((a: number, s: any) => a + s.score, 0) / actSubs.length) : null;
-                                return (
-                                  <div key={act.id} className="text-xs border border-border rounded-lg px-3 py-2 bg-muted/30">
-                                    <span className="font-medium">{i + 1}. {SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
-                                    {act.simulator_cases?.title && (
-                                      <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
-                                    )}
-                                    {actAvg !== null && (
-                                      <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-green-100 text-green-800" : ""}`}>
-                                        {actAvg}%
-                                      </Badge>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </CardContent>
-                        )}
-
-                        {rParticipants.length > 0 && (
-                          <CardContent>
-                            <div className="space-y-2">
-                              {rParticipants.map((p: any) => {
-                                const pSubs = rSubmissions.filter((s: any) => s.participant_id === p.id);
-                                const pAvg = pSubs.length > 0 ? Math.round(pSubs.reduce((a: number, s: any) => a + s.score, 0) / pSubs.length) : null;
-                                const pTime = pSubs.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
-                                return (
-                                  <div key={p.id} className="rounded-lg border border-border p-3">
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <p className="text-sm font-medium">{p.participant_name}</p>
-                                        {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
-                                        <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        {pSubs.length > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
-                                        {pAvg !== null ? (
-                                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800" : ""}>
-                                            {pAvg}%
-                                          </Badge>
-                                        ) : (
-                                          <Badge variant="outline">Pendente</Badge>
-                                        )}
-                                      </div>
+                        {isExpanded && (
+                          <CardContent className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+                            {/* Activities list for exam rooms */}
+                            {isExam && (
+                              <div className="flex flex-wrap gap-2">
+                                {roomActs.map((act: any, i: number) => {
+                                  const actSubs = rSubmissions.filter((s: any) => s.activity_id === act.id);
+                                  const actAvg = actSubs.length > 0 ? Math.round(actSubs.reduce((a: number, s: any) => a + s.score, 0) / actSubs.length) : null;
+                                  return (
+                                    <div key={act.id} className="text-xs border border-border rounded-lg px-3 py-2 bg-muted/30">
+                                      <span className="font-medium">{i + 1}. {SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                                      {act.simulator_cases?.title && (
+                                        <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
+                                      )}
+                                      {actAvg !== null && (
+                                        <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}`}>
+                                          {actAvg}%
+                                        </Badge>
+                                      )}
                                     </div>
-                                    {/* Per-activity breakdown for exam rooms */}
-                                    {isExam && pSubs.length > 0 && (
-                                      <div className="mt-2 flex flex-wrap gap-1">
-                                        {roomActs.map((act: any, i: number) => {
-                                          const actSub = pSubs.find((s: any) => s.activity_id === act.id);
-                                          return (
-                                            <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : actSub.score >= 50 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400") : "bg-muted text-muted-foreground"}`}>
-                                              {SIMULATOR_LABELS[act.simulator_slug]?.substring(0, 3) || act.simulator_slug.substring(0, 3)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
-                                            </span>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                    {/* Legacy per-step display */}
-                                    {!isExam && pSubs.length > 0 && (
-                                      <div className="mt-1 text-xs text-muted-foreground">
-                                        {pSubs.map((s: any) => <span key={s.id} className="mr-1">E{s.step_index + 1}:{s.score}%</span>)}
-                                      </div>
-                                    )}
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Score distribution mini chart */}
+                            {scoreDistribution.length > 0 && rSubmissions.length >= 2 && (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Distribuição de Scores</p>
+                                  <ResponsiveContainer width="100%" height={140}>
+                                    <BarChart data={scoreDistribution}>
+                                      <XAxis dataKey="range" tick={{ fontSize: 10 }} />
+                                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                                      <Tooltip />
+                                      <Bar dataKey="count" name="Alunos" radius={[4, 4, 0, 0]}>
+                                        {scoreDistribution.map((_, i) => (
+                                          <Cell key={i} fill={[
+                                            "hsl(var(--destructive))",
+                                            "hsl(var(--chart-4))",
+                                            "hsl(var(--chart-2))",
+                                            "hsl(var(--chart-3))",
+                                          ][i]} />
+                                        ))}
+                                      </Bar>
+                                    </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                {/* Score summary stats */}
+                                <div className="grid grid-cols-3 gap-2">
+                                  <div className="rounded-lg border border-border p-3 text-center">
+                                    <p className="text-lg font-bold text-primary">{rAvg ?? 0}%</p>
+                                    <p className="text-[10px] text-muted-foreground">Média</p>
                                   </div>
-                                );
-                              })}
-                            </div>
+                                  <div className="rounded-lg border border-border p-3 text-center">
+                                    <p className="text-lg font-bold text-primary">
+                                      {rSubmissions.length > 0 ? Math.max(...rSubmissions.map((s: any) => s.score)) : 0}%
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">Maior</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 text-center">
+                                    <p className="text-lg font-bold text-primary">
+                                      {rSubmissions.length > 0 ? Math.min(...rSubmissions.map((s: any) => s.score)) : 0}%
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">Menor</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Participants */}
+                            {rParticipants.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Participantes</p>
+                                {rParticipants.map((p: any) => {
+                                  const pSubs = rSubmissions.filter((s: any) => s.participant_id === p.id);
+                                  const pAvg = pSubs.length > 0 ? Math.round(pSubs.reduce((a: number, s: any) => a + s.score, 0) / pSubs.length) : null;
+                                  const pTime = pSubs.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
+                                  return (
+                                    <div key={p.id} className="rounded-lg border border-border p-3">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-medium">{p.participant_name}</p>
+                                          {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
+                                          <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          {pSubs.length > 0 && pTime > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
+                                          {pAvg !== null ? (
+                                            <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}>
+                                              {pAvg}%
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="outline">Pendente</Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                      {/* Per-activity breakdown for exam rooms */}
+                                      {isExam && pSubs.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-1">
+                                          {roomActs.map((act: any, i: number) => {
+                                            const actSub = pSubs.find((s: any) => s.activity_id === act.id);
+                                            return (
+                                              <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : actSub.score >= 50 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400") : "bg-muted text-muted-foreground"}`}>
+                                                {(SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug).substring(0, 5)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                      {/* Detailed submission view */}
+                                      {pSubs.map((sub: any) => (
+                                        <ParticipantDetail key={sub.id} submission={sub} />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </CardContent>
                         )}
                       </Card>
@@ -528,7 +696,6 @@ export default function Analytics() {
             {!isPremium && <PremiumOverlay onUpgrade={handleUpgrade} />}
             <div className={!isPremium ? "pointer-events-none select-none filter blur-sm" : ""}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Ferramentas mais usadas */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Ferramentas Mais Usadas</CardTitle></CardHeader>
                   <CardContent>
@@ -546,7 +713,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Uso ao longo do tempo */}
                 <Card>
                   <CardHeader><CardTitle className="text-base">Uso ao Longo do Tempo</CardTitle></CardHeader>
                   <CardContent>
@@ -564,7 +730,6 @@ export default function Analytics() {
                   </CardContent>
                 </Card>
 
-                {/* Distribuição por ferramenta (pie) */}
                 <Card className="lg:col-span-2">
                   <CardHeader><CardTitle className="text-base">Distribuição de Uso por Ferramenta</CardTitle></CardHeader>
                   <CardContent>
@@ -585,7 +750,6 @@ export default function Analytics() {
                 </Card>
               </div>
 
-              {/* Log list */}
               <div className="mt-6">
                 <Card>
                   <CardHeader><CardTitle className="text-base">Últimos Acessos ({logs.length})</CardTitle></CardHeader>
