@@ -275,6 +275,7 @@ const App = () => (
               <Route path="/sala/simulador/disfagia" element={<SimuladorDisfagia />} />
               <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
+              <Route path="/sala/simulador/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
             </Route>
 
             {/* Authenticated routes */}
