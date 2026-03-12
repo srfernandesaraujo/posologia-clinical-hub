@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Activity,
   TestTubes,
+  Stethoscope,
 } from "lucide-react";
 
 interface BenchCard {
