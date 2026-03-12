@@ -151,7 +151,7 @@ export default function SimuladorCirurgiaExodontia() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Cirurgia e Exodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
+      <LabReportPanel benchTitle="Cirurgia e Exodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

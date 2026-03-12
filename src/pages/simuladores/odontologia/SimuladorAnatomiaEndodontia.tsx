@@ -243,7 +243,7 @@ export default function SimuladorAnatomiaEndodontia() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Anatomia Dental — Endodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
+      <LabReportPanel benchTitle="Anatomia Dental — Endodontia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }

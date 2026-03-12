@@ -178,7 +178,7 @@ export default function SimuladorFarmacologiaOdonto() {
       </div>
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-      <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} />
+      <LabReportPanel benchTitle="Farmacologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
     </div>
   );
 }
