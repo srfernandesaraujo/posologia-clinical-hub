@@ -411,6 +411,7 @@ const App = () => (
               <Route path="/laboratorio-virtual/epidemiologia" element={<BancadaEpidemiologia />} />
               <Route path="/laboratorio-virtual/biotecnologia" element={<BancadaBiotecnologia />} />
               <Route path="/laboratorio-virtual/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
+              <Route path="/laboratorio-virtual/pericia-forense" element={<BancadaPericiaForense />} />
               <Route path="/documentacao" element={<Documentacao />} />
             </Route>
 

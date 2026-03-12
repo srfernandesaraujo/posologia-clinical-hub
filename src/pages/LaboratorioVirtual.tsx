@@ -124,6 +124,17 @@ const benches: BenchCard[] = [
     status: "disponivel",
     color: "hsl(45 93% 47%)",
   },
+  {
+    id: "pericia-forense",
+    title: "Perícia Forense",
+    subtitle: "Investigação Criminal",
+    description:
+      "3 laboratórios interligados (Químico, Toxicológico, DNA) para solucionar casos criminais. Espectrômetro de massa, HPLC e eletroferogramas.",
+    icon: <Shield className="h-8 w-8" />,
+    route: "/laboratorio-virtual/pericia-forense",
+    status: "disponivel",
+    color: "hsl(0 72% 51%)",
+  },
 ];
 
 export default function LaboratorioVirtual() {
