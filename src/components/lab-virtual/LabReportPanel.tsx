@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Lock } from "lucide-react";
+import { FileText, Download, Lock, Send, CheckCircle2 } from "lucide-react";
 import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 function sanitizePDF(text: string): string {
   const map: Record<string, string> = {
@@ -23,14 +24,22 @@ interface LabReportPanelProps {
   benchTitle: string;
   isUnlocked: boolean;
   experimentSummary?: Record<string, string>;
+  /** Virtual Room mode */
+  isVirtualRoom?: boolean;
+  /** Called when student clicks "Enviar" in VR mode */
+  onVRSubmit?: (reportData: { hypothesis: string; results: string; conclusion: string }) => void;
+  /** Whether VR submission was already sent */
+  vrSubmitted?: boolean;
 }
 
-export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary }: LabReportPanelProps) {
+export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary, isVirtualRoom, onVRSubmit, vrSubmitted }: LabReportPanelProps) {
   const [hypothesis, setHypothesis] = useState("");
   const [resultsText, setResultsText] = useState("");
   const [conclusion, setConclusion] = useState("");
+  const [sent, setSent] = useState(false);
 
   const canExport = hypothesis.trim().length > 10 && resultsText.trim().length > 10 && conclusion.trim().length > 10;
+  const alreadySent = sent || vrSubmitted;
 
   const exportPDF = () => {
     const doc = new jsPDF();
@@ -80,6 +89,13 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary }: La
     doc.save(sanitizePDF(`relatorio-${benchTitle.toLowerCase().replace(/\s+/g, "-")}.pdf`));
   };
 
+  const handleVRSubmit = () => {
+    if (!onVRSubmit) return;
+    onVRSubmit({ hypothesis, results: resultsText, conclusion });
+    setSent(true);
+    toast.success("Resultados enviados com sucesso!");
+  };
+
   if (!isUnlocked) {
     return (
       <Card className="lg:col-span-2 relative overflow-hidden">
@@ -113,6 +129,7 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary }: La
             value={hypothesis}
             onChange={(e) => setHypothesis(e.target.value)}
             rows={3}
+            disabled={alreadySent}
           />
         </div>
         <div>
@@ -122,6 +139,7 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary }: La
             value={resultsText}
             onChange={(e) => setResultsText(e.target.value)}
             rows={4}
+            disabled={alreadySent}
           />
         </div>
         <div>
@@ -131,14 +149,37 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary }: La
             value={conclusion}
             onChange={(e) => setConclusion(e.target.value)}
             rows={3}
+            disabled={alreadySent}
           />
         </div>
-        <Button onClick={exportPDF} disabled={!canExport} className="w-full">
-          <Download className="h-4 w-4 mr-2" />
-          Exportar Relatório em PDF
-        </Button>
-        {!canExport && (
-          <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para exportar</p>
+
+        {isVirtualRoom ? (
+          alreadySent ? (
+            <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">Resultados enviados ao professor!</span>
+            </div>
+          ) : (
+            <>
+              <Button onClick={handleVRSubmit} disabled={!canExport} className="w-full bg-primary hover:bg-primary/90">
+                <Send className="h-4 w-4 mr-2" />
+                Enviar Resultados
+              </Button>
+              {!canExport && (
+                <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para enviar</p>
+              )}
+            </>
+          )
+        ) : (
+          <>
+            <Button onClick={exportPDF} disabled={!canExport} className="w-full">
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Relatório em PDF
+            </Button>
+            {!canExport && (
+              <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para exportar</p>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
