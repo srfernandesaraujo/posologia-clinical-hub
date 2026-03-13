@@ -28,7 +28,12 @@ const ANTIBIOTICS = [
   { id: "sulfametoxazol", name: "Sulfametoxazol-Trimetoprim", class: "Sulfonamida", gramTip: "Cobertura variável, resistência crescente" },
 ];
 
+let _customResistance: Record<string, Record<string, { mic: number; breakpointS: number; breakpointR: number }>> = {};
+
 function getMICData(bacteriaId: string, antibioticId: string) {
+  if (_customResistance[bacteriaId]?.[antibioticId]) {
+    return _customResistance[bacteriaId][antibioticId];
+  }
   const resistanceMap: Record<string, Record<string, { mic: number; breakpointS: number; breakpointR: number }>> = {
     ecoli: { amoxicilina: { mic: 4, breakpointS: 8, breakpointR: 32 }, ciprofloxacino: { mic: 0.25, breakpointS: 1, breakpointR: 4 }, vancomicina: { mic: 128, breakpointS: 4, breakpointR: 32 }, meropenem: { mic: 0.06, breakpointS: 2, breakpointR: 8 }, gentamicina: { mic: 1, breakpointS: 4, breakpointR: 16 }, sulfametoxazol: { mic: 2, breakpointS: 2, breakpointR: 4 } },
     saureus: { amoxicilina: { mic: 0.5, breakpointS: 2, breakpointR: 8 }, ciprofloxacino: { mic: 0.5, breakpointS: 1, breakpointR: 4 }, vancomicina: { mic: 1, breakpointS: 2, breakpointR: 16 }, meropenem: { mic: 0.12, breakpointS: 2, breakpointR: 8 }, gentamicina: { mic: 0.5, breakpointS: 4, breakpointR: 16 }, sulfametoxazol: { mic: 0.5, breakpointS: 2, breakpointR: 4 } },
