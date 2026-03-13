@@ -186,14 +186,14 @@ export default function BancadaEpidemiologia() {
               <label className="text-sm font-medium">Exposição</label>
               <Select value={exposure} onValueChange={setExposure}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{EXPOSURES.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allExposures.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Desfecho</label>
               <Select value={outcome} onValueChange={setOutcome}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{OUTCOMES.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allOutcomes.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>

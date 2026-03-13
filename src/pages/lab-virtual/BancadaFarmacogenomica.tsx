@@ -132,7 +132,7 @@ export default function BancadaFarmacogenomica() {
               <label className="text-sm font-medium">Fármaco</label>
               <Select value={drug} onValueChange={setDrug}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{DRUGS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} ({d.enzyme})</SelectItem>)}</SelectContent>
+                <SelectContent>{allDrugs.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} ({d.enzyme})</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -141,6 +141,16 @@ export default function BancadaFarmacogenomica() {
               <p><strong>Parâmetros PK base:</strong> ka={selectedDrug.baseParams.ka} h⁻¹, ke={selectedDrug.baseParams.ke} h⁻¹, Vd={selectedDrug.baseParams.vd} L, F={selectedDrug.baseParams.f}</p>
             </div>
             <Button onClick={confirmDrug} className="w-full">Confirmar Fármaco</Button>
+            <AIContextGenerator
+              labType="farmacogenomica"
+              onContextGenerated={(data: any) => {
+                setCustomDrug(data.drug);
+                setDrug(data.drug.id);
+                setCompletedModules(new Set([1]));
+                setCurves(null);
+                setAucData(null);
+              }}
+            />
           </CardContent>
         </Card>
 

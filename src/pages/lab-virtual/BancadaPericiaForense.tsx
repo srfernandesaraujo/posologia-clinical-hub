@@ -135,6 +135,19 @@ export default function BancadaPericiaForense() {
             <Button onClick={() => startCase(selectedId)} disabled={!selectedId} className="w-full">
               Iniciar Investigação
             </Button>
+            <AIContextGenerator
+              labType="pericia-forense"
+              onContextGenerated={(data: any) => {
+                const s = data as ForensicScenario;
+                if (!s.id) s.id = `ai-${Date.now()}`;
+                setScenario(s);
+                setChemResult(null);
+                setToxResult(null);
+                setDnaResult(null);
+                setConclusionResult(null);
+                startTimeRef.current = Date.now();
+              }}
+            />
           </CardContent>
         </Card>
       )}

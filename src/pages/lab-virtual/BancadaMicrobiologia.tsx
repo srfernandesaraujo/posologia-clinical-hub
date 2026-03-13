@@ -196,7 +196,7 @@ export default function BancadaMicrobiologia() {
               <Select value={bacteria} onValueChange={setBacteria}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BACTERIA.map((b) => (
+                  {allBacteria.map((b) => (
                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -208,6 +208,19 @@ export default function BancadaMicrobiologia() {
               <p><strong>Mecanismos de resistência:</strong> {selectedBacteria.resistance}</p>
             </div>
             <Button onClick={confirmStrain} className="w-full">Confirmar Cepa</Button>
+            <AIContextGenerator
+              labType="microbiologia"
+              onContextGenerated={(data: any) => {
+                setCustomBacterium(data.bacteria);
+                const resMap: Record<string, { mic: number; breakpointS: number; breakpointR: number }> = {};
+                (data.resistanceData || []).forEach((r: any) => { resMap[r.antibioticId] = { mic: r.mic, breakpointS: r.breakpointS, breakpointR: r.breakpointR }; });
+                _customResistance = { [data.bacteria.id]: resMap };
+                setBacteria(data.bacteria.id);
+                setCompletedModules(new Set([1]));
+                setAntibiogram(null);
+                setGrowthCurve(null);
+              }}
+            />
           </CardContent>
         </Card>
 

@@ -136,7 +136,7 @@ export default function BancadaEstabilidade() {
               <label className="text-sm font-medium">Formulação</label>
               <Select value={formulation} onValueChange={setFormulation}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{FORMULATIONS.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allFormulations.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -145,6 +145,16 @@ export default function BancadaEstabilidade() {
               <p><strong>Concentração inicial:</strong> {form.initialConc}%</p>
             </div>
             <Button onClick={confirmFormulation} className="w-full">Confirmar Formulação</Button>
+            <AIContextGenerator
+              labType="estabilidade"
+              onContextGenerated={(data: any) => {
+                setCustomFormulation(data.formulation);
+                setFormulation(data.formulation.id);
+                setCompletedModules(new Set([1]));
+                setCurves(null);
+                setArrhenius(null);
+              }}
+            />
           </CardContent>
         </Card>
 

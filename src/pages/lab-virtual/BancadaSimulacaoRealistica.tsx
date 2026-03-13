@@ -282,6 +282,27 @@ export default function BancadaSimulacaoRealistica() {
               <Sparkles className="h-4 w-4 mr-2" />
               Gerar Cenário com IA
             </Button>
+
+            <div className="flex items-center gap-2 my-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] text-muted-foreground">ou tema livre</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <Input
+              value={customTheme}
+              onChange={(e) => setCustomTheme(e.target.value)}
+              placeholder="Descreva um cenário clínico personalizado..."
+              className="text-sm"
+            />
+            <Button
+              onClick={() => loadScenario()}
+              disabled={!customTheme.trim()}
+              variant="outline"
+              className="w-full"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Gerar Tema Livre
+            </Button>
           </CardContent>
         </Card>
       </div>

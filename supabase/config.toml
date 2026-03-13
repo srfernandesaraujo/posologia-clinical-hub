@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.generate-simulation-scenario]
 verify_jwt = false
+
+[functions.generate-lab-context]
+verify_jwt = false

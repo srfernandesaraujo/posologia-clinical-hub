@@ -136,24 +136,38 @@ export default function BancadaBiotecnologia() {
               <label className="text-sm font-medium">Gene-alvo</label>
               <Select value={gene} onValueChange={setGene}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{GENES.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} ({g.mw} kDa)</SelectItem>)}</SelectContent>
+                <SelectContent>{allGenes.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} ({g.mw} kDa)</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Vetor de expressão</label>
               <Select value={vector} onValueChange={setVector}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{VECTORS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.tag}, {v.promoter}</SelectItem>)}</SelectContent>
+                <SelectContent>{allVectors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.tag}, {v.promoter}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Cepa hospedeira</label>
               <Select value={strain} onValueChange={setStrain}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STRAINS.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allStrains.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <Button onClick={confirmConstruct} className="w-full">Confirmar Constructo</Button>
+            <AIContextGenerator
+              labType="biotecnologia"
+              onContextGenerated={(data: any) => {
+                setCustomGene(data.gene);
+                setCustomVector(data.vector);
+                setCustomStrain(data.strain);
+                setGene(data.gene.id);
+                setVector(data.vector.id);
+                setStrain(data.strain.id);
+                setCompletedModules(new Set([1]));
+                setExpressionResults(null);
+                setExpressionCurve(null);
+              }}
+            />
           </CardContent>
         </Card>
 

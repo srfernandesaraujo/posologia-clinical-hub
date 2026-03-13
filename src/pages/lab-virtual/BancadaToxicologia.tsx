@@ -132,7 +132,7 @@ export default function BancadaToxicologia() {
               <label className="text-sm font-medium">Substância</label>
               <Select value={substance} onValueChange={setSubstance}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{SUBSTANCES.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allSubstances.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -140,6 +140,16 @@ export default function BancadaToxicologia() {
               <p><strong>Mecanismo de toxicidade:</strong> {sub.mechanism}</p>
             </div>
             <Button onClick={confirmSubstance} className="w-full">Confirmar Substância</Button>
+            <AIContextGenerator
+              labType="toxicologia"
+              onContextGenerated={(data: any) => {
+                setCustomSubstance(data.substance);
+                setSubstance(data.substance.id);
+                setCompletedModules(new Set([1]));
+                setDoseResponse(null);
+                setToxParams(null);
+              }}
+            />
           </CardContent>
         </Card>
 

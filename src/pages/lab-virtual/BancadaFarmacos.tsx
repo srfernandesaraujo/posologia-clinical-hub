@@ -51,6 +51,15 @@ export default function BancadaFarmacos() {
         )}
       </div>
 
+      {/* AI Context Generator */}
+      <AIContextGenerator
+        labType="farmacos"
+        onContextGenerated={(data: any) => {
+          setSelectedTarget({ id: data.target.id, name: data.target.name });
+          setDrugProperties(data.drugProperties);
+        }}
+      />
+
       {/* Modules grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TargetValidationPanel onTargetSelected={setSelectedTarget} />
