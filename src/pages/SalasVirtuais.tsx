@@ -17,13 +17,15 @@ import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, Arrow
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
-interface SimulatorOption {
+interface ToolOption {
   slug: string;
   label: string;
   category: string;
 }
 
-const SIMULATOR_OPTIONS: SimulatorOption[] = [
+type ToolType = "simulator" | "laboratory";
+
+const SIMULATOR_OPTIONS: ToolOption[] = [
   // Farmácia Clínica
   { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos", category: "Farmácia Clínica" },
   { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Farmácia Clínica" },
@@ -122,7 +124,23 @@ const SIMULATOR_OPTIONS: SimulatorOption[] = [
   { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil", category: "Nutrição" },
 ];
 
-const CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+const LAB_OPTIONS: ToolOption[] = [
+  { slug: "farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
+  { slug: "microbiologia", label: "Microbiologia", category: "Laboratório Virtual" },
+  { slug: "toxicologia", label: "Toxicologia", category: "Laboratório Virtual" },
+  { slug: "farmacogenomica", label: "Farmacogenômica", category: "Laboratório Virtual" },
+  { slug: "estabilidade", label: "Estabilidade", category: "Laboratório Virtual" },
+  { slug: "controle-qualidade", label: "Controle de Qualidade", category: "Laboratório Virtual" },
+  { slug: "epidemiologia", label: "Epidemiologia", category: "Laboratório Virtual" },
+  { slug: "biotecnologia", label: "Biotecnologia", category: "Laboratório Virtual" },
+  { slug: "simulacao-realistica", label: "Simulação Realística", category: "Laboratório Virtual" },
+  { slug: "pericia-forense", label: "Perícia Forense", category: "Laboratório Virtual" },
+  { slug: "modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
+];
+
+const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS];
+const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+const LAB_CATEGORIES = [...new Set(LAB_OPTIONS.map(s => s.category))];
 
 interface ActivityItem {
   category: string;
