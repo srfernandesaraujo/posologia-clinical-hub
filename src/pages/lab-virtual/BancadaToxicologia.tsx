@@ -52,7 +52,10 @@ export default function BancadaToxicologia() {
   // M4
   const [toxParams, setToxParams] = useState<{ ld50: number; ed50: number; ti: number; toxClass: ReturnType<typeof classifyToxicity> } | null>(null);
 
-  const sub = SUBSTANCES.find((s) => s.id === substance)!;
+  const [customSubstance, setCustomSubstance] = useState<typeof SUBSTANCES[0] | null>(null);
+  const allSubstances = useMemo(() => [...SUBSTANCES, ...(customSubstance ? [customSubstance] : [])], [customSubstance]);
+
+  const sub = allSubstances.find((s) => s.id === substance) ?? SUBSTANCES[0];
   const model = ANIMAL_MODELS.find((m) => m.id === animalModel)!;
 
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
