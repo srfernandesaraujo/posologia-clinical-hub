@@ -156,12 +156,18 @@ export default function BancadaSimulacaoRealistica() {
     };
     setDecisions(prev => [...prev, record]);
 
-    // Apply vital effects
-    if (option.vitalEffects && currentVitals) {
+    // Apply vital effects — use fallback if AI didn't provide them
+    if (currentVitals) {
       const newVitals = { ...currentVitals };
-      Object.entries(option.vitalEffects).forEach(([key, delta]) => {
+      const effects = option.vitalEffects && Object.keys(option.vitalEffects).length > 0
+        ? option.vitalEffects
+        : option.isCorrect
+          ? { fc: -Math.floor(Math.random() * 8 + 3), pas: -Math.floor(Math.random() * 10 + 5), spo2: Math.floor(Math.random() * 2 + 1), fr: -Math.floor(Math.random() * 3 + 1) }
+          : { fc: Math.floor(Math.random() * 10 + 5), pas: Math.floor(Math.random() * 15 + 5), spo2: -Math.floor(Math.random() * 3 + 1), fr: Math.floor(Math.random() * 3 + 1) };
+
+      Object.entries(effects).forEach(([key, delta]) => {
         if (key in newVitals) {
-          (newVitals as any)[key] = Math.max(0, (newVitals as any)[key] + delta);
+          (newVitals as any)[key] = Math.max(0, Math.min(300, (newVitals as any)[key] + delta));
         }
       });
       setCurrentVitals(newVitals);
@@ -177,8 +183,11 @@ export default function BancadaSimulacaoRealistica() {
       const newAlerts: string[] = [];
       if (newVitals.spo2 < 90) newAlerts.push("⚠️ SpO₂ crítico! Considere oxigenoterapia.");
       if (newVitals.pas < 80) newAlerts.push("⚠️ Hipotensão grave! Risco de choque.");
+      if (newVitals.pas > 180) newAlerts.push("⚠️ Hipertensão grave! Risco de lesão em órgão-alvo.");
       if (newVitals.fc > 120) newAlerts.push("⚠️ Taquicardia significativa.");
+      if (newVitals.fc < 50) newAlerts.push("⚠️ Bradicardia! Avaliar necessidade de atropina.");
       if (newVitals.glasgow < 9) newAlerts.push("⚠️ Rebaixamento grave do nível de consciência.");
+      if (newVitals.fr > 28) newAlerts.push("⚠️ Taquipneia! Avaliar insuficiência respiratória.");
       setAlerts(newAlerts);
     }
 

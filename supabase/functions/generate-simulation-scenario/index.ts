@@ -18,7 +18,8 @@ REGRAS:
 - Sempre retorne via tool calling usando a função "create_scenario"
 - Os dados devem ser clinicamente coerentes
 - As decisões devem ter feedback educativo detalhado
-- Os efeitos nos sinais vitais devem ser realistas
+- OBRIGATÓRIO: TODA opção de decisão DEVE conter "vitalEffects" com pelo menos 2 alterações nos sinais vitais (fc, pas, pad, fr, temp, spo2, glasgow). Decisões corretas devem melhorar os sinais vitais (ex: fc -10, pas -20, spo2 +3). Decisões incorretas devem piorar (ex: fc +15, pas +10, spo2 -5, glasgow -2). Isso é ESSENCIAL para o monitor de paciente funcionar em tempo real.
+- Os efeitos nos sinais vitais devem ser realistas e proporcionais à gravidade da decisão
 - Cada nó deve ter exatamente 3-4 opções, sendo apenas 1 correta
 - O cenário deve ter 4-6 nós de decisão
 - Pesos: decisões críticas peso 3, importantes peso 2, rotineiras peso 1`;
@@ -95,7 +96,7 @@ O cenário deve incluir um paciente completo com dados demográficos, sinais vit
                             additionalProperties: { type: "number" },
                           },
                         },
-                        required: ["id", "label", "description", "isCorrect", "feedback"],
+                        required: ["id", "label", "description", "isCorrect", "feedback", "vitalEffects"],
                       },
                     },
                   },
