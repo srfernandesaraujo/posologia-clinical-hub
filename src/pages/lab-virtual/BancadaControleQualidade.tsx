@@ -323,7 +323,7 @@ export default function BancadaControleQualidade() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Controle de Qualidade" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Controle de Qualidade" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

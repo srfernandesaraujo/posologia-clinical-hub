@@ -149,6 +149,9 @@ export default function BancadaModelagemMolecular() {
         benchTitle="Modelagem Molecular"
         isUnlocked={completedModules.size >= 3}
         experimentSummary={experimentSummary}
+        isVirtualRoom={isVirtualRoom}
+        onVRSubmit={handleVRSubmit}
+        vrSubmitted={vrSubmitted}
       />
     </div>
   );

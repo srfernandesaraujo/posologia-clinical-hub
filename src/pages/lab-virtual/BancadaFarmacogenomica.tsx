@@ -286,7 +286,7 @@ export default function BancadaFarmacogenomica() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

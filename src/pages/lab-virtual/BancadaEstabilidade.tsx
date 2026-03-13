@@ -278,7 +278,7 @@ export default function BancadaEstabilidade() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Estabilidade" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Estabilidade" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

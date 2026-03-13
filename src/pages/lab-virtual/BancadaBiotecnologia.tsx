@@ -320,7 +320,7 @@ export default function BancadaBiotecnologia() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Biotecnologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Biotecnologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );
