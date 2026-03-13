@@ -97,7 +97,10 @@ export default function BancadaMicrobiologia() {
   const [growthConc, setGrowthConc] = useState([8]);
   const [growthCurve, setGrowthCurve] = useState<any[] | null>(null);
 
-  const selectedBacteria = BACTERIA.find((b) => b.id === bacteria)!;
+  const [customBacterium, setCustomBacterium] = useState<typeof BACTERIA[0] | null>(null);
+  const allBacteria = useMemo(() => [...BACTERIA, ...(customBacterium ? [customBacterium] : [])], [customBacterium]);
+
+  const selectedBacteria = allBacteria.find((b) => b.id === bacteria) ?? BACTERIA[0];
 
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
