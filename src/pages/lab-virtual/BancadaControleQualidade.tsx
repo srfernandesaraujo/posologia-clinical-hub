@@ -154,10 +154,29 @@ export default function BancadaControleQualidade() {
     experimentSummary["Laudo"] = validation.approved ? "APROVADO" : "REPROVADO";
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
+      { label: "Método analítico", userChoice: selectedMethod.name, correct: true },
+      { label: "Analito", userChoice: selectedAnalyte.name, correct: true },
+    ];
+    if (regression) {
+      decisions.push({ label: "Linearidade (R² ≥ 0,999)", userChoice: regression.r2.toFixed(4), correct: regression.r2 >= 0.999, idealChoice: "≥ 0,999" });
+    }
+    if (validation) {
+      decisions.push(
+        { label: "Precisão (RSD ≤ 2%)", userChoice: `${validation.rsd}%`, correct: validation.rsd <= 2, idealChoice: "≤ 2%" },
+        { label: "Exatidão (Recuperação 98-102%)", userChoice: `${validation.meanRecovery}%`, correct: validation.meanRecovery >= 98 && validation.meanRecovery <= 102, idealChoice: "98-102%" },
+        { label: "Laudo", userChoice: validation.approved ? "APROVADO" : "REPROVADO", correct: validation.approved },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardCheck className="h-7 w-7 text-primary" /> Bancada de Controle de Qualidade</h1>
           <p className="text-sm text-muted-foreground">Curva de calibração, LOD/LOQ e validação analítica ICH Q2</p>
