@@ -475,12 +475,44 @@ export default function SalasVirtuais() {
 
             <Separator />
 
+            {/* Tool Type Selector */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div>
+                <p className="font-medium text-sm">Tipo de Ferramenta</p>
+                <p className="text-xs text-muted-foreground">
+                  {toolType === "simulator" ? "Simuladores clínicos com casos" : "Laboratórios virtuais de pesquisa"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={toolType === "simulator" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("simulator")}
+                  className="gap-1.5 h-8"
+                >
+                  <Cpu className="h-3.5 w-3.5" />
+                  Simuladores
+                </Button>
+                <Button
+                  size="sm"
+                  variant={toolType === "laboratory" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("laboratory")}
+                  className="gap-1.5 h-8"
+                >
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Laboratórios
+                </Button>
+              </div>
+            </div>
+
             {/* Mode Toggle */}
             <div className="flex items-center justify-between rounded-lg border border-border p-4">
               <div>
                 <p className="font-medium text-sm">Tipo de Atividade</p>
                 <p className="text-xs text-muted-foreground">
-                  {isExamMode ? "Atividade Simulada — múltiplos simuladores com enunciados" : "Simulação Unitária — um simulador e um caso clínico"}
+                  {isExamMode
+                    ? `Atividade Simulada — múltiplos ${toolType === "laboratory" ? "laboratórios" : "simuladores"} com enunciados`
+                    : `Atividade Unitária — ${toolType === "laboratory" ? "um laboratório" : "um simulador e um caso clínico"}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -494,7 +526,7 @@ export default function SalasVirtuais() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <Label className="text-base font-semibold">
-                  {isExamMode ? "Atividades da Prova" : "Simulador"}
+                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : "Simulador")}
                 </Label>
                 {isExamMode && (
                   <Button variant="outline" size="sm" onClick={addActivity}>
