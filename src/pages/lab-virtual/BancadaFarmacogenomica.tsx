@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const DRUGS = [
   { id: "codeina", name: "Codeína", enzyme: "CYP2D6", type: "prodrug" as const, baseParams: { ka: 1.2, ke: 0.15, vd: 200, f: 0.9 } },

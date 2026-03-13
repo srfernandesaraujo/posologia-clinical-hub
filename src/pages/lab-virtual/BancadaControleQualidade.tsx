@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const METHODS = [
   { id: "uv-vis", name: "Espectrofotometria UV-Vis", lambda: "254 nm" },

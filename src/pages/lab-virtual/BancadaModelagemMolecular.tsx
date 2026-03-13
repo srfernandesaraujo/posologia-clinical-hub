@@ -11,6 +11,7 @@ import { InSilicoPredictionPanel } from "@/components/lab-virtual/molmod/InSilic
 import { BioactivityPanel } from "@/components/lab-virtual/molmod/BioactivityPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 export default function BancadaModelagemMolecular() {
   const navigate = useNavigate();

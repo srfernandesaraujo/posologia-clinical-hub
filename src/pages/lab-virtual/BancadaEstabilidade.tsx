@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const FORMULATIONS = [
   { id: "aspirin", name: "Ácido Acetilsalicílico (comprimido)", k25: 0.0015, order: 1, ea: 85, initialConc: 100 },
