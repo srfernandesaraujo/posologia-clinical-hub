@@ -5,6 +5,7 @@ import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/D
 import { DockingADMEPanel } from "@/components/lab-virtual/DockingADMEPanel";
 import { ClinicalTrialPanel } from "@/components/lab-virtual/ClinicalTrialPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
