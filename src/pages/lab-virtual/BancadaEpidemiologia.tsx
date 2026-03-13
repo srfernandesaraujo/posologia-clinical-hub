@@ -67,6 +67,10 @@ function calcMeasures(a: number, b: number, c: number, d: number) {
 
 export default function BancadaEpidemiologia() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("epidemiologia");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1

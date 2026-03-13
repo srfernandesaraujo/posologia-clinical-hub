@@ -49,6 +49,10 @@ function calcAUC(points: { hora: number; concentracao: number }[]): number {
 
 export default function BancadaFarmacogenomica() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("farmacogenomica");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1

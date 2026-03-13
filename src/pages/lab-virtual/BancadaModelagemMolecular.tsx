@@ -15,6 +15,10 @@ import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 export default function BancadaModelagemMolecular() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("modelagem-molecular");
+  const startTimeRef = useRef(Date.now());
   const [compound, setCompound] = useState<CompoundData | null>(null);
   const [currentSmiles, setCurrentSmiles] = useState("");
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());

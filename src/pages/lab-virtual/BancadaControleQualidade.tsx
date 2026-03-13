@@ -69,6 +69,10 @@ function generateSampleReadings(trueConc: number, slope: number, intercept: numb
 
 export default function BancadaControleQualidade() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("controle-qualidade");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1

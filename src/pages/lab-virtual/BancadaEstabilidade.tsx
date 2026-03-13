@@ -48,6 +48,10 @@ type CurveResult = { conditionId: string; name: string; temp: number; data: any[
 
 export default function BancadaEstabilidade() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("estabilidade");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1

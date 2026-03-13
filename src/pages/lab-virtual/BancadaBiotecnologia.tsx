@@ -54,6 +54,10 @@ function generateExpressionCurve(gene: typeof GENES[0], vector: typeof VECTORS[0
 
 export default function BancadaBiotecnologia() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("biotecnologia");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
