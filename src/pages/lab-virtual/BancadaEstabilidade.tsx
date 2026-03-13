@@ -124,10 +124,27 @@ export default function BancadaEstabilidade() {
   if (arrhenius) { experimentSummary["Prazo de validade (25°C)"] = `${arrhenius.shelfLife25} meses`; }
   if (curves) { curves.forEach((c) => { experimentSummary[`t90 (${c.temp}°C)`] = `${c.t90} meses`; }); }
 
+
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Formulação", userChoice: form.name, correct: true },
+      { label: "Ordem cinética", userChoice: form.order === 0 ? "Ordem zero" : "Primeira ordem", correct: true },
+      { label: "Condições selecionadas", userChoice: selectedConditions.map(id => CONDITIONS.find(c => c.id === id)?.name).join("; "), correct: selectedConditions.length >= 2 },
+    ];
+    if (arrhenius) {
+      decisions.push({ label: "Prazo de validade (25°C)", userChoice: `${arrhenius.shelfLife25} meses`, correct: true });
+    }
+    if (curves) {
+      curves.forEach(c => decisions.push({ label: `t90 (${c.temp}°C)`, userChoice: `${c.t90} meses`, correct: true }));
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="h-7 w-7 text-primary" /> Bancada de Estabilidade</h1>
           <p className="text-sm text-muted-foreground">Cinética de degradação, Arrhenius e prazo de validade</p>
