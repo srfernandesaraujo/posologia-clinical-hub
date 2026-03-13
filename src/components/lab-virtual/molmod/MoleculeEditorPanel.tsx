@@ -70,35 +70,59 @@ export function MoleculeEditorPanel({
     if (!smiles) return;
 
     viewer.removeAllModels();
+    viewer.removeAllSurfaces();
 
-    // Try to load SDF from PubChem for 3D
-    const sdfUrl = `${PUBCHEM_BASE}/compound/smiles/${encodeURIComponent(smiles)}/SDF?record_type=3d`;
     let cancelled = false;
+    const encoded = encodeURIComponent(smiles);
 
-    fetch(sdfUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("no 3d");
-        return res.text();
-      })
-      .then((sdf) => {
-        if (cancelled) return;
-        viewer.addModel(sdf, "sdf");
-        viewer.setStyle({}, { stick: { radius: 0.12 }, sphere: { scale: 0.25 } });
+    // Try 3D SDF first, then 2D SDF fallback
+    const tryFetch = async () => {
+      // Attempt 1: 3D conformer
+      try {
+        const res3d = await fetch(`${PUBCHEM_BASE}/compound/smiles/${encoded}/SDF?record_type=3d`);
+        if (res3d.ok) {
+          const sdf = await res3d.text();
+          if (!cancelled) {
+            viewer.addModel(sdf, "sdf");
+            viewer.setStyle({}, { stick: { radius: 0.12 }, sphere: { scale: 0.25 } });
+            viewer.zoomTo();
+            viewer.render();
+            return;
+          }
+        }
+      } catch {}
+
+      if (cancelled) return;
+
+      // Attempt 2: 2D SDF (PubChem always has this for known compounds)
+      try {
+        const res2d = await fetch(`${PUBCHEM_BASE}/compound/smiles/${encoded}/SDF`);
+        if (res2d.ok) {
+          const sdf = await res2d.text();
+          if (!cancelled) {
+            viewer.addModel(sdf, "sdf");
+            viewer.setStyle({}, { stick: { radius: 0.12 }, sphere: { scale: 0.25 } });
+            viewer.zoomTo();
+            viewer.render();
+            return;
+          }
+        }
+      } catch {}
+
+      if (cancelled) return;
+
+      // Attempt 3: direct SMILES parsing by 3Dmol
+      try {
+        viewer.addModel(smiles, "smi");
+        viewer.setStyle({}, { stick: { radius: 0.12 } });
         viewer.zoomTo();
         viewer.render();
-      })
-      .catch(() => {
-        if (cancelled) return;
-        // Fallback: parse SMILES directly
-        try {
-          viewer.addModel(smiles, "smiles");
-          viewer.setStyle({}, { stick: { radius: 0.12 } });
-          viewer.zoomTo();
-          viewer.render();
-        } catch {
-          // silently fail
-        }
-      });
+      } catch {
+        // nothing to render
+      }
+    };
+
+    tryFetch();
 
     return () => {
       cancelled = true;
