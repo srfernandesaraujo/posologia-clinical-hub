@@ -50,6 +50,16 @@ export default function BancadaModelagemMolecular() {
     "Módulos Concluídos": `${completedModules.size}/4`,
   };
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Composto selecionado", userChoice: compound?.name || "—", correct: !!compound },
+      { label: "SMILES modificado", userChoice: currentSmiles || "—", correct: !!currentSmiles },
+      { label: "Módulos concluídos", userChoice: `${completedModules.size}/4`, correct: completedModules.size >= 3 },
+    ];
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
@@ -59,7 +69,7 @@ export default function BancadaModelagemMolecular() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            onClick={() => navigate("/laboratorio-virtual")}
+            onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
