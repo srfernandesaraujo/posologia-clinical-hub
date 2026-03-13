@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 interface AdminPromptViewerProps {
   toolSlug: string;
   toolName: string;
-  toolType: "calculator" | "simulator" | "game";
+  toolType: "calculator" | "simulator" | "game" | "laboratory";
   prompt: string;
   onSave?: (newPrompt: string) => void;
 }
