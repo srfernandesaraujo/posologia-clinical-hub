@@ -304,6 +304,7 @@ export default function SalasVirtuais() {
     setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
     setExpiresAt("");
     setIsExamMode(false);
+    setToolType("simulator");
   };
 
   const copyPin = (pin: string) => {
@@ -335,17 +336,31 @@ export default function SalasVirtuais() {
     setActivities(copy);
   };
 
-  const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
-  const getSimulatorsForCategory = (cat: string) => SIMULATOR_OPTIONS.filter(s => s.category === cat);
+  const isLabTool = (slug: string) => LAB_OPTIONS.some(l => l.slug === slug);
+  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
+  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
 
-  const getSimulatorLabel = (slug: string) =>
-    SIMULATOR_OPTIONS.find(s => s.slug === slug)?.label || slug;
+  const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
+  const getToolsForCategory = (cat: string) => activeOptions.filter(s => s.category === cat);
+
+  const getToolLabel = (slug: string) =>
+    ALL_OPTIONS.find(s => s.slug === slug)?.label || slug;
 
   const isRoomExam = (room: any) => !room.simulator_slug;
+
+  const isRoomLab = (room: any) => {
+    if (room.simulator_slug) return isLabTool(room.simulator_slug);
+    return false; // for exam rooms, check activities later
+  };
 
   // When switching modes, reset activities
   const handleModeChange = (exam: boolean) => {
     setIsExamMode(exam);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+  };
+
+  const handleToolTypeChange = (type: ToolType) => {
+    setToolType(type);
     setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   };
 
