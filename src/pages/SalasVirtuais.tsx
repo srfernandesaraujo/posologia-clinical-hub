@@ -535,7 +535,7 @@ export default function SalasVirtuais() {
                             <Select value={act.category} onValueChange={v => updateActivity(i, "category", v)}>
                               <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                               <SelectContent>
-                                {CATEGORIES.map(cat => (
+                                {activeCategories.map(cat => (
                                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                 ))}
                               </SelectContent>
