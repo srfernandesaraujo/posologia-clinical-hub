@@ -58,7 +58,10 @@ export default function BancadaFarmacogenomica() {
   // M4
   const [aucData, setAucData] = useState<{ phenotype: string; auc: number; cmax: number; clearance: number; fill: string }[] | null>(null);
 
-  const selectedDrug = DRUGS.find((d) => d.id === drug)!;
+  const [customDrug, setCustomDrug] = useState<typeof DRUGS[0] | null>(null);
+  const allDrugs = useMemo(() => [...DRUGS, ...(customDrug ? [customDrug] : [])], [customDrug]);
+
+  const selectedDrug = allDrugs.find((d) => d.id === drug) ?? DRUGS[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmDrug = () => {
