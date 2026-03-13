@@ -137,6 +137,17 @@ const benches: BenchCard[] = [
     status: "disponivel",
     color: "hsl(0 72% 51%)",
   },
+  {
+    id: "modelagem-molecular",
+    title: "Modelagem Molecular",
+    subtitle: "Modificação e Predição In Silico",
+    description:
+      "Busque compostos no PubChem, modifique estruturas com grupos funcionais, avalie Lipinski/ADMET e consulte alvos bioativos no ChEMBL.",
+    icon: <Atom className="h-8 w-8" />,
+    route: "/laboratorio-virtual/modelagem-molecular",
+    status: "disponivel",
+    color: "hsl(280 70% 55%)",
+  },
 ];
 
 export default function LaboratorioVirtual() {

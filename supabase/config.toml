@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.generate-lab-context]
 verify_jwt = false
+
+[functions.predict-admet]
+verify_jwt = false
