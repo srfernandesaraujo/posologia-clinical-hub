@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const METHODS = [
   { id: "uv-vis", name: "Espectrofotometria UV-Vis", lambda: "254 nm" },
@@ -68,6 +69,10 @@ function generateSampleReadings(trueConc: number, slope: number, intercept: numb
 
 export default function BancadaControleQualidade() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("controle-qualidade");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
@@ -149,10 +154,29 @@ export default function BancadaControleQualidade() {
     experimentSummary["Laudo"] = validation.approved ? "APROVADO" : "REPROVADO";
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
+      { label: "Método analítico", userChoice: selectedMethod.name, correct: true },
+      { label: "Analito", userChoice: selectedAnalyte.name, correct: true },
+    ];
+    if (regression) {
+      decisions.push({ label: "Linearidade (R² ≥ 0,999)", userChoice: regression.r2.toFixed(4), correct: regression.r2 >= 0.999, idealChoice: "≥ 0,999" });
+    }
+    if (validation) {
+      decisions.push(
+        { label: "Precisão (RSD ≤ 2%)", userChoice: `${validation.rsd}%`, correct: validation.rsd <= 2, idealChoice: "≤ 2%" },
+        { label: "Exatidão (Recuperação 98-102%)", userChoice: `${validation.meanRecovery}%`, correct: validation.meanRecovery >= 98 && validation.meanRecovery <= 102, idealChoice: "98-102%" },
+        { label: "Laudo", userChoice: validation.approved ? "APROVADO" : "REPROVADO", correct: validation.approved },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardCheck className="h-7 w-7 text-primary" /> Bancada de Controle de Qualidade</h1>
           <p className="text-sm text-muted-foreground">Curva de calibração, LOD/LOQ e validação analítica ICH Q2</p>
@@ -299,7 +323,7 @@ export default function BancadaControleQualidade() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Controle de Qualidade" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Controle de Qualidade" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

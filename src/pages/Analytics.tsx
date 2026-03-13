@@ -50,6 +50,18 @@ const SIMULATOR_LABELS: Record<string, string> = {
   soap: "SOAP",
   mai: "MAI",
   "cascata-prescricao": "Cascata",
+  // Laboratório Virtual
+  farmacos: "Lab: Fármacos",
+  microbiologia: "Lab: Microbiologia",
+  toxicologia: "Lab: Toxicologia",
+  farmacogenomica: "Lab: Farmacogenômica",
+  estabilidade: "Lab: Estabilidade",
+  "controle-qualidade": "Lab: Controle de Qualidade",
+  epidemiologia: "Lab: Epidemiologia",
+  biotecnologia: "Lab: Biotecnologia",
+  "simulacao-realistica": "Lab: Simulação Realística",
+  "pericia-forense": "Lab: Perícia Forense",
+  "modelagem-molecular": "Lab: Modelagem Molecular",
 };
 
 const CHART_COLORS = [

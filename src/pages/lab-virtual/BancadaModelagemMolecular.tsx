@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,14 @@ import { InSilicoPredictionPanel } from "@/components/lab-virtual/molmod/InSilic
 import { BioactivityPanel } from "@/components/lab-virtual/molmod/BioactivityPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 export default function BancadaModelagemMolecular() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("modelagem-molecular");
+  const startTimeRef = useRef(Date.now());
   const [compound, setCompound] = useState<CompoundData | null>(null);
   const [currentSmiles, setCurrentSmiles] = useState("");
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
@@ -45,6 +50,16 @@ export default function BancadaModelagemMolecular() {
     "Módulos Concluídos": `${completedModules.size}/4`,
   };
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Composto selecionado", userChoice: compound?.name || "—", correct: !!compound },
+      { label: "SMILES modificado", userChoice: currentSmiles || "—", correct: !!currentSmiles },
+      { label: "Módulos concluídos", userChoice: `${completedModules.size}/4`, correct: completedModules.size >= 3 },
+    ];
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
@@ -54,7 +69,7 @@ export default function BancadaModelagemMolecular() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            onClick={() => navigate("/laboratorio-virtual")}
+            onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -134,6 +149,9 @@ export default function BancadaModelagemMolecular() {
         benchTitle="Modelagem Molecular"
         isUnlocked={completedModules.size >= 3}
         experimentSummary={experimentSummary}
+        isVirtualRoom={isVirtualRoom}
+        onVRSubmit={handleVRSubmit}
+        vrSubmitted={vrSubmitted}
       />
     </div>
   );

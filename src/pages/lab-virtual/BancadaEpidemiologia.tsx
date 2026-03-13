@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const STUDY_TYPES = [
   { id: "coorte", name: "Coorte Prospectiva", desc: "Segue expostos e não-expostos ao longo do tempo. Calcula RR e RD." },
@@ -66,6 +67,10 @@ function calcMeasures(a: number, b: number, c: number, d: number) {
 
 export default function BancadaEpidemiologia() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("epidemiologia");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
@@ -139,10 +144,27 @@ export default function BancadaEpidemiologia() {
     experimentSummary["p-valor"] = String(measures.pValue);
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
+      { label: "Tipo de estudo", userChoice: study.name, correct: true },
+      { label: "Exposição", userChoice: exp.name, correct: true },
+      { label: "Desfecho", userChoice: out.name, correct: true },
+      { label: "Tamanho amostral", userChoice: String(sampleSize[0]), correct: sampleSize[0] >= 200 },
+    ];
+    if (measures) {
+      decisions.push(
+        { label: "Associação significativa", userChoice: measures.significant ? "Sim" : "Não", correct: true },
+        { label: "OR", userChoice: `${measures.or} (IC: ${measures.ci95Lower}–${measures.ci95Upper})`, correct: true },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="h-7 w-7 text-primary" /> Bancada de Epidemiologia</h1>
           <p className="text-sm text-muted-foreground">Estudo observacional, OR/RR e análise de associação</p>
@@ -277,7 +299,7 @@ export default function BancadaEpidemiologia() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Epidemiologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Epidemiologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

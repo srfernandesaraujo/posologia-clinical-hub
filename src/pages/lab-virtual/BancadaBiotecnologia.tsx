@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const GENES = [
   { id: "gfp", name: "GFP (Green Fluorescent Protein)", mw: 27, optimalTemp: 30, optimalIPTG: 0.5 },
@@ -53,6 +54,10 @@ function generateExpressionCurve(gene: typeof GENES[0], vector: typeof VECTORS[0
 
 export default function BancadaBiotecnologia() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("biotecnologia");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
@@ -119,10 +124,27 @@ export default function BancadaBiotecnologia() {
     experimentSummary["Fração solúvel"] = `${expressionResults.solubleYield} mg/L`;
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions = [
+      { label: "Gene", userChoice: selectedGene.name, correct: true },
+      { label: "Vetor", userChoice: selectedVector.name, correct: true },
+      { label: "Cepa", userChoice: selectedStrain.name, correct: true },
+      { label: "Temperatura", userChoice: `${temp[0]}°C`, correct: Math.abs(temp[0] - selectedGene.optimalTemp) <= 5 },
+      { label: "IPTG", userChoice: `${iptg[0]} mM`, correct: true },
+    ];
+    if (expressionResults) {
+      decisions.push(
+        { label: "Solubilidade ≥60%", userChoice: `${(expressionResults.solubility * 100).toFixed(0)}%`, correct: expressionResults.solubility >= 0.6 },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><TestTubes className="h-7 w-7 text-primary" /> Bancada de Biotecnologia</h1>
           <p className="text-sm text-muted-foreground">Clonagem, expressão proteica e otimização de produção</p>
@@ -298,7 +320,7 @@ export default function BancadaBiotecnologia() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Biotecnologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Biotecnologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

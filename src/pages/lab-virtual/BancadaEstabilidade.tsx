@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const FORMULATIONS = [
   { id: "aspirin", name: "Ácido Acetilsalicílico (comprimido)", k25: 0.0015, order: 1, ea: 85, initialConc: 100 },
@@ -47,6 +48,10 @@ type CurveResult = { conditionId: string; name: string; temp: number; data: any[
 
 export default function BancadaEstabilidade() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("estabilidade");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
@@ -119,10 +124,27 @@ export default function BancadaEstabilidade() {
   if (arrhenius) { experimentSummary["Prazo de validade (25°C)"] = `${arrhenius.shelfLife25} meses`; }
   if (curves) { curves.forEach((c) => { experimentSummary[`t90 (${c.temp}°C)`] = `${c.t90} meses`; }); }
 
+
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Formulação", userChoice: form.name, correct: true },
+      { label: "Ordem cinética", userChoice: form.order === 0 ? "Ordem zero" : "Primeira ordem", correct: true },
+      { label: "Condições selecionadas", userChoice: selectedConditions.map(id => CONDITIONS.find(c => c.id === id)?.name).join("; "), correct: selectedConditions.length >= 2 },
+    ];
+    if (arrhenius) {
+      decisions.push({ label: "Prazo de validade (25°C)", userChoice: `${arrhenius.shelfLife25} meses`, correct: true });
+    }
+    if (curves) {
+      curves.forEach(c => decisions.push({ label: `t90 (${c.temp}°C)`, userChoice: `${c.t90} meses`, correct: true }));
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="h-7 w-7 text-primary" /> Bancada de Estabilidade</h1>
           <p className="text-sm text-muted-foreground">Cinética de degradação, Arrhenius e prazo de validade</p>
@@ -256,7 +278,7 @@ export default function BancadaEstabilidade() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Estabilidade" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Estabilidade" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

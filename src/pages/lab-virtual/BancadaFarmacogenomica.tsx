@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const DRUGS = [
   { id: "codeina", name: "Codeína", enzyme: "CYP2D6", type: "prodrug" as const, baseParams: { ka: 1.2, ke: 0.15, vd: 200, f: 0.9 } },
@@ -48,6 +49,10 @@ function calcAUC(points: { hora: number; concentracao: number }[]): number {
 
 export default function BancadaFarmacogenomica() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("farmacogenomica");
+  const startTimeRef = useRef(Date.now());
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
 
   // M1
@@ -115,10 +120,24 @@ export default function BancadaFarmacogenomica() {
     aucData.forEach((a) => { experimentSummary[`AUC ${a.phenotype}`] = `${a.auc} mg·h/L`; });
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Fármaco", userChoice: selectedDrug.name, correct: true },
+      { label: "Enzima", userChoice: selectedDrug.enzyme, correct: true },
+      { label: "Tipo", userChoice: selectedDrug.type === "prodrug" ? "Pró-fármaco" : "Fármaco ativo", correct: true },
+      { label: "Dose", userChoice: `${dose[0]} mg`, correct: true },
+    ];
+    if (aucData) {
+      aucData.forEach(a => decisions.push({ label: `AUC ${a.phenotype}`, userChoice: `${a.auc} mg·h/L`, correct: true }));
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Dna className="h-7 w-7 text-primary" /> Bancada de Farmacogenômica</h1>
           <p className="text-sm text-muted-foreground">Variabilidade genética CYP450 e resposta farmacológica</p>
@@ -267,7 +286,7 @@ export default function BancadaFarmacogenomica() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );
