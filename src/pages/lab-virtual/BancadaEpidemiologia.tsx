@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Activity, Lock, CheckCircle2 } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const STUDY_TYPES = [
   { id: "coorte", name: "Coorte Prospectiva", desc: "Segue expostos e não-expostos ao longo do tempo. Calcula RR e RD." },
