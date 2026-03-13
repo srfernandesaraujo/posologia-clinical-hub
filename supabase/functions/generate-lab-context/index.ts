@@ -94,6 +94,19 @@ Proteína com MW kDa realista, temp ótima 16-42°C, IPTG 0.05-2.0 mM. Vetor com
         } } } }
       };
 
+    case "modelagem-molecular":
+      return {
+        systemPrompt: `Você é um químico medicinal. Gere um composto farmacêutico REAL para estudo de modelagem molecular.${themeHint}
+Retorne um composto existente com SMILES real, CID PubChem, propriedades moleculares e sugestões de modificações estruturais.`,
+        tool: { type: "function", function: { name: "generate_context", description: "Generate molecular modeling context", parameters: { type: "object", required: ["compound"], properties: {
+          compound: { type: "object", required: ["name", "smiles", "cid", "mw", "xLogP", "hbd", "hba", "tpsa", "formula", "suggestions"], properties: {
+            name: { type: "string" }, smiles: { type: "string" }, cid: { type: "number" }, mw: { type: "number" },
+            xLogP: { type: "number" }, hbd: { type: "number" }, hba: { type: "number" }, tpsa: { type: "number" },
+            formula: { type: "string" }, suggestions: { type: "string", description: "2-3 suggested modifications to explore" }
+          } }
+        } } } }
+      };
+
     case "pericia-forense":
       return {
         systemPrompt: `Você é perito criminal forense. Gere um CENÁRIO CRIMINAL COMPLETO.${themeHint}

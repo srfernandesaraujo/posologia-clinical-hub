@@ -12,6 +12,7 @@ import {
   TestTubes,
   Stethoscope,
   Shield,
+  Atom,
 } from "lucide-react";
 
 interface BenchCard {
@@ -135,6 +136,17 @@ const benches: BenchCard[] = [
     route: "/laboratorio-virtual/pericia-forense",
     status: "disponivel",
     color: "hsl(0 72% 51%)",
+  },
+  {
+    id: "modelagem-molecular",
+    title: "Modelagem Molecular",
+    subtitle: "Modificação e Predição In Silico",
+    description:
+      "Busque compostos no PubChem, modifique estruturas com grupos funcionais, avalie Lipinski/ADMET e consulte alvos bioativos no ChEMBL.",
+    icon: <Atom className="h-8 w-8" />,
+    route: "/laboratorio-virtual/modelagem-molecular",
+    status: "disponivel",
+    color: "hsl(280 70% 55%)",
   },
 ];
 
