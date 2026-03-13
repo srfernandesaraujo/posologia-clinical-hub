@@ -193,7 +193,7 @@ export function InSilicoPredictionPanel({ smiles, compoundName, disabled, onLipi
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">TPSA:</span>
-                <span className="font-medium">{lipinski.tpsa.toFixed(1)} Å²</span>
+                <span className="font-medium">{Number.isFinite(lipinski.tpsa) ? `${lipinski.tpsa.toFixed(1)} Å²` : "N/A"}</span>
                 <span className="text-muted-foreground ml-2">Violações:</span>
                 <Badge variant={lipinskiViolations === 0 ? "default" : lipinskiViolations <= 1 ? "secondary" : "destructive"} className="text-[10px]">
                   {lipinskiViolations}/4
