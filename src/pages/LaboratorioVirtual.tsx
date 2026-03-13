@@ -12,6 +12,7 @@ import {
   TestTubes,
   Stethoscope,
   Shield,
+  Atom,
 } from "lucide-react";
 
 interface BenchCard {
