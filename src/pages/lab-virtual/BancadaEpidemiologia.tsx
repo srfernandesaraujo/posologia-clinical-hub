@@ -161,6 +161,19 @@ export default function BancadaEpidemiologia() {
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs">{study.desc}</div>
             <Button onClick={confirmStudy} className="w-full">Confirmar Desenho</Button>
+            <AIContextGenerator
+              labType="epidemiologia"
+              onContextGenerated={(data: any) => {
+                setCustomExposure(data.exposure);
+                setCustomOutcome(data.outcome);
+                setExposure(data.exposure.id);
+                setOutcome(data.outcome.id);
+                setCompletedModules(new Set([1]));
+                setTable2x2(null);
+                setMeasures(null);
+                setForestPlot(null);
+              }}
+            />
           </CardContent>
         </Card>
 
