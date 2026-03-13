@@ -504,7 +504,7 @@ export default function SalasVirtuais() {
               </div>
               <div className="space-y-3">
                 {activities.map((act, i) => {
-                  const simulatorsInCategory = getSimulatorsForCategory(act.category);
+                  const toolsInCategory = getToolsForCategory(act.category);
                   const casesForSlug = getCasesForSlug(act.simulatorSlug);
                   return (
                     <Card key={i} className="border-dashed">
