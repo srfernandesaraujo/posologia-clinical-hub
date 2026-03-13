@@ -557,8 +557,8 @@ export default function SalasVirtuais() {
                             </div>
                           )}
 
-                          {/* Step 3: Case (only after simulator) */}
-                          {act.simulatorSlug && (
+                          {/* Step 3: Case (only for simulators, not labs) */}
+                          {act.simulatorSlug && toolType === "simulator" && (
                             <div>
                               <Label className="text-xs">Caso Clínico</Label>
                               {casesForSlug.length > 0 ? (
