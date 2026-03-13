@@ -43,6 +43,7 @@ export default function BancadaSimulacaoRealistica() {
   } = useVirtualRoomCase("simulacao-realistica");
 
   const [selectedScenario, setSelectedScenario] = useState<string>("");
+  const [customTheme, setCustomTheme] = useState("");
   const [scenario, setScenario] = useState<ScenarioData | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
