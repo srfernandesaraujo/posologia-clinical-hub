@@ -63,7 +63,7 @@ function RiskBadge({ risk }: { risk: string }) {
 }
 
 function LipinskiIndicator({ value, max, label, unit }: { value: number | null; max: number; label: string; unit: string }) {
-  if (value === null) {
+  if (value === null || !Number.isFinite(value)) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px]">?</span>
