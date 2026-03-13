@@ -144,10 +144,27 @@ export default function BancadaEpidemiologia() {
     experimentSummary["p-valor"] = String(measures.pValue);
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
+      { label: "Tipo de estudo", userChoice: study.name, correct: true },
+      { label: "Exposição", userChoice: exp.name, correct: true },
+      { label: "Desfecho", userChoice: out.name, correct: true },
+      { label: "Tamanho amostral", userChoice: String(sampleSize[0]), correct: sampleSize[0] >= 200 },
+    ];
+    if (measures) {
+      decisions.push(
+        { label: "Associação significativa", userChoice: measures.significant ? "Sim" : "Não", correct: true },
+        { label: "OR", userChoice: `${measures.or} (IC: ${measures.ci95Lower}–${measures.ci95Upper})`, correct: true },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="h-7 w-7 text-primary" /> Bancada de Epidemiologia</h1>
           <p className="text-sm text-muted-foreground">Estudo observacional, OR/RR e análise de associação</p>
