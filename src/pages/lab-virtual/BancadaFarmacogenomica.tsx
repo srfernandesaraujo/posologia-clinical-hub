@@ -120,10 +120,24 @@ export default function BancadaFarmacogenomica() {
     aucData.forEach((a) => { experimentSummary[`AUC ${a.phenotype}`] = `${a.auc} mg·h/L`; });
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+      { label: "Fármaco", userChoice: selectedDrug.name, correct: true },
+      { label: "Enzima", userChoice: selectedDrug.enzyme, correct: true },
+      { label: "Tipo", userChoice: selectedDrug.type === "prodrug" ? "Pró-fármaco" : "Fármaco ativo", correct: true },
+      { label: "Dose", userChoice: `${dose[0]} mg`, correct: true },
+    ];
+    if (aucData) {
+      aucData.forEach(a => decisions.push({ label: `AUC ${a.phenotype}`, userChoice: `${a.auc} mg·h/L`, correct: true }));
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Dna className="h-7 w-7 text-primary" /> Bancada de Farmacogenômica</h1>
           <p className="text-sm text-muted-foreground">Variabilidade genética CYP450 e resposta farmacológica</p>
