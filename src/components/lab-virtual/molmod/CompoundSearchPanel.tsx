@@ -37,7 +37,7 @@ export function CompoundSearchPanel({ onCompoundSelected, disabled }: CompoundSe
 
     try {
       // Fetch compound properties
-      const propUrl = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(query.trim())}/property/CanonicalSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON`;
+      const propUrl = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(query.trim())}/property/SMILES,ConnectivitySMILES,CanonicalSMILES,IsomericSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON`;
       const res = await fetch(propUrl);
       if (!res.ok) throw new Error("Composto não encontrado no PubChem");
 
@@ -45,10 +45,21 @@ export function CompoundSearchPanel({ onCompoundSelected, disabled }: CompoundSe
       const props = json.PropertyTable?.Properties?.[0];
       if (!props) throw new Error("Dados não disponíveis");
 
+      const resolvedSmiles = [
+        props.SMILES,
+        props.ConnectivitySMILES,
+        props.CanonicalSMILES,
+        props.IsomericSMILES,
+      ].find((value) => typeof value === "string" && value.trim().length > 0)?.trim();
+
+      if (!resolvedSmiles) {
+        throw new Error("O PubChem não retornou um SMILES válido para este composto");
+      }
+
       const compound: CompoundData = {
         cid: Number(props.CID),
         name: query.trim(),
-        smiles: props.CanonicalSMILES,
+        smiles: resolvedSmiles,
         mw: Number(props.MolecularWeight) || 0,
         xLogP: props.XLogP != null ? Number(props.XLogP) : null,
         hbd: Number(props.HBondDonorCount) || 0,
