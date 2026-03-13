@@ -54,40 +54,66 @@ export function MoleculeEditorPanel({
     setManualSmiles(smiles);
   }, [smiles]);
 
-  // 3D viewer
+  // 3D viewer — init once, update model on smiles change
   useEffect(() => {
-    if (!smiles || !containerRef.current || !window.$3Dmol) return;
+    if (!containerRef.current || !window.$3Dmol) return;
 
-    const viewer = window.$3Dmol.createViewer(containerRef.current, {
-      backgroundColor: "hsl(222, 47%, 6%)",
-    });
-    viewerRef.current = viewer;
+    // Create viewer only once
+    if (!viewerRef.current) {
+      viewerRef.current = window.$3Dmol.createViewer(containerRef.current, {
+        backgroundColor: "0x1a1a2e",
+      });
+    }
+
+    const viewer = viewerRef.current;
+
+    if (!smiles) return;
+
+    viewer.removeAllModels();
 
     // Try to load SDF from PubChem for 3D
     const sdfUrl = `${PUBCHEM_BASE}/compound/smiles/${encodeURIComponent(smiles)}/SDF?record_type=3d`;
+    let cancelled = false;
+
     fetch(sdfUrl)
       .then((res) => {
         if (!res.ok) throw new Error("no 3d");
         return res.text();
       })
       .then((sdf) => {
+        if (cancelled) return;
         viewer.addModel(sdf, "sdf");
         viewer.setStyle({}, { stick: { radius: 0.12 }, sphere: { scale: 0.25 } });
         viewer.zoomTo();
         viewer.render();
       })
       .catch(() => {
-        // Fallback: 2D only
-        viewer.addModel(smiles, "smiles");
-        viewer.setStyle({}, { stick: { radius: 0.12 } });
-        viewer.zoomTo();
-        viewer.render();
+        if (cancelled) return;
+        // Fallback: parse SMILES directly
+        try {
+          viewer.addModel(smiles, "smiles");
+          viewer.setStyle({}, { stick: { radius: 0.12 } });
+          viewer.zoomTo();
+          viewer.render();
+        } catch {
+          // silently fail
+        }
       });
 
     return () => {
-      if (viewerRef.current) viewerRef.current.clear();
+      cancelled = true;
     };
   }, [smiles]);
+
+  // Cleanup viewer on unmount
+  useEffect(() => {
+    return () => {
+      if (viewerRef.current) {
+        try { viewerRef.current.clear(); } catch {}
+        viewerRef.current = null;
+      }
+    };
+  }, []);
 
   const applyModification = (group: typeof FUNCTIONAL_GROUPS[0]) => {
     setHistory((h) => [...h, { label: group.label, smiles, timestamp: Date.now() }]);
