@@ -9,6 +9,8 @@ import { ArrowLeft, Microscope, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const BACTERIA = [
   { id: "ecoli", name: "Escherichia coli", gram: "negativo", habitat: "Trato gastrointestinal", resistance: "Bombas de efluxo, β-lactamases" },
