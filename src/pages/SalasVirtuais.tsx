@@ -626,7 +626,7 @@ export default function SalasVirtuais() {
                 {roomActivities.map((act: any, i: number) => (
                   <div key={act.id} className="flex items-center gap-2 text-sm">
                     <Badge variant="outline" className="text-xs">{i + 1}</Badge>
-                    <span>{getSimulatorLabel(act.simulator_slug)}</span>
+                    <span>{getToolLabel(act.simulator_slug)}</span>
                   </div>
                 ))}
               </div>
