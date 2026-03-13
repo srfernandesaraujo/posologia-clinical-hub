@@ -78,9 +78,14 @@ export default function BancadaEpidemiologia() {
   // M4
   const [forestPlot, setForestPlot] = useState<any[] | null>(null);
 
+  const [customExposure, setCustomExposure] = useState<typeof EXPOSURES[0] | null>(null);
+  const [customOutcome, setCustomOutcome] = useState<typeof OUTCOMES[0] | null>(null);
+  const allExposures = useMemo(() => [...EXPOSURES, ...(customExposure ? [customExposure] : [])], [customExposure]);
+  const allOutcomes = useMemo(() => [...OUTCOMES, ...(customOutcome ? [customOutcome] : [])], [customOutcome]);
+
   const study = STUDY_TYPES.find((s) => s.id === studyType)!;
-  const exp = EXPOSURES.find((e) => e.id === exposure)!;
-  const out = OUTCOMES.find((o) => o.id === outcome)!;
+  const exp = allExposures.find((e) => e.id === exposure) ?? EXPOSURES[0];
+  const out = allOutcomes.find((o) => o.id === outcome) ?? OUTCOMES[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmStudy = () => {
