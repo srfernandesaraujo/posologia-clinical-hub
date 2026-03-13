@@ -65,9 +65,16 @@ export default function BancadaBiotecnologia() {
   // M4
   const [expressionCurve, setExpressionCurve] = useState<any[] | null>(null);
 
-  const selectedGene = GENES.find((g) => g.id === gene)!;
-  const selectedVector = VECTORS.find((v) => v.id === vector)!;
-  const selectedStrain = STRAINS.find((s) => s.id === strain)!;
+  const [customGene, setCustomGene] = useState<typeof GENES[0] | null>(null);
+  const [customVector, setCustomVector] = useState<typeof VECTORS[0] | null>(null);
+  const [customStrain, setCustomStrain] = useState<typeof STRAINS[0] | null>(null);
+  const allGenes = useMemo(() => [...GENES, ...(customGene ? [customGene] : [])], [customGene]);
+  const allVectors = useMemo(() => [...VECTORS, ...(customVector ? [customVector] : [])], [customVector]);
+  const allStrains = useMemo(() => [...STRAINS, ...(customStrain ? [customStrain] : [])], [customStrain]);
+
+  const selectedGene = allGenes.find((g) => g.id === gene) ?? GENES[0];
+  const selectedVector = allVectors.find((v) => v.id === vector) ?? VECTORS[0];
+  const selectedStrain = allStrains.find((s) => s.id === strain) ?? STRAINS[0];
   const geneInsert = Math.round(selectedGene.mw * 30 * 3);
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
