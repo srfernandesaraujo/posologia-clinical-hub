@@ -106,12 +106,24 @@ export function InSilicoPredictionPanel({ smiles, compoundName, disabled, onLipi
       const json = await res.json();
       const p = json.PropertyTable?.Properties?.[0];
       if (!p) throw new Error("No properties");
+
+      const mw = Number(p.MolecularWeight);
+      const hbd = Number(p.HBondDonorCount);
+      const hba = Number(p.HBondAcceptorCount);
+      const tpsa = Number(p.TPSA);
+      const logPValue = p.XLogP == null ? null : Number(p.XLogP);
+      const logP = logPValue !== null && Number.isFinite(logPValue) ? logPValue : null;
+
+      if (![mw, hbd, hba, tpsa].every((value) => Number.isFinite(value))) {
+        throw new Error("PubChem returned invalid numeric properties");
+      }
+
       const data: LipinskiData = {
-        mw: p.MolecularWeight,
-        logP: p.XLogP ?? null,
-        hbd: p.HBondDonorCount,
-        hba: p.HBondAcceptorCount,
-        tpsa: p.TPSA,
+        mw,
+        logP,
+        hbd,
+        hba,
+        tpsa,
       };
       setLipinski(data);
       onLipinskiCalculated?.(data);
