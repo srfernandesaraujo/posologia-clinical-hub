@@ -160,6 +160,7 @@ export default function SalasVirtuais() {
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
+  const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
