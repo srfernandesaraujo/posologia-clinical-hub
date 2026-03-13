@@ -46,15 +46,15 @@ export function CompoundSearchPanel({ onCompoundSelected, disabled }: CompoundSe
       if (!props) throw new Error("Dados não disponíveis");
 
       const compound: CompoundData = {
-        cid: props.CID,
+        cid: Number(props.CID),
         name: query.trim(),
         smiles: props.CanonicalSMILES,
-        mw: props.MolecularWeight,
-        xLogP: props.XLogP ?? null,
-        hbd: props.HBondDonorCount,
-        hba: props.HBondAcceptorCount,
-        tpsa: props.TPSA,
-        formula: props.MolecularFormula,
+        mw: Number(props.MolecularWeight) || 0,
+        xLogP: props.XLogP != null ? Number(props.XLogP) : null,
+        hbd: Number(props.HBondDonorCount) || 0,
+        hba: Number(props.HBondAcceptorCount) || 0,
+        tpsa: Number(props.TPSA) || 0,
+        formula: props.MolecularFormula || "",
       };
 
       setResult(compound);
