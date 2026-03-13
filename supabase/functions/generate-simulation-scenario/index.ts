@@ -96,7 +96,7 @@ O cenário deve incluir um paciente completo com dados demográficos, sinais vit
                             additionalProperties: { type: "number" },
                           },
                         },
-                        required: ["id", "label", "description", "isCorrect", "feedback"],
+                        required: ["id", "label", "description", "isCorrect", "feedback", "vitalEffects"],
                       },
                     },
                   },
