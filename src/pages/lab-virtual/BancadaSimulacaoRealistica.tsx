@@ -57,7 +57,7 @@ export default function BancadaSimulacaoRealistica() {
   const startTimeRef = useRef(Date.now());
 
   // ─── Load scenario via AI ─────────────────────────────────
-  const loadScenario = async (scenarioId: string) => {
+  const loadScenario = async (scenarioId?: string) => {
     setLoading(true);
     setDecisions([]);
     setCurrentStage(0);
@@ -66,11 +66,11 @@ export default function BancadaSimulacaoRealistica() {
     setVitalsHistory([]);
 
     try {
-      const chosen = NATIVE_SCENARIOS.find(s => s.id === scenarioId);
+      const chosen = scenarioId ? NATIVE_SCENARIOS.find(s => s.id === scenarioId) : null;
       const { data, error } = await supabase.functions.invoke("generate-simulation-scenario", {
         body: {
-          scenarioId,
-          title: chosen?.title ?? scenarioId,
+          scenarioId: scenarioId || "custom-theme",
+          title: chosen?.title ?? (customTheme.trim() || "Cenário Personalizado"),
           specialty: chosen?.specialty ?? "Geral",
           difficulty: chosen?.difficulty ?? "Médio",
         },
