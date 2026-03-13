@@ -11,13 +11,34 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
 
-const SIMULATOR_LABELS: Record<string, string> = {
+const LAB_SLUGS = new Set([
+  "farmacos", "microbiologia", "toxicologia", "farmacogenomica", "estabilidade",
+  "controle-qualidade", "epidemiologia", "biotecnologia", "simulacao-realistica",
+  "pericia-forense", "modelagem-molecular",
+]);
+
+const TOOL_LABELS: Record<string, string> = {
   prm: "PRM – Problemas Relacionados a Medicamentos",
   antimicrobianos: "Antimicrobianos / Stewardship",
   tdm: "TDM – Monitoramento Terapêutico",
   acompanhamento: "Acompanhamento Farmacoterapêutico",
   insulina: "Dose de Insulina",
+  farmacos: "Lab: Desenvolvimento de Fármacos",
+  microbiologia: "Lab: Microbiologia",
+  toxicologia: "Lab: Toxicologia",
+  farmacogenomica: "Lab: Farmacogenômica",
+  estabilidade: "Lab: Estabilidade",
+  "controle-qualidade": "Lab: Controle de Qualidade",
+  epidemiologia: "Lab: Epidemiologia",
+  biotecnologia: "Lab: Biotecnologia",
+  "simulacao-realistica": "Lab: Simulação Realística",
+  "pericia-forense": "Lab: Perícia Forense",
+  "modelagem-molecular": "Lab: Modelagem Molecular",
 };
+
+function getRouteForSlug(slug: string): string {
+  return LAB_SLUGS.has(slug) ? `/sala/laboratorio/${slug}` : `/sala/simulador/${slug}`;
+}
 
 export default function SalaVirtualAluno() {
   const [searchParams] = useSearchParams();
@@ -146,7 +167,6 @@ export default function SalaVirtualAluno() {
 
   const goToSimulator = () => {
     if (isLegacy) {
-      // Legacy single-simulator mode
       sessionStorage.setItem("virtualRoom", JSON.stringify({
         roomId: room.id,
         participantId,
@@ -154,9 +174,8 @@ export default function SalaVirtualAluno() {
         simulatorSlug: room.simulator_slug,
         participantName,
       }));
-      navigate(`/sala/simulador/${room.simulator_slug}`);
+      navigate(getRouteForSlug(room.simulator_slug));
     } else {
-      // Exam mode: start first activity
       startActivity(0);
     }
   };
@@ -171,7 +190,6 @@ export default function SalaVirtualAluno() {
       caseId: act.case_id,
       simulatorSlug: act.simulator_slug,
       participantName,
-      // Exam context
       activityId: act.id,
       activityIndex: index,
       totalActivities: activities.length,
@@ -182,7 +200,7 @@ export default function SalaVirtualAluno() {
         position: a.position,
       })),
     }));
-    navigate(`/sala/simulador/${act.simulator_slug}`);
+    navigate(getRouteForSlug(act.simulator_slug));
   };
 
   if (step === "pin") {
@@ -294,7 +312,7 @@ export default function SalaVirtualAluno() {
               {activities.map((act: any, i: number) => (
                 <div key={act.id} className="flex items-center gap-2 text-sm">
                   <Badge variant="outline" className="text-xs min-w-[24px] justify-center">{i + 1}</Badge>
-                  <span>{SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                  <span>{TOOL_LABELS[act.simulator_slug] || act.simulator_slug}</span>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground mt-2">

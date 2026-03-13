@@ -278,6 +278,18 @@ const App = () => (
               <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
               <Route path="/sala/simulador/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
+              {/* Lab routes for virtual rooms */}
+              <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
+              <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
+              <Route path="/sala/laboratorio/toxicologia" element={<BancadaToxicologia />} />
+              <Route path="/sala/laboratorio/farmacogenomica" element={<BancadaFarmacogenomica />} />
+              <Route path="/sala/laboratorio/estabilidade" element={<BancadaEstabilidade />} />
+              <Route path="/sala/laboratorio/controle-qualidade" element={<BancadaControleQualidade />} />
+              <Route path="/sala/laboratorio/epidemiologia" element={<BancadaEpidemiologia />} />
+              <Route path="/sala/laboratorio/biotecnologia" element={<BancadaBiotecnologia />} />
+              <Route path="/sala/laboratorio/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
+              <Route path="/sala/laboratorio/pericia-forense" element={<BancadaPericiaForense />} />
+              <Route path="/sala/laboratorio/modelagem-molecular" element={<BancadaModelagemMolecular />} />
             </Route>
 
             {/* Authenticated routes */}

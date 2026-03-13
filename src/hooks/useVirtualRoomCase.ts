@@ -91,6 +91,12 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     }
   };
 
+  const LAB_SLUGS_SET = new Set([
+    "farmacos", "microbiologia", "toxicologia", "farmacogenomica", "estabilidade",
+    "controle-qualidade", "epidemiologia", "biotecnologia", "simulacao-realistica",
+    "pericia-forense", "modelagem-molecular",
+  ]);
+
   const proceedToNext = useCallback(() => {
     const ctx = roomCtxRef.current;
     if (!ctx) return;
@@ -105,7 +111,10 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         activityId: nextAct.id,
         activityIndex: nextIndex,
       }));
-      navigate(`/sala/simulador/${nextAct.simulatorSlug}`);
+      const route = LAB_SLUGS_SET.has(nextAct.simulatorSlug)
+        ? `/sala/laboratorio/${nextAct.simulatorSlug}`
+        : `/sala/simulador/${nextAct.simulatorSlug}`;
+      navigate(route);
     } else {
       sessionStorage.removeItem("virtualRoom");
       navigate("/");

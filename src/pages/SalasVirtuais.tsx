@@ -13,17 +13,19 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
-interface SimulatorOption {
+interface ToolOption {
   slug: string;
   label: string;
   category: string;
 }
 
-const SIMULATOR_OPTIONS: SimulatorOption[] = [
+type ToolType = "simulator" | "laboratory";
+
+const SIMULATOR_OPTIONS: ToolOption[] = [
   // Farmácia Clínica
   { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos", category: "Farmácia Clínica" },
   { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Farmácia Clínica" },
@@ -122,7 +124,23 @@ const SIMULATOR_OPTIONS: SimulatorOption[] = [
   { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil", category: "Nutrição" },
 ];
 
-const CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+const LAB_OPTIONS: ToolOption[] = [
+  { slug: "farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
+  { slug: "microbiologia", label: "Microbiologia", category: "Laboratório Virtual" },
+  { slug: "toxicologia", label: "Toxicologia", category: "Laboratório Virtual" },
+  { slug: "farmacogenomica", label: "Farmacogenômica", category: "Laboratório Virtual" },
+  { slug: "estabilidade", label: "Estabilidade", category: "Laboratório Virtual" },
+  { slug: "controle-qualidade", label: "Controle de Qualidade", category: "Laboratório Virtual" },
+  { slug: "epidemiologia", label: "Epidemiologia", category: "Laboratório Virtual" },
+  { slug: "biotecnologia", label: "Biotecnologia", category: "Laboratório Virtual" },
+  { slug: "simulacao-realistica", label: "Simulação Realística", category: "Laboratório Virtual" },
+  { slug: "pericia-forense", label: "Perícia Forense", category: "Laboratório Virtual" },
+  { slug: "modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
+];
+
+const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS];
+const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+const LAB_CATEGORIES = [...new Set(LAB_OPTIONS.map(s => s.category))];
 
 interface ActivityItem {
   category: string;
@@ -142,6 +160,7 @@ export default function SalasVirtuais() {
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
+  const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
@@ -285,6 +304,7 @@ export default function SalasVirtuais() {
     setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
     setExpiresAt("");
     setIsExamMode(false);
+    setToolType("simulator");
   };
 
   const copyPin = (pin: string) => {
@@ -316,17 +336,31 @@ export default function SalasVirtuais() {
     setActivities(copy);
   };
 
-  const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
-  const getSimulatorsForCategory = (cat: string) => SIMULATOR_OPTIONS.filter(s => s.category === cat);
+  const isLabTool = (slug: string) => LAB_OPTIONS.some(l => l.slug === slug);
+  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
+  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
 
-  const getSimulatorLabel = (slug: string) =>
-    SIMULATOR_OPTIONS.find(s => s.slug === slug)?.label || slug;
+  const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
+  const getToolsForCategory = (cat: string) => activeOptions.filter(s => s.category === cat);
+
+  const getToolLabel = (slug: string) =>
+    ALL_OPTIONS.find(s => s.slug === slug)?.label || slug;
 
   const isRoomExam = (room: any) => !room.simulator_slug;
+
+  const isRoomLab = (room: any) => {
+    if (room.simulator_slug) return isLabTool(room.simulator_slug);
+    return false; // for exam rooms, check activities later
+  };
 
   // When switching modes, reset activities
   const handleModeChange = (exam: boolean) => {
     setIsExamMode(exam);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+  };
+
+  const handleToolTypeChange = (type: ToolType) => {
+    setToolType(type);
     setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   };
 
@@ -402,12 +436,16 @@ export default function SalasVirtuais() {
                   </Button>
                 </div>
                 {room.simulator_slug ? (
-                  <p className="text-sm text-muted-foreground">
-                    Simulador: {getSimulatorLabel(room.simulator_slug)}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    {isLabTool(room.simulator_slug) ? (
+                      <><FlaskConical className="h-3 w-3" /> Lab: {getToolLabel(room.simulator_slug)}</>
+                    ) : (
+                      <>Simulador: {getToolLabel(room.simulator_slug)}</>
+                    )}
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Prova com múltiplos simuladores
+                    Prova com múltiplas atividades
                   </p>
                 )}
                 {room.expires_at && (
@@ -437,12 +475,44 @@ export default function SalasVirtuais() {
 
             <Separator />
 
+            {/* Tool Type Selector */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div>
+                <p className="font-medium text-sm">Tipo de Ferramenta</p>
+                <p className="text-xs text-muted-foreground">
+                  {toolType === "simulator" ? "Simuladores clínicos com casos" : "Laboratórios virtuais de pesquisa"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={toolType === "simulator" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("simulator")}
+                  className="gap-1.5 h-8"
+                >
+                  <Cpu className="h-3.5 w-3.5" />
+                  Simuladores
+                </Button>
+                <Button
+                  size="sm"
+                  variant={toolType === "laboratory" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("laboratory")}
+                  className="gap-1.5 h-8"
+                >
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Laboratórios
+                </Button>
+              </div>
+            </div>
+
             {/* Mode Toggle */}
             <div className="flex items-center justify-between rounded-lg border border-border p-4">
               <div>
                 <p className="font-medium text-sm">Tipo de Atividade</p>
                 <p className="text-xs text-muted-foreground">
-                  {isExamMode ? "Atividade Simulada — múltiplos simuladores com enunciados" : "Simulação Unitária — um simulador e um caso clínico"}
+                  {isExamMode
+                    ? `Atividade Simulada — múltiplos ${toolType === "laboratory" ? "laboratórios" : "simuladores"} com enunciados`
+                    : `Atividade Unitária — ${toolType === "laboratory" ? "um laboratório" : "um simulador e um caso clínico"}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -456,7 +526,7 @@ export default function SalasVirtuais() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <Label className="text-base font-semibold">
-                  {isExamMode ? "Atividades da Prova" : "Simulador"}
+                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : "Simulador")}
                 </Label>
                 {isExamMode && (
                   <Button variant="outline" size="sm" onClick={addActivity}>
@@ -466,7 +536,7 @@ export default function SalasVirtuais() {
               </div>
               <div className="space-y-3">
                 {activities.map((act, i) => {
-                  const simulatorsInCategory = getSimulatorsForCategory(act.category);
+                  const toolsInCategory = getToolsForCategory(act.category);
                   const casesForSlug = getCasesForSlug(act.simulatorSlug);
                   return (
                     <Card key={i} className="border-dashed">
@@ -497,21 +567,21 @@ export default function SalasVirtuais() {
                             <Select value={act.category} onValueChange={v => updateActivity(i, "category", v)}>
                               <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                               <SelectContent>
-                                {CATEGORIES.map(cat => (
+                                {activeCategories.map(cat => (
                                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </div>
 
-                          {/* Step 2: Simulator (only after category) */}
+                          {/* Step 2: Tool (only after category) */}
                           {act.category && (
                             <div>
-                              <Label className="text-xs">Simulador</Label>
+                              <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
                               <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
-                                <SelectTrigger><SelectValue placeholder="Selecione o simulador" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : "Selecione o simulador"} /></SelectTrigger>
                                 <SelectContent>
-                                  {simulatorsInCategory.map(s => (
+                                  {toolsInCategory.map(s => (
                                     <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -519,8 +589,8 @@ export default function SalasVirtuais() {
                             </div>
                           )}
 
-                          {/* Step 3: Case (only after simulator) */}
-                          {act.simulatorSlug && (
+                          {/* Step 3: Case (only for simulators, not labs) */}
+                          {act.simulatorSlug && toolType === "simulator" && (
                             <div>
                               <Label className="text-xs">Caso Clínico</Label>
                               {casesForSlug.length > 0 ? (
@@ -588,7 +658,7 @@ export default function SalasVirtuais() {
                 {roomActivities.map((act: any, i: number) => (
                   <div key={act.id} className="flex items-center gap-2 text-sm">
                     <Badge variant="outline" className="text-xs">{i + 1}</Badge>
-                    <span>{getSimulatorLabel(act.simulator_slug)}</span>
+                    <span>{getToolLabel(act.simulator_slug)}</span>
                   </div>
                 ))}
               </div>
@@ -635,7 +705,7 @@ export default function SalasVirtuais() {
                             {pSubmissions.map((s: any) => {
                               const activity = roomActivities.find((a: any) => a.id === s.activity_id);
                               const actLabel = activity
-                                ? `${getSimulatorLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
+                                ? `${getToolLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
                                 : `Etapa ${s.step_index + 1}`;
                               return (
                                 <div key={s.id} className="flex items-center justify-between text-sm">
