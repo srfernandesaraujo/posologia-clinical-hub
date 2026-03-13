@@ -82,7 +82,8 @@ export default function BancadaControleQualidade() {
   // M4
   const [validation, setValidation] = useState<{ meanConc: number; rsd: number; meanRecovery: number; approved: boolean } | null>(null);
 
-  const selectedAnalyte = ANALYTES.find((a) => a.id === analyte)!;
+  const allAnalytes = useMemo(() => [...ANALYTES, ...(customAnalyte ? [customAnalyte] : [])], [customAnalyte]);
+  const selectedAnalyte = allAnalytes.find((a) => a.id === analyte)!;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
