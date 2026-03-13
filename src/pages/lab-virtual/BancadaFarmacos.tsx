@@ -59,6 +59,7 @@ export default function BancadaFarmacos() {
             prompt={LAB_SYSTEM_PROMPTS.farmacos.prompt}
           />
         </div>
+      </div>
 
       {/* AI Context Generator */}
       <AIContextGenerator

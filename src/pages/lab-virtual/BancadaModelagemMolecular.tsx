@@ -81,6 +81,7 @@ export default function BancadaModelagemMolecular() {
             prompt={LAB_SYSTEM_PROMPTS["modelagem-molecular"].prompt}
           />
         </div>
+      </div>
 
       {/* AI Context Generator */}
       <AIContextGenerator
