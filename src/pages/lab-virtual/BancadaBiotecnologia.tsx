@@ -124,10 +124,27 @@ export default function BancadaBiotecnologia() {
     experimentSummary["Fração solúvel"] = `${expressionResults.solubleYield} mg/L`;
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions = [
+      { label: "Gene", userChoice: selectedGene.name, correct: true },
+      { label: "Vetor", userChoice: selectedVector.name, correct: true },
+      { label: "Cepa", userChoice: selectedStrain.name, correct: true },
+      { label: "Temperatura", userChoice: `${temp[0]}°C`, correct: Math.abs(temp[0] - selectedGene.optimalTemp) <= 5 },
+      { label: "IPTG", userChoice: `${iptg[0]} mM`, correct: true },
+    ];
+    if (expressionResults) {
+      decisions.push(
+        { label: "Solubilidade ≥60%", userChoice: `${(expressionResults.solubility * 100).toFixed(0)}%`, correct: expressionResults.solubility >= 0.6 },
+      );
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><TestTubes className="h-7 w-7 text-primary" /> Bancada de Biotecnologia</h1>
           <p className="text-sm text-muted-foreground">Clonagem, expressão proteica e otimização de produção</p>
