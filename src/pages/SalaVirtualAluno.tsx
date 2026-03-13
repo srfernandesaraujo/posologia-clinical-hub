@@ -312,7 +312,7 @@ export default function SalaVirtualAluno() {
               {activities.map((act: any, i: number) => (
                 <div key={act.id} className="flex items-center gap-2 text-sm">
                   <Badge variant="outline" className="text-xs min-w-[24px] justify-center">{i + 1}</Badge>
-                  <span>{SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                  <span>{TOOL_LABELS[act.simulator_slug] || act.simulator_slug}</span>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground mt-2">
