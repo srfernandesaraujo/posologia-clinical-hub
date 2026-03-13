@@ -58,7 +58,10 @@ export default function BancadaEstabilidade() {
   // M4
   const [arrhenius, setArrhenius] = useState<{ data: any[]; shelfLife25: number } | null>(null);
 
-  const form = FORMULATIONS.find((f) => f.id === formulation)!;
+  const [customFormulation, setCustomFormulation] = useState<typeof FORMULATIONS[0] | null>(null);
+  const allFormulations = useMemo(() => [...FORMULATIONS, ...(customFormulation ? [customFormulation] : [])], [customFormulation]);
+
+  const form = allFormulations.find((f) => f.id === formulation) ?? FORMULATIONS[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmFormulation = () => {
