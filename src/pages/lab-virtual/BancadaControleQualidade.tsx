@@ -157,6 +157,12 @@ export default function BancadaControleQualidade() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardCheck className="h-7 w-7 text-primary" /> Bancada de Controle de Qualidade</h1>
           <p className="text-sm text-muted-foreground">Curva de calibração, LOD/LOQ e validação analítica ICH Q2</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS["controle-qualidade"].slug}
+          toolName={LAB_SYSTEM_PROMPTS["controle-qualidade"].name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS["controle-qualidade"].prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

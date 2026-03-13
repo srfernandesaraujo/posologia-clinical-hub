@@ -147,6 +147,12 @@ export default function BancadaEpidemiologia() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="h-7 w-7 text-primary" /> Bancada de Epidemiologia</h1>
           <p className="text-sm text-muted-foreground">Estudo observacional, OR/RR e análise de associação</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.epidemiologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.epidemiologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.epidemiologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

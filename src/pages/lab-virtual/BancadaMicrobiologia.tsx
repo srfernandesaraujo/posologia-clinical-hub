@@ -184,6 +184,12 @@ export default function BancadaMicrobiologia() {
           </h1>
           <p className="text-sm text-muted-foreground">Antibiograma, curvas de crescimento e classificação S/I/R</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.microbiologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.microbiologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.microbiologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

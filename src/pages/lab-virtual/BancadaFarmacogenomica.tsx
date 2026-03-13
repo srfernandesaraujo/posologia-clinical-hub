@@ -123,6 +123,12 @@ export default function BancadaFarmacogenomica() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Dna className="h-7 w-7 text-primary" /> Bancada de Farmacogenômica</h1>
           <p className="text-sm text-muted-foreground">Variabilidade genética CYP450 e resposta farmacológica</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.farmacogenomica.slug}
+          toolName={LAB_SYSTEM_PROMPTS.farmacogenomica.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.farmacogenomica.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -252,6 +252,12 @@ export default function BancadaSimulacaoRealistica() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Tomada de decisão clínica ramificada com paciente virtual</p>
           </div>
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["simulacao-realistica"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["simulacao-realistica"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["simulacao-realistica"].prompt}
+          />
         </div>
 
         <Card className="max-w-xl mx-auto">

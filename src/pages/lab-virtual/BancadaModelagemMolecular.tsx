@@ -68,12 +68,19 @@ export default function BancadaModelagemMolecular() {
             </p>
           </div>
         </div>
-        {compound && (
-          <Badge variant="outline" className="text-xs">
-            Composto: {compound.name} (CID {compound.cid})
-          </Badge>
-        )}
-      </div>
+        <div className="flex items-center gap-2">
+          {compound && (
+            <Badge variant="outline" className="text-xs">
+              Composto: {compound.name} (CID {compound.cid})
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["modelagem-molecular"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["modelagem-molecular"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["modelagem-molecular"].prompt}
+          />
+        </div>
 
       {/* AI Context Generator */}
       <AIContextGenerator

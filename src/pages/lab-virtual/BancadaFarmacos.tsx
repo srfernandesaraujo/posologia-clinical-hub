@@ -46,12 +46,19 @@ export default function BancadaFarmacos() {
             </p>
           </div>
         </div>
-        {selectedTarget && (
-          <Badge variant="outline" className="text-xs">
-            Alvo: {selectedTarget.name} ({selectedTarget.id})
-          </Badge>
-        )}
-      </div>
+        <div className="flex items-center gap-2">
+          {selectedTarget && (
+            <Badge variant="outline" className="text-xs">
+              Alvo: {selectedTarget.name} ({selectedTarget.id})
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS.farmacos.slug}
+            toolName={LAB_SYSTEM_PROMPTS.farmacos.name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS.farmacos.prompt}
+          />
+        </div>
 
       {/* AI Context Generator */}
       <AIContextGenerator

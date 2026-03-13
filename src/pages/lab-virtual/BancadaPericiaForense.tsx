@@ -100,6 +100,12 @@ export default function BancadaPericiaForense() {
           <p className="text-xs text-muted-foreground">3 laboratórios interligados para solucionar um caso criminal</p>
         </div>
         {isVirtualRoom && <Badge variant="outline" className="ml-auto">Sala Virtual</Badge>}
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS["pericia-forense"].slug}
+          toolName={LAB_SYSTEM_PROMPTS["pericia-forense"].name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS["pericia-forense"].prompt}
+        />
       </div>
 
       {/* Progress bar */}

@@ -123,6 +123,12 @@ export default function BancadaToxicologia() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Skull className="h-7 w-7 text-primary" /> Bancada de Toxicologia</h1>
           <p className="text-sm text-muted-foreground">Curvas dose-resposta, LD50/ED50 e índice terapêutico</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.toxicologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.toxicologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.toxicologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
