@@ -167,7 +167,6 @@ export default function SalaVirtualAluno() {
 
   const goToSimulator = () => {
     if (isLegacy) {
-      // Legacy single-simulator mode
       sessionStorage.setItem("virtualRoom", JSON.stringify({
         roomId: room.id,
         participantId,
@@ -175,9 +174,8 @@ export default function SalaVirtualAluno() {
         simulatorSlug: room.simulator_slug,
         participantName,
       }));
-      navigate(`/sala/simulador/${room.simulator_slug}`);
+      navigate(getRouteForSlug(room.simulator_slug));
     } else {
-      // Exam mode: start first activity
       startActivity(0);
     }
   };
@@ -192,7 +190,6 @@ export default function SalaVirtualAluno() {
       caseId: act.case_id,
       simulatorSlug: act.simulator_slug,
       participantName,
-      // Exam context
       activityId: act.id,
       activityIndex: index,
       totalActivities: activities.length,
@@ -203,7 +200,7 @@ export default function SalaVirtualAluno() {
         position: a.position,
       })),
     }));
-    navigate(`/sala/simulador/${act.simulator_slug}`);
+    navigate(getRouteForSlug(act.simulator_slug));
   };
 
   if (step === "pin") {
