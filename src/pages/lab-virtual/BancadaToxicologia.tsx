@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const SUBSTANCES = [
   { id: "paracetamol", name: "Paracetamol", hillN: 3.5, ld50: 2000, ed50: 15, unit: "mg/kg", mechanism: "Hepatotoxicidade por NAPQI (metabólito reativo via CYP2E1)", clinical: "Analgésico/antipirético de venda livre" },
@@ -42,18 +43,17 @@ function classifyToxicity(ld50: number) {
 
 export default function BancadaToxicologia() {
   const navigate = useNavigate();
-  const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("toxicologia");
+  const startTimeRef = useRef(Date.now());
 
-  // M1
+  const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
   const [substance, setSubstance] = useState("paracetamol");
-  // M2
   const [nPoints, setNPoints] = useState([20]);
   const [animalModel, setAnimalModel] = useState("rato");
-  // M3
   const [doseResponse, setDoseResponse] = useState<any[] | null>(null);
-  // M4
   const [toxParams, setToxParams] = useState<{ ld50: number; ed50: number; ti: number; toxClass: ReturnType<typeof classifyToxicity> } | null>(null);
-
   const [customSubstance, setCustomSubstance] = useState<typeof SUBSTANCES[0] | null>(null);
   const allSubstances = useMemo(() => [...SUBSTANCES, ...(customSubstance ? [customSubstance] : [])], [customSubstance]);
 
@@ -62,11 +62,7 @@ export default function BancadaToxicologia() {
 
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
-  const confirmSubstance = () => {
-    setCompletedModules(new Set([1]));
-    setDoseResponse(null);
-    setToxParams(null);
-  };
+  const confirmSubstance = () => { setCompletedModules(new Set([1])); setDoseResponse(null); setToxParams(null); };
 
   const administerDoses = () => {
     const adjustedLD50 = sub.ld50 * model.factor;
@@ -75,15 +71,9 @@ export default function BancadaToxicologia() {
     const data = [];
     for (let i = 0; i <= nPoints[0]; i++) {
       const dose = (maxDose / nPoints[0]) * i;
-      data.push({
-        dose: parseFloat(dose.toFixed(2)),
-        efeito: parseFloat(hillEquation(dose, adjustedED50, sub.hillN).toFixed(1)),
-        mortalidade: parseFloat(hillEquation(dose, adjustedLD50, sub.hillN).toFixed(1)),
-      });
+      data.push({ dose: parseFloat(dose.toFixed(2)), efeito: parseFloat(hillEquation(dose, adjustedED50, sub.hillN).toFixed(1)), mortalidade: parseFloat(hillEquation(dose, adjustedLD50, sub.hillN).toFixed(1)) });
     }
-    setDoseResponse(data);
-    setToxParams(null);
-    completeModule(2);
+    setDoseResponse(data); setToxParams(null); completeModule(2);
   };
 
   const calcParams = () => {
@@ -96,17 +86,13 @@ export default function BancadaToxicologia() {
 
   const LockedOverlay = ({ req }: { req: number }) => (
     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-lg">
-      <Lock className="h-6 w-6 text-muted-foreground" />
-      <p className="text-xs text-muted-foreground">Complete o módulo {req} para desbloquear</p>
+      <Lock className="h-6 w-6 text-muted-foreground" /><p className="text-xs text-muted-foreground">Complete o módulo {req} para desbloquear</p>
     </div>
   );
-
   const ModuleBadge = ({ n }: { n: number }) => completedModules.has(n) ? <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" /> : null;
 
   const experimentSummary: Record<string, string> = {
-    Substância: sub.name,
-    Modelo: model.name,
-    "Nº de doses": String(nPoints[0]),
+    Substância: sub.name, Modelo: model.name, "Nº de doses": String(nPoints[0]),
   };
   if (toxParams) {
     experimentSummary["LD50"] = `${toxParams.ld50} ${sub.unit}`;
@@ -115,20 +101,33 @@ export default function BancadaToxicologia() {
     experimentSummary["Classificação"] = `${toxParams.toxClass.category} (Classe ${toxParams.toxClass.class})`;
   }
 
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    const decisions = [
+      { label: "Substância", userChoice: sub.name, correct: true },
+      { label: "Modelo animal", userChoice: model.name, correct: true },
+      { label: "Nº de doses", userChoice: String(nPoints[0]), correct: nPoints[0] >= 15 },
+    ];
+    if (toxParams) {
+      decisions.push(
+        { label: "LD50", userChoice: `${toxParams.ld50} ${sub.unit}`, correct: true },
+        { label: "ED50", userChoice: `${toxParams.ed50} ${sub.unit}`, correct: true },
+        { label: "Índice Terapêutico", userChoice: toxParams.ti.toFixed(1), correct: toxParams.ti >= 2 },
+        { label: "Classificação toxicológica", userChoice: `${toxParams.toxClass.category} (Classe ${toxParams.toxClass.class})`, correct: true },
+      );
+    }
+    const score = toxParams ? Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100) : 0;
+    submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Skull className="h-7 w-7 text-primary" /> Bancada de Toxicologia</h1>
           <p className="text-sm text-muted-foreground">Curvas dose-resposta, LD50/ED50 e índice terapêutico</p>
         </div>
-        <AdminPromptViewer
-          toolSlug={LAB_SYSTEM_PROMPTS.toxicologia.slug}
-          toolName={LAB_SYSTEM_PROMPTS.toxicologia.name}
-          toolType="laboratory"
-          prompt={LAB_SYSTEM_PROMPTS.toxicologia.prompt}
-        />
+        <AdminPromptViewer toolSlug={LAB_SYSTEM_PROMPTS.toxicologia.slug} toolName={LAB_SYSTEM_PROMPTS.toxicologia.name} toolType="laboratory" prompt={LAB_SYSTEM_PROMPTS.toxicologia.prompt} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -148,16 +147,7 @@ export default function BancadaToxicologia() {
               <p><strong>Mecanismo de toxicidade:</strong> {sub.mechanism}</p>
             </div>
             <Button onClick={confirmSubstance} className="w-full">Confirmar Substância</Button>
-            <AIContextGenerator
-              labType="toxicologia"
-              onContextGenerated={(data: any) => {
-                setCustomSubstance(data.substance);
-                setSubstance(data.substance.id);
-                setCompletedModules(new Set([1]));
-                setDoseResponse(null);
-                setToxParams(null);
-              }}
-            />
+            <AIContextGenerator labType="toxicologia" onContextGenerated={(data: any) => { setCustomSubstance(data.substance); setSubstance(data.substance.id); setCompletedModules(new Set([1])); setDoseResponse(null); setToxParams(null); }} />
           </CardContent>
         </Card>
 
@@ -243,7 +233,7 @@ export default function BancadaToxicologia() {
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Toxicologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} />
+        <LabReportPanel benchTitle="Bancada de Toxicologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );

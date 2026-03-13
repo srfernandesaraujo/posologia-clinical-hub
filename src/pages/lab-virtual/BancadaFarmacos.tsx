@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { TargetValidationPanel } from "@/components/lab-virtual/TargetValidationPanel";
 import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/DrugDesignPanel";
@@ -11,9 +11,15 @@ import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 export default function BancadaFarmacos() {
   const navigate = useNavigate();
+  const {
+    isVirtualRoom, submitResults: submitVRResults, submitted: vrSubmitted, goBack,
+  } = useVirtualRoomCase("farmacos");
+  const startTimeRef = useRef(Date.now());
+
   const [drugProperties, setDrugProperties] = useState<DrugProperties>({
     mw: 350,
     logP: 2.5,
@@ -22,6 +28,33 @@ export default function BancadaFarmacos() {
   });
   const [selectedTarget, setSelectedTarget] = useState<{ id: string; name: string } | null>(null);
   const [designMode, setDesignMode] = useState<"sliders" | "smiles">("sliders");
+
+  const experimentSummary = selectedTarget ? {
+    "Alvo": `${selectedTarget.name} (${selectedTarget.id})`,
+    "MW": `${drugProperties.mw}`,
+    "LogP": `${drugProperties.logP}`,
+    "HBD": `${drugProperties.hbd}`,
+    "HBA": `${drugProperties.hba}`,
+    "Modo de design": designMode,
+  } : undefined;
+
+  const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
+    if (!selectedTarget) return;
+    const decisions = [
+      { label: "Alvo selecionado", userChoice: `${selectedTarget.name} (${selectedTarget.id})`, correct: true },
+      { label: "MW", userChoice: `${drugProperties.mw} g/mol`, correct: drugProperties.mw >= 150 && drugProperties.mw <= 500 },
+      { label: "LogP", userChoice: `${drugProperties.logP}`, correct: drugProperties.logP >= 0 && drugProperties.logP <= 5 },
+      { label: "HBD (Lipinski ≤5)", userChoice: `${drugProperties.hbd}`, correct: drugProperties.hbd <= 5 },
+      { label: "HBA (Lipinski ≤10)", userChoice: `${drugProperties.hba}`, correct: drugProperties.hba <= 10 },
+      { label: "Modo de design", userChoice: designMode, correct: true },
+    ];
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+    submitVRResults({
+      score,
+      actions: { decisions, report: reportData, experimentSummary },
+      timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000),
+    });
+  };
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -32,7 +65,7 @@ export default function BancadaFarmacos() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            onClick={() => navigate("/laboratorio-virtual")}
+            onClick={() => isVirtualRoom ? goBack() : navigate("/laboratorio-virtual")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -89,16 +122,12 @@ export default function BancadaFarmacos() {
 
       {/* M5 — Mini-Relatório */}
       <LabReportPanel
-        benchTitle="Desenvolvimento de F\u00e1rmacos"
+        benchTitle="Desenvolvimento de Fármacos"
         isUnlocked={!!selectedTarget}
-        experimentSummary={selectedTarget ? {
-          "Alvo": `${selectedTarget.name} (${selectedTarget.id})`,
-          "MW": `${drugProperties.mw}`,
-          "LogP": `${drugProperties.logP}`,
-          "HBD": `${drugProperties.hbd}`,
-          "HBA": `${drugProperties.hba}`,
-          "Modo de design": designMode,
-        } : undefined}
+        experimentSummary={experimentSummary}
+        isVirtualRoom={isVirtualRoom}
+        onVRSubmit={handleVRSubmit}
+        vrSubmitted={vrSubmitted}
       />
     </div>
   );
