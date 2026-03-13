@@ -154,14 +154,18 @@ export function MoleculeEditorPanel({
           {/* 2D */}
           <div className="space-y-1">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase">Estrutura 2D</p>
-            <div className="flex justify-center bg-background rounded-lg border border-border p-2 h-[200px]">
-              <img
-                src={imgUrl}
-                alt="Estrutura 2D"
-                className="max-h-full object-contain"
-                loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
+          <div className="flex justify-center items-center bg-background rounded-lg border border-border p-2 h-[200px]">
+              {smiles ? (
+                <img
+                  key={smiles}
+                  src={imgUrl}
+                  alt="Estrutura 2D"
+                  className="max-h-full object-contain"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">Selecione um composto em M1</span>
+              )}
             </div>
           </div>
           {/* 3D */}
