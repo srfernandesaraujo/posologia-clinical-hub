@@ -9,6 +9,8 @@ import { ArrowLeft, TestTubes, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const GENES = [
   { id: "gfp", name: "GFP (Green Fluorescent Protein)", mw: 27, optimalTemp: 30, optimalIPTG: 0.5 },
@@ -125,6 +127,12 @@ export default function BancadaBiotecnologia() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><TestTubes className="h-7 w-7 text-primary" /> Bancada de Biotecnologia</h1>
           <p className="text-sm text-muted-foreground">Clonagem, expressão proteica e otimização de produção</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.biotecnologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.biotecnologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.biotecnologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

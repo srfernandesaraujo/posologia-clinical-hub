@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Stethoscope, Sparkles, Loader2 } from "lucide-react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -250,6 +252,12 @@ export default function BancadaSimulacaoRealistica() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Tomada de decisão clínica ramificada com paciente virtual</p>
           </div>
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["simulacao-realistica"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["simulacao-realistica"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["simulacao-realistica"].prompt}
+          />
         </div>
 
         <Card className="max-w-xl mx-auto">
@@ -337,11 +345,19 @@ export default function BancadaSimulacaoRealistica() {
             </p>
           </div>
         </div>
-        {completed && (
-          <Badge variant={score >= 70 ? "default" : "destructive"} className="text-sm px-3 py-1">
-            Score Final: {score}%
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {completed && (
+            <Badge variant={score >= 70 ? "default" : "destructive"} className="text-sm px-3 py-1">
+              Score Final: {score}%
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["simulacao-realistica"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["simulacao-realistica"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["simulacao-realistica"].prompt}
+          />
+        </div>
       </div>
 
       {/* 4-panel grid */}

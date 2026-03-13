@@ -9,6 +9,8 @@ import { ArrowLeft, Clock, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ScatterChart, Scatter } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const FORMULATIONS = [
   { id: "aspirin", name: "Ácido Acetilsalicílico (comprimido)", k25: 0.0015, order: 1, ea: 85, initialConc: 100 },
@@ -125,6 +127,12 @@ export default function BancadaEstabilidade() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="h-7 w-7 text-primary" /> Bancada de Estabilidade</h1>
           <p className="text-sm text-muted-foreground">Cinética de degradação, Arrhenius e prazo de validade</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.estabilidade.slug}
+          toolName={LAB_SYSTEM_PROMPTS.estabilidade.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.estabilidade.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

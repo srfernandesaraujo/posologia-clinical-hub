@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Atom, ArrowLeft } from "lucide-react";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { CompoundSearchPanel, type CompoundData } from "@/components/lab-virtual/molmod/CompoundSearchPanel";
 import { MoleculeEditorPanel } from "@/components/lab-virtual/molmod/MoleculeEditorPanel";
 import { InSilicoPredictionPanel } from "@/components/lab-virtual/molmod/InSilicoPredictionPanel";
@@ -66,11 +68,19 @@ export default function BancadaModelagemMolecular() {
             </p>
           </div>
         </div>
-        {compound && (
-          <Badge variant="outline" className="text-xs">
-            Composto: {compound.name} (CID {compound.cid})
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {compound && (
+            <Badge variant="outline" className="text-xs">
+              Composto: {compound.name} (CID {compound.cid})
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["modelagem-molecular"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["modelagem-molecular"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["modelagem-molecular"].prompt}
+          />
+        </div>
       </div>
 
       {/* AI Context Generator */}

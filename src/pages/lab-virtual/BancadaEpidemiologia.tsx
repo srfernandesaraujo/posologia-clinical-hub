@@ -8,6 +8,8 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Activity, Lock, CheckCircle2 } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const STUDY_TYPES = [
   { id: "coorte", name: "Coorte Prospectiva", desc: "Segue expostos e não-expostos ao longo do tempo. Calcula RR e RD." },
@@ -145,6 +147,12 @@ export default function BancadaEpidemiologia() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="h-7 w-7 text-primary" /> Bancada de Epidemiologia</h1>
           <p className="text-sm text-muted-foreground">Estudo observacional, OR/RR e análise de associação</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.epidemiologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.epidemiologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.epidemiologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

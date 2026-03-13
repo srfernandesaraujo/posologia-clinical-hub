@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Shield, FlaskConical, TestTubes, Dna, Scale } from "lucide-react";
 import { FORENSIC_SCENARIOS, type ForensicScenario } from "@/data/forensicScenarios";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { ForensicCasePanel } from "@/components/lab-virtual/ForensicCasePanel";
 import { ChemicalLabPanel } from "@/components/lab-virtual/ChemicalLabPanel";
 import { ToxicologyLabPanel } from "@/components/lab-virtual/ToxicologyLabPanel";
@@ -98,6 +100,12 @@ export default function BancadaPericiaForense() {
           <p className="text-xs text-muted-foreground">3 laboratórios interligados para solucionar um caso criminal</p>
         </div>
         {isVirtualRoom && <Badge variant="outline" className="ml-auto">Sala Virtual</Badge>}
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS["pericia-forense"].slug}
+          toolName={LAB_SYSTEM_PROMPTS["pericia-forense"].name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS["pericia-forense"].prompt}
+        />
       </div>
 
       {/* Progress bar */}

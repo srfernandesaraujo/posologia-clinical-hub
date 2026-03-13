@@ -9,6 +9,8 @@ import { ArrowLeft, Skull, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const SUBSTANCES = [
   { id: "paracetamol", name: "Paracetamol", hillN: 3.5, ld50: 2000, ed50: 15, unit: "mg/kg", mechanism: "Hepatotoxicidade por NAPQI (metabólito reativo via CYP2E1)", clinical: "Analgésico/antipirético de venda livre" },
@@ -121,6 +123,12 @@ export default function BancadaToxicologia() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Skull className="h-7 w-7 text-primary" /> Bancada de Toxicologia</h1>
           <p className="text-sm text-muted-foreground">Curvas dose-resposta, LD50/ED50 e índice terapêutico</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.toxicologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.toxicologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.toxicologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

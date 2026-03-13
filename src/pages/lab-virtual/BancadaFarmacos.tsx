@@ -6,6 +6,8 @@ import { DockingADMEPanel } from "@/components/lab-virtual/DockingADMEPanel";
 import { ClinicalTrialPanel } from "@/components/lab-virtual/ClinicalTrialPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
@@ -44,11 +46,19 @@ export default function BancadaFarmacos() {
             </p>
           </div>
         </div>
-        {selectedTarget && (
-          <Badge variant="outline" className="text-xs">
-            Alvo: {selectedTarget.name} ({selectedTarget.id})
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedTarget && (
+            <Badge variant="outline" className="text-xs">
+              Alvo: {selectedTarget.name} ({selectedTarget.id})
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS.farmacos.slug}
+            toolName={LAB_SYSTEM_PROMPTS.farmacos.name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS.farmacos.prompt}
+          />
+        </div>
       </div>
 
       {/* AI Context Generator */}

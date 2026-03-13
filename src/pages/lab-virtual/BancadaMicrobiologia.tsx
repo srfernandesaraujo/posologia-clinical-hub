@@ -9,6 +9,8 @@ import { ArrowLeft, Microscope, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 
 const BACTERIA = [
   { id: "ecoli", name: "Escherichia coli", gram: "negativo", habitat: "Trato gastrointestinal", resistance: "Bombas de efluxo, β-lactamases" },
@@ -182,6 +184,12 @@ export default function BancadaMicrobiologia() {
           </h1>
           <p className="text-sm text-muted-foreground">Antibiograma, curvas de crescimento e classificação S/I/R</p>
         </div>
+        <AdminPromptViewer
+          toolSlug={LAB_SYSTEM_PROMPTS.microbiologia.slug}
+          toolName={LAB_SYSTEM_PROMPTS.microbiologia.name}
+          toolType="laboratory"
+          prompt={LAB_SYSTEM_PROMPTS.microbiologia.prompt}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
