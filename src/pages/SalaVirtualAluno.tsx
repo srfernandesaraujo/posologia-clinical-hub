@@ -11,13 +11,34 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
 
-const SIMULATOR_LABELS: Record<string, string> = {
+const LAB_SLUGS = new Set([
+  "farmacos", "microbiologia", "toxicologia", "farmacogenomica", "estabilidade",
+  "controle-qualidade", "epidemiologia", "biotecnologia", "simulacao-realistica",
+  "pericia-forense", "modelagem-molecular",
+]);
+
+const TOOL_LABELS: Record<string, string> = {
   prm: "PRM – Problemas Relacionados a Medicamentos",
   antimicrobianos: "Antimicrobianos / Stewardship",
   tdm: "TDM – Monitoramento Terapêutico",
   acompanhamento: "Acompanhamento Farmacoterapêutico",
   insulina: "Dose de Insulina",
+  farmacos: "Lab: Desenvolvimento de Fármacos",
+  microbiologia: "Lab: Microbiologia",
+  toxicologia: "Lab: Toxicologia",
+  farmacogenomica: "Lab: Farmacogenômica",
+  estabilidade: "Lab: Estabilidade",
+  "controle-qualidade": "Lab: Controle de Qualidade",
+  epidemiologia: "Lab: Epidemiologia",
+  biotecnologia: "Lab: Biotecnologia",
+  "simulacao-realistica": "Lab: Simulação Realística",
+  "pericia-forense": "Lab: Perícia Forense",
+  "modelagem-molecular": "Lab: Modelagem Molecular",
 };
+
+function getRouteForSlug(slug: string): string {
+  return LAB_SLUGS.has(slug) ? `/sala/laboratorio/${slug}` : `/sala/simulador/${slug}`;
+}
 
 export default function SalaVirtualAluno() {
   const [searchParams] = useSearchParams();
