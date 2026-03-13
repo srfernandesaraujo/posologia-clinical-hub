@@ -170,7 +170,7 @@ export function MoleculeEditorPanel({
             <div
               ref={containerRef}
               className="w-full h-[200px] rounded-lg border border-border overflow-hidden"
-              style={{ position: "relative" }}
+              style={{ position: "relative", minHeight: "200px" }}
             />
           </div>
         </div>
