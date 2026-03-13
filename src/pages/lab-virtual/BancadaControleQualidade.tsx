@@ -71,6 +71,7 @@ export default function BancadaControleQualidade() {
   // M1
   const [method, setMethod] = useState("uv-vis");
   const [analyte, setAnalyte] = useState("paracetamol");
+  const [customAnalyte, setCustomAnalyte] = useState<typeof ANALYTES[0] | null>(null);
   // M2
   const [nStandards, setNStandards] = useState([6]);
   const [calibration, setCalibration] = useState<any[] | null>(null);
