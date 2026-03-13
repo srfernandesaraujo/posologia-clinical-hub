@@ -63,7 +63,7 @@ function RiskBadge({ risk }: { risk: string }) {
 }
 
 function LipinskiIndicator({ value, max, label, unit }: { value: number | null; max: number; label: string; unit: string }) {
-  if (value === null) {
+  if (value === null || !Number.isFinite(value)) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px]">?</span>
@@ -106,12 +106,24 @@ export function InSilicoPredictionPanel({ smiles, compoundName, disabled, onLipi
       const json = await res.json();
       const p = json.PropertyTable?.Properties?.[0];
       if (!p) throw new Error("No properties");
+
+      const mw = Number(p.MolecularWeight);
+      const hbd = Number(p.HBondDonorCount);
+      const hba = Number(p.HBondAcceptorCount);
+      const tpsa = Number(p.TPSA);
+      const logPValue = p.XLogP == null ? null : Number(p.XLogP);
+      const logP = logPValue !== null && Number.isFinite(logPValue) ? logPValue : null;
+
+      if (![mw, hbd, hba, tpsa].every((value) => Number.isFinite(value))) {
+        throw new Error("PubChem returned invalid numeric properties");
+      }
+
       const data: LipinskiData = {
-        mw: p.MolecularWeight,
-        logP: p.XLogP ?? null,
-        hbd: p.HBondDonorCount,
-        hba: p.HBondAcceptorCount,
-        tpsa: p.TPSA,
+        mw,
+        logP,
+        hbd,
+        hba,
+        tpsa,
       };
       setLipinski(data);
       onLipinskiCalculated?.(data);
@@ -181,7 +193,7 @@ export function InSilicoPredictionPanel({ smiles, compoundName, disabled, onLipi
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">TPSA:</span>
-                <span className="font-medium">{lipinski.tpsa.toFixed(1)} Å²</span>
+                <span className="font-medium">{Number.isFinite(lipinski.tpsa) ? `${lipinski.tpsa.toFixed(1)} Å²` : "N/A"}</span>
                 <span className="text-muted-foreground ml-2">Violações:</span>
                 <Badge variant={lipinskiViolations === 0 ? "default" : lipinskiViolations <= 1 ? "secondary" : "destructive"} className="text-[10px]">
                   {lipinskiViolations}/4
