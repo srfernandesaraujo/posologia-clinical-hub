@@ -71,6 +71,7 @@ export default function BancadaControleQualidade() {
   // M1
   const [method, setMethod] = useState("uv-vis");
   const [analyte, setAnalyte] = useState("paracetamol");
+  const [customAnalyte, setCustomAnalyte] = useState<typeof ANALYTES[0] | null>(null);
   // M2
   const [nStandards, setNStandards] = useState([6]);
   const [calibration, setCalibration] = useState<any[] | null>(null);
@@ -81,7 +82,8 @@ export default function BancadaControleQualidade() {
   // M4
   const [validation, setValidation] = useState<{ meanConc: number; rsd: number; meanRecovery: number; approved: boolean } | null>(null);
 
-  const selectedAnalyte = ANALYTES.find((a) => a.id === analyte)!;
+  const allAnalytes = useMemo(() => [...ANALYTES, ...(customAnalyte ? [customAnalyte] : [])], [customAnalyte]);
+  const selectedAnalyte = allAnalytes.find((a) => a.id === analyte)!;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
