@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Skull, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const SUBSTANCES = [
   { id: "paracetamol", name: "Paracetamol", hillN: 3.5, ld50: 2000, ed50: 15, unit: "mg/kg", mechanism: "Hepatotoxicidade por NAPQI (metabólito reativo via CYP2E1)", clinical: "Analgésico/antipirético de venda livre" },
@@ -51,7 +52,10 @@ export default function BancadaToxicologia() {
   // M4
   const [toxParams, setToxParams] = useState<{ ld50: number; ed50: number; ti: number; toxClass: ReturnType<typeof classifyToxicity> } | null>(null);
 
-  const sub = SUBSTANCES.find((s) => s.id === substance)!;
+  const [customSubstance, setCustomSubstance] = useState<typeof SUBSTANCES[0] | null>(null);
+  const allSubstances = useMemo(() => [...SUBSTANCES, ...(customSubstance ? [customSubstance] : [])], [customSubstance]);
+
+  const sub = allSubstances.find((s) => s.id === substance) ?? SUBSTANCES[0];
   const model = ANIMAL_MODELS.find((m) => m.id === animalModel)!;
 
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
@@ -128,7 +132,7 @@ export default function BancadaToxicologia() {
               <label className="text-sm font-medium">Substância</label>
               <Select value={substance} onValueChange={setSubstance}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{SUBSTANCES.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allSubstances.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -136,6 +140,16 @@ export default function BancadaToxicologia() {
               <p><strong>Mecanismo de toxicidade:</strong> {sub.mechanism}</p>
             </div>
             <Button onClick={confirmSubstance} className="w-full">Confirmar Substância</Button>
+            <AIContextGenerator
+              labType="toxicologia"
+              onContextGenerated={(data: any) => {
+                setCustomSubstance(data.substance);
+                setSubstance(data.substance.id);
+                setCompletedModules(new Set([1]));
+                setDoseResponse(null);
+                setToxParams(null);
+              }}
+            />
           </CardContent>
         </Card>
 

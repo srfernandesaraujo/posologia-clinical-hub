@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Stethoscope, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,7 @@ export default function BancadaSimulacaoRealistica() {
   } = useVirtualRoomCase("simulacao-realistica");
 
   const [selectedScenario, setSelectedScenario] = useState<string>("");
+  const [customTheme, setCustomTheme] = useState("");
   const [scenario, setScenario] = useState<ScenarioData | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
@@ -55,7 +57,7 @@ export default function BancadaSimulacaoRealistica() {
   const startTimeRef = useRef(Date.now());
 
   // ─── Load scenario via AI ─────────────────────────────────
-  const loadScenario = async (scenarioId: string) => {
+  const loadScenario = async (scenarioId?: string) => {
     setLoading(true);
     setDecisions([]);
     setCurrentStage(0);
@@ -64,11 +66,11 @@ export default function BancadaSimulacaoRealistica() {
     setVitalsHistory([]);
 
     try {
-      const chosen = NATIVE_SCENARIOS.find(s => s.id === scenarioId);
+      const chosen = scenarioId ? NATIVE_SCENARIOS.find(s => s.id === scenarioId) : null;
       const { data, error } = await supabase.functions.invoke("generate-simulation-scenario", {
         body: {
-          scenarioId,
-          title: chosen?.title ?? scenarioId,
+          scenarioId: scenarioId || "custom-theme",
+          title: chosen?.title ?? (customTheme.trim() || "Cenário Personalizado"),
           specialty: chosen?.specialty ?? "Geral",
           difficulty: chosen?.difficulty ?? "Médio",
         },
@@ -279,6 +281,27 @@ export default function BancadaSimulacaoRealistica() {
             >
               <Sparkles className="h-4 w-4 mr-2" />
               Gerar Cenário com IA
+            </Button>
+
+            <div className="flex items-center gap-2 my-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] text-muted-foreground">ou tema livre</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <Input
+              value={customTheme}
+              onChange={(e) => setCustomTheme(e.target.value)}
+              placeholder="Descreva um cenário clínico personalizado..."
+              className="text-sm"
+            />
+            <Button
+              onClick={() => loadScenario()}
+              disabled={!customTheme.trim()}
+              variant="outline"
+              className="w-full"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Gerar Tema Livre
             </Button>
           </CardContent>
         </Card>

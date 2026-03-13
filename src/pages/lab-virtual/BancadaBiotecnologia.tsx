@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, TestTubes, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const GENES = [
   { id: "gfp", name: "GFP (Green Fluorescent Protein)", mw: 27, optimalTemp: 30, optimalIPTG: 0.5 },
@@ -64,9 +65,16 @@ export default function BancadaBiotecnologia() {
   // M4
   const [expressionCurve, setExpressionCurve] = useState<any[] | null>(null);
 
-  const selectedGene = GENES.find((g) => g.id === gene)!;
-  const selectedVector = VECTORS.find((v) => v.id === vector)!;
-  const selectedStrain = STRAINS.find((s) => s.id === strain)!;
+  const [customGene, setCustomGene] = useState<typeof GENES[0] | null>(null);
+  const [customVector, setCustomVector] = useState<typeof VECTORS[0] | null>(null);
+  const [customStrain, setCustomStrain] = useState<typeof STRAINS[0] | null>(null);
+  const allGenes = useMemo(() => [...GENES, ...(customGene ? [customGene] : [])], [customGene]);
+  const allVectors = useMemo(() => [...VECTORS, ...(customVector ? [customVector] : [])], [customVector]);
+  const allStrains = useMemo(() => [...STRAINS, ...(customStrain ? [customStrain] : [])], [customStrain]);
+
+  const selectedGene = allGenes.find((g) => g.id === gene) ?? GENES[0];
+  const selectedVector = allVectors.find((v) => v.id === vector) ?? VECTORS[0];
+  const selectedStrain = allStrains.find((s) => s.id === strain) ?? STRAINS[0];
   const geneInsert = Math.round(selectedGene.mw * 30 * 3);
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
@@ -128,24 +136,38 @@ export default function BancadaBiotecnologia() {
               <label className="text-sm font-medium">Gene-alvo</label>
               <Select value={gene} onValueChange={setGene}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{GENES.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} ({g.mw} kDa)</SelectItem>)}</SelectContent>
+                <SelectContent>{allGenes.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} ({g.mw} kDa)</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Vetor de expressão</label>
               <Select value={vector} onValueChange={setVector}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{VECTORS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.tag}, {v.promoter}</SelectItem>)}</SelectContent>
+                <SelectContent>{allVectors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.tag}, {v.promoter}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Cepa hospedeira</label>
               <Select value={strain} onValueChange={setStrain}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STRAINS.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allStrains.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <Button onClick={confirmConstruct} className="w-full">Confirmar Constructo</Button>
+            <AIContextGenerator
+              labType="biotecnologia"
+              onContextGenerated={(data: any) => {
+                setCustomGene(data.gene);
+                setCustomVector(data.vector);
+                setCustomStrain(data.strain);
+                setGene(data.gene.id);
+                setVector(data.vector.id);
+                setStrain(data.strain.id);
+                setCompletedModules(new Set([1]));
+                setExpressionResults(null);
+                setExpressionCurve(null);
+              }}
+            />
           </CardContent>
         </Card>
 

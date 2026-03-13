@@ -5,6 +5,7 @@ import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/D
 import { DockingADMEPanel } from "@/components/lab-virtual/DockingADMEPanel";
 import { ClinicalTrialPanel } from "@/components/lab-virtual/ClinicalTrialPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
@@ -49,6 +50,15 @@ export default function BancadaFarmacos() {
           </Badge>
         )}
       </div>
+
+      {/* AI Context Generator */}
+      <AIContextGenerator
+        labType="farmacos"
+        onContextGenerated={(data: any) => {
+          setSelectedTarget({ id: data.target.id, name: data.target.name });
+          setDrugProperties(data.drugProperties);
+        }}
+      />
 
       {/* Modules grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

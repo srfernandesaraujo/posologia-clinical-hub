@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Microscope, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const BACTERIA = [
   { id: "ecoli", name: "Escherichia coli", gram: "negativo", habitat: "Trato gastrointestinal", resistance: "Bombas de efluxo, β-lactamases" },
@@ -27,7 +28,12 @@ const ANTIBIOTICS = [
   { id: "sulfametoxazol", name: "Sulfametoxazol-Trimetoprim", class: "Sulfonamida", gramTip: "Cobertura variável, resistência crescente" },
 ];
 
+let _customResistance: Record<string, Record<string, { mic: number; breakpointS: number; breakpointR: number }>> = {};
+
 function getMICData(bacteriaId: string, antibioticId: string) {
+  if (_customResistance[bacteriaId]?.[antibioticId]) {
+    return _customResistance[bacteriaId][antibioticId];
+  }
   const resistanceMap: Record<string, Record<string, { mic: number; breakpointS: number; breakpointR: number }>> = {
     ecoli: { amoxicilina: { mic: 4, breakpointS: 8, breakpointR: 32 }, ciprofloxacino: { mic: 0.25, breakpointS: 1, breakpointR: 4 }, vancomicina: { mic: 128, breakpointS: 4, breakpointR: 32 }, meropenem: { mic: 0.06, breakpointS: 2, breakpointR: 8 }, gentamicina: { mic: 1, breakpointS: 4, breakpointR: 16 }, sulfametoxazol: { mic: 2, breakpointS: 2, breakpointR: 4 } },
     saureus: { amoxicilina: { mic: 0.5, breakpointS: 2, breakpointR: 8 }, ciprofloxacino: { mic: 0.5, breakpointS: 1, breakpointR: 4 }, vancomicina: { mic: 1, breakpointS: 2, breakpointR: 16 }, meropenem: { mic: 0.12, breakpointS: 2, breakpointR: 8 }, gentamicina: { mic: 0.5, breakpointS: 4, breakpointR: 16 }, sulfametoxazol: { mic: 0.5, breakpointS: 2, breakpointR: 4 } },
@@ -91,7 +97,10 @@ export default function BancadaMicrobiologia() {
   const [growthConc, setGrowthConc] = useState([8]);
   const [growthCurve, setGrowthCurve] = useState<any[] | null>(null);
 
-  const selectedBacteria = BACTERIA.find((b) => b.id === bacteria)!;
+  const [customBacterium, setCustomBacterium] = useState<typeof BACTERIA[0] | null>(null);
+  const allBacteria = useMemo(() => [...BACTERIA, ...(customBacterium ? [customBacterium] : [])], [customBacterium]);
+
+  const selectedBacteria = allBacteria.find((b) => b.id === bacteria) ?? BACTERIA[0];
 
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
@@ -187,7 +196,7 @@ export default function BancadaMicrobiologia() {
               <Select value={bacteria} onValueChange={setBacteria}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BACTERIA.map((b) => (
+                  {allBacteria.map((b) => (
                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -199,6 +208,19 @@ export default function BancadaMicrobiologia() {
               <p><strong>Mecanismos de resistência:</strong> {selectedBacteria.resistance}</p>
             </div>
             <Button onClick={confirmStrain} className="w-full">Confirmar Cepa</Button>
+            <AIContextGenerator
+              labType="microbiologia"
+              onContextGenerated={(data: any) => {
+                setCustomBacterium(data.bacteria);
+                const resMap: Record<string, { mic: number; breakpointS: number; breakpointR: number }> = {};
+                (data.resistanceData || []).forEach((r: any) => { resMap[r.antibioticId] = { mic: r.mic, breakpointS: r.breakpointS, breakpointR: r.breakpointR }; });
+                _customResistance = { [data.bacteria.id]: resMap };
+                setBacteria(data.bacteria.id);
+                setCompletedModules(new Set([1]));
+                setAntibiogram(null);
+                setGrowthCurve(null);
+              }}
+            />
           </CardContent>
         </Card>
 

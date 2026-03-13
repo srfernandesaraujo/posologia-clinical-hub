@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Shield, FlaskConical, TestTubes, Dna, Scale } from "lucide-react";
 import { FORENSIC_SCENARIOS, type ForensicScenario } from "@/data/forensicScenarios";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import { ForensicCasePanel } from "@/components/lab-virtual/ForensicCasePanel";
 import { ChemicalLabPanel } from "@/components/lab-virtual/ChemicalLabPanel";
 import { ToxicologyLabPanel } from "@/components/lab-virtual/ToxicologyLabPanel";
@@ -134,6 +135,19 @@ export default function BancadaPericiaForense() {
             <Button onClick={() => startCase(selectedId)} disabled={!selectedId} className="w-full">
               Iniciar Investigação
             </Button>
+            <AIContextGenerator
+              labType="pericia-forense"
+              onContextGenerated={(data: any) => {
+                const s = data as ForensicScenario;
+                if (!s.id) s.id = `ai-${Date.now()}`;
+                setScenario(s);
+                setChemResult(null);
+                setToxResult(null);
+                setDnaResult(null);
+                setConclusionResult(null);
+                startTimeRef.current = Date.now();
+              }}
+            />
           </CardContent>
         </Card>
       )}

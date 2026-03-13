@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Dna, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const DRUGS = [
   { id: "codeina", name: "Codeína", enzyme: "CYP2D6", type: "prodrug" as const, baseParams: { ka: 1.2, ke: 0.15, vd: 200, f: 0.9 } },
@@ -57,7 +58,10 @@ export default function BancadaFarmacogenomica() {
   // M4
   const [aucData, setAucData] = useState<{ phenotype: string; auc: number; cmax: number; clearance: number; fill: string }[] | null>(null);
 
-  const selectedDrug = DRUGS.find((d) => d.id === drug)!;
+  const [customDrug, setCustomDrug] = useState<typeof DRUGS[0] | null>(null);
+  const allDrugs = useMemo(() => [...DRUGS, ...(customDrug ? [customDrug] : [])], [customDrug]);
+
+  const selectedDrug = allDrugs.find((d) => d.id === drug) ?? DRUGS[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmDrug = () => {
@@ -128,7 +132,7 @@ export default function BancadaFarmacogenomica() {
               <label className="text-sm font-medium">Fármaco</label>
               <Select value={drug} onValueChange={setDrug}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{DRUGS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} ({d.enzyme})</SelectItem>)}</SelectContent>
+                <SelectContent>{allDrugs.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} ({d.enzyme})</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -137,6 +141,16 @@ export default function BancadaFarmacogenomica() {
               <p><strong>Parâmetros PK base:</strong> ka={selectedDrug.baseParams.ka} h⁻¹, ke={selectedDrug.baseParams.ke} h⁻¹, Vd={selectedDrug.baseParams.vd} L, F={selectedDrug.baseParams.f}</p>
             </div>
             <Button onClick={confirmDrug} className="w-full">Confirmar Fármaco</Button>
+            <AIContextGenerator
+              labType="farmacogenomica"
+              onContextGenerated={(data: any) => {
+                setCustomDrug(data.drug);
+                setDrug(data.drug.id);
+                setCompletedModules(new Set([1]));
+                setCurves(null);
+                setAucData(null);
+              }}
+            />
           </CardContent>
         </Card>
 

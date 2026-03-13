@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Activity, Lock, CheckCircle2 } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const STUDY_TYPES = [
   { id: "coorte", name: "Coorte Prospectiva", desc: "Segue expostos e não-expostos ao longo do tempo. Calcula RR e RD." },
@@ -77,9 +78,14 @@ export default function BancadaEpidemiologia() {
   // M4
   const [forestPlot, setForestPlot] = useState<any[] | null>(null);
 
+  const [customExposure, setCustomExposure] = useState<typeof EXPOSURES[0] | null>(null);
+  const [customOutcome, setCustomOutcome] = useState<typeof OUTCOMES[0] | null>(null);
+  const allExposures = useMemo(() => [...EXPOSURES, ...(customExposure ? [customExposure] : [])], [customExposure]);
+  const allOutcomes = useMemo(() => [...OUTCOMES, ...(customOutcome ? [customOutcome] : [])], [customOutcome]);
+
   const study = STUDY_TYPES.find((s) => s.id === studyType)!;
-  const exp = EXPOSURES.find((e) => e.id === exposure)!;
-  const out = OUTCOMES.find((o) => o.id === outcome)!;
+  const exp = allExposures.find((e) => e.id === exposure) ?? EXPOSURES[0];
+  const out = allOutcomes.find((o) => o.id === outcome) ?? OUTCOMES[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmStudy = () => {
@@ -155,6 +161,19 @@ export default function BancadaEpidemiologia() {
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs">{study.desc}</div>
             <Button onClick={confirmStudy} className="w-full">Confirmar Desenho</Button>
+            <AIContextGenerator
+              labType="epidemiologia"
+              onContextGenerated={(data: any) => {
+                setCustomExposure(data.exposure);
+                setCustomOutcome(data.outcome);
+                setExposure(data.exposure.id);
+                setOutcome(data.outcome.id);
+                setCompletedModules(new Set([1]));
+                setTable2x2(null);
+                setMeasures(null);
+                setForestPlot(null);
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -167,14 +186,14 @@ export default function BancadaEpidemiologia() {
               <label className="text-sm font-medium">Exposição</label>
               <Select value={exposure} onValueChange={setExposure}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{EXPOSURES.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allExposures.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Desfecho</label>
               <Select value={outcome} onValueChange={setOutcome}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{OUTCOMES.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allOutcomes.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>

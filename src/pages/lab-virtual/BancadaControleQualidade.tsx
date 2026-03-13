@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, ClipboardCheck, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const METHODS = [
   { id: "uv-vis", name: "Espectrofotometria UV-Vis", lambda: "254 nm" },
@@ -170,7 +171,7 @@ export default function BancadaControleQualidade() {
               <label className="text-sm font-medium">Analito</label>
               <Select value={analyte} onValueChange={setAnalyte}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ANALYTES.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.trueConc} {a.unit})</SelectItem>)}</SelectContent>
+                <SelectContent>{allAnalytes.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.trueConc} {a.unit})</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -178,6 +179,18 @@ export default function BancadaControleQualidade() {
               <p><strong>Especificação:</strong> {selectedAnalyte.spec}</p>
             </div>
             <Button onClick={confirmAnalysis} className="w-full">Confirmar Análise</Button>
+            <AIContextGenerator
+              labType="controle-qualidade"
+              onContextGenerated={(data: any) => {
+                setCustomAnalyte(data.analyte);
+                setAnalyte(data.analyte.id);
+                setCompletedModules(new Set([1]));
+                setCalibration(null);
+                setRegression(null);
+                setSamples(null);
+                setValidation(null);
+              }}
+            />
           </CardContent>
         </Card>
 

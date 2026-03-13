@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Clock, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ScatterChart, Scatter } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const FORMULATIONS = [
   { id: "aspirin", name: "Ácido Acetilsalicílico (comprimido)", k25: 0.0015, order: 1, ea: 85, initialConc: 100 },
@@ -57,7 +58,10 @@ export default function BancadaEstabilidade() {
   // M4
   const [arrhenius, setArrhenius] = useState<{ data: any[]; shelfLife25: number } | null>(null);
 
-  const form = FORMULATIONS.find((f) => f.id === formulation)!;
+  const [customFormulation, setCustomFormulation] = useState<typeof FORMULATIONS[0] | null>(null);
+  const allFormulations = useMemo(() => [...FORMULATIONS, ...(customFormulation ? [customFormulation] : [])], [customFormulation]);
+
+  const form = allFormulations.find((f) => f.id === formulation) ?? FORMULATIONS[0];
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
   const confirmFormulation = () => {
@@ -132,7 +136,7 @@ export default function BancadaEstabilidade() {
               <label className="text-sm font-medium">Formulação</label>
               <Select value={formulation} onValueChange={setFormulation}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{FORMULATIONS.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{allFormulations.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
@@ -141,6 +145,16 @@ export default function BancadaEstabilidade() {
               <p><strong>Concentração inicial:</strong> {form.initialConc}%</p>
             </div>
             <Button onClick={confirmFormulation} className="w-full">Confirmar Formulação</Button>
+            <AIContextGenerator
+              labType="estabilidade"
+              onContextGenerated={(data: any) => {
+                setCustomFormulation(data.formulation);
+                setFormulation(data.formulation.id);
+                setCompletedModules(new Set([1]));
+                setCurves(null);
+                setArrhenius(null);
+              }}
+            />
           </CardContent>
         </Card>
 
