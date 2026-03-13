@@ -436,12 +436,16 @@ export default function SalasVirtuais() {
                   </Button>
                 </div>
                 {room.simulator_slug ? (
-                  <p className="text-sm text-muted-foreground">
-                    Simulador: {getSimulatorLabel(room.simulator_slug)}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    {isLabTool(room.simulator_slug) ? (
+                      <><FlaskConical className="h-3 w-3" /> Lab: {getToolLabel(room.simulator_slug)}</>
+                    ) : (
+                      <>Simulador: {getToolLabel(room.simulator_slug)}</>
+                    )}
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Prova com múltiplos simuladores
+                    Prova com múltiplas atividades
                   </p>
                 )}
                 {room.expires_at && (
