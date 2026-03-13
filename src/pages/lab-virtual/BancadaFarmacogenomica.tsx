@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Dna, Lock, CheckCircle2 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 
 const DRUGS = [
   { id: "codeina", name: "Codeína", enzyme: "CYP2D6", type: "prodrug" as const, baseParams: { ka: 1.2, ke: 0.15, vd: 200, f: 0.9 } },
