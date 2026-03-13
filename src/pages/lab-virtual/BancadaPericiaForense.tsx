@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Shield, FlaskConical, TestTubes, Dna, Scale } from "lucide-react";
 import { FORENSIC_SCENARIOS, type ForensicScenario } from "@/data/forensicScenarios";
+import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import { ForensicCasePanel } from "@/components/lab-virtual/ForensicCasePanel";
 import { ChemicalLabPanel } from "@/components/lab-virtual/ChemicalLabPanel";
 import { ToxicologyLabPanel } from "@/components/lab-virtual/ToxicologyLabPanel";
