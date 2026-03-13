@@ -345,11 +345,19 @@ export default function BancadaSimulacaoRealistica() {
             </p>
           </div>
         </div>
-        {completed && (
-          <Badge variant={score >= 70 ? "default" : "destructive"} className="text-sm px-3 py-1">
-            Score Final: {score}%
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {completed && (
+            <Badge variant={score >= 70 ? "default" : "destructive"} className="text-sm px-3 py-1">
+              Score Final: {score}%
+            </Badge>
+          )}
+          <AdminPromptViewer
+            toolSlug={LAB_SYSTEM_PROMPTS["simulacao-realistica"].slug}
+            toolName={LAB_SYSTEM_PROMPTS["simulacao-realistica"].name}
+            toolType="laboratory"
+            prompt={LAB_SYSTEM_PROMPTS["simulacao-realistica"].prompt}
+          />
+        </div>
       </div>
 
       {/* 4-panel grid */}
