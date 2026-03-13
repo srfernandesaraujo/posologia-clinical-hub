@@ -673,7 +673,7 @@ export default function SalasVirtuais() {
                             {pSubmissions.map((s: any) => {
                               const activity = roomActivities.find((a: any) => a.id === s.activity_id);
                               const actLabel = activity
-                                ? `${getSimulatorLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
+                                ? `${getToolLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
                                 : `Etapa ${s.step_index + 1}`;
                               return (
                                 <div key={s.id} className="flex items-center justify-between text-sm">
