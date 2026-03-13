@@ -28,6 +28,7 @@ export default function AdminPromptViewer({ toolSlug, toolName, toolType, prompt
     calculator: "Calculadora",
     simulator: "Simulador",
     game: "Jogo Clínico",
+    laboratory: "Laboratório Virtual",
   };
 
   const handleCopy = async () => {
