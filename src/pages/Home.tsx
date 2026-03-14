@@ -12,11 +12,11 @@ import { Button } from "@/components/ui/button";
 
 const featureShowcase = [
   { name: "Calculadoras Clínicas", desc: "20+ scores e fórmulas validadas", icon: Calculator, color: "bg-blue-500/10 text-blue-500", link: "/calculadoras" },
-  { name: "Simuladores Interativos", desc: "60+ simuladores em 8 categorias", icon: FlaskConical, color: "bg-cyan-500/10 text-cyan-500", link: "/simuladores" },
-  { name: "Laboratório Virtual", desc: "8 bancadas modulares de pesquisa", icon: Microscope, color: "bg-purple-500/10 text-purple-500", link: "/laboratorio-virtual" },
+  { name: "Simuladores Interativos", desc: "96+ simuladores em 12 categorias", icon: FlaskConical, color: "bg-cyan-500/10 text-cyan-500", link: "/simuladores" },
+  { name: "Laboratório Virtual", desc: "11 bancadas modulares de pesquisa", icon: Microscope, color: "bg-purple-500/10 text-purple-500", link: "/laboratorio-virtual" },
   { name: "Jogos Educativos", desc: "20+ jogos gamificados com ranking", icon: Gamepad2, color: "bg-amber-500/10 text-amber-500", link: "/jogos-clinicos" },
   { name: "Formação Docente", desc: "7 simuladores pedagógicos", icon: GraduationCap, color: "bg-rose-500/10 text-rose-500", link: "/simuladores" },
-  { name: "Salas Virtuais", desc: "Atividades com PIN para turmas", icon: DoorOpen, color: "bg-emerald-500/10 text-emerald-500", link: "/salas-virtuais" },
+  { name: "Salas Virtuais", desc: "Simuladores + Labs com analytics", icon: DoorOpen, color: "bg-emerald-500/10 text-emerald-500", link: "/salas-virtuais" },
 ];
 
 const simulatorCategories = [
