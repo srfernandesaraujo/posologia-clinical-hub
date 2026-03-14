@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Dna, Lock, CheckCircle2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Dna, Lock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
@@ -47,6 +49,34 @@ function calcAUC(points: { hora: number; concentracao: number }[]): number {
   return parseFloat(auc.toFixed(2));
 }
 
+type DoseAdjustment = "manter" | "reduzir" | "aumentar" | "contraindicar";
+
+function getIdealDoseAdjustment(phenotype: string, drugType: "prodrug" | "drug"): DoseAdjustment {
+  if (drugType === "prodrug") {
+    // Prodrug: PM has low activation → increase or contraindicate; UM has high activation → reduce
+    if (phenotype === "PM") return "contraindicar";
+    if (phenotype === "IM") return "aumentar";
+    if (phenotype === "EM") return "manter";
+    if (phenotype === "UM") return "reduzir";
+  } else {
+    // Active drug: PM accumulates → reduce; UM eliminates fast → increase
+    if (phenotype === "PM") return "reduzir";
+    if (phenotype === "IM") return "reduzir";
+    if (phenotype === "EM") return "manter";
+    if (phenotype === "UM") return "aumentar";
+  }
+  return "manter";
+}
+
+function getIdealRiskPhenotype(drugType: "prodrug" | "drug"): string {
+  // Prodrug: PM has least active metabolite → therapeutic failure risk
+  // Active drug: PM accumulates → toxicity risk
+  // In both cases, the "highest risk" phenotype is PM but for different reasons
+  // For prodrug: UM has risk of exaggerated response; PM has risk of failure
+  // Let's define "maior risco" as toxicity: PM for drug, UM for prodrug
+  return drugType === "prodrug" ? "UM" : "PM";
+}
+
 export default function BancadaFarmacogenomica() {
   const navigate = useNavigate();
   const {
@@ -62,8 +92,16 @@ export default function BancadaFarmacogenomica() {
   const [phenoDist, setPhenoDist] = useState({ PM: 10, IM: 20, EM: 60, UM: 10 });
   // M3
   const [curves, setCurves] = useState<{ phenotype: string; color: string; data: any[]; visible: boolean }[] | null>(null);
+  // M3 decision
+  const [userRiskPhenotype, setUserRiskPhenotype] = useState("");
+  const [m3Submitted, setM3Submitted] = useState(false);
+  const [m3Feedback, setM3Feedback] = useState<{ correct: boolean; ideal: string; reason: string } | null>(null);
   // M4
   const [aucData, setAucData] = useState<{ phenotype: string; auc: number; cmax: number; clearance: number; fill: string }[] | null>(null);
+  // M4 decision
+  const [userDoseAdjustments, setUserDoseAdjustments] = useState<Record<string, DoseAdjustment>>({});
+  const [m4Submitted, setM4Submitted] = useState(false);
+  const [m4Feedback, setM4Feedback] = useState<{ results: { phenotype: string; userChoice: DoseAdjustment; ideal: DoseAdjustment; correct: boolean }[] } | null>(null);
 
   const [customDrug, setCustomDrug] = useState<typeof DRUGS[0] | null>(null);
   const allDrugs = useMemo(() => [...DRUGS, ...(customDrug ? [customDrug] : [])], [customDrug]);
@@ -73,8 +111,9 @@ export default function BancadaFarmacogenomica() {
 
   const confirmDrug = () => {
     setCompletedModules(new Set([1]));
-    setCurves(null);
-    setAucData(null);
+    setCurves(null); setAucData(null);
+    setM3Submitted(false); setM3Feedback(null); setUserRiskPhenotype("");
+    setM4Submitted(false); setM4Feedback(null); setUserDoseAdjustments({});
   };
 
   const genotypePopulation = () => {
@@ -84,18 +123,43 @@ export default function BancadaFarmacogenomica() {
     });
     setCurves(c);
     setAucData(null);
+    setM3Submitted(false); setM3Feedback(null); setUserRiskPhenotype("");
+    setM4Submitted(false); setM4Feedback(null); setUserDoseAdjustments({});
     completeModule(2);
   };
 
-  const compareAUC = () => {
-    if (!curves) return;
-    const auc = curves.map((c, i) => {
-      const a = calcAUC(c.data);
-      const cmax = Math.max(...c.data.map((d) => d.concentracao));
-      return { phenotype: PHENOTYPES[i].id, auc: a, cmax: parseFloat(cmax.toFixed(2)), clearance: parseFloat((dose[0] / a).toFixed(2)), fill: PHENOTYPES[i].color };
-    });
-    setAucData(auc);
+  // M3 decision: identify highest risk phenotype
+  const submitM3Decision = () => {
+    const ideal = getIdealRiskPhenotype(selectedDrug.type);
+    const correct = userRiskPhenotype === ideal;
+    const reason = selectedDrug.type === "prodrug"
+      ? `Como ${selectedDrug.name} é um pró-fármaco, metabolizadores ultrarrápidos (UM) convertem mais substância ao metabólito ativo, gerando risco de toxicidade. Metabolizadores lentos (PM) têm risco de falha terapêutica.`
+      : `Como ${selectedDrug.name} é um fármaco ativo, metabolizadores lentos (PM) acumulam mais fármaco no organismo, aumentando o risco de toxicidade dose-dependente.`;
+    setM3Feedback({ correct, ideal, reason });
+    setM3Submitted(true);
+
+    // Auto-generate AUC data for M4
+    if (curves) {
+      const auc = curves.map((c, i) => {
+        const a = calcAUC(c.data);
+        const cmax = Math.max(...c.data.map((d) => d.concentracao));
+        return { phenotype: PHENOTYPES[i].id, auc: a, cmax: parseFloat(cmax.toFixed(2)), clearance: parseFloat((dose[0] / a).toFixed(2)), fill: PHENOTYPES[i].color };
+      });
+      setAucData(auc);
+    }
     completeModule(3);
+  };
+
+  // M4 decision: dose adjustments
+  const submitM4Decision = () => {
+    const results = PHENOTYPES.map(p => {
+      const ideal = getIdealDoseAdjustment(p.id, selectedDrug.type);
+      const userChoice = userDoseAdjustments[p.id] || "manter";
+      return { phenotype: p.id, userChoice, ideal, correct: userChoice === ideal };
+    });
+    setM4Feedback({ results });
+    setM4Submitted(true);
+    completeModule(4);
   };
 
   const togglePhenotype = (id: string) => {
@@ -109,6 +173,16 @@ export default function BancadaFarmacogenomica() {
     </div>
   );
   const ModuleBadge = ({ n }: { n: number }) => completedModules.has(n) ? <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" /> : null;
+  const FeedbackIcon = ({ correct }: { correct: boolean }) => correct
+    ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+    : <XCircle className="h-4 w-4 text-destructive shrink-0" />;
+
+  const ADJUSTMENT_LABELS: Record<DoseAdjustment, string> = {
+    manter: "Manter dose padrão",
+    reduzir: "Reduzir dose",
+    aumentar: "Aumentar dose",
+    contraindicar: "Contraindicar uso",
+  };
 
   const experimentSummary: Record<string, string> = {
     Fármaco: selectedDrug.name,
@@ -121,14 +195,27 @@ export default function BancadaFarmacogenomica() {
   }
 
   const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
-    const decisions: { label: string; userChoice: string; correct: boolean }[] = [
+    const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
       { label: "Fármaco", userChoice: selectedDrug.name, correct: true },
-      { label: "Enzima", userChoice: selectedDrug.enzyme, correct: true },
       { label: "Tipo", userChoice: selectedDrug.type === "prodrug" ? "Pró-fármaco" : "Fármaco ativo", correct: true },
-      { label: "Dose", userChoice: `${dose[0]} mg`, correct: true },
     ];
-    if (aucData) {
-      aucData.forEach(a => decisions.push({ label: `AUC ${a.phenotype}`, userChoice: `${a.auc} mg·h/L`, correct: true }));
+    if (m3Feedback) {
+      decisions.push({
+        label: "Fenótipo de maior risco",
+        userChoice: userRiskPhenotype,
+        correct: m3Feedback.correct,
+        idealChoice: m3Feedback.ideal,
+      });
+    }
+    if (m4Feedback) {
+      m4Feedback.results.forEach(r => {
+        decisions.push({
+          label: `Ajuste de dose (${r.phenotype})`,
+          userChoice: ADJUSTMENT_LABELS[r.userChoice],
+          correct: r.correct,
+          idealChoice: ADJUSTMENT_LABELS[r.ideal],
+        });
+      });
     }
     const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
     submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
@@ -142,12 +229,7 @@ export default function BancadaFarmacogenomica() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Dna className="h-7 w-7 text-primary" /> Bancada de Farmacogenômica</h1>
           <p className="text-sm text-muted-foreground">Variabilidade genética CYP450 e resposta farmacológica</p>
         </div>
-        <AdminPromptViewer
-          toolSlug={LAB_SYSTEM_PROMPTS.farmacogenomica.slug}
-          toolName={LAB_SYSTEM_PROMPTS.farmacogenomica.name}
-          toolType="laboratory"
-          prompt={LAB_SYSTEM_PROMPTS.farmacogenomica.prompt}
-        />
+        <AdminPromptViewer toolSlug={LAB_SYSTEM_PROMPTS.farmacogenomica.slug} toolName={LAB_SYSTEM_PROMPTS.farmacogenomica.name} toolType="laboratory" prompt={LAB_SYSTEM_PROMPTS.farmacogenomica.prompt} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -168,16 +250,11 @@ export default function BancadaFarmacogenomica() {
               <p><strong>Parâmetros PK base:</strong> ka={selectedDrug.baseParams.ka} h⁻¹, ke={selectedDrug.baseParams.ke} h⁻¹, Vd={selectedDrug.baseParams.vd} L, F={selectedDrug.baseParams.f}</p>
             </div>
             <Button onClick={confirmDrug} className="w-full">Confirmar Fármaco</Button>
-            <AIContextGenerator
-              labType="farmacogenomica"
-              onContextGenerated={(data: any) => {
-                setCustomDrug(data.drug);
-                setDrug(data.drug.id);
-                setCompletedModules(new Set([1]));
-                setCurves(null);
-                setAucData(null);
-              }}
-            />
+            <AIContextGenerator labType="farmacogenomica" onContextGenerated={(data: any) => {
+              setCustomDrug(data.drug); setDrug(data.drug.id);
+              setCompletedModules(new Set([1])); setCurves(null); setAucData(null);
+              setM3Submitted(false); setM3Feedback(null); setM4Submitted(false); setM4Feedback(null);
+            }} />
           </CardContent>
         </Card>
 
@@ -195,11 +272,7 @@ export default function BancadaFarmacogenomica() {
               {PHENOTYPES.map((p) => (
                 <div key={p.id} className="flex items-center gap-2">
                   <span className="text-xs w-8" style={{ color: p.color }}>{p.id}</span>
-                  <Slider
-                    value={[phenoDist[p.id as keyof typeof phenoDist]]}
-                    onValueChange={(v) => setPhenoDist((prev) => ({ ...prev, [p.id]: v[0] }))}
-                    min={0} max={100} step={5} className="flex-1"
-                  />
+                  <Slider value={[phenoDist[p.id as keyof typeof phenoDist]]} onValueChange={(v) => setPhenoDist((prev) => ({ ...prev, [p.id]: v[0] }))} min={0} max={100} step={5} className="flex-1" />
                   <span className="text-xs w-8 text-right">{phenoDist[p.id as keyof typeof phenoDist]}%</span>
                 </div>
               ))}
@@ -208,10 +281,10 @@ export default function BancadaFarmacogenomica() {
           </CardContent>
         </Card>
 
-        {/* M3 */}
+        {/* M3 - Curvas PK + Decisão: fenótipo de maior risco */}
         <Card className="lg:col-span-2 relative">
           {!completedModules.has(2) && <LockedOverlay req={2} />}
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">3. Curvas PK por Genótipo <ModuleBadge n={2} /></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">3. Interpretação das Curvas PK <ModuleBadge n={3} /></CardTitle></CardHeader>
           <CardContent>
             {!curves ? (
               <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Aguardando genotipagem</div>
@@ -236,16 +309,53 @@ export default function BancadaFarmacogenomica() {
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
-                <Button onClick={compareAUC} className="w-full">Comparar AUC entre Fenótipos</Button>
+
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertTriangle className="h-4 w-4" />
+                    Decisão Crítica: Identificar o fenótipo de maior risco
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedDrug.type === "prodrug"
+                      ? `${selectedDrug.name} é um pró-fármaco metabolizado por ${selectedDrug.enzyme}. Analise as curvas e identifique qual fenótipo apresenta maior risco de toxicidade.`
+                      : `${selectedDrug.name} é um fármaco ativo metabolizado por ${selectedDrug.enzyme}. Analise as curvas e identifique qual fenótipo apresenta maior risco de toxicidade por acúmulo.`
+                    }
+                  </p>
+                  <div>
+                    <Label className="text-xs font-medium">Qual fenótipo tem maior risco de TOXICIDADE?</Label>
+                    <Select value={userRiskPhenotype} onValueChange={setUserRiskPhenotype} disabled={m3Submitted}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione o fenótipo..." /></SelectTrigger>
+                      <SelectContent>
+                        {PHENOTYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {!m3Submitted ? (
+                    <Button onClick={submitM3Decision} disabled={!userRiskPhenotype} className="w-full">
+                      Confirmar Identificação
+                    </Button>
+                  ) : m3Feedback && (
+                    <div className="space-y-2 animate-fade-in">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FeedbackIcon correct={m3Feedback.correct} />
+                        <span>
+                          Sua resposta: <strong>{userRiskPhenotype}</strong> | Correto: <strong>{m3Feedback.ideal}</strong>
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{m3Feedback.reason}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* M4 */}
+        {/* M4 - AUC + Decisão: ajuste de dose por fenótipo */}
         <Card className="lg:col-span-2 relative">
           {!completedModules.has(3) && <LockedOverlay req={3} />}
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">4. Comparação de AUC <ModuleBadge n={3} /></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">4. Recomendação de Ajuste de Dose <ModuleBadge n={4} /></CardTitle></CardHeader>
           <CardContent>
             {!aucData ? (
               <div className="h-52 flex items-center justify-center text-sm text-muted-foreground">Aguardando análise</div>
@@ -275,18 +385,77 @@ export default function BancadaFarmacogenomica() {
                     ))}
                   </tbody>
                 </table>
-                <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-                  <strong className="text-foreground">Veredito:</strong>{" "}
-                  {selectedDrug.type === "prodrug"
-                    ? `Como ${selectedDrug.name} é um pró-fármaco metabolizado por ${selectedDrug.enzyme}, metabolizadores lentos (PM) apresentam menor conversão ao metabólito ativo. Metabolizadores ultrarrápidos (UM) podem ter resposta exagerada.`
-                    : `${selectedDrug.name} é metabolizado por ${selectedDrug.enzyme}. Metabolizadores lentos (PM) acumulam mais fármaco, aumentando risco de toxicidade. Considerar redução de dose para PM.`}
+
+                {m3Feedback && !m3Feedback.correct && !m4Submitted && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-xs text-destructive">
+                    ⚠️ Sua identificação de risco no módulo anterior foi incorreta. Considere os dados de AUC acima para revisar seu raciocínio ao recomendar ajustes.
+                  </div>
+                )}
+
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertTriangle className="h-4 w-4" />
+                    Decisão Crítica: Recomende o ajuste de dose para cada fenótipo
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Considerando que {selectedDrug.name} é um {selectedDrug.type === "prodrug" ? "pró-fármaco" : "fármaco ativo"}, qual a conduta para cada perfil metabólico?
+                  </p>
+
+                  <div className="space-y-3">
+                    {PHENOTYPES.map(p => (
+                      <div key={p.id} className="flex items-center gap-3">
+                        <span className="text-xs font-semibold w-8" style={{ color: p.color }}>{p.id}</span>
+                        <RadioGroup
+                          value={userDoseAdjustments[p.id] || ""}
+                          onValueChange={v => setUserDoseAdjustments(prev => ({ ...prev, [p.id]: v as DoseAdjustment }))}
+                          disabled={m4Submitted}
+                          className="flex gap-3"
+                        >
+                          {(Object.keys(ADJUSTMENT_LABELS) as DoseAdjustment[]).map(adj => (
+                            <div key={adj} className="flex items-center gap-1">
+                              <RadioGroupItem value={adj} id={`${p.id}-${adj}`} />
+                              <Label htmlFor={`${p.id}-${adj}`} className="text-[10px] cursor-pointer">{ADJUSTMENT_LABELS[adj]}</Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    ))}
+                  </div>
+
+                  {!m4Submitted ? (
+                    <Button
+                      onClick={submitM4Decision}
+                      disabled={Object.keys(userDoseAdjustments).length < 4}
+                      className="w-full"
+                    >
+                      Confirmar Recomendações
+                    </Button>
+                  ) : m4Feedback && (
+                    <div className="space-y-2 animate-fade-in">
+                      {m4Feedback.results.map(r => (
+                        <div key={r.phenotype} className="flex items-center gap-2 text-sm">
+                          <FeedbackIcon correct={r.correct} />
+                          <span className="text-xs">
+                            <strong>{r.phenotype}</strong>: você = "{ADJUSTMENT_LABELS[r.userChoice]}" | ideal = "<strong>{ADJUSTMENT_LABELS[r.ideal]}</strong>"
+                          </span>
+                        </div>
+                      ))}
+                      <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground mt-2">
+                        <strong className="text-foreground">Resumo:</strong>{" "}
+                        {selectedDrug.type === "prodrug"
+                          ? `Pró-fármacos como ${selectedDrug.name} dependem da ativação via ${selectedDrug.enzyme}. PM tem conversão insuficiente (contraindicar), IM precisa de dose maior, EM mantém dose padrão, e UM deve reduzir dose pelo risco de ativação excessiva.`
+                          : `Fármacos ativos como ${selectedDrug.name} são inativados via ${selectedDrug.enzyme}. PM e IM acumulam fármaco (reduzir dose), EM mantém padrão, e UM elimina rápido demais (aumentar dose).`
+                        }
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
+        <LabReportPanel benchTitle="Bancada de Farmacogenômica" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );
