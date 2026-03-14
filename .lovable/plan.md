@@ -1,100 +1,57 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Análise: Alternativas ao Sketchfab para Modelos 3D Médicos
 
-## Visão Geral
+### Situação Atual
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+O MedView 3D usa a **Sketchfab API** para buscar e renderizar modelos 3D. O problema: os modelos são genéricos (upload da comunidade), nem sempre têm qualidade/especificidade clínica, e a busca frequentemente retorna resultados irrelevantes ou nenhum resultado.
 
-## Arquitetura
+### Alternativas Disponíveis
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+| Plataforma | Prós | Contras | Custo |
+|-----------|------|---------|-------|
+| **BioDigital Human** | Modelos anatômicos profissionais, labels médicos, API robusta, usado por universidades | API cara (~$500+/mês enterprise), sem plano gratuito viável | Alto |
+| **Zygote Body** | Anatomia completa do corpo humano, qualidade médica | API limitada, menos flexível para embed | Médio |
+| **3D4Medical (Elsevier)** | Referência em educação médica | Sem API pública para embed web | N/A |
+| **NIH 3D Print Exchange** | Gratuito, modelos científicos reais | Poucos modelos, sem viewer API | Grátis |
+| **Three.js + modelos próprios (GLB/GLTF)** | Controle total, sem dependência externa, qualidade garantida | Precisa criar/comprar modelos, mais trabalho inicial | Variável |
+| **Turbosquid/CGTrader** | Milhares de modelos médicos de alta qualidade para compra | Compra unitária, sem API de busca dinâmica | $10-200/modelo |
 
-## Simuladores por Lotes
+### Recomendação: Estratégia Híbrida
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+A melhor abordagem custo-benefício seria uma **estratégia híbrida**:
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+1. **Modelos curados pré-selecionados** — Para cada procedimento (as 6 áreas atuais), selecionar manualmente 3-5 modelos Sketchfab de alta qualidade e salvar seus UIDs no código. Assim o usuário já vê um modelo bom ao entrar, sem precisar buscar.
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+2. **Manter busca Sketchfab como secundária** — O botão "Buscar" continua disponível para explorar mais modelos.
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+3. **Futuramente: BioDigital Human** — Se o produto escalar e justificar o investimento, migrar para BioDigital que é o padrão ouro em anatomia 3D interativa para educação.
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### Implementação da Estratégia 1 (curação)
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+Criar um mapa de modelos curados por procedimento em cada página do MedView 3D:
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+```text
+// Exemplo de estrutura
+const CURATED_MODELS = {
+  "implante-dentario": {
+    modelId: "abc123...",  // UID Sketchfab verificado
+    name: "Mandíbula com implante"
+  },
+  "stent-coronario": {
+    modelId: "def456...",
+    name: "Artéria coronária com stent"
+  }
+}
+```
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+Cada etapa do procedimento teria um modelo padrão pré-validado que carrega automaticamente, eliminando o problema de "tela de erro" e garantindo qualidade consistente.
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+### Ação necessária de sua parte
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+Para implementar a curação, seria necessário:
+- Navegar no Sketchfab e selecionar manualmente os melhores modelos para cada procedimento
+- Ou: autorizar que eu faça buscas automáticas e salve os melhores resultados como defaults
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
-
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
-
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+Quer que eu implemente a estratégia de modelos curados pré-selecionados?
 
