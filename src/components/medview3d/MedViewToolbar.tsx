@@ -181,14 +181,15 @@ export function MedViewToolbar({ api, isReady, onFullscreen, disabled, disabledM
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+              className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={tool.action}
+              disabled={disabled}
             >
               <tool.icon className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>{tool.label}</p>
+            <p>{disabled && disabledMessage ? disabledMessage : tool.label}</p>
           </TooltipContent>
         </Tooltip>
       ))}
