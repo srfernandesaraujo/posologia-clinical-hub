@@ -434,6 +434,13 @@ const App = () => (
               <Route path="/laboratorio-virtual/pericia-forense" element={<BancadaPericiaForense />} />
               <Route path="/laboratorio-virtual/modelagem-molecular" element={<BancadaModelagemMolecular />} />
               <Route path="/documentacao" element={<Documentacao />} />
+              <Route path="/medview-3d" element={<MedView3D />} />
+              <Route path="/medview-3d/ortopedia-proteses" element={<OrtopediaProteses />} />
+              <Route path="/medview-3d/cardiologia-stent" element={<CardiologiaStent />} />
+              <Route path="/medview-3d/odontologia-implantes" element={<OdontologiaImplantes />} />
+              <Route path="/medview-3d/farmacologia-dispositivos" element={<FarmacologiaDispositivos />} />
+              <Route path="/medview-3d/dermatologia-cirurgia-plastica" element={<DermatologiaCirurgiaPlastica />} />
+              <Route path="/medview-3d/cirurgia-geral-laparoscopia" element={<CirurgiaGeralLaparoscopia />} />
             </Route>
 
             {/* Admin routes */}
