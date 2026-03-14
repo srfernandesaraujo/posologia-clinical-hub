@@ -93,6 +93,7 @@ const BUILT_IN_CASES: CaseData[] = [
     title: "Caso 2: Notificação B — Clonazepam (Lista B1)",
     difficulty: "Difícil",
     tipo: "B",
+    patient: { diagnosis: "Dispensação de Clonazepam (Lista B1) — Prescritor fora do escopo" },
     paciente: {
       nome: "João Pedro Martins", idade: 35,
       queixa: "Preciso do meu Rivotril. O dentista me passou porque estou muito ansioso com o tratamento de canal.",
