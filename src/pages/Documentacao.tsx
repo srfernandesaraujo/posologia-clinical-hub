@@ -141,7 +141,7 @@ const sections = [
   {
     title: "Laboratório Virtual",
     icon: Microscope,
-    description: "8 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF.",
+    description: "11 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF. Integrado com Salas Virtuais e Analytics.",
     items: [
       { name: "Desenvolvimento de Fármacos", desc: "Alvo → ligante → docking → ensaio clínico → relatório", link: "/laboratorio-virtual" },
       { name: "Microbiologia", desc: "Cepa → antibióticos → placa de Petri → curva de crescimento", link: "/laboratorio-virtual" },
@@ -151,6 +151,9 @@ const sections = [
       { name: "Controle de Qualidade", desc: "Método → calibração → quantificação → validação ICH Q2", link: "/laboratorio-virtual" },
       { name: "Epidemiologia", desc: "Desenho → variáveis → tabela 2×2 → forest plot", link: "/laboratorio-virtual" },
       { name: "Biotecnologia", desc: "Constructo → indução → SDS-PAGE → curva de expressão", link: "/laboratorio-virtual" },
+      { name: "Simulação Realística", desc: "Cenários clínicos com decisões em tempo real e desfechos variáveis", link: "/laboratorio-virtual" },
+      { name: "Perícia Forense", desc: "Coleta de evidências → análise toxicológica → laudo pericial", link: "/laboratorio-virtual" },
+      { name: "Modelagem Molecular", desc: "Busca de compostos → edição molecular → predições in silico", link: "/laboratorio-virtual" },
     ],
   },
   {
