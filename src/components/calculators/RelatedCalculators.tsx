@@ -58,8 +58,9 @@ const RELATED_MAP: Record<string, string[]> = {
   "rass-sedacao": ["qsofa", "nutricao-parenteral"],
   "nutricao-parenteral": ["holliday-segar", "meld-score"],
   "interacoes-cyp": ["vancomicina-auc", "qtc-corrigido", "equivalencia-antidepressivos"],
-  "adesao-oncologia": ["toxicidade-antineoplasicos"],
-  "toxicidade-antineoplasicos": ["adesao-oncologia"],
+  "adesao-oncologia": ["toxicidade-antineoplasicos", "ajuste-dose-oncologico"],
+  "toxicidade-antineoplasicos": ["adesao-oncologia", "ajuste-dose-oncologico"],
+  "ajuste-dose-oncologico": ["adesao-oncologia", "toxicidade-antineoplasicos", "ajuste-dose-renal", "meld-score"],
 };
 
 const CALC_NAMES: Record<string, string> = {
