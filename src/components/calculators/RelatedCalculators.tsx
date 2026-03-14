@@ -83,6 +83,8 @@ const CALC_NAMES: Record<string, string> = {
   "rass-sedacao": "RASS (Sedacao)",
   "nutricao-parenteral": "NPT",
   "interacoes-cyp": "Interacoes CYP450",
+  "adesao-oncologia": "Adesao Oncologica",
+  "toxicidade-antineoplasicos": "Toxicidade Antineoplasicos",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {

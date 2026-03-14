@@ -94,6 +94,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Pediatria": "340 70% 55%",
   "Hepatologia": "15 80% 50%",
   "Terapia Intensiva": "190 70% 45%",
+  "Oncologia": "300 60% 50%",
 };
 
 export default function Calculadoras() {

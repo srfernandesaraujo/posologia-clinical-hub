@@ -117,6 +117,18 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "Drug Metabolism and CYP450 Interactions", source: "Clin Pharmacol Ther", year: "2021" },
     { title: "FDA Guidance on Drug Interaction Studies", source: "FDA", year: "2020" },
   ],
+  "adesao-oncologia": [
+    { title: "ARMS: Adherence to Refills and Medications Scale", source: "Ann Pharmacother", year: "2007", url: "https://doi.org/10.1345/aph.1H413" },
+    { title: "MASCC MOATT — Oral Agent Teaching Tool", source: "Support Care Cancer", year: "2010" },
+    { title: "Morisky Medication Adherence Scales (MMAS-4/8)", source: "J Clin Hypertens", year: "2008" },
+    { title: "Adherence to Oral Anticancer Agents", source: "J Oncol Pharm Pract", year: "2019" },
+  ],
+  "toxicidade-antineoplasicos": [
+    { title: "CARG Toxicity Score for Older Adults with Cancer", source: "Cancer", year: "2011", url: "https://doi.org/10.1002/cncr.26094" },
+    { title: "CRASH Score — Chemotherapy Risk Assessment Scale for High-Age Patients", source: "Cancer", year: "2012", url: "https://doi.org/10.1002/cncr.27284" },
+    { title: "ESC Cardio-Oncology Guidelines (HFA-ICOS)", source: "European Heart Journal", year: "2022", url: "https://doi.org/10.1093/eurheartj/ehac244" },
+    { title: "Practical Assessment of Older Adults with Cancer", source: "J Clin Oncol", year: "2021" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {
