@@ -249,16 +249,11 @@ export default function AdesaoOncologia() {
           <ShareToolButton toolSlug={SLUG} toolName="Adesão Oncológica" />
           <AdminPromptViewer
             toolSlug={SLUG}
-            systemPrompt={getNativePrompt(SLUG)}
+            toolName="Adesão Oncológica"
+            toolType="calculator"
+            prompt={getNativePrompt(SLUG) || ""}
           />
-          <CalculationHistory
-            history={history}
-            calculatorName="Adesão Oncológica"
-            onRestore={(entry) => {
-              const d = entry.details as any;
-              if (d.instrumento) setInstrumento(d.instrumento);
-            }}
-          />
+          <CalculationHistory calculatorSlug={SLUG} />
         </div>
       </div>
 
