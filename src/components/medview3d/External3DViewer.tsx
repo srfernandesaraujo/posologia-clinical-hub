@@ -87,7 +87,7 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
 
     const initViewer = useCallback(async () => {
       if (!iframeRef.current || !modelId) {
-        setLoadError("Selecione um modelo para iniciar a visualização.");
+        setLoadError(null);
         setIsReady(false);
         setApi(null);
         return;
