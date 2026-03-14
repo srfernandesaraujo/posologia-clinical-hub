@@ -1,15 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Zap, FileText, DoorOpen, Calculator, Gamepad2 } from "lucide-react";
-import { useSubscription } from "@/hooks/useSubscription";
-import { toast } from "sonner";
-
-interface UpgradeModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  feature?: string;
-}
-
 import { Crown, Zap, FileText, DoorOpen, Calculator, Gamepad2, FlaskConical, Box, Store } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
