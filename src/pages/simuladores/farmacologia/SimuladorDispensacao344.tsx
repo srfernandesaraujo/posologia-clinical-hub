@@ -211,7 +211,7 @@ export default function SimuladorDispensacao344() {
   const navigate = useNavigate();
   const location = useLocation();
   const isVirtualRoom = location.pathname.startsWith("/sala");
-  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG);
+  const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom: isRoom, examProgress, examFeedback, submitResults, proceedToNext } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<CaseData | null>(null);
