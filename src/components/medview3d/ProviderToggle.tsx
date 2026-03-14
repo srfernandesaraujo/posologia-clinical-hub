@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type ViewerProvider = "sketchfab" | "biodigital";
+export type ViewerProvider = "sketchfab" | "zanatomy";
 
 interface ProviderToggleProps {
   provider: ViewerProvider;
@@ -29,13 +29,13 @@ export function ProviderToggle({ provider, onChange }: ProviderToggleProps) {
         size="sm"
         className={cn(
           "h-7 px-3 text-xs rounded-md transition-all",
-          provider === "biodigital"
+          provider === "zanatomy"
             ? "bg-background text-foreground shadow-sm font-medium"
             : "text-muted-foreground hover:text-foreground"
         )}
-        onClick={() => onChange("biodigital")}
+        onClick={() => onChange("zanatomy")}
       >
-        BioDigital
+        Z-Anatomy
       </Button>
     </div>
   );
