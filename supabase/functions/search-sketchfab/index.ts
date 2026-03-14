@@ -46,8 +46,17 @@ function buildQueryCandidates(rawQuery: string) {
 
   const firstThree = normalized.split(" ").slice(0, 3).join(" ").trim();
   const firstTwo = normalized.split(" ").slice(0, 2).join(" ").trim();
+  const lower = normalized.toLowerCase();
 
-  return Array.from(new Set([normalized, simplified, firstThree, firstTwo].filter((q) => q.length >= 3)));
+  let semanticFallback = "human anatomy";
+  if (lower.includes("dental") || lower.includes("odont")) semanticFallback = "dental implant jaw";
+  else if (lower.includes("heart") || lower.includes("coronary") || lower.includes("stent")) semanticFallback = "heart anatomy";
+  else if (lower.includes("knee") || lower.includes("femur") || lower.includes("tibia") || lower.includes("ortho")) semanticFallback = "knee joint anatomy";
+  else if (lower.includes("laparo") || lower.includes("gallbladder") || lower.includes("abdomen") || lower.includes("cholecyst")) semanticFallback = "gallbladder anatomy";
+  else if (lower.includes("face") || lower.includes("botox") || lower.includes("filler") || lower.includes("derma")) semanticFallback = "face muscles anatomy";
+  else if (lower.includes("uterus") || lower.includes("iud") || lower.includes("diu") || lower.includes("cervix")) semanticFallback = "uterus anatomy";
+
+  return Array.from(new Set([normalized, simplified, firstThree, firstTwo, semanticFallback].filter((q) => q.length >= 3)));
 }
 
 serve(async (req) => {
