@@ -41,6 +41,7 @@ import NutricaoParenteral from "./pages/NutricaoParenteral";
 import InteracoesCYP from "./pages/InteracoesCYP";
 import AdesaoOncologia from "./pages/AdesaoOncologia";
 import ToxicidadeAntineoplasicos from "./pages/ToxicidadeAntineoplasicos";
+import AjusteDoseOncologico from "./pages/AjusteDoseOncologico";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -418,6 +419,7 @@ const App = () => (
               <Route path="/calculadoras/interacoes-cyp" element={<InteracoesCYP />} />
               <Route path="/calculadoras/adesao-oncologia" element={<AdesaoOncologia />} />
               <Route path="/calculadoras/toxicidade-antineoplasicos" element={<ToxicidadeAntineoplasicos />} />
+              <Route path="/calculadoras/ajuste-dose-oncologico" element={<AjusteDoseOncologico />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />

@@ -129,6 +129,13 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "ESC Cardio-Oncology Guidelines (HFA-ICOS)", source: "European Heart Journal", year: "2022", url: "https://doi.org/10.1093/eurheartj/ehac244" },
     { title: "Practical Assessment of Older Adults with Cancer", source: "J Clin Oncol", year: "2021" },
   ],
+  "ajuste-dose-oncologico": [
+    { title: "Calvert AH et al. Carboplatin Dosage: Prospective Evaluation", source: "J Clin Oncol", year: "1989", url: "https://doi.org/10.1200/JCO.1989.7.11.1748" },
+    { title: "Cockcroft DW, Gault MH. Prediction of Creatinine Clearance", source: "Nephron", year: "1976" },
+    { title: "NCI Organ Dysfunction Working Group (NCI-ODWG)", source: "J Clin Oncol", year: "2006" },
+    { title: "Child-Pugh Classification for TKI Dose Adjustment", source: "Hepatology", year: "2001" },
+    { title: "FDA Guidance: Pharmacokinetics in Patients with Hepatic Impairment", source: "FDA", year: "2020" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {

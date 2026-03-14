@@ -1886,6 +1886,33 @@ PRESCRIÇÕES VISUAIS: Componentes HTML que replicam fielmente os formulários o
 GERAÇÃO DE CASOS: Crie cenários com erros propositais nas prescrições (data vencida, campo ausente, quantidade excessiva, UF diferente, prescritor não habilitado, falta de via, >3 substâncias C1). Use medicamentos reais: morfina, codeína, metilfenidato, clonazepam, diazepam, zolpidem, pregabalina, tramadol, fenobarbital, anfetamina. Varie os tipos de pacientes e comportamentos no balcão.
 
 REFERÊNCIAS: Portaria SVS/MS nº 344/98, RDC nº 58/2007, RDC nº 22/2001, Lei nº 5.991/1973.`,
+
+  "ajuste-dose-oncologico": `Você é um especialista em farmacologia oncológica. Crie uma calculadora de ajuste de dose de antineoplásicos para pacientes com insuficiência renal e/ou hepática, com 3 abas:
+
+ABA 1 — CARBOPLATINA (FÓRMULA DE CALVERT):
+- Campos: AUC alvo (4-7), TFG (direto ou via Cockcroft-Gault: peso, idade, sexo, creatinina)
+- Fórmula: Dose (mg) = AUC × (TFG + 25)
+- Cap TFG em 125 mL/min (recomendação FDA/GOG)
+- Alerta visual quando TFG > 125
+
+ABA 2 — AJUSTE RENAL GERAL:
+- Calcula ClCr via Cockcroft-Gault
+- Select de ~15 antineoplásicos (cisplatina, capecitabina, metotrexato, lenalidomida, pemetrexede, etoposido, bleomicina, topotecano, oxaliplatina, fludarabina, ifosfamida, gemcitabina, citarabina, ciclofosfamida, carboplatina)
+- Tabela de ajuste por faixa de ClCr: >60, 45-60, 30-45, <30 mL/min
+- Resultado com recomendação de dose + tabela completa do fármaco
+
+ABA 3 — AJUSTE HEPÁTICO:
+- Sub-seleção: QT venosa (NCI-ODWG) ou TKI oral (Child-Pugh)
+- NCI-ODWG: bilirrubina, AST, ULN → classificação Normal/A/B/C/D + select de fármaco IV → recomendação
+- Child-Pugh: bilirrubina, albumina, INR, ascite, encefalopatia → score/classe A/B/C + select de TKI → recomendação
+
+PAINEL LATERAL: RiskGauge (ClCr ou Child-Pugh), observações clínicas, exportação PDF, referências clínicas.
+
+REFERÊNCIAS:
+- Calvert AH et al. J Clin Oncol 1989;7:1748-1756
+- Cockcroft DW, Gault MH. Nephron 1976;16:31-41
+- NCI Organ Dysfunction Working Group. J Clin Oncol 2006
+- FDA Guidance: Pharmacokinetics in Hepatic Impairment, 2020`,
 };
 
 

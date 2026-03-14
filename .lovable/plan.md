@@ -1,52 +1,100 @@
 
 
-## Plano: Calculadora de Ajuste de Dose Oncológico (Renal e Hepático)
+# Plano: Simuladores de Bioquímica
 
-### Resumo
-Criar uma terceira calculadora de Oncologia com 3 abas: **Carboplatina (Calvert)**, **Ajuste Renal Geral** (Cockcroft-Gault + antineoplásico), e **Ajuste Hepático** (NCI-ODWG para IV, Child-Pugh para TKIs orais). Seguirá o mesmo padrão visual das calculadoras existentes.
+## Visão Geral
 
-**Slug**: `ajuste-dose-oncologico`
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
----
+## Arquitetura
 
-### Aba 1 — Carboplatina (Fórmula de Calvert)
-- **Inputs**: AUC alvo (dropdown: 4, 5, 6, 7), TFG (input numérico ou calcular via Cockcroft-Gault inline com peso/idade/sexo/creatinina)
-- **Fórmula**: Dose (mg) = AUC × (TFG + 25)
-- **Resultado**: Dose em mg, alerta se TFG < 15 ou > 125 (cap)
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-### Aba 2 — Ajuste Renal Geral
-- **Inputs**: Peso, idade, sexo, creatinina sérica → calcula ClCr (Cockcroft-Gault)
-- **Select de antineoplásico**: Lista com ~15-20 fármacos comuns (cisplatina, capecitabina, metotrexato, lenalidomida, pemetrexede, etc.)
-- **Tabela de ajuste**: Para cada fármaco, faixas de ClCr (>60, 30-60, 15-30, <15/diálise) com % de dose ou contraindicação
-- **Resultado**: RiskGauge com ClCr, recomendação de dose ajustada
+## Simuladores por Lotes
 
-### Aba 3 — Ajuste Hepático
-- **Sub-seleção**: QT venosa (NCI-ODWG) ou TKI oral (Child-Pugh)
-- **NCI-ODWG**: Inputs de bilirrubina total, AST, ULN → classificação (Normal, Grupo A/B/C/D) + select de fármaco → recomendação
-- **Child-Pugh**: Inputs de bilirrubina, albumina, INR, ascite, encefalopatia → score A/B/C + select de TKI → recomendação
-- **Resultado**: Classificação + ajuste de dose por fármaco
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
----
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-### Arquivos a Criar
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/pages/AjusteDoseOncologico.tsx` | Página principal (~700 linhas) |
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-### Arquivos a Editar
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/Calculadoras.tsx` | +1 entrada NATIVE_CALCULATORS + slug |
-| `src/App.tsx` | Rota `/calculadoras/ajuste-dose-oncologico` |
-| `src/data/nativeSystemPrompts.ts` | System prompt do slug |
-| `src/components/calculators/ClinicalReferences.tsx` | Referências (Calvert 1989, NCI-ODWG, Child-Pugh) |
-| `src/components/calculators/RelatedCalculators.tsx` | Relacionar com as 2 calculadoras oncológicas existentes |
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
 
-### Padrão Visual
-- Layout `grid-cols-1 lg:grid-cols-3` (2/3 inputs + 1/3 resultados)
-- Header com AdminPromptViewer, ShareToolButton, CalculationHistory
-- Painel direito: RiskGauge, recomendações, PDF, ClinicalReferences, RelatedCalculators
-- Tabs para alternar entre os 3 instrumentos
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
+
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
+
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
+
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
+
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
+
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
+
+## Alterações em arquivos existentes
+
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 

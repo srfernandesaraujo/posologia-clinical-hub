@@ -33,6 +33,7 @@ const NATIVE_PATHS: Record<string, string> = {
   "interacoes-cyp": "/calculadoras/interacoes-cyp",
   "adesao-oncologia": "/calculadoras/adesao-oncologia",
   "toxicidade-antineoplasicos": "/calculadoras/toxicidade-antineoplasicos",
+  "ajuste-dose-oncologico": "/calculadoras/ajuste-dose-oncologico",
 };
 
 const RELATED_MAP: Record<string, string[]> = {
@@ -57,8 +58,9 @@ const RELATED_MAP: Record<string, string[]> = {
   "rass-sedacao": ["qsofa", "nutricao-parenteral"],
   "nutricao-parenteral": ["holliday-segar", "meld-score"],
   "interacoes-cyp": ["vancomicina-auc", "qtc-corrigido", "equivalencia-antidepressivos"],
-  "adesao-oncologia": ["toxicidade-antineoplasicos"],
-  "toxicidade-antineoplasicos": ["adesao-oncologia"],
+  "adesao-oncologia": ["toxicidade-antineoplasicos", "ajuste-dose-oncologico"],
+  "toxicidade-antineoplasicos": ["adesao-oncologia", "ajuste-dose-oncologico"],
+  "ajuste-dose-oncologico": ["adesao-oncologia", "toxicidade-antineoplasicos", "ajuste-dose-renal", "meld-score"],
 };
 
 const CALC_NAMES: Record<string, string> = {
@@ -85,6 +87,7 @@ const CALC_NAMES: Record<string, string> = {
   "interacoes-cyp": "Interacoes CYP450",
   "adesao-oncologia": "Adesao Oncologica",
   "toxicidade-antineoplasicos": "Toxicidade Antineoplasicos",
+  "ajuste-dose-oncologico": "Ajuste Dose Oncologico",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {
