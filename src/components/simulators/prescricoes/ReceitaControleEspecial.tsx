@@ -13,82 +13,111 @@ interface ReceitaControleEspecialProps {
 
 export default function ReceitaControleEspecial({ data }: ReceitaControleEspecialProps) {
   const d = data;
+  const line = "border-b border-foreground/20";
+  const fieldText = "text-foreground";
+  const labelText = "text-muted-foreground font-bold text-[10px] uppercase tracking-wide";
+
   return (
-    <div className="rounded-lg border-2 border-border bg-card p-4 sm:p-6 text-xs sm:text-sm font-mono space-y-3 max-w-xl mx-auto shadow-md">
-      {/* Header */}
-      <div className="text-center space-y-0.5">
-        <h3 className="text-base font-bold text-foreground">RECEITUÁRIO DE CONTROLE ESPECIAL</h3>
-        <div className="flex justify-center gap-6 text-[10px] text-muted-foreground">
-          <span className="px-2 py-0.5 border rounded bg-muted">1ª VIA — FARMÁCIA</span>
-          <span className={`px-2 py-0.5 border rounded ${d.segundaVia === false ? "bg-destructive/10 text-destructive font-bold" : "bg-muted"}`}>
-            2ª VIA — PACIENTE {d.segundaVia === false && "(AUSENTE)"}
-          </span>
-        </div>
+    <div className="rounded border-2 border-border bg-card text-[11px] max-w-lg mx-auto shadow-lg font-sans overflow-hidden">
+      {/* Title + Vias */}
+      <div className="p-3 pb-2 text-center">
+        <p className="font-black text-sm text-foreground">RECEITUÁRIO CONTROLE ESPECIAL</p>
       </div>
 
-      <hr className="border-border" />
+      {/* Emitente box + Vias indicator */}
+      <div className="px-3 pb-2">
+        <div className="flex gap-3">
+          {/* Emitente */}
+          <fieldset className="border border-border rounded p-2 flex-1 space-y-1">
+            <legend className={`${labelText} px-1 text-[9px]`}>IDENTIFICAÇÃO DO EMITENTE</legend>
+            <p className={fieldText}>Nome Completo: <span className="font-medium">{d.emitente?.nome || ""}</span></p>
+            <div className="flex gap-3">
+              <p className={fieldText}>CRM <span className="font-medium">{d.emitente?.crm || "______"}</span></p>
+              <p className={fieldText}>UF: <span className="font-medium">{d.emitente?.uf || "___"}</span></p>
+              <p className={fieldText}>Nº ______</p>
+            </div>
+            <p className={fieldText}>Endereço Completo e Telefone: <span className="font-medium">{d.emitente?.endereco || ""} {d.emitente?.telefone || ""}</span></p>
+            <div className="flex gap-3">
+              <p className={fieldText}>Cidade: <span className="font-medium">{d.emitente?.cidade || ""}</span></p>
+              <p className={fieldText}>UF: <span className="font-medium">{d.emitente?.uf || ""}</span></p>
+            </div>
+          </fieldset>
 
-      {/* Emitente */}
-      <fieldset className="border border-border rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-muted-foreground px-1">IDENTIFICAÇÃO DO EMITENTE</legend>
-        <p>Nome: {d.emitente?.nome || "________________________"}</p>
-        <p>CRM: {d.emitente?.crm || "______"} — UF: {d.emitente?.uf || "___"}</p>
-        <p>End.: {d.emitente?.endereco || "________________________"} — Tel.: {d.emitente?.telefone || "(__)____-____"}</p>
-        <p>Cidade: {d.emitente?.cidade || "____________"} — UF: {d.emitente?.uf || "___"}</p>
-      </fieldset>
-
-      {/* Paciente */}
-      <fieldset className="border border-border rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-muted-foreground px-1">PACIENTE</legend>
-        <p>Nome: {d.paciente?.nome || "________________________"}</p>
-        <p>End.: {d.paciente?.endereco || "________________________"}</p>
-      </fieldset>
-
-      {/* Prescrição */}
-      <fieldset className="border border-border rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-muted-foreground px-1">PRESCRIÇÃO</legend>
-        {d.prescricao && d.prescricao.length > 0 ? (
-          <ol className="list-decimal list-inside space-y-1">
-            {d.prescricao.map((item, i) => (
-              <li key={i}><strong>{item}</strong></li>
-            ))}
-          </ol>
-        ) : (
-          <p>____________________________________________</p>
-        )}
-      </fieldset>
-
-      {/* Data e Assinatura */}
-      <div className="flex justify-between items-end">
-        <p>Data: <strong>{d.data || "__/__/____"}</strong></p>
-        <div className="text-center">
-          <div className="w-40 border-b border-foreground/30 mb-0.5" />
-          <p className="text-[10px]">Assinatura do Emitente {d.assinaturaEmitente === false && <span className="text-destructive font-bold">(AUSENTE)</span>}</p>
-        </div>
-      </div>
-
-      <hr className="border-border" />
-
-      {/* Comprador */}
-      <fieldset className="border border-border rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-muted-foreground px-1">IDENTIFICAÇÃO DO COMPRADOR</legend>
-        <p>Nome: {d.comprador?.nome || "________________________"}</p>
-        <p>Ident.: {d.comprador?.identidade || "____________"} — Org. Emissor: {d.comprador?.orgaoEmissor || "______"}</p>
-        <p>End.: {d.comprador?.endereco || "________________________"}</p>
-        <p>Cidade: {d.comprador?.cidade || "____________"} — UF: {d.comprador?.uf || "___"} — Tel.: {d.comprador?.telefone || "(__)____-____"}</p>
-      </fieldset>
-
-      {/* Fornecedor */}
-      <fieldset className="border border-border rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-muted-foreground px-1">IDENTIFICAÇÃO DO FORNECEDOR</legend>
-        <div className="flex justify-between items-end">
-          <div className="text-center">
-            <div className="w-40 border-b border-foreground/30 mb-0.5" />
-            <p className="text-[10px]">Assinatura do Farmacêutico</p>
+          {/* Vias */}
+          <div className="flex flex-col justify-center text-[10px] space-y-1 min-w-[100px]">
+            <p className="font-bold text-foreground">1ª VIA FARMÁCIA</p>
+            <p className={`font-bold ${d.segundaVia === false ? "text-destructive" : "text-foreground"}`}>
+              2ª VIA PACIENTE
+              {d.segundaVia === false && <span className="block text-[9px]">(AUSENTE)</span>}
+            </p>
           </div>
-          <p>Data: {d.fornecedor?.data || "__/__/____"}</p>
         </div>
-      </fieldset>
+      </div>
+
+      {/* Paciente + Endereço + Prescrição */}
+      <div className="px-3 space-y-2 pb-2">
+        <div>
+          <span className="text-[10px] text-muted-foreground">Paciente: </span>
+          <span className={`${line} inline-block ${fieldText} font-medium`}>{d.paciente?.nome || ""}</span>
+        </div>
+        <div>
+          <span className="text-[10px] text-muted-foreground">Endereço: </span>
+          <span className={`${line} inline-block ${fieldText}`}>{d.paciente?.endereco || ""}</span>
+        </div>
+        <div>
+          <span className="text-[10px] text-muted-foreground">Prescrição:</span>
+          {d.prescricao && d.prescricao.length > 0 ? (
+            <div className="mt-1 space-y-1 pl-1">
+              {d.prescricao.map((item, i) => (
+                <p key={i} className={`${fieldText} font-medium`}>{i + 1}. {item}</p>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2 mt-1">
+              {[1, 2, 3].map(i => <div key={i} className={`${line} w-full`} />)}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Data + Assinatura */}
+      <div className="px-3 pb-2 flex justify-between items-end">
+        <p className={fieldText}>Data: <span className="font-medium">{d.data || "___/___/___"}</span></p>
+        <div className="text-center">
+          <div className="w-36 border-b border-foreground/30 mb-0.5" />
+          <p className="text-[9px] text-muted-foreground">Assinatura do Emitente
+            {d.assinaturaEmitente === false && <span className="text-destructive font-bold ml-1">(AUSENTE)</span>}
+          </p>
+        </div>
+      </div>
+
+      {/* === Comprador + Fornecedor === */}
+      <div className="grid grid-cols-2 border-t border-border mx-3 mb-3 mt-4">
+        {/* Comprador */}
+        <div className="border border-border rounded-l p-2 space-y-1">
+          <p className={`${labelText} text-center text-[9px]`}>IDENTIFICAÇÃO DO COMPRADOR</p>
+          <p className={fieldText}>Nome: <span className="font-medium">{d.comprador?.nome || ""}</span></p>
+          <div className="flex gap-2">
+            <p className={fieldText}>Ident.: <span className="font-medium">{d.comprador?.identidade || ""}</span></p>
+            <p className={fieldText}>Órg. Emissor: <span className="font-medium">{d.comprador?.orgaoEmissor || ""}</span></p>
+          </div>
+          <p className={fieldText}>End.: <span className="font-medium">{d.comprador?.endereco || ""}</span></p>
+          <div className="flex gap-2">
+            <p className={fieldText}>Cidade: <span className="font-medium">{d.comprador?.cidade || ""}</span></p>
+            <p className={fieldText}>UF: <span className="font-medium">{d.comprador?.uf || ""}</span></p>
+          </div>
+          <p className={fieldText}>Telefone: <span className="font-medium">{d.comprador?.telefone || ""}</span></p>
+        </div>
+        {/* Fornecedor */}
+        <div className="border border-l-0 border-border rounded-r p-2 space-y-1">
+          <p className={`${labelText} text-center text-[9px]`}>IDENTIFICAÇÃO DO FORNECEDOR</p>
+          <div className="min-h-[40px]" />
+          <div className="text-[9px] text-right space-y-1 text-muted-foreground">
+            <p>ASSINATURA DO FARMACÊUTICO</p>
+            <p>DATA: {d.fornecedor?.data || "___/___/___"}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
