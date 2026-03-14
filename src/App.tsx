@@ -75,6 +75,7 @@ import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/Sim
 import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
 import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
 import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
+import SimuladorDispensacao344 from "./pages/simuladores/farmacologia/SimuladorDispensacao344";
 import SimuladorEstabilidade from "./pages/simuladores/farmacotecnica/SimuladorEstabilidade";
 import SimuladorLiberacaoFarmacos from "./pages/simuladores/farmacotecnica/SimuladorLiberacaoFarmacos";
 import SimuladorDiluicao from "./pages/simuladores/farmacotecnica/SimuladorDiluicao";
@@ -244,6 +245,7 @@ const App = () => (
               <Route path="/sala/simulador/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
               <Route path="/sala/simulador/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
               <Route path="/sala/simulador/farmacogenomica" element={<SimuladorFarmacogenomica />} />
+              <Route path="/sala/simulador/dispensacao-344" element={<SimuladorDispensacao344 />} />
               <Route path="/sala/simulador/estabilidade" element={<SimuladorEstabilidade />} />
               <Route path="/sala/simulador/liberacao-farmacos" element={<SimuladorLiberacaoFarmacos />} />
               <Route path="/sala/simulador/diluicao" element={<SimuladorDiluicao />} />
@@ -343,6 +345,7 @@ const App = () => (
               <Route path="/simuladores/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
               <Route path="/simuladores/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
               <Route path="/simuladores/farmacogenomica" element={<SimuladorFarmacogenomica />} />
+              <Route path="/simuladores/dispensacao-344" element={<SimuladorDispensacao344 />} />
               <Route path="/simuladores/estabilidade" element={<SimuladorEstabilidade />} />
               <Route path="/simuladores/liberacao-farmacos" element={<SimuladorLiberacaoFarmacos />} />
               <Route path="/simuladores/diluicao" element={<SimuladorDiluicao />} />
