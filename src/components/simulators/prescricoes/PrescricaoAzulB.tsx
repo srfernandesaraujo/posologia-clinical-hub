@@ -7,6 +7,7 @@ interface PrescricaoAzulBProps {
     medicamento?: string;
     quantidade?: string;
     formaFarmaceutica?: string;
+    doseUnidade?: string;
     posologia?: string;
     data?: string;
     assinaturaEmitente?: boolean;
@@ -18,75 +19,112 @@ interface PrescricaoAzulBProps {
 
 export default function PrescricaoAzulB({ data }: PrescricaoAzulBProps) {
   const d = data;
+  const line = "border-b border-blue-900/40 dark:border-blue-400/40";
+  const fieldText = "text-blue-950 dark:text-blue-100";
+  const labelText = "text-blue-900/80 dark:text-blue-300/80 font-bold text-[10px] uppercase tracking-wide";
+
   return (
-    <div className="rounded-lg border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/40 p-4 sm:p-6 text-xs sm:text-sm font-mono space-y-3 max-w-xl mx-auto shadow-md">
-      {/* Header */}
-      <div className="text-center space-y-0.5">
-        <p className="text-[10px] text-blue-800 dark:text-blue-300 font-bold tracking-widest uppercase">
-          Ministério da Saúde — ANVISA
-        </p>
-        <h3 className="text-base font-bold text-blue-900 dark:text-blue-200">
-          NOTIFICAÇÃO DE RECEITA — B
-        </h3>
-        <div className="flex justify-center gap-4 text-[10px] text-blue-700 dark:text-blue-400">
-          <span>UF: <strong>{d.uf || "___"}</strong></span>
-          <span>Nº: <strong>{d.numero || "000000"}</strong></span>
+    <div className="rounded border-2 border-blue-800 dark:border-blue-600 bg-[#c4daf0] dark:bg-blue-950/60 text-[11px] max-w-2xl mx-auto shadow-lg font-sans overflow-hidden">
+      {/* === ROW 1: Top 3-column layout === */}
+      <div className="grid grid-cols-[1fr_1.5fr_1fr] border-b border-blue-800 dark:border-blue-600">
+        {/* Col 1: Title + UF/Número + Data */}
+        <div className="border-r border-blue-800 dark:border-blue-600 p-2 space-y-2">
+          <p className="font-black text-xs text-blue-950 dark:text-blue-100">NOTIFICAÇÃO DE RECEITA</p>
+          <div className="flex items-center gap-1">
+            <div className="flex items-center border border-blue-900 dark:border-blue-500 text-[10px]">
+              <span className="px-1 text-[8px] text-blue-800 dark:text-blue-300">UF</span>
+              <span className="border-l border-blue-900 dark:border-blue-500 px-1 text-[8px] text-blue-800 dark:text-blue-300">NÚMERO</span>
+            </div>
+          </div>
+          <div className="flex items-center border border-blue-900 dark:border-blue-500">
+            <span className={`px-2 py-0.5 font-bold text-sm ${fieldText}`}>{d.uf || "___"}</span>
+            <span className={`border-l border-blue-900 dark:border-blue-500 px-2 py-0.5 font-bold text-sm flex-1 ${fieldText}`}>{d.numero || "000000"}</span>
+            <span className="px-2 py-0.5 font-black text-2xl text-blue-950 dark:text-blue-100 border-l border-blue-900 dark:border-blue-500">B</span>
+          </div>
+          <div className="pt-1">
+            <span className={`${line} inline-block min-w-[20px] ${fieldText}`}>{d.data ? d.data.split("/")[0] : "___"}</span>
+            <span className="text-[10px] text-blue-800 dark:text-blue-300"> de </span>
+            <span className={`${line} inline-block min-w-[40px] ${fieldText}`}>{d.data ? d.data.split("/")[1] : "________"}</span>
+            <span className="text-[10px] text-blue-800 dark:text-blue-300"> de </span>
+            <span className={`${line} inline-block min-w-[20px] ${fieldText}`}>{d.data ? d.data.split("/")[2] : "____"}</span>
+          </div>
+          <div className="pt-3 space-y-1">
+            <div className={`${line} w-full`} />
+            <p className="text-[9px] text-center text-blue-800 dark:text-blue-300">Assinatura do Emitente
+              {d.assinaturaEmitente === false && <span className="text-red-600 dark:text-red-400 font-bold ml-1">(AUSENTE)</span>}
+            </p>
+          </div>
+        </div>
+
+        {/* Col 2: Emitente + Paciente + Endereço */}
+        <div className="border-r border-blue-800 dark:border-blue-600 flex flex-col">
+          <div className="border-b border-blue-800 dark:border-blue-600 p-2 flex-1">
+            <p className={`${labelText} text-center mb-1`}>IDENTIFICAÇÃO DO EMITENTE</p>
+            <div className={`text-center space-y-0.5 ${fieldText}`}>
+              <p className="font-bold text-xs">{d.emitente?.nome || "________________________"}</p>
+              <p>{d.emitente?.crm || "CRM: ______"}</p>
+              <p>{d.emitente?.endereco || "________________________"}</p>
+              <p>Telefone: {d.emitente?.telefone || "(__)____-____"}</p>
+            </div>
+          </div>
+          <div className="p-2 space-y-2">
+            <div>
+              <span className="text-[10px] text-blue-800 dark:text-blue-300">Paciente: </span>
+              <span className={`${line} inline-block flex-1 ${fieldText}`}>{d.paciente?.nome || ""}</span>
+            </div>
+            <div>
+              <span className="text-[10px] text-blue-800 dark:text-blue-300">Endereço: </span>
+              <span className={`${line} inline-block flex-1 ${fieldText}`}>{d.paciente?.endereco || ""}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Col 3: Medicamento fields */}
+        <div className="flex flex-col">
+          {[
+            { label: "Medicamento ou Substância", value: d.medicamento },
+            { label: "Quantidade e Forma Farmacêutica", value: d.quantidade ? `${d.quantidade} — ${d.formaFarmaceutica || ""}` : undefined },
+            { label: "Dose por Unidade Posológica", value: d.doseUnidade },
+            { label: "Posologia", value: d.posologia },
+          ].map((f, i) => (
+            <div key={i} className={`border-b border-blue-800 dark:border-blue-600 p-1.5 flex-1 ${i === 3 ? "border-b-0" : ""}`}>
+              <p className={`${labelText} text-[8px]`}>{f.label}</p>
+              <p className={`${fieldText} mt-0.5 font-medium`}>{f.value || ""}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      <hr className="border-blue-400 dark:border-blue-700" />
-
-      {/* Emitente */}
-      <fieldset className="border border-blue-400 dark:border-blue-700 rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-blue-800 dark:text-blue-300 px-1">IDENTIFICAÇÃO DO EMITENTE</legend>
-        <p>{d.emitente?.nome || "________________________"}</p>
-        <p>CRM: {d.emitente?.crm || "______"}</p>
-        <p>End.: {d.emitente?.endereco || "________________________"}</p>
-        <p>Tel.: {d.emitente?.telefone || "(__)____-____"}</p>
-      </fieldset>
-
-      {/* Paciente */}
-      <fieldset className="border border-blue-400 dark:border-blue-700 rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-blue-800 dark:text-blue-300 px-1">PACIENTE</legend>
-        <p>Nome: {d.paciente?.nome || "________________________"}</p>
-        <p>End.: {d.paciente?.endereco || "________________________"}</p>
-      </fieldset>
-
-      {/* Medicamento */}
-      <fieldset className="border border-blue-400 dark:border-blue-700 rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-blue-800 dark:text-blue-300 px-1">MEDICAMENTO</legend>
-        <p>Medicamento / Substância: <strong>{d.medicamento || "____________"}</strong></p>
-        <p>Quantidade e Forma Farmac.: {d.quantidade || "___"} — {d.formaFarmaceutica || "____________"}</p>
-        <p>Posologia: {d.posologia || "____________"}</p>
-      </fieldset>
-
-      {/* Data e Assinatura */}
-      <div className="flex justify-between items-end">
-        <p>Data: <strong>{d.data || "__/__/____"}</strong></p>
-        <div className="text-center">
-          <div className="w-40 border-b border-blue-600 dark:border-blue-500 mb-0.5" />
-          <p className="text-[10px]">Assinatura do Emitente {d.assinaturaEmitente === false && <span className="text-destructive font-bold">(AUSENTE)</span>}</p>
+      {/* === ROW 2: Comprador + Fornecedor === */}
+      <div className="grid grid-cols-[2fr_1fr] border-t border-blue-800 dark:border-blue-600">
+        {/* Comprador */}
+        <div className="border-r border-blue-800 dark:border-blue-600 p-2">
+          <p className={`${labelText} text-center mb-1`}>IDENTIFICAÇÃO DO COMPRADOR</p>
+          <div className="space-y-1">
+            <p className={fieldText}>Nome: <span className={line}>{d.comprador?.nome || ""}</span></p>
+            <p className={fieldText}>Endereço: <span className={line}>{d.comprador?.endereco || ""}</span></p>
+            <p className={fieldText}>Telefone: <span className={line}>{d.comprador?.telefone || ""}</span></p>
+            <div className="flex gap-4">
+              <p className={fieldText}>Identidade Nº: <span className={line}>{d.comprador?.identidade || ""}</span></p>
+              <p className={fieldText}>Órgão Emissor: <span className={line}>{d.comprador?.orgaoEmissor || ""}</span></p>
+            </div>
+          </div>
+        </div>
+        {/* Fornecedor */}
+        <div className="p-2">
+          <p className={`${labelText} text-center mb-1`}>CARIMBO DO FORNECEDOR</p>
+          <div className="min-h-[50px] flex items-center justify-center">
+            <p className={`${fieldText} text-center`}>{d.fornecedor || ""}</p>
+          </div>
+          <p className={`text-right text-[10px] ${fieldText}`}>___/___/___</p>
         </div>
       </div>
 
-      <hr className="border-blue-400 dark:border-blue-700" />
-
-      {/* Comprador */}
-      <fieldset className="border border-blue-400 dark:border-blue-700 rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-blue-800 dark:text-blue-300 px-1">IDENTIFICAÇÃO DO COMPRADOR</legend>
-        <p>Nome: {d.comprador?.nome || "________________________"}</p>
-        <p>End.: {d.comprador?.endereco || "________________________"}</p>
-        <p>Tel.: {d.comprador?.telefone || "(__)____-____"}</p>
-        <p>Identidade Nº: {d.comprador?.identidade || "____________"} — Órgão Emissor: {d.comprador?.orgaoEmissor || "______"}</p>
-      </fieldset>
-
-      {/* Fornecedor */}
-      <fieldset className="border border-blue-400 dark:border-blue-700 rounded p-2 space-y-1">
-        <legend className="text-[10px] font-bold text-blue-800 dark:text-blue-300 px-1">CARIMBO DO FORNECEDOR</legend>
-        <p>{d.fornecedor || "________________________"}</p>
-      </fieldset>
-
-      {d.grafica && <p className="text-[9px] text-blue-600 dark:text-blue-500 text-center">{d.grafica}</p>}
+      {/* Footer */}
+      <div className="border-t border-blue-800 dark:border-blue-600 px-2 py-0.5 flex justify-between">
+        <p className="text-[8px] text-blue-700 dark:text-blue-400">Dados da Gráfica: Nome - Endereço Completo - CGC</p>
+        <p className="text-[8px] text-blue-700 dark:text-blue-400">Numeração desta impressão: de ___ a ___</p>
+      </div>
     </div>
   );
 }
