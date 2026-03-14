@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Scissors, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { External3DViewer, type External3DViewerHandle } from "@/components/medview3d/External3DViewer";
+import { External3DViewer, type SketchfabApi } from "@/components/medview3d/External3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
-import { ProcedureStepCard } from "@/components/medview3d/ProcedureStepCard";
 import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,13 @@ export default function CirurgiaGeralLaparoscopia() {
   const [currentStep, setCurrentStep] = useState(0);
   const [activeModel, setActiveModel] = useState("b5d3e7f1a2c4b6d8e0f2a4c6b8d0e2f4");
   const [searchOpen, setSearchOpen] = useState(false);
-  const viewerRef = useRef<External3DViewerHandle>(null);
+  const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
+  const [viewerReady, setViewerReady] = useState(false);
+
+  useEffect(() => {
+    if (!viewerApi || !viewerReady) return;
+    viewerApi.recenterCamera();
+  }, [currentStep, viewerApi, viewerReady]);
 
   return (
     <div className="space-y-4">
@@ -53,13 +58,16 @@ export default function CirurgiaGeralLaparoscopia() {
 
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">
-          <External3DViewer ref={viewerRef} modelId={activeModel} title="Abdômen — Colecistectomia" />
+          <External3DViewer
+            modelId={activeModel}
+            title="Abdômen — Colecistectomia"
+            onApiReady={(api) => { setViewerApi(api); setViewerReady(true); }}
+          />
         </div>
-        <MedViewToolbar api={viewerRef.current?.api} isReady={viewerRef.current?.isReady} />
+        <MedViewToolbar api={viewerApi} isReady={viewerReady} />
       </div>
 
       <ProcedureTimeline steps={steps} currentStep={currentStep} onStepChange={setCurrentStep} />
-      <ProcedureStepCard step={steps[currentStep]} totalSteps={steps.length} />
     </div>
   );
 }
