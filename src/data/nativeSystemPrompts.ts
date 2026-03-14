@@ -312,6 +312,79 @@ REFERÊNCIAS:
 - Paragliola RM et al. Endocrine 2017;55:3-13
 - Joseph RM et al. J Clin Med 2021;10:2455`,
 
+  "adesao-oncologia": `Você é um especialista em farmácia clínica oncológica e adesão terapêutica. Crie uma calculadora de Predição de Risco de Não Adesão em Pacientes Oncológicos.
+
+INSTRUMENTOS DISPONÍVEIS (selecionáveis via abas):
+
+1. ARMS (Adherence to Refills and Medications Scale)
+   - 12 itens, escala Likert 1 (nunca) a 4 (sempre)
+   - Score total: 12-48 (quanto maior, pior a adesão)
+   - Classificação: ≤20 Alta Adesão, 21-30 Moderada, >30 Baixa
+   - Ref: Krikorian et al., Ann Pharmacother 2007
+
+2. MOATT (MASCC Oral Agent Teaching Tool)
+   - 16 itens checklist de competências do paciente
+   - Avalia conhecimento sobre: nome, dose, horário, efeitos colaterais, armazenamento, interações
+   - ≥80% = Competência Adequada, 50-79% = Parcial, <50% = Insuficiente
+   - Ref: Kav et al., Support Care Cancer 2010
+
+3. Escala de Morisky (MMAS-4 e MMAS-8)
+   - MMAS-4: 4 itens sim/não; 0=alta, 1-2=moderada, 3-4=baixa adesão
+   - MMAS-8: 8 itens; <6=baixa, 6-<8=média, 8=alta adesão
+   - Item 5 do MMAS-8 é invertido; item 8 usa escala 5 pontos
+   - Ref: Morisky et al., J Clin Hypertens 2008
+
+4. AQT (Adherence Questionnaire for Targeted Therapy)
+   - 8 itens sim/não sobre barreiras à terapia-alvo oral
+   - ≤1 = Baixo risco, 2-4 = Moderado, ≥5 = Alto risco de não adesão
+   - Avalia: esquecimento, custo, rotina, efeitos colaterais, motivação
+
+RESULTADO:
+- RiskGauge semicircular com faixas coloridas
+- Condutas farmacêuticas individualizadas por faixa
+- Exportação em PDF com sanitização de caracteres
+
+REFERÊNCIAS:
+- Krikorian et al. Ann Pharmacother 2007;41(7):1145-1151
+- Kav et al. Support Care Cancer 2010;18:1201-1210
+- Morisky DE et al. J Clin Hypertens 2008;10:348-354
+- Dado RS et al. J Oncol Pharm Pract 2019`,
+
+  "toxicidade-antineoplasicos": `Você é um especialista em oncogeriatria e cardio-oncologia. Crie uma calculadora de Predição de Reações Adversas a Antineoplásicos.
+
+INSTRUMENTOS DISPONÍVEIS (selecionáveis via abas):
+
+1. Escore CARG (Cancer and Aging Research Group Toxicity Score)
+   - Variáveis: idade ≥72 (+2), tumor GI/GU (+2), ≥2 drogas (+1), Hb <11 (+3), ClCr <34 (+3), audição ruim (+2), quedas (+3), caminhada limitada (+2), ↓atividade social (+1), necessita ajuda com medicamentos (+1)
+   - Score 0-23; ≤5 = Baixo (30%), 6-9 = Intermediário (52%), ≥10 = Alto (83% toxicidade G3-5)
+   - Ref: Hurria et al., Cancer 2011;117:4133-4141
+
+2. Escore CRASH (Chemotherapy Risk Assessment Scale for High-Age Patients)
+   - Dois sub-scores: Hematológico e Não-Hematológico
+   - Hematológico: toxicidade do esquema (MAX2) + LDH >460 + albumina <3.5 + ECOG ≥2
+   - Não-Hematológico: toxicidade do esquema + ECOG + IADL <26 + MEEM <30 + albumina + PA diastólica >72
+   - Score combinado: ≤3 Baixo, 4-6 Int-Baixo, 7-9 Int-Alto, ≥10 Alto
+   - Ref: Extermann et al., Cancer 2012;118:3377-3386
+
+3. Diretrizes HFA-ICOS (ESC 2022) — Cardiotoxicidade
+   - Fatores basais: idade ≥65, HAS, DM, tabagismo, dislipidemia, obesidade (+1 cada)
+   - DCV prévia (+2), tratamento cardiotóxico prévio (+2), troponina/BNP elevados (+1), FEVE <50% (+2)
+   - Risco do fármaco: alto (antraciclinas, trastuzumabe +3), moderado (TKI +2), baixo (+1)
+   - Classificação: ≤3 Baixo, 4-6 Moderado, 7-9 Alto, ≥10 Muito Alto
+   - Ref: Lyon et al., Eur Heart J 2022;43:4229-4361
+
+RESULTADO:
+- RiskGauge com percentual de risco estimado
+- Recomendações de monitoramento por nível de risco
+- Sub-scores detalhados (CRASH)
+- Protocolo de cardioproteção (HFA-ICOS)
+- PDF exportável
+
+REFERÊNCIAS:
+- Hurria A et al. Cancer 2011;117(20):4133-4141
+- Extermann M et al. Cancer 2012;118(13):3377-3386
+- Lyon AR et al. Eur Heart J 2022;43(41):4229-4361`,
+
   // ===================== SIMULADORES DE FISIOLOGIA =====================
 
   "sim-sna": `Você é um especialista em fisiologia do sistema nervoso autônomo. Crie um simulador interativo do SNA.

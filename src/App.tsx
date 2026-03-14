@@ -39,6 +39,8 @@ import DosePediatrica from "./pages/DosePediatrica";
 import RassSas from "./pages/RassSas";
 import NutricaoParenteral from "./pages/NutricaoParenteral";
 import InteracoesCYP from "./pages/InteracoesCYP";
+import AdesaoOncologia from "./pages/AdesaoOncologia";
+import ToxicidadeAntineoplasicos from "./pages/ToxicidadeAntineoplasicos";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -414,6 +416,8 @@ const App = () => (
               <Route path="/calculadoras/rass-sedacao" element={<RassSas />} />
               <Route path="/calculadoras/nutricao-parenteral" element={<NutricaoParenteral />} />
               <Route path="/calculadoras/interacoes-cyp" element={<InteracoesCYP />} />
+              <Route path="/calculadoras/adesao-oncologia" element={<AdesaoOncologia />} />
+              <Route path="/calculadoras/toxicidade-antineoplasicos" element={<ToxicidadeAntineoplasicos />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />

@@ -1,53 +1,100 @@
 
 
-## Plano: Duas Calculadoras Clínicas de Oncologia
+# Plano: Simuladores de Bioquímica
 
-### Resumo
-Criar duas calculadoras clínicas na categoria **Oncologia**: (1) Predição de Risco de Não Adesão em Pacientes Oncológicos (4 instrumentos) e (2) Predição de Reações Adversas a Antineoplásicos (3 instrumentos). Ambas seguem o padrão existente (layout 2/3 + 1/3, RiskGauge, ClinicalReferences, RelatedCalculators, AdminPromptViewer, PDF).
+## Visão Geral
 
-### Calculadora 1 — Risco de Não Adesão Oncológica
-**Slug**: `adesao-oncologia`  
-**Instrumentos selecionáveis via Tabs/Select**:
-- **ARMS** (12 itens, escala 1-4; score 12-48; quanto maior = pior adesão)
-- **MOATT** (16 itens; checklist de competências do paciente em terapia oral)
-- **Morisky MMAS-4** (4 itens sim/não; 0=alta adesão, 4=baixa) e **MMAS-8** (8 itens; <6=baixa, 6-7=média, 8=alta)
-- **AQT** (itens sobre terapia-alvo; score composto)
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-**Resultado**: RiskGauge com faixas (Alta/Média/Baixa adesão), condutas farmacêuticas sugeridas, PDF exportável.
+## Arquitetura
 
-### Calculadora 2 — Reações Adversas a Antineoplásicos
-**Slug**: `toxicidade-antineoplasicos`  
-**Instrumentos selecionáveis**:
-- **CARG** (idade, tipo tumor, nº drogas, hemoglobina, ClCr, quedas, atividade social, etc. → % risco toxicidade grau 3-5)
-- **CRASH** (2 sub-scores: hematológico + não-hematológico; variáveis como LDH, albumina, ECOG, esquema QT)
-- **HFA-ICOS (ESC)** (classificação de risco cardiotoxicidade: baixo/médio/alto/muito alto baseado em fatores + tipo de antineoplásico)
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-**Resultado**: RiskGauge, recomendações de monitoramento, PDF exportável.
+## Simuladores por Lotes
 
-### Arquivos a Criar
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/pages/AdesaoOncologia.tsx` | Calculadora 1 (~600 linhas) |
-| `src/pages/ToxicidadeAntineoplasicos.tsx` | Calculadora 2 (~600 linhas) |
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
-### Arquivos a Editar
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/Calculadoras.tsx` | Adicionar 2 entradas em NATIVE_CALCULATORS + NATIVE_SLUGS + categoria "Oncologia" com ícone e cor |
-| `src/App.tsx` | Importar e registrar rotas `/calculadoras/adesao-oncologia` e `/calculadoras/toxicidade-antineoplasicos` |
-| `src/data/nativeSystemPrompts.ts` | Adicionar prompts para ambos os slugs |
-| `src/components/calculators/ClinicalReferences.tsx` | Adicionar referências para ambos os slugs |
-| `src/components/calculators/RelatedCalculators.tsx` | Adicionar NATIVE_PATHS e RELATED_MAP para ambos os slugs (relacionando entre si) |
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-### Padrão Visual (idêntico a RiscoCardiovascular)
-- Layout `grid-cols-1 lg:grid-cols-3`: inputs à esquerda (2 cols), resultados à direita (1 col)
-- Header com ícone, título, ShareToolButton, AdminPromptViewer, CalculationHistory
-- Painel direito: RiskGauge, condutas/recomendações, botão PDF, ClinicalReferences, RelatedCalculators
-- Escala de risco visual com bolinhas coloridas
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-### Referências Clínicas Incluídas
-**Calc 1**: Krikorian et al. (ARMS, 2007), Kav et al. (MOATT, 2010), Morisky et al. (MMAS, 1986/2008), literatura AQT  
-**Calc 2**: Hurria et al. (CARG, 2011), Extermann et al. (CRASH, 2012), Lyon et al. (HFA-ICOS/ESC, 2022)
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
+
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
+
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
+
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
+
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
+
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
+
+## Alterações em arquivos existentes
+
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 

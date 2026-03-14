@@ -51,6 +51,8 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Escala RASS (Sedacao em UTI)", description: "Richmond Agitation-Sedation Scale — avaliacao e conduta.", category: "Terapia Intensiva", path: "/calculadoras/rass-sedacao", icon: Moon, searchKey: "rass sedacao uti agitacao richmond" },
   { name: "Nutricao Parenteral Total (NPT)", description: "Calculo de macronutrientes, GIR e volume para NPT.", category: "Terapia Intensiva", path: "/calculadoras/nutricao-parenteral", icon: Utensils, searchKey: "nutricao parenteral npt gir harris benedict" },
   { name: "Radar de Interacoes CYP450", description: "Visualizacao das interacoes farmacocineticas via citocromo P450.", category: "Farmacologia Clínica", path: "/calculadoras/interacoes-cyp", icon: Dna, searchKey: "interacoes cyp450 citocromo farmacologia" },
+  { name: "Predição de Risco de Não Adesão Oncológica", description: "ARMS, MOATT, Morisky e AQT para avaliar risco de não adesão em pacientes oncológicos.", category: "Oncologia", path: "/calculadoras/adesao-oncologia", icon: Pill, searchKey: "adesao oncologia arms moatt morisky aqt" },
+  { name: "Predição de Reações Adversas a Antineoplásicos", description: "CARG, CRASH e HFA-ICOS para predição de toxicidade e cardiotoxicidade.", category: "Oncologia", path: "/calculadoras/toxicidade-antineoplasicos", icon: Activity, searchKey: "toxicidade antineoplasicos carg crash hfa icos cardiotoxicidade" },
 ];
 
 const NATIVE_SLUGS = new Set([
@@ -59,6 +61,7 @@ const NATIVE_SLUGS = new Set([
   "ckd-epi", "correcao-sodio", "correcao-calcio", "wells-score", "qsofa",
   "vancomicina-auc", "insulina-basal-bolus", "holliday-segar", "meld-score",
   "qtc-corrigido", "dose-pediatrica", "rass-sedacao", "nutricao-parenteral", "interacoes-cyp",
+  "adesao-oncologia", "toxicidade-antineoplasicos",
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
   "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",
@@ -76,6 +79,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Pediatria": Baby,
   "Hepatologia": Flame,
   "Terapia Intensiva": HeartPulse,
+  "Oncologia": ShieldAlert,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -89,6 +93,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Pediatria": "340 70% 55%",
   "Hepatologia": "15 80% 50%",
   "Terapia Intensiva": "190 70% 45%",
+  "Oncologia": "300 60% 50%",
 };
 
 export default function Calculadoras() {
