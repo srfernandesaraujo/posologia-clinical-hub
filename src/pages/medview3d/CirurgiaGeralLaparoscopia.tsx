@@ -10,12 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Posicionamento e Pneumoperitônio", description: "Paciente em decúbito dorsal, anti-Trendelenburg. Insuflação com CO₂ via agulha de Veress no ponto de Palmer." },
-  { stepNumber: 2, title: "Inserção dos Trocartes", description: "Posicionamento de 4 trocartes: umbilical (câmera), epigástrico, flanco direito e hipocôndrio direito." },
-  { stepNumber: 3, title: "Exposição do Triângulo de Calot", description: "Tração do fundo vesicular e identificação do ducto cístico e artéria cística na visão crítica de segurança." },
-  { stepNumber: 4, title: "Clipagem e Secção", description: "Aplicação de clipes de titânio no ducto e artéria cística, seguida de secção com tesoura laparoscópica." },
-  { stepNumber: 5, title: "Dissecção da Vesícula", description: "Separação da vesícula biliar do leito hepático usando eletrocautério monopolar com cuidado hemostático." },
-  { stepNumber: 6, title: "Extração e Revisão", description: "Retirada da vesícula pelo portal umbilical em endobag, revisão da hemostasia e desinsuflação." },
+  { stepNumber: 1, title: "Posicionamento e Pneumoperitônio", description: "Paciente em decúbito dorsal, anti-Trendelenburg. Insuflação com CO₂ via agulha de Veress no ponto de Palmer.", searchQuery: "pneumoperitoneum veress needle laparoscopy trocar" },
+  { stepNumber: 2, title: "Inserção dos Trocartes", description: "Posicionamento de 4 trocartes: umbilical (câmera), epigástrico, flanco direito e hipocôndrio direito.", searchQuery: "laparoscopic trocar port placement abdomen" },
+  { stepNumber: 3, title: "Exposição do Triângulo de Calot", description: "Tração do fundo vesicular e identificação do ducto cístico e artéria cística na visão crítica de segurança.", searchQuery: "calot triangle gallbladder cystic duct artery" },
+  { stepNumber: 4, title: "Clipagem e Secção", description: "Aplicação de clipes de titânio no ducto e artéria cística, seguida de secção com tesoura laparoscópica.", searchQuery: "laparoscopic clip applier cystic duct ligation" },
+  { stepNumber: 5, title: "Dissecção da Vesícula", description: "Separação da vesícula biliar do leito hepático usando eletrocautério monopolar com cuidado hemostático.", searchQuery: "gallbladder dissection liver bed cholecystectomy" },
+  { stepNumber: 6, title: "Extração e Revisão", description: "Retirada da vesícula pelo portal umbilical em endobag, revisão da hemostasia e desinsuflação.", searchQuery: "endobag specimen retrieval laparoscopy port closure" },
 ];
 
 export default function CirurgiaGeralLaparoscopia() {
@@ -29,6 +29,8 @@ export default function CirurgiaGeralLaparoscopia() {
     if (!viewerApi || !viewerReady) return;
     viewerApi.recenterCamera();
   }, [currentStep, viewerApi, viewerReady]);
+
+  const currentSearchQuery = steps[currentStep]?.searchQuery;
 
   return (
     <div className="space-y-4">
@@ -52,7 +54,11 @@ export default function CirurgiaGeralLaparoscopia() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <SketchfabModelSearch defaultQuery="abdomen gallbladder liver anatomy" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+          <SketchfabModelSearch
+            defaultQuery="abdomen gallbladder liver anatomy"
+            activeQuery={currentSearchQuery}
+            onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }}
+          />
         </CollapsibleContent>
       </Collapsible>
 

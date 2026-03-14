@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,26 @@ import { useSketchfabSearch, type SketchfabModel } from "@/hooks/useSketchfabSea
 interface SketchfabModelSearchProps {
   onSelectModel: (modelId: string) => void;
   defaultQuery?: string;
+  activeQuery?: string;
 }
 
-export function SketchfabModelSearch({ onSelectModel, defaultQuery = "" }: SketchfabModelSearchProps) {
-  const [query, setQuery] = useState(defaultQuery);
+export function SketchfabModelSearch({ onSelectModel, defaultQuery = "", activeQuery }: SketchfabModelSearchProps) {
+  const [query, setQuery] = useState(activeQuery || defaultQuery);
   const { models, isLoading, totalCount, searchModels } = useSketchfabSearch();
+  const lastSearchedRef = useRef("");
+
+  // Auto-search when activeQuery changes (step-level context)
+  useEffect(() => {
+    if (activeQuery && activeQuery !== lastSearchedRef.current) {
+      setQuery(activeQuery);
+      lastSearchedRef.current = activeQuery;
+      searchModels(activeQuery, 8);
+    }
+  }, [activeQuery, searchModels]);
 
   const handleSearch = () => {
     if (query.trim()) {
+      lastSearchedRef.current = query.trim();
       searchModels(query.trim(), 8);
     }
   };

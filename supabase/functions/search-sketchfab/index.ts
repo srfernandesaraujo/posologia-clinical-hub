@@ -16,7 +16,7 @@ serve(async (req) => {
       throw new Error('SKETCHFAB_API_KEY is not configured');
     }
 
-    const { query, count = 4, categories } = await req.json();
+    const { query, count = 8, categories } = await req.json();
 
     if (!query || typeof query !== 'string') {
       return new Response(JSON.stringify({ error: 'query is required' }), {
@@ -31,12 +31,11 @@ serve(async (req) => {
       downloadable: 'false',
       count: String(count),
       sort_by: '-relevance',
+      license: 'by,by-sa,by-nd,by-nc,by-nc-sa,by-nc-nd,cc0',
     });
 
-    // Category filter for anatomy/medicine if provided
-    if (categories) {
-      params.set('categories', categories);
-    }
+    // Default to science-technology category for medical models
+    params.set('categories', categories || 'science-technology');
 
     const response = await fetch(
       `https://api.sketchfab.com/v3/search?${params.toString()}`,

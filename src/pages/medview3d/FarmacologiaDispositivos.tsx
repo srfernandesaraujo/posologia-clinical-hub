@@ -10,11 +10,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal)." },
-  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas." },
-  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria." },
-  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada." },
-  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina." },
+  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal).", searchQuery: "uterus anatomy female reproductive system" },
+  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas.", searchQuery: "uterine cavity hysterometry uterus measurement" },
+  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria.", searchQuery: "intrauterine device IUD copper hormonal" },
+  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada.", searchQuery: "IUD insertion cervical canal uterine fundus" },
+  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina.", searchQuery: "ultrasound IUD position uterus verification" },
 ];
 
 export default function FarmacologiaDispositivos() {
@@ -28,6 +28,8 @@ export default function FarmacologiaDispositivos() {
     if (!viewerApi || !viewerReady) return;
     viewerApi.recenterCamera();
   }, [currentStep, viewerApi, viewerReady]);
+
+  const currentSearchQuery = steps[currentStep]?.searchQuery;
 
   return (
     <div className="space-y-4">
@@ -51,7 +53,11 @@ export default function FarmacologiaDispositivos() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <SketchfabModelSearch defaultQuery="uterus anatomy IUD" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+          <SketchfabModelSearch
+            defaultQuery="uterus anatomy IUD"
+            activeQuery={currentSearchQuery}
+            onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }}
+          />
         </CollapsibleContent>
       </Collapsible>
 
