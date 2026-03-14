@@ -46,6 +46,14 @@ const sections: DocSection[] = [
     ],
   },
   {
+    id: "odonto-fisio-nutri", title: "Odontologia, Fisioterapia e Nutrição", icon: Scan, color: "text-orange-400 bg-orange-500/10",
+    items: [
+      { q: "O que são os simuladores de Odontologia?", a: "São 8 simuladores com SVG interativo cobrindo odontograma, endodontia, periodontograma, anestesiologia, cefalometria, radiografia, farmacologia odontológica e cirurgia/exodontia (Pell & Gregory)." },
+      { q: "O que são os simuladores de Fisioterapia?", a: "São 8 simuladores para avaliação funcional: goniometria articular, avaliação postural (simetrógrafo), força muscular (Oxford/MRC), dermátomos, fisioterapia respiratória, eletroterapia, testes ortopédicos especiais e escala de Berg." },
+      { q: "O que são os simuladores de Nutrição?", a: "São 8 simuladores abrangendo avaliação nutricional antropométrica, triagem (NRS-2002), cálculo de necessidades energéticas, terapia enteral (TNE), parenteral (TNP), disfagia, nutrição renal e nutrição materno-infantil." },
+    ],
+  },
+  {
     id: "formacao-docente", title: "Formação Docente", icon: GraduationCap, color: "text-rose-400 bg-rose-500/10",
     items: [
       { q: "O que é a categoria Formação Docente?", a: "São 7 simuladores exclusivos para treinamento pedagógico de professores, cobrindo feedback formativo (Pendleton/R2C2/ALOBA), elaboração de questões (Bloom), condução de caso PBL/TBL, planejamento de aula por competências (DCNs), gestão de sala com incidentes críticos, avaliação por rubrica OSCE e preceptoria clínica (One-Minute Preceptor)." },
@@ -56,10 +64,11 @@ const sections: DocSection[] = [
   {
     id: "laboratorio", title: "Laboratório Virtual", icon: Microscope, color: "text-purple-400 bg-purple-500/10",
     items: [
-      { q: "O que é o Laboratório Virtual?", a: "É um ambiente com 8 bancadas de pesquisa modulares onde o usuário conduz experimentos sequenciais — cada módulo depende dos resultados do anterior, simulando uma experiência real de bancada." },
-      { q: "Quais bancadas estão disponíveis?", a: "Desenvolvimento de Fármacos, Microbiologia, Toxicologia, Farmacogenômica, Estabilidade, Controle de Qualidade, Epidemiologia e Biotecnologia." },
+      { q: "O que é o Laboratório Virtual?", a: "É um ambiente com 11 bancadas de pesquisa modulares onde o usuário conduz experimentos sequenciais — cada módulo depende dos resultados do anterior, simulando uma experiência real de bancada." },
+      { q: "Quais bancadas estão disponíveis?", a: "Desenvolvimento de Fármacos, Microbiologia, Toxicologia, Farmacogenômica, Estabilidade, Controle de Qualidade, Epidemiologia, Biotecnologia, Simulação Realística, Perícia Forense e Modelagem Molecular." },
       { q: "Como funciona o fluxo modular?", a: "Cada bancada tem 4 módulos experimentais + 1 módulo de mini-relatório. O módulo 2 só desbloqueia após completar o módulo 1, e assim por diante. Suas escolhas iniciais impactam diretamente os resultados dos módulos seguintes." },
       { q: "O que é o mini-relatório?", a: "É o módulo final de cada bancada onde você escreve hipótese, resultados e conclusão sobre o experimento realizado. Pode exportar o relatório completo em PDF com os dados de todos os módulos." },
+      { q: "Os laboratórios funcionam em Salas Virtuais?", a: "Sim! Professores podem adicionar bancadas do laboratório como atividades em salas virtuais. Os resultados (decisões, relatório e score) aparecem no Analytics do professor com gráfico radar e detalhamento completo." },
     ],
   },
   {
