@@ -160,22 +160,24 @@ export default function BancadaSimulacaoRealistica() {
     };
     setDecisions(prev => [...prev, record]);
 
-    // Apply vital effects — use fallback if AI didn't provide them
-    if (currentVitals) {
-      const newVitals = { ...currentVitals };
-      const effects = option.vitalEffects && Object.keys(option.vitalEffects).length > 0
-        ? option.vitalEffects
-        : option.isCorrect
-          ? { fc: -Math.floor(Math.random() * 8 + 3), pas: -Math.floor(Math.random() * 10 + 5), spo2: Math.floor(Math.random() * 2 + 1), fr: -Math.floor(Math.random() * 3 + 1) }
-          : { fc: Math.floor(Math.random() * 10 + 5), pas: Math.floor(Math.random() * 15 + 5), spo2: -Math.floor(Math.random() * 3 + 1), fr: Math.floor(Math.random() * 3 + 1) };
+    // Apply vital effects — use functional updater to avoid stale closure
+    const effects = option.vitalEffects && Object.keys(option.vitalEffects).length > 0
+      ? option.vitalEffects
+      : option.isCorrect
+        ? { fc: -Math.floor(Math.random() * 8 + 3), pas: -Math.floor(Math.random() * 10 + 5), spo2: Math.floor(Math.random() * 2 + 1), fr: -Math.floor(Math.random() * 3 + 1) }
+        : { fc: Math.floor(Math.random() * 10 + 5), pas: Math.floor(Math.random() * 15 + 5), spo2: -Math.floor(Math.random() * 3 + 1), fr: Math.floor(Math.random() * 3 + 1) };
 
+    setCurrentVitals(prev => {
+      if (!prev) return prev;
+      const newVitals = { ...prev };
       Object.entries(effects).forEach(([key, delta]) => {
         if (key in newVitals) {
-          (newVitals as any)[key] = Math.max(0, Math.min(300, (newVitals as any)[key] + delta));
+          (newVitals as any)[key] = Math.max(0, Math.min(300, (newVitals as any)[key] + (delta as number)));
         }
       });
-      setCurrentVitals(newVitals);
-      setVitalsHistory(prev => [...prev, {
+
+      // Update vitals history with new values
+      setVitalsHistory(h => [...h, {
         stage: `Etapa ${node.stage + 1}`,
         fc: newVitals.fc,
         pas: newVitals.pas,
@@ -183,7 +185,7 @@ export default function BancadaSimulacaoRealistica() {
         fr: newVitals.fr,
       }]);
 
-      // Generate alerts
+      // Generate alerts based on new vitals
       const newAlerts: string[] = [];
       if (newVitals.spo2 < 90) newAlerts.push("⚠️ SpO₂ crítico! Considere oxigenoterapia.");
       if (newVitals.pas < 80) newAlerts.push("⚠️ Hipotensão grave! Risco de choque.");
@@ -193,7 +195,9 @@ export default function BancadaSimulacaoRealistica() {
       if (newVitals.glasgow < 9) newAlerts.push("⚠️ Rebaixamento grave do nível de consciência.");
       if (newVitals.fr > 28) newAlerts.push("⚠️ Taquipneia! Avaliar insuficiência respiratória.");
       setAlerts(newAlerts);
-    }
+
+      return newVitals;
+    });
 
     // Check FDA for drug-related decisions
     if (option.label.toLowerCase().includes("mg") || option.description.toLowerCase().includes("prescrev")) {
