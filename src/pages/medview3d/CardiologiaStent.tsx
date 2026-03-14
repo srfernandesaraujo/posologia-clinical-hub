@@ -20,14 +20,15 @@ const steps: ProcedureStep[] = [
 
 export default function CardiologiaStent() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("");
+  const [activeModel, setActiveModel] = useState(steps[0]?.modelId || "");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
 
   useEffect(() => {
-    if (!viewerApi || !viewerReady) return;
-    viewerApi.recenterCamera();
+    const curatedId = steps[currentStep]?.modelId;
+    if (curatedId) setActiveModel(curatedId);
+    if (viewerApi && viewerReady) viewerApi.recenterCamera();
   }, [currentStep, viewerApi, viewerReady]);
 
   const currentSearchQuery = steps[currentStep]?.searchQuery;
