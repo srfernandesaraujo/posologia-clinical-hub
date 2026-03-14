@@ -7,6 +7,7 @@ export interface ProcedureStep {
   title: string;
   description: string;
   modelId?: string;
+  searchQuery?: string;
 }
 
 interface ProcedureTimelineProps {

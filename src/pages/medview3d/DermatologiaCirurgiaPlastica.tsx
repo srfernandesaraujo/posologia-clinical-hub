@@ -10,11 +10,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Análise Facial", description: "Avaliação dos terços faciais, simetria e identificação dos músculos-alvo para tratamento com toxina botulínica." },
-  { stepNumber: 2, title: "Marcações dos Pontos", description: "Demarcação dos pontos de injeção sobre os feixes musculares frontal, corrugador e prócero." },
-  { stepNumber: 3, title: "Aplicação da Toxina", description: "Injeção intramuscular de toxina botulínica tipo A nos pontos marcados com seringa de insulina." },
-  { stepNumber: 4, title: "Pontos de Preenchimento", description: "Identificação dos sulcos nasolabiais, regiões malares e lábios para preenchimento com ácido hialurônico." },
-  { stepNumber: 5, title: "Resultado Volumétrico", description: "Demonstração da mudança volumétrica facial após preenchimento com visualização da projeção tecidual." },
+  { stepNumber: 1, title: "Análise Facial", description: "Avaliação dos terços faciais, simetria e identificação dos músculos-alvo para tratamento com toxina botulínica.", searchQuery: "face anatomy facial muscles expression" },
+  { stepNumber: 2, title: "Marcações dos Pontos", description: "Demarcação dos pontos de injeção sobre os feixes musculares frontal, corrugador e prócero.", searchQuery: "frontalis corrugator procerus muscle injection points" },
+  { stepNumber: 3, title: "Aplicação da Toxina", description: "Injeção intramuscular de toxina botulínica tipo A nos pontos marcados com seringa de insulina.", searchQuery: "botulinum toxin injection facial botox technique" },
+  { stepNumber: 4, title: "Pontos de Preenchimento", description: "Identificação dos sulcos nasolabiais, regiões malares e lábios para preenchimento com ácido hialurônico.", searchQuery: "nasolabial fold malar cheek dermal filler" },
+  { stepNumber: 5, title: "Resultado Volumétrico", description: "Demonstração da mudança volumétrica facial após preenchimento com visualização da projeção tecidual.", searchQuery: "facial volume restoration hyaluronic acid filler result" },
 ];
 
 export default function DermatologiaCirurgiaPlastica() {
@@ -28,6 +28,8 @@ export default function DermatologiaCirurgiaPlastica() {
     if (!viewerApi || !viewerReady) return;
     viewerApi.recenterCamera();
   }, [currentStep, viewerApi, viewerReady]);
+
+  const currentSearchQuery = steps[currentStep]?.searchQuery;
 
   return (
     <div className="space-y-4">
@@ -51,7 +53,11 @@ export default function DermatologiaCirurgiaPlastica() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <SketchfabModelSearch defaultQuery="face anatomy muscles skull" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+          <SketchfabModelSearch
+            defaultQuery="face anatomy muscles skull"
+            activeQuery={currentSearchQuery}
+            onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }}
+          />
         </CollapsibleContent>
       </Collapsible>
 

@@ -10,12 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Identificação da Lesão", description: "Visualização da artéria coronária com placa aterosclerótica causando estenose significativa (>70%)." },
-  { stepNumber: 2, title: "Acesso Vascular", description: "Punção da artéria femoral ou radial e inserção da bainha introdutora para passagem do cateter-guia." },
-  { stepNumber: 3, title: "Posicionamento do Cateter", description: "Avanço do cateter-guia sob fluoroscopia até o óstio coronário com fio-guia 0.014 polegadas." },
-  { stepNumber: 4, title: "Pré-dilatação com Balão", description: "Inflação do cateter-balão na região da estenose para pré-dilatar a placa aterosclerótica." },
-  { stepNumber: 5, title: "Implante do Stent", description: "Posicionamento e expansão do stent farmacológico na lesão, restaurando o lúmen arterial." },
-  { stepNumber: 6, title: "Resultado Final", description: "Confirmação angiográfica do fluxo restaurado (TIMI 3) e remoção do sistema de entrega." },
+  { stepNumber: 1, title: "Identificação da Lesão", description: "Visualização da artéria coronária com placa aterosclerótica causando estenose significativa (>70%).", searchQuery: "coronary artery atherosclerosis stenosis" },
+  { stepNumber: 2, title: "Acesso Vascular", description: "Punção da artéria femoral ou radial e inserção da bainha introdutora para passagem do cateter-guia.", searchQuery: "femoral artery catheter vascular access" },
+  { stepNumber: 3, title: "Posicionamento do Cateter", description: "Avanço do cateter-guia sob fluoroscopia até o óstio coronário com fio-guia 0.014 polegadas.", searchQuery: "cardiac catheterization guide wire coronary" },
+  { stepNumber: 4, title: "Pré-dilatação com Balão", description: "Inflação do cateter-balão na região da estenose para pré-dilatar a placa aterosclerótica.", searchQuery: "balloon angioplasty coronary artery" },
+  { stepNumber: 5, title: "Implante do Stent", description: "Posicionamento e expansão do stent farmacológico na lesão, restaurando o lúmen arterial.", searchQuery: "coronary stent deployment drug eluting" },
+  { stepNumber: 6, title: "Resultado Final", description: "Confirmação angiográfica do fluxo restaurado (TIMI 3) e remoção do sistema de entrega.", searchQuery: "coronary angiography blood flow restoration" },
 ];
 
 export default function CardiologiaStent() {
@@ -29,6 +29,8 @@ export default function CardiologiaStent() {
     if (!viewerApi || !viewerReady) return;
     viewerApi.recenterCamera();
   }, [currentStep, viewerApi, viewerReady]);
+
+  const currentSearchQuery = steps[currentStep]?.searchQuery;
 
   return (
     <div className="space-y-4">
@@ -52,7 +54,11 @@ export default function CardiologiaStent() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <SketchfabModelSearch defaultQuery="heart anatomy coronary" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+          <SketchfabModelSearch
+            defaultQuery="heart anatomy coronary"
+            activeQuery={currentSearchQuery}
+            onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }}
+          />
         </CollapsibleContent>
       </Collapsible>
 
