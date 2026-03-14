@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { External3DViewer } from "@/components/medview3d/External3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { ProcedureStepCard } from "@/components/medview3d/ProcedureStepCard";
+import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Análise Facial", description: "Avaliação dos terços faciais, simetria e identificação dos músculos-alvo para tratamento com toxina botulínica.", modelId: "fadc0b1e42444a01aff6aff44aa7dab5" },
-  { stepNumber: 2, title: "Marcações dos Pontos", description: "Demarcação dos pontos de injeção sobre os feixes musculares frontal, corrugador e prócero.", modelId: "fadc0b1e42444a01aff6aff44aa7dab5" },
-  { stepNumber: 3, title: "Aplicação da Toxina", description: "Injeção intramuscular de toxina botulínica tipo A nos pontos marcados com seringa de insulina.", modelId: "fadc0b1e42444a01aff6aff44aa7dab5" },
-  { stepNumber: 4, title: "Pontos de Preenchimento", description: "Identificação dos sulcos nasolabiais, regiões malares e lábios para preenchimento com ácido hialurônico.", modelId: "fadc0b1e42444a01aff6aff44aa7dab5" },
-  { stepNumber: 5, title: "Resultado Volumétrico", description: "Demonstração da mudança volumétrica facial após preenchimento com visualização da projeção tecidual.", modelId: "fadc0b1e42444a01aff6aff44aa7dab5" },
+  { stepNumber: 1, title: "Análise Facial", description: "Avaliação dos terços faciais, simetria e identificação dos músculos-alvo para tratamento com toxina botulínica." },
+  { stepNumber: 2, title: "Marcações dos Pontos", description: "Demarcação dos pontos de injeção sobre os feixes musculares frontal, corrugador e prócero." },
+  { stepNumber: 3, title: "Aplicação da Toxina", description: "Injeção intramuscular de toxina botulínica tipo A nos pontos marcados com seringa de insulina." },
+  { stepNumber: 4, title: "Pontos de Preenchimento", description: "Identificação dos sulcos nasolabiais, regiões malares e lábios para preenchimento com ácido hialurônico." },
+  { stepNumber: 5, title: "Resultado Volumétrico", description: "Demonstração da mudança volumétrica facial após preenchimento com visualização da projeção tecidual." },
 ];
-
-const DEFAULT_MODEL = "fadc0b1e42444a01aff6aff44aa7dab5";
 
 export default function DermatologiaCirurgiaPlastica() {
   const [currentStep, setCurrentStep] = useState(0);
-  const activeModel = steps[currentStep]?.modelId || DEFAULT_MODEL;
+  const [activeModel, setActiveModel] = useState("a4c2bdf8e4a14e29b7b2e7f0d1a3c5e7");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -35,6 +37,17 @@ export default function DermatologiaCirurgiaPlastica() {
           <Sparkles className="h-3 w-3 mr-1" /> Dermatologia
         </Badge>
       </div>
+
+      <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Search className="h-4 w-4" /> Buscar modelo 3D no Sketchfab
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <SketchfabModelSearch defaultQuery="face anatomy muscles skull" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">

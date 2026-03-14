@@ -6,26 +6,27 @@ import { External3DViewer } from "@/components/medview3d/External3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { ProcedureStepCard } from "@/components/medview3d/ProcedureStepCard";
+import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Radiológica", description: "Análise do grau de desgaste articular e planejamento cirúrgico com radiografias e tomografia do joelho.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
-  { stepNumber: 2, title: "Acesso Cirúrgico", description: "Incisão parapatelar medial e exposição da articulação do joelho com eversão patelar.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
-  { stepNumber: 3, title: "Resseção Óssea Femoral", description: "Cortes no fêmur distal usando guias de alinhamento intramedular para posicionamento do componente femoral.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
-  { stepNumber: 4, title: "Preparação da Tíbia", description: "Corte tibial proximal com guia extramedular e remoção dos meniscos remanescentes.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
-  { stepNumber: 5, title: "Implantação dos Componentes", description: "Encaixe e cimentação da prótese femoral, inserto tibial de polietileno e componente tibial metálico.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
-  { stepNumber: 6, title: "Teste de Estabilidade", description: "Verificação do alinhamento, amplitude de movimento e estabilidade ligamentar com os componentes de teste.", modelId: "2b0e77e4e8f24e17a7e2fb3af2c28b6e" },
+  { stepNumber: 1, title: "Avaliação Radiológica", description: "Análise do grau de desgaste articular e planejamento cirúrgico com radiografias e tomografia do joelho." },
+  { stepNumber: 2, title: "Acesso Cirúrgico", description: "Incisão parapatelar medial e exposição da articulação do joelho com eversão patelar." },
+  { stepNumber: 3, title: "Resseção Óssea Femoral", description: "Cortes no fêmur distal usando guias de alinhamento intramedular para posicionamento do componente femoral." },
+  { stepNumber: 4, title: "Preparação da Tíbia", description: "Corte tibial proximal com guia extramedular e remoção dos meniscos remanescentes." },
+  { stepNumber: 5, title: "Implantação dos Componentes", description: "Encaixe e cimentação da prótese femoral, inserto tibial de polietileno e componente tibial metálico." },
+  { stepNumber: 6, title: "Teste de Estabilidade", description: "Verificação do alinhamento, amplitude de movimento e estabilidade ligamentar com os componentes de teste." },
 ];
-
-// Modelo placeholder de joelho do Sketchfab
-const DEFAULT_MODEL = "2b0e77e4e8f24e17a7e2fb3af2c28b6e";
 
 export default function OrtopediaProteses() {
   const [currentStep, setCurrentStep] = useState(0);
-  const activeModel = steps[currentStep]?.modelId || DEFAULT_MODEL;
+  const [activeModel, setActiveModel] = useState("d3cce6fa37684b1096bc3eb9acc9c069");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/medview-3d" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-5 w-5" />
@@ -39,7 +40,17 @@ export default function OrtopediaProteses() {
         </Badge>
       </div>
 
-      {/* Viewport + Toolbar */}
+      <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Search className="h-4 w-4" /> Buscar modelo 3D no Sketchfab
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <SketchfabModelSearch defaultQuery="knee joint anatomy" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+        </CollapsibleContent>
+      </Collapsible>
+
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">
           <External3DViewer modelId={activeModel} title="Prótese de Joelho" />
@@ -47,10 +58,7 @@ export default function OrtopediaProteses() {
         <MedViewToolbar />
       </div>
 
-      {/* Timeline */}
       <ProcedureTimeline steps={steps} currentStep={currentStep} onStepChange={setCurrentStep} />
-
-      {/* Step detail */}
       <ProcedureStepCard step={steps[currentStep]} totalSteps={steps.length} />
     </div>
   );
