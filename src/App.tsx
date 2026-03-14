@@ -245,6 +245,7 @@ const App = () => (
               <Route path="/sala/simulador/farmaco-autonomica" element={<SimuladorFarmacoAutonomica />} />
               <Route path="/sala/simulador/tolerancia-dependencia" element={<SimuladorToleranciaDependencia />} />
               <Route path="/sala/simulador/farmacogenomica" element={<SimuladorFarmacogenomica />} />
+              <Route path="/sala/simulador/dispensacao-344" element={<SimuladorDispensacao344 />} />
               <Route path="/sala/simulador/estabilidade" element={<SimuladorEstabilidade />} />
               <Route path="/sala/simulador/liberacao-farmacos" element={<SimuladorLiberacaoFarmacos />} />
               <Route path="/sala/simulador/diluicao" element={<SimuladorDiluicao />} />
