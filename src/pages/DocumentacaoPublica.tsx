@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
