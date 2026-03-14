@@ -122,7 +122,7 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
         preload: 1,
         transparent: 0,
       });
-    }, [modelId, onApiReady]);
+    }, [modelId]);
 
     useEffect(() => {
       initViewer();
