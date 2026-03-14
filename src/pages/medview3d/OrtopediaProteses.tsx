@@ -28,8 +28,7 @@ export default function OrtopediaProteses() {
   useEffect(() => {
     const curatedId = steps[currentStep]?.modelId;
     if (curatedId) setActiveModel(curatedId);
-    if (viewerApi && viewerReady) viewerApi.recenterCamera();
-  }, [currentStep, viewerApi, viewerReady]);
+  }, [currentStep]);
 
   const currentSearchQuery = steps[currentStep]?.searchQuery;
 
