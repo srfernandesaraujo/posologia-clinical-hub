@@ -732,6 +732,33 @@ Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas iden
   "nutricao-renal": `Gere um caso clínico para o Simulador de Nutrição Renal. O caso deve conter: title, difficulty, patient (name, age, scenario, labs: {ureia, creatinina, K, P, Ca, albumina}), idealProtein (0.6-0.8/0.8-1.0/1.0-1.2/1.2-1.5), idealK/idealP/idealNa/idealLiquido (sem-restricao/moderado/restrito/muito-restrito), idealFoodIssues (array), idealSupplements (array), consequence ({correct, wrong}).`,
 
   "nutricao-materno-infantil": `Gere um caso clínico para o Simulador de Nutrição Materno-Infantil. O caso deve conter: title, difficulty, patient (name, age, ig, imcPreGest, currentWeight, preWeight, height, labs), idealAtalah (baixo-peso/adequado/sobrepeso/obesidade), idealGainRange, idealSupplements ({acidoFolico, ferro, calcio, vitD, omega3}), complication (texto), idealCompAction (aumentar-ferro/dieta-dmg/restringir-sodio/manter), consequence ({correct, wrong}).`,
+
+  "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
+O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: título descritivo do caso
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- tipo: "A"|"B"|"C" (A = Notificação Amarela / Lista A entorpecentes, B = Notificação Azul / Lista B psicotrópicos, C = Receita Controle Especial / Lista C1)
+- paciente: { nome (string), idade (number), queixa (string - motivo da ida à farmácia), comportamento (string - como o paciente se comporta no balcão) }
+- prescricao: objeto com campos da prescrição preenchidos. Para tipo A ou B: { uf, numero, emitente: {nome, crm, endereco}, paciente: {nome, endereco}, medicamento, quantidade, posologia, data, assinatura (boolean) }. Para tipo C: { emitente: {nome, crm, crf, endereco}, paciente: {nome, endereco}, medicamentos (array de {nome, quantidade, posologia}), data, assinatura (boolean), segundaVia (boolean) }
+- errosCampos: array de { campo (string - nome do campo), correto (boolean - se o campo está correto), detalhe (string - explicação), artigo (string opcional - artigo da Portaria 344 relevante) }. Inclua pelo menos 2-3 erros propositais na prescrição (data vencida, campo ausente, quantidade acima do permitido, UF diferente, falta de segunda via, etc.)
+- perguntasLegais: array de { pergunta (string), opcoes (array de 4 strings), correta (number 0-3 indicando índice da resposta correta), explicacao (string), artigo (string opcional) }. Inclua 3-4 perguntas sobre: validade da notificação (30 dias para A, 30 dias para B, 30 dias para C), quantidade máxima permitida (A: 30 dias de tratamento ou 5 ampolas; B: 60 dias ou 5 ampolas; C: 60 dias, max 3 substâncias), retenção de vias, regras de UF.
+- decisaoCorreta: "dispensar"|"recusar"|"parcial"
+- justificativaCorreta: string explicando por que a decisão correta é essa, citando artigos da Portaria 344
+- orientacoes: array de { texto (string - item de orientação ao paciente), correta (boolean - se deve ser marcado como correto) }. Inclua orientações sobre: uso correto, armazenamento, não compartilhar, efeitos adversos, retorno ao médico. Pelo menos 6 itens, 4 corretos e 2 incorretos (distratores).
+- narrativa: string com 2-3 frases descrevendo o cenário no balcão da farmácia
+
+REGRAS FARMACÊUTICAS (Portaria 344/98):
+- Lista A (entorpecentes): Notificação de Receita A (amarela), validade 30 dias, máximo 30 dias de tratamento ou 5 ampolas
+- Lista B (psicotrópicos): Notificação de Receita B (azul), validade 30 dias, máximo 60 dias de tratamento ou 5 ampolas
+- Lista C1 (controle especial): Receita de Controle Especial (branca, 2 vias), validade 30 dias, máximo 60 dias, máximo 3 substâncias por receita
+- Campos obrigatórios: emitente (nome, inscrição profissional, endereço), paciente (nome, endereço), medicamento, quantidade, posologia, data, assinatura
+- Notificações A e B: restritas à UF de emissão (salvo exceções)
+- Retenção: A retém na farmácia; B retém 1 via; C retém 1ª via na farmácia
+
+Varie entre diferentes medicamentos controlados reais: morfina, codeína, metilfenidato, clonazepam, diazepam, zolpidem, pregabalina, tramadol, etc.
+Varie os tipos de erro: data vencida, campo incompleto, quantidade excessiva, UF diferente, prescritor não habilitado, falta de via, associação proibida.`,
 };
 
 serve(async (req) => {
