@@ -33,6 +33,7 @@ const NATIVE_PATHS: Record<string, string> = {
   "interacoes-cyp": "/calculadoras/interacoes-cyp",
   "adesao-oncologia": "/calculadoras/adesao-oncologia",
   "toxicidade-antineoplasicos": "/calculadoras/toxicidade-antineoplasicos",
+  "ajuste-dose-oncologico": "/calculadoras/ajuste-dose-oncologico",
 };
 
 const RELATED_MAP: Record<string, string[]> = {
