@@ -27,8 +27,7 @@ export default function FarmacologiaDispositivos() {
   useEffect(() => {
     const curatedId = steps[currentStep]?.modelId;
     if (curatedId) setActiveModel(curatedId);
-    if (viewerApi && viewerReady) viewerApi.recenterCamera();
-  }, [currentStep, viewerApi, viewerReady]);
+  }, [currentStep]);
 
   const currentSearchQuery = steps[currentStep]?.searchQuery;
 
