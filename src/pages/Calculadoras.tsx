@@ -53,6 +53,7 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Radar de Interacoes CYP450", description: "Visualizacao das interacoes farmacocineticas via citocromo P450.", category: "Farmacologia Clínica", path: "/calculadoras/interacoes-cyp", icon: Dna, searchKey: "interacoes cyp450 citocromo farmacologia" },
   { name: "Predição de Risco de Não Adesão Oncológica", description: "ARMS, MOATT, Morisky e AQT para avaliar risco de não adesão em pacientes oncológicos.", category: "Oncologia", path: "/calculadoras/adesao-oncologia", icon: Pill, searchKey: "adesao oncologia arms moatt morisky aqt" },
   { name: "Predição de Reações Adversas a Antineoplásicos", description: "CARG, CRASH e HFA-ICOS para predição de toxicidade e cardiotoxicidade.", category: "Oncologia", path: "/calculadoras/toxicidade-antineoplasicos", icon: Activity, searchKey: "toxicidade antineoplasicos carg crash hfa icos cardiotoxicidade" },
+  { name: "Ajuste de Dose Oncológico (Renal/Hepático)", description: "Carboplatina (Calvert), ajuste renal (Cockcroft-Gault) e hepático (NCI-ODWG / Child-Pugh).", category: "Oncologia", path: "/calculadoras/ajuste-dose-oncologico", icon: FlaskConical, searchKey: "ajuste dose oncologico carboplatina calvert renal hepatico child pugh nci odwg" },
 ];
 
 const NATIVE_SLUGS = new Set([
