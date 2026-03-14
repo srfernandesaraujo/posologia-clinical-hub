@@ -20,7 +20,7 @@ const steps: ProcedureStep[] = [
 
 export default function OrtopediaProteses() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("d3cce6fa37684b1096bc3eb9acc9c069");
+  const [activeModel, setActiveModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);

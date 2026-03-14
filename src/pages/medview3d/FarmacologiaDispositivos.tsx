@@ -19,7 +19,7 @@ const steps: ProcedureStep[] = [
 
 export default function FarmacologiaDispositivos() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("c1c84fb4d37c4e0e8e8b0c8d5d6f3a2b");
+  const [activeModel, setActiveModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);

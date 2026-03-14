@@ -20,7 +20,7 @@ const steps: ProcedureStep[] = [
 
 export default function CardiologiaStent() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("0d3a1e7e90224cecb1e41a9e83ad32ec");
+  const [activeModel, setActiveModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);

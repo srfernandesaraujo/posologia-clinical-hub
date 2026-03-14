@@ -20,7 +20,7 @@ const steps: ProcedureStep[] = [
 
 export default function CirurgiaGeralLaparoscopia() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("b5d3e7f1a2c4b6d8e0f2a4c6b8d0e2f4");
+  const [activeModel, setActiveModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);

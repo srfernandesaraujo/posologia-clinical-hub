@@ -19,7 +19,7 @@ const steps: ProcedureStep[] = [
 
 export default function DermatologiaCirurgiaPlastica() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("a4c2bdf8e4a14e29b7b2e7f0d1a3c5e7");
+  const [activeModel, setActiveModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
