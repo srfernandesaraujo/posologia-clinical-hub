@@ -51,6 +51,8 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Escala RASS (Sedacao em UTI)", description: "Richmond Agitation-Sedation Scale — avaliacao e conduta.", category: "Terapia Intensiva", path: "/calculadoras/rass-sedacao", icon: Moon, searchKey: "rass sedacao uti agitacao richmond" },
   { name: "Nutricao Parenteral Total (NPT)", description: "Calculo de macronutrientes, GIR e volume para NPT.", category: "Terapia Intensiva", path: "/calculadoras/nutricao-parenteral", icon: Utensils, searchKey: "nutricao parenteral npt gir harris benedict" },
   { name: "Radar de Interacoes CYP450", description: "Visualizacao das interacoes farmacocineticas via citocromo P450.", category: "Farmacologia Clínica", path: "/calculadoras/interacoes-cyp", icon: Dna, searchKey: "interacoes cyp450 citocromo farmacologia" },
+  { name: "Predição de Risco de Não Adesão Oncológica", description: "ARMS, MOATT, Morisky e AQT para avaliar risco de não adesão em pacientes oncológicos.", category: "Oncologia", path: "/calculadoras/adesao-oncologia", icon: Pill, searchKey: "adesao oncologia arms moatt morisky aqt" },
+  { name: "Predição de Reações Adversas a Antineoplásicos", description: "CARG, CRASH e HFA-ICOS para predição de toxicidade e cardiotoxicidade.", category: "Oncologia", path: "/calculadoras/toxicidade-antineoplasicos", icon: Activity, searchKey: "toxicidade antineoplasicos carg crash hfa icos cardiotoxicidade" },
 ];
 
 const NATIVE_SLUGS = new Set([
