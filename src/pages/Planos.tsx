@@ -10,20 +10,26 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const features = [
-  { key: "calculators", free: "3 por dia", premium: "Ilimitadas" },
-  { key: "simulators", free: false, premium: true },
-  { key: "games", free: false, premium: true },
-  { key: "pdf", free: false, premium: true },
+  { key: "calculators", free: "3 por dia", premium: "22+ ilimitadas" },
+  { key: "simulators", free: false, premium: "88+ (12 categorias)" },
+  { key: "games", free: false, premium: "21+ nativos + criação por IA" },
+  { key: "lab", free: false, premium: "11 bancadas" },
+  { key: "medview3d", free: false, premium: "6 especialidades" },
   { key: "virtualRooms", free: false, premium: true },
+  { key: "marketplace", free: false, premium: true },
+  { key: "pdf", free: false, premium: true },
   { key: "priority", free: false, premium: true },
 ];
 
 const featureLabels: Record<string, string> = {
   calculators: "Calculadoras Clínicas",
-  simulators: "Simuladores Avançados",
-  games: "Jogos Clínicos Interativos",
-  pdf: "Relatórios em PDF",
+  simulators: "Simuladores Interativos com IA",
+  games: "Jogos Clínicos Gamificados",
+  lab: "Laboratório Virtual",
+  medview3d: "MedView 3D",
   virtualRooms: "Salas Virtuais Ilimitadas",
+  marketplace: "Marketplace de Ferramentas",
+  pdf: "Relatórios em PDF",
   priority: "Suporte Prioritário",
 };
 
