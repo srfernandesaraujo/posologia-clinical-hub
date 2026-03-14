@@ -412,9 +412,7 @@ export default function ToxicidadeAntineoplasicos() {
               <RiskGauge
                 value={resultado.percentual}
                 maxValue={100}
-                label={resultado.faixa}
-                sublabel={`Score: ${resultado.score}`}
-                color={resultado.cor}
+                label={`${resultado.faixa} (Score: ${resultado.score})`}
               />
 
               <div className="rounded-2xl border border-border bg-card p-6">
