@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Microscope, Lock, CheckCircle2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Microscope, Lock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
@@ -75,6 +77,15 @@ function generateGrowthCurve(bacteriaId: string, antibioticId: string, concentra
 
 type AntibiogramResult = { antibioticId: string; name: string; mic: number; classification: "S" | "I" | "R"; halo: number };
 
+function getBestEmpiricAntibiotic(results: AntibiogramResult[]): { id: string; reason: string } {
+  const sensitive = results.filter(r => r.classification === "S");
+  if (sensitive.length === 0) return { id: results[0].antibioticId, reason: "Nenhum antibiótico sensível — considerar terapia combinada ou polimixinas" };
+  // Prefer narrowest spectrum with lowest MIC
+  const sorted = [...sensitive].sort((a, b) => a.mic - b.mic);
+  const best = sorted[0];
+  return { id: best.antibioticId, reason: `Menor MIC entre os sensíveis (${best.mic} µg/mL), favorecendo eficácia e reduzindo pressão seletiva` };
+}
+
 export default function BancadaMicrobiologia() {
   const navigate = useNavigate();
   const {
@@ -87,6 +98,18 @@ export default function BancadaMicrobiologia() {
   const [selectedAntibiotics, setSelectedAntibiotics] = useState<string[]>(["amoxicilina", "ciprofloxacino", "meropenem"]);
   const [concentration, setConcentration] = useState([8]);
   const [antibiogram, setAntibiogram] = useState<AntibiogramResult[] | null>(null);
+
+  // M3 decision: manual S/I/R classification
+  const [userClassifications, setUserClassifications] = useState<Record<string, "S" | "I" | "R">>({});
+  const [m3Submitted, setM3Submitted] = useState(false);
+  const [m3Feedback, setM3Feedback] = useState<{ results: { antibioticId: string; name: string; userChoice: string; real: string; correct: boolean }[] } | null>(null);
+
+  // M4 decision: choose empiric antibiotic
+  const [userEmpiricChoice, setUserEmpiricChoice] = useState("");
+  const [userEmpiricJustification, setUserEmpiricJustification] = useState("");
+  const [m4Submitted, setM4Submitted] = useState(false);
+  const [m4Feedback, setM4Feedback] = useState<{ correct: boolean; idealId: string; idealName: string; idealReason: string } | null>(null);
+
   const [growthAntibiotic, setGrowthAntibiotic] = useState<string | null>(null);
   const [growthConc, setGrowthConc] = useState([8]);
   const [growthCurve, setGrowthCurve] = useState<any[] | null>(null);
@@ -95,10 +118,13 @@ export default function BancadaMicrobiologia() {
   const allBacteria = useMemo(() => [...BACTERIA, ...(customBacterium ? [customBacterium] : [])], [customBacterium]);
 
   const selectedBacteria = allBacteria.find((b) => b.id === bacteria) ?? BACTERIA[0];
-
   const completeModule = (n: number) => setCompletedModules((prev) => new Set([...prev, n]));
 
-  const confirmStrain = () => { setCompletedModules(new Set([1])); setAntibiogram(null); setGrowthCurve(null); };
+  const confirmStrain = () => {
+    setCompletedModules(new Set([1])); setAntibiogram(null); setGrowthCurve(null);
+    setM3Submitted(false); setM3Feedback(null); setUserClassifications({});
+    setM4Submitted(false); setM4Feedback(null); setUserEmpiricChoice(""); setUserEmpiricJustification("");
+  };
 
   const runIncubation = () => {
     const results = selectedAntibiotics.map((aId) => {
@@ -108,18 +134,43 @@ export default function BancadaMicrobiologia() {
       return { antibioticId: aId, name: ab.name, mic, classification: c, halo: getHaloSize(c) };
     });
     setAntibiogram(results);
-    const firstSensitive = results.find((r) => r.classification === "S");
-    setGrowthAntibiotic(firstSensitive?.antibioticId ?? results[0].antibioticId);
-    setGrowthConc([concentration[0]]);
     setGrowthCurve(null);
+    setM3Submitted(false); setM3Feedback(null); setUserClassifications({});
+    setM4Submitted(false); setM4Feedback(null); setUserEmpiricChoice(""); setUserEmpiricJustification("");
     completeModule(2);
   };
 
-  const runGrowthCurve = () => {
-    if (!growthAntibiotic) return;
-    const curve = generateGrowthCurve(bacteria, growthAntibiotic, growthConc[0]);
-    setGrowthCurve(curve);
+  // M3 decision: classify S/I/R manually
+  const submitM3Decision = () => {
+    if (!antibiogram) return;
+    const results = antibiogram.map(r => ({
+      antibioticId: r.antibioticId,
+      name: r.name,
+      userChoice: userClassifications[r.antibioticId] || "S",
+      real: r.classification,
+      correct: (userClassifications[r.antibioticId] || "S") === r.classification,
+    }));
+    setM3Feedback({ results });
+    setM3Submitted(true);
+
+    // Auto-generate growth curve for M4
+    const firstSensitive = antibiogram.find((r) => r.classification === "S");
+    setGrowthAntibiotic(firstSensitive?.antibioticId ?? antibiogram[0].antibioticId);
+    setGrowthConc([concentration[0]]);
+    const abForCurve = firstSensitive?.antibioticId ?? antibiogram[0].antibioticId;
+    setGrowthCurve(generateGrowthCurve(bacteria, abForCurve, concentration[0]));
     completeModule(3);
+  };
+
+  // M4 decision: choose empiric antibiotic
+  const submitM4Decision = () => {
+    if (!antibiogram) return;
+    const best = getBestEmpiricAntibiotic(antibiogram);
+    const correct = userEmpiricChoice === best.id;
+    const idealName = ANTIBIOTICS.find(a => a.id === best.id)?.name || best.id;
+    setM4Feedback({ correct, idealId: best.id, idealName, idealReason: best.reason });
+    setM4Submitted(true);
+    completeModule(4);
   };
 
   const updateGrowthRealtime = (abId: string, conc: number) => {
@@ -148,17 +199,25 @@ export default function BancadaMicrobiologia() {
     const decisions: { label: string; userChoice: string; correct: boolean; idealChoice?: string }[] = [
       { label: "Bactéria selecionada", userChoice: selectedBacteria.name, correct: true },
     ];
-    if (antibiogram) {
-      antibiogram.forEach((r) => {
+    if (m3Feedback) {
+      m3Feedback.results.forEach(r => {
         decisions.push({
           label: `Classificação: ${r.name}`,
-          userChoice: r.classification,
-          correct: true,
-          idealChoice: r.classification,
+          userChoice: r.userChoice,
+          correct: r.correct,
+          idealChoice: r.real,
         });
       });
     }
-    const score = antibiogram ? Math.round((antibiogram.filter(r => r.classification === "S").length / antibiogram.length) * 100) : 0;
+    if (m4Feedback) {
+      decisions.push({
+        label: "Antibiótico empírico escolhido",
+        userChoice: ANTIBIOTICS.find(a => a.id === userEmpiricChoice)?.name || userEmpiricChoice,
+        correct: m4Feedback.correct,
+        idealChoice: m4Feedback.idealName,
+      });
+    }
+    const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
     submitVRResults({ score, actions: { decisions, report: reportData, experimentSummary }, timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000) });
   };
 
@@ -168,6 +227,16 @@ export default function BancadaMicrobiologia() {
     </div>
   );
   const ModuleBadge = ({ n }: { n: number }) => (completedModules.has(n) ? <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" /> : null);
+  const FeedbackIcon = ({ correct }: { correct: boolean }) => correct
+    ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+    : <XCircle className="h-4 w-4 text-destructive shrink-0" />;
+
+  const JUSTIFICATIONS = [
+    { value: "menor_mic", label: "Menor MIC entre os sensíveis (maior potência)" },
+    { value: "espectro_estreito", label: "Espectro mais estreito (menor pressão seletiva)" },
+    { value: "amplo_espectro", label: "Maior cobertura empírica (amplo espectro)" },
+    { value: "disponibilidade", label: "Disponibilidade e custo-efetividade" },
+  ];
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -205,6 +274,7 @@ export default function BancadaMicrobiologia() {
               _customResistance = { [data.bacteria.id]: resMap };
               setBacteria(data.bacteria.id);
               setCompletedModules(new Set([1])); setAntibiogram(null); setGrowthCurve(null);
+              setM3Submitted(false); setM3Feedback(null); setM4Submitted(false); setM4Feedback(null);
             }} />
           </CardContent>
         </Card>
@@ -235,15 +305,16 @@ export default function BancadaMicrobiologia() {
           </CardContent>
         </Card>
 
-        {/* M3 */}
-        <Card className="relative">
+        {/* M3 - Placa de Petri + Decisão: classificar S/I/R manualmente */}
+        <Card className="lg:col-span-2 relative">
           {!completedModules.has(2) && <LockedOverlay requiredModule={2} />}
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">3. Placa de Petri + Classificação S/I/R <ModuleBadge n={3} /></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">3. Interpretação do Antibiograma <ModuleBadge n={3} /></CardTitle></CardHeader>
           <CardContent>
             {!antibiogram ? (
               <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Aguardando incubação</div>
             ) : (
               <div className="space-y-4">
+                {/* Petri plate visualization */}
                 <div className="relative mx-auto" style={{ width: 240, height: 240 }}>
                   <svg viewBox="0 0 240 240" className="w-full h-full">
                     <circle cx="120" cy="120" r="115" fill="hsl(45 60% 85%)" stroke="hsl(var(--border))" strokeWidth="2" />
@@ -253,44 +324,84 @@ export default function BancadaMicrobiologia() {
                       const cx = 120 + dist * Math.cos(angle);
                       const cy = 120 + dist * Math.sin(angle);
                       const haloR = r.halo * 2;
-                      const color = r.classification === "S" ? "hsl(142 71% 45%)" : r.classification === "I" ? "hsl(45 93% 47%)" : "hsl(0 72% 51%)";
                       return (
                         <g key={r.antibioticId}>
                           {r.halo > 2 && <circle cx={cx} cy={cy} r={haloR} fill="hsl(45 60% 95%)" opacity={0.7} />}
-                          <circle cx={cx} cy={cy} r={7} fill={color} />
+                          <circle cx={cx} cy={cy} r={7} fill="hsl(var(--primary))" />
                           <text x={cx} y={cy + haloR + 12} textAnchor="middle" fontSize="7" fill="hsl(var(--foreground))">{r.name.substring(0, 6)}</text>
+                          {/* Show halo diameter in mm */}
+                          {r.halo > 2 && <text x={cx} y={cy - haloR - 4} textAnchor="middle" fontSize="6" fill="hsl(var(--muted-foreground))">{r.halo.toFixed(0)}mm</text>}
                         </g>
                       );
                     })}
                   </svg>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="border-b"><th className="text-left py-1 font-medium">Antibiótico</th><th className="text-center py-1 font-medium">MIC</th><th className="text-center py-1 font-medium">Halo</th><th className="text-center py-1 font-medium">Class.</th></tr></thead>
-                    <tbody>
-                      {antibiogram.map((r) => (
-                        <tr key={r.antibioticId} className="border-b border-border/50">
-                          <td className="py-1 text-xs">{r.name}</td>
-                          <td className="text-center text-xs">{r.mic}</td>
-                          <td className="text-center text-xs">{r.halo.toFixed(1)}</td>
-                          <td className="text-center">
-                            <Badge variant={r.classification === "S" ? "default" : r.classification === "I" ? "secondary" : "destructive"} className="text-[10px]">{r.classification}</Badge>
-                          </td>
-                        </tr>
+
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertTriangle className="h-4 w-4" />
+                    Decisão Crítica: Classifique cada antibiótico como S, I ou R
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Analise o tamanho dos halos de inibição na placa de Petri e classifique cada antibiótico. Halos grandes (&gt;18mm) geralmente indicam sensibilidade, halos médios (13-17mm) indicam intermediário, e halos pequenos (&lt;13mm) ou ausentes indicam resistência.
+                  </p>
+
+                  <div className="space-y-2">
+                    {antibiogram.map(r => (
+                      <div key={r.antibioticId} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-32 truncate">{r.name}</span>
+                        <span className="text-[10px] text-muted-foreground w-16">Halo: {r.halo.toFixed(0)}mm</span>
+                        <RadioGroup
+                          value={userClassifications[r.antibioticId] || ""}
+                          onValueChange={v => setUserClassifications(prev => ({ ...prev, [r.antibioticId]: v as "S" | "I" | "R" }))}
+                          disabled={m3Submitted}
+                          className="flex gap-3"
+                        >
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem value="S" id={`${r.antibioticId}-S`} />
+                            <Label htmlFor={`${r.antibioticId}-S`} className="text-xs cursor-pointer text-green-600">S</Label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem value="I" id={`${r.antibioticId}-I`} />
+                            <Label htmlFor={`${r.antibioticId}-I`} className="text-xs cursor-pointer text-yellow-600">I</Label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem value="R" id={`${r.antibioticId}-R`} />
+                            <Label htmlFor={`${r.antibioticId}-R`} className="text-xs cursor-pointer text-red-600">R</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    ))}
+                  </div>
+
+                  {!m3Submitted ? (
+                    <Button
+                      onClick={submitM3Decision}
+                      disabled={Object.keys(userClassifications).length < antibiogram.length}
+                      className="w-full"
+                    >
+                      Confirmar Classificações
+                    </Button>
+                  ) : m3Feedback && (
+                    <div className="space-y-2 animate-fade-in">
+                      {m3Feedback.results.map(r => (
+                        <div key={r.antibioticId} className="flex items-center gap-2 text-xs">
+                          <FeedbackIcon correct={r.correct} />
+                          <span><strong>{r.name}</strong>: você = {r.userChoice} | real = <strong>{r.real}</strong> (MIC = {antibiogram.find(a => a.antibioticId === r.antibioticId)?.mic} µg/mL)</span>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  )}
                 </div>
-                <Button onClick={runGrowthCurve} className="w-full">Gerar Curvas de Crescimento</Button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* M4 */}
-        <Card className="relative">
+        {/* M4 - Curva de crescimento + Decisão: antibiótico empírico */}
+        <Card className="lg:col-span-2 relative">
           {!completedModules.has(3) && <LockedOverlay requiredModule={3} />}
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">4. Curva de Crescimento <ModuleBadge n={3} /></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center">4. Escolha do Antibiótico Empírico <ModuleBadge n={4} /></CardTitle></CardHeader>
           <CardContent>
             {!growthCurve ? (
               <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Aguardando módulo 3</div>
@@ -298,7 +409,7 @@ export default function BancadaMicrobiologia() {
               <div className="space-y-3">
                 {antibiogram && (
                   <div className="flex flex-wrap gap-2 items-center">
-                    <label className="text-xs font-medium">Antibiótico:</label>
+                    <label className="text-xs font-medium">Explorar curva:</label>
                     {antibiogram.map((r) => (
                       <Badge key={r.antibioticId} variant={growthAntibiotic === r.antibioticId ? "default" : "outline"} className="cursor-pointer text-[10px]" onClick={() => updateGrowthRealtime(r.antibioticId, growthConc[0])}>{r.name.substring(0, 8)}</Badge>
                     ))}
@@ -319,13 +430,69 @@ export default function BancadaMicrobiologia() {
                     <Line type="monotone" dataKey="tratado" stroke="hsl(var(--primary))" name={`Tratado (${growthConc[0]} µg/mL)`} dot={false} strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
+
+                {m3Feedback && m3Feedback.results.some(r => !r.correct) && !m4Submitted && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-xs text-destructive">
+                    ⚠️ Algumas classificações S/I/R foram incorretas. Use as curvas de crescimento para validar sua interpretação antes de escolher o antibiótico empírico.
+                  </div>
+                )}
+
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertTriangle className="h-4 w-4" />
+                    Decisão Crítica: Selecione o antibiótico para tratamento empírico
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium">Antibiótico de escolha:</Label>
+                    <Select value={userEmpiricChoice} onValueChange={setUserEmpiricChoice} disabled={m4Submitted}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {antibiogram?.map(r => (
+                          <SelectItem key={r.antibioticId} value={r.antibioticId}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium">Justificativa:</Label>
+                    <RadioGroup value={userEmpiricJustification} onValueChange={setUserEmpiricJustification} disabled={m4Submitted} className="mt-2 space-y-1">
+                      {JUSTIFICATIONS.map(j => (
+                        <div key={j.value} className="flex items-center gap-2">
+                          <RadioGroupItem value={j.value} id={`just-${j.value}`} />
+                          <Label htmlFor={`just-${j.value}`} className="text-xs cursor-pointer">{j.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  {!m4Submitted ? (
+                    <Button onClick={submitM4Decision} disabled={!userEmpiricChoice || !userEmpiricJustification} className="w-full">
+                      Confirmar Escolha Terapêutica
+                    </Button>
+                  ) : m4Feedback && (
+                    <div className="space-y-2 animate-fade-in">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FeedbackIcon correct={m4Feedback.correct} />
+                        <span>
+                          Sua escolha: <strong>{ANTIBIOTICS.find(a => a.id === userEmpiricChoice)?.name}</strong> | Ideal: <strong>{m4Feedback.idealName}</strong>
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{m4Feedback.idealReason}</p>
+                      <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                        <strong className="text-foreground">Princípio:</strong> Na terapia empírica, prefere-se o antibiótico sensível com menor MIC (maior potência), espectro mais estreito (menor pressão seletiva para resistência), e boa penetração no sítio de infecção.
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* M5 */}
-        <LabReportPanel benchTitle="Bancada de Microbiologia" isUnlocked={completedModules.has(3)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
+        <LabReportPanel benchTitle="Bancada de Microbiologia" isUnlocked={completedModules.has(4)} experimentSummary={experimentSummary} isVirtualRoom={isVirtualRoom} onVRSubmit={handleVRSubmit} vrSubmitted={vrSubmitted} />
       </div>
     </div>
   );
