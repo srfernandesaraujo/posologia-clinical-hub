@@ -5,7 +5,7 @@ const sections = [
   {
     title: "Calculadoras Clínicas",
     icon: Calculator,
-    description: "Mais de 20 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline.",
+    description: "Mais de 20 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline. Organização por categorias com busca e visualização em grade/lista.",
     items: [
       { name: "CKD-EPI 2021 (TFGe)", desc: "Equação sem correção racial — KDIGO 2021", link: "/calculadoras/ckd-epi" },
       { name: "Correção de Sódio", desc: "Fórmula de Katz para hiponatremia", link: "/calculadoras/correcao-sodio" },
