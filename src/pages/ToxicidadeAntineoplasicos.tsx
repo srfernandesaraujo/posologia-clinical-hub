@@ -265,15 +265,8 @@ export default function ToxicidadeAntineoplasicos() {
         </div>
         <div className="flex items-center gap-2">
           <ShareToolButton toolSlug={SLUG} toolName="Toxicidade Antineoplásicos" />
-          <AdminPromptViewer toolSlug={SLUG} systemPrompt={getNativePrompt(SLUG)} />
-          <CalculationHistory
-            history={history}
-            calculatorName="Toxicidade Antineoplásicos"
-            onRestore={(entry) => {
-              const d = entry.details as any;
-              if (d.instrumento) setInstrumento(d.instrumento);
-            }}
-          />
+          <AdminPromptViewer toolSlug={SLUG} toolName="Toxicidade Antineoplásicos" toolType="calculator" prompt={getNativePrompt(SLUG) || ""} />
+          <CalculationHistory calculatorSlug={SLUG} />
         </div>
       </div>
 
