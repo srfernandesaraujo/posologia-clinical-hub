@@ -270,7 +270,7 @@ export default function ToxicidadeAntineoplasicos() {
         </div>
       </div>
 
-      <HistoryConsentBanner consent={consent} setConsent={setConsent} />
+      <HistoryConsentBanner />
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
