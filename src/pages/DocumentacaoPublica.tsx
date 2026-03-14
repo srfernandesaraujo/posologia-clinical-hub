@@ -133,7 +133,7 @@ export default function DocumentacaoPublica() {
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Central de Ajuda</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Documentação do Posologia Clinical Hub</h1>
-          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, simuladores, laboratório virtual, jogos, formação docente e mais.</p>
+          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 96+ simuladores, 11 bancadas de laboratório, jogos, formação docente, salas virtuais e mais.</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input
