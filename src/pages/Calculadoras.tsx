@@ -80,6 +80,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Pediatria": Baby,
   "Hepatologia": Flame,
   "Terapia Intensiva": HeartPulse,
+  "Oncologia": ShieldAlert,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
