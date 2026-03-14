@@ -10,12 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Radiológica", description: "Análise do grau de desgaste articular e planejamento cirúrgico com radiografias e tomografia do joelho.", searchQuery: "knee joint osteoarthritis X-ray CT scan" },
-  { stepNumber: 2, title: "Acesso Cirúrgico", description: "Incisão parapatelar medial e exposição da articulação do joelho com eversão patelar.", searchQuery: "knee surgery parapatellar approach anatomy" },
-  { stepNumber: 3, title: "Resseção Óssea Femoral", description: "Cortes no fêmur distal usando guias de alinhamento intramedular para posicionamento do componente femoral.", searchQuery: "femoral bone cutting guide knee arthroplasty" },
-  { stepNumber: 4, title: "Preparação da Tíbia", description: "Corte tibial proximal com guia extramedular e remoção dos meniscos remanescentes.", searchQuery: "tibial plateau cut knee replacement meniscus" },
-  { stepNumber: 5, title: "Implantação dos Componentes", description: "Encaixe e cimentação da prótese femoral, inserto tibial de polietileno e componente tibial metálico.", searchQuery: "total knee replacement prosthesis implant" },
-  { stepNumber: 6, title: "Teste de Estabilidade", description: "Verificação do alinhamento, amplitude de movimento e estabilidade ligamentar com os componentes de teste.", searchQuery: "knee prosthesis stability test range of motion" },
+  { stepNumber: 1, title: "Avaliação Radiológica", description: "Análise do grau de desgaste articular e planejamento cirúrgico com radiografias e tomografia do joelho.", searchQuery: "knee joint osteoarthritis X-ray CT scan", modelId: "5b8e5a0fedf94acea0f9566c885520fb" },
+  { stepNumber: 2, title: "Acesso Cirúrgico", description: "Incisão parapatelar medial e exposição da articulação do joelho com eversão patelar.", searchQuery: "knee surgery parapatellar approach anatomy", modelId: "f3ca361790e143c0ad2c7a7b34eef4f2" },
+  { stepNumber: 3, title: "Resseção Óssea Femoral", description: "Cortes no fêmur distal usando guias de alinhamento intramedular para posicionamento do componente femoral.", searchQuery: "femoral bone cutting guide knee arthroplasty", modelId: "f3ca361790e143c0ad2c7a7b34eef4f2" },
+  { stepNumber: 4, title: "Preparação da Tíbia", description: "Corte tibial proximal com guia extramedular e remoção dos meniscos remanescentes.", searchQuery: "tibial plateau cut knee replacement meniscus", modelId: "f3ca361790e143c0ad2c7a7b34eef4f2" },
+  { stepNumber: 5, title: "Implantação dos Componentes", description: "Encaixe e cimentação da prótese femoral, inserto tibial de polietileno e componente tibial metálico.", searchQuery: "total knee replacement prosthesis implant", modelId: "5b8e5a0fedf94acea0f9566c885520fb" },
+  { stepNumber: 6, title: "Teste de Estabilidade", description: "Verificação do alinhamento, amplitude de movimento e estabilidade ligamentar com os componentes de teste.", searchQuery: "knee prosthesis stability test range of motion", modelId: "5b8e5a0fedf94acea0f9566c885520fb" },
 ];
 
 export default function OrtopediaProteses() {
