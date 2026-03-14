@@ -70,6 +70,8 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
     const [api, setApi] = useState<SketchfabApi | null>(null);
     const [isReady, setIsReady] = useState(false);
     const clientRef = useRef<any>(null);
+    const onApiReadyRef = useRef(onApiReady);
+    onApiReadyRef.current = onApiReady;
 
     useImperativeHandle(ref, () => ({ api, isReady }), [api, isReady]);
 
