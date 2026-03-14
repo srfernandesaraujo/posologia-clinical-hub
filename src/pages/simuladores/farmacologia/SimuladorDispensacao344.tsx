@@ -306,7 +306,7 @@ export default function SimuladorDispensacao344() {
   }
 
   // AI cases from DB
-  const aiCases = allCases.filter((c: any) => c.is_ai_generated);
+  const aiCases = allCases.filter((c: any) => c.isAI);
 
   /* ─── Dashboard ─── */
   if (!activeCase) {
