@@ -419,6 +419,7 @@ const App = () => (
               <Route path="/calculadoras/interacoes-cyp" element={<InteracoesCYP />} />
               <Route path="/calculadoras/adesao-oncologia" element={<AdesaoOncologia />} />
               <Route path="/calculadoras/toxicidade-antineoplasicos" element={<ToxicidadeAntineoplasicos />} />
+              <Route path="/calculadoras/ajuste-dose-oncologico" element={<AjusteDoseOncologico />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />

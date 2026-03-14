@@ -87,6 +87,7 @@ const CALC_NAMES: Record<string, string> = {
   "interacoes-cyp": "Interacoes CYP450",
   "adesao-oncologia": "Adesao Oncologica",
   "toxicidade-antineoplasicos": "Toxicidade Antineoplasicos",
+  "ajuste-dose-oncologico": "Ajuste Dose Oncologico",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {

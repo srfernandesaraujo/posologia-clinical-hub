@@ -62,7 +62,7 @@ const NATIVE_SLUGS = new Set([
   "ckd-epi", "correcao-sodio", "correcao-calcio", "wells-score", "qsofa",
   "vancomicina-auc", "insulina-basal-bolus", "holliday-segar", "meld-score",
   "qtc-corrigido", "dose-pediatrica", "rass-sedacao", "nutricao-parenteral", "interacoes-cyp",
-  "adesao-oncologia", "toxicidade-antineoplasicos",
+  "adesao-oncologia", "toxicidade-antineoplasicos", "ajuste-dose-oncologico",
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
   "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",
