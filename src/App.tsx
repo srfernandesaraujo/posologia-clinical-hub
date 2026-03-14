@@ -157,6 +157,13 @@ import PoliticaCookies from "./pages/PoliticaCookies";
 import Vitrine from "./pages/Vitrine";
 import DocumentacaoPublica from "./pages/DocumentacaoPublica";
 import ContatoPublico from "./pages/ContatoPublico";
+import MedView3D from "./pages/MedView3D";
+import OrtopediaProteses from "./pages/medview3d/OrtopediaProteses";
+import CardiologiaStent from "./pages/medview3d/CardiologiaStent";
+import OdontologiaImplantes from "./pages/medview3d/OdontologiaImplantes";
+import FarmacologiaDispositivos from "./pages/medview3d/FarmacologiaDispositivos";
+import DermatologiaCirurgiaPlastica from "./pages/medview3d/DermatologiaCirurgiaPlastica";
+import CirurgiaGeralLaparoscopia from "./pages/medview3d/CirurgiaGeralLaparoscopia";
 
 const queryClient = new QueryClient();
 
