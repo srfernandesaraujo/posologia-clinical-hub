@@ -50,8 +50,8 @@ export default function Home() {
 
   const stats = [
     { value: "20+", label: t("home.stats.calculators") },
-    { value: "60+", label: t("home.stats.simulators") },
-    { value: "8", label: t("home.stats.labBenches") },
+    { value: "96+", label: t("home.stats.simulators") },
+    { value: "11", label: t("home.stats.labBenches") },
     { value: "20+", label: t("home.stats.games") },
   ];
 
