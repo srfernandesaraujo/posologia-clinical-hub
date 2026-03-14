@@ -20,7 +20,7 @@ const steps: ProcedureStep[] = [
 
 export default function OdontologiaImplantes() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeModel, setActiveModel] = useState("1a9c9c9af4c64c6d97f9a2e05a39a48e");
+  const [activeModel, setActiveModel] = useState("173fad1fdf784b5db66ed00010a3a59f");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);

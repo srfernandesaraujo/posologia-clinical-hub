@@ -13,13 +13,14 @@ interface SketchfabModelSearchProps {
 
 export function SketchfabModelSearch({ onSelectModel, defaultQuery = "", activeQuery }: SketchfabModelSearchProps) {
   const [query, setQuery] = useState(activeQuery || defaultQuery);
+  const [hasSearched, setHasSearched] = useState(false);
   const { models, isLoading, totalCount, searchModels } = useSketchfabSearch();
   const lastSearchedRef = useRef("");
 
-  // Auto-search when activeQuery changes (step-level context)
   useEffect(() => {
     if (activeQuery && activeQuery !== lastSearchedRef.current) {
       setQuery(activeQuery);
+      setHasSearched(true);
       lastSearchedRef.current = activeQuery;
       searchModels(activeQuery, 8);
     }
@@ -27,6 +28,7 @@ export function SketchfabModelSearch({ onSelectModel, defaultQuery = "", activeQ
 
   const handleSearch = () => {
     if (query.trim()) {
+      setHasSearched(true);
       lastSearchedRef.current = query.trim();
       searchModels(query.trim(), 8);
     }
@@ -48,8 +50,10 @@ export function SketchfabModelSearch({ onSelectModel, defaultQuery = "", activeQ
         </Button>
       </div>
 
-      {totalCount > 0 && (
-        <p className="text-xs text-muted-foreground">{totalCount} modelos encontrados</p>
+      {totalCount > 0 && <p className="text-xs text-muted-foreground">{totalCount} modelos encontrados</p>}
+
+      {hasSearched && !isLoading && models.length === 0 && (
+        <p className="text-xs text-muted-foreground">Nenhum modelo encontrado para esse termo. Tente uma busca mais curta (ex: “dental implant”).</p>
       )}
 
       {models.length > 0 && (
