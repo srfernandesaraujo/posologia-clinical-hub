@@ -160,7 +160,7 @@ export default function Planos() {
             <h2 className="text-2xl font-bold">Premium</h2>
           </div>
           <div className="mb-6">
-            <span className="text-4xl font-extrabold">R$29,90</span>
+            <span className="text-4xl font-extrabold">R$49,90</span>
             <span className="text-muted-foreground">/mês</span>
           </div>
           <ul className="space-y-3 flex-1 mb-8">

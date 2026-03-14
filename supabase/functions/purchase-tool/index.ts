@@ -14,7 +14,7 @@ const PRICES: Record<string, { price: number; credit: number }> = {
   caso_clinico: { price: 200, credit: 100 },
 };
 
-const SUBSCRIPTION_PRICE_BRL = 2990; // R$ 29,90
+const SUBSCRIPTION_PRICE_BRL = 4990; // R$ 49,90
 
 const log = (step: string, details?: any) => {
   console.log(`[PURCHASE-TOOL] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);

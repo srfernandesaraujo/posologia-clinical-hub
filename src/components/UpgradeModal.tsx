@@ -57,7 +57,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
             ))}
           </div>
           <p className="text-center text-lg font-bold text-primary">
-            R$ 29,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+            R$ 49,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
           </p>
         </div>
         <DialogFooter>

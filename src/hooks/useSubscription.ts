@@ -14,8 +14,8 @@ interface SubscriptionState {
 // Stripe IDs
 export const STRIPE_PLANS = {
   premium: {
-    price_id: "price_1T3NWrHCdXdXOsuTqygSw3PH",
-    product_id: "prod_U1QNl8Sm7yQNHn",
+    price_id: "price_1TAvkGHCdXdXOsuTvCpgJPMc",
+    product_id: "prod_U9ECgb0z92x1Ea",
   },
 } as const;
 
