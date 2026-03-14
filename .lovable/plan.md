@@ -1,100 +1,122 @@
 
 
-# Plano: Simuladores de Bioquímica
+# MedView 3D — Demonstração de Procedimentos Médicos
 
 ## Visão Geral
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+Novo módulo do sistema chamado **"MedView 3D"** que permite a profissionais de saúde demonstrar procedimentos cirúrgicos e clínicos usando modelos anatômicos 3D interativos embutidos via iframe (Sketchfab Viewer API como placeholder inicial, preparado para BioDigital Human API).
 
-## Arquitetura
+O módulo segue o padrão organizacional existente: uma **página-índice** com sidebar de categorias (igual a Simuladores/Calculadoras/Jogos) e **páginas individuais** para cada procedimento.
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+---
 
-## Simuladores por Lotes
+## Estrutura de Arquivos
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+```text
+src/pages/
+  MedView3D.tsx                          ← Página-índice com sidebar + grid/list
+  medview3d/
+    OrtopediaProteses.tsx                ← Pinos, placas, prótese joelho/quadril
+    CardiologiaStent.tsx                 ← Cateter, balão, stent
+    OdontologiaImplantes.tsx             ← Extrações, implantes, ortodontia
+    FarmacologiaDispositivos.tsx          ← Implante subcutâneo, DIU, terapias-alvo
+    DermatologiaCirurgiaPlastica.tsx      ← Toxina botulínica, preenchedores
+    CirurgiaGeralLaparoscopia.tsx         ← Colecistectomia, apendicectomia
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+src/components/medview3d/
+    External3DViewer.tsx                 ← Componente iframe responsivo
+    MedViewToolbar.tsx                   ← Barra de ferramentas médicas
+    ProcedureTimeline.tsx                ← Slider de linha do tempo do procedimento
+    ProcedureStepCard.tsx                ← Card com descrição do passo atual
+```
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+---
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+## Componentes Principais
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### 1. External3DViewer
+- Recebe `modelId` (string) como prop
+- Renderiza um `<iframe>` responsivo apontando para Sketchfab embed (`https://sketchfab.com/models/{modelId}/embed`)
+- Preparado com ref para futura integração via `postMessage` com Sketchfab Viewer API ou BioDigital Human API
+- Controles de rotação e zoom nativos do iframe
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+### 2. MedViewToolbar
+- Botões com ícones Lucide:
+  - **Isolar Estrutura** (`Focus`) — `handleIsolateStructure()` stub
+  - **Raio-X / Transparência** (`Layers`) — `handleToggleTransparency()` stub
+  - **Play Animação** (`Play`) — `handlePlayAnimation()` stub
+  - **Anotações** (`MessageCircle`) — `handleAddAnnotation()` stub
+- Todas as funções são stubs com comentários explicando que enviarão `postMessage` para a API do iframe
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+### 3. ProcedureTimeline
+- Componente `Slider` (já existente em `ui/slider.tsx`)
+- Array de passos do procedimento com `{ stepNumber, title, description, modelId? }`
+- Ao mover o slider, atualiza o passo atual e opcionalmente troca o modelo/anotação no viewer
+- Botões "Anterior" e "Próximo" (`ChevronLeft`, `ChevronRight`)
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+### 4. Página-índice MedView3D.tsx
+- Layout idêntico ao de Simuladores: sidebar com categorias, busca, toggle grid/list
+- 6 categorias com procedimentos listados como cards
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+---
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+## Categorias e Procedimentos
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+| Categoria | Procedimentos |
+|---|---|
+| Ortopedia e Traumatologia | Prótese de joelho, Prótese de quadril, Fixação com placa e parafusos |
+| Cardiologia Intervencionista | Angioplastia com stent, Cateterismo cardíaco |
+| Odontologia e Bucomaxilofacial | Implante dentário, Extração de dente incluso, Movimentação ortodôntica |
+| Farmacologia e Dispositivos | Inserção de DIU, Implante subdérmico, Via de terapia-alvo |
+| Dermatologia e Cirurgia Plástica | Aplicação de toxina botulínica, Preenchimento facial |
+| Cirurgia Geral | Colecistectomia laparoscópica, Apendicectomia laparoscópica |
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+---
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
+## Layout da Página de Procedimento
 
-## Alterações em arquivos existentes
+```text
+┌─────────────────────────────────────────────────────┐
+│  ← Voltar    Prótese de Joelho    [categoria badge] │
+├───────────────────────────────┬─────────────────────┤
+│                               │  Toolbar Médica     │
+│                               │  ┌───┐ Isolar       │
+│    External3DViewer           │  ┌───┐ Raio-X       │
+│    (iframe Sketchfab)         │  ┌───┐ Play         │
+│    ~70% da largura            │  ┌───┐ Anotações    │
+│                               │                     │
+├───────────────────────────────┴─────────────────────┤
+│  Timeline: ◄ [====●===========] ►  Passo 2 de 5    │
+│  "Posicionamento do guia femoral"                   │
+└─────────────────────────────────────────────────────┘
+```
 
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+Design: tons de azul clínico (`sky-50`, `slate-100`), branco, tipografia limpa. Prioriza espaço do iframe.
+
+---
+
+## Integração no Sistema
+
+1. **AppLayout.tsx** — Adicionar item de navegação "MedView 3D" com ícone `Eye` ou `Scan`
+2. **App.tsx** — Registrar rotas:
+   - `/medview-3d` → página-índice
+   - `/medview-3d/ortopedia-proteses` → página do procedimento (e assim para cada um)
+3. **Home.tsx / Documentacao.tsx** — Adicionar seção descritiva do novo módulo
+4. **Modelos placeholder** — Usar IDs públicos de modelos anatômicos do Sketchfab (ex: coração, joelho, crânio) como demonstração inicial
+
+---
 
 ## Detalhes Técnicos
 
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+- **Sem dependência de Three.js** — todo o 3D é delegado ao iframe externo
+- **Stubs com postMessage** — cada função de toolbar terá um padrão:
+  ```typescript
+  // Será integrado com Sketchfab Viewer API ou BioDigital Human API
+  // via iframe.contentWindow.postMessage(...)
+  const handleIsolateStructure = () => {
+    toast.info("Função será integrada com a API do visualizador 3D");
+  };
+  ```
+- **Slider nativo** — reutiliza `@/components/ui/slider` existente
+- **Feature gating** — módulo disponível para todos os planos (ou configurável via `useFeatureGating`)
 
