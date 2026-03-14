@@ -297,29 +297,28 @@ export default function AjusteDoseOncologico() {
 
   function handleSave() {
     let summary = "";
-    let details: Record<string, any> = { aba };
+    let details: Record<string, string | number> = { aba };
     if (aba === "carboplatina" && carboDose !== null) {
       summary = `Carboplatina: AUC ${aucAlvo}, TFG ${carboTfg.toFixed(1)}, Dose ${carboDose.toFixed(0)} mg`;
-      details = { ...details, aucAlvo, tfg: carboTfg, dose: carboDose };
+      details = { ...details, aucAlvo, tfg: Number(carboTfg.toFixed(1)), dose: Number(carboDose.toFixed(0)) };
     } else if (aba === "renal" && renalResult) {
       summary = `${renalResult.drug}: ClCr ${renalClCr.toFixed(1)} → ${renalResult.recomendacao}`;
-      details = { ...details, ...renalResult };
+      details = { ...details, drug: renalResult.drug, clcr: Number(renalClCr.toFixed(1)), faixa: renalResult.faixa, recomendacao: renalResult.recomendacao };
     } else if (aba === "hepatico" && hepaticMode === "nci" && nciResult) {
       summary = `NCI-ODWG ${nciResult.grupo}: ${nciResult.drug} → ${nciResult.recomendacao}`;
-      details = { ...details, ...nciResult };
+      details = { ...details, grupo: nciResult.grupo, drug: nciResult.drug, recomendacao: nciResult.recomendacao };
     } else if (aba === "hepatico" && hepaticMode === "childpugh" && cpResult) {
       summary = `Child-Pugh ${cpResult.classe}: ${cpResult.drug} → ${cpResult.recomendacao}`;
-      details = { ...details, ...cpResult };
+      details = { ...details, score: cpResult.score, classe: cpResult.classe, drug: cpResult.drug, recomendacao: cpResult.recomendacao };
     } else return;
 
-    const entry: CalculationEntry = {
+    saveCalculation({
       calculatorName: "Ajuste de Dose Oncológico",
       calculatorSlug: SLUG,
       summary,
       details,
       patientName: nomePaciente || undefined,
-    };
-    saveCalculation(entry);
+    });
   }
 
   const history = getByCalculator(SLUG);
