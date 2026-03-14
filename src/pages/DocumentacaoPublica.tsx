@@ -94,7 +94,7 @@ const sections: DocSection[] = [
   {
     id: "planos", title: "Planos e Pagamento", icon: CreditCard, color: "text-green-400 bg-green-500/10",
     items: [
-      { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 60+ simuladores, laboratório virtual, jogos, salas virtuais, formação docente e relatórios PDF)." },
+      { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 96+ simuladores, 11 bancadas de laboratório, jogos, salas virtuais com analytics, formação docente e relatórios PDF)." },
       { q: "Como faço upgrade para Premium?", a: "Acesse a página de Planos no menu lateral e clique em 'Assinar Premium'. Pagamento seguro pelo Stripe." },
       { q: "Posso cancelar a qualquer momento?", a: "Sim, o cancelamento pode ser solicitado pelo portal do cliente Stripe." },
       { q: "Quais formas de pagamento são aceitas?", a: "Cartão de crédito e débito via Stripe, com suporte a bandeiras internacionais." },
