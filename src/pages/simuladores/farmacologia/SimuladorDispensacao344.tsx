@@ -47,6 +47,7 @@ const BUILT_IN_CASES: CaseData[] = [
     title: "Caso 1: Notificação A — Morfina (Lista A1)",
     difficulty: "Médio",
     tipo: "A",
+    patient: { diagnosis: "Dispensação de Morfina (Lista A1) — Notificação amarela com erros" },
     paciente: {
       nome: "Maria da Silva", idade: 62,
       queixa: "Vim buscar a morfina do meu marido. Ele tem câncer e está com muita dor.",
