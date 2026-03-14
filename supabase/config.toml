@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.predict-admet]
 verify_jwt = false
+
+[functions.search-sketchfab]
+verify_jwt = false

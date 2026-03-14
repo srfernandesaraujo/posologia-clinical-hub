@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Pill } from "lucide-react";
+import { ArrowLeft, Pill, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { External3DViewer } from "@/components/medview3d/External3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { ProcedureStepCard } from "@/components/medview3d/ProcedureStepCard";
+import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal).", modelId: "89c89f2c97c54f4e91753fa71adf4c21" },
-  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas.", modelId: "89c89f2c97c54f4e91753fa71adf4c21" },
-  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria.", modelId: "89c89f2c97c54f4e91753fa71adf4c21" },
-  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada.", modelId: "89c89f2c97c54f4e91753fa71adf4c21" },
-  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina.", modelId: "89c89f2c97c54f4e91753fa71adf4c21" },
+  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal)." },
+  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas." },
+  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria." },
+  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada." },
+  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina." },
 ];
-
-const DEFAULT_MODEL = "89c89f2c97c54f4e91753fa71adf4c21";
 
 export default function FarmacologiaDispositivos() {
   const [currentStep, setCurrentStep] = useState(0);
-  const activeModel = steps[currentStep]?.modelId || DEFAULT_MODEL;
+  const [activeModel, setActiveModel] = useState("c1c84fb4d37c4e0e8e8b0c8d5d6f3a2b");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -35,6 +37,17 @@ export default function FarmacologiaDispositivos() {
           <Pill className="h-3 w-3 mr-1" /> Farmacologia
         </Badge>
       </div>
+
+      <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Search className="h-4 w-4" /> Buscar modelo 3D no Sketchfab
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <SketchfabModelSearch defaultQuery="uterus anatomy IUD" onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }} />
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">
