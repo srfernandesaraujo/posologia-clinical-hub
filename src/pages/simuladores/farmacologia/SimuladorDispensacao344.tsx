@@ -31,6 +31,7 @@ interface OrientacaoItem { texto: string; correta: boolean }
 interface CaseData {
   id?: string; title: string; difficulty: string; isAI?: boolean;
   patient?: { diagnosis: string };
+  tipo: "A" | "B" | "C";
   paciente: { nome: string; idade: number; queixa: string; comportamento: string };
   prescricao: any;
   errosCampos: FieldError[];
