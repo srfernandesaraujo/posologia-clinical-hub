@@ -181,13 +181,14 @@ export default function ToxicidadeAntineoplasicos() {
 
     setResultado(res);
 
-    if (consent) {
-      saveEntry({
-        calculator_name: "Toxicidade Antineoplásicos",
-        calculator_slug: SLUG,
+    if (hasConsent) {
+      saveCalculation({
+        calculatorName: "Toxicidade Antineoplásicos",
+        calculatorSlug: SLUG,
         summary: `${instrumento.toUpperCase()}: ${res.score} — ${res.faixa}`,
-        details: { instrumento, ...data, score: res.score, faixa: res.faixa },
-        patient_name: nomePaciente || undefined,
+        details: { instrumento, score: String(res.score), faixa: res.faixa },
+        patientName: nomePaciente || undefined,
+        date: new Date().toISOString().slice(0, 10),
       });
     }
   }
