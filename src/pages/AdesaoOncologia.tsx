@@ -188,13 +188,14 @@ export default function AdesaoOncologia() {
     const res = { score, maxScore, percentual, faixa, cor, condutas };
     setResultado(res);
 
-    if (consent) {
-      saveEntry({
-        calculator_name: "Risco de Não Adesão Oncológica",
-        calculator_slug: SLUG,
+    if (hasConsent) {
+      saveCalculation({
+        calculatorName: "Risco de Não Adesão Oncológica",
+        calculatorSlug: SLUG,
         summary: `${instrumento.toUpperCase()}: ${score}/${maxScore} — ${faixa}`,
-        details: { instrumento, score, maxScore, faixa, nomePaciente },
-        patient_name: nomePaciente || undefined,
+        details: { instrumento, score: String(score), maxScore: String(maxScore), faixa },
+        patientName: nomePaciente || undefined,
+        date: new Date().toISOString().slice(0, 10),
       });
     }
   }
