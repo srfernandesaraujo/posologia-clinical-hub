@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, SmilePlus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { External3DViewer } from "@/components/medview3d/External3DViewer";
+import { External3DViewer, type External3DViewerHandle } from "@/components/medview3d/External3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { ProcedureStepCard } from "@/components/medview3d/ProcedureStepCard";
@@ -23,6 +23,7 @@ export default function OdontologiaImplantes() {
   const [currentStep, setCurrentStep] = useState(0);
   const [activeModel, setActiveModel] = useState("1a9c9c9af4c64c6d97f9a2e05a39a48e");
   const [searchOpen, setSearchOpen] = useState(false);
+  const viewerRef = useRef<External3DViewerHandle>(null);
 
   return (
     <div className="space-y-4">
@@ -52,9 +53,9 @@ export default function OdontologiaImplantes() {
 
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">
-          <External3DViewer modelId={activeModel} title="Mandíbula — Implante Dentário" />
+          <External3DViewer ref={viewerRef} modelId={activeModel} title="Mandíbula — Implante Dentário" />
         </div>
-        <MedViewToolbar />
+        <MedViewToolbar api={viewerRef.current?.api} isReady={viewerRef.current?.isReady} />
       </div>
 
       <ProcedureTimeline steps={steps} currentStep={currentStep} onStepChange={setCurrentStep} />
