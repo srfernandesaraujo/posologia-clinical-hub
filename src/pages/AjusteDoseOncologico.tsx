@@ -315,6 +315,7 @@ export default function AjusteDoseOncologico() {
     saveCalculation({
       calculatorName: "Ajuste de Dose Oncológico",
       calculatorSlug: SLUG,
+      date: new Date().toISOString(),
       summary,
       details,
       patientName: nomePaciente || undefined,
