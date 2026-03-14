@@ -10,11 +10,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal).", searchQuery: "uterus anatomy female reproductive system" },
-  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas.", searchQuery: "uterine cavity hysterometry uterus measurement" },
-  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria.", searchQuery: "intrauterine device IUD copper hormonal" },
-  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada.", searchQuery: "IUD insertion cervical canal uterine fundus" },
-  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina.", searchQuery: "ultrasound IUD position uterus verification" },
+  { stepNumber: 1, title: "Avaliação Pré-Procedimento", description: "Confirmação da indicação, exclusão de gravidez e escolha do dispositivo (DIU de cobre ou hormonal).", searchQuery: "uterus anatomy female reproductive system", modelId: "b0d36ec846094eb18fd8fb7335e6d9f3" },
+  { stepNumber: 2, title: "Histerometria", description: "Medição da cavidade uterina com histerômetro para confirmar profundidade e angulação adequadas.", searchQuery: "uterine cavity hysterometry uterus measurement", modelId: "b0d36ec846094eb18fd8fb7335e6d9f3" },
+  { stepNumber: 3, title: "Carregamento do Dispositivo", description: "Preparação do DIU no tubo insertor com ajuste da marca limitadora conforme a histerometria.", searchQuery: "intrauterine device IUD copper hormonal", modelId: "930890ede6754a729bee647f3ca18a5a" },
+  { stepNumber: 4, title: "Inserção Intrauterina", description: "Passagem do insertor pelo canal cervical e liberação do DIU no fundo uterino com técnica de retirada.", searchQuery: "IUD insertion cervical canal uterine fundus", modelId: "930890ede6754a729bee647f3ca18a5a" },
+  { stepNumber: 5, title: "Verificação de Posição", description: "Confirmação ultrassonográfica do posicionamento correto do DIU na cavidade uterina.", searchQuery: "ultrasound IUD position uterus verification", modelId: "b0d36ec846094eb18fd8fb7335e6d9f3" },
 ];
 
 export default function FarmacologiaDispositivos() {
