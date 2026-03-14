@@ -31,11 +31,11 @@ serve(async (req) => {
       downloadable: 'false',
       count: String(count),
       sort_by: '-relevance',
-      license: 'by,by-sa,by-nd,by-nc,by-nc-sa,by-nc-nd,cc0',
     });
 
-    // Default to science-technology category for medical models
-    params.set('categories', categories || 'science-technology');
+    if (categories) {
+      params.set('categories', categories);
+    }
 
     const response = await fetch(
       `https://api.sketchfab.com/v3/search?${params.toString()}`,
