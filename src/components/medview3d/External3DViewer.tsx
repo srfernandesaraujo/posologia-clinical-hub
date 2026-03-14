@@ -162,30 +162,48 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
 
     return (
       <div className="relative w-full h-full min-h-[400px] rounded-xl overflow-hidden border border-border bg-card">
-        <iframe
-          ref={iframeRef}
-          title={title || "Visualizador 3D"}
-          src=""
-          className="w-full h-full absolute inset-0"
-          allow="autoplay; fullscreen; xr-spatial-tracking"
-          allowFullScreen
-        />
+        {!modelId ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-card p-4">
+            <div className="flex flex-col items-center gap-4 text-center max-w-md">
+              <div className="rounded-full bg-primary/10 p-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </div>
+              <div>
+                <p className="text-base font-medium text-foreground">Nenhum modelo carregado</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Clique no botão <strong>"Buscar modelo 3D no Sketchfab"</strong> acima para encontrar e selecionar um modelo 3D apropriado para esta especialidade.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <iframe
+              ref={iframeRef}
+              title={title || "Visualizador 3D"}
+              src=""
+              className="w-full h-full absolute inset-0"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowFullScreen
+            />
 
-        {loadError ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm p-4">
-            <div className="rounded-md border border-border bg-background/80 px-4 py-3 text-center max-w-md">
-              <p className="text-sm font-medium text-foreground">Falha ao carregar o modelo 3D</p>
-              <p className="text-xs text-muted-foreground mt-1">{loadError}</p>
-            </div>
-          </div>
-        ) : !isReady ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-2">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <p className="text-xs text-muted-foreground">Carregando modelo 3D...</p>
-            </div>
-          </div>
-        ) : null}
+            {loadError ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm p-4">
+                <div className="rounded-md border border-border bg-background/80 px-4 py-3 text-center max-w-md">
+                  <p className="text-sm font-medium text-foreground">Falha ao carregar o modelo 3D</p>
+                  <p className="text-xs text-muted-foreground mt-1">{loadError}</p>
+                </div>
+              </div>
+            ) : !isReady ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="text-xs text-muted-foreground">Carregando modelo 3D...</p>
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     );
   }
