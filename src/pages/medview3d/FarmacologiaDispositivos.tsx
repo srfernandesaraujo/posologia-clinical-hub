@@ -3,11 +3,10 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Pill, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { External3DViewer, type SketchfabApi } from "@/components/medview3d/External3DViewer";
-import { BioDigital3DViewer } from "@/components/medview3d/BioDigital3DViewer";
+import { ZAnatomy3DViewer } from "@/components/medview3d/ZAnatomy3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
 import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
-import { BioDigitalModelSearch } from "@/components/medview3d/BioDigitalModelSearch";
 import { ProviderToggle, type ViewerProvider } from "@/components/medview3d/ProviderToggle";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,6 @@ const steps: ProcedureStep[] = [
 export default function FarmacologiaDispositivos() {
   const [currentStep, setCurrentStep] = useState(0);
   const [activeModel, setActiveModel] = useState(steps[0]?.modelId || "");
-  const [biodigitalModel, setBiodigitalModel] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [viewerApi, setViewerApi] = useState<SketchfabApi | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
@@ -35,7 +33,7 @@ export default function FarmacologiaDispositivos() {
   }, [currentStep]);
 
   const currentSearchQuery = steps[currentStep]?.searchQuery;
-  const isBioDigital = provider === "biodigital";
+  const isZAnatomy = provider === "zanatomy";
 
   return (
     <div className="space-y-4">
@@ -54,33 +52,28 @@ export default function FarmacologiaDispositivos() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <ProviderToggle provider={provider} onChange={setProvider} />
-        <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Search className="h-4 w-4" /> {isBioDigital ? "Selecionar modelo BioDigital" : "Buscar modelo 3D no Sketchfab"}
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            {isBioDigital ? (
-              <BioDigitalModelSearch
-                specialty="farmacologia"
-                onSelectModel={(id) => { setBiodigitalModel(id); setSearchOpen(false); }}
-              />
-            ) : (
+        {!isZAnatomy && (
+          <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Search className="h-4 w-4" /> Buscar modelo 3D no Sketchfab
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
               <SketchfabModelSearch
                 defaultQuery="uterus anatomy IUD"
                 activeQuery={currentSearchQuery}
                 onSelectModel={(id) => { setActiveModel(id); setSearchOpen(false); }}
               />
-            )}
-          </CollapsibleContent>
-        </Collapsible>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
 
       <div className="flex gap-3" style={{ height: "60vh" }}>
         <div className="flex-1">
-          {isBioDigital ? (
-            <BioDigital3DViewer modelId={biodigitalModel} title="Útero — BioDigital" />
+          {isZAnatomy ? (
+            <ZAnatomy3DViewer title="Z-Anatomy — Farmacologia" />
           ) : (
             <External3DViewer
               modelId={activeModel}
@@ -92,8 +85,8 @@ export default function FarmacologiaDispositivos() {
         <MedViewToolbar
           api={viewerApi}
           isReady={viewerReady}
-          disabled={isBioDigital}
-          disabledMessage="Ferramentas indisponíveis no modo BioDigital"
+          disabled={isZAnatomy}
+          disabledMessage="Use as ferramentas dentro do Z-Anatomy"
         />
       </div>
 
