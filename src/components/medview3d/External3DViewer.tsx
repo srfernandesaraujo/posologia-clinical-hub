@@ -43,7 +43,6 @@ declare global {
   }
 }
 
-// Load the Sketchfab Viewer API script once
 let scriptLoaded = false;
 let scriptPromise: Promise<void> | null = null;
 
@@ -61,6 +60,7 @@ function loadSketchfabScript(): Promise<void> {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+
   return scriptPromise;
 }
 
@@ -69,27 +69,45 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [api, setApi] = useState<SketchfabApi | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const clientRef = useRef<any>(null);
     const onApiReadyRef = useRef(onApiReady);
+    const readyTimeoutRef = useRef<number | null>(null);
+
     onApiReadyRef.current = onApiReady;
 
     useImperativeHandle(ref, () => ({ api, isReady }), [api, isReady]);
 
-    const initViewer = useCallback(async () => {
-      if (!iframeRef.current || !modelId) return;
+    const clearReadyTimeout = useCallback(() => {
+      if (readyTimeoutRef.current) {
+        window.clearTimeout(readyTimeoutRef.current);
+        readyTimeoutRef.current = null;
+      }
+    }, []);
 
-      // Cleanup previous
+    const initViewer = useCallback(async () => {
+      if (!iframeRef.current || !modelId) {
+        setLoadError("Selecione um modelo para iniciar a visualização.");
+        setIsReady(false);
+        setApi(null);
+        return;
+      }
+
       setApi(null);
       setIsReady(false);
+      setLoadError(null);
+      clearReadyTimeout();
 
       try {
         await loadSketchfabScript();
       } catch {
+        setLoadError("Falha ao carregar o script do visualizador Sketchfab.");
         console.error("Failed to load Sketchfab Viewer API script");
         return;
       }
 
       if (!window.Sketchfab) {
+        setLoadError("Sketchfab Viewer API indisponível no navegador.");
         console.error("Sketchfab not available on window");
         return;
       }
@@ -100,13 +118,24 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
       client.init(modelId, {
         success: (apiInstance: SketchfabApi) => {
           apiInstance.start();
+
+          readyTimeoutRef.current = window.setTimeout(() => {
+            setLoadError("Este modelo não carregou a tempo. Escolha outro na busca.");
+            setIsReady(false);
+          }, 12000);
+
           apiInstance.addEventListener("viewerready", () => {
+            clearReadyTimeout();
+            setLoadError(null);
             setApi(apiInstance);
             setIsReady(true);
             onApiReadyRef.current?.(apiInstance);
           });
         },
         error: () => {
+          clearReadyTimeout();
+          setLoadError("Modelo indisponível ou inválido no Sketchfab. Selecione outro.");
+          setIsReady(false);
           console.error("Sketchfab Viewer API initialization error");
         },
         autostart: 1,
@@ -122,11 +151,14 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
         preload: 1,
         transparent: 0,
       });
-    }, [modelId]);
+    }, [clearReadyTimeout, modelId]);
 
     useEffect(() => {
       initViewer();
-    }, [initViewer]);
+      return () => {
+        clearReadyTimeout();
+      };
+    }, [initViewer, clearReadyTimeout]);
 
     return (
       <div className="relative w-full h-full min-h-[400px] rounded-xl overflow-hidden border border-border bg-card">
@@ -138,14 +170,22 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
           allow="autoplay; fullscreen; xr-spatial-tracking"
           allowFullScreen
         />
-        {!isReady && (
+
+        {loadError ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm p-4">
+            <div className="rounded-md border border-border bg-background/80 px-4 py-3 text-center max-w-md">
+              <p className="text-sm font-medium text-foreground">Falha ao carregar o modelo 3D</p>
+              <p className="text-xs text-muted-foreground mt-1">{loadError}</p>
+            </div>
+          </div>
+        ) : !isReady ? (
           <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <p className="text-xs text-muted-foreground">Carregando modelo 3D...</p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     );
   }
