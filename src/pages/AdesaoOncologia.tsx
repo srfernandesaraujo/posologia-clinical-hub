@@ -91,7 +91,7 @@ export default function AdesaoOncologia() {
   const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const SLUG = "adesao-oncologia";
-  const { consent, setConsent, history, saveEntry } = useCalculationHistory(SLUG);
+  const { hasConsent, saveCalculation, getByCalculator } = useCalculationHistory();
 
   const [instrumento, setInstrumento] = useState("arms");
   const [nomePaciente, setNomePaciente] = useState("");
