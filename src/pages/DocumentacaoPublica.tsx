@@ -39,8 +39,8 @@ const sections: DocSection[] = [
   {
     id: "simuladores", title: "Simuladores Interativos", icon: FlaskConical, color: "text-cyan-400 bg-cyan-500/10",
     items: [
-      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 60 simuladores." },
-      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 8 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (7), Química Farmacêutica (8), Formação Docente (7), além de simuladores criados pelo usuário." },
+      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 96 simuladores." },
+      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
       { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium. Usuários gratuitos podem visualizar a lista." },
     ],
