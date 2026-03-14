@@ -39,6 +39,8 @@ import DosePediatrica from "./pages/DosePediatrica";
 import RassSas from "./pages/RassSas";
 import NutricaoParenteral from "./pages/NutricaoParenteral";
 import InteracoesCYP from "./pages/InteracoesCYP";
+import AdesaoOncologia from "./pages/AdesaoOncologia";
+import ToxicidadeAntineoplasicos from "./pages/ToxicidadeAntineoplasicos";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
