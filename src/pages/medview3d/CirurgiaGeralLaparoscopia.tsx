@@ -10,12 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Posicionamento e Pneumoperitônio", description: "Paciente em decúbito dorsal, anti-Trendelenburg. Insuflação com CO₂ via agulha de Veress no ponto de Palmer.", searchQuery: "pneumoperitoneum veress needle laparoscopy trocar" },
-  { stepNumber: 2, title: "Inserção dos Trocartes", description: "Posicionamento de 4 trocartes: umbilical (câmera), epigástrico, flanco direito e hipocôndrio direito.", searchQuery: "laparoscopic trocar port placement abdomen" },
-  { stepNumber: 3, title: "Exposição do Triângulo de Calot", description: "Tração do fundo vesicular e identificação do ducto cístico e artéria cística na visão crítica de segurança.", searchQuery: "calot triangle gallbladder cystic duct artery" },
-  { stepNumber: 4, title: "Clipagem e Secção", description: "Aplicação de clipes de titânio no ducto e artéria cística, seguida de secção com tesoura laparoscópica.", searchQuery: "laparoscopic clip applier cystic duct ligation" },
-  { stepNumber: 5, title: "Dissecção da Vesícula", description: "Separação da vesícula biliar do leito hepático usando eletrocautério monopolar com cuidado hemostático.", searchQuery: "gallbladder dissection liver bed cholecystectomy" },
-  { stepNumber: 6, title: "Extração e Revisão", description: "Retirada da vesícula pelo portal umbilical em endobag, revisão da hemostasia e desinsuflação.", searchQuery: "endobag specimen retrieval laparoscopy port closure" },
+  { stepNumber: 1, title: "Posicionamento e Pneumoperitônio", description: "Paciente em decúbito dorsal, anti-Trendelenburg. Insuflação com CO₂ via agulha de Veress no ponto de Palmer.", searchQuery: "pneumoperitoneum veress needle laparoscopy trocar", modelId: "4553d8f1888743f3bef15b681794244a" },
+  { stepNumber: 2, title: "Inserção dos Trocartes", description: "Posicionamento de 4 trocartes: umbilical (câmera), epigástrico, flanco direito e hipocôndrio direito.", searchQuery: "laparoscopic trocar port placement abdomen", modelId: "4553d8f1888743f3bef15b681794244a" },
+  { stepNumber: 3, title: "Exposição do Triângulo de Calot", description: "Tração do fundo vesicular e identificação do ducto cístico e artéria cística na visão crítica de segurança.", searchQuery: "calot triangle gallbladder cystic duct artery", modelId: "afc3093974804c8ea3cbb949e0b8ee77" },
+  { stepNumber: 4, title: "Clipagem e Secção", description: "Aplicação de clipes de titânio no ducto e artéria cística, seguida de secção com tesoura laparoscópica.", searchQuery: "laparoscopic clip applier cystic duct ligation", modelId: "afc3093974804c8ea3cbb949e0b8ee77" },
+  { stepNumber: 5, title: "Dissecção da Vesícula", description: "Separação da vesícula biliar do leito hepático usando eletrocautério monopolar com cuidado hemostático.", searchQuery: "gallbladder dissection liver bed cholecystectomy", modelId: "afc3093974804c8ea3cbb949e0b8ee77" },
+  { stepNumber: 6, title: "Extração e Revisão", description: "Retirada da vesícula pelo portal umbilical em endobag, revisão da hemostasia e desinsuflação.", searchQuery: "endobag specimen retrieval laparoscopy port closure", modelId: "4553d8f1888743f3bef15b681794244a" },
 ];
 
 export default function CirurgiaGeralLaparoscopia() {
