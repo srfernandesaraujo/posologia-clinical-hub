@@ -106,6 +106,7 @@ const NATIVE_SIMULATORS = [
   { slug: "disfagia", name: "Avaliação e Conduta em Disfagia", description: "Testes à beira-leito, FOIS e manejo de consistências alimentares.", icon: ClipboardList, category: "Nutrição" },
   { slug: "nutricao-renal", name: "Nutrição no Paciente Renal Crônico", description: "Prescrição dietética, restrições e suplementação na DRC.", icon: ClipboardList, category: "Nutrição" },
   { slug: "nutricao-materno-infantil", name: "Nutrição Materno-Infantil", description: "Curva de Atalah, suplementação e manejo de intercorrências gestacionais.", icon: ClipboardList, category: "Nutrição" },
+  { slug: "dispensacao-344", name: "Dispensação — Portaria 344/98", description: "Treine a dispensação de medicamentos controlados (listas A, B e C) no balcão da farmácia.", icon: Pill, category: "Farmácia Clínica" },
 ];
 
 // Category icon mapping
