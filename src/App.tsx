@@ -41,6 +41,7 @@ import NutricaoParenteral from "./pages/NutricaoParenteral";
 import InteracoesCYP from "./pages/InteracoesCYP";
 import AdesaoOncologia from "./pages/AdesaoOncologia";
 import ToxicidadeAntineoplasicos from "./pages/ToxicidadeAntineoplasicos";
+import AjusteDoseOncologico from "./pages/AjusteDoseOncologico";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
