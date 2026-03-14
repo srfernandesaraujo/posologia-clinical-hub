@@ -9,9 +9,11 @@ interface MedViewToolbarProps {
   api?: SketchfabApi | null;
   isReady?: boolean;
   onFullscreen?: () => void;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-export function MedViewToolbar({ api, isReady, onFullscreen }: MedViewToolbarProps) {
+export function MedViewToolbar({ api, isReady, onFullscreen, disabled, disabledMessage }: MedViewToolbarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<number[]>([]);
   const [xrayActive, setXrayActive] = useState(false);
