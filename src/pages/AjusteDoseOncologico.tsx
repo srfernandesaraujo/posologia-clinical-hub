@@ -321,7 +321,7 @@ export default function AjusteDoseOncologico() {
     });
   }
 
-  const history = getByCalculator(SLUG);
+  
 
   return (
     <div className="space-y-6">
