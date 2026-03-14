@@ -85,8 +85,10 @@ const sections: DocSection[] = [
     items: [
       { q: "O que são Salas Virtuais?", a: "São ambientes colaborativos onde professores criam sessões de simulação para que alunos participem em tempo real. Cada sala possui um PIN de 6 dígitos." },
       { q: "Como os alunos acessam?", a: "Alunos não precisam de conta! Basta inserir o PIN da sala na página inicial e informar seu nome." },
-      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem um dashboard com resultados de cada aluno incluindo pontuação, ações e tempo gasto." },
+      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem um dashboard com Analytics completo: pontuação, gráfico radar de decisões, ações detalhadas, tempo gasto e relatórios de laboratório." },
       { q: "Quem pode criar salas?", a: "Criação exclusiva para usuários Premium, professores convidados e administradores." },
+      { q: "Posso usar laboratórios nas salas?", a: "Sim! As salas suportam tanto simuladores (96+) quanto bancadas do Laboratório Virtual (11). O professor escolhe entre 'Simuladores' ou 'Laboratórios' no momento da criação." },
+      { q: "Posso criar roteiros com múltiplas atividades?", a: "Sim! No modo 'Atividade Simulada' é possível compor um roteiro multi-etapas com diferentes simuladores/laboratórios, cada um com enunciado pedagógico personalizado." },
     ],
   },
   {
