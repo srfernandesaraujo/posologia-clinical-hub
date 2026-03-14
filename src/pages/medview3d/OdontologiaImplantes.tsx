@@ -10,12 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 
 const steps: ProcedureStep[] = [
-  { stepNumber: 1, title: "Avaliação Tomográfica", description: "Análise da tomografia cone-beam para avaliação da disponibilidade óssea e planejamento do implante.", searchQuery: "dental jaw anatomy" },
-  { stepNumber: 2, title: "Guia Cirúrgico", description: "Confecção do guia cirúrgico com base no planejamento digital para posicionamento preciso do implante.", searchQuery: "dental implant guide" },
-  { stepNumber: 3, title: "Incisão e Descolamento", description: "Incisão mucoperiostal e descolamento do retalho para exposição da crista óssea alveolar.", searchQuery: "oral surgery jaw flap" },
-  { stepNumber: 4, title: "Fresagem Óssea", description: "Perfuração sequencial com brocas de diâmetro crescente seguindo o protocolo do sistema de implantes.", searchQuery: "dental implant drill" },
-  { stepNumber: 5, title: "Instalação do Implante", description: "Inserção do implante de titânio no leito ósseo preparado com torque de inserção controlado.", searchQuery: "dental implant fixture" },
-  { stepNumber: 6, title: "Cicatrização e Prótese", description: "Período de osseointegração e posterior instalação do pilar protético e coroa definitiva.", searchQuery: "dental crown abutment" },
+  { stepNumber: 1, title: "Avaliação Tomográfica", description: "Análise da tomografia cone-beam para avaliação da disponibilidade óssea e planejamento do implante.", searchQuery: "dental jaw anatomy", modelId: "3c417fe771a2445eb70fbe6415773ace" },
+  { stepNumber: 2, title: "Guia Cirúrgico", description: "Confecção do guia cirúrgico com base no planejamento digital para posicionamento preciso do implante.", searchQuery: "dental implant guide", modelId: "b280950d40424c60aa7507eea5b124b9" },
+  { stepNumber: 3, title: "Incisão e Descolamento", description: "Incisão mucoperiostal e descolamento do retalho para exposição da crista óssea alveolar.", searchQuery: "oral surgery jaw flap", modelId: "b280950d40424c60aa7507eea5b124b9" },
+  { stepNumber: 4, title: "Fresagem Óssea", description: "Perfuração sequencial com brocas de diâmetro crescente seguindo o protocolo do sistema de implantes.", searchQuery: "dental implant drill", modelId: "173fad1fdf784b5db66ed00010a3a59f" },
+  { stepNumber: 5, title: "Instalação do Implante", description: "Inserção do implante de titânio no leito ósseo preparado com torque de inserção controlado.", searchQuery: "dental implant fixture", modelId: "173fad1fdf784b5db66ed00010a3a59f" },
+  { stepNumber: 6, title: "Cicatrização e Prótese", description: "Período de osseointegração e posterior instalação do pilar protético e coroa definitiva.", searchQuery: "dental crown abutment", modelId: "173fad1fdf784b5db66ed00010a3a59f" },
 ];
 
 export default function OdontologiaImplantes() {
