@@ -206,7 +206,7 @@ export default function BancadaSimulacaoRealistica() {
     }
 
     setCurrentStage(prev => prev + 1);
-  }, [scenario, currentVitals, checkFDA]);
+  }, [scenario, checkFDA]);
 
   // ─── VR submit ─────────────────────────────────────────────
   const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
