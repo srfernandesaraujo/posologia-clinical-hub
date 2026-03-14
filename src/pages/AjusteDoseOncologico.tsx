@@ -343,8 +343,8 @@ export default function AjusteDoseOncologico() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <ShareToolButton toolSlug={SLUG} toolName="Ajuste de Dose Oncológico" />
-          <AdminPromptViewer toolSlug={SLUG} systemPrompt={getNativePrompt(SLUG) || ""} />
-          {history.length > 0 && <CalculationHistory history={history} />}
+          <AdminPromptViewer toolSlug={SLUG} toolName="Ajuste de Dose Oncológico" toolType="calculator" prompt={getNativePrompt(SLUG) || ""} />
+          <CalculationHistory calculatorSlug={SLUG} />
         </div>
       </div>
 
