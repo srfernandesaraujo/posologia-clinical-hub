@@ -424,9 +424,7 @@ export default function AdesaoOncologia() {
               <RiskGauge
                 value={instrumento === "moatt" ? gaugeValue : (100 - gaugeValue)}
                 maxValue={100}
-                label={resultado.faixa}
-                sublabel={`${resultado.score}/${resultado.maxScore} pontos`}
-                color={resultado.cor}
+                label={`${resultado.faixa} (${resultado.score}/${resultado.maxScore})`}
               />
 
               <div className="rounded-2xl border border-border bg-card p-6">
