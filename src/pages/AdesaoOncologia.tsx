@@ -6,6 +6,7 @@ import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
+import type { CalculationEntry } from "@/hooks/useCalculationHistory";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { useNavigate } from "react-router-dom";
