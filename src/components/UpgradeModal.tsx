@@ -10,12 +10,25 @@ interface UpgradeModalProps {
   feature?: string;
 }
 
+import { Crown, Zap, FileText, DoorOpen, Calculator, Gamepad2, FlaskConical, Box, Store } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
+
+interface UpgradeModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  feature?: string;
+}
+
 const PREMIUM_BENEFITS = [
-  { icon: Calculator, label: "Calculadoras ilimitadas" },
-  { icon: Zap, label: "Simuladores avançados" },
-  { icon: Gamepad2, label: "Jogos clínicos interativos" },
+  { icon: Calculator, label: "22+ Calculadoras Clínicas ilimitadas" },
+  { icon: Zap, label: "88+ Simuladores interativos (12 categorias)" },
+  { icon: Gamepad2, label: "21+ Jogos Clínicos gamificados" },
+  { icon: FlaskConical, label: "11 Bancadas de Laboratório Virtual" },
+  { icon: Box, label: "MedView 3D (6 especialidades)" },
+  { icon: DoorOpen, label: "Salas Virtuais ilimitadas" },
+  { icon: Store, label: "Marketplace de Ferramentas" },
   { icon: FileText, label: "Relatórios em PDF" },
-  { icon: DoorOpen, label: "Salas virtuais ilimitadas" },
 ];
 
 export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps) {
