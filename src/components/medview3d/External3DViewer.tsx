@@ -70,6 +70,8 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
     const [api, setApi] = useState<SketchfabApi | null>(null);
     const [isReady, setIsReady] = useState(false);
     const clientRef = useRef<any>(null);
+    const onApiReadyRef = useRef(onApiReady);
+    onApiReadyRef.current = onApiReady;
 
     useImperativeHandle(ref, () => ({ api, isReady }), [api, isReady]);
 
@@ -101,7 +103,7 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
           apiInstance.addEventListener("viewerready", () => {
             setApi(apiInstance);
             setIsReady(true);
-            onApiReady?.(apiInstance);
+            onApiReadyRef.current?.(apiInstance);
           });
         },
         error: () => {
@@ -120,7 +122,7 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
         preload: 1,
         transparent: 0,
       });
-    }, [modelId, onApiReady]);
+    }, [modelId]);
 
     useEffect(() => {
       initViewer();
