@@ -1,100 +1,71 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Plano: Decisões Críticas nos Laboratórios Virtuais
 
-## Visão Geral
+### Problema
+Nos 7 laboratórios listados, os cards 3 e 4 são puramente observacionais -- o pesquisador apenas clica um botão e vê o resultado calculado automaticamente, sem precisar interpretar dados ou tomar decisões. Não há interdependência real entre os módulos.
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+### Estratégia Geral
+Transformar cada card observacional em um **desafio de interpretação**: o pesquisador vê os dados brutos (gráfico, tabela) e precisa **selecionar/estimar** o resultado correto entre opções. O sistema compara a resposta do pesquisador com o valor calculado internamente e registra acerto/erro no score final.
 
-## Arquitetura
+---
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+### Bancada por Bancada
 
-## Simuladores por Lotes
+**1. Toxicologia** (`BancadaToxicologia.tsx`)
+- **M3 (Curvas)**: Após ver as curvas dose-resposta, o pesquisador deve **estimar visualmente o ED50 e LD50** a partir do gráfico (selecionar faixa de dose via Select entre opções). O sistema compara com o valor real.
+- **M4 (Parâmetros)**: Pesquisador deve **classificar a toxicidade** (escolher classe Hodge & Sterner) e **decidir se o IT é seguro** antes de ver a resposta correta. Feedback com verde/vermelho.
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+**2. Farmacogenômica** (`BancadaFarmacogenomica.tsx`)
+- **M3 (Curvas PK)**: Após ver as 4 curvas, pesquisador deve **identificar qual fenótipo tem maior risco** (toxicidade para fármaco ativo, falha terapêutica para pró-fármaco) via Select.
+- **M4 (AUC)**: Pesquisador deve **recomendar ajuste de dose** para cada fenótipo (manter/reduzir/aumentar/contraindicar) via radio buttons. Sistema valida com base no tipo prodrug/drug.
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+**3. Estabilidade** (`BancadaEstabilidade.tsx`)
+- **M3 (Degradação)**: Pesquisador deve **estimar o t90** para cada condição a partir da curva (Select com faixas) e **identificar a ordem cinética** observando o formato da curva.
+- **M4 (Arrhenius)**: Pesquisador deve **estimar o prazo de validade** a 25°C e **decidir se o produto atende prazo mínimo** regulatório (24 meses ANVISA).
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+**4. Controle de Qualidade** (`BancadaControleQualidade.tsx`)
+- **M2 (Calibração)**: Após gerar a curva, pesquisador deve **avaliar se R² atende critério** (≥0.999) e **decidir se a curva é válida** (aprovar/rejeitar/refazer).
+- **M3 (Amostras)**: Pesquisador deve **identificar outliers** na tabela de réplicas e **decidir se exclui** alguma leitura antes da validação.
+- **M4 (Validação)**: Pesquisador deve **emitir o laudo** (APROVADO/REPROVADO) justificando com base nos critérios ICH, antes de ver a resposta automática.
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+**5. Epidemiologia** (`BancadaEpidemiologia.tsx`)
+- **M3 (Tabela 2×2)**: Após ver a tabela, pesquisador deve **calcular mentalmente o OR** e selecionar a faixa correta, e **interpretar a significância** (significativo ou não) antes de ver.
+- **M4 (Forest Plot)**: Pesquisador deve **identificar se há confundimento** (a magnitude do OR muda >10% com ajuste?) e **concluir causalidade vs. associação**.
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+**6. Biotecnologia** (`BancadaBiotecnologia.tsx`)
+- **M3 (SDS-PAGE)**: Pesquisador deve **interpretar o gel**: identificar em qual faixa de peso molecular está a banda-alvo e **decidir se a solubilidade é adequada** para prosseguir ou se precisa otimizar condições.
+- **M4 (Curva de Expressão)**: Pesquisador deve **identificar o tempo ótimo de coleta** (ponto de inflexão expressão vs. crescimento) e **escolher a estratégia de purificação** adequada ao tag.
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+**7. Microbiologia** (`BancadaMicrobiologia.tsx`)
+- **M3 (Antibiograma)**: Após ver a placa de Petri, pesquisador deve **classificar cada antibiótico como S/I/R** manualmente antes de ver a resposta do sistema. Comparação visual do halo com breakpoints.
+- **M4 (Curva)**: Pesquisador deve **selecionar o antibiótico de escolha** para tratamento empírico e **justificar** a escolha (menor MIC sensível, espectro, etc.).
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
+---
 
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
+### Padrão de Implementação (repetido em todos)
 
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+Cada card de decisão seguirá esta estrutura:
+1. **Dados brutos visíveis** (gráfico/tabela/imagem)
+2. **Formulário de decisão** (Select, RadioGroup ou Badges clicáveis)
+3. **Botão "Confirmar Decisão"** que trava a escolha
+4. **Feedback imediato** (ícone verde/vermelho + explicação)
+5. **Score atualizado** no `handleVRSubmit` com `correct: userChoice === idealAnswer`
 
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
+Cada decisão errada NÃO bloqueia o avanço (filosofia pedagógica existente), mas impacta o score final.
 
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
+### Interdependência
+- Respostas dos cards anteriores influenciam o contexto dos cards seguintes (ex: se o pesquisador classificou errado a toxicidade no M3, o M4 mostra as consequências clínicas da classificação errada)
 
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
+### Arquivos Editados
+- `src/pages/lab-virtual/BancadaToxicologia.tsx`
+- `src/pages/lab-virtual/BancadaFarmacogenomica.tsx`
+- `src/pages/lab-virtual/BancadaEstabilidade.tsx`
+- `src/pages/lab-virtual/BancadaControleQualidade.tsx`
+- `src/pages/lab-virtual/BancadaEpidemiologia.tsx`
+- `src/pages/lab-virtual/BancadaBiotecnologia.tsx`
+- `src/pages/lab-virtual/BancadaMicrobiologia.tsx`
 
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+### Escopo
+7 arquivos, ~200-300 linhas cada. Implementação em lotes de 2-3 bancadas por vez para garantir qualidade. Começando por Toxicologia + Farmacogenômica + Microbiologia, depois Estabilidade + Controle de Qualidade, e por fim Epidemiologia + Biotecnologia.
 
