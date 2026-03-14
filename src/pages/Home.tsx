@@ -24,8 +24,11 @@ const simulatorCategories = [
   { name: "Fisiologia Humana", count: 10, icon: Heart },
   { name: "Bioquímica", count: 10, icon: Beaker },
   { name: "Farmacologia Básica", count: 8, icon: Brain },
-  { name: "Farmacotécnica", count: 7, icon: FlaskConical },
+  { name: "Farmacotécnica", count: 8, icon: FlaskConical },
   { name: "Química Farmacêutica", count: 8, icon: Activity },
+  { name: "Odontologia", count: 8, icon: Activity },
+  { name: "Fisioterapia", count: 8, icon: Heart },
+  { name: "Nutrição", count: 8, icon: Beaker },
   { name: "Formação Docente", count: 7, icon: GraduationCap },
 ];
 
