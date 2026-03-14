@@ -103,7 +103,7 @@ export const External3DViewer = forwardRef<External3DViewerHandle, External3DVie
           apiInstance.addEventListener("viewerready", () => {
             setApi(apiInstance);
             setIsReady(true);
-            onApiReady?.(apiInstance);
+            onApiReadyRef.current?.(apiInstance);
           });
         },
         error: () => {
