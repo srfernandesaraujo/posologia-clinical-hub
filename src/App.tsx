@@ -75,6 +75,7 @@ import SimuladorBloqueioNeuromuscular from "./pages/simuladores/farmacologia/Sim
 import SimuladorFarmacoAutonomica from "./pages/simuladores/farmacologia/SimuladorFarmacoAutonomica";
 import SimuladorToleranciaDependencia from "./pages/simuladores/farmacologia/SimuladorToleranciaDependencia";
 import SimuladorFarmacogenomica from "./pages/simuladores/farmacologia/SimuladorFarmacogenomica";
+import SimuladorDispensacao344 from "./pages/simuladores/farmacologia/SimuladorDispensacao344";
 import SimuladorEstabilidade from "./pages/simuladores/farmacotecnica/SimuladorEstabilidade";
 import SimuladorLiberacaoFarmacos from "./pages/simuladores/farmacotecnica/SimuladorLiberacaoFarmacos";
 import SimuladorDiluicao from "./pages/simuladores/farmacotecnica/SimuladorDiluicao";
