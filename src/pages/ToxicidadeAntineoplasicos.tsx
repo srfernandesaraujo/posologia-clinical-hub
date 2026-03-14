@@ -164,7 +164,7 @@ export default function ToxicidadeAntineoplasicos() {
   const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const SLUG = "toxicidade-antineoplasicos";
-  const { consent, setConsent, history, saveEntry } = useCalculationHistory(SLUG);
+  const { hasConsent, saveCalculation } = useCalculationHistory();
 
   const [instrumento, setInstrumento] = useState("carg");
   const [nomePaciente, setNomePaciente] = useState("");
