@@ -138,6 +138,7 @@ const BUILT_IN_CASES: CaseData[] = [
     title: "Caso 3: Receita C — Polifarmácia (Lista C1)",
     difficulty: "Difícil",
     tipo: "C",
+    patient: { diagnosis: "Polifarmácia C1 — 4 substâncias + ausência da 2ª via" },
     paciente: {
       nome: "Dona Aparecida", idade: 55,
       queixa: "O médico passou esses remédios para minha dor e ansiedade. Preciso de todos.",
