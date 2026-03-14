@@ -9,9 +9,11 @@ interface MedViewToolbarProps {
   api?: SketchfabApi | null;
   isReady?: boolean;
   onFullscreen?: () => void;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-export function MedViewToolbar({ api, isReady, onFullscreen }: MedViewToolbarProps) {
+export function MedViewToolbar({ api, isReady, onFullscreen, disabled, disabledMessage }: MedViewToolbarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<number[]>([]);
   const [xrayActive, setXrayActive] = useState(false);
@@ -179,14 +181,15 @@ export function MedViewToolbar({ api, isReady, onFullscreen }: MedViewToolbarPro
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+              className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={tool.action}
+              disabled={disabled}
             >
               <tool.icon className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>{tool.label}</p>
+            <p>{disabled && disabledMessage ? disabledMessage : tool.label}</p>
           </TooltipContent>
         </Tooltip>
       ))}

@@ -1,54 +1,100 @@
 
 
-## Plano: Seletor Sketchfab / BioDigital no MedView 3D
+# Plano: Simuladores de Bioquímica
 
-### Resumo
-Adicionar um toggle que permite ao usuário alternar entre **Sketchfab** (atual) e **BioDigital Human** como provedor de visualização 3D. O BioDigital funcionará via embed básico de iframe (sem developer key), exibindo modelos públicos anatômicos.
+## Visão Geral
 
----
+Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
 
-### Componentes
+## Arquitetura
 
-**1. Novo componente `BioDigital3DViewer.tsx`**
-- Iframe simples apontando para `https://human.biodigital.com/widget/?be=<MODEL_ID>`
-- Mesma interface visual do `External3DViewer` (borda, loading state, placeholder quando sem modelo)
-- Sem API programática (toolbar será desabilitada no modo BioDigital)
+- Novos componentes em `src/pages/simuladores/bioquimica/`
+- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
+- Rotas registradas em `App.tsx` (padrão + sala virtual)
+- Slugs adicionados em `useSimulatorCases.ts`
 
-**2. Novo componente `BioDigitalModelSearch.tsx`**
-- Campo de busca que abre resultados do BioDigital em uma lista curada (IDs pré-mapeados por especialidade)
-- Como BioDigital não tem API de busca pública gratuita, usaremos uma **lista curada de modelos** por especialidade (heart, knee, skull, etc.) que o usuário pode selecionar
-- Alternativa: link direto para `human.biodigital.com/search?q=` abrindo em nova aba para o usuário copiar o ID
+## Simuladores por Lotes
 
-**3. Seletor de provedor (toggle)**
-- Componente inline com dois botões (Sketchfab | BioDigital) posicionado ao lado do botão de busca existente
-- Estado `provider: "sketchfab" | "biodigital"` em cada página de procedimento
-- Quando BioDigital ativo: mostra `BioDigital3DViewer` + busca curada; toolbar desabilitada com tooltip explicativo
-- Quando Sketchfab ativo: comportamento atual mantido integralmente
+### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
 
-**4. Dados curados BioDigital**
-- Arquivo `src/data/biodigitalModels.ts` com mapeamento de modelos por especialidade:
-  - Cardiologia: coração, artérias coronárias, stent
-  - Ortopedia: joelho, quadril, coluna
-  - Odontologia: mandíbula, implante
-  - etc.
-- Cada entrada: `{ id: string, name: string, specialty: string }`
+1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
+   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
+   - Sliders: concentração de NADH, FADH2
+   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
+   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
+   - Gráfico temporal da produção de ATP e gradiente
 
----
+2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
+   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
+   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
+   - Cálculo de P50 dinâmico com desvio da curva
+   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
 
-### Arquivos editados/criados
+3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
+   - Toggle alimentado (insulina) vs jejum (glucagon)
+   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
+   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
+   - Indicadores de fosforilação/desfosforilação enzimática
 
-| Arquivo | Ação |
-|---------|------|
-| `src/components/medview3d/BioDigital3DViewer.tsx` | **Criar** — iframe viewer |
-| `src/components/medview3d/BioDigitalModelSearch.tsx` | **Criar** — seletor de modelos curados |
-| `src/components/medview3d/ProviderToggle.tsx` | **Criar** — toggle Sketchfab/BioDigital |
-| `src/data/biodigitalModels.ts` | **Criar** — catálogo curado |
-| `src/pages/medview3d/*.tsx` (6 arquivos) | **Editar** — adicionar estado `provider`, renderizar viewer/search condicional, desabilitar toolbar no modo BioDigital |
-| `src/components/medview3d/MedViewToolbar.tsx` | **Editar** — aceitar prop `disabled` para modo BioDigital |
+4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
+   - Extensão do simulador existente com inibição **acompetitiva**
+   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
+   - Sliders: [S], [E], concentração do inibidor
+   - Visualização de alterações em Km, Vmax, inclinação e interceções
 
-### Comportamento
-- Por padrão, abre com **Sketchfab** (comportamento atual preservado)
-- Toggle troca o viewer instantaneamente; ao voltar para Sketchfab, recarrega o modelo curado do step atual
-- Toolbar mostra tooltip "Ferramentas indisponíveis no modo BioDigital" quando desabilitada
-- Estado do provider é local por página (não persiste entre navegações)
+### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+
+5. **SimuladorCicloUreia** (`ciclo-ureia`)
+   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
+   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
+   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
+   - Indicador de neurotoxicidade
+
+6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
+   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
+   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
+   - Outputs: níveis de PGE2, TXA2, LTB4
+   - Casos: inflamação aguda, asma, prevenção cardiovascular
+
+7. **SimuladorLipoproteinas** (`lipoproteinas`)
+   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
+   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
+   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
+   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
+
+### Lote 3 (3 simuladores — Bioquímica celular e genética)
+
+8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
+   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
+   - Toggle: célula normal vs deficiência de G6PD
+   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
+   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
+   - Indicador visual de hemólise
+
+9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
+   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
+   - Slider de volume de NaOH/HCl adicionado
+   - Curva de titulação em tempo real com indicação de pKa e pI
+   - Cálculo dinâmico de carga líquida em função do pH
+
+10. **SimuladorOperonLac** (`operon-lac`)
+    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
+    - Sliders: glicose e lactose no meio
+    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
+    - Output: nível de transcrição de β-galactosidase
+    - Gráfico temporal da expressão génica
+
+## Alterações em arquivos existentes
+
+- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
+- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
+- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
+
+## Detalhes Técnicos
+
+- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
+- Modelos matemáticos no front-end com `useEffect`/`useMemo`
+- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
+- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
+- 3 casos built-in por simulador com dificuldades variadas
 
