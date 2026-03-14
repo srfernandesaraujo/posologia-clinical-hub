@@ -1,11 +1,11 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 const sections = [
   {
     title: "Calculadoras Clínicas",
     icon: Calculator,
-    description: "Mais de 20 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline.",
+    description: "Mais de 20 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline. Organização por categorias com busca e visualização em grade/lista.",
     items: [
       { name: "CKD-EPI 2021 (TFGe)", desc: "Equação sem correção racial — KDIGO 2021", link: "/calculadoras/ckd-epi" },
       { name: "Correção de Sódio", desc: "Fórmula de Katz para hiponatremia", link: "/calculadoras/correcao-sodio" },
@@ -31,7 +31,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais.",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 96+ simuladores em 12 categorias.",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "MAI (Medication Appropriateness Index)", desc: "Avaliação de adequação em 10 critérios", link: "/simuladores/mai" },
@@ -139,9 +139,54 @@ const sections = [
     ],
   },
   {
+    title: "Simuladores — Odontologia",
+    icon: Scan,
+    description: "8 simuladores para prática odontológica com SVG interativo, radiografias esquemáticas e planejamento cirúrgico.",
+    items: [
+      { name: "Odontograma Interativo", desc: "Registro clínico com arcada SVG (32 dentes, 5 faces) e ICDAS", link: "/simuladores/odontograma" },
+      { name: "Anatomia Dental (Endodontia)", desc: "Anatomia interna, testes de vitalidade e decisão terapêutica", link: "/simuladores/anatomia-endodontia" },
+      { name: "Periodontograma", desc: "Sondagem periodontal com classificação AAP/EFP 2018", link: "/simuladores/periodontograma" },
+      { name: "Anestesiologia Odontológica", desc: "Técnicas de bloqueio e cálculo de dose máxima", link: "/simuladores/anestesiologia-odonto" },
+      { name: "Cefalometria e Angle", desc: "Marcação cefalométrica e cálculo de SNA, SNB e ANB", link: "/simuladores/cefalometria" },
+      { name: "Radiografia Odontológica", desc: "Leitura de imagens esquemáticas e identificação de patologias", link: "/simuladores/radiografia-odonto" },
+      { name: "Farmacologia Odontológica", desc: "Prescrição segura com gauges de risco por perfil", link: "/simuladores/farmacologia-odonto" },
+      { name: "Cirurgia e Exodontia", desc: "Pell & Gregory e planejamento de terceiros molares", link: "/simuladores/cirurgia-exodontia" },
+    ],
+  },
+  {
+    title: "Simuladores — Fisioterapia",
+    icon: Accessibility,
+    description: "8 simuladores para avaliação funcional, neurológica e respiratória com ferramentas visuais interativas.",
+    items: [
+      { name: "Goniometria Articular", desc: "Medição de ADM com goniômetro virtual e valores AAOS", link: "/simuladores/goniometria" },
+      { name: "Avaliação Postural", desc: "Simetrógrafo com marcação de pontos e fio de prumo", link: "/simuladores/avaliacao-postural" },
+      { name: "Força Muscular (Oxford/MRC)", desc: "Graduação 0-5 com mapa de calor corporal", link: "/simuladores/forca-muscular" },
+      { name: "Dermátomos e Sensibilidade", desc: "Mapeamento sensitivo e correlação com nível de lesão", link: "/simuladores/dermatomos" },
+      { name: "Fisioterapia Respiratória", desc: "Ausculta virtual e técnicas de higiene brônquica", link: "/simuladores/respiratorio" },
+      { name: "Eletroterapia", desc: "TENS, FES, corrente russa com visualização de onda", link: "/simuladores/eletroterapia" },
+      { name: "Testes Ortopédicos", desc: "Testes provocativos com animação SVG da manobra", link: "/simuladores/testes-ortopedicos" },
+      { name: "Escala de Berg", desc: "14 itens de equilíbrio com radar e risco de queda", link: "/simuladores/berg" },
+    ],
+  },
+  {
+    title: "Simuladores — Nutrição",
+    icon: ClipboardList,
+    description: "8 simuladores para avaliação nutricional, terapia enteral/parenteral e condições clínicas especiais.",
+    items: [
+      { name: "Avaliação Nutricional", desc: "IMC, composição corporal e risco metabólico", link: "/simuladores/avaliacao-nutricional" },
+      { name: "Triagem Nutricional (NRS-2002)", desc: "Ferramentas de triagem e decisão de conduta", link: "/simuladores/triagem-nutricional" },
+      { name: "Necessidades Energéticas", desc: "Harris-Benedict, Mifflin e macronutrientes", link: "/simuladores/necessidades-energeticas" },
+      { name: "Terapia Nutricional Enteral", desc: "Fórmulas, vias de acesso e complicações", link: "/simuladores/tne" },
+      { name: "Terapia Nutricional Parenteral", desc: "Prescrição, compatibilidade e manejo", link: "/simuladores/tnp" },
+      { name: "Disfagia", desc: "Testes à beira-leito, FOIS e consistências", link: "/simuladores/disfagia" },
+      { name: "Nutrição Renal", desc: "Prescrição dietética na DRC", link: "/simuladores/nutricao-renal" },
+      { name: "Nutrição Materno-Infantil", desc: "Atalah, suplementação e intercorrências", link: "/simuladores/nutricao-materno-infantil" },
+    ],
+  },
+  {
     title: "Laboratório Virtual",
     icon: Microscope,
-    description: "8 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF.",
+    description: "11 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF. Integrado com Salas Virtuais e Analytics.",
     items: [
       { name: "Desenvolvimento de Fármacos", desc: "Alvo → ligante → docking → ensaio clínico → relatório", link: "/laboratorio-virtual" },
       { name: "Microbiologia", desc: "Cepa → antibióticos → placa de Petri → curva de crescimento", link: "/laboratorio-virtual" },
@@ -151,12 +196,15 @@ const sections = [
       { name: "Controle de Qualidade", desc: "Método → calibração → quantificação → validação ICH Q2", link: "/laboratorio-virtual" },
       { name: "Epidemiologia", desc: "Desenho → variáveis → tabela 2×2 → forest plot", link: "/laboratorio-virtual" },
       { name: "Biotecnologia", desc: "Constructo → indução → SDS-PAGE → curva de expressão", link: "/laboratorio-virtual" },
+      { name: "Simulação Realística", desc: "Cenários clínicos com decisões em tempo real e desfechos variáveis", link: "/laboratorio-virtual" },
+      { name: "Perícia Forense", desc: "Coleta de evidências → análise toxicológica → laudo pericial", link: "/laboratorio-virtual" },
+      { name: "Modelagem Molecular", desc: "Busca de compostos → edição molecular → predições in silico", link: "/laboratorio-virtual" },
     ],
   },
   {
     title: "Jogos Clínicos",
     icon: Gamepad2,
-    description: "Mais de 20 jogos educativos para treinar farmacologia e clínica de forma divertida e gamificada.",
+    description: "Mais de 20 jogos educativos para treinar farmacologia e clínica de forma divertida e gamificada. Organização por categorias com busca e visualização em grade/lista.",
     items: [
       { name: "Alerta Vermelho", desc: "Identificação de emergências" },
       { name: "Código Azul", desc: "Simulação de parada cardíaca" },
@@ -169,12 +217,14 @@ const sections = [
   {
     title: "Salas Virtuais",
     icon: DoorOpen,
-    description: "Crie salas com PIN para atividades em grupo. Alunos acessam pelo PIN sem necessidade de cadastro.",
+    description: "Crie salas com PIN para atividades em grupo. Suporta simuladores e laboratórios de pesquisa com Analytics completo (decisões, radar, relatório).",
     items: [
       { name: "Criação de salas com PIN de 6 dígitos" },
-      { name: "Atividades com simuladores e casos clínicos" },
-      { name: "Dashboard do professor com submissões em tempo real" },
+      { name: "Modo Simulação Unitária ou Atividade Simulada (roteiro multi-etapas)" },
+      { name: "Catálogo com 96+ simuladores e 11 bancadas de pesquisa" },
+      { name: "Dashboard do professor com submissões e analytics em tempo real" },
       { name: "Suporte a grupos e participantes individuais" },
+      { name: "Analytics com gráfico radar, decisões detalhadas e relatórios de laboratório" },
     ],
   },
   {

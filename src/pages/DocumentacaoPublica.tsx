@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,10 +39,18 @@ const sections: DocSection[] = [
   {
     id: "simuladores", title: "Simuladores Interativos", icon: FlaskConical, color: "text-cyan-400 bg-cyan-500/10",
     items: [
-      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 60 simuladores." },
-      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 8 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (7), Química Farmacêutica (8), Formação Docente (7), além de simuladores criados pelo usuário." },
+      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 96 simuladores." },
+      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
       { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium. Usuários gratuitos podem visualizar a lista." },
+    ],
+  },
+  {
+    id: "odonto-fisio-nutri", title: "Odontologia, Fisioterapia e Nutrição", icon: Scan, color: "text-orange-400 bg-orange-500/10",
+    items: [
+      { q: "O que são os simuladores de Odontologia?", a: "São 8 simuladores com SVG interativo cobrindo odontograma, endodontia, periodontograma, anestesiologia, cefalometria, radiografia, farmacologia odontológica e cirurgia/exodontia (Pell & Gregory)." },
+      { q: "O que são os simuladores de Fisioterapia?", a: "São 8 simuladores para avaliação funcional: goniometria articular, avaliação postural (simetrógrafo), força muscular (Oxford/MRC), dermátomos, fisioterapia respiratória, eletroterapia, testes ortopédicos especiais e escala de Berg." },
+      { q: "O que são os simuladores de Nutrição?", a: "São 8 simuladores abrangendo avaliação nutricional antropométrica, triagem (NRS-2002), cálculo de necessidades energéticas, terapia enteral (TNE), parenteral (TNP), disfagia, nutrição renal e nutrição materno-infantil." },
     ],
   },
   {
@@ -56,10 +64,11 @@ const sections: DocSection[] = [
   {
     id: "laboratorio", title: "Laboratório Virtual", icon: Microscope, color: "text-purple-400 bg-purple-500/10",
     items: [
-      { q: "O que é o Laboratório Virtual?", a: "É um ambiente com 8 bancadas de pesquisa modulares onde o usuário conduz experimentos sequenciais — cada módulo depende dos resultados do anterior, simulando uma experiência real de bancada." },
-      { q: "Quais bancadas estão disponíveis?", a: "Desenvolvimento de Fármacos, Microbiologia, Toxicologia, Farmacogenômica, Estabilidade, Controle de Qualidade, Epidemiologia e Biotecnologia." },
+      { q: "O que é o Laboratório Virtual?", a: "É um ambiente com 11 bancadas de pesquisa modulares onde o usuário conduz experimentos sequenciais — cada módulo depende dos resultados do anterior, simulando uma experiência real de bancada." },
+      { q: "Quais bancadas estão disponíveis?", a: "Desenvolvimento de Fármacos, Microbiologia, Toxicologia, Farmacogenômica, Estabilidade, Controle de Qualidade, Epidemiologia, Biotecnologia, Simulação Realística, Perícia Forense e Modelagem Molecular." },
       { q: "Como funciona o fluxo modular?", a: "Cada bancada tem 4 módulos experimentais + 1 módulo de mini-relatório. O módulo 2 só desbloqueia após completar o módulo 1, e assim por diante. Suas escolhas iniciais impactam diretamente os resultados dos módulos seguintes." },
       { q: "O que é o mini-relatório?", a: "É o módulo final de cada bancada onde você escreve hipótese, resultados e conclusão sobre o experimento realizado. Pode exportar o relatório completo em PDF com os dados de todos os módulos." },
+      { q: "Os laboratórios funcionam em Salas Virtuais?", a: "Sim! Professores podem adicionar bancadas do laboratório como atividades em salas virtuais. Os resultados (decisões, relatório e score) aparecem no Analytics do professor com gráfico radar e detalhamento completo." },
     ],
   },
   {
@@ -76,14 +85,16 @@ const sections: DocSection[] = [
     items: [
       { q: "O que são Salas Virtuais?", a: "São ambientes colaborativos onde professores criam sessões de simulação para que alunos participem em tempo real. Cada sala possui um PIN de 6 dígitos." },
       { q: "Como os alunos acessam?", a: "Alunos não precisam de conta! Basta inserir o PIN da sala na página inicial e informar seu nome." },
-      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem um dashboard com resultados de cada aluno incluindo pontuação, ações e tempo gasto." },
+      { q: "O professor acompanha os resultados?", a: "Sim, o professor tem um dashboard com Analytics completo: pontuação, gráfico radar de decisões, ações detalhadas, tempo gasto e relatórios de laboratório." },
       { q: "Quem pode criar salas?", a: "Criação exclusiva para usuários Premium, professores convidados e administradores." },
+      { q: "Posso usar laboratórios nas salas?", a: "Sim! As salas suportam tanto simuladores (96+) quanto bancadas do Laboratório Virtual (11). O professor escolhe entre 'Simuladores' ou 'Laboratórios' no momento da criação." },
+      { q: "Posso criar roteiros com múltiplas atividades?", a: "Sim! No modo 'Atividade Simulada' é possível compor um roteiro multi-etapas com diferentes simuladores/laboratórios, cada um com enunciado pedagógico personalizado." },
     ],
   },
   {
     id: "planos", title: "Planos e Pagamento", icon: CreditCard, color: "text-green-400 bg-green-500/10",
     items: [
-      { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 60+ simuladores, laboratório virtual, jogos, salas virtuais, formação docente e relatórios PDF)." },
+      { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 96+ simuladores, 11 bancadas de laboratório, jogos, salas virtuais com analytics, formação docente e relatórios PDF)." },
       { q: "Como faço upgrade para Premium?", a: "Acesse a página de Planos no menu lateral e clique em 'Assinar Premium'. Pagamento seguro pelo Stripe." },
       { q: "Posso cancelar a qualquer momento?", a: "Sim, o cancelamento pode ser solicitado pelo portal do cliente Stripe." },
       { q: "Quais formas de pagamento são aceitas?", a: "Cartão de crédito e débito via Stripe, com suporte a bandeiras internacionais." },
@@ -122,7 +133,7 @@ export default function DocumentacaoPublica() {
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Central de Ajuda</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Documentação do Posologia Clinical Hub</h1>
-          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, simuladores, laboratório virtual, jogos, formação docente e mais.</p>
+          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 96+ simuladores, 11 bancadas de laboratório, jogos, formação docente, salas virtuais e mais.</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input
