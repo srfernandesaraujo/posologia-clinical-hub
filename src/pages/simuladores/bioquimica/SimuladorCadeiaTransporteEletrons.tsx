@@ -59,7 +59,7 @@ const BUILT_IN_CASES: ETCCase[] = [
     title: "Metabolismo Aeróbio Normal",
     difficulty: "Fácil",
     patient: { name: "Ana Costa", age: 22, weight: 62, diagnosis: "Fisiologia normal" },
-    scenario: "Explore a cadeia de transporte de eletrões em condições normais. Ajuste NADH e FADH2 e observe a produção de ATP.",
+    scenario: "Explore a cadeia de transporte de elétrons em condições normais. Ajuste NADH e FADH2 e observe a produção de ATP.",
     initialNADH: 60, initialFADH2: 40,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: false, dnp: false },
     expectedATP: [25, 38],
