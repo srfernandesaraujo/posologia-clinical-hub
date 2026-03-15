@@ -1,4 +1,5 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility, Server, Database, Code, Cloud, Lock, Layers, Cpu, Network, Key, GitBranch } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, Link } from "react-router-dom";
 
 const sections = [
@@ -264,6 +265,161 @@ const sections = [
   },
 ];
 
+const techSections = [
+  {
+    title: "Stack Tecnológico",
+    icon: Code,
+    content: [
+      { label: "Frontend", value: "React 18 + TypeScript + Vite 5 (SPA)" },
+      { label: "Estilização", value: "Tailwind CSS 4 + shadcn/ui (Radix primitives)" },
+      { label: "Roteamento", value: "React Router DOM v6 (client-side routing)" },
+      { label: "Gráficos", value: "Recharts (LineChart, BarChart, RadarChart, PieChart)" },
+      { label: "Animações", value: "Framer Motion" },
+      { label: "Internacionalização", value: "i18next + react-i18next (pt, en, es)" },
+      { label: "Notificações", value: "Sonner (toasts) + shadcn Toast" },
+      { label: "PDF", value: "jsPDF + html2canvas para relatórios exportáveis" },
+      { label: "Testes", value: "Vitest + Testing Library" },
+      { label: "Linting", value: "ESLint com config flat (eslint.config.js)" },
+      { label: "Build", value: "Vite com tree-shaking, code splitting por rota (lazy imports)" },
+    ],
+  },
+  {
+    title: "Backend — Supabase",
+    icon: Cloud,
+    content: [
+      { label: "Provedor", value: "Supabase (PostgreSQL gerenciado + Auth + Edge Functions + Storage)" },
+      { label: "Autenticação", value: "Supabase Auth com email/senha, persistência em localStorage, autoRefreshToken" },
+      { label: "SDK", value: "supabase-js v2 com tipagem gerada automaticamente (Database types)" },
+      { label: "Client", value: "Singleton em src/integrations/supabase/client.ts com createClient<Database>()" },
+      { label: "Tipos", value: "src/integrations/supabase/types.ts — gerado automaticamente pelo CLI do Supabase" },
+      { label: "Projeto ID", value: "hxfzgjxwozzuzgdsrrpb" },
+    ],
+  },
+  {
+    title: "Banco de Dados — Tabelas",
+    icon: Database,
+    content: [
+      { label: "profiles", value: "Perfis de usuário (user_id, full_name, avatar_url, has_unlimited_access, status)" },
+      { label: "user_roles", value: "Roles separadas (admin, user, professor) — enum app_role" },
+      { label: "tools", value: "Ferramentas/calculadoras (name, slug, type, fields JSON, formula JSON, category_id)" },
+      { label: "categories", value: "Categorias de ferramentas (name, slug, icon)" },
+      { label: "simulator_cases", value: "Casos clínicos (case_data JSONB, simulator_slug, difficulty, is_ai_generated)" },
+      { label: "virtual_rooms", value: "Salas virtuais (pin, title, simulator_slug, case_id, expires_at, is_active)" },
+      { label: "room_activities", value: "Atividades de sala (room_id, simulator_slug, case_id, position)" },
+      { label: "room_participants", value: "Participantes (participant_name, is_group, group_members JSONB)" },
+      { label: "room_submissions", value: "Submissões (actions JSONB, score, time_spent_seconds, step_index)" },
+      { label: "calculation_history", value: "Histórico de cálculos por usuário (calculator_slug, details JSONB, patient_name)" },
+      { label: "student_points", value: "Pontuação gamificada (source, points, simulator_slug)" },
+      { label: "user_badges", value: "Badges conquistadas (badge_id, earned_at)" },
+      { label: "marketplace_purchases", value: "Compras do marketplace (tool_id, buyer_id, seller_id, price_brl)" },
+      { label: "shared_tools", value: "Links compartilhados (share_token, tool_id, expires_at)" },
+      { label: "tool_reviews", value: "Avaliações de ferramentas (rating, comment)" },
+      { label: "analytics_events", value: "Eventos de analytics (event_type, session_id, page_path, metadata JSONB)" },
+      { label: "ai_api_keys", value: "Chaves de API de IA (provider, model, priority, is_active) — somente admin" },
+      { label: "ai_usage_log", value: "Log de uso de IA (tokens_input/output, estimated_cost_usd, prompt_type)" },
+      { label: "contact_messages", value: "Mensagens de contato (name, email, subject, message)" },
+      { label: "usage_logs", value: "Logs de uso de ferramentas (tool_id, user_id)" },
+      { label: "leaderboard (View)", value: "View agregada com total_points, active_days, badge_count por usuário" },
+    ],
+  },
+  {
+    title: "Segurança — RLS & Auth",
+    icon: Lock,
+    content: [
+      { label: "RLS (Row-Level Security)", value: "Habilitado em todas as tabelas. Políticas PERMISSIVE baseadas em auth.uid() e has_role()" },
+      { label: "Função has_role()", value: "SECURITY DEFINER que consulta user_roles sem recursão RLS" },
+      { label: "Trigger on_auth_user_created", value: "Cria profile + atribui role 'user' automaticamente no signup" },
+      { label: "Roles", value: "Enum app_role: admin | user | professor" },
+      { label: "Padrão de acesso", value: "Propriedade (auth.uid() = user_id/created_by) ou role admin" },
+      { label: "Salas Virtuais", value: "Acesso público para leitura (is_active=true), CRUD restrito ao criador" },
+      { label: "Marketplace", value: "Leitura pública de tools ativos + marketplace; escrita restrita ao dono" },
+      { label: "Cookies", value: "Banner LGPD com consentimento granular (CookieConsentContext)" },
+    ],
+  },
+  {
+    title: "Edge Functions (Serverless)",
+    icon: Server,
+    content: [
+      { label: "generate-case", value: "Gera casos clínicos via IA (OpenAI/compatível) para simuladores" },
+      { label: "generate-game", value: "Gera conteúdo de jogos clínicos via IA" },
+      { label: "generate-tool", value: "Cria calculadoras personalizadas via IA generativa" },
+      { label: "generate-lab-context", value: "Gera contexto científico para bancadas do Laboratório Virtual" },
+      { label: "generate-simulation-scenario", value: "Gera cenários de simulação realística via IA" },
+      { label: "feedback-agent", value: "Agente de feedback educacional com IA" },
+      { label: "predict-admet", value: "Predição ADMET in silico para modelagem molecular" },
+      { label: "check-subscription", value: "Verifica status de assinatura do usuário" },
+      { label: "create-checkout", value: "Cria sessão de checkout Stripe para assinaturas" },
+      { label: "customer-portal", value: "Portal de gerenciamento de assinatura (Stripe)" },
+      { label: "purchase-tool", value: "Processa compras do marketplace" },
+      { label: "send-contact-email", value: "Envia emails de contato via Resend API" },
+      { label: "invite-user / list-invited-users", value: "Convite de usuários pelo admin" },
+      { label: "search-sketchfab", value: "Busca modelos 3D na API do Sketchfab (MedView 3D)" },
+      { label: "game-ranking / update-game", value: "Ranking e atualização de jogos" },
+      { label: "case-authors / list-marketplace-cases", value: "Consulta autores e casos do marketplace" },
+      { label: "hub-metrics / send-metrics-to-hub", value: "Métricas e integração com hub externo" },
+      { label: "expire-inactive-rooms", value: "Expira salas virtuais inativas (cron/manual)" },
+      { label: "verify-share", value: "Valida tokens de compartilhamento de ferramentas" },
+    ],
+  },
+  {
+    title: "Integrações & APIs Externas",
+    icon: Network,
+    content: [
+      { label: "OpenAI / Compatível", value: "Geração de casos, jogos, ferramentas e cenários. Provider configurável via ai_api_keys" },
+      { label: "Stripe", value: "Pagamentos, assinaturas e portal do cliente (STRIPE_SECRET_KEY)" },
+      { label: "Resend", value: "Envio de emails transacionais (RESEND_API_KEY)" },
+      { label: "Sketchfab", value: "Busca e embed de modelos 3D anatômicos (SKETCHFAB_API_KEY)" },
+      { label: "RxNav (NIH)", value: "Interações medicamentosas no simulador de Interações" },
+      { label: "Z-Anatomy", value: "Visualizador 3D anatômico integrado (MedView 3D)" },
+      { label: "Hub externo", value: "Sincronização de métricas (HUB_SERVICE_KEY, HUB_SERVICE_ID)" },
+    ],
+  },
+  {
+    title: "Secrets (Variáveis de Ambiente)",
+    icon: Key,
+    content: [
+      { label: "VITE_SUPABASE_URL", value: "URL pública do projeto Supabase (frontend)" },
+      { label: "VITE_SUPABASE_PUBLISHABLE_KEY", value: "Chave anon/pública do Supabase (frontend)" },
+      { label: "SUPABASE_SERVICE_ROLE_KEY", value: "Chave de serviço (somente Edge Functions — nunca no frontend)" },
+      { label: "STRIPE_SECRET_KEY", value: "Chave secreta Stripe (Edge Functions)" },
+      { label: "RESEND_API_KEY", value: "Chave da API Resend (Edge Functions)" },
+      { label: "SKETCHFAB_API_KEY", value: "Chave da API Sketchfab (Edge Functions)" },
+      { label: "HUB_SERVICE_KEY / HUB_SERVICE_ID", value: "Credenciais do hub de métricas externo" },
+      { label: "HUB_METRICS_KEY", value: "Chave de métricas do hub" },
+      { label: "LOVABLE_API_KEY", value: "Chave interna do Lovable" },
+    ],
+  },
+  {
+    title: "Arquitetura Frontend",
+    icon: Layers,
+    content: [
+      { label: "Estrutura de pastas", value: "src/pages (rotas), src/components (UI), src/hooks (lógica), src/contexts (estado global), src/data (constantes)" },
+      { label: "Roteamento", value: "App.tsx com React Router — rotas públicas (PublicLayout) e protegidas (AppLayout + ProtectedRoute)" },
+      { label: "Autenticação", value: "AuthContext com useAuth() — session, user, isAdmin, isProfessor, signIn, signUp, signOut" },
+      { label: "Feature Gating", value: "useFeatureGating() — controle de acesso a funcionalidades por plano/role" },
+      { label: "Gamificação", value: "useGamification() — pontos, badges, streaks (student_points + user_badges)" },
+      { label: "Histórico", value: "useCalculationHistory() — CRUD de cálculos salvos por paciente" },
+      { label: "Assinatura", value: "useSubscription() — verifica plano ativo via Edge Function" },
+      { label: "Salas Virtuais", value: "useVirtualRoomCase() — carrega caso e simulador de uma sala" },
+      { label: "Design System", value: "Tokens semânticos em index.css (--primary, --background, etc.) + tailwind.config.ts" },
+      { label: "Componentes UI", value: "shadcn/ui (40+ componentes) com variantes customizadas" },
+    ],
+  },
+  {
+    title: "Deploy & Infraestrutura",
+    icon: GitBranch,
+    content: [
+      { label: "Hospedagem", value: "Lovable Cloud (preview + produção com domínio customizado)" },
+      { label: "Domínio publicado", value: "med-tool-forge.lovable.app" },
+      { label: "CI/CD", value: "Deploy automático a cada commit via Lovable" },
+      { label: "Edge Functions", value: "Deploy automático no Supabase (Deno runtime)" },
+      { label: "CDN", value: "Assets estáticos servidos via CDN do Lovable" },
+      { label: "Monitoramento", value: "Logs de Edge Functions no dashboard Supabase + analytics interno" },
+      { label: "Banco de dados", value: "PostgreSQL gerenciado pelo Supabase (região automática)" },
+    ],
+  },
+];
+
 export default function Documentacao() {
   const navigate = useNavigate();
 
@@ -280,43 +436,83 @@ export default function Documentacao() {
           </div>
           <div>
             <h1 className="text-3xl font-bold">Documentação</h1>
-            <p className="text-muted-foreground">Guia completo de todas as funcionalidades do Posologia Clinical Hub</p>
+            <p className="text-muted-foreground">Guia completo de funcionalidades e infraestrutura técnica do Posologia Clinical Hub</p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-8">
-        {sections.map((section) => (
-          <div key={section.title} className="rounded-2xl border border-border bg-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <section.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{section.title}</h2>
-                <p className="text-sm text-muted-foreground">{section.description}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {section.items.map((item, i) => (
-                <div key={i} className="flex items-start gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                  <span className="text-primary mt-0.5">•</span>
-                  <div className="min-w-0">
-                    {"link" in item && item.link ? (
-                      <Link to={item.link} className="text-sm font-medium text-primary hover:underline">{item.name}</Link>
-                    ) : (
-                      <span className="text-sm font-medium">{item.name}</span>
-                    )}
-                    {"desc" in item && item.desc && (
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    )}
+      <Tabs defaultValue="funcionalidades" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsTrigger value="funcionalidades" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Funcionalidades
+          </TabsTrigger>
+          <TabsTrigger value="tecnico" className="flex items-center gap-2">
+            <Cpu className="h-4 w-4" />
+            Infraestrutura Técnica
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="funcionalidades">
+          <div className="space-y-8">
+            {sections.map((section) => (
+              <div key={section.title} className="rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <section.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">{section.title}</h2>
+                    <p className="text-sm text-muted-foreground">{section.description}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {section.items.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                      <span className="text-primary mt-0.5">•</span>
+                      <div className="min-w-0">
+                        {"link" in item && item.link ? (
+                          <Link to={item.link} className="text-sm font-medium text-primary hover:underline">{item.name}</Link>
+                        ) : (
+                          <span className="text-sm font-medium">{item.name}</span>
+                        )}
+                        {"desc" in item && item.desc && (
+                          <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="tecnico">
+          <div className="space-y-8">
+            {techSections.map((section) => (
+              <div key={section.title} className="rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <section.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold">{section.title}</h2>
+                </div>
+                <div className="space-y-1">
+                  {section.content.map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                      <span className="text-xs font-mono font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded whitespace-nowrap mt-0.5 min-w-[140px] text-center">
+                        {item.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
