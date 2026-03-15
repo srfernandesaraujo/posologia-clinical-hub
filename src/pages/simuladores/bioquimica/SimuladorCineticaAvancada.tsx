@@ -332,7 +332,7 @@ export default function SimuladorCineticaAvancada() {
 
       <SimulatorChallengeMode
         challengeSet={getCineticaAvancadaChallenges()}
-        simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki }}
+        simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp }}
       />
     </div>
   );
