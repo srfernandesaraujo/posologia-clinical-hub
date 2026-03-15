@@ -37,7 +37,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Crescimento Diáuxico — Transição Glicose → Lactose",
     difficulty: "Médio",
     patient: { name: "Exercício 1", age: 0, weight: 0, diagnosis: "Regulação do operão lac em E. coli" },
-    scenario: "Bactéria E. coli cresce primeiro em glicose (fonte preferida). Quando a glicose se esgota, o cAMP aumenta, CAP liga-se ao promotor e, se a lactose estiver presente, a alolactose desreprime o operão. Observe a fase de latência (lag) do crescimento diáuxico.",
+    scenario: "Bactéria E. coli cresce primeiro em glicose (fonte preferida). Quando a glicose se esgota, o cAMP aumenta, CAP liga-se ao promotor e, se a lactose estiver presente, a alolactose desreprime o operon. Observe a fase de latência (lag) do crescimento diáuxico.",
     initialGlucose: 80, initialLactose: 60,
     expectedTranscription: [0, 20],
     clinicalTip: "O crescimento diáuxico demonstra a repressão catabólica: a glicose inibe a expressão de genes para metabolismo de outras fontes de carbono, garantindo eficiência metabólica.",
