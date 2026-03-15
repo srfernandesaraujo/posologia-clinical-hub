@@ -179,13 +179,24 @@ export default function SimuladorTitulacaoAminoacidos() {
   }, [curveData, currentpH]);
 
   useEffect(() => {
+    setVisibleAminoAcids(prev => (prev.includes(selectedAA) ? prev : [...prev, selectedAA]));
+  }, [selectedAA]);
+
+  useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
       tickRef.current += 1;
-      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pH: currentpH, charge: currentPoint.charge }]);
+      const snapshot = AMINO_ACIDS.reduce(
+        (acc, amino, index) => {
+          acc[getAminoHistoryKey(index)] = computeChargeAtPH(amino, currentpH);
+          return acc;
+        },
+        { time: tickRef.current, pH: currentpH } as { time: number; pH: number; [key: string]: number },
+      );
+      setHistory(prev => [...prev.slice(-59), snapshot]);
     }, 1000);
     return () => clearInterval(id);
-  }, [running, currentpH, currentPoint.charge]);
+  }, [running, currentpH]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
