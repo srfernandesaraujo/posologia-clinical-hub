@@ -115,6 +115,9 @@ export default function SimuladorTitulacaoAminoacidos() {
   const [activeCase, setActiveCase] = useState<TitrationCase | null>(null);
   const [selectedAA, setSelectedAA] = useState(0);
   const [currentpH, setCurrentpH] = useState(1.0);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; pH: number; charge: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -131,6 +134,7 @@ export default function SimuladorTitulacaoAminoacidos() {
     if (activeCase) {
       setSelectedAA(activeCase.aminoAcidIndex);
       setCurrentpH(activeCase.startpH);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 

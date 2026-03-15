@@ -83,6 +83,9 @@ export default function SimuladorPentosesFosfato() {
   const [g6pdDeficient, setG6pdDeficient] = useState(false);
   const [oxidantAgent, setOxidantAgent] = useState("primaquina");
   const [oxidantDose, setOxidantDose] = useState(50);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; hemolysis: number; membrane: number; heinz: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -101,6 +104,7 @@ export default function SimuladorPentosesFosfato() {
       setG6pdDeficient(activeCase.g6pdDeficient);
       setOxidantAgent(activeCase.oxidantAgent);
       setOxidantDose(activeCase.oxidantDose);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 

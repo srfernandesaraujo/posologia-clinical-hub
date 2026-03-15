@@ -72,6 +72,9 @@ export default function SimuladorOperonLac() {
   const [activeCase, setActiveCase] = useState<OperonCase | null>(null);
   const [glucose, setGlucose] = useState(50);
   const [lactose, setLactose] = useState(50);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; transcription: number; betaGal: number; camp: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -89,6 +92,7 @@ export default function SimuladorOperonLac() {
     if (activeCase) {
       setGlucose(activeCase.initialGlucose);
       setLactose(activeCase.initialLactose);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 

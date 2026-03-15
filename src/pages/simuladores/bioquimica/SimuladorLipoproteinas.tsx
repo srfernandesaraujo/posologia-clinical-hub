@@ -88,6 +88,9 @@ export default function SimuladorLipoproteinas() {
   const [lplActivity, setLPLActivity] = useState(80);
   const [ldlReceptor, setLDLReceptor] = useState(80);
   const [drugs, setDrugs] = useState({ statin: false, resin: false, ezetimibe: false, pcsk9i: false, fibrate: false });
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; ldl: number; hdl: number; tg: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -108,6 +111,7 @@ export default function SimuladorLipoproteinas() {
       setLPLActivity(activeCase.initialLPL);
       setLDLReceptor(activeCase.initialLDLReceptor);
       setDrugs(activeCase.drugs);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
