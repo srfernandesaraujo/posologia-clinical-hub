@@ -162,6 +162,7 @@ export default function SimuladorTitulacaoAminoacidos() {
   useEffect(() => {
     if (activeCase) {
       setSelectedAA(activeCase.aminoAcidIndex);
+      setVisibleAminoAcids([activeCase.aminoAcidIndex]);
       setCurrentpH(activeCase.startpH);
       setRunning(false); setHistory([]); tickRef.current = 0;
     }
