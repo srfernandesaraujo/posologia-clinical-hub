@@ -287,7 +287,7 @@ export default function SimuladorDissociacaoHemoglobina() {
 
       <SimulatorChallengeMode
         challengeSet={getDissociacaoHemoglobinaChallenges()}
-        simulatorState={{ pH, pCO2, temp, bpg }}
+        simulatorState={{ pH, pCO2, temp, bpg, p50 }}
       />
     </div>
   );

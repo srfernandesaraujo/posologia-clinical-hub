@@ -323,7 +323,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
 
       <SimulatorChallengeMode
         challengeSet={getCadeiaTransporteEletronsChallenges()}
-        simulatorState={{ nadh, fadh2, ...inhibitors }}
+        simulatorState={{ nadh, fadh2, ...inhibitors, atpRate: outputs.atpRate }}
       />
     </div>
   );
