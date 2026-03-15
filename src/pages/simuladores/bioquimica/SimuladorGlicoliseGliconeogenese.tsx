@@ -271,11 +271,9 @@ export default function SimuladorGlicoliseGliconeogenese() {
                 <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
                 <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="activity" name="Atividade (%)" radius={[0, 4, 4, 0]}>
-                  {enzymeBarData.map((entry, idx) => (
-                    <rect key={idx} fill={entry.fill} />
-                  ))}
-                </Bar>
+                {outputs.enzymes.filter(e => e.pathway === "glycolysis").length > 0 && (
+                  <Bar dataKey="activity" name="Atividade (%)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

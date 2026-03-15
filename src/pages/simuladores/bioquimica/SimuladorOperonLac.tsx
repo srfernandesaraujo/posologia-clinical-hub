@@ -37,7 +37,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Crescimento Diáuxico — Transição Glicose → Lactose",
     difficulty: "Médio",
     patient: { name: "Exercício 1", age: 0, weight: 0, diagnosis: "Regulação do operão lac em E. coli" },
-    scenario: "Bactéria E. coli cresce primeiro em glicose (fonte preferida). Quando a glicose se esgota, o cAMP aumenta, CAP liga-se ao promotor e, se a lactose estiver presente, a alolactose desreprime o operão. Observe a fase de latência (lag) do crescimento diáuxico.",
+    scenario: "Bactéria E. coli cresce primeiro em glicose (fonte preferida). Quando a glicose se esgota, o cAMP aumenta, CAP liga-se ao promotor e, se a lactose estiver presente, a alolactose desreprime o operon. Observe a fase de latência (lag) do crescimento diáuxico.",
     initialGlucose: 80, initialLactose: 60,
     expectedTranscription: [0, 20],
     clinicalTip: "O crescimento diáuxico demonstra a repressão catabólica: a glicose inibe a expressão de genes para metabolismo de outras fontes de carbono, garantindo eficiência metabólica.",
@@ -46,7 +46,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Indução Máxima — Lactose sem Glicose",
     difficulty: "Fácil",
     patient: { name: "Exercício 2", age: 0, weight: 0, diagnosis: "Condições de indução máxima do operão lac" },
-    scenario: "Meio com lactose mas sem glicose. O cAMP está elevado (CAP ativo), e a alolactose (derivada da lactose) liga-se ao repressor LacI, causando a desrepressão máxima do operão.",
+    scenario: "Meio com lactose mas sem glicose. O cAMP está elevado (CAP ativo), e a alolactose (derivada da lactose) liga-se ao repressor LacI, causando a desrepressão máxima do operon.",
     initialGlucose: 0, initialLactose: 80,
     expectedTranscription: [80, 100],
     clinicalTip: "Para expressão máxima do operão lac são necessárias DUAS condições simultâneas: 1) ausência de glicose (↑cAMP → CAP ativo) e 2) presença de lactose (alolactose desreprime LacI).",
@@ -55,7 +55,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Mutação no Operador — Operão Constitutivo",
     difficulty: "Difícil",
     patient: { name: "Exercício 3", age: 0, weight: 0, diagnosis: "Mutação Oc (operador constitutivo)" },
-    scenario: "Mutação no operador (Oc) que impede a ligação do repressor LacI. O operão é transcrito constitutivamente, independentemente da presença de lactose. Apenas a regulação positiva por CAP-cAMP persiste.",
+    scenario: "Mutação no operador (Oc) que impede a ligação do repressor LacI. O operon é transcrito constitutivamente, independentemente da presença de lactose. Apenas a regulação positiva por CAP-cAMP persiste.",
     initialGlucose: 50, initialLactose: 0,
     expectedTranscription: [20, 60],
     clinicalTip: "Mutações Oc no operador são cis-dominantes: afetam apenas os genes no mesmo cromossoma. Em diplóides parciais (F'/chromossome), o alelo Oc afeta apenas a cópia adjacente do operão.",
@@ -171,7 +171,7 @@ export default function SimuladorOperonLac() {
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
-            <h1 className="text-2xl font-bold">Operão Lac — Regulação Genética</h1>
+            <h1 className="text-2xl font-bold">Operon Lac — Regulação Genética</h1>
             <p className="text-muted-foreground">Regulação positiva (CAP-cAMP) e negativa (repressor LacI) da transcrição</p>
             <AdminPromptViewer toolSlug="sim-operon-lac" toolName="Operon Lac" toolType="simulator" prompt={getNativePrompt("sim-operon-lac") || ""} />
           </div>
@@ -232,7 +232,7 @@ export default function SimuladorOperonLac() {
 
           {/* DNA Diagram */}
           <Card>
-            <CardHeader><CardTitle className="text-lg">Estrutura do Operão</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Estrutura do Operon</CardTitle></CardHeader>
             <CardContent>
               <div className="text-xs font-mono space-y-2">
                 <div className="flex gap-1 items-center">
@@ -263,10 +263,10 @@ export default function SimuladorOperonLac() {
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={regulationData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -276,7 +276,7 @@ export default function SimuladorOperonLac() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Produtos do Operão</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Produtos do Operon</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-3 text-center mb-4">
                 <div>
@@ -300,10 +300,10 @@ export default function SimuladorOperonLac() {
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={expressionTimeline}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="tempo" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="tempo" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="betaGal" name="β-Galactosidase (%)" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="permease" name="Permease (%)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />

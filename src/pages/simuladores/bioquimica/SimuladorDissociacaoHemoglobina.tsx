@@ -98,6 +98,9 @@ export default function SimuladorDissociacaoHemoglobina() {
   const [pCO2, setPCO2] = useState(40);
   const [temp, setTemp] = useState(37);
   const [bpg, setBPG] = useState(5);
+  const [running, setRunning] = useState(false);
+  const [p50History, setP50History] = useState<any[]>([]);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -115,12 +118,25 @@ export default function SimuladorDissociacaoHemoglobina() {
     if (activeCase) {
       setPH(activeCase.initialPH); setPCO2(activeCase.initialPCO2);
       setTemp(activeCase.initialTemp); setBPG(activeCase.initialBPG);
+      setRunning(false); setP50History([]); setTime(0);
     }
   }, [activeCase]);
 
   const p50 = useMemo(() => computeP50(pH, pCO2, temp, bpg), [pH, pCO2, temp, bpg]);
   const curveData = useMemo(() => generateCurveData(p50), [p50]);
   const normalCurve = useMemo(() => generateCurveData(26.6), []);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTime(t => {
+        const newT = t + 1;
+        setP50History(prev => [...prev.slice(-59), { time: newT, p50, pH, pCO2, temp, bpg }]);
+        return newT;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, p50, pH, pCO2, temp, bpg]);
 
   const shift = p50 > 28 ? "Direita ➡️" : p50 < 25 ? "⬅️ Esquerda" : "Normal";
 
@@ -219,7 +235,10 @@ export default function SimuladorDissociacaoHemoglobina() {
                 <p className="text-lg font-bold">{shift}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+              <Button variant="outline" onClick={handleFinish} disabled={(!running && p50History.length === 0) || submitted}>Finalizar</Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -243,6 +262,25 @@ export default function SimuladorDissociacaoHemoglobina() {
         </Card>
       </div>
 
+      {p50History.length > 1 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={p50History}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="p50" name="P50 (mmHg)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="pH" name="pH" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
@@ -252,7 +290,7 @@ export default function SimuladorDissociacaoHemoglobina() {
 
       <SimulatorChallengeMode
         challengeSet={getDissociacaoHemoglobinaChallenges()}
-        simulatorState={{ pH, pCO2, temp, bpg }}
+        simulatorState={{ pH, pCO2, temp, bpg, p50 }}
       />
     </div>
   );

@@ -78,6 +78,9 @@ export default function SimuladorCicloUreia() {
 
   const [activeCase, setActiveCase] = useState<UreaCycleCase | null>(null);
   const [deficiencies, setDeficiencies] = useState({ cpsI: false, otc: false, ass: false, asl: false, arginase: false });
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -94,6 +97,7 @@ export default function SimuladorCicloUreia() {
   useEffect(() => {
     if (activeCase) {
       setDeficiencies(activeCase.deficiencies);
+      setRunning(false); setHistory([]); setTime(0);
     }
   }, [activeCase]);
 
@@ -115,6 +119,18 @@ export default function SimuladorCicloUreia() {
     const toxicity = ammoniaLevel > 80 ? "Crítica" : ammoniaLevel > 40 ? "Elevada" : ammoniaLevel > 15 ? "Moderada" : "Normal";
     return { levels, ammoniaLevel, toxicity, ureiaOutput: levels.ureia };
   }, [deficiencies]);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTime(t => {
+        const newT = t + 1;
+        setHistory(prev => [...prev.slice(-59), { time: newT, ammonia: Math.round(model.ammoniaLevel), ureia: Math.round(model.ureiaOutput) }]);
+        return newT;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, model]);
 
   const barData = [
     { name: "NH₃", value: Math.round(model.levels.nh3) },
@@ -256,10 +272,10 @@ export default function SimuladorCicloUreia() {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -274,10 +290,10 @@ export default function SimuladorCicloUreia() {
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={neuroData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hora" />
-              <YAxis />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
               <Line type="monotone" dataKey="amonia" name="NH₃ (µmol/L)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="edema" name="Edema Cerebral (%)" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
@@ -288,7 +304,8 @@ export default function SimuladorCicloUreia() {
       </Card>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
@@ -300,7 +317,7 @@ export default function SimuladorCicloUreia() {
 
       <SimulatorChallengeMode
         challengeSet={getCicloUreiaChallenges()}
-        simulatorState={{ ...deficiencies }}
+        simulatorState={{ ...deficiencies, ammonia: Math.round(model.ammoniaLevel) }}
       />
     </div>
   );

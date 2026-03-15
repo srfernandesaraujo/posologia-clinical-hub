@@ -262,10 +262,10 @@ export default function SimuladorPentosesFosfato() {
 
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={pathwayData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Bar dataKey="normal" name="Normal" fill="hsl(var(--muted-foreground))" opacity={0.3} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="atual" name="Atual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -279,10 +279,10 @@ export default function SimuladorPentosesFosfato() {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={damageTimeline}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hora" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="hemoglobina" name="Hb (g/dL)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="reticulocitos" name="Reticulócitos (%)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
@@ -307,7 +307,7 @@ export default function SimuladorPentosesFosfato() {
 
       <SimulatorChallengeMode
         challengeSet={getPentosesFosfatoChallenges()}
-        simulatorState={{ g6pdDeficient, oxidantAgent, oxidantDose }}
+        simulatorState={{ g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis }}
       />
     </div>
   );

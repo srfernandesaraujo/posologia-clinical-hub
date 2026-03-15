@@ -43,23 +43,23 @@ const BUILT_IN_CASES: ETCCase[] = [
     initialNADH: 80, initialFADH2: 60,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: true, dnp: false },
     expectedATP: [0, 5],
-    clinicalTip: "O cianeto liga-se ao Fe³⁺ do citocromo a3 (Complexo IV), impedindo a transferência de eletrões ao O₂. Tratamento: hidroxocobalamina ou nitrito de sódio + tiossulfato.",
+    clinicalTip: "O cianeto liga-se ao Fe³⁺ do citocromo a3 (Complexo IV), impedindo a transferência de elétrons ao O₂. Tratamento: hidroxocobalamina ou nitrito de sódio + tiossulfato.",
   },
   {
     title: "Desacoplamento por DNP",
     difficulty: "Médio",
     patient: { name: "Maria Fernandes", age: 28, weight: 55, diagnosis: "Uso ilícito de dinitrofenol para emagrecimento" },
-    scenario: "Paciente tomou DNP para perda de peso. O DNP dissipa o gradiente de protões sem bloquear a cadeia. Observe o consumo de O₂ mantido mas ATP reduzido.",
+    scenario: "Paciente tomou DNP para perda de peso. O DNP dissipa o gradiente de prótons sem bloquear a cadeia. Observe o consumo de O₂ mantido mas ATP reduzido.",
     initialNADH: 70, initialFADH2: 50,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: false, dnp: true },
     expectedATP: [5, 20],
-    clinicalTip: "Desacopladores como DNP transportam H⁺ pela membrana interna, dissipando o gradiente. A energia é libertada como calor (hipertermia). A cadeia continua a funcionar mas não há síntese de ATP.",
+    clinicalTip: "Desacopladores como DNP transportam H⁺ pela membrana interna, dissipando o gradiente. A energia é liberada como calor (hipertermia). A cadeia continua a funcionar mas não há síntese de ATP.",
   },
   {
     title: "Metabolismo Aeróbio Normal",
     difficulty: "Fácil",
     patient: { name: "Ana Costa", age: 22, weight: 62, diagnosis: "Fisiologia normal" },
-    scenario: "Explore a cadeia de transporte de eletrões em condições normais. Ajuste NADH e FADH2 e observe a produção de ATP.",
+    scenario: "Explore a cadeia de transporte de elétrons em condições normais. Ajuste NADH e FADH2 e observe a produção de ATP.",
     initialNADH: 60, initialFADH2: 40,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: false, dnp: false },
     expectedATP: [25, 38],
@@ -183,7 +183,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
-            <h1 className="text-2xl font-bold">Cadeia de Transporte de Eletrões</h1>
+            <h1 className="text-2xl font-bold">Cadeia de Transporte de Elétrons</h1>
             <p className="text-muted-foreground">Fosforilação oxidativa, inibidores de complexos e desacopladores.</p>
             <AdminPromptViewer toolSlug="sim-cadeia-transporte-eletrons" toolName="Cadeia de Transporte de Elétrons" toolType="simulator" prompt={getNativePrompt("sim-cadeia-transporte-eletrons") || ""} />
           </div>
@@ -323,7 +323,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
 
       <SimulatorChallengeMode
         challengeSet={getCadeiaTransporteEletronsChallenges()}
-        simulatorState={{ nadh, fadh2, ...inhibitors }}
+        simulatorState={{ nadh, fadh2, ...inhibitors, atpRate: outputs.atpRate }}
       />
     </div>
   );

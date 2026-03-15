@@ -135,7 +135,7 @@ export default function SimuladorTitulacaoAminoacidos() {
   }, [activeCase]);
 
   const aa = AMINO_ACIDS[selectedAA];
-  const curveData = useMemo(() => computeTitrationCurve(aa), [aa]);
+  const curveData = useMemo(() => computeTitrationCurve(aa), [selectedAA]);
 
   const currentPoint = useMemo(() => {
     const closest = curveData.reduce((prev, curr) =>

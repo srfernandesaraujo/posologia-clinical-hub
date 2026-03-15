@@ -299,10 +299,10 @@ export default function SimuladorLipoproteinas() {
               </div>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={lipidData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Bar dataKey="value" name="Atual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="target" name="Alvo" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} opacity={0.3} />
@@ -316,11 +316,11 @@ export default function SimuladorLipoproteinas() {
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={transportData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" name="Nível" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Bar dataKey="value" name="Nível" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

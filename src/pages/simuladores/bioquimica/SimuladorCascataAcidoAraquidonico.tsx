@@ -270,10 +270,10 @@ export default function SimuladorCascataAcidoAraquidonico() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={eicosanoidData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -325,7 +325,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
 
       <SimulatorChallengeMode
         challengeSet={getCascataAcidoAraquidonicoChallenges()}
-        simulatorState={{ stimulus, ...drugs }}
+        simulatorState={{ stimulus, ...drugs, pge2: model.pge2 }}
       />
     </div>
   );
