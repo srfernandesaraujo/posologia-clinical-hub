@@ -105,8 +105,18 @@ export default function SimuladorCascataAcidoAraquidonico() {
     if (activeCase) {
       setStimulus(activeCase.initialStimulus);
       setDrugs(activeCase.drugs);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pge2: model.pge2, txa2: model.txa2, inflammation: model.inflammation }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.pge2, model.txa2, model.inflammation]);
 
   const toggleDrug = useCallback((key: string) => {
     setDrugs(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
