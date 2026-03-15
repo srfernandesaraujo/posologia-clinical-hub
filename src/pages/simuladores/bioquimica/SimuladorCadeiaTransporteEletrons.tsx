@@ -49,11 +49,11 @@ const BUILT_IN_CASES: ETCCase[] = [
     title: "Desacoplamento por DNP",
     difficulty: "Médio",
     patient: { name: "Maria Fernandes", age: 28, weight: 55, diagnosis: "Uso ilícito de dinitrofenol para emagrecimento" },
-    scenario: "Paciente tomou DNP para perda de peso. O DNP dissipa o gradiente de protões sem bloquear a cadeia. Observe o consumo de O₂ mantido mas ATP reduzido.",
+    scenario: "Paciente tomou DNP para perda de peso. O DNP dissipa o gradiente de prótons sem bloquear a cadeia. Observe o consumo de O₂ mantido mas ATP reduzido.",
     initialNADH: 70, initialFADH2: 50,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: false, dnp: true },
     expectedATP: [5, 20],
-    clinicalTip: "Desacopladores como DNP transportam H⁺ pela membrana interna, dissipando o gradiente. A energia é libertada como calor (hipertermia). A cadeia continua a funcionar mas não há síntese de ATP.",
+    clinicalTip: "Desacopladores como DNP transportam H⁺ pela membrana interna, dissipando o gradiente. A energia é liberada como calor (hipertermia). A cadeia continua a funcionar mas não há síntese de ATP.",
   },
   {
     title: "Metabolismo Aeróbio Normal",
