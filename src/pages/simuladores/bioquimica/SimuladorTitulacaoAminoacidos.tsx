@@ -144,7 +144,8 @@ export default function SimuladorTitulacaoAminoacidos() {
   const [selectedAA, setSelectedAA] = useState(0);
   const [currentpH, setCurrentpH] = useState(1.0);
   const [running, setRunning] = useState(false);
-  const [history, setHistory] = useState<{ time: number; pH: number; charge: number }[]>([]);
+  const [history, setHistory] = useState<Array<{ time: number; pH: number; [key: string]: number }>>([]);
+  const [visibleAminoAcids, setVisibleAminoAcids] = useState<number[]>([0]);
   const tickRef = useRef(0);
 
   useEffect(() => {
