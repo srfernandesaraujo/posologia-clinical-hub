@@ -300,7 +300,26 @@ export default function SimuladorCineticaAvancada() {
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+           </Card>
+
+          {history.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="kmApp" name="Km aparente" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                    <Line type="monotone" dataKey="vmaxApp" name="Vmax aparente" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
