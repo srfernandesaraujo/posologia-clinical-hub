@@ -352,17 +352,43 @@ export default function SimuladorTitulacaoAminoacidos() {
 
       {history.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-lg">Evolução Temporal</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-lg">Evolução Temporal</CardTitle>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {AMINO_ACIDS.map((a, i) => {
+                const isVisible = visibleAminoAcids.includes(i);
+                return (
+                  <button
+                    key={a.name}
+                    onClick={() => setVisibleAminoAcids(prev => isVisible ? prev.filter(x => x !== i) : [...prev, i])}
+                    className={`text-xs px-2 py-1 rounded-full border transition-colors ${isVisible ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-muted-foreground hover:bg-muted/50"}`}
+                  >
+                    {a.name}
+                  </button>
+                );
+              })}
+            </div>
+          </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "Carga", angle: -90, position: "insideLeft" }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: number) => v.toFixed(2)} />
                 <Legend />
                 <Line type="monotone" dataKey="pH" name="pH" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="charge" name="Carga" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                {visibleAminoAcids.map((idx) => (
+                  <Line
+                    key={idx}
+                    type="monotone"
+                    dataKey={getAminoHistoryKey(idx)}
+                    name={`Carga ${AMINO_ACIDS[idx].name}`}
+                    stroke={TEMPORAL_LINE_COLORS[idx % TEMPORAL_LINE_COLORS.length]}
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
