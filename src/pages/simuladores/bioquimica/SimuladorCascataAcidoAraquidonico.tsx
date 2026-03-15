@@ -109,15 +109,6 @@ export default function SimuladorCascataAcidoAraquidonico() {
     }
   }, [activeCase]);
 
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => {
-      tickRef.current += 1;
-      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pge2: model.pge2, txa2: model.txa2, inflammation: model.inflammation }]);
-    }, 1000);
-    return () => clearInterval(id);
-  }, [running, model.pge2, model.txa2, model.inflammation]);
-
   const toggleDrug = useCallback((key: string) => {
     setDrugs(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
   }, []);
@@ -151,6 +142,15 @@ export default function SimuladorCascataAcidoAraquidonico() {
       bronchoconstriction: Math.round(cysLTEffect),
     };
   }, [stimulus, drugs]);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pge2: model.pge2, txa2: model.txa2, inflammation: model.inflammation }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.pge2, model.txa2, model.inflammation]);
 
   const eicosanoidData = [
     { name: "PGE2", value: model.pge2 },
