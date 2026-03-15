@@ -141,6 +141,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase) return;
+    setRunning(false);
     const ok = outputs.dominantPathway === activeCase.expectedFlux;
     const s = ok ? 100 : 30;
     if (submitted) return;
