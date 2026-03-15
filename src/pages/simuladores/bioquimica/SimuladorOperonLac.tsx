@@ -171,7 +171,7 @@ export default function SimuladorOperonLac() {
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
-            <h1 className="text-2xl font-bold">Operão Lac — Regulação Genética</h1>
+            <h1 className="text-2xl font-bold">Operon Lac — Regulação Genética</h1>
             <p className="text-muted-foreground">Regulação positiva (CAP-cAMP) e negativa (repressor LacI) da transcrição</p>
             <AdminPromptViewer toolSlug="sim-operon-lac" toolName="Operon Lac" toolType="simulator" prompt={getNativePrompt("sim-operon-lac") || ""} />
           </div>
