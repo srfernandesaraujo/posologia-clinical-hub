@@ -130,6 +130,15 @@ export default function SimuladorOperonLac() {
     };
   }, [glucose, lactose]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, transcription: model.transcription, betaGal: model.betaGal, camp: model.camp }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.transcription, model.betaGal, model.camp]);
+
   // Time-course of gene expression when conditions change
   const expressionTimeline = useMemo(() => {
     const pts = [];
