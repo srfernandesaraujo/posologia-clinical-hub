@@ -98,6 +98,9 @@ export default function SimuladorDissociacaoHemoglobina() {
   const [pCO2, setPCO2] = useState(40);
   const [temp, setTemp] = useState(37);
   const [bpg, setBPG] = useState(5);
+  const [running, setRunning] = useState(false);
+  const [p50History, setP50History] = useState<any[]>([]);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
