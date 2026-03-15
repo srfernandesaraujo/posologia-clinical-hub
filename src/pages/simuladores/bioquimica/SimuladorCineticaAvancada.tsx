@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +105,20 @@ export default function SimuladorCineticaAvancada() {
   const [inhibitorType, setInhibitorType] = useState<InhibitorType>("none");
   const [inhibitorConc, setInhibitorConc] = useState(0);
   const [ki, setKi] = useState(5);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; kmApp: number; vmaxApp: number }[]>([]);
+  const tickRef = useRef(0);
+
+  const outputs = useMemo(() => computeKinetics(vmax, km, inhibitorType, inhibitorConc, ki), [vmax, km, inhibitorType, inhibitorConc, ki]);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, outputs.kmApp, outputs.vmaxApp]);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -125,13 +139,13 @@ export default function SimuladorCineticaAvancada() {
       setInhibitorType(activeCase.inhibitorType as InhibitorType);
       setInhibitorConc(activeCase.inhibitorType !== "none" ? 5 : 0);
       setKi(5);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
-  const outputs = useMemo(() => computeKinetics(vmax, km, inhibitorType, inhibitorConc, ki), [vmax, km, inhibitorType, inhibitorConc, ki]);
-
   const handleFinish = useCallback(() => {
     if (!activeCase) return;
+    setRunning(false);
     const kmOk = outputs.kmApp >= activeCase.expectedKmApp[0] && outputs.kmApp <= activeCase.expectedKmApp[1];
     const vmOk = outputs.vmaxApp >= activeCase.expectedVmaxApp[0] && outputs.vmaxApp <= activeCase.expectedVmaxApp[1];
     const s = (kmOk ? 50 : 0) + (vmOk ? 50 : 0);
@@ -246,7 +260,10 @@ export default function SimuladorCineticaAvancada() {
                 <p className="text-xs text-muted-foreground">µmol/min</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+              <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -283,7 +300,26 @@ export default function SimuladorCineticaAvancada() {
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+           </Card>
+
+          {history.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="kmApp" name="Km aparente" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                    <Line type="monotone" dataKey="vmaxApp" name="Vmax aparente" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -296,7 +332,7 @@ export default function SimuladorCineticaAvancada() {
 
       <SimulatorChallengeMode
         challengeSet={getCineticaAvancadaChallenges()}
-        simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki }}
+        simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp }}
       />
     </div>
   );

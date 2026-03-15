@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +72,9 @@ export default function SimuladorOperonLac() {
   const [activeCase, setActiveCase] = useState<OperonCase | null>(null);
   const [glucose, setGlucose] = useState(50);
   const [lactose, setLactose] = useState(50);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; transcription: number; betaGal: number; camp: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -89,6 +92,7 @@ export default function SimuladorOperonLac() {
     if (activeCase) {
       setGlucose(activeCase.initialGlucose);
       setLactose(activeCase.initialLactose);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
@@ -126,6 +130,15 @@ export default function SimuladorOperonLac() {
     };
   }, [glucose, lactose]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, transcription: model.transcription, betaGal: model.betaGal, camp: model.camp }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.transcription, model.betaGal, model.camp]);
+
   // Time-course of gene expression when conditions change
   const expressionTimeline = useMemo(() => {
     const pts = [];
@@ -151,6 +164,7 @@ export default function SimuladorOperonLac() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
+    setRunning(false);
     const ok = model.transcription >= activeCase.expectedTranscription[0] && model.transcription <= activeCase.expectedTranscription[1];
     const s = ok ? 100 : Math.max(0, 100 - Math.abs(model.transcription - (activeCase.expectedTranscription[0] + activeCase.expectedTranscription[1]) / 2) * 2);
     submitResults({ score: Math.round(s), actions: { glucose, lactose, transcription: model.transcription } });
@@ -359,8 +373,29 @@ export default function SimuladorOperonLac() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
       </div>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal (Real-time)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="transcription" name="Transcrição (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="betaGal" name="β-Gal (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="camp" name="cAMP (%)" stroke="hsl(var(--chart-1))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
@@ -371,7 +406,7 @@ export default function SimuladorOperonLac() {
 
       <SimulatorChallengeMode
         challengeSet={getOperonLacChallenges()}
-        simulatorState={{ glucose, lactose }}
+        simulatorState={{ glucose, lactose, transcription: model.transcription }}
       />
     </div>
   );

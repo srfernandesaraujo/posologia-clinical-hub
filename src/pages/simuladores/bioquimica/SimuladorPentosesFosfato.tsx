@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,9 @@ export default function SimuladorPentosesFosfato() {
   const [g6pdDeficient, setG6pdDeficient] = useState(false);
   const [oxidantAgent, setOxidantAgent] = useState("primaquina");
   const [oxidantDose, setOxidantDose] = useState(50);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; hemolysis: number; membrane: number; heinz: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -101,6 +104,7 @@ export default function SimuladorPentosesFosfato() {
       setG6pdDeficient(activeCase.g6pdDeficient);
       setOxidantAgent(activeCase.oxidantAgent);
       setOxidantDose(activeCase.oxidantDose);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
@@ -124,6 +128,15 @@ export default function SimuladorPentosesFosfato() {
     };
   }, [g6pdDeficient, oxidantAgent, oxidantDose]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, hemolysis: model.hemolysis, membrane: model.membraneIntegrity, heinz: model.heinzBodies }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.hemolysis, model.membraneIntegrity, model.heinzBodies]);
+
   const pathwayData = [
     { name: "G6PD", normal: 100, atual: model.g6pdActivity },
     { name: "NADPH", normal: 90, atual: model.nadphProduction },
@@ -145,6 +158,7 @@ export default function SimuladorPentosesFosfato() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
+    setRunning(false);
     const hemOk = model.hemolysis >= activeCase.expectedHemolysis[0] && model.hemolysis <= activeCase.expectedHemolysis[1];
     const s = hemOk ? 100 : Math.max(0, 100 - Math.abs(model.hemolysis - (activeCase.expectedHemolysis[0] + activeCase.expectedHemolysis[1]) / 2) * 2);
     submitResults({ score: Math.round(s), actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
@@ -295,8 +309,29 @@ export default function SimuladorPentosesFosfato() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
       </div>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="hemolysis" name="Hemólise (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="membrane" name="Membrana (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="heinz" name="Heinz (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">

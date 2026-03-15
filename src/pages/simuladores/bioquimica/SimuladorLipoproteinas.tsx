@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -88,6 +88,9 @@ export default function SimuladorLipoproteinas() {
   const [lplActivity, setLPLActivity] = useState(80);
   const [ldlReceptor, setLDLReceptor] = useState(80);
   const [drugs, setDrugs] = useState({ statin: false, resin: false, ezetimibe: false, pcsk9i: false, fibrate: false });
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; ldl: number; hdl: number; tg: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -108,6 +111,7 @@ export default function SimuladorLipoproteinas() {
       setLPLActivity(activeCase.initialLPL);
       setLDLReceptor(activeCase.initialLDLReceptor);
       setDrugs(activeCase.drugs);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
@@ -156,6 +160,15 @@ export default function SimuladorLipoproteinas() {
     return { chylomicrons: Math.round(fatIntake * 0.8), vldl: Math.round(vldl), idl: Math.round(idl), ldlMgDl, hdlMgDl, tgMgDl, totalChol, effectiveReceptor: Math.round(effectiveReceptor), effectiveLPL: Math.round(effectiveLPL), risk };
   }, [fatIntake, lplActivity, ldlReceptor, drugs]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, ldl: model.ldlMgDl, hdl: model.hdlMgDl, tg: model.tgMgDl }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.ldlMgDl, model.hdlMgDl, model.tgMgDl]);
+
   const lipidData = [
     { name: "LDL-c", value: model.ldlMgDl, target: 100 },
     { name: "HDL-c", value: model.hdlMgDl, target: 50 },
@@ -173,6 +186,7 @@ export default function SimuladorLipoproteinas() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
+    setRunning(false);
     const ldlOk = model.ldlMgDl >= activeCase.expectedLDL[0] && model.ldlMgDl <= activeCase.expectedLDL[1];
     const s = ldlOk ? 100 : Math.max(0, 100 - Math.abs(model.ldlMgDl - (activeCase.expectedLDL[0] + activeCase.expectedLDL[1]) / 2));
     submitResults({ score: Math.round(s), actions: { fatIntake, lplActivity, ldlReceptor, drugs, ldlMgDl: model.ldlMgDl } });
@@ -329,8 +343,29 @@ export default function SimuladorLipoproteinas() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
       </div>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="ldl" name="LDL-c (mg/dL)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="hdl" name="HDL-c (mg/dL)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="tg" name="TG (mg/dL)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
@@ -341,7 +376,7 @@ export default function SimuladorLipoproteinas() {
 
       <SimulatorChallengeMode
         challengeSet={getLipoproteinasChallenges()}
-        simulatorState={{ fatIntake, lplActivity, ldlReceptor, ...drugs }}
+        simulatorState={{ fatIntake, lplActivity, ldlReceptor, ...drugs, ldlMgDl: model.ldlMgDl }}
       />
     </div>
   );

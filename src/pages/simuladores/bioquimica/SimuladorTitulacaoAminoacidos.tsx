@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +115,9 @@ export default function SimuladorTitulacaoAminoacidos() {
   const [activeCase, setActiveCase] = useState<TitrationCase | null>(null);
   const [selectedAA, setSelectedAA] = useState(0);
   const [currentpH, setCurrentpH] = useState(1.0);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; pH: number; charge: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -131,6 +134,7 @@ export default function SimuladorTitulacaoAminoacidos() {
     if (activeCase) {
       setSelectedAA(activeCase.aminoAcidIndex);
       setCurrentpH(activeCase.startpH);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
@@ -144,8 +148,18 @@ export default function SimuladorTitulacaoAminoacidos() {
     return closest;
   }, [curveData, currentpH]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pH: currentpH, charge: currentPoint.charge }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, currentpH, currentPoint.charge]);
+
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
+    setRunning(false);
     submitResults({ score: 100, actions: { aminoAcid: aa.name, currentpH } });
   }, [activeCase, aa, currentpH, submitted, submitResults]);
 
@@ -255,10 +269,10 @@ export default function SimuladorTitulacaoAminoacidos() {
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={curveData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="equivalents" label={{ value: "Equivalentes de OH⁻", position: "insideBottom", offset: -5 }} />
-                  <YAxis domain={[0, 14]} label={{ value: "pH", angle: -90, position: "insideLeft" }} />
-                  <Tooltip formatter={(v: number) => v.toFixed(2)} />
+               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="equivalents" label={{ value: "Equivalentes de OH⁻", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 14]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <ReferenceLine y={aa.pKa1} stroke="hsl(var(--chart-1))" strokeDasharray="5 5" label={{ value: `pKa1=${aa.pKa1}`, position: "right", fontSize: 10 }} />
                   <ReferenceLine y={aa.pKa2} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: `pKa2=${aa.pKa2}`, position: "right", fontSize: 10 }} />
                   {aa.pKaR && <ReferenceLine y={aa.pKaR} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" label={{ value: `pKaR=${aa.pKaR}`, position: "right", fontSize: 10 }} />}
@@ -275,10 +289,10 @@ export default function SimuladorTitulacaoAminoacidos() {
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={curveData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="pH" label={{ value: "pH", position: "insideBottom", offset: -5 }} />
-                  <YAxis label={{ value: "Carga", angle: -90, position: "insideLeft" }} />
-                  <Tooltip formatter={(v: number) => v.toFixed(2)} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="pH" label={{ value: "pH", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "Carga", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" />
                   <ReferenceLine x={aa.pI} stroke="hsl(var(--primary))" strokeDasharray="3 3" label={{ value: "pI", position: "top", fontSize: 10 }} />
                   <ReferenceLine x={currentpH} stroke="hsl(var(--destructive))" strokeWidth={2} />
@@ -291,8 +305,28 @@ export default function SimuladorTitulacaoAminoacidos() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
       </div>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="pH" name="pH" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="charge" name="Carga" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
@@ -303,7 +337,7 @@ export default function SimuladorTitulacaoAminoacidos() {
 
       <SimulatorChallengeMode
         challengeSet={getTitulacaoAminoacidosChallenges()}
-        simulatorState={{ selectedAA, currentpH }}
+        simulatorState={{ selectedAA, currentpH, charge: currentPoint.charge }}
       />
     </div>
   );
