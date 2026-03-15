@@ -326,7 +326,7 @@ export default function SimuladorPentosesFosfato() {
                 <Legend />
                 <Line type="monotone" dataKey="hemolysis" name="Hemólise (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="membrane" name="Membrana (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="heinz" name="Heinz (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="heinz" name="Heinz (%)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

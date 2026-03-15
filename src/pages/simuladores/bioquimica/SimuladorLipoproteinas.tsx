@@ -360,7 +360,7 @@ export default function SimuladorLipoproteinas() {
                 <Legend />
                 <Line type="monotone" dataKey="ldl" name="LDL-c (mg/dL)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="hdl" name="HDL-c (mg/dL)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="tg" name="TG (mg/dL)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="tg" name="TG (mg/dL)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

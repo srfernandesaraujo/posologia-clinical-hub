@@ -308,6 +308,25 @@ export default function SimuladorCicloUreia() {
         <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
       </div>
 
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="ammonia" name="Amônia (µmol/L)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="ureia" name="Ureia (%)" stroke="hsl(var(--foreground))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold text-primary mb-1">💡 Dica Clínica</p>

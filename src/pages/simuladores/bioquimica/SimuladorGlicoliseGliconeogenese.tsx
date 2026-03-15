@@ -141,6 +141,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase) return;
+    setRunning(false);
     const ok = outputs.dominantPathway === activeCase.expectedFlux;
     const s = ok ? 100 : 30;
     if (submitted) return;
@@ -293,7 +294,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
                 <Legend />
                 <Line type="monotone" dataKey="gly" name="Glicólise (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="gng" name="Gliconeogénese (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="glucose" name="Glicemia (mg/dL)" stroke="hsl(var(--accent-foreground))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="glucose" name="Glicemia (mg/dL)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

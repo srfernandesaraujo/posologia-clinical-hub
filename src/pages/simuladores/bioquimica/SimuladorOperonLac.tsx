@@ -389,8 +389,8 @@ export default function SimuladorOperonLac() {
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="transcription" name="Transcrição (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="betaGal" name="β-Gal (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="camp" name="cAMP (%)" stroke="hsl(var(--chart-1))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
+                <Line type="monotone" dataKey="betaGal" name="β-Gal (%)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="camp" name="cAMP (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={2} strokeDasharray="5 5" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

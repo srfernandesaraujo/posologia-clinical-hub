@@ -105,6 +105,34 @@ function computeTitrationCurve(aa: AminoAcid): { pH: number; equivalents: number
   return points;
 }
 
+function computeChargeAtPH(aa: AminoAcid, pH: number): number {
+  const alpha1 = 1 / (1 + Math.pow(10, pH - aa.pKa1));
+  const alpha2 = 1 / (1 + Math.pow(10, pH - aa.pKa2));
+  const alphaR = aa.pKaR ? 1 / (1 + Math.pow(10, pH - aa.pKaR)) : 0;
+
+  let charge = alpha2;
+  charge -= (1 - alpha1);
+
+  if (aa.pKaR) {
+    if (aa.sideChainType.includes("Ácido")) {
+      charge -= (1 - alphaR);
+    } else {
+      charge += alphaR;
+    }
+  }
+
+  return +charge.toFixed(2);
+}
+
+const TEMPORAL_LINE_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--destructive))",
+  "hsl(var(--foreground))",
+  "hsl(var(--muted-foreground))",
+];
+
+const getAminoHistoryKey = (index: number) => `aa_${index}`;
+
 export default function SimuladorTitulacaoAminoacidos() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -116,7 +144,8 @@ export default function SimuladorTitulacaoAminoacidos() {
   const [selectedAA, setSelectedAA] = useState(0);
   const [currentpH, setCurrentpH] = useState(1.0);
   const [running, setRunning] = useState(false);
-  const [history, setHistory] = useState<{ time: number; pH: number; charge: number }[]>([]);
+  const [history, setHistory] = useState<Array<{ time: number; pH: number; [key: string]: number }>>([]);
+  const [visibleAminoAcids, setVisibleAminoAcids] = useState<number[]>([0]);
   const tickRef = useRef(0);
 
   useEffect(() => {
@@ -133,6 +162,7 @@ export default function SimuladorTitulacaoAminoacidos() {
   useEffect(() => {
     if (activeCase) {
       setSelectedAA(activeCase.aminoAcidIndex);
+      setVisibleAminoAcids([activeCase.aminoAcidIndex]);
       setCurrentpH(activeCase.startpH);
       setRunning(false); setHistory([]); tickRef.current = 0;
     }
@@ -149,13 +179,24 @@ export default function SimuladorTitulacaoAminoacidos() {
   }, [curveData, currentpH]);
 
   useEffect(() => {
+    setVisibleAminoAcids(prev => (prev.includes(selectedAA) ? prev : [...prev, selectedAA]));
+  }, [selectedAA]);
+
+  useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
       tickRef.current += 1;
-      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pH: currentpH, charge: currentPoint.charge }]);
+      const snapshot = AMINO_ACIDS.reduce(
+        (acc, amino, index) => {
+          acc[getAminoHistoryKey(index)] = computeChargeAtPH(amino, currentpH);
+          return acc;
+        },
+        { time: tickRef.current, pH: currentpH } as { time: number; pH: number; [key: string]: number },
+      );
+      setHistory(prev => [...prev.slice(-59), snapshot]);
     }, 1000);
     return () => clearInterval(id);
-  }, [running, currentpH, currentPoint.charge]);
+  }, [running, currentpH]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
