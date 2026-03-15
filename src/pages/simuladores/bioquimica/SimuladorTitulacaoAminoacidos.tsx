@@ -269,9 +269,9 @@ export default function SimuladorTitulacaoAminoacidos() {
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={curveData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="equivalents" label={{ value: "Equivalentes de OH⁻", position: "insideBottom", offset: -5 }} />
-                  <YAxis domain={[0, 14]} label={{ value: "pH", angle: -90, position: "insideLeft" }} />
+               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="equivalents" label={{ value: "Equivalentes de OH⁻", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 14]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip formatter={(v: number) => v.toFixed(2)} />
                   <ReferenceLine y={aa.pKa1} stroke="hsl(var(--chart-1))" strokeDasharray="5 5" label={{ value: `pKa1=${aa.pKa1}`, position: "right", fontSize: 10 }} />
                   <ReferenceLine y={aa.pKa2} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: `pKa2=${aa.pKa2}`, position: "right", fontSize: 10 }} />
