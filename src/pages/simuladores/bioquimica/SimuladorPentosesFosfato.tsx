@@ -128,6 +128,15 @@ export default function SimuladorPentosesFosfato() {
     };
   }, [g6pdDeficient, oxidantAgent, oxidantDose]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, hemolysis: model.hemolysis, membrane: model.membraneIntegrity, heinz: model.heinzBodies }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.hemolysis, model.membraneIntegrity, model.heinzBodies]);
+
   const pathwayData = [
     { name: "G6PD", normal: 100, atual: model.g6pdActivity },
     { name: "NADPH", normal: 90, atual: model.nadphProduction },
