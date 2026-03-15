@@ -373,8 +373,29 @@ export default function SimuladorOperonLac() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleFinish} disabled={submitted}>Finalizar Simulação</Button>
+        <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
       </div>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Evolução Temporal (Real-time)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="transcription" name="Transcrição (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="betaGal" name="β-Gal (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="camp" name="cAMP (%)" stroke="hsl(var(--chart-1))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-4">
@@ -385,7 +406,7 @@ export default function SimuladorOperonLac() {
 
       <SimulatorChallengeMode
         challengeSet={getOperonLacChallenges()}
-        simulatorState={{ glucose, lactose }}
+        simulatorState={{ glucose, lactose, transcription: model.transcription }}
       />
     </div>
   );
