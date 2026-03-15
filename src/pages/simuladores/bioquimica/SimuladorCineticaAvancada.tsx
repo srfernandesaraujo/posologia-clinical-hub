@@ -105,6 +105,20 @@ export default function SimuladorCineticaAvancada() {
   const [inhibitorType, setInhibitorType] = useState<InhibitorType>("none");
   const [inhibitorConc, setInhibitorConc] = useState(0);
   const [ki, setKi] = useState(5);
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; kmApp: number; vmaxApp: number }[]>([]);
+  const tickRef = useRef(0);
+
+  const outputs = useMemo(() => computeKinetics(vmax, km, inhibitorType, inhibitorConc, ki), [vmax, km, inhibitorType, inhibitorConc, ki]);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, outputs.kmApp, outputs.vmaxApp]);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -125,13 +139,13 @@ export default function SimuladorCineticaAvancada() {
       setInhibitorType(activeCase.inhibitorType as InhibitorType);
       setInhibitorConc(activeCase.inhibitorType !== "none" ? 5 : 0);
       setKi(5);
+      setRunning(false); setHistory([]); tickRef.current = 0;
     }
   }, [activeCase]);
 
-  const outputs = useMemo(() => computeKinetics(vmax, km, inhibitorType, inhibitorConc, ki), [vmax, km, inhibitorType, inhibitorConc, ki]);
-
   const handleFinish = useCallback(() => {
     if (!activeCase) return;
+    setRunning(false);
     const kmOk = outputs.kmApp >= activeCase.expectedKmApp[0] && outputs.kmApp <= activeCase.expectedKmApp[1];
     const vmOk = outputs.vmaxApp >= activeCase.expectedVmaxApp[0] && outputs.vmaxApp <= activeCase.expectedVmaxApp[1];
     const s = (kmOk ? 50 : 0) + (vmOk ? 50 : 0);
