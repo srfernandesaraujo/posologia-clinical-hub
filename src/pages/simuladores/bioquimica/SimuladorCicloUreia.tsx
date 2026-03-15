@@ -101,18 +101,6 @@ export default function SimuladorCicloUreia() {
     }
   }, [activeCase]);
 
-  useEffect(() => {
-    if (!running) return;
-    const interval = setInterval(() => {
-      setTime(t => {
-        const newT = t + 1;
-        setHistory(prev => [...prev.slice(-59), { time: newT, ammonia: Math.round(model.ammoniaLevel), ureia: Math.round(model.ureiaOutput) }]);
-        return newT;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [running, model]);
-
   const toggleDeficiency = useCallback((key: string) => {
     setDeficiencies(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
   }, []);
