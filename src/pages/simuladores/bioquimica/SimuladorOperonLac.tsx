@@ -300,10 +300,10 @@ export default function SimuladorOperonLac() {
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={expressionTimeline}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="tempo" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="tempo" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="betaGal" name="β-Galactosidase (%)" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="permease" name="Permease (%)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />

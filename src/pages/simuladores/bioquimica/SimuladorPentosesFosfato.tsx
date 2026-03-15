@@ -279,10 +279,10 @@ export default function SimuladorPentosesFosfato() {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={damageTimeline}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hora" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="hemoglobina" name="Hb (g/dL)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="reticulocitos" name="Reticulócitos (%)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />

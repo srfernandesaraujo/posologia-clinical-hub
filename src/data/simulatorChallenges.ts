@@ -371,7 +371,7 @@ export function getTitulacaoAminoacidosChallenges(): ChallengeSet {
 
 export function getOperonLacChallenges(): ChallengeSet {
   return {
-    title: "Desafio: Operão Lac",
+    title: "Desafio: Operon Lac",
     description: "Regulação genética bacteriana, repressão catabólica, indução e mutações.",
     challenges: [
       { type: "mcq", question: "O operão lac codifica enzimas para:", options: ["Síntese de lactose", "Metabolismo da lactose (β-galactosidase, permease, transacetilase)", "Síntese de triptofano", "Replicação do DNA"], correctIndex: 1, explanation: "lacZ (β-galactosidase: hidrolisa lactose), lacY (permease: importa lactose), lacA (transacetilase). Organizados em operão policistrónico.", reference: "Lehninger, Cap. 28" },
