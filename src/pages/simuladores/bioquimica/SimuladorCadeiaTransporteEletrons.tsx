@@ -43,7 +43,7 @@ const BUILT_IN_CASES: ETCCase[] = [
     initialNADH: 80, initialFADH2: 60,
     inhibitors: { rotenone: false, antimycinA: false, cyanide: true, dnp: false },
     expectedATP: [0, 5],
-    clinicalTip: "O cianeto liga-se ao Fe³⁺ do citocromo a3 (Complexo IV), impedindo a transferência de eletrões ao O₂. Tratamento: hidroxocobalamina ou nitrito de sódio + tiossulfato.",
+    clinicalTip: "O cianeto liga-se ao Fe³⁺ do citocromo a3 (Complexo IV), impedindo a transferência de elétrons ao O₂. Tratamento: hidroxocobalamina ou nitrito de sódio + tiossulfato.",
   },
   {
     title: "Desacoplamento por DNP",
