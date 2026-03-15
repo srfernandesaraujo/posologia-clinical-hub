@@ -246,7 +246,10 @@ export default function SimuladorCineticaAvancada() {
                 <p className="text-xs text-muted-foreground">µmol/min</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+              <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
+            </div>
           </CardContent>
         </Card>
 
