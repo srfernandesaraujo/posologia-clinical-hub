@@ -232,7 +232,7 @@ export default function SimuladorOperonLac() {
 
           {/* DNA Diagram */}
           <Card>
-            <CardHeader><CardTitle className="text-lg">Estrutura do Operão</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Estrutura do Operon</CardTitle></CardHeader>
             <CardContent>
               <div className="text-xs font-mono space-y-2">
                 <div className="flex gap-1 items-center">
