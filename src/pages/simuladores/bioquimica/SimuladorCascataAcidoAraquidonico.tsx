@@ -85,6 +85,9 @@ export default function SimuladorCascataAcidoAraquidonico() {
   const [activeCase, setActiveCase] = useState<AACase | null>(null);
   const [stimulus, setStimulus] = useState(70);
   const [drugs, setDrugs] = useState({ aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false });
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<{ time: number; pge2: number; txa2: number; inflammation: number }[]>([]);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
