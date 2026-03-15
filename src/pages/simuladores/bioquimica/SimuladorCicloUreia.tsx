@@ -78,6 +78,9 @@ export default function SimuladorCicloUreia() {
 
   const [activeCase, setActiveCase] = useState<UreaCycleCase | null>(null);
   const [deficiencies, setDeficiencies] = useState({ cpsI: false, otc: false, ass: false, asl: false, arginase: false });
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
