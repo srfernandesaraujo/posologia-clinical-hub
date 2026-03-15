@@ -115,8 +115,21 @@ export default function SimuladorDissociacaoHemoglobina() {
     if (activeCase) {
       setPH(activeCase.initialPH); setPCO2(activeCase.initialPCO2);
       setTemp(activeCase.initialTemp); setBPG(activeCase.initialBPG);
+      setRunning(false); setP50History([]); setTime(0);
     }
   }, [activeCase]);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTime(t => {
+        const newT = t + 1;
+        setP50History(prev => [...prev.slice(-59), { time: newT, p50, pH, pCO2, temp, bpg }]);
+        return newT;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, p50, pH, pCO2, temp, bpg]);
 
   const p50 = useMemo(() => computeP50(pH, pCO2, temp, bpg), [pH, pCO2, temp, bpg]);
   const curveData = useMemo(() => generateCurveData(p50), [p50]);
