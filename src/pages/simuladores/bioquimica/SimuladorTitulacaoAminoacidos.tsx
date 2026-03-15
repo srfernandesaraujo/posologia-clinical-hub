@@ -272,7 +272,7 @@ export default function SimuladorTitulacaoAminoacidos() {
                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="equivalents" label={{ value: "Equivalentes de OH⁻", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                   <YAxis domain={[0, 14]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip formatter={(v: number) => v.toFixed(2)} />
+                  <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <ReferenceLine y={aa.pKa1} stroke="hsl(var(--chart-1))" strokeDasharray="5 5" label={{ value: `pKa1=${aa.pKa1}`, position: "right", fontSize: 10 }} />
                   <ReferenceLine y={aa.pKa2} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: `pKa2=${aa.pKa2}`, position: "right", fontSize: 10 }} />
                   {aa.pKaR && <ReferenceLine y={aa.pKaR} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" label={{ value: `pKaR=${aa.pKaR}`, position: "right", fontSize: 10 }} />}
