@@ -325,7 +325,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
 
       <SimulatorChallengeMode
         challengeSet={getCascataAcidoAraquidonicoChallenges()}
-        simulatorState={{ stimulus, ...drugs }}
+        simulatorState={{ stimulus, ...drugs, pge2: model.pge2 }}
       />
     </div>
   );

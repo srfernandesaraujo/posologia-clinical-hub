@@ -276,7 +276,7 @@ export default function SimuladorOperonLac() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Produtos do Operão</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Produtos do Operon</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-3 text-center mb-4">
                 <div>

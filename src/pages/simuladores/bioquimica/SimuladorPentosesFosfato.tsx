@@ -307,7 +307,7 @@ export default function SimuladorPentosesFosfato() {
 
       <SimulatorChallengeMode
         challengeSet={getPentosesFosfatoChallenges()}
-        simulatorState={{ g6pdDeficient, oxidantAgent, oxidantDose }}
+        simulatorState={{ g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis }}
       />
     </div>
   );

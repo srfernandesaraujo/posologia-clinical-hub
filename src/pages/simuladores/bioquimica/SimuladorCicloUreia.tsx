@@ -120,6 +120,18 @@ export default function SimuladorCicloUreia() {
     return { levels, ammoniaLevel, toxicity, ureiaOutput: levels.ureia };
   }, [deficiencies]);
 
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTime(t => {
+        const newT = t + 1;
+        setHistory(prev => [...prev.slice(-59), { time: newT, ammonia: Math.round(model.ammoniaLevel), ureia: Math.round(model.ureiaOutput) }]);
+        return newT;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, model]);
+
   const barData = [
     { name: "NH₃", value: Math.round(model.levels.nh3) },
     { name: "Carb-P", value: Math.round(model.levels.carbamilP) },
