@@ -263,10 +263,10 @@ export default function SimuladorOperonLac() {
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={regulationData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
