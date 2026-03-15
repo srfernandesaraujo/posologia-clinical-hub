@@ -312,7 +312,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
                 <Legend />
                 <Line type="monotone" dataKey="atpRate" name="ATP (mol/s)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="gradient" name="Gradiente H⁺" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="o2Consumption" name="Consumo O₂ (%)" stroke="hsl(var(--accent-foreground))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="o2Consumption" name="Consumo O₂ (%)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
