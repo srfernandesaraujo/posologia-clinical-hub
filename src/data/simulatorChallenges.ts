@@ -200,7 +200,7 @@ export function getADMEChallenges(): ChallengeSet {
 
 export function getCadeiaTransporteEletronsChallenges(): ChallengeSet {
   return {
-    title: "Desafio: Cadeia de Transporte de Eletrões",
+    title: "Desafio: Cadeia de Transporte de Elétrons",
     description: "Fosforilação oxidativa, inibidores, desacopladores e produção de ATP mitocondrial.",
     challenges: [
       { type: "mcq", question: "Quantos ATP são produzidos por cada NADH na fosforilação oxidativa?", options: ["1.5", "2.5", "3.0", "4.0"], correctIndex: 1, explanation: "Cada NADH gera ~2.5 ATP (10 H⁺ bombeados, ~4 H⁺ por ATP). FADH2 entra no Complexo II e gera ~1.5 ATP.", reference: "Lehninger, Cap. 19" },
