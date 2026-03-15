@@ -290,10 +290,10 @@ export default function SimuladorCicloUreia() {
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={neuroData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hora" />
-              <YAxis />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
               <Line type="monotone" dataKey="amonia" name="NH₃ (µmol/L)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="edema" name="Edema Cerebral (%)" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
