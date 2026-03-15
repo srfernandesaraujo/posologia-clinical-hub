@@ -219,7 +219,10 @@ export default function SimuladorDissociacaoHemoglobina() {
                 <p className="text-lg font-bold">{shift}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+              <Button variant="outline" onClick={handleFinish} disabled={(!running && p50History.length === 0) || submitted}>Finalizar</Button>
+            </div>
           </CardContent>
         </Card>
 
