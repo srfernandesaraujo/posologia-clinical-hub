@@ -160,6 +160,15 @@ export default function SimuladorLipoproteinas() {
     return { chylomicrons: Math.round(fatIntake * 0.8), vldl: Math.round(vldl), idl: Math.round(idl), ldlMgDl, hdlMgDl, tgMgDl, totalChol, effectiveReceptor: Math.round(effectiveReceptor), effectiveLPL: Math.round(effectiveLPL), risk };
   }, [fatIntake, lplActivity, ldlReceptor, drugs]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, ldl: model.ldlMgDl, hdl: model.hdlMgDl, tg: model.tgMgDl }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, model.ldlMgDl, model.hdlMgDl, model.tgMgDl]);
+
   const lipidData = [
     { name: "LDL-c", value: model.ldlMgDl, target: 100 },
     { name: "HDL-c", value: model.hdlMgDl, target: 50 },
