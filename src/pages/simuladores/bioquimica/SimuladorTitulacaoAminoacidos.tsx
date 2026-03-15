@@ -148,8 +148,18 @@ export default function SimuladorTitulacaoAminoacidos() {
     return closest;
   }, [curveData, currentpH]);
 
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      setHistory(prev => [...prev.slice(-59), { time: tickRef.current, pH: currentpH, charge: currentPoint.charge }]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, currentpH, currentPoint.charge]);
+
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
+    setRunning(false);
     submitResults({ score: 100, actions: { aminoAcid: aa.name, currentpH } });
   }, [activeCase, aa, currentpH, submitted, submitResults]);
 
