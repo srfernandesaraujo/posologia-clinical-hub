@@ -78,7 +78,20 @@ function computeETC(nadh: number, fadh2: number, inhibitors: { rotenone: boolean
   let c3 = inhibitors.antimycinA ? 0 : Math.min(c1 * 0.8 + c2 * 0.5, 1);
   let c4 = inhibitors.cyanide ? 0 : c3 * 0.9;
 
-  // Proton gradient
+  // If chain is blocked downstream, upstream complexes back up
+  if (inhibitors.antimycinA) {
+    c3 = 0;
+    c4 = 0;
+    c1 = inhibitors.rotenone ? 0 : n * 0.2;
+  }
+
+  if (inhibitors.cyanide) {
+    c4 = 0;
+    c3 = 0;
+    c1 = inhibitors.rotenone ? 0 : n * 0.1;
+  }
+
+  // Proton gradient (must be calculated after inhibitor effects)
   const pumpedProtons = (c1 * 4 + c3 * 4 + c4 * 2); // H+ per electron pair
   const uncoupling = inhibitors.dnp ? 0.85 : 0;
   const gradient = Math.max(0, pumpedProtons * (1 - uncoupling));
@@ -86,14 +99,6 @@ function computeETC(nadh: number, fadh2: number, inhibitors: { rotenone: boolean
   // ATP synthesis
   const atpRate = gradient * 3.5; // ATP per unit time
   const o2Consumption = c4 > 0 ? (c1 + c2 * 0.5) * 50 : 0;
-
-  // If chain is blocked downstream, upstream complexes back up
-  if (inhibitors.cyanide) {
-    c3 = 0; c1 = inhibitors.rotenone ? 0 : n * 0.1;
-  }
-  if (inhibitors.antimycinA) {
-    c1 = inhibitors.rotenone ? 0 : n * 0.2;
-  }
 
   return {
     complex1: +(c1 * 100).toFixed(0),
