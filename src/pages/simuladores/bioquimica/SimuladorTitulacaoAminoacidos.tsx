@@ -105,6 +105,34 @@ function computeTitrationCurve(aa: AminoAcid): { pH: number; equivalents: number
   return points;
 }
 
+function computeChargeAtPH(aa: AminoAcid, pH: number): number {
+  const alpha1 = 1 / (1 + Math.pow(10, pH - aa.pKa1));
+  const alpha2 = 1 / (1 + Math.pow(10, pH - aa.pKa2));
+  const alphaR = aa.pKaR ? 1 / (1 + Math.pow(10, pH - aa.pKaR)) : 0;
+
+  let charge = alpha2;
+  charge -= (1 - alpha1);
+
+  if (aa.pKaR) {
+    if (aa.sideChainType.includes("Ácido")) {
+      charge -= (1 - alphaR);
+    } else {
+      charge += alphaR;
+    }
+  }
+
+  return +charge.toFixed(2);
+}
+
+const TEMPORAL_LINE_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--destructive))",
+  "hsl(var(--foreground))",
+  "hsl(var(--muted-foreground))",
+];
+
+const getAminoHistoryKey = (index: number) => `aa_${index}`;
+
 export default function SimuladorTitulacaoAminoacidos() {
   const navigate = useNavigate();
   const location = useLocation();
