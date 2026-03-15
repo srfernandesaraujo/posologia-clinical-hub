@@ -55,7 +55,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Mutação no Operador — Operão Constitutivo",
     difficulty: "Difícil",
     patient: { name: "Exercício 3", age: 0, weight: 0, diagnosis: "Mutação Oc (operador constitutivo)" },
-    scenario: "Mutação no operador (Oc) que impede a ligação do repressor LacI. O operão é transcrito constitutivamente, independentemente da presença de lactose. Apenas a regulação positiva por CAP-cAMP persiste.",
+    scenario: "Mutação no operador (Oc) que impede a ligação do repressor LacI. O operon é transcrito constitutivamente, independentemente da presença de lactose. Apenas a regulação positiva por CAP-cAMP persiste.",
     initialGlucose: 50, initialLactose: 0,
     expectedTranscription: [20, 60],
     clinicalTip: "Mutações Oc no operador são cis-dominantes: afetam apenas os genes no mesmo cromossoma. Em diplóides parciais (F'/chromossome), o alelo Oc afeta apenas a cópia adjacente do operão.",
