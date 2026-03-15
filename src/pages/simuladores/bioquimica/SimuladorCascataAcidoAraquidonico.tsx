@@ -344,7 +344,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
                 <Legend />
                 <Line type="monotone" dataKey="pge2" name="PGE2 (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="txa2" name="TXA2 (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="inflammation" name="Inflamação (%)" stroke="hsl(var(--chart-3))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="inflammation" name="Inflamação (%)" stroke="hsl(var(--foreground))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

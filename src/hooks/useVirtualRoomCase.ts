@@ -58,7 +58,11 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     timeSpentSeconds?: number;
   }) => {
     const ctx = roomCtxRef.current;
-    if (!ctx || submitted) return;
+    if (submitted) return;
+    if (!ctx) {
+      setSubmitted(true);
+      return;
+    }
 
     try {
       const { error } = await supabase.from("room_submissions").insert({

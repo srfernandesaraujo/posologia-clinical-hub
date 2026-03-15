@@ -142,6 +142,7 @@ export default function SimuladorDissociacaoHemoglobina() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase) return;
+    setRunning(false);
     const ok = p50 >= activeCase.expectedP50[0] && p50 <= activeCase.expectedP50[1];
     const s = ok ? 100 : Math.max(0, 100 - Math.abs(p50 - (activeCase.expectedP50[0] + activeCase.expectedP50[1]) / 2) * 8);
     if (submitted) return;
