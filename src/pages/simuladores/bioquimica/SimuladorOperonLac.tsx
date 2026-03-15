@@ -46,7 +46,7 @@ const BUILT_IN_CASES: OperonCase[] = [
     title: "Indução Máxima — Lactose sem Glicose",
     difficulty: "Fácil",
     patient: { name: "Exercício 2", age: 0, weight: 0, diagnosis: "Condições de indução máxima do operão lac" },
-    scenario: "Meio com lactose mas sem glicose. O cAMP está elevado (CAP ativo), e a alolactose (derivada da lactose) liga-se ao repressor LacI, causando a desrepressão máxima do operão.",
+    scenario: "Meio com lactose mas sem glicose. O cAMP está elevado (CAP ativo), e a alolactose (derivada da lactose) liga-se ao repressor LacI, causando a desrepressão máxima do operon.",
     initialGlucose: 0, initialLactose: 80,
     expectedTranscription: [80, 100],
     clinicalTip: "Para expressão máxima do operão lac são necessárias DUAS condições simultâneas: 1) ausência de glicose (↑cAMP → CAP ativo) e 2) presença de lactose (alolactose desreprime LacI).",
