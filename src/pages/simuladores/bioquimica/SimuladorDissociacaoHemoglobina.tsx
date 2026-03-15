@@ -122,6 +122,10 @@ export default function SimuladorDissociacaoHemoglobina() {
     }
   }, [activeCase]);
 
+  const p50 = useMemo(() => computeP50(pH, pCO2, temp, bpg), [pH, pCO2, temp, bpg]);
+  const curveData = useMemo(() => generateCurveData(p50), [p50]);
+  const normalCurve = useMemo(() => generateCurveData(26.6), []);
+
   useEffect(() => {
     if (!running) return;
     const interval = setInterval(() => {
@@ -133,10 +137,6 @@ export default function SimuladorDissociacaoHemoglobina() {
     }, 1000);
     return () => clearInterval(interval);
   }, [running, p50, pH, pCO2, temp, bpg]);
-
-  const p50 = useMemo(() => computeP50(pH, pCO2, temp, bpg), [pH, pCO2, temp, bpg]);
-  const curveData = useMemo(() => generateCurveData(p50), [p50]);
-  const normalCurve = useMemo(() => generateCurveData(26.6), []);
 
   const shift = p50 > 28 ? "Direita ➡️" : p50 < 25 ? "⬅️ Esquerda" : "Normal";
 
