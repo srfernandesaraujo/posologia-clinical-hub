@@ -317,7 +317,7 @@ export default function SimuladorCicloUreia() {
 
       <SimulatorChallengeMode
         challengeSet={getCicloUreiaChallenges()}
-        simulatorState={{ ...deficiencies }}
+        simulatorState={{ ...deficiencies, ammonia: Math.round(model.ammoniaLevel) }}
       />
     </div>
   );
