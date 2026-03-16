@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye, Trash2, RotateCcw, Archive } from "lucide-react";
@@ -479,6 +479,38 @@ export default function Analytics() {
       return data;
     },
   });
+
+  // ── Realtime: auto-refresh when new submissions or participants arrive ──
+  const allRoomIds = rooms.map((r: any) => r.id);
+  useEffect(() => {
+    if (allRoomIds.length === 0) return;
+
+    const channel = supabase
+      .channel("analytics-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_submissions" },
+        (payload) => {
+          if (allRoomIds.includes(payload.new.room_id)) {
+            queryClient.invalidateQueries({ queryKey: ["analytics-submissions"] });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_participants" },
+        (payload) => {
+          if (allRoomIds.includes(payload.new.room_id)) {
+            queryClient.invalidateQueries({ queryKey: ["analytics-participants"] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [allRoomIds.join(","), queryClient]);
 
   const totalStudents = allParticipants.length;
   const totalSubmissions = allSubmissions.length;
