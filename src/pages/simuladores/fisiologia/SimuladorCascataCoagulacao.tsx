@@ -108,6 +108,9 @@ export default function SimuladorCascataCoagulacao() {
 
   const [activeCase, setActiveCase] = useState<CoagCase | null>(null);
   const [disabledFactors, setDisabledFactors] = useState<Set<string>>(new Set());
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
