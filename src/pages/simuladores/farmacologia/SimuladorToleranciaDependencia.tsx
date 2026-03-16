@@ -87,12 +87,17 @@ export default function SimuladorToleranciaDependencia() {
     if (!activeCase || submitted) return 0;
     const ok = weeksOfUse >= activeCase.expectedWeeks[0] && weeksOfUse <= activeCase.expectedWeeks[1];
     const s = ok ? 100 : 30;
+    setLastScore(s);
     submitResults({ score: s, actions: { drugClass, weeksOfUse, doseEscalation } });
     return s;
   }, [activeCase, drugClass, weeksOfUse, doseEscalation, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugClass: c.drugClass ?? "opioide", expectedWeeks: c.expectedWeeks ?? [4, 12], clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
