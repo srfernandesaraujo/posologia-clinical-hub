@@ -74,6 +74,9 @@ export default function SimuladorToleranciaDependencia() {
   const [drugClass, setDrugClass] = useState<DrugClass>("opioide");
   const [weeksOfUse, setWeeksOfUse] = useState(8);
   const [doseEscalation, setDoseEscalation] = useState(50);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugClass: cd.drugClass ?? "opioide", expectedWeeks: cd.expectedWeeks ?? [4, 12], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDrugClass(activeCase.drugClass); setWeeksOfUse(8); setDoseEscalation(50); } }, [activeCase]);
