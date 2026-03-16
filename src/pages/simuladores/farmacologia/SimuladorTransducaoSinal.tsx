@@ -73,10 +73,12 @@ export default function SimuladorTransducaoSinal() {
   }, [selectedReceptor, agonistConc, blockStep, blockIntensity]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const receptorOk = selectedReceptor === activeCase.targetReceptor;
     const blockOk = activeCase.expectedBlockStep < 0 ? blockStep < 0 : blockStep === activeCase.expectedBlockStep;
-    submitResults({ score: (receptorOk ? 60 : 0) + (blockOk ? 40 : 0), actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });
+    const s = (receptorOk ? 60 : 0) + (blockOk ? 40 : 0);
+    submitResults({ score: s, actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });
+    return s;
   }, [activeCase, selectedReceptor, blockStep, agonistConc, blockIntensity, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, targetReceptor: c.targetReceptor ?? "gpcr-gs", expectedBlockStep: c.expectedBlockStep ?? -1, clinicalTip: c.clinicalTip ?? "" });
