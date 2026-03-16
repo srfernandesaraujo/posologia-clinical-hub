@@ -147,7 +147,7 @@ export default function SimuladorTransducaoSinal() {
               </div>
               {blockStep >= 0 && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">Intensidade do bloqueio</label><span className="text-sm font-bold text-destructive">{blockIntensity}%</span></div><Slider value={[blockIntensity]} onValueChange={([v]) => setBlockIntensity(v)} min={0} max={100} step={5} /></div>)}
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
