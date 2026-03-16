@@ -625,6 +625,38 @@ export default function SalasVirtuais() {
                               />
                             </div>
                           )}
+
+                          {/* Challenge customization - for simulators only */}
+                          {act.simulatorSlug && toolType === "simulator" && (
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button
+                                variant={act.customChallenges ? "default" : "outline"}
+                                size="sm"
+                                className="gap-1.5 text-xs"
+                                onClick={() => setChallengeEditorIndex(i)}
+                              >
+                                {act.customChallenges ? (
+                                  <><Edit3 className="h-3 w-3" />Editar Desafio Customizado ({act.customChallenges.challenges?.length || 0} questões)</>
+                                ) : (
+                                  <><Target className="h-3 w-3" />Customizar Desafio</>
+                                )}
+                              </Button>
+                              {act.customChallenges && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-destructive"
+                                  onClick={() => {
+                                    const copy = [...activities];
+                                    copy[i] = { ...copy[i], customChallenges: null };
+                                    setActivities(copy);
+                                  }}
+                                >
+                                  <X className="h-3 w-3 mr-1" />Remover
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
