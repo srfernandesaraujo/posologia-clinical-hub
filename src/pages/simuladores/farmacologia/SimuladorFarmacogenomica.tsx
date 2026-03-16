@@ -80,6 +80,9 @@ export default function SimuladorFarmacogenomica() {
   const [phenotype, setPhenotype] = useState<Phenotype>("extensivo");
   const [dose, setDose] = useState(100);
   const [drugType, setDrugType] = useState<DrugType>("pro-farmaco");
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setPhenotype("extensivo"); setDose(100); setDrugType(activeCase.drugType); } }, [activeCase]);
