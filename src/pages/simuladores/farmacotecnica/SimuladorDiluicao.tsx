@@ -79,13 +79,15 @@ export default function SimuladorDiluicao() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<DilCase | null>(null);
   const [c1, setC1] = useState(1);
   const [v1, setV1] = useState(1);
   const [v2, setV2] = useState(10);
   const [mode, setMode] = useState<"simple" | "serial" | "isotony">("simple");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
