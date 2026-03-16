@@ -82,9 +82,11 @@ export default function SimuladorToleranciaDependencia() {
   const points = useMemo(() => generateToleranceCurve(drugClass, weeksOfUse, doseEscalation), [drugClass, weeksOfUse, doseEscalation]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = weeksOfUse >= activeCase.expectedWeeks[0] && weeksOfUse <= activeCase.expectedWeeks[1];
-    submitResults({ score: ok ? 100 : 30, actions: { drugClass, weeksOfUse, doseEscalation } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { drugClass, weeksOfUse, doseEscalation } });
+    return s;
   }, [activeCase, drugClass, weeksOfUse, doseEscalation, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugClass: c.drugClass ?? "opioide", expectedWeeks: c.expectedWeeks ?? [4, 12], clinicalTip: c.clinicalTip ?? "" });
