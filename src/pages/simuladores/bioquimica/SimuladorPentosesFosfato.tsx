@@ -171,6 +171,21 @@ export default function SimuladorPentosesFosfato() {
     return s;
   }, [activeCase, model, g6pdDeficient, oxidantAgent, oxidantDose, submitted, submitResults]);
 
+  // Auto-submit when challenge completed in virtual room
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
+
+  // Auto-redirect after 15s
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => {
     setActiveCase({
       id: c.id, title: c.title, difficulty: c.difficulty, isAI: true,
