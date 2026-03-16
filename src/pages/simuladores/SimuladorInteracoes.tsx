@@ -145,10 +145,16 @@ async function fetchInteractions(rxcuis: string[]): Promise<Interaction[]> {
 /* ─── Component ─── */
 export default function SimuladorInteracoes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { allCases, generateCase, isGenerating } = useSimulatorCases("interacoes", BUILT_IN_CASES);
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("interacoes", BUILT_IN_CASES);
 
   // Dashboard vs simulator
   const [activeCase, setActiveCase] = useState<any | null>(null);
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   // Simulator state
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
@@ -160,6 +166,48 @@ export default function SimuladorInteracoes() {
   const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>([]);
   const [showScenario, setShowScenario] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+
+  // Auto-start for virtual rooms
+  useEffect(() => {
+    if (isVR && virtualRoomCase && !vrAutoStarted) {
+      setVrAutoStarted(true);
+      const c = virtualRoomCase as any;
+      setActiveCase(c);
+      // Pre-load drugs if available
+      if (c.drugs && Array.isArray(c.drugs)) {
+        (async () => {
+          const drugs: Drug[] = [];
+          for (const name of c.drugs) {
+            const results = await fetchDrugSuggestions(name);
+            if (results.length > 0) drugs.push(results[0]);
+          }
+          setSelectedDrugs(drugs);
+        })();
+      }
+      if (c.comorbidities && Array.isArray(c.comorbidities)) {
+        setSelectedComorbidities(c.comorbidities);
+      }
+    }
+  }, [isVR, virtualRoomCase, vrAutoStarted]);
+
+  // Auto-submit when interactions are loaded in VR
+  useEffect(() => {
+    if (isVR && !vrSubmitted && interactions.length > 0 && selectedDrugs.length >= 2) {
+      const highCount = interactions.filter(i => i.severity === "high").length;
+      const score = highCount === 0 ? 90 : 70;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugs: selectedDrugs.map(d => d.name), interactionsFound: interactions.length, highSeverity: highCount } });
+    }
+  }, [interactions, isVR, vrSubmitted, selectedDrugs]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
 
   // Debounced search
   useEffect(() => {
