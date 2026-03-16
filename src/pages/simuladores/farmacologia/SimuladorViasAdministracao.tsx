@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -75,7 +76,7 @@ export default function SimuladorViasAdministracao() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<VACase | null>(null);
   const [dose, setDose] = useState(100);
@@ -83,7 +84,7 @@ export default function SimuladorViasAdministracao() {
   const [elimRate, setElimRate] = useState(5);
   const [enabledRoutes, setEnabledRoutes] = useState<string[]>(["iv-bolus", "oral"]);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, expectedRoute: cd.expectedRoute ?? "oral", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedRoute: cd.expectedRoute ?? "oral", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDose(100); setBioFactor(100); setElimRate(5); setEnabledRoutes(["iv-bolus", "oral"]); } }, [activeCase]);
 
   const points = useMemo(() => generatePKProfiles(dose, enabledRoutes, bioFactor, elimRate), [dose, enabledRoutes, bioFactor, elimRate]);
@@ -91,9 +92,11 @@ export default function SimuladorViasAdministracao() {
   const toggleRoute = (key: string) => setEnabledRoutes(prev => prev.includes(key) ? prev.filter(r => r !== key) : [...prev, key]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = enabledRoutes.includes(activeCase.expectedRoute);
-    submitResults({ score: ok ? 100 : 30, actions: { dose, bioFactor, elimRate, enabledRoutes } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { dose, bioFactor, elimRate, enabledRoutes } });
+    return s;
   }, [activeCase, enabledRoutes, dose, bioFactor, elimRate, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedRoute: c.expectedRoute ?? "oral", clinicalTip: c.clinicalTip ?? "" });
@@ -144,7 +147,7 @@ export default function SimuladorViasAdministracao() {
               <p className="text-sm font-semibold">Vias de Administração</p>
               {ROUTES.map(r => (<div key={r.key} className="flex items-center justify-between"><label className="text-sm">{r.label} (F={r.bioavail}%)</label><Switch checked={enabledRoutes.includes(r.key)} onCheckedChange={() => toggleRoute(r.key)} /></div>))}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

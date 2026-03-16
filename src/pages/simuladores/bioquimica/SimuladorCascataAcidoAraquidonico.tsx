@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, Flame } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -80,7 +81,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<AACase | null>(null);
   const [stimulus, setStimulus] = useState(70);
@@ -91,9 +92,9 @@ export default function SimuladorCascataAcidoAraquidonico() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario, initialStimulus: cd.initialStimulus ?? 70,
         drugs: cd.drugs ?? { aspirin: false, ibuprofen: false, celecoxib: false, corticosteroid: false, zileuton: false, montelukast: false },
         expectedPGE2: cd.expectedPGE2 ?? [10, 50], clinicalTip: cd.clinicalTip ?? "",
@@ -162,11 +163,12 @@ export default function SimuladorCascataAcidoAraquidonico() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     const pge2Ok = model.pge2 >= activeCase.expectedPGE2[0] && model.pge2 <= activeCase.expectedPGE2[1];
-    const s = pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2);
-    submitResults({ score: Math.round(s), actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+    const s = Math.round(pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2));
+    submitResults({ score: s, actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+    return s;
   }, [activeCase, model, stimulus, drugs, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -328,7 +330,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
 
       <div className="flex gap-2">
         <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
+        <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={() => handleFinish()} fallbackLabel="Finalizar" />
       </div>
 
       {history.length > 0 && (

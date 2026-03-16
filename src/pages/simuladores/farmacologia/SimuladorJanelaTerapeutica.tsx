@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -51,22 +52,24 @@ export default function SimuladorJanelaTerapeutica() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<JTCase | null>(null);
   const [dose, setDose] = useState(30);
   const [de50, setDE50] = useState(30);
   const [dl50, setDL50] = useState(65);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, drugName: cd.drugName ?? "", de50: cd.de50 ?? 30, dl50: cd.dl50 ?? 65, expectedDose: cd.expectedDose ?? [20, 40], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugName: cd.drugName ?? "", de50: cd.de50 ?? 30, dl50: cd.dl50 ?? 65, expectedDose: cd.expectedDose ?? [20, 40], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDose(activeCase.de50); setDE50(activeCase.de50); setDL50(activeCase.dl50); } }, [activeCase]);
 
   const { points, it } = useMemo(() => generatePopulationCurves(de50, dl50, dose), [de50, dl50, dose]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = dose >= activeCase.expectedDose[0] && dose <= activeCase.expectedDose[1];
-    submitResults({ score: ok ? 100 : 30, actions: { dose, de50, dl50, it } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { dose, de50, dl50, it } });
+    return s;
   }, [activeCase, dose, de50, dl50, it, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugName: c.drugName ?? "", de50: c.de50 ?? 30, dl50: c.dl50 ?? 65, expectedDose: c.expectedDose ?? [20, 40], clinicalTip: c.clinicalTip ?? "" });
@@ -113,7 +116,7 @@ export default function SimuladorJanelaTerapeutica() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose administrada</label><span className="text-sm font-bold">{dose}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={0} max={100} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DE50</label><span className="text-sm font-bold">{de50}</span></div><Slider value={[de50]} onValueChange={([v]) => setDE50(v)} min={5} max={80} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DL50</label><span className="text-sm font-bold">{dl50}</span></div><Slider value={[dl50]} onValueChange={([v]) => setDL50(v)} min={20} max={100} step={1} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

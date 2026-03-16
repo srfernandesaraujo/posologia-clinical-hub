@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -74,23 +75,25 @@ export default function SimuladorFarmacogenomica() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<FGCase | null>(null);
   const [phenotype, setPhenotype] = useState<Phenotype>("extensivo");
   const [dose, setDose] = useState(100);
   const [drugType, setDrugType] = useState<DrugType>("pro-farmaco");
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setPhenotype("extensivo"); setDose(100); setDrugType(activeCase.drugType); } }, [activeCase]);
 
   const points = useMemo(() => generatePGxCurve(dose, phenotype, drugType), [dose, phenotype, drugType]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const phenOk = phenotype === activeCase.expectedPhenotype;
     const doseOk = dose >= activeCase.expectedDoseAdjust[0] && dose <= activeCase.expectedDoseAdjust[1];
-    submitResults({ score: (phenOk ? 60 : 0) + (doseOk ? 40 : 0), actions: { phenotype, dose, drugType } });
+    const s = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    submitResults({ score: s, actions: { phenotype, dose, drugType } });
+    return s;
   }, [activeCase, phenotype, dose, drugType, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugType: c.drugType ?? "pro-farmaco", enzyme: c.enzyme ?? "CYP2D6", expectedPhenotype: c.expectedPhenotype ?? "extensivo", expectedDoseAdjust: c.expectedDoseAdjust ?? [80, 120], clinicalTip: c.clinicalTip ?? "" });
@@ -144,7 +147,7 @@ export default function SimuladorFarmacogenomica() {
               <button onClick={() => setDrugType("pro-farmaco")} className={`w-full text-left p-2 rounded text-sm ${drugType === "pro-farmaco" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Pró-fármaco (precisa de ativação)</button>
               <button onClick={() => setDrugType("farmaco-ativo")} className={`w-full text-left p-2 rounded text-sm ${drugType === "farmaco-ativo" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Fármaco ativo (metabolismo = inativação)</button>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

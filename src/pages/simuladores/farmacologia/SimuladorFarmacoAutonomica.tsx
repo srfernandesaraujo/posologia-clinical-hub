@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -70,20 +71,22 @@ export default function SimuladorFarmacoAutonomica() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<FACase | null>(null);
   const [selectedDrug, setSelectedDrug] = useState("atropina");
   const [drugDose, setDrugDose] = useState(80);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, expectedDrug: cd.expectedDrug ?? "atropina", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedDrug: cd.expectedDrug ?? "atropina", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setSelectedDrug("atropina"); setDrugDose(80); } }, [activeCase]);
 
   const organEffects = useMemo(() => computeOrganEffects(selectedDrug, drugDose), [selectedDrug, drugDose]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: selectedDrug === activeCase.expectedDrug ? 100 : 20, actions: { selectedDrug, drugDose } });
+    if (!activeCase || submitted) return 0;
+    const s = selectedDrug === activeCase.expectedDrug ? 100 : 20;
+    submitResults({ score: s, actions: { selectedDrug, drugDose } });
+    return s;
   }, [activeCase, selectedDrug, drugDose, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedDrug: c.expectedDrug ?? "atropina", clinicalTip: c.clinicalTip ?? "" });
@@ -131,7 +134,7 @@ export default function SimuladorFarmacoAutonomica() {
               {DRUGS.map(d => (<button key={d.key} onClick={() => setSelectedDrug(d.key)} className={`p-2.5 rounded-lg border text-xs font-medium transition-colors ${selectedDrug === d.key ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}>{d.label}</button>))}
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{drugDose}%</span></div><Slider value={[drugDose]} onValueChange={([v]) => setDrugDose(v)} min={0} max={100} step={5} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

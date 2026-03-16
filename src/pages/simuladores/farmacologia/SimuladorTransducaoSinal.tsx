@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -51,7 +52,7 @@ export default function SimuladorTransducaoSinal() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<TSCase | null>(null);
   const [selectedReceptor, setSelectedReceptor] = useState<ReceptorType>("gpcr-gs");
@@ -59,7 +60,7 @@ export default function SimuladorTransducaoSinal() {
   const [blockStep, setBlockStep] = useState(-1); // -1 = no block
   const [blockIntensity, setBlockIntensity] = useState(80);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, targetReceptor: cd.targetReceptor ?? "gpcr-gs", expectedBlockStep: cd.expectedBlockStep ?? -1, clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, targetReceptor: cd.targetReceptor ?? "gpcr-gs", expectedBlockStep: cd.expectedBlockStep ?? -1, clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setSelectedReceptor(activeCase.targetReceptor); setAgonistConc(80); setBlockStep(-1); setBlockIntensity(80); } }, [activeCase]);
 
   const cascadeData = useMemo(() => {
@@ -72,10 +73,12 @@ export default function SimuladorTransducaoSinal() {
   }, [selectedReceptor, agonistConc, blockStep, blockIntensity]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const receptorOk = selectedReceptor === activeCase.targetReceptor;
     const blockOk = activeCase.expectedBlockStep < 0 ? blockStep < 0 : blockStep === activeCase.expectedBlockStep;
-    submitResults({ score: (receptorOk ? 60 : 0) + (blockOk ? 40 : 0), actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });
+    const s = (receptorOk ? 60 : 0) + (blockOk ? 40 : 0);
+    submitResults({ score: s, actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });
+    return s;
   }, [activeCase, selectedReceptor, blockStep, agonistConc, blockIntensity, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, targetReceptor: c.targetReceptor ?? "gpcr-gs", expectedBlockStep: c.expectedBlockStep ?? -1, clinicalTip: c.clinicalTip ?? "" });
@@ -137,7 +140,7 @@ export default function SimuladorTransducaoSinal() {
               </div>
               {blockStep >= 0 && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">Intensidade do bloqueio</label><span className="text-sm font-bold text-destructive">{blockIntensity}%</span></div><Slider value={[blockIntensity]} onValueChange={([v]) => setBlockIntensity(v)} min={0} max={100} step={5} /></div>)}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

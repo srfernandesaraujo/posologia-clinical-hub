@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -86,7 +87,7 @@ export default function SimuladorDoseResposta() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<DRCase | null>(null);
   const [ec50, setEC50] = useState(50);
@@ -98,8 +99,8 @@ export default function SimuladorDoseResposta() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialEC50: cd.initialEC50 ?? 50, initialEmax: cd.initialEmax ?? 100, expectedEC50: cd.expectedEC50 ?? [40, 60], expectedEmax: cd.expectedEmax ?? [90, 110], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialEC50: cd.initialEC50 ?? 50, initialEmax: cd.initialEmax ?? 100, expectedEC50: cd.expectedEC50 ?? [40, 60], expectedEmax: cd.expectedEmax ?? [90, 110], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -110,10 +111,12 @@ export default function SimuladorDoseResposta() {
   const { points, effEC50, effEmax } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ec50Ok = effEC50 >= activeCase.expectedEC50[0] && effEC50 <= activeCase.expectedEC50[1];
     const emaxOk = effEmax >= activeCase.expectedEmax[0] && effEmax <= activeCase.expectedEmax[1];
-    submitResults({ score: (ec50Ok ? 50 : 0) + (emaxOk ? 50 : 0), actions: { ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, effEC50, effEmax } });
+    const s = (ec50Ok ? 50 : 0) + (emaxOk ? 50 : 0);
+    submitResults({ score: s, actions: { ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, effEC50, effEmax } });
+    return s;
   }, [activeCase, effEC50, effEmax, ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialEC50: c.initialEC50 ?? 50, initialEmax: c.initialEmax ?? 100, expectedEC50: c.expectedEC50 ?? [40, 60], expectedEmax: c.expectedEmax ?? [90, 110], clinicalTip: c.clinicalTip ?? "" });
@@ -176,7 +179,7 @@ export default function SimuladorDoseResposta() {
                 <div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">[Antagonista]</label><span className="text-sm font-bold text-destructive">{antagConc}%</span></div><Slider value={[antagConc]} onValueChange={([v]) => setAntagConc(v)} min={0} max={100} step={5} /></div>
               )}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

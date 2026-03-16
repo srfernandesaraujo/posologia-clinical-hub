@@ -301,7 +301,7 @@ export default function SimuladorDispensacao344() {
 
   // Room case handling
   if (virtualRoomCase && !activeCase) {
-    const cd = virtualRoomCase.case_data as any;
+    const cd = virtualRoomCase as any;
     startCase({ ...cd, id: virtualRoomCase.id, title: virtualRoomCase.title } as CaseData);
   }
 

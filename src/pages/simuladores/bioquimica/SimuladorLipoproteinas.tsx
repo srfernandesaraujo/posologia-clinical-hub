@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, Heart } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -81,7 +82,7 @@ export default function SimuladorLipoproteinas() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<LipoCase | null>(null);
   const [fatIntake, setFatIntake] = useState(50);
@@ -94,9 +95,9 @@ export default function SimuladorLipoproteinas() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialFatIntake: cd.initialFatIntake ?? 50, initialLPL: cd.initialLPL ?? 80, initialLDLReceptor: cd.initialLDLReceptor ?? 80,
         drugs: cd.drugs ?? { statin: false, resin: false, ezetimibe: false, pcsk9i: false, fibrate: false },
@@ -185,11 +186,12 @@ export default function SimuladorLipoproteinas() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     const ldlOk = model.ldlMgDl >= activeCase.expectedLDL[0] && model.ldlMgDl <= activeCase.expectedLDL[1];
-    const s = ldlOk ? 100 : Math.max(0, 100 - Math.abs(model.ldlMgDl - (activeCase.expectedLDL[0] + activeCase.expectedLDL[1]) / 2));
-    submitResults({ score: Math.round(s), actions: { fatIntake, lplActivity, ldlReceptor, drugs, ldlMgDl: model.ldlMgDl } });
+    const s = Math.round(ldlOk ? 100 : Math.max(0, 100 - Math.abs(model.ldlMgDl - (activeCase.expectedLDL[0] + activeCase.expectedLDL[1]) / 2)));
+    submitResults({ score: s, actions: { fatIntake, lplActivity, ldlReceptor, drugs, ldlMgDl: model.ldlMgDl } });
+    return s;
   }, [activeCase, model, fatIntake, lplActivity, ldlReceptor, drugs, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -344,7 +346,7 @@ export default function SimuladorLipoproteinas() {
 
       <div className="flex gap-2">
         <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted} className="flex-1">Finalizar</Button>
+        <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={() => handleFinish()} fallbackLabel="Finalizar" />
       </div>
 
       {history.length > 0 && (

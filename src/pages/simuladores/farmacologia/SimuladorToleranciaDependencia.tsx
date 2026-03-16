@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -68,22 +69,24 @@ export default function SimuladorToleranciaDependencia() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<TDCase | null>(null);
   const [drugClass, setDrugClass] = useState<DrugClass>("opioide");
   const [weeksOfUse, setWeeksOfUse] = useState(8);
   const [doseEscalation, setDoseEscalation] = useState(50);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, drugClass: cd.drugClass ?? "opioide", expectedWeeks: cd.expectedWeeks ?? [4, 12], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugClass: cd.drugClass ?? "opioide", expectedWeeks: cd.expectedWeeks ?? [4, 12], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDrugClass(activeCase.drugClass); setWeeksOfUse(8); setDoseEscalation(50); } }, [activeCase]);
 
   const points = useMemo(() => generateToleranceCurve(drugClass, weeksOfUse, doseEscalation), [drugClass, weeksOfUse, doseEscalation]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = weeksOfUse >= activeCase.expectedWeeks[0] && weeksOfUse <= activeCase.expectedWeeks[1];
-    submitResults({ score: ok ? 100 : 30, actions: { drugClass, weeksOfUse, doseEscalation } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { drugClass, weeksOfUse, doseEscalation } });
+    return s;
   }, [activeCase, drugClass, weeksOfUse, doseEscalation, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugClass: c.drugClass ?? "opioide", expectedWeeks: c.expectedWeeks ?? [4, 12], clinicalTip: c.clinicalTip ?? "" });
@@ -133,7 +136,7 @@ export default function SimuladorToleranciaDependencia() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Semanas de Uso</label><span className="text-sm font-bold">{weeksOfUse} sem</span></div><Slider value={[weeksOfUse]} onValueChange={([v]) => setWeeksOfUse(v)} min={1} max={24} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Escalação de Dose</label><span className="text-sm font-bold">{doseEscalation}%</span></div><Slider value={[doseEscalation]} onValueChange={([v]) => setDoseEscalation(v)} min={0} max={100} step={5} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>
