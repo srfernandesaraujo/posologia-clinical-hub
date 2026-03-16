@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Volume2, VolumeX, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, AlertTriangle, Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -149,6 +149,9 @@ export default function SimuladorBombaInfusao() {
   const alarmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [infusingBlink, setInfusingBlink] = useState(false);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
 
   // Auto-start for virtual rooms
   if (isVR && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
@@ -156,6 +159,24 @@ export default function SimuladorBombaInfusao() {
     setActiveCase(virtualRoomCase as InfusionCase);
     setScreen("sim");
   }
+
+  // Auto-submit when infusion completes in VR
+  useEffect(() => {
+    if (isVR && !vrSubmitted && pumpState === "alarm" && alarmType === null && remainingVolume === 0) {
+      const score = 85;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugName: activeCase?.drugName, mode, rateMLH, totalVolume } });
+    }
+  }, [pumpState, alarmType, remainingVolume, isVR, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
 
   useEffect(() => {
     return () => {
@@ -622,6 +643,24 @@ export default function SimuladorBombaInfusao() {
           </div>
         )}
       </div>
+
+      {/* VR Results */}
+      {isVR && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2 mt-4">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
 
       {/* Educational Info */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">

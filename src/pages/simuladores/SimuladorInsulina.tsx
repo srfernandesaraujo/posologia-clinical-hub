@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, AlertTriangle, Eye } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -78,6 +78,9 @@ export default function SimuladorInsulina() {
   const [preceptorLoading, setPreceptorLoading] = useState(false);
   const [pendingChange, setPendingChange] = useState<(() => void) | null>(null);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
     setVrAutoStarted(true);
@@ -85,6 +88,24 @@ export default function SimuladorInsulina() {
   }
 
   const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
+
+  // Auto-submit when reaching panel screen in VR
+  useEffect(() => {
+    if (isVirtualRoom && screen === "painel" && !vrSubmitted) {
+      const score = hba1c <= 7 ? 100 : hba1c <= 8 ? 70 : 40;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitResults({ score, actions: { regime, basalType, prandialType, tdd, basalPct, glycemics, hba1c } });
+    }
+  }, [screen, isVirtualRoom, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVirtualRoom && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, vrSubmitted, goBack]);
 
   const start = (i: number) => {
     setCaseIdx(i);
@@ -336,6 +357,25 @@ export default function SimuladorInsulina() {
           </Card>
         </div>
       </div>
+
+      {/* VR Results */}
+      {isVirtualRoom && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2 mt-4">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              <p className="text-xs text-muted-foreground">HbA1c estimada: {String(hba1c)}%</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
 
       {/* Preceptor Modal */}
       <Dialog open={preceptorOpen} onOpenChange={setPreceptorOpen}>

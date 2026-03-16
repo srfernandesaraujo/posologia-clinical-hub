@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, HelpCircle, FileDown, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, FileDown, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -136,6 +136,9 @@ export default function SimuladorDesmameBenzo() {
 
   // Help dialog
   const [helpOpen, setHelpOpen] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   // Auto-start for virtual rooms
   if (isVR && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
@@ -150,6 +153,24 @@ export default function SimuladorDesmameBenzo() {
   }
 
   const drug = BENZO_DRUGS.find(d => d.name === selectedDrug);
+
+  // Auto-submit when plan is generated in VR
+  useEffect(() => {
+    if (isVR && plan.length > 0 && !vrSubmitted) {
+      const score = sensitivity === "high" ? 90 : 80;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugName: selectedDrug, dailyDose, usageDuration, sensitivity, planWeeks: plan.length > 0 ? plan[plan.length - 1].week : 0 } });
+    }
+  }, [plan, isVR, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
 
   // ─── Generate tapering plan ───
   const generatePlan = () => {
@@ -721,6 +742,25 @@ export default function SimuladorDesmameBenzo() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* VR Results */}
+      {isVR && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2 mt-4">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              <p className="text-xs text-muted-foreground">Duração do plano: ~{plan.length > 0 ? plan[plan.length - 1].week : 0} semanas</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
 
       {/* Educational cards */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">

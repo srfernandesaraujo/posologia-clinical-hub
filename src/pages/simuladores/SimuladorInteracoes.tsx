@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 /* ─── Types ─── */
 interface Drug {
@@ -142,10 +145,16 @@ async function fetchInteractions(rxcuis: string[]): Promise<Interaction[]> {
 /* ─── Component ─── */
 export default function SimuladorInteracoes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { allCases, generateCase, isGenerating } = useSimulatorCases("interacoes", BUILT_IN_CASES);
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("interacoes", BUILT_IN_CASES);
 
   // Dashboard vs simulator
   const [activeCase, setActiveCase] = useState<any | null>(null);
+  const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   // Simulator state
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
@@ -157,6 +166,48 @@ export default function SimuladorInteracoes() {
   const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>([]);
   const [showScenario, setShowScenario] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+
+  // Auto-start for virtual rooms
+  useEffect(() => {
+    if (isVR && virtualRoomCase && !vrAutoStarted) {
+      setVrAutoStarted(true);
+      const c = virtualRoomCase as any;
+      setActiveCase(c);
+      // Pre-load drugs if available
+      if (c.drugs && Array.isArray(c.drugs)) {
+        (async () => {
+          const drugs: Drug[] = [];
+          for (const name of c.drugs) {
+            const results = await fetchDrugSuggestions(name);
+            if (results.length > 0) drugs.push(results[0]);
+          }
+          setSelectedDrugs(drugs);
+        })();
+      }
+      if (c.comorbidities && Array.isArray(c.comorbidities)) {
+        setSelectedComorbidities(c.comorbidities);
+      }
+    }
+  }, [isVR, virtualRoomCase, vrAutoStarted]);
+
+  // Auto-submit when interactions are loaded in VR
+  useEffect(() => {
+    if (isVR && !vrSubmitted && interactions.length > 0 && selectedDrugs.length >= 2) {
+      const highCount = interactions.filter(i => i.severity === "high").length;
+      const score = highCount === 0 ? 90 : 70;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugs: selectedDrugs.map(d => d.name), interactionsFound: interactions.length, highSeverity: highCount } });
+    }
+  }, [interactions, isVR, vrSubmitted, selectedDrugs]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
 
   // Debounced search
   useEffect(() => {
@@ -227,6 +278,12 @@ export default function SimuladorInteracoes() {
   const sevColor = (s: string) => s === "high" ? "bg-red-500/10 text-red-600 border-red-500/30" : s === "medium" ? "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" : "bg-green-500/10 text-green-600 border-green-500/30";
   const sevIcon = (s: string) => s === "high" ? <ShieldAlert className="h-5 w-5 text-red-500" /> : s === "medium" ? <AlertTriangle className="h-5 w-5 text-yellow-500" /> : <ShieldCheck className="h-5 w-5 text-green-500" />;
 
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVR && !activeCase) return null;
+
   /* ─── Dashboard ─── */
   if (!activeCase) {
     return (
@@ -248,10 +305,12 @@ export default function SimuladorInteracoes() {
 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Casos Clínicos</h2>
-          <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="gap-2">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Gerar com IA
-          </Button>
+          {!isVR && (
+            <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="gap-2">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Gerar com IA
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -287,9 +346,12 @@ export default function SimuladorInteracoes() {
   /* ─── Simulator UI ─── */
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
+        <Button variant="ghost" size="icon" onClick={isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -523,6 +585,25 @@ export default function SimuladorInteracoes() {
           ))}
         </div>
       </div>
+
+      {/* VR Results */}
+      {isVR && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              <p className="text-xs text-muted-foreground">{interactions.length} interação(ões) analisadas</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
     </div>
   );
 }
