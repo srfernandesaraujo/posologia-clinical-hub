@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { ExamBanner } from "@/components/ExamBanner";
+import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 
 /* ─── Types ─── */
 interface Drug {
