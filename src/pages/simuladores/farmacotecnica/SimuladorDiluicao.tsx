@@ -105,7 +105,9 @@ export default function SimuladorDiluicao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = c2 >= activeCase.expectedC2Range[0] && c2 <= activeCase.expectedC2Range[1];
-    submitResults({ score: ok ? 100 : 30, actions: { c1, v1, v2, c2 } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { c1, v1, v2, c2 } });
   }, [activeCase, c2, c1, v1, v2, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialC1: c.initialC1 ?? 1, initialV1: c.initialV1 ?? 1, expectedC2Range: c.expectedC2Range ?? [0.05, 0.15], clinicalTip: c.clinicalTip ?? "" });
