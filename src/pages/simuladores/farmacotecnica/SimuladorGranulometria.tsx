@@ -119,6 +119,13 @@ export default function SimuladorGranulometria() {
     if (activeCase) { setMean(activeCase.initialMean); setSpread(activeCase.initialSpread); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const { histogram, d10, d50, d90, span } = useMemo(() => computeDistribution(mean, spread), [mean, spread]);
 
   const handleFinish = useCallback(() => {
