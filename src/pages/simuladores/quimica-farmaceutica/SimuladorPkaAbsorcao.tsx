@@ -196,7 +196,7 @@ export default function SimuladorPkaAbsorcao() {
               <p className="text-3xl font-bold text-primary">{currentFraction.toFixed(1)}%</p>
             </div>
             <div className="text-xs text-muted-foreground">Fármacos referência: {EXAMPLE_DRUGS.map(d => `${d.name} (pKa ${d.pKa})`).join(", ")}</div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

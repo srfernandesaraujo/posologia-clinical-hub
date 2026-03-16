@@ -162,7 +162,7 @@ export default function SimuladorLipinski() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP</label><span className={`text-sm font-bold ${logP > 5 ? 'text-destructive' : ''}`}>{logP}</span></div><Slider value={[logP * 10]} onValueChange={([v]) => setLogP(v / 10)} min={-20} max={80} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Donors (HBD)</label><span className={`text-sm font-bold ${hbd > 5 ? 'text-destructive' : ''}`}>{hbd}</span></div><Slider value={[hbd]} onValueChange={([v]) => setHbd(v)} min={0} max={15} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Acceptors (HBA)</label><span className={`text-sm font-bold ${hba > 10 ? 'text-destructive' : ''}`}>{hba}</span></div><Slider value={[hba]} onValueChange={([v]) => setHba(v)} min={0} max={25} step={1} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

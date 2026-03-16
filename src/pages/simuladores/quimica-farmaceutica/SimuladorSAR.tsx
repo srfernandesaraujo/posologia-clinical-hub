@@ -198,7 +198,7 @@ export default function SimuladorSAR() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Hidroxila (-OH)</label><span className="text-sm font-bold">{oh}%</span></div><Slider value={[oh]} onValueChange={([v]) => setOh(v)} min={0} max={100} step={5} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Metil (-CH₃)</label><span className="text-sm font-bold">{ch3}%</span></div><Slider value={[ch3]} onValueChange={([v]) => setCh3(v)} min={0} max={100} step={5} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Trifluormetil (-CF₃)</label><span className="text-sm font-bold">{cf3}%</span></div><Slider value={[cf3]} onValueChange={([v]) => setCf3(v)} min={0} max={100} step={5} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

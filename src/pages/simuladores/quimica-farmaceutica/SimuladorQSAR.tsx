@@ -184,7 +184,7 @@ export default function SimuladorQSAR() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP (lipofilia)</label><span className="text-sm font-bold">{logP}</span></div><Slider value={[logP * 10 + 10]} onValueChange={([v]) => setLogP((v - 10) / 10)} min={0} max={60} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">σ Hammett (efeito eletrônico)</label><span className="text-sm font-bold">{sigma.toFixed(1)}</span></div><Slider value={[(sigma + 1) * 50]} onValueChange={([v]) => setSigma(v / 50 - 1)} min={0} max={100} step={5} /><p className="text-xs text-muted-foreground mt-1">σ&lt;0: doador (NH₂, OCH₃) | σ&gt;0: retirador (NO₂, CF₃)</p></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

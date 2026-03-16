@@ -176,7 +176,7 @@ export default function SimuladorMetabolismo() {
               </Select>
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Atividade CYP (%)</label><span className="text-sm font-bold">{cypActivity}%</span></div><Slider value={[cypActivity]} onValueChange={([v]) => setCypActivity(v)} min={10} max={300} step={10} /><p className="text-xs text-muted-foreground mt-1">&lt;50%: Metabolizador Lento | 100%: Normal | &gt;150%: Ultra-rápido</p></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

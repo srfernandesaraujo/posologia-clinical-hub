@@ -166,7 +166,7 @@ export default function SimuladorQuiralidade() {
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Razão Eudísmica</p><p className="text-xl font-bold">{drug.eudismicRatio}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Chiral Switch?</p><p className="text-xl font-bold">{drug.chiralSwitch ? "✓ Sim" : "✗ Não"}</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>
