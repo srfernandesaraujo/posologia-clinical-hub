@@ -112,9 +112,11 @@ export default function SimuladorMetabolismo() {
   const selectedPD = PRODRUGS.find(p => p.id === prodrugId) || PRODRUGS[0];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = peakActive >= activeCase.expectedActiveRange[0] && peakActive <= activeCase.expectedActiveRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { prodrugId, cypActivity, peakActive, tMax } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { prodrugId, cypActivity, peakActive, tMax } });
+    return s;
   }, [activeCase, peakActive, tMax, prodrugId, cypActivity, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialProdrug: c.initialProdrug ?? "enalapril", initialCypActivity: c.initialCypActivity ?? 100, expectedActiveRange: c.expectedActiveRange ?? [30, 70], clinicalTip: c.clinicalTip ?? "" });
