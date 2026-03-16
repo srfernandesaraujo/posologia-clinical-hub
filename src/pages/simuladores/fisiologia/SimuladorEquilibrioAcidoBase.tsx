@@ -152,9 +152,11 @@ export default function SimuladorEquilibrioAcidoBase() {
   };
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const normalized = ab.ph >= 7.35 && ab.ph <= 7.45;
-    submitResults({ score: normalized ? 100 : 50, actions: { rrModifier, renalModifier, ph: ab.ph, pCO2: ab.pCO2, hco3: ab.hco3 } });
+    const s = normalized ? 100 : 50;
+    submitResults({ score: s, actions: { rrModifier, renalModifier, ph: ab.ph, pCO2: ab.pCO2, hco3: ab.hco3 } });
+    return s;
   }, [activeCase, ab, rrModifier, renalModifier, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
