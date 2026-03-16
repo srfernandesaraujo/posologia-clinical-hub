@@ -138,6 +138,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <OracleAgent />
     </div>
   );
 }
