@@ -70,12 +70,17 @@ export default function SimuladorJanelaTerapeutica() {
     if (!activeCase || submitted) return 0;
     const ok = dose >= activeCase.expectedDose[0] && dose <= activeCase.expectedDose[1];
     const s = ok ? 100 : 30;
+    setLastScore(s);
     submitResults({ score: s, actions: { dose, de50, dl50, it } });
     return s;
   }, [activeCase, dose, de50, dl50, it, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugName: c.drugName ?? "", de50: c.de50 ?? 30, dl50: c.dl50 ?? 65, expectedDose: c.expectedDose ?? [20, 40], clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
