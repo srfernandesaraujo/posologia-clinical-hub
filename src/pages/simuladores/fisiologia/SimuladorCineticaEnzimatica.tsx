@@ -138,12 +138,12 @@ export default function SimuladorCineticaEnzimatica() {
   );
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const vmaxOk = effectiveVmax >= activeCase.expectedVmax[0] && effectiveVmax <= activeCase.expectedVmax[1];
     const kmOk = effectiveKm >= activeCase.expectedKm[0] && effectiveKm <= activeCase.expectedKm[1];
     const s = (vmaxOk ? 50 : 0) + (kmOk ? 50 : 0);
-    if (submitted) return;
-    submitResults({ score: s, actions: { vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, effectiveVmax, effectiveKm } });
+    if (!submitted) submitResults({ score: s, actions: { vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, effectiveVmax, effectiveKm } });
+    return s;
   }, [activeCase, effectiveVmax, effectiveKm, vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
