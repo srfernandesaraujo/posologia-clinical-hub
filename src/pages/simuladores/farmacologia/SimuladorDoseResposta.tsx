@@ -99,8 +99,8 @@ export default function SimuladorDoseResposta() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialEC50: cd.initialEC50 ?? 50, initialEmax: cd.initialEmax ?? 100, expectedEC50: cd.expectedEC50 ?? [40, 60], expectedEmax: cd.expectedEmax ?? [90, 110], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialEC50: cd.initialEC50 ?? 50, initialEmax: cd.initialEmax ?? 100, expectedEC50: cd.expectedEC50 ?? [40, 60], expectedEmax: cd.expectedEmax ?? [90, 110], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
