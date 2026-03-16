@@ -644,6 +644,24 @@ export default function SimuladorBombaInfusao() {
         )}
       </div>
 
+      {/* VR Results */}
+      {isVR && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2 mt-4">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
+
       {/* Educational Info */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-card p-4">
