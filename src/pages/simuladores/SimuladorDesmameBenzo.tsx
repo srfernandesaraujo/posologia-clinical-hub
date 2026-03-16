@@ -136,6 +136,9 @@ export default function SimuladorDesmameBenzo() {
 
   // Help dialog
   const [helpOpen, setHelpOpen] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   // Auto-start for virtual rooms
   if (isVR && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
