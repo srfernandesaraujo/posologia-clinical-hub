@@ -109,6 +109,9 @@ export default function SimuladorCineticaEnzimatica() {
   const [nonCompetitiveInhibitor, setNonCompetitiveInhibitor] = useState(false);
   const [inhibitorConc, setInhibitorConc] = useState(50);
   const [showLineweaver, setShowLineweaver] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
