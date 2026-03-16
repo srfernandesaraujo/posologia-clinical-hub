@@ -105,9 +105,9 @@ export default function SimuladorDissociacaoHemoglobina() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialPH: cd.initialPH ?? 7.40, initialPCO2: cd.initialPCO2 ?? 40, initialTemp: cd.initialTemp ?? 37, initialBPG: cd.initialBPG ?? 5,
         expectedP50: cd.expectedP50 ?? [24, 28], clinicalTip: cd.clinicalTip ?? "",
