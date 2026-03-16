@@ -165,7 +165,7 @@ export default function SimuladorBloqueioNeuromuscular() {
               ))}
               {reversal !== "nenhum" && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose de Reversão</label><span className="text-sm font-bold">{reversalDose}%</span></div><Slider value={[reversalDose]} onValueChange={([v]) => setReversalDose(v)} min={20} max={100} step={5} /></div>)}
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
