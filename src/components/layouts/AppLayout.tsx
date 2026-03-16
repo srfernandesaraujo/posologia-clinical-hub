@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { SidebarContactForm } from "@/components/SidebarContactForm";
+import { OracleAgent } from "@/components/OracleAgent";
 import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 
 export function AppLayout() {
