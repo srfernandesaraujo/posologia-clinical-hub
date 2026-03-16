@@ -163,11 +163,12 @@ export default function SimuladorCascataAcidoAraquidonico() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     const pge2Ok = model.pge2 >= activeCase.expectedPGE2[0] && model.pge2 <= activeCase.expectedPGE2[1];
-    const s = pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2);
-    submitResults({ score: Math.round(s), actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+    const s = Math.round(pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2));
+    submitResults({ score: s, actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+    return s;
   }, [activeCase, model, stimulus, drugs, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
