@@ -85,7 +85,12 @@ export default function SimuladorPentosesFosfato() {
   const [oxidantDose, setOxidantDose] = useState(50);
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<{ time: number; hemolysis: number; membrane: number; heinz: number }[]>([]);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
   const tickRef = useRef(0);
+  const loadingVR = false;
+  const goBack = () => navigate("/");
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -165,6 +170,21 @@ export default function SimuladorPentosesFosfato() {
     submitResults({ score: s, actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
     return s;
   }, [activeCase, model, g6pdDeficient, oxidantAgent, oxidantDose, submitted, submitResults]);
+
+  // Auto-submit when challenge completed in virtual room
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
+
+  // Auto-redirect after 15s
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
 
   const loadAICase = (c: any) => {
     setActiveCase({
