@@ -123,9 +123,11 @@ export default function SimuladorQSAR() {
   const result = useMemo(() => computeQSAR(seriesId, logP, sigma), [seriesId, logP, sigma]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = logP >= activeCase.expectedOptimalLogPRange[0] && logP <= activeCase.expectedOptimalLogPRange[1];
-    submitResults({ score: ok ? 100 : 40, actions: { seriesId, logP, sigma, activity: result.activity, optimalLogP: result.optimalLogP } });
+    const s = ok ? 100 : 40;
+    submitResults({ score: s, actions: { seriesId, logP, sigma, activity: result.activity, optimalLogP: result.optimalLogP } });
+    return s;
   }, [activeCase, logP, seriesId, sigma, result, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialSeries: c.initialSeries ?? "sulfonamides", initialLogP: c.initialLogP ?? 1.0, initialSigma: c.initialSigma ?? 0, expectedOptimalLogPRange: c.expectedOptimalLogPRange ?? [0.7, 1.2], clinicalTip: c.clinicalTip ?? "" });
