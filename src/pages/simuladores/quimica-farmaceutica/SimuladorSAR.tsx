@@ -275,7 +275,7 @@ export default function SimuladorSAR() {
         </Card>
       </div>
 
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</CardContent></Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
       <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ scaffoldId, halogen, oh, ch3, cf3, potency: result.potency, logP: result.logP, selectivity: result.selectivity }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
