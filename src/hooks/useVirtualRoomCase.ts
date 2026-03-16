@@ -9,7 +9,7 @@ interface ExamFeedback {
   isFinalActivity: boolean;
 }
 
-export function useVirtualRoomCase(simulatorSlug: string) {
+export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) {
   const navigate = useNavigate();
   const [virtualRoomCase, setVirtualRoomCase] = useState<any>(null);
   const [isVirtualRoom, setIsVirtualRoom] = useState(false);
@@ -48,11 +48,18 @@ export function useVirtualRoomCase(simulatorSlug: string) {
             }
             setLoading(false);
           });
+      } else if (ctx.nativeCaseIndex !== null && ctx.nativeCaseIndex !== undefined && builtInCases) {
+        // Native built-in case — pick from array by index
+        const nativeCase = builtInCases[ctx.nativeCaseIndex];
+        if (nativeCase) {
+          setVirtualRoomCase({
+            ...nativeCase,
+            id: `native-${ctx.nativeCaseIndex}`,
+          });
+        }
       }
-      // If nativeCaseIndex is set, virtualRoomCase stays null
-      // and the simulator will use nativeCaseIndex to pick the built-in case
     } catch {}
-  }, [simulatorSlug]);
+  }, [simulatorSlug, builtInCases]);
 
   const submitResults = async (opts: {
     stepIndex?: number;
