@@ -164,11 +164,12 @@ export default function SimuladorOperonLac() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     const ok = model.transcription >= activeCase.expectedTranscription[0] && model.transcription <= activeCase.expectedTranscription[1];
-    const s = ok ? 100 : Math.max(0, 100 - Math.abs(model.transcription - (activeCase.expectedTranscription[0] + activeCase.expectedTranscription[1]) / 2) * 2);
-    submitResults({ score: Math.round(s), actions: { glucose, lactose, transcription: model.transcription } });
+    const s = Math.round(ok ? 100 : Math.max(0, 100 - Math.abs(model.transcription - (activeCase.expectedTranscription[0] + activeCase.expectedTranscription[1]) / 2) * 2));
+    submitResults({ score: s, actions: { glucose, lactose, transcription: model.transcription } });
+    return s;
   }, [activeCase, model, glucose, lactose, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
