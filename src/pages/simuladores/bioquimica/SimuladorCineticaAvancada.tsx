@@ -123,9 +123,9 @@ export default function SimuladorCineticaAvancada() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario, initialVmax: cd.initialVmax ?? 100, initialKm: cd.initialKm ?? 10,
         inhibitorType: cd.inhibitorType ?? "none",
         expectedKmApp: cd.expectedKmApp ?? [8, 12], expectedVmaxApp: cd.expectedVmaxApp ?? [90, 110],
