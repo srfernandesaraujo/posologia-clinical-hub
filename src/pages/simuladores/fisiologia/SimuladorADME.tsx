@@ -130,9 +130,9 @@ export default function SimuladorADME() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialBioavailability: cd.initialBioavailability ?? 85, initialVd: cd.initialVd ?? 50,
         initialClearance: cd.initialClearance ?? 20, initialKa: cd.initialKa ?? 70, initialFirstPass: cd.initialFirstPass ?? true,
