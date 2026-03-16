@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, Flame } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, Flame, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -117,7 +116,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
   const [activeCase, setActiveCase] = useState<ETCCase | null>(null);
   const [nadh, setNadh] = useState(60);
@@ -126,6 +125,24 @@ export default function SimuladorCadeiaTransporteEletrons() {
   const [history, setHistory] = useState<any[]>([]);
   const [time, setTime] = useState(0);
   const [running, setRunning] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+
+  // Auto-submit when challenge completed in VR
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
+
+  // Auto-redirect 15s after submission in VR
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -164,11 +181,12 @@ export default function SimuladorCadeiaTransporteEletrons() {
   const outputs = computeETC(nadh, fadh2, inhibitors);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return 0;
+    if (!activeCase || submitted) return 0;
     const atpOk = outputs.atpRate >= activeCase.expectedATP[0] && outputs.atpRate <= activeCase.expectedATP[1];
     const s = Math.round(atpOk ? 100 : Math.max(0, 100 - Math.abs(outputs.atpRate - (activeCase.expectedATP[0] + activeCase.expectedATP[1]) / 2) * 5));
     setRunning(false);
-    if (!submitted) submitResults({ score: s, actions: { nadh, fadh2, inhibitors, atpRate: outputs.atpRate } });
+    setLastScore(s);
+    submitResults({ score: s, actions: { nadh, fadh2, inhibitors, atpRate: outputs.atpRate } });
     return s;
   }, [activeCase, outputs, nadh, fadh2, inhibitors, submitted, submitResults]);
 
@@ -182,6 +200,14 @@ export default function SimuladorCadeiaTransporteEletrons() {
   };
 
   const toggleInhibitor = (key: keyof typeof inhibitors) => setInhibitors(prev => ({ ...prev, [key]: !prev[key] }));
+
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && !activeCase) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   if (!activeCase) {
     return (
@@ -226,7 +252,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -266,7 +292,9 @@ export default function SimuladorCadeiaTransporteEletrons() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={() => handleFinish()} fallbackLabel="Finalizar" />
+              {!isVirtualRoom && (
+                <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="flex-1">Finalizar</Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -330,7 +358,25 @@ export default function SimuladorCadeiaTransporteEletrons() {
       <SimulatorChallengeMode
         challengeSet={getCadeiaTransporteEletronsChallenges()}
         simulatorState={{ nadh, fadh2, ...inhibitors, atpRate: outputs.atpRate }}
+        onComplete={() => setChallengeCompleted(true)}
       />
+
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
+          <div className="space-y-2">
+            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+          </div>
+        )
+      )}
     </div>
   );
 }
