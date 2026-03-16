@@ -100,8 +100,8 @@ export default function SimuladorCompressao() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialForce: cd.initialForce ?? 50, initialGranuleSize: cd.initialGranuleSize ?? 50, initialLubricant: cd.initialLubricant ?? 20, expectedHardnessRange: cd.expectedHardnessRange ?? [6, 10], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialForce: cd.initialForce ?? 50, initialGranuleSize: cd.initialGranuleSize ?? 50, initialLubricant: cd.initialLubricant ?? 20, expectedHardnessRange: cd.expectedHardnessRange ?? [6, 10], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
