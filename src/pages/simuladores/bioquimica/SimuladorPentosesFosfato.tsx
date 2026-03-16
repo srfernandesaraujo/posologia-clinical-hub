@@ -85,7 +85,12 @@ export default function SimuladorPentosesFosfato() {
   const [oxidantDose, setOxidantDose] = useState(50);
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<{ time: number; hemolysis: number; membrane: number; heinz: number }[]>([]);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
   const tickRef = useRef(0);
+  const loadingVR = false;
+  const goBack = () => navigate("/");
 
   useEffect(() => {
     if (virtualRoomCase) {
