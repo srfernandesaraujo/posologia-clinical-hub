@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye } from "lucide-react";
+import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye, Trash2, RotateCcw, Archive } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
