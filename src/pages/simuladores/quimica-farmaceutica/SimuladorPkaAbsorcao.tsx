@@ -131,8 +131,10 @@ export default function SimuladorPkaAbsorcao() {
   const currentFraction = useMemo(() => getFractionAtPH(drugType, pKa, pH), [drugType, pKa, pH]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
+    return s;
   }, [activeCase, drugType, pKa, pH, currentFraction, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialPka: c.initialPka ?? 3.5, initialType: c.initialType ?? "weak_acid", initialPH: c.initialPH ?? 1.5, expectedAbsorptionSite: c.expectedAbsorptionSite ?? "estomago", clinicalTip: c.clinicalTip ?? "" });
