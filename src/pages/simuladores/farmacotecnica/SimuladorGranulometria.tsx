@@ -124,7 +124,9 @@ export default function SimuladorGranulometria() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = d50 >= activeCase.expectedD50Range[0] && d50 <= activeCase.expectedD50Range[1];
-    submitResults({ score: ok ? 100 : 30, actions: { mean, spread, d10, d50, d90, span } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { mean, spread, d10, d50, d90, span } });
   }, [activeCase, d50, mean, spread, d10, d90, span, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialMean: c.initialMean ?? 150, initialSpread: c.initialSpread ?? 30, expectedD50Range: c.expectedD50Range ?? [100, 200], clinicalTip: c.clinicalTip ?? "" });
