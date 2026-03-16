@@ -366,7 +366,7 @@ export default function SalasVirtuais() {
 
   const handleToolTypeChange = (type: ToolType) => {
     setToolType(type);
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   };
 
   if (!canUseVirtualRooms) {
