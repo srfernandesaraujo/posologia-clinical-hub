@@ -79,9 +79,9 @@ export default function SimuladorOperonLac() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario, initialGlucose: cd.initialGlucose ?? 50,
         initialLactose: cd.initialLactose ?? 50, expectedTranscription: cd.expectedTranscription ?? [0, 100],
         clinicalTip: cd.clinicalTip ?? "",
