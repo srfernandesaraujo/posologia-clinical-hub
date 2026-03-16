@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award, Eye } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 type FeedbackModel = "pendleton" | "r2c2" | "aloba";
 
