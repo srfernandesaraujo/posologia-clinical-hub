@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -77,7 +76,6 @@ function computeDocking(targetId: string, distance: number, activeInteractions: 
   const target = TARGETS.find(t => t.id === targetId) || TARGETS[0];
   let deltaG = 0;
   const interactionContributions: Array<{ name: string; contribution: number }> = [];
-
   for (const intId of activeInteractions) {
     const interaction = INTERACTIONS.find(i => i.id === intId);
     if (!interaction) continue;
@@ -91,13 +89,10 @@ function computeDocking(targetId: string, distance: number, activeInteractions: 
     deltaG += contrib;
     interactionContributions.push({ name: interaction.name, contribution: Math.round(contrib * 100) / 100 });
   }
-
-  // Distance penalty
   const distPenalty = Math.abs(distance - target.optimalDist) * 1.5;
   deltaG -= distPenalty > 0 ? -distPenalty : 0;
   deltaG += distPenalty > 2 ? distPenalty * 0.5 : 0;
-
-  const Ki = Math.exp(deltaG / (0.00198 * 310)); // simplified
+  const Ki = Math.exp(deltaG / (0.00198 * 310));
   const energyVsDistance = [];
   for (let d = 1.5; d <= 6; d += 0.1) {
     let e = 0;
@@ -109,17 +104,11 @@ function computeDocking(targetId: string, distance: number, activeInteractions: 
         const optDist = (rMin + rMax) / 2;
         e += interaction.strength * (1 - Math.abs(d - optDist) / (rMax - rMin));
       }
-      if (d < rMin) e += (rMin - d) * 5; // repulsion
+      if (d < rMin) e += (rMin - d) * 5;
     }
     energyVsDistance.push({ distance: Math.round(d * 10) / 10, energy: Math.round(e * 100) / 100 });
   }
-
-  return {
-    deltaG: Math.round(deltaG * 100) / 100,
-    Ki: Ki > 0 ? Ki.toExponential(2) : "N/A",
-    interactionContributions,
-    energyVsDistance,
-  };
+  return { deltaG: Math.round(deltaG * 100) / 100, Ki: Ki > 0 ? Ki.toExponential(2) : "N/A", interactionContributions, energyVsDistance };
 }
 
 export default function SimuladorDocking() {
@@ -133,6 +122,9 @@ export default function SimuladorDocking() {
   const [targetId, setTargetId] = useState("cox2");
   const [distance, setDistance] = useState(3.5);
   const [activeInter, setActiveInter] = useState<string[]>(["hbond", "hydrophobic"]);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -146,10 +138,7 @@ export default function SimuladorDocking() {
   }, [activeCase]);
 
   const result = useMemo(() => computeDocking(targetId, distance, activeInter), [targetId, distance, activeInter]);
-
-  const toggleInteraction = (id: string) => {
-    setActiveInter(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+  const toggleInteraction = (id: string) => setActiveInter(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
@@ -159,9 +148,24 @@ export default function SimuladorDocking() {
     return s;
   }, [activeCase, result, targetId, distance, activeInter, submitted, submitResults]);
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === "number" ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialTarget: c.initialTarget ?? "cox2", initialDistance: c.initialDistance ?? 3.5, expectedDeltaGRange: c.expectedDeltaGRange ?? [-12, -8], clinicalTip: c.clinicalTip ?? "" });
 
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -176,13 +180,9 @@ export default function SimuladorDocking() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+            {aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -194,7 +194,7 @@ export default function SimuladorDocking() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -222,7 +222,17 @@ export default function SimuladorDocking() {
                 ))}
               </div>
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
           </CardContent>
         </Card>
         <Card>
@@ -262,7 +272,7 @@ export default function SimuladorDocking() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ targetId, distance, activeInter, deltaG: result.deltaG }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ targetId, distance, activeInter, deltaG: result.deltaG }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }
