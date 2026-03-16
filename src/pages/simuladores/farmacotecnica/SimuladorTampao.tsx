@@ -131,6 +131,13 @@ export default function SimuladorTampao() {
     if (activeCase) { setBufferName(activeCase.initialBuffer); setRatio(1); setConcentration(50); setAcidAdded(0); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const { pH, beta, titrationData, betaCurve, pKa, rangeMin, rangeMax } = useMemo(() => computeBuffer(bufferName, ratio, concentration, acidAdded), [bufferName, ratio, concentration, acidAdded]);
 
   const handleFinish = useCallback(() => {
