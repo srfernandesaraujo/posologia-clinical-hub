@@ -241,7 +241,44 @@ export default function Analytics() {
     },
   });
 
-  const roomIds = rooms.map((r: any) => r.id);
+  const softDeleteRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").update({ deleted_at: new Date().toISOString() } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala movida para a lixeira");
+    },
+  });
+
+  const restoreRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").update({ deleted_at: null } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala restaurada");
+    },
+  });
+
+  const permanentDeleteRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala excluída permanentemente");
+    },
+  });
+
+  const activeRooms = rooms.filter((r: any) => !r.deleted_at);
+  const trashedRooms = rooms.filter((r: any) => !!r.deleted_at);
+  const displayedRooms = showTrash ? trashedRooms : activeRooms;
+
+  const roomIds = displayedRooms.map((r: any) => r.id);
 
   const { data: allParticipants = [] } = useQuery({
     queryKey: ["analytics-participants", roomIds],
