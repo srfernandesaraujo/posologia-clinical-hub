@@ -17,6 +17,7 @@ import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, Arrow
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
+import { getNativeCases } from "@/data/nativeCaseCatalog";
 
 interface ToolOption {
   slug: string;
