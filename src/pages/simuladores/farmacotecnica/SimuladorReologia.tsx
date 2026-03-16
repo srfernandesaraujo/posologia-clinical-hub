@@ -122,7 +122,9 @@ export default function SimuladorReologia() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { behavior, viscosity, thickener } });
+    const score = 80;
+    setLastScore(score);
+    submitResults({ score, actions: { behavior, viscosity, thickener } });
   }, [activeCase, behavior, viscosity, thickener, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialBehavior: c.initialBehavior ?? "pseudoplastic", initialViscosity: c.initialViscosity ?? 70, clinicalTip: c.clinicalTip ?? "" });
