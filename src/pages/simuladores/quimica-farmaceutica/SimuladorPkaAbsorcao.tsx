@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -107,6 +106,9 @@ export default function SimuladorPkaAbsorcao() {
   const [drugType, setDrugType] = useState("weak_acid");
   const [pKa, setPka] = useState(3.5);
   const [pH, setPH] = useState(1.5);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {

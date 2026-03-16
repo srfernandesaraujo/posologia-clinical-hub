@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -74,12 +73,7 @@ function computeMetabolism(prodrugId: string, cypActivity: number) {
     const prodrug = 100 * Math.exp(-pd.ka * t);
     const active = (100 * kc / (pd.kElim - pd.ka + kc)) * (Math.exp(-(pd.ka) * t) - Math.exp(-(pd.kElim + kc) * t));
     const metabolite = Math.max(0, 100 - prodrug - Math.max(0, active));
-    points.push({
-      hour: t,
-      profarmaco: Math.round(Math.max(0, prodrug) * 10) / 10,
-      ativo: Math.round(Math.max(0, active) * 10) / 10,
-      metabolito: Math.round(Math.max(0, metabolite) * 10) / 10,
-    });
+    points.push({ hour: t, profarmaco: Math.round(Math.max(0, prodrug) * 10) / 10, ativo: Math.round(Math.max(0, active) * 10) / 10, metabolito: Math.round(Math.max(0, metabolite) * 10) / 10 });
   }
   const peakActive = Math.max(...points.map(p => p.ativo));
   const tMax = points.find(p => p.ativo === peakActive)?.hour || 0;
@@ -96,6 +90,9 @@ export default function SimuladorMetabolismo() {
   const [activeCase, setActiveCase] = useState<MetabCase | null>(null);
   const [prodrugId, setProdrugId] = useState("enalapril");
   const [cypActivity, setCypActivity] = useState(100);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -119,9 +116,24 @@ export default function SimuladorMetabolismo() {
     return s;
   }, [activeCase, peakActive, tMax, prodrugId, cypActivity, submitted, submitResults]);
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === "number" ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialProdrug: c.initialProdrug ?? "enalapril", initialCypActivity: c.initialCypActivity ?? 100, expectedActiveRange: c.expectedActiveRange ?? [30, 70], clinicalTip: c.clinicalTip ?? "" });
 
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -136,13 +148,9 @@ export default function SimuladorMetabolismo() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+            {aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -154,7 +162,7 @@ export default function SimuladorMetabolismo() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -176,7 +184,17 @@ export default function SimuladorMetabolismo() {
               </Select>
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Atividade CYP (%)</label><span className="text-sm font-bold">{cypActivity}%</span></div><Slider value={[cypActivity]} onValueChange={([v]) => setCypActivity(v)} min={10} max={300} step={10} /><p className="text-xs text-muted-foreground mt-1">&lt;50%: Metabolizador Lento | 100%: Normal | &gt;150%: Ultra-rápido</p></div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
           </CardContent>
         </Card>
         <Card>
@@ -210,7 +228,7 @@ export default function SimuladorMetabolismo() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ prodrugId, cypActivity, peakActive, tMax }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ prodrugId, cypActivity, peakActive, tMax }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }

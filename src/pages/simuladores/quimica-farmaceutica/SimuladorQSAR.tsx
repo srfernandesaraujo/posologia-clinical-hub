@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -35,50 +34,22 @@ interface QSARCase {
 }
 
 const BUILT_IN_CASES: QSARCase[] = [
-  {
-    title: "Sulfonamidas – Equação de Hansch Original",
-    difficulty: "Fácil",
-    patient: { name: "Hansch 1964", series: "Sulfonamidas", context: "Antibacterianos" },
-    scenario: "Hansch demonstrou que a atividade antibacteriana das sulfonamidas segue uma relação parabólica com logP. Encontre o logP ótimo (ponto máximo da parábola).",
-    initialSeries: "sulfonamides", initialLogP: 1.0, initialSigma: 0,
-    expectedOptimalLogPRange: [0.7, 1.2],
-    clinicalTip: "A equação de Hansch parabólica: log(1/C) = a(logP)² + b(logP) + c mostra que existe um logP ótimo para absorção + distribuição. Muito lipofílico = sequestro em gordura.",
-  },
-  {
-    title: "Barbitúricos – Atividade Hipnótica e logP",
-    difficulty: "Médio",
-    patient: { name: "Estudo Clássico", series: "Barbitúricos", context: "Hipnóticos/sedativos" },
-    scenario: "A atividade hipnótica dos barbitúricos correlaciona-se com logP (penetração da BHE). Analise como substituintes que aumentam logP afetam a latência do sono.",
-    initialSeries: "barbiturates", initialLogP: 1.5, initialSigma: 0.3,
-    expectedOptimalLogPRange: [0.8, 1.2],
-    clinicalTip: "Barbitúricos com logP mais alto cruzam a BHE mais rapidamente (tiopental: logP ~2.8, onset <30s). Mas logP muito alto prolonga a duração por redistribuição lenta do tecido adiposo.",
-  },
-  {
-    title: "QSAR Multivariado – σ Hammett e Atividade",
-    difficulty: "Difícil",
-    patient: { name: "Drug Design Avançado", series: "Sulfonamidas", context: "Análise multi-paramétrica" },
-    scenario: "Além de logP, o parâmetro σ de Hammett (efeito eletrônico) influencia a atividade. Explore a equação: log(1/C) = a(logP)² + b(logP) + ρσ + c. Ajuste ambos os descritores.",
-    initialSeries: "sulfonamides", initialLogP: 0.5, initialSigma: -0.5,
-    expectedOptimalLogPRange: [0.7, 1.2],
-    clinicalTip: "O σ de Hammett mede o efeito eletrônico: σ>0 = retirador de elétrons (NO₂, CF₃), σ<0 = doador (NH₂, OCH₃). Em sulfonamidas, substituintes retiradores aumentam a acidez (↑pKa⁻) e a interação com DHPS.",
-  },
+  { title: "Sulfonamidas – Equação de Hansch Original", difficulty: "Fácil", patient: { name: "Hansch 1964", series: "Sulfonamidas", context: "Antibacterianos" }, scenario: "Hansch demonstrou que a atividade antibacteriana das sulfonamidas segue uma relação parabólica com logP. Encontre o logP ótimo (ponto máximo da parábola).", initialSeries: "sulfonamides", initialLogP: 1.0, initialSigma: 0, expectedOptimalLogPRange: [0.7, 1.2], clinicalTip: "A equação de Hansch parabólica: log(1/C) = a(logP)² + b(logP) + c mostra que existe um logP ótimo para absorção + distribuição. Muito lipofílico = sequestro em gordura." },
+  { title: "Barbitúricos – Atividade Hipnótica e logP", difficulty: "Médio", patient: { name: "Estudo Clássico", series: "Barbitúricos", context: "Hipnóticos/sedativos" }, scenario: "A atividade hipnótica dos barbitúricos correlaciona-se com logP (penetração da BHE). Analise como substituintes que aumentam logP afetam a latência do sono.", initialSeries: "barbiturates", initialLogP: 1.5, initialSigma: 0.3, expectedOptimalLogPRange: [0.8, 1.2], clinicalTip: "Barbitúricos com logP mais alto cruzam a BHE mais rapidamente (tiopental: logP ~2.8, onset <30s). Mas logP muito alto prolonga a duração por redistribuição lenta do tecido adiposo." },
+  { title: "QSAR Multivariado – σ Hammett e Atividade", difficulty: "Difícil", patient: { name: "Drug Design Avançado", series: "Sulfonamidas", context: "Análise multi-paramétrica" }, scenario: "Além de logP, o parâmetro σ de Hammett (efeito eletrônico) influencia a atividade. Explore a equação: log(1/C) = a(logP)² + b(logP) + ρσ + c. Ajuste ambos os descritores.", initialSeries: "sulfonamides", initialLogP: 0.5, initialSigma: -0.5, expectedOptimalLogPRange: [0.7, 1.2], clinicalTip: "O σ de Hammett mede o efeito eletrônico: σ>0 = retirador de elétrons (NO₂, CF₃), σ<0 = doador (NH₂, OCH₃). Em sulfonamidas, substituintes retiradores aumentam a acidez (↑pKa⁻) e a interação com DHPS." },
 ];
 
 function computeQSAR(seriesId: string, logP: number, sigma: number) {
   const series = SERIES.find(s => s.id === seriesId) || SERIES[0];
-  const rho = 0.8; // Hammett reaction constant
+  const rho = 0.8;
   const activity = series.a * logP * logP + series.b * logP + rho * sigma + series.c;
-  
   const curveData = [];
   for (let lp = -1; lp <= 5; lp += 0.1) {
     const act = series.a * lp * lp + series.b * lp + rho * sigma + series.c;
     curveData.push({ logP: Math.round(lp * 10) / 10, activity: Math.round(act * 1000) / 1000 });
   }
-
   const optimalLogP = -series.b / (2 * series.a);
   const maxActivity = series.a * optimalLogP * optimalLogP + series.b * optimalLogP + rho * sigma + series.c;
-
-  // Generate scatter points (simulated congeners)
   const scatterData = [];
   for (let i = 0; i < 12; i++) {
     const lp = -0.5 + i * 0.5 + (Math.random() - 0.5) * 0.3;
@@ -86,15 +57,7 @@ function computeQSAR(seriesId: string, logP: number, sigma: number) {
     const act = series.a * lp * lp + series.b * lp + rho * sigma + series.c + noise;
     scatterData.push({ logP: Math.round(lp * 100) / 100, activity: Math.round(act * 100) / 100 });
   }
-
-  return {
-    activity: Math.round(activity * 1000) / 1000,
-    optimalLogP: Math.round(optimalLogP * 100) / 100,
-    maxActivity: Math.round(maxActivity * 1000) / 1000,
-    curveData,
-    scatterData,
-    r2: 0.87 + sigma * 0.02,
-  };
+  return { activity: Math.round(activity * 1000) / 1000, optimalLogP: Math.round(optimalLogP * 100) / 100, maxActivity: Math.round(maxActivity * 1000) / 1000, curveData, scatterData, r2: 0.87 + sigma * 0.02 };
 }
 
 export default function SimuladorQSAR() {
@@ -108,6 +71,9 @@ export default function SimuladorQSAR() {
   const [seriesId, setSeriesId] = useState("sulfonamides");
   const [logP, setLogP] = useState(1.0);
   const [sigma, setSigma] = useState(0);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -130,9 +96,24 @@ export default function SimuladorQSAR() {
     return s;
   }, [activeCase, logP, seriesId, sigma, result, submitted, submitResults]);
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === "number" ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialSeries: c.initialSeries ?? "sulfonamides", initialLogP: c.initialLogP ?? 1.0, initialSigma: c.initialSigma ?? 0, expectedOptimalLogPRange: c.expectedOptimalLogPRange ?? [0.7, 1.2], clinicalTip: c.clinicalTip ?? "" });
 
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -147,13 +128,9 @@ export default function SimuladorQSAR() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+            {aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -165,7 +142,7 @@ export default function SimuladorQSAR() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -184,7 +161,17 @@ export default function SimuladorQSAR() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP (lipofilia)</label><span className="text-sm font-bold">{logP}</span></div><Slider value={[logP * 10 + 10]} onValueChange={([v]) => setLogP((v - 10) / 10)} min={0} max={60} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">σ Hammett (efeito eletrônico)</label><span className="text-sm font-bold">{sigma.toFixed(1)}</span></div><Slider value={[(sigma + 1) * 50]} onValueChange={([v]) => setSigma(v / 50 - 1)} min={0} max={100} step={5} /><p className="text-xs text-muted-foreground mt-1">σ&lt;0: doador (NH₂, OCH₃) | σ&gt;0: retirador (NO₂, CF₃)</p></div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
           </CardContent>
         </Card>
         <Card>
@@ -217,7 +204,7 @@ export default function SimuladorQSAR() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ seriesId, logP, sigma, activity: result.activity, optimalLogP: result.optimalLogP }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ seriesId, logP, sigma, activity: result.activity, optimalLogP: result.optimalLogP }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }
