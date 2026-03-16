@@ -173,10 +173,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         activityIndex: nextIndex,
         customChallenges: nextAct.customChallenges || null,
       }));
-      const slug = nextAct.simulatorSlug;
-      const route = LAB_SLUGS_SET.has(slug)
-        ? `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`
-        : `/sala/simulador/${slug}`;
+      const route = getRouteForActivity(nextAct.simulatorSlug, nextAct.caseId);
       navigate(route);
     } else {
       sessionStorage.removeItem("virtualRoom");

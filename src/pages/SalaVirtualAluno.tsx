@@ -198,7 +198,7 @@ export default function SalaVirtualAluno() {
         participantName,
         customChallenges: legacyAct?.custom_challenges || null,
       }));
-      navigate(getRouteForSlug(room.simulator_slug));
+      navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
       startActivity(0);
     }
@@ -226,7 +226,7 @@ export default function SalaVirtualAluno() {
         customChallenges: a.custom_challenges || null,
       })),
     }));
-    navigate(getRouteForSlug(act.simulator_slug));
+    navigate(getRouteForActivity(act.simulator_slug, act.case_id));
   };
 
   if (step === "pin") {
