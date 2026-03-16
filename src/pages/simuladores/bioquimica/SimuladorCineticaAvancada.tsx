@@ -97,7 +97,7 @@ export default function SimuladorCineticaAvancada() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
   const [activeCase, setActiveCase] = useState<KineticsCase | null>(null);
   const [vmax, setVmax] = useState(100);
@@ -108,6 +108,22 @@ export default function SimuladorCineticaAvancada() {
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<{ time: number; kmApp: number; vmaxApp: number }[]>([]);
   const tickRef = useRef(0);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
 
   const outputs = useMemo(() => computeKinetics(vmax, km, inhibitorType, inhibitorConc, ki), [vmax, km, inhibitorType, inhibitorConc, ki]);
 
