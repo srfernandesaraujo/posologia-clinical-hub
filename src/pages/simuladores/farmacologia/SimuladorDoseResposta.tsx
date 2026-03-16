@@ -111,10 +111,12 @@ export default function SimuladorDoseResposta() {
   const { points, effEC50, effEmax } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ec50Ok = effEC50 >= activeCase.expectedEC50[0] && effEC50 <= activeCase.expectedEC50[1];
     const emaxOk = effEmax >= activeCase.expectedEmax[0] && effEmax <= activeCase.expectedEmax[1];
-    submitResults({ score: (ec50Ok ? 50 : 0) + (emaxOk ? 50 : 0), actions: { ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, effEC50, effEmax } });
+    const s = (ec50Ok ? 50 : 0) + (emaxOk ? 50 : 0);
+    submitResults({ score: s, actions: { ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, effEC50, effEmax } });
+    return s;
   }, [activeCase, effEC50, effEmax, ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialEC50: c.initialEC50 ?? 50, initialEmax: c.initialEmax ?? 100, expectedEC50: c.expectedEC50 ?? [40, 60], expectedEmax: c.expectedEmax ?? [90, 110], clinicalTip: c.clinicalTip ?? "" });
