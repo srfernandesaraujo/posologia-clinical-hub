@@ -54,11 +54,17 @@ interface SimulatorChallengeModeProps {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function SimulatorChallengeMode({
-  challengeSet,
+  challengeSet: nativeChallengeSet,
+  customChallengeSet,
   simulatorState,
   onResetForChallenge,
   onComplete,
+  hidden,
 }: SimulatorChallengeModeProps) {
+  // Use custom challenges if provided (from virtual room), otherwise native
+  const challengeSet = customChallengeSet || nativeChallengeSet;
+  
+  if (hidden) return null;
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
