@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -87,6 +86,9 @@ export default function SimuladorBloqueioNeuromuscular() {
   const [agentDose, setAgentDose] = useState(80);
   const [reversal, setReversal] = useState<"nenhum" | "neostigmina" | "sugammadex">("nenhum");
   const [reversalDose, setReversalDose] = useState(80);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedAgent: cd.expectedAgent ?? "nao-despolarizante", expectedReversal: cd.expectedReversal ?? "nenhum", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setAgent("nao-despolarizante"); setAgentDose(80); setReversal("nenhum"); setReversalDose(80); } }, [activeCase]);
@@ -98,12 +100,17 @@ export default function SimuladorBloqueioNeuromuscular() {
     const agentOk = agent === activeCase.expectedAgent;
     const reversalOk = reversal === activeCase.expectedReversal;
     const s = (agentOk ? 50 : 0) + (reversalOk ? 50 : 0);
+    setLastScore(s);
     submitResults({ score: s, actions: { agent, agentDose, reversal, reversalDose } });
     return s;
   }, [activeCase, agent, agentDose, reversal, reversalDose, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedAgent: c.expectedAgent ?? "nao-despolarizante", expectedReversal: c.expectedReversal ?? "nenhum", clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
@@ -122,10 +129,10 @@ export default function SimuladorBloqueioNeuromuscular() {
             {BUILT_IN_CASES.map((c, i) => (
               <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
             ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
+            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -136,7 +143,7 @@ export default function SimuladorBloqueioNeuromuscular() {
     <div className="space-y-4">
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
+      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
       <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -158,7 +165,7 @@ export default function SimuladorBloqueioNeuromuscular() {
               ))}
               {reversal !== "nenhum" && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose de Reversão</label><span className="text-sm font-bold">{reversalDose}%</span></div><Slider value={[reversalDose]} onValueChange={([v]) => setReversalDose(v)} min={20} max={100} step={5} /></div>)}
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
@@ -181,7 +188,23 @@ export default function SimuladorBloqueioNeuromuscular() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal }} />
+      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal }} onComplete={() => setChallengeCompleted(true)} />
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
+          <div className="space-y-2">
+            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+          </div>
+        )
+      )}
     </div>
   );
 }

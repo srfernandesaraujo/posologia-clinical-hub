@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -81,6 +80,9 @@ export default function SimuladorFarmacogenomica() {
   const [phenotype, setPhenotype] = useState<Phenotype>("extensivo");
   const [dose, setDose] = useState(100);
   const [drugType, setDrugType] = useState<DrugType>("pro-farmaco");
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setPhenotype("extensivo"); setDose(100); setDrugType(activeCase.drugType); } }, [activeCase]);
@@ -92,12 +94,17 @@ export default function SimuladorFarmacogenomica() {
     const phenOk = phenotype === activeCase.expectedPhenotype;
     const doseOk = dose >= activeCase.expectedDoseAdjust[0] && dose <= activeCase.expectedDoseAdjust[1];
     const s = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    setLastScore(s);
     submitResults({ score: s, actions: { phenotype, dose, drugType } });
     return s;
   }, [activeCase, phenotype, dose, drugType, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugType: c.drugType ?? "pro-farmaco", enzyme: c.enzyme ?? "CYP2D6", expectedPhenotype: c.expectedPhenotype ?? "extensivo", expectedDoseAdjust: c.expectedDoseAdjust ?? [80, 120], clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
@@ -116,10 +123,10 @@ export default function SimuladorFarmacogenomica() {
             {BUILT_IN_CASES.map((c, i) => (
               <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
             ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
+            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -130,7 +137,7 @@ export default function SimuladorFarmacogenomica() {
     <div className="space-y-4">
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
+      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
       <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm"><strong>Enzima:</strong> {activeCase.enzyme}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -147,7 +154,7 @@ export default function SimuladorFarmacogenomica() {
               <button onClick={() => setDrugType("pro-farmaco")} className={`w-full text-left p-2 rounded text-sm ${drugType === "pro-farmaco" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Pró-fármaco (precisa de ativação)</button>
               <button onClick={() => setDrugType("farmaco-ativo")} className={`w-full text-left p-2 rounded text-sm ${drugType === "farmaco-ativo" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Fármaco ativo (metabolismo = inativação)</button>
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
@@ -169,7 +176,23 @@ export default function SimuladorFarmacogenomica() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getFarmacogenomicaChallenges()} simulatorState={{ phenotype, dose, drugType }} />
+      <SimulatorChallengeMode challengeSet={getFarmacogenomicaChallenges()} simulatorState={{ phenotype, dose, drugType }} onComplete={() => setChallengeCompleted(true)} />
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
+          <div className="space-y-2">
+            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+          </div>
+        )
+      )}
     </div>
   );
 }
