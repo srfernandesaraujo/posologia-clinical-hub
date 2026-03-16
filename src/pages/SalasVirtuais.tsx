@@ -165,6 +165,7 @@ export default function SalasVirtuais() {
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
+  const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
