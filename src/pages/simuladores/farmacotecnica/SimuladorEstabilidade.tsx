@@ -99,6 +99,7 @@ export default function SimuladorEstabilidade() {
   const [kRef, setKRef] = useState(0.03);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
