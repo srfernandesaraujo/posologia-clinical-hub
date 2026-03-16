@@ -82,7 +82,7 @@ export default function SimuladorFarmacogenomica() {
   const [dose, setDose] = useState(100);
   const [drugType, setDrugType] = useState<DrugType>("pro-farmaco");
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: cd.id ?? virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugType: cd.drugType ?? "pro-farmaco", enzyme: cd.enzyme ?? "CYP2D6", expectedPhenotype: cd.expectedPhenotype ?? "extensivo", expectedDoseAdjust: cd.expectedDoseAdjust ?? [80, 120], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setPhenotype("extensivo"); setDose(100); setDrugType(activeCase.drugType); } }, [activeCase]);
 
   const points = useMemo(() => generatePGxCurve(dose, phenotype, drugType), [dose, phenotype, drugType]);
