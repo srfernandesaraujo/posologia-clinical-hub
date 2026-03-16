@@ -98,12 +98,14 @@ export default function SimuladorReologia() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<RheoCase | null>(null);
   const [behavior, setBehavior] = useState("pseudoplastic");
   const [viscosity, setViscosity] = useState(70);
   const [thickener, setThickener] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
