@@ -64,6 +64,40 @@ export function useVirtualRoomCase(simulatorSlug: string) {
       return;
     }
 
+    // If challenge mode exists, it handles its own submission — skip here
+    const hasChallenges = sessionStorage.getItem("hasChallenges");
+    const challengeSubmitted = sessionStorage.getItem("challengeSubmitted");
+    if (hasChallenges === "true") {
+      // If challenge already submitted, just mark as submitted for UI state
+      if (challengeSubmitted === "true") {
+        setSubmitted(true);
+        // Handle exam feedback
+        if (ctx.allActivities && ctx.activityIndex !== undefined) {
+          const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
+          setExamFeedback({
+            score: opts.score,
+            simulatorSlug: ctx.simulatorSlug,
+            caseTitle: virtualRoomCase?.title,
+            isFinalActivity: isFinal,
+          });
+        }
+        return;
+      }
+      // Challenge mode hasn't submitted yet — skip, it will submit with correct score
+      setSubmitted(true);
+      if (ctx.allActivities && ctx.activityIndex !== undefined) {
+        const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
+        setExamFeedback({
+          score: opts.score,
+          simulatorSlug: ctx.simulatorSlug,
+          caseTitle: virtualRoomCase?.title,
+          isFinalActivity: isFinal,
+        });
+      }
+      return;
+    }
+
+    // No challenges — submit normally with simulator score
     try {
       const { error } = await supabase.from("room_submissions").insert({
         room_id: ctx.roomId,
@@ -77,7 +111,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
       if (!error) {
         setSubmitted(true);
 
-        // If exam mode, show feedback overlay instead of auto-navigating
         if (ctx.allActivities && ctx.activityIndex !== undefined) {
           const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
           setExamFeedback({
@@ -105,6 +138,10 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     const ctx = roomCtxRef.current;
     if (!ctx) return;
 
+    // Clean up challenge flags
+    sessionStorage.removeItem("hasChallenges");
+    sessionStorage.removeItem("challengeSubmitted");
+
     const nextIndex = ctx.activityIndex + 1;
     if (nextIndex < ctx.totalActivities) {
       const nextAct = ctx.allActivities[nextIndex];
@@ -128,6 +165,8 @@ export function useVirtualRoomCase(simulatorSlug: string) {
 
   const goBack = () => {
     sessionStorage.removeItem("virtualRoom");
+    sessionStorage.removeItem("hasChallenges");
+    sessionStorage.removeItem("challengeSubmitted");
     navigate("/");
   };
 
