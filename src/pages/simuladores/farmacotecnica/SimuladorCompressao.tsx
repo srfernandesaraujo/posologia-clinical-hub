@@ -114,7 +114,9 @@ export default function SimuladorCompressao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = hardness >= activeCase.expectedHardnessRange[0] && hardness <= activeCase.expectedHardnessRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { force, granuleSize, lubricant, hardness, friability, disintegration } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { force, granuleSize, lubricant, hardness, friability, disintegration } });
   }, [activeCase, hardness, force, granuleSize, lubricant, friability, disintegration, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialForce: c.initialForce ?? 50, initialGranuleSize: c.initialGranuleSize ?? 50, initialLubricant: c.initialLubricant ?? 20, expectedHardnessRange: c.expectedHardnessRange ?? [6, 10], clinicalTip: c.clinicalTip ?? "" });
