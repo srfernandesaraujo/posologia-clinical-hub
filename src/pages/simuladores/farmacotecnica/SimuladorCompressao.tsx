@@ -109,6 +109,13 @@ export default function SimuladorCompressao() {
     if (activeCase) { setForce(activeCase.initialForce); setGranuleSize(activeCase.initialGranuleSize); setLubricant(activeCase.initialLubricant); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const { heckelData, kawakitaData, hardness, friability, disintegration } = useMemo(() => computeCompression(force, granuleSize, lubricant), [force, granuleSize, lubricant]);
 
   const handleFinish = useCallback(() => {
