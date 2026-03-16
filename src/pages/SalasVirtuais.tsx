@@ -248,13 +248,17 @@ export default function SalasVirtuais() {
       const pin = generatePin();
       const isLegacy = validActivities.length === 1;
 
+      // For native cases, don't store in case_id (UUID FK). Store in description or custom field.
+      const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") ? caseId : null;
+      const getNativeCaseIndex = (caseId: string) => caseId?.startsWith("native:") ? parseInt(caseId.replace("native:", "")) : null;
+
       const { data: roomData, error: roomError } = await supabase
         .from("virtual_rooms")
         .insert({
           pin,
           title,
           simulator_slug: isLegacy ? validActivities[0].simulatorSlug : null,
-          case_id: isLegacy ? (validActivities[0].caseId || null) : null,
+          case_id: isLegacy ? getDbCaseId(validActivities[0].caseId) : null,
           created_by: user!.id,
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
@@ -266,9 +270,13 @@ export default function SalasVirtuais() {
       const activityRows = validActivities.map((a, i) => ({
         room_id: roomData.id,
         simulator_slug: a.simulatorSlug,
-        case_id: a.caseId || null,
+        case_id: getDbCaseId(a.caseId),
         position: i,
-        custom_challenges: a.customChallenges || null,
+        custom_challenges: a.customChallenges
+          ? { ...a.customChallenges, nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+          : getNativeCaseIndex(a.caseId) !== null
+            ? { nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+            : null,
       }));
 
       const { error: actError } = await supabase
