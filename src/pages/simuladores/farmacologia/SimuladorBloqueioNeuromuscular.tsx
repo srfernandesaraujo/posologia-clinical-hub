@@ -100,12 +100,17 @@ export default function SimuladorBloqueioNeuromuscular() {
     const agentOk = agent === activeCase.expectedAgent;
     const reversalOk = reversal === activeCase.expectedReversal;
     const s = (agentOk ? 50 : 0) + (reversalOk ? 50 : 0);
+    setLastScore(s);
     submitResults({ score: s, actions: { agent, agentDose, reversal, reversalDose } });
     return s;
   }, [activeCase, agent, agentDose, reversal, reversalDose, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedAgent: c.expectedAgent ?? "nao-despolarizante", expectedReversal: c.expectedReversal ?? "nenhum", clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
