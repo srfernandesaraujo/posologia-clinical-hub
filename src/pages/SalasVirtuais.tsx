@@ -361,7 +361,7 @@ export default function SalasVirtuais() {
   // When switching modes, reset activities
   const handleModeChange = (exam: boolean) => {
     setIsExamMode(exam);
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   };
 
   const handleToolTypeChange = (type: ToolType) => {
