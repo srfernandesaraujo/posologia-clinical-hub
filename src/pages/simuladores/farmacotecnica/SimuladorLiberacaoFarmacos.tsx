@@ -102,7 +102,7 @@ export default function SimuladorLiberacaoFarmacos() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<ReleaseCase | null>(null);
   const [coating, setCoating] = useState(50);
@@ -112,6 +112,8 @@ export default function SimuladorLiberacaoFarmacos() {
   const [showEnteric, setShowEnteric] = useState(false);
   const [showPulsatile, setShowPulsatile] = useState(false);
   const [showTransdermal, setShowTransdermal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
