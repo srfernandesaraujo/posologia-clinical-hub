@@ -11,7 +11,7 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, AreaChart, Area } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart, Scatter } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -120,7 +120,15 @@ export default function SimuladorHLB() {
   const surfA = SURFACTANTS[surfAIdx];
   const surfB = SURFACTANTS[surfBIdx];
   const hlbMix = useMemo(() => computeHLB(surfAPct, surfA.hlb, 100 - surfAPct, surfB.hlb), [surfAPct, surfA, surfB]);
-  const stabilityData = useMemo(() => computeStabilityProfile(oil.hlbReq), [oil]);
+  const stabilityData = useMemo(() => {
+    const profile = computeStabilityProfile(oil.hlbReq);
+    // Add a marker point for the current mix HLB
+    const mixStability = Math.max(0, 100 - Math.pow(Math.abs(hlbMix - oil.hlbReq), 2) * 3);
+    return profile.map(p => ({
+      ...p,
+      mixPoint: Math.abs(p.hlb - Math.round(hlbMix * 2) / 2) < 0.26 ? Math.round(mixStability * 10) / 10 : undefined,
+    }));
+  }, [oil, hlbMix]);
   const hlbDiff = Math.abs(hlbMix - oil.hlbReq);
   const stabilityPct = Math.max(0, 100 - hlbDiff * hlbDiff * 3);
 
@@ -212,14 +220,15 @@ export default function SimuladorHLB() {
           <CardHeader><CardTitle className="text-base">Estabilidade vs HLB</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={stabilityData}>
+              <ComposedChart data={stabilityData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="hlb" label={{ value: "HLB", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis domain={[0, 110]} label={{ value: "Estabilidade (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine x={Math.round(hlbMix * 10) / 10} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))" }} />
                 <Area type="monotone" dataKey="stability" name="Estabilidade" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-              </AreaChart>
+                <Scatter dataKey="mixPoint" name="HLB Atual" fill="hsl(var(--destructive))" r={6} />
+                <ReferenceLine x={Math.round(hlbMix * 2) / 2} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))", position: "top" }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
