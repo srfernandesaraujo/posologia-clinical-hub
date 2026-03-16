@@ -143,7 +143,7 @@ export default function SimuladorToleranciaDependencia() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Semanas de Uso</label><span className="text-sm font-bold">{weeksOfUse} sem</span></div><Slider value={[weeksOfUse]} onValueChange={([v]) => setWeeksOfUse(v)} min={1} max={24} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Escalação de Dose</label><span className="text-sm font-bold">{doseEscalation}%</span></div><Slider value={[doseEscalation]} onValueChange={([v]) => setDoseEscalation(v)} min={0} max={100} step={5} /></div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
