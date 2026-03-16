@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye, Trash2, RotateCcw, Archive } from "lucide-react";
