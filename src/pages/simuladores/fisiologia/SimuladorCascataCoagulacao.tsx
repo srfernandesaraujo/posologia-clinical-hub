@@ -139,12 +139,12 @@ export default function SimuladorCascataCoagulacao() {
   const outputs = computeCoagulation(disabledFactors);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const tpOk = outputs.tp >= activeCase.expectedTP[0] && outputs.tp <= activeCase.expectedTP[1];
     const ttpaOk = outputs.ttpa >= activeCase.expectedTTPa[0] && outputs.ttpa <= activeCase.expectedTTPa[1];
     const s = (tpOk ? 50 : 0) + (ttpaOk ? 50 : 0);
-    if (submitted) return;
-    submitResults({ score: s, actions: { disabledFactors: Array.from(disabledFactors), tp: outputs.tp, inr: outputs.inr, ttpa: outputs.ttpa } });
+    if (!submitted) submitResults({ score: s, actions: { disabledFactors: Array.from(disabledFactors), tp: outputs.tp, inr: outputs.inr, ttpa: outputs.ttpa } });
+    return s;
   }, [activeCase, outputs, disabledFactors, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
