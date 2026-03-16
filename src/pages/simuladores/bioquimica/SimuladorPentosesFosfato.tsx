@@ -158,11 +158,12 @@ export default function SimuladorPentosesFosfato() {
   }, [model.hemolysis]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     const hemOk = model.hemolysis >= activeCase.expectedHemolysis[0] && model.hemolysis <= activeCase.expectedHemolysis[1];
-    const s = hemOk ? 100 : Math.max(0, 100 - Math.abs(model.hemolysis - (activeCase.expectedHemolysis[0] + activeCase.expectedHemolysis[1]) / 2) * 2);
-    submitResults({ score: Math.round(s), actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
+    const s = Math.round(hemOk ? 100 : Math.max(0, 100 - Math.abs(model.hemolysis - (activeCase.expectedHemolysis[0] + activeCase.expectedHemolysis[1]) / 2) * 2));
+    submitResults({ score: s, actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
+    return s;
   }, [activeCase, model, g6pdDeficient, oxidantAgent, oxidantDose, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
