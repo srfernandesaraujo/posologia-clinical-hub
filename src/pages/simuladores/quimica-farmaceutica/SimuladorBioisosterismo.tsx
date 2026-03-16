@@ -132,9 +132,11 @@ export default function SimuladorBioisosterismo() {
   }, [originalGroup, selectedBio]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = bioId === activeCase.bestBioisostere;
-    submitResults({ score: ok ? 100 : 40, actions: { groupId, bioId } });
+    const s = ok ? 100 : 40;
+    submitResults({ score: s, actions: { groupId, bioId } });
+    return s;
   }, [activeCase, bioId, groupId, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialGroup: c.initialGroup ?? "cooh", initialBioisostere: c.initialBioisostere ?? "tetrazole", bestBioisostere: c.bestBioisostere ?? "tetrazole", clinicalTip: c.clinicalTip ?? "" });
