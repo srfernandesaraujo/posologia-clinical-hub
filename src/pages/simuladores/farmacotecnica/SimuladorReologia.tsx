@@ -109,8 +109,8 @@ export default function SimuladorReologia() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialBehavior: cd.initialBehavior ?? "pseudoplastic", initialViscosity: cd.initialViscosity ?? 70, clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialBehavior: cd.initialBehavior ?? "pseudoplastic", initialViscosity: cd.initialViscosity ?? 70, clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
