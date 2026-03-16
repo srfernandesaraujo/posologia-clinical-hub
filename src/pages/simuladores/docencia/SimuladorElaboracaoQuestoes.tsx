@@ -69,6 +69,7 @@ const CHALLENGES: Challenge[] = [
 type Phase = "classify" | "elevate";
 
 export default function SimuladorElaboracaoQuestoes() {
+  const navigate = useNavigate();
   const [challengeIdx, setChallengeIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("classify");
   const [classifyAnswers, setClassifyAnswers] = useState<(number | null)[]>([]);
@@ -77,8 +78,27 @@ export default function SimuladorElaboracaoQuestoes() {
   const [showClassifyResult, setShowClassifyResult] = useState(false);
   const [elevateChoice, setElevateChoice] = useState<number | null>(null);
   const [showElevateResult, setShowElevateResult] = useState(false);
+  const [vrShowFeedback, setVrShowFeedback] = useState(false);
 
   const challenge = CHALLENGES[challengeIdx];
+
+  const { isVirtualRoom: isVR, submitResults, submitted } = useVirtualRoomCase("elaboracao-questoes");
+
+  // Auto-submit when elevate result is shown
+  useEffect(() => {
+    if (isVR && showElevateResult && !submitted) {
+      const score = Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100);
+      submitResults({ score, actions: { classifyScore, elevateCorrect: elevateChoice === challenge.targetLevel }, timeSpentSeconds: 0 });
+    }
+  }, [showElevateResult]);
+
+  // 15s redirect
+  useEffect(() => {
+    if (isVR && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, submitted, navigate]);
 
   const handleClassify = () => {
     if (selectedLevel === null) return;
