@@ -106,8 +106,8 @@ export default function SimuladorBioisosterismo() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialGroup: cd.initialGroup ?? "cooh", initialBioisostere: cd.initialBioisostere ?? "tetrazole", bestBioisostere: cd.bestBioisostere ?? "tetrazole", clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialGroup: cd.initialGroup ?? "cooh", initialBioisostere: cd.initialBioisostere ?? "tetrazole", bestBioisostere: cd.bestBioisostere ?? "tetrazole", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
