@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ShieldAlert, ChevronRight, RotateCcw, Award } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, ShieldAlert, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+
+const SLUG = "gestao-sala";
 
 interface Incident {
   id: string;
@@ -69,11 +72,15 @@ const INCIDENTS: Incident[] = [
 ];
 
 export default function SimuladorGestaoSala() {
+  const navigate = useNavigate();
+  const { isVirtualRoom, submitResults, submitted } = useVirtualRoomCase(SLUG);
+
   const [shuffledIncidents] = useState(() => [...INCIDENTS].sort(() => Math.random() - 0.5));
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   const incident = shuffledIncidents[step];
 
@@ -100,6 +107,19 @@ export default function SimuladorGestaoSala() {
   const totalScore = answers.reduce((acc, optIdx, i) => acc + shuffledIncidents[i].options[optIdx].score, 0);
   const pct = Math.round((totalScore / (shuffledIncidents.length * 3)) * 100);
 
+  useEffect(() => {
+    if (isVirtualRoom && showResult && !submitted) {
+      submitResults({ score: pct, actions: { answers, dims } });
+    }
+  }, [showResult]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const handleRestart = () => {
     setStep(0);
     setAnswers([]);
@@ -110,7 +130,7 @@ export default function SimuladorGestaoSala() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/simuladores"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
+        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
         <div>
           <h1 className="text-2xl font-bold">Gestão de Sala de Aula — Incidentes Críticos</h1>
           <p className="text-muted-foreground text-sm">Responda a situações difíceis em tempo real</p>
@@ -164,43 +184,50 @@ export default function SimuladorGestaoSala() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Perfil de Gestão de Sala</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-center py-4">
-              <div className={`text-5xl font-bold mb-2 ${pct >= 75 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-destructive"}`}>{pct}%</div>
-              <p className="text-muted-foreground text-sm">Competência em gestão de incidentes</p>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Assertividade", value: dims.assertividade, color: "text-blue-600" },
-                { label: "Empatia", value: dims.empatia, color: "text-emerald-600" },
-                { label: "Ambiente", value: dims.ambiente, color: "text-purple-600" },
-              ].map(d => (
-                <div key={d.label} className="text-center p-3 rounded-lg border">
-                  <div className={`text-2xl font-bold ${d.color}`}>{Math.round((d.value / maxDim) * 100)}%</div>
-                  <p className="text-xs text-muted-foreground">{d.label}</p>
-                  <Progress value={(d.value / maxDim) * 100} className="h-1.5 mt-1" />
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {(!isVirtualRoom || showFeedbackVR) && (
+              <>
+                <div className="text-center py-4">
+                  <div className={`text-5xl font-bold mb-2 ${pct >= 75 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-destructive"}`}>{pct}%</div>
+                  <p className="text-muted-foreground text-sm">Competência em gestão de incidentes</p>
                 </div>
-              ))}
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              {shuffledIncidents.map((inc, i) => {
-                const chosen = inc.options[answers[i]];
-                return (
-                  <div key={i} className={`p-3 rounded-lg border text-sm ${chosen.score >= 2 ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
-                    <p className="font-medium">{inc.title} ({inc.category})</p>
-                    <p className="text-muted-foreground mt-1">{chosen.feedback}</p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <p className="font-semibold mb-2">📚 Referências</p>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Brookfield SD. <em>The Skillful Teacher</em>. 3rd ed. Jossey-Bass, 2015.</li>
-                <li>• Hativa N. <em>Teaching for Effective Learning in Higher Education</em>. Springer, 2000.</li>
-              </ul>
-            </div>
-            <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Reiniciar</Button>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Assertividade", value: dims.assertividade, color: "text-blue-600" },
+                    { label: "Empatia", value: dims.empatia, color: "text-emerald-600" },
+                    { label: "Ambiente", value: dims.ambiente, color: "text-purple-600" },
+                  ].map(d => (
+                    <div key={d.label} className="text-center p-3 rounded-lg border">
+                      <div className={`text-2xl font-bold ${d.color}`}>{Math.round((d.value / maxDim) * 100)}%</div>
+                      <p className="text-xs text-muted-foreground">{d.label}</p>
+                      <Progress value={(d.value / maxDim) * 100} className="h-1.5 mt-1" />
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  {shuffledIncidents.map((inc, i) => {
+                    const chosen = inc.options[answers[i]];
+                    return (
+                      <div key={i} className={`p-3 rounded-lg border text-sm ${chosen.score >= 2 ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
+                        <p className="font-medium">{inc.title} ({inc.category})</p>
+                        <p className="text-muted-foreground mt-1">{chosen.feedback}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm">
+                  <p className="font-semibold mb-2">📚 Referências</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Brookfield SD. <em>The Skillful Teacher</em>. 3rd ed. Jossey-Bass, 2015.</li>
+                    <li>• Hativa N. <em>Teaching for Effective Learning in Higher Education</em>. Springer, 2000.</li>
+                  </ul>
+                </div>
+                {!isVirtualRoom && <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Reiniciar</Button>}
+              </>
+            )}
           </CardContent>
         </Card>
       )}

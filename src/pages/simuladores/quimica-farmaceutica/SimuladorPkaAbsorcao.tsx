@@ -81,7 +81,6 @@ function computeIonization(type: string, pKa: number) {
     } else if (type === "weak_base") {
       nonIonized = 100 / (1 + Math.pow(10, pKa - pH));
     } else {
-      // Simplified zwitterion
       nonIonized = 100 / (1 + Math.pow(10, pH - pKa) + Math.pow(10, (pKa - 2) - pH));
     }
     points.push({ pH: Math.round(pH * 10) / 10, nonIonized: Math.round(nonIonized * 100) / 100 });
@@ -135,11 +134,17 @@ export default function SimuladorPkaAbsorcao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
     const s = 80;
+    setLastScore(s);
     submitResults({ score: s, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
     return s;
   }, [activeCase, drugType, pKa, pH, currentFraction, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialPka: c.initialPka ?? 3.5, initialType: c.initialType ?? "weak_acid", initialPH: c.initialPH ?? 1.5, expectedAbsorptionSite: c.expectedAbsorptionSite ?? "estomago", clinicalTip: c.clinicalTip ?? "" });
+
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   if (!activeCase) {
     return (
@@ -162,7 +167,9 @@ export default function SimuladorPkaAbsorcao() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && (
+              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -174,7 +181,7 @@ export default function SimuladorPkaAbsorcao() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -198,7 +205,21 @@ export default function SimuladorPkaAbsorcao() {
               <p className="text-3xl font-bold text-primary">{currentFraction.toFixed(1)}%</p>
             </div>
             <div className="text-xs text-muted-foreground">Fármacos referência: {EXAMPLE_DRUGS.map(d => `${d.name} (pKa ${d.pKa})`).join(", ")}</div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && !submitted && (
+              <Button onClick={() => handleFinish()} className="w-full gap-2"><FlaskConical className="h-4 w-4" /> Finalizar Caso</Button>
+            )}
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              </div>
+            )}
+            {!isVirtualRoom && (
+              <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -237,7 +258,7 @@ export default function SimuladorPkaAbsorcao() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }

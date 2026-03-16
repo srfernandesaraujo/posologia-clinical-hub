@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Users, ChevronRight, RotateCcw, Award, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Users, ChevronRight, RotateCcw, Award, MessageCircle, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+
+const SLUG = "conducao-caso";
 
 interface StudentPersona {
   name: string;
@@ -98,11 +101,15 @@ const PBL_CASES: PBLCase[] = [
 ];
 
 export default function SimuladorConducaoCaso() {
+  const navigate = useNavigate();
+  const { isVirtualRoom, submitResults, submitted } = useVirtualRoomCase(SLUG);
+
   const [caseIdx] = useState(0);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   const pblCase = PBL_CASES[caseIdx];
   const moment = pblCase.moments[step];
@@ -127,6 +134,19 @@ export default function SimuladorConducaoCaso() {
   const palestranteCount = answers.filter((optIdx, i) => pblCase.moments[i].options[optIdx].type === "palestrante").length;
   const omissoCount = answers.filter((optIdx, i) => pblCase.moments[i].options[optIdx].type === "omisso").length;
 
+  useEffect(() => {
+    if (isVirtualRoom && showResult && !submitted) {
+      submitResults({ score: pct, actions: { answers, facilitadorCount, palestranteCount, omissoCount } });
+    }
+  }, [showResult]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const handleRestart = () => {
     setStep(0);
     setAnswers([]);
@@ -137,7 +157,7 @@ export default function SimuladorConducaoCaso() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/simuladores"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
+        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
         <div>
           <h1 className="text-2xl font-bold">Condução de Caso Clínico (PBL/TBL)</h1>
           <p className="text-muted-foreground text-sm">Treine a facilitação de discussões em grupo</p>
@@ -217,48 +237,55 @@ export default function SimuladorConducaoCaso() {
             <CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Perfil de Facilitação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-center py-4">
-              <div className={`text-5xl font-bold mb-2 ${pct >= 75 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-destructive"}`}>{pct}%</div>
-              <p className="text-muted-foreground text-sm">
-                {pct >= 75 ? "Excelente facilitador!" : pct >= 50 ? "Bom, mas tendência a 'dar aula'." : "Mais palestrante que facilitador. Pratique mais!"}
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-emerald-500/10 rounded-lg p-3">
-                <div className="text-2xl font-bold text-emerald-600">{facilitadorCount}</div>
-                <p className="text-xs text-muted-foreground">Facilitador</p>
-              </div>
-              <div className="bg-amber-500/10 rounded-lg p-3">
-                <div className="text-2xl font-bold text-amber-600">{palestranteCount}</div>
-                <p className="text-xs text-muted-foreground">Palestrante</p>
-              </div>
-              <div className="bg-destructive/10 rounded-lg p-3">
-                <div className="text-2xl font-bold text-destructive">{omissoCount}</div>
-                <p className="text-xs text-muted-foreground">Omisso</p>
-              </div>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              {pblCase.moments.map((m, i) => {
-                const chosen = m.options[answers[i]];
-                return (
-                  <div key={i} className={`p-3 rounded-lg border text-sm ${chosen.type === "facilitador" ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
-                    <p className="text-muted-foreground italic text-xs">{m.situation}</p>
-                    <p className="mt-1">Sua escolha: "{chosen.text}"</p>
-                    <p className="text-muted-foreground mt-1">{chosen.feedback}</p>
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {(!isVirtualRoom || showFeedbackVR) && (
+              <>
+                <div className="text-center py-4">
+                  <div className={`text-5xl font-bold mb-2 ${pct >= 75 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-destructive"}`}>{pct}%</div>
+                  <p className="text-muted-foreground text-sm">
+                    {pct >= 75 ? "Excelente facilitador!" : pct >= 50 ? "Bom, mas tendência a 'dar aula'." : "Mais palestrante que facilitador. Pratique mais!"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-emerald-500/10 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-emerald-600">{facilitadorCount}</div>
+                    <p className="text-xs text-muted-foreground">Facilitador</p>
                   </div>
-                );
-              })}
-            </div>
-            <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <p className="font-semibold mb-2">📚 Referências</p>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Barrows HS. <em>Problem-Based Learning in Medicine</em>. Springer, 1980.</li>
-                <li>• Michaelsen LK, et al. <em>Team-Based Learning</em>. Stylus Publishing, 2004.</li>
-                <li>• Dolmans DHJM, et al. Problem-based learning: future challenges for educational practice and research. Med Educ. 2005;39(7):732-41.</li>
-              </ul>
-            </div>
-            <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Reiniciar</Button>
+                  <div className="bg-amber-500/10 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-amber-600">{palestranteCount}</div>
+                    <p className="text-xs text-muted-foreground">Palestrante</p>
+                  </div>
+                  <div className="bg-destructive/10 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-destructive">{omissoCount}</div>
+                    <p className="text-xs text-muted-foreground">Omisso</p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  {pblCase.moments.map((m, i) => {
+                    const chosen = m.options[answers[i]];
+                    return (
+                      <div key={i} className={`p-3 rounded-lg border text-sm ${chosen.type === "facilitador" ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
+                        <p className="text-muted-foreground italic text-xs">{m.situation}</p>
+                        <p className="mt-1">Sua escolha: "{chosen.text}"</p>
+                        <p className="text-muted-foreground mt-1">{chosen.feedback}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm">
+                  <p className="font-semibold mb-2">📚 Referências</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Barrows HS. <em>Problem-Based Learning in Medicine</em>. Springer, 1980.</li>
+                    <li>• Michaelsen LK, et al. <em>Team-Based Learning</em>. Stylus Publishing, 2004.</li>
+                    <li>• Dolmans DHJM, et al. Problem-based learning: future challenges for educational practice and research. Med Educ. 2005;39(7):732-41.</li>
+                  </ul>
+                </div>
+                {!isVirtualRoom && <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Reiniciar</Button>}
+              </>
+            )}
           </CardContent>
         </Card>
       )}
