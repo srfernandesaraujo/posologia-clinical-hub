@@ -88,7 +88,7 @@ export default function SimuladorBloqueioNeuromuscular() {
   const [reversal, setReversal] = useState<"nenhum" | "neostigmina" | "sugammadex">("nenhum");
   const [reversalDose, setReversalDose] = useState(80);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, expectedAgent: cd.expectedAgent ?? "nao-despolarizante", expectedReversal: cd.expectedReversal ?? "nenhum", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedAgent: cd.expectedAgent ?? "nao-despolarizante", expectedReversal: cd.expectedReversal ?? "nenhum", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setAgent("nao-despolarizante"); setAgentDose(80); setReversal("nenhum"); setReversalDose(80); } }, [activeCase]);
 
   const points = useMemo(() => generateNMBCurve(agent, agentDose, reversal, reversalDose), [agent, agentDose, reversal, reversalDose]);
