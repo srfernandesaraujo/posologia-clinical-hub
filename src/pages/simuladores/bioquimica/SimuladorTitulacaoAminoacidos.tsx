@@ -151,9 +151,9 @@ export default function SimuladorTitulacaoAminoacidos() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario, aminoAcidIndex: cd.aminoAcidIndex ?? 0,
         startpH: cd.startpH ?? 1.0, clinicalTip: cd.clinicalTip ?? "",
       });
