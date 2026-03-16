@@ -92,9 +92,11 @@ export default function SimuladorViasAdministracao() {
   const toggleRoute = (key: string) => setEnabledRoutes(prev => prev.includes(key) ? prev.filter(r => r !== key) : [...prev, key]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = enabledRoutes.includes(activeCase.expectedRoute);
-    submitResults({ score: ok ? 100 : 30, actions: { dose, bioFactor, elimRate, enabledRoutes } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { dose, bioFactor, elimRate, enabledRoutes } });
+    return s;
   }, [activeCase, enabledRoutes, dose, bioFactor, elimRate, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedRoute: c.expectedRoute ?? "oral", clinicalTip: c.clinicalTip ?? "" });
