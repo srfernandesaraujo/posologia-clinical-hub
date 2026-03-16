@@ -137,7 +137,9 @@ export default function SimuladorHLB() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = hlbMix >= activeCase.expectedHLBRange[0] && hlbMix <= activeCase.expectedHLBRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { selectedOil, surfA: surfA.name, surfB: surfB.name, surfAPct, hlbMix: Math.round(hlbMix * 10) / 10 } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { selectedOil, surfA: surfA.name, surfB: surfB.name, surfAPct, hlbMix: Math.round(hlbMix * 10) / 10 } });
   }, [activeCase, hlbMix, selectedOil, surfA, surfB, surfAPct, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedHLBRange: c.expectedHLBRange ?? [9, 12], clinicalTip: c.clinicalTip ?? "" });
