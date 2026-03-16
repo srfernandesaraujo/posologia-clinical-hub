@@ -161,6 +161,7 @@ export default function SimuladorPentosesFosfato() {
     setRunning(false);
     const hemOk = model.hemolysis >= activeCase.expectedHemolysis[0] && model.hemolysis <= activeCase.expectedHemolysis[1];
     const s = Math.round(hemOk ? 100 : Math.max(0, 100 - Math.abs(model.hemolysis - (activeCase.expectedHemolysis[0] + activeCase.expectedHemolysis[1]) / 2) * 2));
+    setLastScore(s);
     submitResults({ score: s, actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
     return s;
   }, [activeCase, model, g6pdDeficient, oxidantAgent, oxidantDose, submitted, submitResults]);
