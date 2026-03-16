@@ -82,6 +82,9 @@ export default function SimuladorViasAdministracao() {
   const [bioFactor, setBioFactor] = useState(100);
   const [elimRate, setElimRate] = useState(5);
   const [enabledRoutes, setEnabledRoutes] = useState<string[]>(["iv-bolus", "oral"]);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedRoute: cd.expectedRoute ?? "oral", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDose(100); setBioFactor(100); setElimRate(5); setEnabledRoutes(["iv-bolus", "oral"]); } }, [activeCase]);
