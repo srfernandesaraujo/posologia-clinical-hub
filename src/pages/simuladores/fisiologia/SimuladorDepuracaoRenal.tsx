@@ -122,9 +122,11 @@ export default function SimuladorDepuracaoRenal() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const tfgOk = renal.tfg >= activeCase.expectedTFG[0] && renal.tfg <= activeCase.expectedTFG[1];
-    submitResults({ score: tfgOk ? 100 : 40, actions: { afferent, efferent, hydration, permeability, tfg: renal.tfg } });
+    const s = tfgOk ? 100 : 40;
+    submitResults({ score: s, actions: { afferent, efferent, hydration, permeability, tfg: renal.tfg } });
+    return s;
   }, [activeCase, renal, afferent, efferent, hydration, permeability, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
