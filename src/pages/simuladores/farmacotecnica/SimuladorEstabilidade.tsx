@@ -101,6 +101,13 @@ export default function SimuladorEstabilidade() {
   const [lastScore, setLastScore] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
 
+  // Auto-submit results when challenge is completed in virtual room
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
+
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
