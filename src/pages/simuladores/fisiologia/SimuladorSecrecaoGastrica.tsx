@@ -120,6 +120,9 @@ export default function SimuladorSecrecaoGastrica() {
   const [history, setHistory] = useState<any[]>([]);
   const [time, setTime] = useState(0);
   const [running, setRunning] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
