@@ -444,8 +444,11 @@ export default function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <p className="text-3xl font-bold text-primary">{rooms.length}</p>
+            <p className="text-3xl font-bold text-primary">{activeRooms.length}</p>
                 <p className="text-sm text-muted-foreground">Salas Criadas</p>
+                {trashedRooms.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground">({trashedRooms.length} na lixeira)</p>
+                )}
               </CardContent>
             </Card>
             <Card>
