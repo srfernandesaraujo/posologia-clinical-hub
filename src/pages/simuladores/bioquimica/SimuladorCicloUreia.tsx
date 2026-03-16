@@ -173,6 +173,7 @@ export default function SimuladorCicloUreia() {
     if (!activeCase || submitted) return;
     const ammoniaOk = model.ammoniaLevel >= activeCase.expectedAmmonia[0] && model.ammoniaLevel <= activeCase.expectedAmmonia[1];
     const s = Math.round(ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5));
+    setLastScore(s);
     submitResults({ score: s, actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
     return s;
   }, [activeCase, model, deficiencies, submitted, submitResults]);
