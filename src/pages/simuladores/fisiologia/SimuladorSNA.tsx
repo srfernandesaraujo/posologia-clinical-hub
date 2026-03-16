@@ -127,13 +127,13 @@ export default function SimuladorSNA() {
   const outputs = computeOutputs(sympathetic, parasympathetic);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const fcOk = outputs.fc >= activeCase.expectedFC[0] && outputs.fc <= activeCase.expectedFC[1];
     const pasOk = outputs.pas >= activeCase.expectedPAS[0] && outputs.pas <= activeCase.expectedPAS[1];
     const s = (fcOk ? 50 : 0) + (pasOk ? 50 : 0);
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: s, actions: { sympathetic, parasympathetic, fc: outputs.fc, pas: outputs.pas } });
+    if (!submitted) submitResults({ score: s, actions: { sympathetic, parasympathetic, fc: outputs.fc, pas: outputs.pas } });
+    return s;
   }, [activeCase, outputs, sympathetic, parasympathetic, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
