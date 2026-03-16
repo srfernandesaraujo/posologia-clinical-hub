@@ -202,7 +202,8 @@ export default function Analytics() {
   const { user } = useAuth();
   const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade, loading } = useFeatureGating();
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
-
+  const [showTrash, setShowTrash] = useState(false);
+  const queryClient = useQueryClient();
   const toggleRoom = (id: string) => {
     setExpandedRooms(prev => {
       const next = new Set(prev);
