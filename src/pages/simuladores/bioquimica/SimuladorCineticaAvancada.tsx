@@ -165,6 +165,7 @@ export default function SimuladorCineticaAvancada() {
     const kmOk = outputs.kmApp >= activeCase.expectedKmApp[0] && outputs.kmApp <= activeCase.expectedKmApp[1];
     const vmOk = outputs.vmaxApp >= activeCase.expectedVmaxApp[0] && outputs.vmaxApp <= activeCase.expectedVmaxApp[1];
     const s = (kmOk ? 50 : 0) + (vmOk ? 50 : 0);
+    setLastScore(s);
     if (!submitted) submitResults({ score: s, actions: { vmax, km, inhibitorType, inhibitorConc, ki, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp } });
     return s;
   }, [activeCase, outputs, vmax, km, inhibitorType, inhibitorConc, ki, submitted, submitResults]);
