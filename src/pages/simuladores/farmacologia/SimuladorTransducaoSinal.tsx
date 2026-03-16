@@ -58,6 +58,9 @@ export default function SimuladorTransducaoSinal() {
   const [agonistConc, setAgonistConc] = useState(80);
   const [blockStep, setBlockStep] = useState(-1); // -1 = no block
   const [blockIntensity, setBlockIntensity] = useState(80);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, targetReceptor: cd.targetReceptor ?? "gpcr-gs", expectedBlockStep: cd.expectedBlockStep ?? -1, clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setSelectedReceptor(activeCase.targetReceptor); setAgonistConc(80); setBlockStep(-1); setBlockIntensity(80); } }, [activeCase]);
