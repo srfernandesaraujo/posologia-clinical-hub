@@ -167,6 +167,7 @@ export default function SimuladorOperonLac() {
     setRunning(false);
     const ok = model.transcription >= activeCase.expectedTranscription[0] && model.transcription <= activeCase.expectedTranscription[1];
     const s = Math.round(ok ? 100 : Math.max(0, 100 - Math.abs(model.transcription - (activeCase.expectedTranscription[0] + activeCase.expectedTranscription[1]) / 2) * 2));
+    setLastScore(s);
     submitResults({ score: s, actions: { glucose, lactose, transcription: model.transcription } });
     return s;
   }, [activeCase, model, glucose, lactose, submitted, submitResults]);
