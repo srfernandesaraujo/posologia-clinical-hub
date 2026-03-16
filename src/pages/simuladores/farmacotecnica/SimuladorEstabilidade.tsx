@@ -237,10 +237,8 @@ export default function SimuladorEstabilidade() {
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
       <SimulatorChallengeMode challengeSet={getEstabilidadeChallenges()} simulatorState={{ concentration, temp, order, kRef, t90 }} onComplete={() => setChallengeCompleted(true)} />
 
-      {isVirtualRoom && (
-        !submitted ? (
-          <Button onClick={handleFinish} disabled={!challengeCompleted} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
-        ) : !showFeedback ? (
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
           <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
         ) : (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
