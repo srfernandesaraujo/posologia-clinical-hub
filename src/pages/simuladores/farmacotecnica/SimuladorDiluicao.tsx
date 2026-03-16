@@ -100,6 +100,13 @@ export default function SimuladorDiluicao() {
     if (activeCase) { setC1(activeCase.initialC1); setV1(activeCase.initialV1); setV2(activeCase.initialV1 * 10); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const { c2, diluent, serial, naclNeeded } = useMemo(() => computeDilution(c1, v1, v2), [c1, v1, v2]);
 
   const handleFinish = useCallback(() => {
