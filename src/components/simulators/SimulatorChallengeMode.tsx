@@ -39,12 +39,16 @@ export interface ChallengeSet {
 
 interface SimulatorChallengeModeProps {
   challengeSet: ChallengeSet;
+  /** Override challenge set (e.g., from virtual room custom challenges) */
+  customChallengeSet?: ChallengeSet | null;
   /** Current simulator state (for adjust challenges) */
   simulatorState: Record<string, any>;
   /** Called when student should reset simulator to specific values for a challenge */
   onResetForChallenge?: (params: Record<string, number>) => void;
   /** Called when all challenges complete with final score */
   onComplete?: (score: number, total: number) => void;
+  /** Hide the challenge section entirely */
+  hidden?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
