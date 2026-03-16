@@ -287,7 +287,9 @@ export default function SimuladorCineticaAvancada() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={() => handleFinish()} fallbackLabel="Finalizar" />
+              {!isVirtualRoom && (
+                <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="flex-1">Finalizar</Button>
+              )}
             </div>
           </CardContent>
         </Card>
