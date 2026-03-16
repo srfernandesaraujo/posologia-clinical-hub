@@ -190,10 +190,11 @@ export default function SimuladorDiluicao() {
                   <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
                   <p className="text-xs text-muted-foreground">C2: {c2} | Faixa esperada: {activeCase?.expectedC2Range?.[0]}–{activeCase?.expectedC2Range?.[1]}</p>
                 </div>
-              )}{isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
+              )
             ) : (
               <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
             )}
+            {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
           </CardContent>
         </Card>
         <Card>
