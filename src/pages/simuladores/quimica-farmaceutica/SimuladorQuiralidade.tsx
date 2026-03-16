@@ -99,8 +99,10 @@ export default function SimuladorQuiralidade() {
   ], [drug, eutomerFraction, distomerFraction]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { drugId, ee, eutomerFraction } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { drugId, ee, eutomerFraction } });
+    return s;
   }, [activeCase, drugId, ee, eutomerFraction, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialDrug: c.initialDrug ?? "omeprazol", initialEnantiomericExcess: c.initialEnantiomericExcess ?? 100, expectedAnswer: c.expectedAnswer ?? "eutomer", clinicalTip: c.clinicalTip ?? "" });
