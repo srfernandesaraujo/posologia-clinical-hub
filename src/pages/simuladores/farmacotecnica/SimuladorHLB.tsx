@@ -220,14 +220,15 @@ export default function SimuladorHLB() {
           <CardHeader><CardTitle className="text-base">Estabilidade vs HLB</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={stabilityData}>
+              <ComposedChart data={stabilityData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="hlb" label={{ value: "HLB", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis domain={[0, 110]} label={{ value: "Estabilidade (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine x={Math.round(hlbMix * 10) / 10} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))" }} />
                 <Area type="monotone" dataKey="stability" name="Estabilidade" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-              </AreaChart>
+                <Scatter dataKey="mixPoint" name="HLB Atual" fill="hsl(var(--destructive))" r={6} />
+                <ReferenceLine x={Math.round(hlbMix * 2) / 2} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))", position: "top" }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
