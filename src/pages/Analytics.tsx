@@ -480,6 +480,38 @@ export default function Analytics() {
     },
   });
 
+  // ── Realtime: auto-refresh when new submissions or participants arrive ──
+  const allRoomIds = rooms.map((r: any) => r.id);
+  useEffect(() => {
+    if (allRoomIds.length === 0) return;
+
+    const channel = supabase
+      .channel("analytics-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_submissions" },
+        (payload) => {
+          if (allRoomIds.includes(payload.new.room_id)) {
+            queryClient.invalidateQueries({ queryKey: ["analytics-submissions"] });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_participants" },
+        (payload) => {
+          if (allRoomIds.includes(payload.new.room_id)) {
+            queryClient.invalidateQueries({ queryKey: ["analytics-participants"] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [allRoomIds.join(","), queryClient]);
+
   const totalStudents = allParticipants.length;
   const totalSubmissions = allSubmissions.length;
   const avgScore = totalSubmissions > 0
