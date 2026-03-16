@@ -20,19 +20,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const SLUG = "quiralidade";
 
-const CHIRAL_DRUGS = [
-  { id: "omeprazol", name: "Omeprazol / Esomeprazol", eutomer: "S-omeprazol", distomer: "R-omeprazol", eutomerPotency: 85, distomerPotency: 45, eutomerToxicity: 15, distomerToxicity: 20, eutomerMetab: 70, distomerMetab: 50, eudismicRatio: 1.9, chiralSwitch: true },
-  { id: "ibuprofeno", name: "Ibuprofeno R / S", eutomer: "S-ibuprofeno", distomer: "R-ibuprofeno", eutomerPotency: 90, distomerPotency: 10, eutomerToxicity: 20, distomerToxicity: 15, eutomerMetab: 60, distomerMetab: 65, eudismicRatio: 9.0, chiralSwitch: false },
-  { id: "talidomida", name: "Talidomida R / S", eutomer: "R-talidomida", distomer: "S-talidomida", eutomerPotency: 80, distomerPotency: 75, eutomerToxicity: 10, distomerToxicity: 95, eutomerMetab: 50, distomerMetab: 50, eudismicRatio: 1.1, chiralSwitch: false },
-  { id: "metotrexato", name: "Metotrexato L / D", eutomer: "L-metotrexato", distomer: "D-metotrexato", eutomerPotency: 95, distomerPotency: 5, eutomerToxicity: 60, distomerToxicity: 5, eutomerMetab: 40, distomerMetab: 80, eudismicRatio: 19.0, chiralSwitch: false },
-];
-
 interface ChirCase {
   id?: string; title: string; difficulty: string; isAI?: boolean;
   patient: { name: string; drug: string; context: string };
   scenario: string; initialDrug: string; initialEnantiomericExcess: number;
   expectedAnswer: string; clinicalTip: string;
 }
+
+const CHIRAL_DRUGS = [
+  { id: "omeprazol", name: "Omeprazol / Esomeprazol", eutomer: "S-omeprazol", distomer: "R-omeprazol", eutomerPotency: 85, distomerPotency: 45, eutomerToxicity: 15, distomerToxicity: 20, eutomerMetab: 70, distomerMetab: 50, eudismicRatio: 1.9, chiralSwitch: true },
+  { id: "ibuprofeno", name: "Ibuprofeno R / S", eutomer: "S-ibuprofeno", distomer: "R-ibuprofeno", eutomerPotency: 90, distomerPotency: 10, eutomerToxicity: 20, distomerToxicity: 15, eutomerMetab: 60, distomerMetab: 65, eudismicRatio: 9.0, chiralSwitch: false },
+  { id: "talidomida", name: "Talidomida R / S", eutomer: "R-talidomida", distomer: "S-talidomida", eutomerPotency: 80, distomerPotency: 75, eutomerToxicity: 10, distomerToxicity: 95, eutomerMetab: 50, distomerMetab: 50, eudismicRatio: 1.1, chiralSwitch: false },
+  { id: "metotrexato", name: "Metotrexato L / D", eutomer: "L-metotrexato", distomer: "D-metotrexato", eutomerPotency: 95, distomerPotency: 5, eutomerToxicity: 60, distomerToxicity: 5, eutomerMetab: 40, distomerMetab: 80, eudismicRatio: 19.0, chiralSwitch: false },
+];
 
 const BUILT_IN_CASES: ChirCase[] = [
   {
@@ -74,6 +74,9 @@ export default function SimuladorQuiralidade() {
   const [activeCase, setActiveCase] = useState<ChirCase | null>(null);
   const [drugId, setDrugId] = useState("omeprazol");
   const [ee, setEe] = useState(100);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -100,11 +103,17 @@ export default function SimuladorQuiralidade() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
     const s = 80;
+    setLastScore(s);
     submitResults({ score: s, actions: { drugId, ee, eutomerFraction } });
     return s;
   }, [activeCase, drugId, ee, eutomerFraction, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialDrug: c.initialDrug ?? "omeprazol", initialEnantiomericExcess: c.initialEnantiomericExcess ?? 100, expectedAnswer: c.expectedAnswer ?? "eutomer", clinicalTip: c.clinicalTip ?? "" });
+
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   if (!activeCase) {
     return (
@@ -127,7 +136,9 @@ export default function SimuladorQuiralidade() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && (
+              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -139,7 +150,7 @@ export default function SimuladorQuiralidade() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -165,7 +176,21 @@ export default function SimuladorQuiralidade() {
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Razão Eudísmica</p><p className="text-xl font-bold">{drug.eudismicRatio}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Chiral Switch?</p><p className="text-xl font-bold">{drug.chiralSwitch ? "✓ Sim" : "✗ Não"}</p></div>
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && !submitted && (
+              <Button onClick={() => handleFinish()} className="w-full gap-2"><FlaskConical className="h-4 w-4" /> Finalizar Caso</Button>
+            )}
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              </div>
+            )}
+            {!isVirtualRoom && (
+              <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -188,7 +213,7 @@ export default function SimuladorQuiralidade() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugId, ee, eutomerFraction }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugId, ee, eutomerFraction }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }

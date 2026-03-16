@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BookOpen, CheckCircle, XCircle, ChevronRight, RotateCcw, Award, Target } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, BookOpen, CheckCircle, XCircle, ChevronRight, RotateCcw, Award, Target, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+
+const SLUG = "planejamento-aula";
 
 interface Competence {
   id: string;
@@ -57,11 +60,15 @@ const ASSESSMENTS: Assessment[] = [
 type Step = "competence" | "objective" | "methodology" | "assessment" | "result";
 
 export default function SimuladorPlanejamentoAula() {
+  const navigate = useNavigate();
+  const { isVirtualRoom, submitResults, submitted } = useVirtualRoomCase(SLUG);
+
   const [step, setStep] = useState<Step>("competence");
   const [selectedCompetence, setSelectedCompetence] = useState<string | null>(null);
   const [objectiveLevel, setObjectiveLevel] = useState<string | null>(null);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   const competence = COMPETENCES.find(c => c.id === selectedCompetence);
 
@@ -79,7 +86,6 @@ export default function SimuladorPlanejamentoAula() {
     setSelectedAssessments(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
   };
 
-  // Alignment scoring
   const methodAlignment = selectedMethods.filter(mId => {
     const m = METHODOLOGIES.find(x => x.id === mId);
     return m && selectedCompetence && m.bestFor.includes(selectedCompetence);
@@ -98,6 +104,20 @@ export default function SimuladorPlanejamentoAula() {
     ? Math.round(((methodAlignment / selectedMethods.length) + (assessmentAlignment / selectedAssessments.length)) / 2 * 100)
     : 0;
 
+  // VR auto-submit
+  useEffect(() => {
+    if (isVirtualRoom && step === "result" && !submitted) {
+      submitResults({ score: totalAlignment, actions: { selectedCompetence, objectiveLevel, selectedMethods, selectedAssessments } });
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const handleRestart = () => {
     setStep("competence");
     setSelectedCompetence(null);
@@ -112,7 +132,7 @@ export default function SimuladorPlanejamentoAula() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/simuladores"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
+        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
         <div>
           <h1 className="text-2xl font-bold">Planejamento de Aula por Competências</h1>
           <p className="text-muted-foreground text-sm">Alinhamento construtivo com DCNs de Farmácia (Biggs)</p>
@@ -227,54 +247,61 @@ export default function SimuladorPlanejamentoAula() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Alinhamento Construtivo (Biggs)</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-center py-4">
-              <div className={`text-5xl font-bold mb-2 ${totalAlignment >= 70 ? "text-emerald-600" : totalAlignment >= 40 ? "text-amber-600" : "text-destructive"}`}>{totalAlignment}%</div>
-              <p className="text-muted-foreground text-sm">Coerência do Alinhamento Construtivo</p>
-              <Progress value={totalAlignment} className="h-3 mt-3 max-w-xs mx-auto" />
-            </div>
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {(!isVirtualRoom || showFeedbackVR) && (
+              <>
+                <div className="text-center py-4">
+                  <div className={`text-5xl font-bold mb-2 ${totalAlignment >= 70 ? "text-emerald-600" : totalAlignment >= 40 ? "text-amber-600" : "text-destructive"}`}>{totalAlignment}%</div>
+                  <p className="text-muted-foreground text-sm">Coerência do Alinhamento Construtivo</p>
+                  <Progress value={totalAlignment} className="h-3 mt-3 max-w-xs mx-auto" />
+                </div>
 
-            <div className="space-y-3 text-sm">
-              <div className="p-3 rounded-lg border">
-                <p className="font-medium mb-1">🎯 Competência DCN</p>
-                <p className="text-muted-foreground">{competence?.text}</p>
-                <Badge variant="outline" className="mt-1">{competence?.area}</Badge>
-              </div>
-              <div className="p-3 rounded-lg border">
-                <p className="font-medium mb-1">📐 Nível do Objetivo</p>
-                <p className="text-muted-foreground">{objectiveLevels.find(o => o.id === objectiveLevel)?.desc}</p>
-              </div>
-              <div className="p-3 rounded-lg border">
-                <p className="font-medium mb-1">📚 Metodologias</p>
-                {selectedMethods.map(mId => {
-                  const m = METHODOLOGIES.find(x => x.id === mId)!;
-                  const aligned = selectedCompetence && m.bestFor.includes(selectedCompetence);
-                  return (
-                    <div key={mId} className="flex items-center gap-2 mt-1">
-                      {aligned ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                      <span>{m.name}</span>
-                      {!aligned && <span className="text-xs text-muted-foreground">(baixo alinhamento com esta competência)</span>}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="p-3 rounded-lg border">
-                <p className="font-medium mb-1">✅ Avaliação</p>
-                {selectedAssessments.map(aId => {
-                  const a = ASSESSMENTS.find(x => x.id === aId)!;
-                  return <p key={aId} className="text-muted-foreground">• {a.name}: {a.measures.join(", ")}</p>;
-                })}
-              </div>
-            </div>
+                <div className="space-y-3 text-sm">
+                  <div className="p-3 rounded-lg border">
+                    <p className="font-medium mb-1">🎯 Competência DCN</p>
+                    <p className="text-muted-foreground">{competence?.text}</p>
+                    <Badge variant="outline" className="mt-1">{competence?.area}</Badge>
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="font-medium mb-1">📐 Nível do Objetivo</p>
+                    <p className="text-muted-foreground">{objectiveLevels.find(o => o.id === objectiveLevel)?.desc}</p>
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="font-medium mb-1">📚 Metodologias</p>
+                    {selectedMethods.map(mId => {
+                      const m = METHODOLOGIES.find(x => x.id === mId)!;
+                      const aligned = selectedCompetence && m.bestFor.includes(selectedCompetence);
+                      return (
+                        <div key={mId} className="flex items-center gap-2 mt-1">
+                          {aligned ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                          <span>{m.name}</span>
+                          {!aligned && <span className="text-xs text-muted-foreground">(baixo alinhamento com esta competência)</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="font-medium mb-1">✅ Avaliação</p>
+                    {selectedAssessments.map(aId => {
+                      const a = ASSESSMENTS.find(x => x.id === aId)!;
+                      return <p key={aId} className="text-muted-foreground">• {a.name}: {a.measures.join(", ")}</p>;
+                    })}
+                  </div>
+                </div>
 
-            <Separator />
-            <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <p className="font-semibold mb-2">📚 Referências</p>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Biggs J, Tang C. <em>Teaching for Quality Learning at University</em>. 4th ed. Open University Press, 2011.</li>
-                <li>• Brasil. Resolução CNE/CES nº 6/2017 — DCNs Farmácia.</li>
-              </ul>
-            </div>
-            <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Planejar Nova Aula</Button>
+                <Separator />
+                <div className="bg-muted/50 rounded-lg p-4 text-sm">
+                  <p className="font-semibold mb-2">📚 Referências</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Biggs J, Tang C. <em>Teaching for Quality Learning at University</em>. 4th ed. Open University Press, 2011.</li>
+                    <li>• Brasil. Resolução CNE/CES nº 6/2017 — DCNs Farmácia.</li>
+                  </ul>
+                </div>
+                {!isVirtualRoom && <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Planejar Nova Aula</Button>}
+              </>
+            )}
           </CardContent>
         </Card>
       )}
