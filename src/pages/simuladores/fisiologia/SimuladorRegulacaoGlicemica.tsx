@@ -111,9 +111,9 @@ export default function SimuladorRegulacaoGlicemica() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialCarbIntake: cd.initialCarbIntake ?? 50, initialInsulinSensitivity: cd.initialInsulinSensitivity ?? 80,
         initialPancreaticFunction: cd.initialPancreaticFunction ?? 95,
