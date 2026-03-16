@@ -154,11 +154,11 @@ export default function SimuladorADME() {
   const pk = generatePKCurve(bioavailability, vd, clearance, ka, firstPass);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = pk.cmax >= activeCase.expectedCmax[0] && pk.cmax <= activeCase.expectedCmax[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(pk.cmax - (activeCase.expectedCmax[0] + activeCase.expectedCmax[1]) / 2) * 3);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { bioavailability, vd, clearance, ka, firstPass, cmax: pk.cmax, tmax: pk.tmax } });
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(pk.cmax - (activeCase.expectedCmax[0] + activeCase.expectedCmax[1]) / 2) * 3));
+    if (!submitted) submitResults({ score: s, actions: { bioavailability, vd, clearance, ka, firstPass, cmax: pk.cmax, tmax: pk.tmax } });
+    return s;
   }, [activeCase, pk, bioavailability, vd, clearance, ka, firstPass, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
