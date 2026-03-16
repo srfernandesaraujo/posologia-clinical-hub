@@ -126,6 +126,13 @@ export default function SimuladorLiberacaoFarmacos() {
     if (activeCase) { setCoating(activeCase.initialCoating); setParticleSize(activeCase.initialParticleSize); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const points = useMemo(() => computeRelease(coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal), [coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal]);
 
   const handleFinish = useCallback(() => {
