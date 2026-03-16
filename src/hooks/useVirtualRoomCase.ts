@@ -193,6 +193,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     : null;
 
   const customChallenges = roomCtxRef.current?.customChallenges || null;
+  const nativeCaseIndex: number | null = roomCtxRef.current?.nativeCaseIndex ?? null;
 
   return {
     virtualRoomCase,
@@ -205,5 +206,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     examFeedback,
     proceedToNext,
     customChallenges,
+    nativeCaseIndex,
   };
 }
