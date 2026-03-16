@@ -152,9 +152,11 @@ export default function SimuladorDocking() {
   };
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = result.deltaG >= activeCase.expectedDeltaGRange[0] && result.deltaG <= activeCase.expectedDeltaGRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { targetId, distance, activeInter, deltaG: result.deltaG } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { targetId, distance, activeInter, deltaG: result.deltaG } });
+    return s;
   }, [activeCase, result, targetId, distance, activeInter, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialTarget: c.initialTarget ?? "cox2", initialDistance: c.initialDistance ?? 3.5, expectedDeltaGRange: c.expectedDeltaGRange ?? [-12, -8], clinicalTip: c.clinicalTip ?? "" });
