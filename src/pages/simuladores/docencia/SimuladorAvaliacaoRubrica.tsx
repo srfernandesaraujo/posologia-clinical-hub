@@ -116,12 +116,31 @@ Observações:
 ];
 
 export default function SimuladorAvaliacaoRubrica() {
+  const navigate = useNavigate();
   const [stationIdx, setStationIdx] = useState(0);
   const [scores, setScores] = useState<(number | null)[]>([]);
   const [currentCriterion, setCurrentCriterion] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [vrShowFeedback, setVrShowFeedback] = useState(false);
 
   const station = STATIONS[stationIdx];
+
+  const { isVirtualRoom: isVR, submitResults, submitted } = useVirtualRoomCase("avaliacao-rubrica");
+
+  // Auto-submit when result is shown
+  useEffect(() => {
+    if (isVR && showResult && !submitted) {
+      submitResults({ score: Math.round(kappa * 100), actions: { scores, agreements }, timeSpentSeconds: 0 });
+    }
+  }, [showResult]);
+
+  // 15s redirect
+  useEffect(() => {
+    if (isVR && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, submitted, navigate]);
 
   const handleScore = (level: number) => {
     const newScores = [...scores];
