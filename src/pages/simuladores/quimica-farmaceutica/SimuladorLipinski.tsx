@@ -106,9 +106,11 @@ export default function SimuladorLipinski() {
   const scatterData = [...KNOWN_DRUGS.map(d => ({ ...d, z: 8 })), { name: "Seu Composto", mw, logP, hbd, hba, z: 12 }];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = result.violations === activeCase.expectedViolations;
-    submitResults({ score: ok ? 100 : 40, actions: { mw, logP, hbd, hba, violations: result.violations } });
+    const s = ok ? 100 : 40;
+    submitResults({ score: s, actions: { mw, logP, hbd, hba, violations: result.violations } });
+    return s;
   }, [activeCase, result, mw, logP, hbd, hba, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialMW: c.initialMW ?? 350, initialLogP: c.initialLogP ?? 2.5, initialHBD: c.initialHBD ?? 2, initialHBA: c.initialHBA ?? 5, expectedViolations: c.expectedViolations ?? 0, clinicalTip: c.clinicalTip ?? "" });
