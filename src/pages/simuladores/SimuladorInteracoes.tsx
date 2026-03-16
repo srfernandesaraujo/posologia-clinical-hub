@@ -278,6 +278,12 @@ export default function SimuladorInteracoes() {
   const sevColor = (s: string) => s === "high" ? "bg-red-500/10 text-red-600 border-red-500/30" : s === "medium" ? "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" : "bg-green-500/10 text-green-600 border-green-500/30";
   const sevIcon = (s: string) => s === "high" ? <ShieldAlert className="h-5 w-5 text-red-500" /> : s === "medium" ? <AlertTriangle className="h-5 w-5 text-yellow-500" /> : <ShieldCheck className="h-5 w-5 text-green-500" />;
 
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVR && !activeCase) return null;
+
   /* ─── Dashboard ─── */
   if (!activeCase) {
     return (
