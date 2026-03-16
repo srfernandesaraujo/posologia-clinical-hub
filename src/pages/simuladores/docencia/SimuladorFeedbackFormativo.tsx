@@ -198,14 +198,33 @@ const MODELS: Record<FeedbackModel, { name: string; description: string; steps: 
 };
 
 export default function SimuladorFeedbackFormativo() {
+  const navigate = useNavigate();
   const [model, setModel] = useState<FeedbackModel | null>(null);
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [vrShowFeedback, setVrShowFeedback] = useState(false);
 
   const scenario = SCENARIOS[scenarioIndex];
+
+  const { isVirtualRoom: isVR, submitResults, submitted } = useVirtualRoomCase("feedback-formativo");
+
+  // Auto-submit when result is shown
+  useEffect(() => {
+    if (isVR && showResult && !submitted) {
+      submitResults({ score: percentage, actions: { model, answers }, timeSpentSeconds: 0 });
+    }
+  }, [showResult]);
+
+  // 15s redirect
+  useEffect(() => {
+    if (isVR && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, submitted, navigate]);
 
   const handleSelectModel = (m: FeedbackModel) => {
     setModel(m);
