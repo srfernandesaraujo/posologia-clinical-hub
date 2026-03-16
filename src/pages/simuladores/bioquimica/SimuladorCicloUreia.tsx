@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, Beaker } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -74,7 +75,7 @@ export default function SimuladorCicloUreia() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<UreaCycleCase | null>(null);
   const [deficiencies, setDeficiencies] = useState({ cpsI: false, otc: false, ass: false, asl: false, arginase: false });
@@ -84,9 +85,9 @@ export default function SimuladorCicloUreia() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: cd.id, title: cd.title, difficulty: cd.difficulty, isAI: cd.isAI,
         patient: cd.patient, scenario: cd.scenario,
         deficiencies: cd.deficiencies ?? { cpsI: false, otc: false, ass: false, asl: false, arginase: false },
         expectedAmmonia: cd.expectedAmmonia ?? [50, 200], clinicalTip: cd.clinicalTip ?? "",
@@ -156,8 +157,9 @@ export default function SimuladorCicloUreia() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ammoniaOk = model.ammoniaLevel >= activeCase.expectedAmmonia[0] && model.ammoniaLevel <= activeCase.expectedAmmonia[1];
-    const s = ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5);
-    submitResults({ score: Math.round(s), actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+    const s = Math.round(ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5));
+    submitResults({ score: s, actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+    return s;
   }, [activeCase, model, deficiencies, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -305,7 +307,7 @@ export default function SimuladorCicloUreia() {
 
       <div className="flex gap-2">
         <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-        <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
+        <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={() => handleFinish() ?? 0} fallbackLabel="Finalizar" />
       </div>
 
       {history.length > 0 && (
