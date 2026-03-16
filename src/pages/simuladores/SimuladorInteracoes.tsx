@@ -346,9 +346,12 @@ export default function SimuladorInteracoes() {
   /* ─── Simulator UI ─── */
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
+        <Button variant="ghost" size="icon" onClick={isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
