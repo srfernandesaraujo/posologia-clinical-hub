@@ -157,8 +157,9 @@ export default function SimuladorCicloUreia() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ammoniaOk = model.ammoniaLevel >= activeCase.expectedAmmonia[0] && model.ammoniaLevel <= activeCase.expectedAmmonia[1];
-    const s = ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5);
-    submitResults({ score: Math.round(s), actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+    const s = Math.round(ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5));
+    submitResults({ score: s, actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+    return s;
   }, [activeCase, model, deficiencies, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
