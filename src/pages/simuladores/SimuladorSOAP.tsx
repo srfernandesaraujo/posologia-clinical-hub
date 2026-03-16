@@ -139,6 +139,13 @@ export default function SimuladorSOAP() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase(SLUG);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
+
+  useEffect(() => {
+    if (isVirtualRoom && screen === "report") {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, screen, goBack]);
   const [caseIdx, setCaseIdx] = useState(0);
   const [userSOAP, setUserSOAP] = useState<UserSOAP>({ subjetivo: "", objetivo: "", avaliacao: "", plano: "" });
   const [activeTab, setActiveTab] = useState<string>("subjetivo");

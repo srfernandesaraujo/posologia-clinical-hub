@@ -92,6 +92,13 @@ export default function SimuladorPRM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("prm", BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext, nativeCaseIndex } = useVirtualRoomCase("prm", BUILT_IN_CASES);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
+
+  useEffect(() => {
+    if (isVirtualRoom && screen === "report") {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, screen, goBack]);
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
   const [selectedDrug, setSelectedDrug] = useState<number | null>(null);
