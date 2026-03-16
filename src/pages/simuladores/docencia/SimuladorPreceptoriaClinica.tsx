@@ -201,7 +201,7 @@ export default function SimuladorPreceptoriaClinica() {
 
   useEffect(() => {
     if (isVirtualRoom && submitted) {
-      const t = setTimeout(() => navigate("/", 15000);
+      const t = setTimeout(() => navigate("/"), 15000);
       return () => clearTimeout(t);
     }
   }, [isVirtualRoom, submitted, navigate]);
