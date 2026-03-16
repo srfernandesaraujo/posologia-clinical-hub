@@ -118,6 +118,13 @@ export default function SimuladorReologia() {
     if (activeCase) { setBehavior(activeCase.initialBehavior); setViscosity(activeCase.initialViscosity); setThickener(0); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const points = useMemo(() => computeRheogram(behavior, viscosity, thickener), [behavior, viscosity, thickener]);
 
   const handleFinish = useCallback(() => {
