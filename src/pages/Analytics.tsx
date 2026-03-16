@@ -61,17 +61,17 @@ const SIMULATOR_LABELS: Record<string, string> = {
   reologia: "Reologia",
   "tampao-farmaceutico": "Tampão Farmacêutico",
   // Laboratório Virtual
-  farmacos: "Lab: Fármacos",
-  microbiologia: "Lab: Microbiologia",
-  toxicologia: "Lab: Toxicologia",
-  farmacogenomica: "Lab: Farmacogenômica",
-  estabilidade: "Lab: Estabilidade",
-  "controle-qualidade": "Lab: Controle de Qualidade",
-  epidemiologia: "Lab: Epidemiologia",
-  biotecnologia: "Lab: Biotecnologia",
-  "simulacao-realistica": "Lab: Simulação Realística",
-  "pericia-forense": "Lab: Perícia Forense",
-  "modelagem-molecular": "Lab: Modelagem Molecular",
+  "lab-farmacos": "Lab: Fármacos",
+  "lab-microbiologia": "Lab: Microbiologia",
+  "lab-toxicologia": "Lab: Toxicologia",
+  "lab-farmacogenomica": "Lab: Farmacogenômica",
+  "lab-estabilidade": "Lab: Estabilidade",
+  "lab-controle-qualidade": "Lab: Controle de Qualidade",
+  "lab-epidemiologia": "Lab: Epidemiologia",
+  "lab-biotecnologia": "Lab: Biotecnologia",
+  "lab-simulacao-realistica": "Lab: Simulação Realística",
+  "lab-pericia-forense": "Lab: Perícia Forense",
+  "lab-modelagem-molecular": "Lab: Modelagem Molecular",
 };
 
 const CHART_COLORS = [
