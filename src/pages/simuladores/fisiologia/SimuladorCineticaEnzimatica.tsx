@@ -112,9 +112,9 @@ export default function SimuladorCineticaEnzimatica() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialVmax: cd.initialVmax ?? 100, initialKm: cd.initialKm ?? 50,
         expectedVmax: cd.expectedVmax ?? [90, 110], expectedKm: cd.expectedKm ?? [45, 55], clinicalTip: cd.clinicalTip ?? "",
