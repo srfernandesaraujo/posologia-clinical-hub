@@ -299,6 +299,7 @@ export type Database = {
         Row: {
           case_id: string | null
           created_at: string
+          custom_challenges: Json | null
           id: string
           position: number
           room_id: string
@@ -307,6 +308,7 @@ export type Database = {
         Insert: {
           case_id?: string | null
           created_at?: string
+          custom_challenges?: Json | null
           id?: string
           position?: number
           room_id: string
@@ -315,6 +317,7 @@ export type Database = {
         Update: {
           case_id?: string | null
           created_at?: string
+          custom_challenges?: Json | null
           id?: string
           position?: number
           room_id?: string
@@ -710,6 +713,7 @@ export type Database = {
           case_id: string | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           description: string | null
           expires_at: string | null
           id: string
@@ -722,6 +726,7 @@ export type Database = {
           case_id?: string | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           description?: string | null
           expires_at?: string | null
           id?: string
@@ -734,6 +739,7 @@ export type Database = {
           case_id?: string | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           description?: string | null
           expires_at?: string | null
           id?: string
