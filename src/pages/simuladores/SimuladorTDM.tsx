@@ -78,7 +78,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 
 export default function SimuladorTDM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("tdm", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tdm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tdm", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");

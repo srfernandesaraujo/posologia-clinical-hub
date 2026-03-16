@@ -17,6 +17,7 @@ import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, Arrow
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
+import { getNativeCases } from "@/data/nativeCaseCatalog";
 
 interface ToolOption {
   slug: string;
@@ -247,13 +248,17 @@ export default function SalasVirtuais() {
       const pin = generatePin();
       const isLegacy = validActivities.length === 1;
 
+      // For native cases, don't store in case_id (UUID FK). Store in description or custom field.
+      const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") ? caseId : null;
+      const getNativeCaseIndex = (caseId: string) => caseId?.startsWith("native:") ? parseInt(caseId.replace("native:", "")) : null;
+
       const { data: roomData, error: roomError } = await supabase
         .from("virtual_rooms")
         .insert({
           pin,
           title,
           simulator_slug: isLegacy ? validActivities[0].simulatorSlug : null,
-          case_id: isLegacy ? (validActivities[0].caseId || null) : null,
+          case_id: isLegacy ? getDbCaseId(validActivities[0].caseId) : null,
           created_by: user!.id,
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
@@ -265,9 +270,13 @@ export default function SalasVirtuais() {
       const activityRows = validActivities.map((a, i) => ({
         room_id: roomData.id,
         simulator_slug: a.simulatorSlug,
-        case_id: a.caseId || null,
+        case_id: getDbCaseId(a.caseId),
         position: i,
-        custom_challenges: a.customChallenges || null,
+        custom_challenges: a.customChallenges
+          ? { ...a.customChallenges, nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+          : getNativeCaseIndex(a.caseId) !== null
+            ? { nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+            : null,
       }));
 
       const { error: actError } = await supabase
@@ -595,23 +604,42 @@ export default function SalasVirtuais() {
                           )}
 
                           {/* Step 3: Case (only for simulators, not labs) */}
-                          {act.simulatorSlug && toolType === "simulator" && (
-                            <div>
-                              <Label className="text-xs">Caso Clínico</Label>
-                              {casesForSlug.length > 0 ? (
-                                <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
-                                  <SelectTrigger><SelectValue placeholder="Selecione o caso clínico" /></SelectTrigger>
-                                  <SelectContent>
-                                    {casesForSlug.map((c: any) => (
-                                      <SelectItem key={c.id} value={c.id}>{c.title} ({c.difficulty})</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <p className="text-xs text-muted-foreground italic py-2">Nenhum caso clínico disponível para este simulador. Crie casos na página do simulador primeiro.</p>
-                              )}
-                            </div>
-                          )}
+                          {act.simulatorSlug && toolType === "simulator" && (() => {
+                            const nativeCasesForSlug = getNativeCases(act.simulatorSlug);
+                            const hasAnyCases = casesForSlug.length > 0 || nativeCasesForSlug.length > 0;
+                            return (
+                              <div>
+                                <Label className="text-xs">Caso Clínico</Label>
+                                {hasAnyCases ? (
+                                  <Select value={act.caseId} onValueChange={v => updateActivity(i, "caseId", v)}>
+                                    <SelectTrigger><SelectValue placeholder="Selecione o caso clínico (opcional)" /></SelectTrigger>
+                                    <SelectContent>
+                                      {nativeCasesForSlug.length > 0 && (
+                                        <>
+                                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Nativos</div>
+                                          {nativeCasesForSlug.map(nc => (
+                                            <SelectItem key={`native:${nc.index}`} value={`native:${nc.index}`}>
+                                              📋 {nc.title} ({nc.difficulty})
+                                            </SelectItem>
+                                          ))}
+                                        </>
+                                      )}
+                                      {casesForSlug.length > 0 && (
+                                        <>
+                                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Criados / IA</div>
+                                          {casesForSlug.map((c: any) => (
+                                            <SelectItem key={c.id} value={c.id}>🤖 {c.title} ({c.difficulty})</SelectItem>
+                                          ))}
+                                        </>
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground italic py-2">Nenhum caso clínico disponível para este simulador.</p>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {/* Step 4: Instruction (only in exam mode, after simulator selected) */}
                           {isExamMode && act.simulatorSlug && (

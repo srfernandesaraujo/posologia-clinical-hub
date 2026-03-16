@@ -111,7 +111,7 @@ export default function SimuladorDesmameBenzo() {
   const isVirtualRoom = location.pathname.startsWith("/sala");
 
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("desmame-benzo", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("desmame-benzo");
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("desmame-benzo", BUILT_IN_CASES);
 
   const [screen, setScreen] = useState<"dashboard" | "config" | "plan">("dashboard");
   const [activeCase, setActiveCase] = useState<TaperingCase | null>(null);

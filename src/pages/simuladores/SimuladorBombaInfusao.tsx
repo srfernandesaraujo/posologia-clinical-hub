@@ -118,7 +118,7 @@ export default function SimuladorBombaInfusao() {
   const isVirtualRoom = location.pathname.startsWith("/sala");
 
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("bomba-infusao", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("bomba-infusao");
+  const { virtualRoomCase, isVirtualRoom: isVR, loading: loadingVR, goBack, submitResults: submitVRResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("bomba-infusao", BUILT_IN_CASES);
 
   const [screen, setScreen] = useState<"dashboard" | "sim">("dashboard");
   const [activeCase, setActiveCase] = useState<InfusionCase | null>(null);

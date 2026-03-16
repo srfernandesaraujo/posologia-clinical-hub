@@ -86,7 +86,7 @@ type UserAction = { drug: string; action: string; newDose?: string; newFrequency
 
 export default function SimuladorAcompanhamento() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("acompanhamento", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("acompanhamento");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("acompanhamento", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [consultIdx, setConsultIdx] = useState(0);

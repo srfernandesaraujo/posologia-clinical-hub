@@ -9,7 +9,7 @@ interface ExamFeedback {
   isFinalActivity: boolean;
 }
 
-export function useVirtualRoomCase(simulatorSlug: string) {
+export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) {
   const navigate = useNavigate();
   const [virtualRoomCase, setVirtualRoomCase] = useState<any>(null);
   const [isVirtualRoom, setIsVirtualRoom] = useState(false);
@@ -23,9 +23,13 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     if (!raw) return;
     try {
       const ctx = JSON.parse(raw);
-      if (ctx.caseId && ctx.simulatorSlug === simulatorSlug) {
-        roomCtxRef.current = ctx;
-        setIsVirtualRoom(true);
+      if (ctx.simulatorSlug !== simulatorSlug) return;
+
+      roomCtxRef.current = ctx;
+      setIsVirtualRoom(true);
+
+      if (ctx.caseId) {
+        // DB case — fetch from Supabase
         setLoading(true);
         supabase
           .from("simulator_cases")
@@ -44,12 +48,18 @@ export function useVirtualRoomCase(simulatorSlug: string) {
             }
             setLoading(false);
           });
-      } else if (ctx.simulatorSlug === simulatorSlug) {
-        roomCtxRef.current = ctx;
-        setIsVirtualRoom(true);
+      } else if (ctx.nativeCaseIndex !== null && ctx.nativeCaseIndex !== undefined && builtInCases) {
+        // Native built-in case — pick from array by index
+        const nativeCase = builtInCases[ctx.nativeCaseIndex];
+        if (nativeCase) {
+          setVirtualRoomCase({
+            ...nativeCase,
+            id: `native-${ctx.nativeCaseIndex}`,
+          });
+        }
       }
     } catch {}
-  }, [simulatorSlug]);
+  }, [simulatorSlug, builtInCases]);
 
   const submitResults = async (opts: {
     stepIndex?: number;
@@ -193,6 +203,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     : null;
 
   const customChallenges = roomCtxRef.current?.customChallenges || null;
+  const nativeCaseIndex: number | null = roomCtxRef.current?.nativeCaseIndex ?? null;
 
   return {
     virtualRoomCase,
@@ -205,5 +216,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     examFeedback,
     proceedToNext,
     customChallenges,
+    nativeCaseIndex,
   };
 }
