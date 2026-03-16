@@ -186,12 +186,14 @@ export default function SimuladorPRM() {
               </CardContent>
             </Card>
           ))}
-          <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
-            <div className="text-center p-6">
-              {isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
-              <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
-            </div>
-          </Card>
+          {!isVirtualRoom && (
+            <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer flex items-center justify-center min-h-[140px]" onClick={generateCase}>
+              <div className="text-center p-6">
+                {isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
+                <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     );
