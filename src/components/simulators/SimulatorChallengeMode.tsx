@@ -98,7 +98,22 @@ export default function SimulatorChallengeMode({
   const handleAdjustValidate = useCallback(() => {
     if (answered) return;
     const challenge = current as AdjustChallenge;
-    const result = challenge.validator(simulatorState);
+    let result: { correct: boolean; feedback: string };
+    
+    if (challenge.validator) {
+      result = challenge.validator(simulatorState);
+    } else {
+      // For serialized custom challenges, validate using targetParams ranges
+      const params = challenge.targetParams || {};
+      const allInRange = Object.entries(params).every(([key, spec]) => {
+        const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
+        return val !== undefined && val >= spec.min && val <= spec.max;
+      });
+      result = allInRange
+        ? { correct: true, feedback: "Parâmetros dentro da faixa esperada!" }
+        : { correct: false, feedback: "Ajuste os parâmetros para ficarem dentro das faixas indicadas." };
+    }
+    
     setAnswered(true);
     setAdjustValidated(true);
     setIsCorrect(result.correct);
