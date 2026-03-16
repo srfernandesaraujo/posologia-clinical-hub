@@ -147,6 +147,7 @@ interface ActivityItem {
   simulatorSlug: string;
   caseId: string;
   instruction: string;
+  customChallenges?: any;
 }
 
 function generatePin(): string {
