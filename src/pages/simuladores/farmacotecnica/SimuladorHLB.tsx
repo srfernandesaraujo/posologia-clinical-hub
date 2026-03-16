@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -94,18 +94,20 @@ export default function SimuladorHLB() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<HLBCase | null>(null);
   const [selectedOil, setSelectedOil] = useState(OIL_PHASES[0].name);
   const [surfAIdx, setSurfAIdx] = useState(2); // Span 80
   const [surfBIdx, setSurfBIdx] = useState(5); // Tween 80
   const [surfAPct, setSurfAPct] = useState(50);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, expectedHLBRange: cd.expectedHLBRange ?? [9, 12], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedHLBRange: cd.expectedHLBRange ?? [9, 12], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -135,7 +137,9 @@ export default function SimuladorHLB() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = hlbMix >= activeCase.expectedHLBRange[0] && hlbMix <= activeCase.expectedHLBRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { selectedOil, surfA: surfA.name, surfB: surfB.name, surfAPct, hlbMix: Math.round(hlbMix * 10) / 10 } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { selectedOil, surfA: surfA.name, surfB: surfB.name, surfAPct, hlbMix: Math.round(hlbMix * 10) / 10 } });
   }, [activeCase, hlbMix, selectedOil, surfA, surfB, surfAPct, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedHLBRange: c.expectedHLBRange ?? [9, 12], clinicalTip: c.clinicalTip ?? "" });
@@ -213,7 +217,21 @@ export default function SimuladorHLB() {
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">HLB Requerido</p><p className="text-2xl font-bold">{oil.hlbReq}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Estabilidade</p><p className={`text-2xl font-bold ${stabilityPct > 80 ? "text-green-600" : stabilityPct > 50 ? "text-yellow-600" : "text-destructive"}`}>{Math.round(stabilityPct)}%</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">HLB Mistura: {Math.round(hlbMix * 10) / 10} | Faixa esperada: {activeCase?.expectedHLBRange?.[0]}–{activeCase?.expectedHLBRange?.[1]}</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

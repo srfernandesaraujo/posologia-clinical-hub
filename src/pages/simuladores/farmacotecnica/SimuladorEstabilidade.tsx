@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -91,18 +91,20 @@ export default function SimuladorEstabilidade() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<StabCase | null>(null);
   const [concentration, setConcentration] = useState(100);
   const [temp, setTemp] = useState(25);
   const [order, setOrder] = useState("first");
   const [kRef, setKRef] = useState(0.03);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialConcentration: cd.initialConcentration ?? 100, initialTemp: cd.initialTemp ?? 25, initialOrder: cd.initialOrder ?? "first", expectedT90Range: cd.expectedT90Range ?? [5, 15], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialConcentration: cd.initialConcentration ?? 100, initialTemp: cd.initialTemp ?? 25, initialOrder: cd.initialOrder ?? "first", expectedT90Range: cd.expectedT90Range ?? [5, 15], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -115,7 +117,9 @@ export default function SimuladorEstabilidade() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const t90Ok = t90 >= activeCase.expectedT90Range[0] && t90 <= activeCase.expectedT90Range[1];
-    submitResults({ score: t90Ok ? 100 : 30, actions: { concentration, temp, order, kRef, t90 } });
+    const score = t90Ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { concentration, temp, order, kRef, t90 } });
   }, [activeCase, t90, concentration, temp, order, kRef, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialConcentration: c.initialConcentration ?? 100, initialTemp: c.initialTemp ?? 25, initialOrder: c.initialOrder ?? "first", expectedT90Range: c.expectedT90Range ?? [5, 15], clinicalTip: c.clinicalTip ?? "" });
@@ -181,7 +185,21 @@ export default function SimuladorEstabilidade() {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">t90: {t90} meses | Faixa esperada: {activeCase?.expectedT90Range?.[0]}–{activeCase?.expectedT90Range?.[1]} meses</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -102,7 +102,7 @@ export default function SimuladorLiberacaoFarmacos() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<ReleaseCase | null>(null);
   const [coating, setCoating] = useState(50);
@@ -112,11 +112,13 @@ export default function SimuladorLiberacaoFarmacos() {
   const [showEnteric, setShowEnteric] = useState(false);
   const [showPulsatile, setShowPulsatile] = useState(false);
   const [showTransdermal, setShowTransdermal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialCoating: cd.initialCoating ?? 50, initialParticleSize: cd.initialParticleSize ?? 50, expectedT80Range: cd.expectedT80Range ?? [4, 12], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialCoating: cd.initialCoating ?? 50, initialParticleSize: cd.initialParticleSize ?? 50, expectedT80Range: cd.expectedT80Range ?? [4, 12], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -128,7 +130,9 @@ export default function SimuladorLiberacaoFarmacos() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal } });
+    const score = 80;
+    setLastScore(score);
+    submitResults({ score, actions: { coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal } });
   }, [activeCase, coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialCoating: c.initialCoating ?? 50, initialParticleSize: c.initialParticleSize ?? 50, expectedT80Range: c.expectedT80Range ?? [4, 12], clinicalTip: c.clinicalTip ?? "" });
@@ -189,7 +193,21 @@ export default function SimuladorLiberacaoFarmacos() {
               <div className="flex items-center justify-between"><label className="text-sm">Pulsátil</label><Switch checked={showPulsatile} onCheckedChange={setShowPulsatile} /></div>
               <div className="flex items-center justify-between"><label className="text-sm">Transdérmica</label><Switch checked={showTransdermal} onCheckedChange={setShowTransdermal} /></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">Revestimento: {coating}% | Tamanho de Partícula: {particleSize}%</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -100,16 +100,18 @@ export default function SimuladorGranulometria() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<GranCase | null>(null);
   const [mean, setMean] = useState(150);
   const [spread, setSpread] = useState(30);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialMean: cd.initialMean ?? 150, initialSpread: cd.initialSpread ?? 30, expectedD50Range: cd.expectedD50Range ?? [100, 200], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialMean: cd.initialMean ?? 150, initialSpread: cd.initialSpread ?? 30, expectedD50Range: cd.expectedD50Range ?? [100, 200], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -122,7 +124,9 @@ export default function SimuladorGranulometria() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = d50 >= activeCase.expectedD50Range[0] && d50 <= activeCase.expectedD50Range[1];
-    submitResults({ score: ok ? 100 : 30, actions: { mean, spread, d10, d50, d90, span } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { mean, spread, d10, d50, d90, span } });
   }, [activeCase, d50, mean, spread, d10, d90, span, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialMean: c.initialMean ?? 150, initialSpread: c.initialSpread ?? 30, expectedD50Range: c.expectedD50Range ?? [100, 200], clinicalTip: c.clinicalTip ?? "" });
@@ -181,7 +185,21 @@ export default function SimuladorGranulometria() {
               <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">D90</p><p className="text-lg font-bold">{d90} µm</p></div>
               <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Span</p><p className="text-lg font-bold">{span}</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">D50: {d50} µm | Faixa esperada: {activeCase?.expectedD50Range?.[0]}–{activeCase?.expectedD50Range?.[1]} µm</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

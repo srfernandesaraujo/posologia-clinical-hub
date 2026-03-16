@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -89,17 +89,19 @@ export default function SimuladorCompressao() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<CompCase | null>(null);
   const [force, setForce] = useState(50);
   const [granuleSize, setGranuleSize] = useState(50);
   const [lubricant, setLubricant] = useState(20);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialForce: cd.initialForce ?? 50, initialGranuleSize: cd.initialGranuleSize ?? 50, initialLubricant: cd.initialLubricant ?? 20, expectedHardnessRange: cd.expectedHardnessRange ?? [6, 10], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialForce: cd.initialForce ?? 50, initialGranuleSize: cd.initialGranuleSize ?? 50, initialLubricant: cd.initialLubricant ?? 20, expectedHardnessRange: cd.expectedHardnessRange ?? [6, 10], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -112,7 +114,9 @@ export default function SimuladorCompressao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = hardness >= activeCase.expectedHardnessRange[0] && hardness <= activeCase.expectedHardnessRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { force, granuleSize, lubricant, hardness, friability, disintegration } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { force, granuleSize, lubricant, hardness, friability, disintegration } });
   }, [activeCase, hardness, force, granuleSize, lubricant, friability, disintegration, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialForce: c.initialForce ?? 50, initialGranuleSize: c.initialGranuleSize ?? 50, initialLubricant: c.initialLubricant ?? 20, expectedHardnessRange: c.expectedHardnessRange ?? [6, 10], clinicalTip: c.clinicalTip ?? "" });
@@ -171,7 +175,21 @@ export default function SimuladorCompressao() {
               <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Friabilidade</p><p className={`text-lg font-bold ${friability <= 1 ? "" : "text-destructive"}`}>{friability}%</p></div>
               <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Desintegração</p><p className={`text-lg font-bold ${disintegration <= 15 ? "" : "text-destructive"}`}>{disintegration} min</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">Dureza: {hardness} kp | Faixa esperada: {activeCase?.expectedHardnessRange?.[0]}–{activeCase?.expectedHardnessRange?.[1]} kp</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <div className="space-y-4">

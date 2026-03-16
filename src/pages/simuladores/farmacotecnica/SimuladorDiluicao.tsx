@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -79,18 +79,20 @@ export default function SimuladorDiluicao() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<DilCase | null>(null);
   const [c1, setC1] = useState(1);
   const [v1, setV1] = useState(1);
   const [v2, setV2] = useState(10);
   const [mode, setMode] = useState<"simple" | "serial" | "isotony">("simple");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialC1: cd.initialC1 ?? 1, initialV1: cd.initialV1 ?? 1, expectedC2Range: cd.expectedC2Range ?? [0.05, 0.15], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialC1: cd.initialC1 ?? 1, initialV1: cd.initialV1 ?? 1, expectedC2Range: cd.expectedC2Range ?? [0.05, 0.15], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -103,7 +105,9 @@ export default function SimuladorDiluicao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = c2 >= activeCase.expectedC2Range[0] && c2 <= activeCase.expectedC2Range[1];
-    submitResults({ score: ok ? 100 : 30, actions: { c1, v1, v2, c2 } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { c1, v1, v2, c2 } });
   }, [activeCase, c2, c1, v1, v2, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialC1: c.initialC1 ?? 1, initialV1: c.initialV1 ?? 1, expectedC2Range: c.expectedC2Range ?? [0.05, 0.15], clinicalTip: c.clinicalTip ?? "" });
@@ -168,7 +172,21 @@ export default function SimuladorDiluicao() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">C1 (concentração inicial)</label><span className="text-sm font-bold">{c1}</span></div><Slider value={[c1 * 10]} onValueChange={([v]) => setC1(v / 10)} min={1} max={500} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">V1 (volume do soluto, mL)</label><span className="text-sm font-bold">{v1} mL</span></div><Slider value={[v1]} onValueChange={([v]) => setV1(v)} min={0.1} max={50} step={0.1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">V2 (volume final, mL)</label><span className="text-sm font-bold">{v2} mL</span></div><Slider value={[v2]} onValueChange={([v]) => setV2(Math.max(v, v1 + 0.1))} min={1} max={500} step={1} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">C2: {c2} | Faixa esperada: {activeCase?.expectedC2Range?.[0]}–{activeCase?.expectedC2Range?.[1]}</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

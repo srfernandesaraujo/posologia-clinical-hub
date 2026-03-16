@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -98,17 +98,19 @@ export default function SimuladorReologia() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<RheoCase | null>(null);
   const [behavior, setBehavior] = useState("pseudoplastic");
   const [viscosity, setViscosity] = useState(70);
   const [thickener, setThickener] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialBehavior: cd.initialBehavior ?? "pseudoplastic", initialViscosity: cd.initialViscosity ?? 70, clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialBehavior: cd.initialBehavior ?? "pseudoplastic", initialViscosity: cd.initialViscosity ?? 70, clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -120,7 +122,9 @@ export default function SimuladorReologia() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { behavior, viscosity, thickener } });
+    const score = 80;
+    setLastScore(score);
+    submitResults({ score, actions: { behavior, viscosity, thickener } });
   }, [activeCase, behavior, viscosity, thickener, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialBehavior: c.initialBehavior ?? "pseudoplastic", initialViscosity: c.initialViscosity ?? 70, clinicalTip: c.clinicalTip ?? "" });
@@ -185,7 +189,21 @@ export default function SimuladorReologia() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Viscosidade Base</label><span className="text-sm font-bold">{viscosity}</span></div><Slider value={[viscosity]} onValueChange={([v]) => setViscosity(v)} min={10} max={100} step={5} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Espessante Adicionado (%)</label><span className="text-sm font-bold">{thickener}%</span></div><Slider value={[thickener]} onValueChange={([v]) => setThickener(v)} min={0} max={100} step={5} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">Comportamento: {behavior} | Viscosidade: {viscosity} | Espessante: {thickener}%</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>
