@@ -23,9 +23,13 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     if (!raw) return;
     try {
       const ctx = JSON.parse(raw);
-      if (ctx.caseId && ctx.simulatorSlug === simulatorSlug) {
-        roomCtxRef.current = ctx;
-        setIsVirtualRoom(true);
+      if (ctx.simulatorSlug !== simulatorSlug) return;
+
+      roomCtxRef.current = ctx;
+      setIsVirtualRoom(true);
+
+      if (ctx.caseId) {
+        // DB case — fetch from Supabase
         setLoading(true);
         supabase
           .from("simulator_cases")
@@ -44,10 +48,9 @@ export function useVirtualRoomCase(simulatorSlug: string) {
             }
             setLoading(false);
           });
-      } else if (ctx.simulatorSlug === simulatorSlug) {
-        roomCtxRef.current = ctx;
-        setIsVirtualRoom(true);
       }
+      // If nativeCaseIndex is set, virtualRoomCase stays null
+      // and the simulator will use nativeCaseIndex to pick the built-in case
     } catch {}
   }, [simulatorSlug]);
 
