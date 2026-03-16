@@ -203,7 +203,7 @@ export default function SimuladorGranulometria() {
                   <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
                   <p className="text-xs text-muted-foreground">D50: {d50} µm | Faixa esperada: {activeCase?.expectedD50Range?.[0]}–{activeCase?.expectedD50Range?.[1]} µm</p>
                 </div>
-              )
+              )}{isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
             ) : (
               <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
             )}

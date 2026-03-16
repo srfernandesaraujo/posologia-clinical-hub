@@ -207,7 +207,7 @@ export default function SimuladorReologia() {
                   <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
                   <p className="text-xs text-muted-foreground">Comportamento: {behavior} | Viscosidade: {viscosity} | Espessante: {thickener}%</p>
                 </div>
-              )
+              )}{isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
             ) : (
               <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
             )}
