@@ -132,6 +132,8 @@ export default function SimulatorChallengeMode({
     setAdjustValidated(false);
   }, []);
 
+  if (hidden) return null;
+
   // ── Not started ──
   if (!started) {
     return (
