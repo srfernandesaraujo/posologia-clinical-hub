@@ -317,7 +317,7 @@ export default function SalasVirtuais() {
     toast.success(`PIN ${pin} copiado!`);
   };
 
-  const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+  const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   const removeActivity = (i: number) => {
     if (activities.length <= 1) return;
     setActivities(activities.filter((_, idx) => idx !== i));
