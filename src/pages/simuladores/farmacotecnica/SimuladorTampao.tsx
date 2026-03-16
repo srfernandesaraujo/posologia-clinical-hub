@@ -136,7 +136,9 @@ export default function SimuladorTampao() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const ok = pH >= activeCase.expectedpHRange[0] && pH <= activeCase.expectedpHRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { bufferName, ratio, concentration, acidAdded, pH, beta } });
+    const score = ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { bufferName, ratio, concentration, acidAdded, pH, beta } });
   }, [activeCase, pH, bufferName, ratio, concentration, acidAdded, beta, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialBuffer: c.initialBuffer ?? "Fosfato", targetpH: c.targetpH ?? 7.0, expectedpHRange: c.expectedpHRange ?? [6.5, 7.5], clinicalTip: c.clinicalTip ?? "" });
