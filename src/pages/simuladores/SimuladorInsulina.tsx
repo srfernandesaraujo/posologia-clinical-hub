@@ -89,6 +89,24 @@ export default function SimuladorInsulina() {
 
   const c = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
 
+  // Auto-submit when reaching panel screen in VR
+  useEffect(() => {
+    if (isVirtualRoom && screen === "painel" && !vrSubmitted) {
+      const score = hba1c <= 7 ? 100 : hba1c <= 8 ? 70 : 40;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitResults({ score, actions: { regime, basalType, prandialType, tdd, basalPct, glycemics, hba1c } });
+    }
+  }, [screen, isVirtualRoom, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVirtualRoom && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, vrSubmitted, goBack]);
+
   const start = (i: number) => {
     setCaseIdx(i);
     const cs = allCases[i] as CaseData;

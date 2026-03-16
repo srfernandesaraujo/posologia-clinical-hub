@@ -154,6 +154,24 @@ export default function SimuladorDesmameBenzo() {
 
   const drug = BENZO_DRUGS.find(d => d.name === selectedDrug);
 
+  // Auto-submit when plan is generated in VR
+  useEffect(() => {
+    if (isVR && plan.length > 0 && !vrSubmitted) {
+      const score = sensitivity === "high" ? 90 : 80;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugName: selectedDrug, dailyDose, usageDuration, sensitivity, planWeeks: plan.length > 0 ? plan[plan.length - 1].week : 0 } });
+    }
+  }, [plan, isVR, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
+
   // ─── Generate tapering plan ───
   const generatePlan = () => {
     if (!drug || !dailyDose || !usageDuration) return;
