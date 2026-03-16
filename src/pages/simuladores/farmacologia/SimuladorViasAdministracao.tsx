@@ -147,7 +147,7 @@ export default function SimuladorViasAdministracao() {
               <p className="text-sm font-semibold">Vias de Administração</p>
               {ROUTES.map(r => (<div key={r.key} className="flex items-center justify-between"><label className="text-sm">{r.label} (F={r.bioavail}%)</label><Switch checked={enabledRoutes.includes(r.key)} onCheckedChange={() => toggleRoute(r.key)} /></div>))}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

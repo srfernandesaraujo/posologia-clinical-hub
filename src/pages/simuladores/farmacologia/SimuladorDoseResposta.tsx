@@ -179,7 +179,7 @@ export default function SimuladorDoseResposta() {
                 <div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">[Antagonista]</label><span className="text-sm font-bold text-destructive">{antagConc}%</span></div><Slider value={[antagConc]} onValueChange={([v]) => setAntagConc(v)} min={0} max={100} step={5} /></div>
               )}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>
