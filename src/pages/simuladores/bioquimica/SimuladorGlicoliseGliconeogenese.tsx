@@ -141,12 +141,12 @@ export default function SimuladorGlicoliseGliconeogenese() {
   }, [running, outputs]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     setRunning(false);
     const ok = outputs.dominantPathway === activeCase.expectedFlux;
     const s = ok ? 100 : 30;
-    if (submitted) return;
-    submitResults({ score: s, actions: { insulin, glucagon, fed, insulinResistance, dominantPathway: outputs.dominantPathway } });
+    if (!submitted) submitResults({ score: s, actions: { insulin, glucagon, fed, insulinResistance, dominantPathway: outputs.dominantPathway } });
+    return s;
   }, [activeCase, outputs, insulin, glucagon, fed, insulinResistance, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
