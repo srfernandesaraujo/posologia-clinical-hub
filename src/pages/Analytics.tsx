@@ -565,11 +565,26 @@ export default function Analytics() {
 
               {/* Per-Room Detail */}
               <div className="mt-6 space-y-4">
-                <h3 className="font-semibold text-lg">Detalhes por Sala</h3>
-                {rooms.length === 0 ? (
-                  <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhuma sala virtual criada ainda.</CardContent></Card>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">
+                    {showTrash ? "Lixeira" : "Detalhes por Sala"}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {trashedRooms.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{showTrash ? "Voltar às salas" : "Lixeira"}</span>
+                        <Switch checked={showTrash} onCheckedChange={setShowTrash} />
+                        {showTrash && <Archive className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {displayedRooms.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">
+                    {showTrash ? "Nenhuma sala na lixeira." : "Nenhuma sala virtual criada ainda."}
+                  </CardContent></Card>
                 ) : (
-                  rooms.map((room: any) => {
+                  displayedRooms.map((room: any) => {
                     const rParticipants = allParticipants.filter((p: any) => p.room_id === room.id);
                     const rSubmissions = allSubmissions.filter((s: any) => s.room_id === room.id);
                     const rAvg = rSubmissions.length > 0 ? Math.round(rSubmissions.reduce((a: number, s: any) => a + s.score, 0) / rSubmissions.length) : null;
