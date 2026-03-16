@@ -149,6 +149,9 @@ export default function SimuladorBombaInfusao() {
   const alarmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [infusingBlink, setInfusingBlink] = useState(false);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
 
   // Auto-start for virtual rooms
   if (isVR && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
