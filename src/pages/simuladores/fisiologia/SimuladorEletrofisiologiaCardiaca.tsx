@@ -140,8 +140,10 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   const apData = useMemo(() => generateActionPotential(na, k, ca, cellType), [na, k, ca, cellType]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { na, k, ca, cellType } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { na, k, ca, cellType } });
+    return s;
   }, [activeCase, na, k, ca, cellType, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
