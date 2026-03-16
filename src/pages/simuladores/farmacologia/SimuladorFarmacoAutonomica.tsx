@@ -141,7 +141,7 @@ export default function SimuladorFarmacoAutonomica() {
               {DRUGS.map(d => (<button key={d.key} onClick={() => setSelectedDrug(d.key)} className={`p-2.5 rounded-lg border text-xs font-medium transition-colors ${selectedDrug === d.key ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}>{d.label}</button>))}
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{drugDose}%</span></div><Slider value={[drugDose]} onValueChange={([v]) => setDrugDose(v)} min={0} max={100} step={5} /></div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
