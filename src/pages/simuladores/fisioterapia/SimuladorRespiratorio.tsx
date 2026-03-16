@@ -146,6 +146,9 @@ export default function SimuladorRespiratorio() {
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); }
   const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
+  useEffect(() => { if (isVR && showFeedback && !submitted) { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions }, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  useEffect(() => { if (isVR && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVR, submitted, navigate]);
+
   if (!activeCase) {
     return (
       <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
@@ -257,6 +260,13 @@ export default function SimuladorRespiratorio() {
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Fisioterapia Respiratória" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
+      {isVR && submitted && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${feedback.score >= 80 ? "text-green-600" : feedback.score >= 50 ? "text-yellow-600" : "text-destructive"}`}>{feedback.score}%</div>
+          <p className="text-sm text-muted-foreground">{feedback.score >= 80 ? "🏆 Excelente!" : feedback.score >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
+      )}
     </div>
   );
 }

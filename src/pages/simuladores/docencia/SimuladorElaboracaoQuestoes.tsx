@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb, Eye } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const BLOOM_LEVELS = [
   { level: 1, name: "Lembrar", color: "bg-red-500", verbs: ["Listar", "Definir", "Identificar", "Nomear", "Citar", "Reconhecer"], description: "Recuperar informações da memória" },
@@ -68,6 +69,7 @@ const CHALLENGES: Challenge[] = [
 type Phase = "classify" | "elevate";
 
 export default function SimuladorElaboracaoQuestoes() {
+  const navigate = useNavigate();
   const [challengeIdx, setChallengeIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("classify");
   const [classifyAnswers, setClassifyAnswers] = useState<(number | null)[]>([]);
@@ -76,8 +78,27 @@ export default function SimuladorElaboracaoQuestoes() {
   const [showClassifyResult, setShowClassifyResult] = useState(false);
   const [elevateChoice, setElevateChoice] = useState<number | null>(null);
   const [showElevateResult, setShowElevateResult] = useState(false);
+  const [vrShowFeedback, setVrShowFeedback] = useState(false);
 
   const challenge = CHALLENGES[challengeIdx];
+
+  const { isVirtualRoom: isVR, submitResults, submitted } = useVirtualRoomCase("elaboracao-questoes");
+
+  // Auto-submit when elevate result is shown
+  useEffect(() => {
+    if (isVR && showElevateResult && !submitted) {
+      const score = Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100);
+      submitResults({ score, actions: { classifyScore, elevateCorrect: elevateChoice === challenge.targetLevel }, timeSpentSeconds: 0 });
+    }
+  }, [showElevateResult]);
+
+  // 15s redirect
+  useEffect(() => {
+    if (isVR && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, submitted, navigate]);
 
   const handleClassify = () => {
     if (selectedLevel === null) return;
@@ -270,9 +291,26 @@ export default function SimuladorElaboracaoQuestoes() {
                 <li>• Bloom BS. <em>Taxonomy of Educational Objectives</em>. Longman, 1956.</li>
               </ul>
             </div>
-            <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Próximo Desafio</Button>
+      {!isVR && <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Próximo Desafio</Button>}
           </CardContent>
         </Card>
+      )}
+
+      {isVR && submitted && !vrShowFeedback && (
+        <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
+          <Eye className="h-4 w-4" /> Mostrar Resultados
+        </Button>
+      )}
+      {isVR && submitted && vrShowFeedback && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100) >= 80 ? "text-green-600" : Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100) >= 50 ? "text-yellow-600" : "text-destructive"}`}>
+            {Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100)}%
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100) >= 80 ? "🏆 Excelente!" : "📈 Bom, pode melhorar"}
+          </p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
       )}
     </div>
   );

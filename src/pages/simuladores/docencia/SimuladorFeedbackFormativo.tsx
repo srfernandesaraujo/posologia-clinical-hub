@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award, Eye } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 type FeedbackModel = "pendleton" | "r2c2" | "aloba";
 
@@ -197,14 +198,33 @@ const MODELS: Record<FeedbackModel, { name: string; description: string; steps: 
 };
 
 export default function SimuladorFeedbackFormativo() {
+  const navigate = useNavigate();
   const [model, setModel] = useState<FeedbackModel | null>(null);
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [vrShowFeedback, setVrShowFeedback] = useState(false);
 
   const scenario = SCENARIOS[scenarioIndex];
+
+  const { isVirtualRoom: isVR, submitResults, submitted } = useVirtualRoomCase("feedback-formativo");
+
+  // Auto-submit when result is shown
+  useEffect(() => {
+    if (isVR && showResult && !submitted) {
+      submitResults({ score: percentage, actions: { model, answers }, timeSpentSeconds: 0 });
+    }
+  }, [showResult]);
+
+  // 15s redirect
+  useEffect(() => {
+    if (isVR && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, submitted, navigate]);
 
   const handleSelectModel = (m: FeedbackModel) => {
     setModel(m);
@@ -401,12 +421,27 @@ export default function SimuladorFeedbackFormativo() {
                 <li>• Silverman J, et al. <em>Skills for Communicating with Patients</em>. 3rd ed. CRC Press, 2013.</li>
               </ul>
             </div>
-            <div className="flex gap-3">
-              <Button onClick={handleRestart} variant="outline" className="flex-1 gap-2"><RotateCcw className="h-4 w-4" /> Tentar Outro Modelo</Button>
-              <Button onClick={handleNextScenario} className="flex-1 gap-2">Próximo Cenário <ChevronRight className="h-4 w-4" /></Button>
-            </div>
+            {!isVR && (
+              <div className="flex gap-3">
+                <Button onClick={handleRestart} variant="outline" className="flex-1 gap-2"><RotateCcw className="h-4 w-4" /> Tentar Outro Modelo</Button>
+                <Button onClick={handleNextScenario} className="flex-1 gap-2">Próximo Cenário <ChevronRight className="h-4 w-4" /></Button>
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {isVR && submitted && !vrShowFeedback && (
+        <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
+          <Eye className="h-4 w-4" /> Mostrar Resultados
+        </Button>
+      )}
+      {isVR && submitted && vrShowFeedback && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${percentage >= 80 ? "text-green-600" : percentage >= 50 ? "text-yellow-600" : "text-destructive"}`}>{percentage}%</div>
+          <p className="text-sm text-muted-foreground">{percentage >= 80 ? "🏆 Excelente!" : percentage >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
       )}
     </div>
   );
