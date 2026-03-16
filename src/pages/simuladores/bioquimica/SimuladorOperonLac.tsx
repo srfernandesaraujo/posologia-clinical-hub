@@ -67,7 +67,7 @@ export default function SimuladorOperonLac() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
   const [activeCase, setActiveCase] = useState<OperonCase | null>(null);
   const [glucose, setGlucose] = useState(50);
@@ -75,6 +75,20 @@ export default function SimuladorOperonLac() {
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<{ time: number; transcription: number; betaGal: number; camp: number }[]>([]);
   const tickRef = useRef(0);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
 
   useEffect(() => {
     if (virtualRoomCase) {
