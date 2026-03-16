@@ -50,6 +50,14 @@ const SIMULATOR_LABELS: Record<string, string> = {
   soap: "SOAP",
   mai: "MAI",
   "cascata-prescricao": "Cascata",
+  // Farmacotécnica
+  "hlb-emulsoes": "HLB e Emulsões",
+  compressao: "Compressão",
+  diluicao: "Diluição",
+  granulometria: "Granulometria",
+  "liberacao-farmacos": "Liberação de Fármacos",
+  reologia: "Reologia",
+  "tampao-farmaceutico": "Tampão Farmacêutico",
   // Laboratório Virtual
   farmacos: "Lab: Fármacos",
   microbiologia: "Lab: Microbiologia",

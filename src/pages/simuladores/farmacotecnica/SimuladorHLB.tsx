@@ -217,7 +217,21 @@ export default function SimuladorHLB() {
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">HLB Requerido</p><p className="text-2xl font-bold">{oil.hlbReq}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Estabilidade</p><p className={`text-2xl font-bold ${stabilityPct > 80 ? "text-green-600" : stabilityPct > 50 ? "text-yellow-600" : "text-destructive"}`}>{Math.round(stabilityPct)}%</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">HLB Mistura: {Math.round(hlbMix * 10) / 10} | Faixa esperada: {activeCase?.expectedHLBRange?.[0]}–{activeCase?.expectedHLBRange?.[1]}</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

@@ -172,7 +172,21 @@ export default function SimuladorDiluicao() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">C1 (concentração inicial)</label><span className="text-sm font-bold">{c1}</span></div><Slider value={[c1 * 10]} onValueChange={([v]) => setC1(v / 10)} min={1} max={500} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">V1 (volume do soluto, mL)</label><span className="text-sm font-bold">{v1} mL</span></div><Slider value={[v1]} onValueChange={([v]) => setV1(v)} min={0.1} max={50} step={0.1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">V2 (volume final, mL)</label><span className="text-sm font-bold">{v2} mL</span></div><Slider value={[v2]} onValueChange={([v]) => setV2(Math.max(v, v1 + 0.1))} min={1} max={500} step={1} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">C2: {c2} | Faixa esperada: {activeCase?.expectedC2Range?.[0]}–{activeCase?.expectedC2Range?.[1]}</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>

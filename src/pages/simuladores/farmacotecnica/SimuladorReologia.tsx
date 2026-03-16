@@ -189,7 +189,21 @@ export default function SimuladorReologia() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Viscosidade Base</label><span className="text-sm font-bold">{viscosity}</span></div><Slider value={[viscosity]} onValueChange={([v]) => setViscosity(v)} min={10} max={100} step={5} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Espessante Adicionado (%)</label><span className="text-sm font-bold">{thickener}%</span></div><Slider value={[thickener]} onValueChange={([v]) => setThickener(v)} min={0} max={100} step={5} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">Comportamento: {behavior} | Viscosidade: {viscosity} | Espessante: {thickener}%</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
           </CardContent>
         </Card>
         <Card>
