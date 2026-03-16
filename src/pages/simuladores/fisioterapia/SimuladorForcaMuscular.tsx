@@ -262,6 +262,13 @@ export default function SimuladorForcaMuscular() {
 
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Força Muscular (Oxford/MRC)" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
+      {isVR && submitted && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${feedback.score >= 80 ? "text-green-600" : feedback.score >= 50 ? "text-yellow-600" : "text-destructive"}`}>{feedback.score}%</div>
+          <p className="text-sm text-muted-foreground">{feedback.score >= 80 ? "🏆 Excelente!" : feedback.score >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
+      )}
     </div>
   );
 }

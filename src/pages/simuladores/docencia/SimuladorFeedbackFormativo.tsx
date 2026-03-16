@@ -421,12 +421,27 @@ export default function SimuladorFeedbackFormativo() {
                 <li>• Silverman J, et al. <em>Skills for Communicating with Patients</em>. 3rd ed. CRC Press, 2013.</li>
               </ul>
             </div>
-            <div className="flex gap-3">
-              <Button onClick={handleRestart} variant="outline" className="flex-1 gap-2"><RotateCcw className="h-4 w-4" /> Tentar Outro Modelo</Button>
-              <Button onClick={handleNextScenario} className="flex-1 gap-2">Próximo Cenário <ChevronRight className="h-4 w-4" /></Button>
-            </div>
+            {!isVR && (
+              <div className="flex gap-3">
+                <Button onClick={handleRestart} variant="outline" className="flex-1 gap-2"><RotateCcw className="h-4 w-4" /> Tentar Outro Modelo</Button>
+                <Button onClick={handleNextScenario} className="flex-1 gap-2">Próximo Cenário <ChevronRight className="h-4 w-4" /></Button>
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {isVR && submitted && !vrShowFeedback && (
+        <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
+          <Eye className="h-4 w-4" /> Mostrar Resultados
+        </Button>
+      )}
+      {isVR && submitted && vrShowFeedback && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${percentage >= 80 ? "text-green-600" : percentage >= 50 ? "text-yellow-600" : "text-destructive"}`}>{percentage}%</div>
+          <p className="text-sm text-muted-foreground">{percentage >= 80 ? "🏆 Excelente!" : percentage >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
       )}
     </div>
   );

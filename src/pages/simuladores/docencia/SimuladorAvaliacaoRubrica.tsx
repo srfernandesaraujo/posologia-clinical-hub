@@ -261,9 +261,22 @@ export default function SimuladorAvaliacaoRubrica() {
                 <li>• Norcini JJ, et al. Criteria for good assessment. Med Teach. 2011;33(3):206-14.</li>
               </ul>
             </div>
-            <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Próxima Estação</Button>
+            {!isVR && <Button onClick={handleRestart} className="w-full gap-2"><RotateCcw className="h-4 w-4" /> Próxima Estação</Button>}
           </CardContent>
         </Card>
+      )}
+
+      {isVR && submitted && !vrShowFeedback && (
+        <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
+          <Eye className="h-4 w-4" /> Mostrar Resultados
+        </Button>
+      )}
+      {isVR && submitted && vrShowFeedback && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+          <div className={`text-3xl font-bold ${Math.round(kappa * 100) >= 80 ? "text-green-600" : Math.round(kappa * 100) >= 50 ? "text-yellow-600" : "text-destructive"}`}>{Math.round(kappa * 100)}%</div>
+          <p className="text-sm text-muted-foreground">{Math.round(kappa * 100) >= 80 ? "🏆 Excelente!" : Math.round(kappa * 100) >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+          <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
+        </div>
       )}
     </div>
   );
