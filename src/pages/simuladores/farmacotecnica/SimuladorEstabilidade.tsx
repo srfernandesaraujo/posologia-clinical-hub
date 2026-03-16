@@ -124,11 +124,19 @@ export default function SimuladorEstabilidade() {
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialConcentration: c.initialConcentration ?? 100, initialTemp: c.initialTemp ?? 25, initialOrder: c.initialOrder ?? "first", expectedT90Range: c.expectedT90Range ?? [5, 15], clinicalTip: c.clinicalTip ?? "" });
 
+  if (loadingVR) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (isVirtualRoom && !activeCase) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
   if (!activeCase) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
             <h1 className="text-2xl font-bold">Estabilidade e Prazo de Validade</h1>
             <p className="text-muted-foreground">Cinética de degradação, equação de Arrhenius e cálculo de t90.</p>
