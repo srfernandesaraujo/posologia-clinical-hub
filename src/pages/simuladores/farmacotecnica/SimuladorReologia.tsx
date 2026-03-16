@@ -195,11 +195,12 @@ export default function SimuladorReologia() {
               <LineChart data={points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="shearRate" label={{ value: "Taxa de Cisalhamento (s⁻¹)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis label={{ value: "Tensão (Pa)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="left" label={{ value: "Tensão (Pa)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--primary))" />
+                <YAxis yAxisId="right" orientation="right" label={{ value: "Viscosidade (Pa·s)", angle: 90, position: "insideRight" }} stroke="hsl(var(--chart-2))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Line type="monotone" dataKey="shearStress" name="Tensão de Cisalhamento" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="viscosity" name="Viscosidade Aparente" stroke="hsl(var(--chart-2))" dot={false} strokeWidth={2} strokeDasharray="5 5" />
+                <Line yAxisId="left" type="monotone" dataKey="shearStress" name="Tensão de Cisalhamento" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line yAxisId="right" type="monotone" dataKey="viscosity" name="Viscosidade Aparente" stroke="hsl(var(--chart-2))" dot={false} strokeWidth={2} strokeDasharray="5 5" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
