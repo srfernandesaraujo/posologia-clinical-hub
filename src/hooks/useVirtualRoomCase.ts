@@ -114,6 +114,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         simulatorSlug: nextAct.simulatorSlug,
         activityId: nextAct.id,
         activityIndex: nextIndex,
+        customChallenges: nextAct.customChallenges || null,
       }));
       const route = LAB_SLUGS_SET.has(nextAct.simulatorSlug)
         ? `/sala/laboratorio/${nextAct.simulatorSlug}`
