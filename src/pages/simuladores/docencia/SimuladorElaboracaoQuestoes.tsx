@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb, Eye } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 const BLOOM_LEVELS = [
   { level: 1, name: "Lembrar", color: "bg-red-500", verbs: ["Listar", "Definir", "Identificar", "Nomear", "Citar", "Reconhecer"], description: "Recuperar informações da memória" },
