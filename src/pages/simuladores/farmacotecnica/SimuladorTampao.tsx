@@ -131,6 +131,13 @@ export default function SimuladorTampao() {
     if (activeCase) { setBufferName(activeCase.initialBuffer); setRatio(1); setConcentration(50); setAcidAdded(0); }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const { pH, beta, titrationData, betaCurve, pKa, rangeMin, rangeMax } = useMemo(() => computeBuffer(bufferName, ratio, concentration, acidAdded), [bufferName, ratio, concentration, acidAdded]);
 
   const handleFinish = useCallback(() => {
@@ -164,7 +171,7 @@ export default function SimuladorTampao() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -219,6 +226,7 @@ export default function SimuladorTampao() {
             ) : (
               <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
             )}
+            {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
           </CardContent>
         </Card>
         <div className="space-y-4">

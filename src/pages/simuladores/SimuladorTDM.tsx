@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,13 @@ export default function SimuladorTDM() {
   const [newDose, setNewDose] = useState("");
   const [newInterval, setNewInterval] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, goBack]);
   const [expandedJust, setExpandedJust] = useState(false);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
 

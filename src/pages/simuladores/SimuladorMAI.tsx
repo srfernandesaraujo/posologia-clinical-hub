@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,13 @@ export default function SimuladorMAI() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase(SLUG);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
+
+  useEffect(() => {
+    if (isVirtualRoom && screen === "report") {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, screen, goBack]);
   const [caseIdx, setCaseIdx] = useState(0);
   const [userRatings, setUserRatings] = useState<UserRatings>({});
   const [selectedDrug, setSelectedDrug] = useState<number>(0);

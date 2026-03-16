@@ -88,6 +88,13 @@ export default function SimuladorAcompanhamento() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("acompanhamento", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("acompanhamento", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
+
+  useEffect(() => {
+    if (isVirtualRoom && screen === "report") {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, screen, goBack]);
   const [caseIdx, setCaseIdx] = useState(0);
   const [consultIdx, setConsultIdx] = useState(0);
   const [userActions, setUserActions] = useState<Record<number, UserAction[]>>({});
