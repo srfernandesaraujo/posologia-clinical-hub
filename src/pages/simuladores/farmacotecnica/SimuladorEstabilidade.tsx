@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -100,6 +100,13 @@ export default function SimuladorEstabilidade() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
+
+  // Auto-submit results when challenge is completed in virtual room
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+    }
+  }, [challengeCompleted]);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -230,10 +237,8 @@ export default function SimuladorEstabilidade() {
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
       <SimulatorChallengeMode challengeSet={getEstabilidadeChallenges()} simulatorState={{ concentration, temp, order, kRef, t90 }} onComplete={() => setChallengeCompleted(true)} />
 
-      {isVirtualRoom && (
-        !submitted ? (
-          <Button onClick={handleFinish} disabled={!challengeCompleted} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
-        ) : !showFeedback ? (
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
           <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
         ) : (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
