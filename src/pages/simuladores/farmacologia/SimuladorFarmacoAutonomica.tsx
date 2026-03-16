@@ -75,6 +75,9 @@ export default function SimuladorFarmacoAutonomica() {
   const [activeCase, setActiveCase] = useState<FACase | null>(null);
   const [selectedDrug, setSelectedDrug] = useState("atropina");
   const [drugDose, setDrugDose] = useState(80);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedDrug: cd.expectedDrug ?? "atropina", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setSelectedDrug("atropina"); setDrugDose(80); } }, [activeCase]);
