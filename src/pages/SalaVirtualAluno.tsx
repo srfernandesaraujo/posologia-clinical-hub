@@ -19,6 +19,18 @@ const LAB_SLUGS = new Set([
   "lab-pericia-forense", "lab-modelagem-molecular",
 ]);
 
+const LAB_ONLY_SLUGS = new Set([
+  "farmacos",
+  "microbiologia",
+  "toxicologia",
+  "controle-qualidade",
+  "epidemiologia",
+  "biotecnologia",
+  "simulacao-realistica",
+  "pericia-forense",
+  "modelagem-molecular",
+]);
+
 const TOOL_LABELS: Record<string, string> = {
   prm: "PRM – Problemas Relacionados a Medicamentos",
   antimicrobianos: "Antimicrobianos / Stewardship",
@@ -38,11 +50,15 @@ const TOOL_LABELS: Record<string, string> = {
   "lab-modelagem-molecular": "Lab: Modelagem Molecular",
 };
 
-function getRouteForSlug(slug: string): string {
+function getRouteForActivity(slug: string, caseId?: string | null): string {
   if (LAB_SLUGS.has(slug)) {
-    const realSlug = slug.replace(LAB_PREFIX, "");
-    return `/sala/laboratorio/${realSlug}`;
+    return `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`;
   }
+
+  if (LAB_ONLY_SLUGS.has(slug) && !caseId) {
+    return `/sala/laboratorio/${slug}`;
+  }
+
   return `/sala/simulador/${slug}`;
 }
 
@@ -182,7 +198,7 @@ export default function SalaVirtualAluno() {
         participantName,
         customChallenges: legacyAct?.custom_challenges || null,
       }));
-      navigate(getRouteForSlug(room.simulator_slug));
+      navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
       startActivity(0);
     }
@@ -210,7 +226,7 @@ export default function SalaVirtualAluno() {
         customChallenges: a.custom_challenges || null,
       })),
     }));
-    navigate(getRouteForSlug(act.simulator_slug));
+    navigate(getRouteForActivity(act.simulator_slug, act.case_id));
   };
 
   if (step === "pin") {

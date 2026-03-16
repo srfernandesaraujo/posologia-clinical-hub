@@ -136,6 +136,24 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     "lab-pericia-forense", "lab-modelagem-molecular",
   ]);
 
+  const LAB_ONLY_SLUGS_SET = new Set([
+    "farmacos",
+    "microbiologia",
+    "toxicologia",
+    "controle-qualidade",
+    "epidemiologia",
+    "biotecnologia",
+    "simulacao-realistica",
+    "pericia-forense",
+    "modelagem-molecular",
+  ]);
+
+  const getRouteForActivity = (slug: string, caseId?: string | null) => {
+    if (LAB_SLUGS_SET.has(slug)) return `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`;
+    if (LAB_ONLY_SLUGS_SET.has(slug) && !caseId) return `/sala/laboratorio/${slug}`;
+    return `/sala/simulador/${slug}`;
+  };
+
   const proceedToNext = useCallback(() => {
     const ctx = roomCtxRef.current;
     if (!ctx) return;
@@ -155,10 +173,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         activityIndex: nextIndex,
         customChallenges: nextAct.customChallenges || null,
       }));
-      const slug = nextAct.simulatorSlug;
-      const route = LAB_SLUGS_SET.has(slug)
-        ? `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`
-        : `/sala/simulador/${slug}`;
+      const route = getRouteForActivity(nextAct.simulatorSlug, nextAct.caseId);
       navigate(route);
     } else {
       sessionStorage.removeItem("virtualRoom");
