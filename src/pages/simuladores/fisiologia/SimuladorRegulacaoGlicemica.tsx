@@ -147,12 +147,12 @@ export default function SimuladorRegulacaoGlicemica() {
   const outputs = computeGlycemic(carbIntake, insulinSensitivity, pancreaticFunction);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = outputs.glycemia >= activeCase.expectedGlycemia[0] && outputs.glycemia <= activeCase.expectedGlycemia[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.glycemia - (activeCase.expectedGlycemia[0] + activeCase.expectedGlycemia[1]) / 2) / 2);
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.glycemia - (activeCase.expectedGlycemia[0] + activeCase.expectedGlycemia[1]) / 2) / 2));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { carbIntake, insulinSensitivity, pancreaticFunction, glycemia: outputs.glycemia } });
+    if (!submitted) submitResults({ score: s, actions: { carbIntake, insulinSensitivity, pancreaticFunction, glycemia: outputs.glycemia } });
+    return s;
   }, [activeCase, outputs, carbIntake, insulinSensitivity, pancreaticFunction, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
