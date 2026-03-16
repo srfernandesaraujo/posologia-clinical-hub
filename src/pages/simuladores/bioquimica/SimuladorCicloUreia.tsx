@@ -85,9 +85,9 @@ export default function SimuladorCicloUreia() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: cd.id, title: cd.title, difficulty: cd.difficulty, isAI: cd.isAI,
         patient: cd.patient, scenario: cd.scenario,
         deficiencies: cd.deficiencies ?? { cpsI: false, otc: false, ass: false, asl: false, arginase: false },
         expectedAmmonia: cd.expectedAmmonia ?? [50, 200], clinicalTip: cd.clinicalTip ?? "",
