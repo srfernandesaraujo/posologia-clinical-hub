@@ -65,9 +65,11 @@ export default function SimuladorJanelaTerapeutica() {
   const { points, it } = useMemo(() => generatePopulationCurves(de50, dl50, dose), [de50, dl50, dose]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = dose >= activeCase.expectedDose[0] && dose <= activeCase.expectedDose[1];
-    submitResults({ score: ok ? 100 : 30, actions: { dose, de50, dl50, it } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { dose, de50, dl50, it } });
+    return s;
   }, [activeCase, dose, de50, dl50, it, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugName: c.drugName ?? "", de50: c.de50 ?? 30, dl50: c.dl50 ?? 65, expectedDose: c.expectedDose ?? [20, 40], clinicalTip: c.clinicalTip ?? "" });
