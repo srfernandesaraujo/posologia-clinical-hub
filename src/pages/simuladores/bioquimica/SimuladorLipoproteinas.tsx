@@ -189,6 +189,7 @@ export default function SimuladorLipoproteinas() {
     setRunning(false);
     const ldlOk = model.ldlMgDl >= activeCase.expectedLDL[0] && model.ldlMgDl <= activeCase.expectedLDL[1];
     const s = Math.round(ldlOk ? 100 : Math.max(0, 100 - Math.abs(model.ldlMgDl - (activeCase.expectedLDL[0] + activeCase.expectedLDL[1]) / 2)));
+    setLastScore(s);
     submitResults({ score: s, actions: { fatIntake, lplActivity, ldlReceptor, drugs, ldlMgDl: model.ldlMgDl } });
     return s;
   }, [activeCase, model, fatIntake, lplActivity, ldlReceptor, drugs, submitted, submitResults]);
