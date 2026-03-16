@@ -163,12 +163,12 @@ export default function SimuladorSecrecaoGastrica() {
   const outputs = computeGastricSecretion(histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = outputs.pH >= activeCase.expectedPH[0] && outputs.pH <= activeCase.expectedPH[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.pH - (activeCase.expectedPH[0] + activeCase.expectedPH[1]) / 2) * 20);
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.pH - (activeCase.expectedPH[0] + activeCase.expectedPH[1]) / 2) * 20));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic, pH: outputs.pH } });
+    if (!submitted) submitResults({ score: s, actions: { histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic, pH: outputs.pH } });
+    return s;
   }, [activeCase, outputs, histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
