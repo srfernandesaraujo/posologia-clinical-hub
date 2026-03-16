@@ -98,9 +98,9 @@ export default function SimuladorDepuracaoRenal() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialAfferent: cd.initialAfferent ?? 70, initialEfferent: cd.initialEfferent ?? 60,
         initialHydration: cd.initialHydration ?? 80, initialPermeability: cd.initialPermeability ?? 100,
