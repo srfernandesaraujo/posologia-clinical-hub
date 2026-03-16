@@ -91,8 +91,8 @@ export default function SimuladorDiluicao() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialC1: cd.initialC1 ?? 1, initialV1: cd.initialV1 ?? 1, expectedC2Range: cd.expectedC2Range ?? [0.05, 0.15], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialC1: cd.initialC1 ?? 1, initialV1: cd.initialV1 ?? 1, expectedC2Range: cd.expectedC2Range ?? [0.05, 0.15], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
