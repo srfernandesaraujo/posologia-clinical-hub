@@ -120,6 +120,9 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   const [k, setK] = useState(100);
   const [ca, setCa] = useState(100);
   const [cellType, setCellType] = useState<"ventricular" | "nodal">("ventricular");
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
