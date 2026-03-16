@@ -110,8 +110,8 @@ export default function SimuladorPkaAbsorcao() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialPka: cd.initialPka ?? 3.5, initialType: cd.initialType ?? "weak_acid", initialPH: cd.initialPH ?? 1.5, expectedAbsorptionSite: cd.expectedAbsorptionSite ?? "estomago", clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialPka: cd.initialPka ?? 3.5, initialType: cd.initialType ?? "weak_acid", initialPH: cd.initialPH ?? 1.5, expectedAbsorptionSite: cd.expectedAbsorptionSite ?? "estomago", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
