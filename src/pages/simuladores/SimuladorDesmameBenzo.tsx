@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, HelpCircle, FileDown, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, FileDown, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
