@@ -305,10 +305,12 @@ export default function SimuladorInteracoes() {
 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Casos Clínicos</h2>
-          <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="gap-2">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Gerar com IA
-          </Button>
+          {!isVR && (
+            <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="gap-2">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Gerar com IA
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
