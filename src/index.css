@@ -36,6 +36,12 @@
 
     --radius: 0.75rem;
 
+    --chart-1: 168 80% 42%;
+    --chart-2: 45 93% 58%;
+    --chart-3: 280 65% 60%;
+    --chart-4: 200 80% 55%;
+    --chart-5: 340 75% 55%;
+
     --sidebar-background: 222 40% 8%;
     --sidebar-foreground: 210 20% 96%;
     --sidebar-primary: 168 80% 42%;

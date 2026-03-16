@@ -63,30 +63,33 @@ function computeRelease(coating: number, particleSize: number, showImmediate: bo
   const points = [];
   for (let t = 0; t <= 24; t += 0.5) {
     const entry: any = { hour: t };
-    // Immediate: Higuchi-like fast
+    // Immediate: Higuchi-like fast — coating slows release, smaller particles speed it up
     if (showImmediate) {
-      const kI = (100 - particleSize) / 50 + 1;
+      const coatingFactor = 1 - (coating / 150); // higher coating = slower
+      const kI = ((100 - particleSize) / 50 + 1) * Math.max(coatingFactor, 0.2);
       entry.imediata = Math.min(100, Math.round(100 * (1 - Math.exp(-kI * t)) * 100) / 100);
     }
-    // Prolonged: zero-order-like
+    // Prolonged: zero-order-like — coating strongly affects rate
     if (showProlonged) {
-      const rate = (100 - coating) / 100 * 8;
+      const rate = Math.max(0.5, (100 - coating) / 100 * 8);
       entry.prolongada = Math.min(100, Math.round(rate * t * 100) / 100);
     }
-    // Enteric: lag + burst
+    // Enteric: lag + burst — coating increases lag time
     if (showEnteric) {
-      const lag = coating / 30;
-      entry.enterica = t < lag ? 0 : Math.min(100, Math.round(100 * (1 - Math.exp(-1.5 * (t - lag))) * 100) / 100);
+      const lag = coating / 25;
+      const kE = ((100 - particleSize) / 80 + 0.8);
+      entry.enterica = t < lag ? 0 : Math.min(100, Math.round(100 * (1 - Math.exp(-kE * (t - lag))) * 100) / 100);
     }
-    // Pulsatile: two pulses
+    // Pulsatile: two pulses — coating delays second pulse
     if (showPulsatile) {
+      const delay2 = 4 + coating / 20;
       const p1 = 50 * (1 - Math.exp(-2 * t));
-      const p2 = t > 6 ? 50 * (1 - Math.exp(-2 * (t - 6))) : 0;
+      const p2 = t > delay2 ? 50 * (1 - Math.exp(-2 * (t - delay2))) : 0;
       entry.pulsatil = Math.min(100, Math.round((p1 + p2) * 100) / 100);
     }
-    // Transdermal: slow steady
+    // Transdermal: slow steady — coating = membrane thickness
     if (showTransdermal) {
-      const kT = (100 - coating) / 100 * 3;
+      const kT = Math.max(0.3, (100 - coating) / 100 * 3);
       entry.transdermica = Math.min(100, Math.round(100 * (1 - Math.exp(-kT * t / 10)) * 100) / 100);
     }
     points.push(entry);
