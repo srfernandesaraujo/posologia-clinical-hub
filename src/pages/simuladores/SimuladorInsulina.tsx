@@ -78,6 +78,9 @@ export default function SimuladorInsulina() {
   const [preceptorLoading, setPreceptorLoading] = useState(false);
   const [pendingChange, setPendingChange] = useState<(() => void) | null>(null);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
+  const [vrSubmitted, setVrSubmitted] = useState(false);
+  const [showVRFeedback, setShowVRFeedback] = useState(false);
+  const [vrScore, setVrScore] = useState(0);
 
   if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
     setVrAutoStarted(true);
