@@ -768,6 +768,22 @@ export default function SalasVirtuais() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Challenge Editor Dialog */}
+      {challengeEditorIndex !== null && (
+        <ChallengeEditor
+          open={challengeEditorIndex !== null}
+          onOpenChange={(open) => { if (!open) setChallengeEditorIndex(null); }}
+          initialChallenges={activities[challengeEditorIndex]?.customChallenges || null}
+          simulatorLabel={getToolLabel(activities[challengeEditorIndex]?.simulatorSlug || "")}
+          onSave={(challengeSet) => {
+            const copy = [...activities];
+            copy[challengeEditorIndex] = { ...copy[challengeEditorIndex], customChallenges: challengeSet };
+            setActivities(copy);
+            setChallengeEditorIndex(null);
+          }}
+        />
+      )}
     </div>
   );
 }
