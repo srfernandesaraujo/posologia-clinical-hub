@@ -13,9 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
 
 interface ToolOption {
   slug: string;
@@ -147,6 +148,7 @@ interface ActivityItem {
   simulatorSlug: string;
   caseId: string;
   instruction: string;
+  customChallenges?: any;
 }
 
 function generatePin(): string {
@@ -163,6 +165,7 @@ export default function SalasVirtuais() {
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
+  const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
@@ -264,6 +267,7 @@ export default function SalasVirtuais() {
         simulator_slug: a.simulatorSlug,
         case_id: a.caseId || null,
         position: i,
+        custom_challenges: a.customChallenges || null,
       }));
 
       const { error: actError } = await supabase
@@ -301,10 +305,11 @@ export default function SalasVirtuais() {
   const resetForm = () => {
     setCreateOpen(false);
     setTitle("");
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
     setExpiresAt("");
     setIsExamMode(false);
     setToolType("simulator");
+    setChallengeEditorIndex(null);
   };
 
   const copyPin = (pin: string) => {
@@ -312,7 +317,7 @@ export default function SalasVirtuais() {
     toast.success(`PIN ${pin} copiado!`);
   };
 
-  const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+  const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   const removeActivity = (i: number) => {
     if (activities.length <= 1) return;
     setActivities(activities.filter((_, idx) => idx !== i));
@@ -356,12 +361,12 @@ export default function SalasVirtuais() {
   // When switching modes, reset activities
   const handleModeChange = (exam: boolean) => {
     setIsExamMode(exam);
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   };
 
   const handleToolTypeChange = (type: ToolType) => {
     setToolType(type);
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
   };
 
   if (!canUseVirtualRooms) {
@@ -620,6 +625,38 @@ export default function SalasVirtuais() {
                               />
                             </div>
                           )}
+
+                          {/* Challenge customization - for simulators only */}
+                          {act.simulatorSlug && toolType === "simulator" && (
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button
+                                variant={act.customChallenges ? "default" : "outline"}
+                                size="sm"
+                                className="gap-1.5 text-xs"
+                                onClick={() => setChallengeEditorIndex(i)}
+                              >
+                                {act.customChallenges ? (
+                                  <><Edit3 className="h-3 w-3" />Editar Desafio Customizado ({act.customChallenges.challenges?.length || 0} questões)</>
+                                ) : (
+                                  <><Target className="h-3 w-3" />Customizar Desafio</>
+                                )}
+                              </Button>
+                              {act.customChallenges && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-destructive"
+                                  onClick={() => {
+                                    const copy = [...activities];
+                                    copy[i] = { ...copy[i], customChallenges: null };
+                                    setActivities(copy);
+                                  }}
+                                >
+                                  <X className="h-3 w-3 mr-1" />Remover
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -731,6 +768,22 @@ export default function SalasVirtuais() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Challenge Editor Dialog */}
+      {challengeEditorIndex !== null && (
+        <ChallengeEditor
+          open={challengeEditorIndex !== null}
+          onOpenChange={(open) => { if (!open) setChallengeEditorIndex(null); }}
+          initialChallenges={activities[challengeEditorIndex]?.customChallenges || null}
+          simulatorLabel={getToolLabel(activities[challengeEditorIndex]?.simulatorSlug || "")}
+          onSave={(challengeSet) => {
+            const copy = [...activities];
+            copy[challengeEditorIndex] = { ...copy[challengeEditorIndex], customChallenges: challengeSet };
+            setActivities(copy);
+            setChallengeEditorIndex(null);
+          }}
+        />
+      )}
     </div>
   );
 }

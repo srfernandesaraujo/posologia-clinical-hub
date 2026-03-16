@@ -39,22 +39,30 @@ export interface ChallengeSet {
 
 interface SimulatorChallengeModeProps {
   challengeSet: ChallengeSet;
+  /** Override challenge set (e.g., from virtual room custom challenges) */
+  customChallengeSet?: ChallengeSet | null;
   /** Current simulator state (for adjust challenges) */
   simulatorState: Record<string, any>;
   /** Called when student should reset simulator to specific values for a challenge */
   onResetForChallenge?: (params: Record<string, number>) => void;
   /** Called when all challenges complete with final score */
   onComplete?: (score: number, total: number) => void;
+  /** Hide the challenge section entirely */
+  hidden?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function SimulatorChallengeMode({
-  challengeSet,
+  challengeSet: nativeChallengeSet,
+  customChallengeSet,
   simulatorState,
   onResetForChallenge,
   onComplete,
+  hidden,
 }: SimulatorChallengeModeProps) {
+  // Use custom challenges if provided (from virtual room), otherwise native
+  const challengeSet = customChallengeSet || nativeChallengeSet;
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -90,7 +98,22 @@ export default function SimulatorChallengeMode({
   const handleAdjustValidate = useCallback(() => {
     if (answered) return;
     const challenge = current as AdjustChallenge;
-    const result = challenge.validator(simulatorState);
+    let result: { correct: boolean; feedback: string };
+    
+    if (challenge.validator) {
+      result = challenge.validator(simulatorState);
+    } else {
+      // For serialized custom challenges, validate using targetParams ranges
+      const params = challenge.targetParams || {};
+      const allInRange = Object.entries(params).every(([key, spec]) => {
+        const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
+        return val !== undefined && val >= spec.min && val <= spec.max;
+      });
+      result = allInRange
+        ? { correct: true, feedback: "Parâmetros dentro da faixa esperada!" }
+        : { correct: false, feedback: "Ajuste os parâmetros para ficarem dentro das faixas indicadas." };
+    }
+    
     setAnswered(true);
     setAdjustValidated(true);
     setIsCorrect(result.correct);
@@ -123,6 +146,8 @@ export default function SimulatorChallengeMode({
     setFinished(false);
     setAdjustValidated(false);
   }, []);
+
+  if (hidden) return null;
 
   // ── Not started ──
   if (!started) {

@@ -167,12 +167,14 @@ export default function SalaVirtualAluno() {
 
   const goToSimulator = () => {
     if (isLegacy) {
+      const legacyAct = activities[0]; // single activity
       sessionStorage.setItem("virtualRoom", JSON.stringify({
         roomId: room.id,
         participantId,
         caseId: room.case_id,
         simulatorSlug: room.simulator_slug,
         participantName,
+        customChallenges: legacyAct?.custom_challenges || null,
       }));
       navigate(getRouteForSlug(room.simulator_slug));
     } else {
@@ -193,11 +195,13 @@ export default function SalaVirtualAluno() {
       activityId: act.id,
       activityIndex: index,
       totalActivities: activities.length,
+      customChallenges: act.custom_challenges || null,
       allActivities: activities.map((a: any) => ({
         id: a.id,
         simulatorSlug: a.simulator_slug,
         caseId: a.case_id,
         position: a.position,
+        customChallenges: a.custom_challenges || null,
       })),
     }));
     navigate(getRouteForSlug(act.simulator_slug));

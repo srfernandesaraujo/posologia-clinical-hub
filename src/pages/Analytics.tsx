@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye } from "lucide-react";
+import { BarChart3, DoorOpen, Lock, Crown, ClipboardList, ChevronDown, ChevronUp, FileText, CheckCircle2, XCircle, Eye, Trash2, RotateCcw, Archive } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -200,7 +202,8 @@ export default function Analytics() {
   const { user } = useAuth();
   const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade, loading } = useFeatureGating();
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
-
+  const [showTrash, setShowTrash] = useState(false);
+  const queryClient = useQueryClient();
   const toggleRoom = (id: string) => {
     setExpandedRooms(prev => {
       const next = new Set(prev);
@@ -238,7 +241,44 @@ export default function Analytics() {
     },
   });
 
-  const roomIds = rooms.map((r: any) => r.id);
+  const softDeleteRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").update({ deleted_at: new Date().toISOString() } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala movida para a lixeira");
+    },
+  });
+
+  const restoreRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").update({ deleted_at: null } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala restaurada");
+    },
+  });
+
+  const permanentDeleteRoom = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("virtual_rooms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-rooms"] });
+      toast.success("Sala excluída permanentemente");
+    },
+  });
+
+  const activeRooms = rooms.filter((r: any) => !r.deleted_at);
+  const trashedRooms = rooms.filter((r: any) => !!r.deleted_at);
+  const displayedRooms = showTrash ? trashedRooms : activeRooms;
+
+  const roomIds = displayedRooms.map((r: any) => r.id);
 
   const { data: allParticipants = [] } = useQuery({
     queryKey: ["analytics-participants", roomIds],
@@ -404,8 +444,11 @@ export default function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <p className="text-3xl font-bold text-primary">{rooms.length}</p>
+            <p className="text-3xl font-bold text-primary">{activeRooms.length}</p>
                 <p className="text-sm text-muted-foreground">Salas Criadas</p>
+                {trashedRooms.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground">({trashedRooms.length} na lixeira)</p>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -522,11 +565,26 @@ export default function Analytics() {
 
               {/* Per-Room Detail */}
               <div className="mt-6 space-y-4">
-                <h3 className="font-semibold text-lg">Detalhes por Sala</h3>
-                {rooms.length === 0 ? (
-                  <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhuma sala virtual criada ainda.</CardContent></Card>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">
+                    {showTrash ? "Lixeira" : "Detalhes por Sala"}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {trashedRooms.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{showTrash ? "Voltar às salas" : "Lixeira"}</span>
+                        <Switch checked={showTrash} onCheckedChange={setShowTrash} />
+                        {showTrash && <Archive className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {displayedRooms.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">
+                    {showTrash ? "Nenhuma sala na lixeira." : "Nenhuma sala virtual criada ainda."}
+                  </CardContent></Card>
                 ) : (
-                  rooms.map((room: any) => {
+                  displayedRooms.map((room: any) => {
                     const rParticipants = allParticipants.filter((p: any) => p.room_id === room.id);
                     const rSubmissions = allSubmissions.filter((s: any) => s.room_id === room.id);
                     const rAvg = rSubmissions.length > 0 ? Math.round(rSubmissions.reduce((a: number, s: any) => a + s.score, 0) / rSubmissions.length) : null;
@@ -559,6 +617,20 @@ export default function Analytics() {
                             </CardTitle>
                             <div className="flex items-center gap-2">
                               <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
+                              {showTrash ? (
+                                <>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); restoreRoom.mutate(room.id); }} title="Restaurar">
+                                    <RotateCcw className="h-4 w-4 text-primary" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); permanentDeleteRoom.mutate(room.id); }} title="Excluir permanentemente">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); softDeleteRoom.mutate(room.id); }} title="Mover para lixeira">
+                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                              )}
                               {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                             </div>
                           </div>

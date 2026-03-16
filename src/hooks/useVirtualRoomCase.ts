@@ -114,6 +114,7 @@ export function useVirtualRoomCase(simulatorSlug: string) {
         simulatorSlug: nextAct.simulatorSlug,
         activityId: nextAct.id,
         activityIndex: nextIndex,
+        customChallenges: nextAct.customChallenges || null,
       }));
       const route = LAB_SLUGS_SET.has(nextAct.simulatorSlug)
         ? `/sala/laboratorio/${nextAct.simulatorSlug}`
@@ -134,6 +135,8 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     ? { current: (roomCtxRef.current.activityIndex ?? 0) + 1, total: roomCtxRef.current.totalActivities }
     : null;
 
+  const customChallenges = roomCtxRef.current?.customChallenges || null;
+
   return {
     virtualRoomCase,
     isVirtualRoom,
@@ -144,5 +147,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     examProgress,
     examFeedback,
     proceedToNext,
+    customChallenges,
   };
 }
