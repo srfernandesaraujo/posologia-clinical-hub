@@ -106,6 +106,9 @@ export default function SimuladorPkaAbsorcao() {
   const [drugType, setDrugType] = useState("weak_acid");
   const [pKa, setPka] = useState(3.5);
   const [pH, setPH] = useState(1.5);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
