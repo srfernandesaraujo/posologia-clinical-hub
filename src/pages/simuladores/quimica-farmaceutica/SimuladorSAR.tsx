@@ -113,8 +113,8 @@ export default function SimuladorSAR() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialHalogen: cd.initialHalogen ?? 50, initialOH: cd.initialOH ?? 20, initialCH3: cd.initialCH3 ?? 30, initialCF3: cd.initialCF3 ?? 10, expectedPotencyRange: cd.expectedPotencyRange ?? [60, 90], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialHalogen: cd.initialHalogen ?? 50, initialOH: cd.initialOH ?? 20, initialCH3: cd.initialCH3 ?? 30, initialCF3: cd.initialCF3 ?? 10, expectedPotencyRange: cd.expectedPotencyRange ?? [60, 90], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
