@@ -90,7 +90,7 @@ const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividad
 
 export default function SimuladorPRM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("prm", BUILT_IN_CASES);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext, nativeCaseIndex } = useVirtualRoomCase("prm");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext, nativeCaseIndex } = useVirtualRoomCase("prm", BUILT_IN_CASES);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, UserAnswer>>({});
@@ -99,20 +99,10 @@ export default function SimuladorPRM() {
   const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set());
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
 
-  // Auto-start virtual room case (DB case or native case)
-  if (isVirtualRoom && !vrAutoStarted && screen === "dashboard") {
-    if (virtualRoomCase) {
-      setVrAutoStarted(true);
-      setScreen("sim");
-    } else if (nativeCaseIndex !== null && BUILT_IN_CASES[nativeCaseIndex]) {
-      setVrAutoStarted(true);
-      setCaseIdx(nativeCaseIndex);
-      setScreen("sim");
-    } else if (!loadingVRCase && nativeCaseIndex === null && !virtualRoomCase) {
-      // No specific case — just enter VR mode with first case
-      setVrAutoStarted(true);
-      setScreen("sim");
-    }
+  // Auto-start virtual room case
+  if (isVirtualRoom && virtualRoomCase && !vrAutoStarted && screen === "dashboard") {
+    setVrAutoStarted(true);
+    setScreen("sim");
   }
 
   const currentCase = isVirtualRoom && virtualRoomCase ? virtualRoomCase as CaseData : (allCases[caseIdx] as CaseData | undefined);
