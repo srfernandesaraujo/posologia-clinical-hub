@@ -117,7 +117,9 @@ export default function SimuladorEstabilidade() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
     const t90Ok = t90 >= activeCase.expectedT90Range[0] && t90 <= activeCase.expectedT90Range[1];
-    submitResults({ score: t90Ok ? 100 : 30, actions: { concentration, temp, order, kRef, t90 } });
+    const score = t90Ok ? 100 : 30;
+    setLastScore(score);
+    submitResults({ score, actions: { concentration, temp, order, kRef, t90 } });
   }, [activeCase, t90, concentration, temp, order, kRef, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialConcentration: c.initialConcentration ?? 100, initialTemp: c.initialTemp ?? 25, initialOrder: c.initialOrder ?? "first", expectedT90Range: c.expectedT90Range ?? [5, 15], clinicalTip: c.clinicalTip ?? "" });
