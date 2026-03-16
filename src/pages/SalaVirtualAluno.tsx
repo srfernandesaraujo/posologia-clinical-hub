@@ -190,6 +190,7 @@ export default function SalaVirtualAluno() {
   const goToSimulator = () => {
     if (isLegacy) {
       const legacyAct = activities[0]; // single activity
+      const nativeCaseIndex = legacyAct?.custom_challenges?.nativeCaseIndex ?? null;
       sessionStorage.setItem("virtualRoom", JSON.stringify({
         roomId: room.id,
         participantId,
@@ -197,6 +198,7 @@ export default function SalaVirtualAluno() {
         simulatorSlug: room.simulator_slug,
         participantName,
         customChallenges: legacyAct?.custom_challenges || null,
+        nativeCaseIndex,
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
@@ -208,6 +210,7 @@ export default function SalaVirtualAluno() {
     const act = activities[index];
     if (!act) return;
 
+    const nativeCaseIndex = act.custom_challenges?.nativeCaseIndex ?? null;
     sessionStorage.setItem("virtualRoom", JSON.stringify({
       roomId: room.id,
       participantId,
@@ -218,12 +221,14 @@ export default function SalaVirtualAluno() {
       activityIndex: index,
       totalActivities: activities.length,
       customChallenges: act.custom_challenges || null,
+      nativeCaseIndex,
       allActivities: activities.map((a: any) => ({
         id: a.id,
         simulatorSlug: a.simulator_slug,
         caseId: a.case_id,
         position: a.position,
         customChallenges: a.custom_challenges || null,
+        nativeCaseIndex: a.custom_challenges?.nativeCaseIndex ?? null,
       })),
     }));
     navigate(getRouteForActivity(act.simulator_slug, act.case_id));
