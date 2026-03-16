@@ -420,10 +420,23 @@ export default function SimuladorTitulacaoAminoacidos() {
         </CardContent>
       </Card>
 
-      <SimulatorChallengeMode
-        challengeSet={getTitulacaoAminoacidosChallenges()}
-        simulatorState={{ selectedAA, currentpH, charge: currentPoint.charge }}
-      />
+      <SimulatorChallengeMode challengeSet={getTitulacaoAminoacidosChallenges()} simulatorState={{ selectedAA, currentpH, charge: currentPoint.charge }} onComplete={() => setChallengeCompleted(true)} />
+      {isVirtualRoom && submitted && (
+        !showFeedback ? (
+          <div className="space-y-2">
+            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+          </div>
+        )
+      )}
     </div>
   );
 }
