@@ -617,6 +617,20 @@ export default function Analytics() {
                             </CardTitle>
                             <div className="flex items-center gap-2">
                               <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
+                              {showTrash ? (
+                                <>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); restoreRoom.mutate(room.id); }} title="Restaurar">
+                                    <RotateCcw className="h-4 w-4 text-primary" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); permanentDeleteRoom.mutate(room.id); }} title="Excluir permanentemente">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); softDeleteRoom.mutate(room.id); }} title="Mover para lixeira">
+                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                              )}
                               {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                             </div>
                           </div>
