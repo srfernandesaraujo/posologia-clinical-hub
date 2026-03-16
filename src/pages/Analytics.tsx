@@ -909,7 +909,7 @@ export default function Analytics() {
                                       )}
                                       {/* Detailed submission view */}
                                       {pSubs.map((sub: any) => (
-                                        <ParticipantDetail key={sub.id} submission={sub} />
+                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
                                       ))}
                                     </div>
                                   );
