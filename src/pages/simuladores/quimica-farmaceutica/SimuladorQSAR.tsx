@@ -111,8 +111,8 @@ export default function SimuladorQSAR() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialSeries: cd.initialSeries ?? "sulfonamides", initialLogP: cd.initialLogP ?? 1.0, initialSigma: cd.initialSigma ?? 0, expectedOptimalLogPRange: cd.expectedOptimalLogPRange ?? [0.7, 1.2], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialSeries: cd.initialSeries ?? "sulfonamides", initialLogP: cd.initialLogP ?? 1.0, initialSigma: cd.initialSigma ?? 0, expectedOptimalLogPRange: cd.expectedOptimalLogPRange ?? [0.7, 1.2], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
