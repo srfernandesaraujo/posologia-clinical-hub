@@ -88,10 +88,12 @@ export default function SimuladorFarmacogenomica() {
   const points = useMemo(() => generatePGxCurve(dose, phenotype, drugType), [dose, phenotype, drugType]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const phenOk = phenotype === activeCase.expectedPhenotype;
     const doseOk = dose >= activeCase.expectedDoseAdjust[0] && dose <= activeCase.expectedDoseAdjust[1];
-    submitResults({ score: (phenOk ? 60 : 0) + (doseOk ? 40 : 0), actions: { phenotype, dose, drugType } });
+    const s = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    submitResults({ score: s, actions: { phenotype, dose, drugType } });
+    return s;
   }, [activeCase, phenotype, dose, drugType, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugType: c.drugType ?? "pro-farmaco", enzyme: c.enzyme ?? "CYP2D6", expectedPhenotype: c.expectedPhenotype ?? "extensivo", expectedDoseAdjust: c.expectedDoseAdjust ?? [80, 120], clinicalTip: c.clinicalTip ?? "" });
