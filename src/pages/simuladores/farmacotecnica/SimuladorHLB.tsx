@@ -94,13 +94,15 @@ export default function SimuladorHLB() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<HLBCase | null>(null);
   const [selectedOil, setSelectedOil] = useState(OIL_PHASES[0].name);
   const [surfAIdx, setSurfAIdx] = useState(2); // Span 80
   const [surfBIdx, setSurfBIdx] = useState(5); // Tween 80
   const [surfAPct, setSurfAPct] = useState(50);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
     if (virtualRoomCase) {
