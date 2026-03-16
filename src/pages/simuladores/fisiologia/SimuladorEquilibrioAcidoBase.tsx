@@ -110,6 +110,9 @@ export default function SimuladorEquilibrioAcidoBase() {
   const [rrModifier, setRrModifier] = useState(50);
   const [renalModifier, setRenalModifier] = useState(50);
   const [history, setHistory] = useState<any[]>([]);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
