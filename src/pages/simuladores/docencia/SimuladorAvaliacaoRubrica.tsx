@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ClipboardCheck, ChevronRight, RotateCcw, Award } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, ClipboardCheck, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 
 interface RubricCriterion {
   name: string;
