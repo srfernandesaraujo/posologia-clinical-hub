@@ -57,6 +57,9 @@ export default function SimuladorJanelaTerapeutica() {
   const [dose, setDose] = useState(30);
   const [de50, setDE50] = useState(30);
   const [dl50, setDL50] = useState(65);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugName: cd.drugName ?? "", de50: cd.de50 ?? 30, dl50: cd.dl50 ?? 65, expectedDose: cd.expectedDose ?? [20, 40], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDose(activeCase.de50); setDE50(activeCase.de50); setDL50(activeCase.dl50); } }, [activeCase]);
