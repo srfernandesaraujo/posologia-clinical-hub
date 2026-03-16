@@ -88,7 +88,7 @@ function computeDegradation(c0: number, temp: number, order: string, kRef: numbe
 
 export default function SimuladorEstabilidade() {
   const navigate = useNavigate();
-  const location = useLocation();
+  
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
