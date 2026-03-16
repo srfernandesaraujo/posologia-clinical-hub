@@ -94,10 +94,12 @@ export default function SimuladorBloqueioNeuromuscular() {
   const points = useMemo(() => generateNMBCurve(agent, agentDose, reversal, reversalDose), [agent, agentDose, reversal, reversalDose]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const agentOk = agent === activeCase.expectedAgent;
     const reversalOk = reversal === activeCase.expectedReversal;
-    submitResults({ score: (agentOk ? 50 : 0) + (reversalOk ? 50 : 0), actions: { agent, agentDose, reversal, reversalDose } });
+    const s = (agentOk ? 50 : 0) + (reversalOk ? 50 : 0);
+    submitResults({ score: s, actions: { agent, agentDose, reversal, reversalDose } });
+    return s;
   }, [activeCase, agent, agentDose, reversal, reversalDose, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedAgent: c.expectedAgent ?? "nao-despolarizante", expectedReversal: c.expectedReversal ?? "nenhum", clinicalTip: c.clinicalTip ?? "" });
