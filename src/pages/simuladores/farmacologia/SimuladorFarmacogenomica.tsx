@@ -154,7 +154,7 @@ export default function SimuladorFarmacogenomica() {
               <button onClick={() => setDrugType("pro-farmaco")} className={`w-full text-left p-2 rounded text-sm ${drugType === "pro-farmaco" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Pró-fármaco (precisa de ativação)</button>
               <button onClick={() => setDrugType("farmaco-ativo")} className={`w-full text-left p-2 rounded text-sm ${drugType === "farmaco-ativo" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Fármaco ativo (metabolismo = inativação)</button>
             </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={() => handleFinish()} fallbackLabel="Finalizar Caso" />
+            
           </CardContent>
         </Card>
         <Card>
