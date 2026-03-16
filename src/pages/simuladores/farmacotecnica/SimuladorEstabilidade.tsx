@@ -99,6 +99,7 @@ export default function SimuladorEstabilidade() {
   const [kRef, setKRef] = useState(0.03);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -192,19 +193,7 @@ export default function SimuladorEstabilidade() {
                 </SelectContent>
               </Select>
             </div>
-            {isVirtualRoom ? (
-              !submitted ? (
-                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
-              ) : !showFeedback ? (
-                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-              ) : (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
-                  <p className="text-xs text-muted-foreground">t90: {t90} meses | Faixa esperada: {activeCase?.expectedT90Range?.[0]}–{activeCase?.expectedT90Range?.[1]} meses</p>
-                </div>
-              )
-            ) : (
+            {!isVirtualRoom && (
               <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
             )}
           </CardContent>
@@ -239,7 +228,21 @@ export default function SimuladorEstabilidade() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getEstabilidadeChallenges()} simulatorState={{ concentration, temp, order, kRef, t90 }} />
+      <SimulatorChallengeMode challengeSet={getEstabilidadeChallenges()} simulatorState={{ concentration, temp, order, kRef, t90 }} onComplete={() => setChallengeCompleted(true)} />
+
+      {isVirtualRoom && (
+        !submitted ? (
+          <Button onClick={handleFinish} disabled={!challengeCompleted} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+        ) : !showFeedback ? (
+          <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+        ) : (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+            <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+            <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+            <p className="text-xs text-muted-foreground">t90: {t90} meses | Faixa esperada: {activeCase?.expectedT90Range?.[0]}–{activeCase?.expectedT90Range?.[1]} meses</p>
+          </div>
+        )
+      )}
     </div>
   );
 }
