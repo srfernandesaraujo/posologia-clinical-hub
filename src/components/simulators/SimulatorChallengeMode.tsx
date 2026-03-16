@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -21,9 +22,7 @@ export interface AdjustChallenge {
   type: "adjust";
   question: string;
   context?: string;
-  /** Which parameters the student needs to adjust (key names from the simulator state) */
   targetParams: Record<string, { min: number; max: number; label: string }>;
-  /** Function to validate current simulator state — returns { correct, feedback } */
   validator: (currentState: Record<string, any>) => { correct: boolean; feedback: string };
   explanation: string;
   reference?: string;
@@ -37,17 +36,23 @@ export interface ChallengeSet {
   challenges: Challenge[];
 }
 
+export interface QuestionResult {
+  index: number;
+  type: "mcq" | "adjust";
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  correct: boolean;
+  explanation: string;
+  reference?: string;
+}
+
 interface SimulatorChallengeModeProps {
   challengeSet: ChallengeSet;
-  /** Override challenge set (e.g., from virtual room custom challenges) */
   customChallengeSet?: ChallengeSet | null;
-  /** Current simulator state (for adjust challenges) */
   simulatorState: Record<string, any>;
-  /** Called when student should reset simulator to specific values for a challenge */
   onResetForChallenge?: (params: Record<string, number>) => void;
-  /** Called when all challenges complete with final score */
-  onComplete?: (score: number, total: number) => void;
-  /** Hide the challenge section entirely */
+  onComplete?: (score: number, total: number, questionResults?: QuestionResult[]) => void;
   hidden?: boolean;
 }
 
@@ -61,7 +66,6 @@ export default function SimulatorChallengeMode({
   onComplete,
   hidden,
 }: SimulatorChallengeModeProps) {
-  // Use custom challenges if provided (from virtual room), otherwise native
   const challengeSet = customChallengeSet || nativeChallengeSet;
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,6 +76,36 @@ export default function SimulatorChallengeMode({
   const [feedback, setFeedback] = useState("");
   const [finished, setFinished] = useState(false);
   const [adjustValidated, setAdjustValidated] = useState(false);
+  const questionResultsRef = useRef<QuestionResult[]>([]);
+  const startTimeRef = useRef<number>(Date.now());
+
+  // Virtual room detection
+  const vrContextRef = useRef<any>(null);
+  const [isVR, setIsVR] = useState(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("virtualRoom");
+    if (raw) {
+      try {
+        const ctx = JSON.parse(raw);
+        vrContextRef.current = ctx;
+        setIsVR(true);
+        // Signal that challenges exist so submitResults can skip
+        sessionStorage.setItem("hasChallenges", "true");
+      } catch {}
+    }
+    return () => {
+      sessionStorage.removeItem("hasChallenges");
+    };
+  }, []);
+
+  // Auto-start in virtual room mode
+  useEffect(() => {
+    if (isVR && !started) {
+      setStarted(true);
+      startTimeRef.current = Date.now();
+    }
+  }, [isVR, started]);
 
   const challenges = challengeSet.challenges;
   const current = challenges[currentIndex];
@@ -82,6 +116,8 @@ export default function SimulatorChallengeMode({
     setCurrentIndex(0);
     setScore(0);
     setFinished(false);
+    questionResultsRef.current = [];
+    startTimeRef.current = Date.now();
   }, []);
 
   const handleMCQAnswer = useCallback((optionIndex: number) => {
@@ -93,7 +129,19 @@ export default function SimulatorChallengeMode({
     setIsCorrect(correct);
     setFeedback(challenge.explanation);
     if (correct) setScore((s) => s + 1);
-  }, [answered, current]);
+
+    // Track per-question result
+    questionResultsRef.current.push({
+      index: currentIndex,
+      type: "mcq",
+      question: challenge.question,
+      userAnswer: challenge.options[optionIndex],
+      correctAnswer: challenge.options[challenge.correctIndex],
+      correct,
+      explanation: challenge.explanation,
+      reference: challenge.reference,
+    });
+  }, [answered, current, currentIndex]);
 
   const handleAdjustValidate = useCallback(() => {
     if (answered) return;
@@ -103,7 +151,6 @@ export default function SimulatorChallengeMode({
     if (challenge.validator) {
       result = challenge.validator(simulatorState);
     } else {
-      // For serialized custom challenges, validate using targetParams ranges
       const params = challenge.targetParams || {};
       const allInRange = Object.entries(params).every(([key, spec]) => {
         const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
@@ -119,12 +166,66 @@ export default function SimulatorChallengeMode({
     setIsCorrect(result.correct);
     setFeedback(result.correct ? challenge.explanation : result.feedback + "\n\n" + challenge.explanation);
     if (result.correct) setScore((s) => s + 1);
-  }, [answered, current, simulatorState]);
+
+    // Track per-question result
+    const paramsSummary = Object.entries(challenge.targetParams || {}).map(([key, spec]) => {
+      const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
+      return `${spec.label}: ${val ?? "?"} (faixa: ${spec.min}–${spec.max})`;
+    }).join("; ");
+
+    questionResultsRef.current.push({
+      index: currentIndex,
+      type: "adjust",
+      question: challenge.question,
+      userAnswer: paramsSummary,
+      correctAnswer: Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; "),
+      correct: result.correct,
+      explanation: challenge.explanation,
+      reference: challenge.reference,
+    });
+  }, [answered, current, simulatorState, currentIndex]);
+
+  const submitToVirtualRoom = useCallback(async (finalScore: number, total: number) => {
+    const ctx = vrContextRef.current;
+    if (!ctx) return;
+
+    const pctScore = Math.round((finalScore / total) * 100);
+    const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+
+    try {
+      await supabase.from("room_submissions").insert({
+        room_id: ctx.roomId,
+        participant_id: ctx.participantId,
+        step_index: ctx.activityIndex ?? 0,
+        score: pctScore,
+        actions: {
+          type: "challenge_results",
+          questions: questionResultsRef.current,
+          summary: { correct: finalScore, total, score: pctScore },
+        } as any,
+        time_spent_seconds: timeSpent,
+        activity_id: ctx.activityId || null,
+      });
+
+      // Signal that VR submission was done by challenge mode
+      sessionStorage.setItem("challengeSubmitted", "true");
+    } catch (err) {
+      console.error("Error submitting challenge results:", err);
+    }
+  }, []);
 
   const handleNext = useCallback(() => {
+    const newScore = score; // score already updated by handleMCQAnswer/handleAdjustValidate
     if (currentIndex + 1 >= challenges.length) {
       setFinished(true);
-      onComplete?.(score, challenges.length);
+      // Use score + current correct (since setScore is batched, score might not reflect last answer yet)
+      const finalScore = newScore;
+      onComplete?.(finalScore, challenges.length, questionResultsRef.current);
+      
+      // Submit to virtual room if in VR mode
+      if (isVR) {
+        submitToVirtualRoom(finalScore, challenges.length);
+      }
     } else {
       setCurrentIndex((i) => i + 1);
       setSelectedOption(null);
@@ -133,7 +234,7 @@ export default function SimulatorChallengeMode({
       setFeedback("");
       setAdjustValidated(false);
     }
-  }, [currentIndex, challenges.length, score, onComplete]);
+  }, [currentIndex, challenges.length, score, onComplete, isVR, submitToVirtualRoom]);
 
   const handleRestart = useCallback(() => {
     setStarted(false);
@@ -145,6 +246,8 @@ export default function SimulatorChallengeMode({
     setFeedback("");
     setFinished(false);
     setAdjustValidated(false);
+    questionResultsRef.current = [];
+    startTimeRef.current = Date.now();
   }, []);
 
   if (hidden) return null;
@@ -194,9 +297,14 @@ export default function SimulatorChallengeMode({
               <span key={s} className={`text-2xl ${s <= stars ? "text-yellow-400" : "text-muted-foreground/30"}`}>★</span>
             ))}
           </div>
-          <Button onClick={handleRestart} variant="outline" className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Tentar Novamente
-          </Button>
+          {isVR && (
+            <p className="text-xs text-muted-foreground">✅ Resultado enviado para o professor</p>
+          )}
+          {!isVR && (
+            <Button onClick={handleRestart} variant="outline" className="gap-2">
+              <RotateCcw className="h-4 w-4" /> Tentar Novamente
+            </Button>
+          )}
         </CardContent>
       </Card>
     );

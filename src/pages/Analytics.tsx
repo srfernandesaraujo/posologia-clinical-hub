@@ -97,18 +97,52 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 /** Expandable participant detail showing decisions + report */
-function ParticipantDetail({ submission }: { submission: any }) {
+function ParticipantDetail({ submission, roomSubmissions }: { submission: any; roomSubmissions: any[] }) {
   const [open, setOpen] = useState(false);
   const actions = submission.actions;
 
-  // Support both old format (array of decisions) and new format ({ decisions, report })
-  const decisions: any[] = Array.isArray(actions)
-    ? actions
-    : actions?.decisions || [];
-  const report = !Array.isArray(actions) ? actions?.report : null;
-  const hasDetails = decisions.length > 0 || report;
+  // Detect new challenge_results format
+  const isChallengeFormat = actions?.type === "challenge_results";
+  const questions: any[] = isChallengeFormat ? (actions.questions || []) : [];
+  const challengeSummary = isChallengeFormat ? actions.summary : null;
 
+  // Legacy format
+  const decisions: any[] = !isChallengeFormat
+    ? (Array.isArray(actions) ? actions : actions?.decisions || [])
+    : [];
+  const report = !isChallengeFormat && !Array.isArray(actions) ? actions?.report : null;
+
+  const hasDetails = questions.length > 0 || decisions.length > 0 || report;
   if (!hasDetails) return null;
+
+  // Comparative analysis: how this student compares to others in same room
+  const otherSubmissions = roomSubmissions.filter((s: any) => s.id !== submission.id);
+  const roomAvg = otherSubmissions.length > 0
+    ? Math.round(otherSubmissions.reduce((a: number, s: any) => a + s.score, 0) / otherSubmissions.length)
+    : null;
+  const studentScore = submission.score;
+
+  // Per-question difficulty analysis (from all submissions in this room that have challenge data)
+  const questionDifficultyMap: Record<number, { total: number; correct: number }> = {};
+  roomSubmissions.forEach((s: any) => {
+    if (s.actions?.type === "challenge_results" && s.actions.questions) {
+      s.actions.questions.forEach((q: any) => {
+        if (!questionDifficultyMap[q.index]) questionDifficultyMap[q.index] = { total: 0, correct: 0 };
+        questionDifficultyMap[q.index].total += 1;
+        if (q.correct) questionDifficultyMap[q.index].correct += 1;
+      });
+    }
+  });
+
+  // Topic analysis from questions
+  const topicStats: Record<string, { correct: number; total: number }> = {};
+  questions.forEach((q: any) => {
+    // Use question type as a simple topic grouping
+    const topic = q.type === "mcq" ? "Múltipla Escolha" : "Ajuste de Parâmetros";
+    if (!topicStats[topic]) topicStats[topic] = { correct: 0, total: 0 };
+    topicStats[topic].total += 1;
+    if (q.correct) topicStats[topic].correct += 1;
+  });
 
   return (
     <div className="mt-2">
@@ -118,8 +152,133 @@ function ParticipantDetail({ submission }: { submission: any }) {
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
       </Button>
       {open && (
-        <div className="mt-2 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
-          {/* Decisions breakdown */}
+        <div className="mt-2 space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+
+          {/* ── Comparative Summary ── */}
+          {(roomAvg !== null || challengeSummary) && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {challengeSummary && (
+                <>
+                  <div className="rounded-lg border border-border p-2 text-center">
+                    <p className="text-lg font-bold text-primary">{challengeSummary.correct}/{challengeSummary.total}</p>
+                    <p className="text-[10px] text-muted-foreground">Acertos</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-2 text-center">
+                    <p className={`text-lg font-bold ${challengeSummary.score >= 80 ? "text-green-600 dark:text-green-400" : challengeSummary.score >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"}`}>{challengeSummary.score}%</p>
+                    <p className="text-[10px] text-muted-foreground">Score</p>
+                  </div>
+                </>
+              )}
+              {roomAvg !== null && (
+                <>
+                  <div className="rounded-lg border border-border p-2 text-center">
+                    <p className="text-lg font-bold text-muted-foreground">{roomAvg}%</p>
+                    <p className="text-[10px] text-muted-foreground">Média da Sala</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-2 text-center">
+                    <p className={`text-lg font-bold ${studentScore > roomAvg ? "text-green-600 dark:text-green-400" : studentScore < roomAvg ? "text-destructive" : "text-muted-foreground"}`}>
+                      {studentScore > roomAvg ? "+" : ""}{studentScore - roomAvg}%
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">vs. Sala</p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Per-Question Breakdown (new format) ── */}
+          {questions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Questão a Questão ({questions.filter((q: any) => q.correct).length}/{questions.length} acertos)
+              </p>
+              {questions.map((q: any, i: number) => {
+                const difficulty = questionDifficultyMap[q.index];
+                const diffPct = difficulty ? Math.round((difficulty.correct / difficulty.total) * 100) : null;
+                const diffLabel = diffPct !== null
+                  ? (diffPct >= 80 ? "Fácil" : diffPct >= 50 ? "Moderada" : "Difícil")
+                  : null;
+                const diffColor = diffPct !== null
+                  ? (diffPct >= 80 ? "text-green-600 dark:text-green-400" : diffPct >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive")
+                  : "";
+
+                return (
+                  <div key={i} className={`rounded-lg p-3 text-xs border ${q.correct ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"}`}>
+                    <div className="flex items-start gap-2">
+                      {q.correct
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                        : <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">Q{q.index + 1}.</span>
+                          <Badge variant="outline" className="text-[10px] h-4">{q.type === "mcq" ? "Pergunta" : "Ajuste"}</Badge>
+                          {diffLabel && (
+                            <Badge variant="outline" className={`text-[10px] h-4 ${diffColor}`}>
+                              {diffLabel} {diffPct !== null && `(${diffPct}% acertaram)`}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground leading-relaxed">{q.question}</p>
+                        <p className="text-muted-foreground">
+                          Resposta: <span className={`font-medium ${q.correct ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{q.userAnswer}</span>
+                        </p>
+                        {!q.correct && (
+                          <p className="text-muted-foreground">
+                            Correta: <span className="font-medium text-green-600 dark:text-green-400">{q.correctAnswer}</span>
+                          </p>
+                        )}
+                        {q.explanation && (
+                          <p className="text-muted-foreground italic mt-1">💡 {q.explanation}</p>
+                        )}
+                        {q.reference && (
+                          <p className="text-muted-foreground mt-0.5">📚 {q.reference}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Topic breakdown */}
+              {Object.keys(topicStats).length > 0 && (
+                <div className="mt-2 rounded-lg border border-border p-3 bg-muted/30">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Desempenho por Tipo</p>
+                  <div className="flex flex-wrap gap-3">
+                    {Object.entries(topicStats).map(([topic, stats]) => {
+                      const pct = Math.round((stats.correct / stats.total) * 100);
+                      return (
+                        <div key={topic} className="text-xs">
+                          <span className="font-medium">{topic}:</span>{" "}
+                          <span className={pct >= 80 ? "text-green-600 dark:text-green-400" : pct >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"}>
+                            {stats.correct}/{stats.total} ({pct}%)
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Radar for question performance */}
+              {questions.length >= 3 && (
+                <div className="mt-2">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <RadarChart data={questions.map((q: any) => ({
+                      label: `Q${q.index + 1}`,
+                      acerto: q.correct ? 100 : 0,
+                    }))} cx="50%" cy="50%" outerRadius="70%">
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar dataKey="acerto" fill="hsl(var(--primary))" fillOpacity={0.4} stroke="hsl(var(--primary))" strokeWidth={2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Legacy decisions format ── */}
           {decisions.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decisões Clínicas</p>
@@ -137,14 +296,13 @@ function ParticipantDetail({ submission }: { submission: any }) {
                   </div>
                 </div>
               ))}
-              {/* Mini radar for decision accuracy per category */}
               {decisions.length >= 3 && (() => {
                 const radarData = decisions.map((d: any) => ({
                   label: d.label?.length > 18 ? d.label.substring(0, 18) + "…" : (d.label || "—"),
                   acerto: (d.correct === true || d.correct === "true" || d.correct === 1) ? 100 : 0,
                 }));
-                const hasAnyData = radarData.some(r => r.acerto > 0);
                 const correctCount = radarData.filter(r => r.acerto > 0).length;
+                const hasAnyData = correctCount > 0;
                 return (
                   <div className="mt-2">
                     <p className="text-[10px] text-muted-foreground text-center mb-1">
@@ -751,7 +909,7 @@ export default function Analytics() {
                                       )}
                                       {/* Detailed submission view */}
                                       {pSubs.map((sub: any) => (
-                                        <ParticipantDetail key={sub.id} submission={sub} />
+                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
                                       ))}
                                     </div>
                                   );
