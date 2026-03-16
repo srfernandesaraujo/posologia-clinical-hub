@@ -109,6 +109,9 @@ export default function SimuladorCineticaEnzimatica() {
   const [nonCompetitiveInhibitor, setNonCompetitiveInhibitor] = useState(false);
   const [inhibitorConc, setInhibitorConc] = useState(50);
   const [showLineweaver, setShowLineweaver] = useState(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -155,7 +158,22 @@ export default function SimuladorCineticaEnzimatica() {
     });
   };
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === 'number' ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -176,10 +194,12 @@ export default function SimuladorCineticaEnzimatica() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Gerar Caso com IA
-            </Button>
+            {!isVirtualRoom && (
+              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                Gerar Caso com IA
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -194,7 +214,7 @@ export default function SimuladorCineticaEnzimatica() {
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -301,7 +321,23 @@ export default function SimuladorCineticaEnzimatica() {
       <SimulatorChallengeMode
         challengeSet={getCineticaEnzimaticaChallenges()}
         simulatorState={{ vmax, km }}
+        onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }}
       />
+
+      {isVirtualRoom && submitted && (
+        <Card className="border-primary/20">
+          <CardContent className="pt-4 space-y-2">
+            <Button variant="outline" className="w-full" onClick={() => setShowFeedback(!showFeedback)}>
+              {showFeedback ? "Ocultar Resultados" : "Mostrar Resultados"}
+            </Button>
+            {showFeedback && (
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                <p className="text-sm font-semibold">Pontuação: {lastScore}%</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
