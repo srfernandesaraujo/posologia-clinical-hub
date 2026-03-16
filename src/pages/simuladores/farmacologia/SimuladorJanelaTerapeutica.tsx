@@ -59,7 +59,7 @@ export default function SimuladorJanelaTerapeutica() {
   const [de50, setDE50] = useState(30);
   const [dl50, setDL50] = useState(65);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase.case_data as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, drugName: cd.drugName ?? "", de50: cd.de50 ?? 30, dl50: cd.dl50 ?? 65, expectedDose: cd.expectedDose ?? [20, 40], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, drugName: cd.drugName ?? "", de50: cd.de50 ?? 30, dl50: cd.dl50 ?? 65, expectedDose: cd.expectedDose ?? [20, 40], clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setDose(activeCase.de50); setDE50(activeCase.de50); setDL50(activeCase.dl50); } }, [activeCase]);
 
   const { points, it } = useMemo(() => generatePopulationCurves(de50, dl50, dose), [de50, dl50, dose]);
