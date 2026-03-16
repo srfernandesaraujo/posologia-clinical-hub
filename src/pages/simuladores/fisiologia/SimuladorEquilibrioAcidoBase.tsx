@@ -261,7 +261,7 @@ export default function SimuladorEquilibrioAcidoBase() {
                 ))}
               </div>
             </div>
-            <Button onClick={handleFinish} className="w-full" disabled={submitted}>Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

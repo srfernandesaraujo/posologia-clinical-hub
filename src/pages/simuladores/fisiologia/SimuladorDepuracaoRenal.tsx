@@ -204,7 +204,7 @@ export default function SimuladorDepuracaoRenal() {
                 <Slider value={[ctrl.value]} onValueChange={([v]) => ctrl.set(v)} min={10} max={100} step={5} />
               </div>
             ))}
-            <Button onClick={handleFinish} className="w-full" disabled={submitted}>Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

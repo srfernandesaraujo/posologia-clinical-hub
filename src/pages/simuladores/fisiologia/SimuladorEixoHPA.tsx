@@ -221,8 +221,7 @@ export default function SimuladorEixoHPA() {
               <p className="text-xs text-muted-foreground mt-1">0% = nenhum · 100% = dose suprafisiológica (ex: prednisona 60 mg/dia)</p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
+              <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar" />
             </div>
           </CardContent>
         </Card>

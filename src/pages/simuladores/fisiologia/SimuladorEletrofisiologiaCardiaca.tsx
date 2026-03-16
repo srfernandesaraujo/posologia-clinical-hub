@@ -231,7 +231,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Condutância Ca²⁺</label><span className="text-sm font-bold">{ca}%</span></div>
               <Slider value={[ca]} onValueChange={([v]) => setCa(v)} min={0} max={150} step={5} />
             </div>
-            <Button onClick={handleFinish} className="w-full" disabled={submitted}>Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

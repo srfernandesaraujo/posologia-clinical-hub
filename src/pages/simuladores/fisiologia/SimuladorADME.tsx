@@ -251,7 +251,7 @@ export default function SimuladorADME() {
               <div><p className="text-sm font-medium">Metabolismo de 1ª Passagem</p><p className="text-xs text-muted-foreground">Extração hepática pré-sistêmica</p></div>
               <Switch checked={firstPass} onCheckedChange={setFirstPass} />
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Avaliação</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Avaliação" />
           </CardContent>
         </Card>
 

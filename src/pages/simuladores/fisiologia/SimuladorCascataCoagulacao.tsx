@@ -256,7 +256,7 @@ export default function SimuladorCascataCoagulacao() {
               </div>
             </div>
 
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Avaliação</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Avaliação" />
           </CardContent>
         </Card>
 
