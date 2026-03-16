@@ -86,6 +86,9 @@ export default function SimuladorBloqueioNeuromuscular() {
   const [agentDose, setAgentDose] = useState(80);
   const [reversal, setReversal] = useState<"nenhum" | "neostigmina" | "sugammadex">("nenhum");
   const [reversalDose, setReversalDose] = useState(80);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedAgent: cd.expectedAgent ?? "nao-despolarizante", expectedReversal: cd.expectedReversal ?? "nenhum", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
   useEffect(() => { if (activeCase) { setAgent("nao-despolarizante"); setAgentDose(80); setReversal("nenhum"); setReversalDose(80); } }, [activeCase]);
