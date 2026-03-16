@@ -11,10 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
 
+const LAB_PREFIX = "lab-";
+
 const LAB_SLUGS = new Set([
-  "farmacos", "microbiologia", "toxicologia", "farmacogenomica", "estabilidade",
-  "controle-qualidade", "epidemiologia", "biotecnologia", "simulacao-realistica",
-  "pericia-forense", "modelagem-molecular",
+  "lab-farmacos", "lab-microbiologia", "lab-toxicologia", "lab-farmacogenomica", "lab-estabilidade",
+  "lab-controle-qualidade", "lab-epidemiologia", "lab-biotecnologia", "lab-simulacao-realistica",
+  "lab-pericia-forense", "lab-modelagem-molecular",
 ]);
 
 const TOOL_LABELS: Record<string, string> = {
@@ -23,21 +25,25 @@ const TOOL_LABELS: Record<string, string> = {
   tdm: "TDM – Monitoramento Terapêutico",
   acompanhamento: "Acompanhamento Farmacoterapêutico",
   insulina: "Dose de Insulina",
-  farmacos: "Lab: Desenvolvimento de Fármacos",
-  microbiologia: "Lab: Microbiologia",
-  toxicologia: "Lab: Toxicologia",
-  farmacogenomica: "Lab: Farmacogenômica",
-  estabilidade: "Lab: Estabilidade",
-  "controle-qualidade": "Lab: Controle de Qualidade",
-  epidemiologia: "Lab: Epidemiologia",
-  biotecnologia: "Lab: Biotecnologia",
-  "simulacao-realistica": "Lab: Simulação Realística",
-  "pericia-forense": "Lab: Perícia Forense",
-  "modelagem-molecular": "Lab: Modelagem Molecular",
+  "lab-farmacos": "Lab: Desenvolvimento de Fármacos",
+  "lab-microbiologia": "Lab: Microbiologia",
+  "lab-toxicologia": "Lab: Toxicologia",
+  "lab-farmacogenomica": "Lab: Farmacogenômica",
+  "lab-estabilidade": "Lab: Estabilidade",
+  "lab-controle-qualidade": "Lab: Controle de Qualidade",
+  "lab-epidemiologia": "Lab: Epidemiologia",
+  "lab-biotecnologia": "Lab: Biotecnologia",
+  "lab-simulacao-realistica": "Lab: Simulação Realística",
+  "lab-pericia-forense": "Lab: Perícia Forense",
+  "lab-modelagem-molecular": "Lab: Modelagem Molecular",
 };
 
 function getRouteForSlug(slug: string): string {
-  return LAB_SLUGS.has(slug) ? `/sala/laboratorio/${slug}` : `/sala/simulador/${slug}`;
+  if (LAB_SLUGS.has(slug)) {
+    const realSlug = slug.replace(LAB_PREFIX, "");
+    return `/sala/laboratorio/${realSlug}`;
+  }
+  return `/sala/simulador/${slug}`;
 }
 
 export default function SalaVirtualAluno() {

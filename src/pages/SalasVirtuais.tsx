@@ -126,17 +126,17 @@ const SIMULATOR_OPTIONS: ToolOption[] = [
 ];
 
 const LAB_OPTIONS: ToolOption[] = [
-  { slug: "farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
-  { slug: "microbiologia", label: "Microbiologia", category: "Laboratório Virtual" },
-  { slug: "toxicologia", label: "Toxicologia", category: "Laboratório Virtual" },
-  { slug: "farmacogenomica", label: "Farmacogenômica", category: "Laboratório Virtual" },
-  { slug: "estabilidade", label: "Estabilidade", category: "Laboratório Virtual" },
-  { slug: "controle-qualidade", label: "Controle de Qualidade", category: "Laboratório Virtual" },
-  { slug: "epidemiologia", label: "Epidemiologia", category: "Laboratório Virtual" },
-  { slug: "biotecnologia", label: "Biotecnologia", category: "Laboratório Virtual" },
-  { slug: "simulacao-realistica", label: "Simulação Realística", category: "Laboratório Virtual" },
-  { slug: "pericia-forense", label: "Perícia Forense", category: "Laboratório Virtual" },
-  { slug: "modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
+  { slug: "lab-farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
+  { slug: "lab-microbiologia", label: "Microbiologia", category: "Laboratório Virtual" },
+  { slug: "lab-toxicologia", label: "Toxicologia", category: "Laboratório Virtual" },
+  { slug: "lab-farmacogenomica", label: "Farmacogenômica", category: "Laboratório Virtual" },
+  { slug: "lab-estabilidade", label: "Estabilidade", category: "Laboratório Virtual" },
+  { slug: "lab-controle-qualidade", label: "Controle de Qualidade", category: "Laboratório Virtual" },
+  { slug: "lab-epidemiologia", label: "Epidemiologia", category: "Laboratório Virtual" },
+  { slug: "lab-biotecnologia", label: "Biotecnologia", category: "Laboratório Virtual" },
+  { slug: "lab-simulacao-realistica", label: "Simulação Realística", category: "Laboratório Virtual" },
+  { slug: "lab-pericia-forense", label: "Perícia Forense", category: "Laboratório Virtual" },
+  { slug: "lab-modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
 ];
 
 const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS];
