@@ -56,6 +56,7 @@ const SIMULATOR_LABELS: Record<string, string> = {
   "hlb-emulsoes": "HLB e Emulsões",
   compressao: "Compressão",
   diluicao: "Diluição",
+  estabilidade: "Estabilidade",
   granulometria: "Granulometria",
   "liberacao-farmacos": "Liberação de Fármacos",
   reologia: "Reologia",

@@ -108,6 +108,16 @@ export default function SimuladorEstabilidade() {
     }
   }, [challengeCompleted]);
 
+  // Auto-redirect to home 15s after submission in virtual room
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
