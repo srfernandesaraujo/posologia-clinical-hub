@@ -142,12 +142,12 @@ export default function SimuladorDissociacaoHemoglobina() {
   const shift = p50 > 28 ? "Direita ➡️" : p50 < 25 ? "⬅️ Esquerda" : "Normal";
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     setRunning(false);
     const ok = p50 >= activeCase.expectedP50[0] && p50 <= activeCase.expectedP50[1];
-    const s = ok ? 100 : Math.max(0, 100 - Math.abs(p50 - (activeCase.expectedP50[0] + activeCase.expectedP50[1]) / 2) * 8);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { pH, pCO2, temp, bpg, p50 } });
+    const s = Math.round(ok ? 100 : Math.max(0, 100 - Math.abs(p50 - (activeCase.expectedP50[0] + activeCase.expectedP50[1]) / 2) * 8));
+    if (!submitted) submitResults({ score: s, actions: { pH, pCO2, temp, bpg, p50 } });
+    return s;
   }, [activeCase, p50, pH, pCO2, temp, bpg, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
