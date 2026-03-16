@@ -148,8 +148,23 @@ export default function SimuladorSNA() {
     });
   };
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === 'number' ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   // Dashboard
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -170,10 +185,12 @@ export default function SimuladorSNA() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Gerar Caso com IA
-            </Button>
+            {!isVirtualRoom && (
+              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                Gerar Caso com IA
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
