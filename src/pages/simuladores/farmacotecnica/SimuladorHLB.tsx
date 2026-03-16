@@ -118,6 +118,13 @@ export default function SimuladorHLB() {
     }
   }, [activeCase]);
 
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const t = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const oil = OIL_PHASES.find(o => o.name === selectedOil) || OIL_PHASES[0];
   const surfA = SURFACTANTS[surfAIdx];
   const surfB = SURFACTANTS[surfBIdx];
