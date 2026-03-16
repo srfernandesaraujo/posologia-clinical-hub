@@ -83,8 +83,10 @@ export default function SimuladorFarmacoAutonomica() {
   const organEffects = useMemo(() => computeOrganEffects(selectedDrug, drugDose), [selectedDrug, drugDose]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: selectedDrug === activeCase.expectedDrug ? 100 : 20, actions: { selectedDrug, drugDose } });
+    if (!activeCase || submitted) return 0;
+    const s = selectedDrug === activeCase.expectedDrug ? 100 : 20;
+    submitResults({ score: s, actions: { selectedDrug, drugDose } });
+    return s;
   }, [activeCase, selectedDrug, drugDose, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, expectedDrug: c.expectedDrug ?? "atropina", clinicalTip: c.clinicalTip ?? "" });
