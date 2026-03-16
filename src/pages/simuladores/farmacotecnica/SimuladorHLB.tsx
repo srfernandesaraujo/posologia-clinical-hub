@@ -120,7 +120,15 @@ export default function SimuladorHLB() {
   const surfA = SURFACTANTS[surfAIdx];
   const surfB = SURFACTANTS[surfBIdx];
   const hlbMix = useMemo(() => computeHLB(surfAPct, surfA.hlb, 100 - surfAPct, surfB.hlb), [surfAPct, surfA, surfB]);
-  const stabilityData = useMemo(() => computeStabilityProfile(oil.hlbReq), [oil]);
+  const stabilityData = useMemo(() => {
+    const profile = computeStabilityProfile(oil.hlbReq);
+    // Add a marker point for the current mix HLB
+    const mixStability = Math.max(0, 100 - Math.pow(Math.abs(hlbMix - oil.hlbReq), 2) * 3);
+    return profile.map(p => ({
+      ...p,
+      mixPoint: Math.abs(p.hlb - Math.round(hlbMix * 2) / 2) < 0.26 ? Math.round(mixStability * 10) / 10 : undefined,
+    }));
+  }, [oil, hlbMix]);
   const hlbDiff = Math.abs(hlbMix - oil.hlbReq);
   const stabilityPct = Math.max(0, 100 - hlbDiff * hlbDiff * 3);
 
