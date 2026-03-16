@@ -305,10 +305,11 @@ export default function SalasVirtuais() {
   const resetForm = () => {
     setCreateOpen(false);
     setTitle("");
-    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
+    setActivities([{ category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
     setExpiresAt("");
     setIsExamMode(false);
     setToolType("simulator");
+    setChallengeEditorIndex(null);
   };
 
   const copyPin = (pin: string) => {
