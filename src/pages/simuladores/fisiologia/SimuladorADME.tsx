@@ -127,6 +127,9 @@ export default function SimuladorADME() {
   const [clearance, setClearance] = useState(20);
   const [ka, setKa] = useState(70);
   const [firstPass, setFirstPass] = useState(true);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
