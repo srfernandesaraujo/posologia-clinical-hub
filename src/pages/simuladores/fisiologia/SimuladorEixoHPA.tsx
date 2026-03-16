@@ -137,12 +137,12 @@ export default function SimuladorEixoHPA() {
   const outputs = computeHPA(stress, exogenousCortisol);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = outputs.totalCortisol >= activeCase.expectedCortisol[0] && outputs.totalCortisol <= activeCase.expectedCortisol[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.totalCortisol - (activeCase.expectedCortisol[0] + activeCase.expectedCortisol[1]) / 2) * 2);
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.totalCortisol - (activeCase.expectedCortisol[0] + activeCase.expectedCortisol[1]) / 2) * 2));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { stress, exogenousCortisol, totalCortisol: outputs.totalCortisol } });
+    if (!submitted) submitResults({ score: s, actions: { stress, exogenousCortisol, totalCortisol: outputs.totalCortisol } });
+    return s;
   }, [activeCase, outputs, stress, exogenousCortisol, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
