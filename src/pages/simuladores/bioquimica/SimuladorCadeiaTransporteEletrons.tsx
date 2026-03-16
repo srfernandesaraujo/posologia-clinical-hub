@@ -164,12 +164,12 @@ export default function SimuladorCadeiaTransporteEletrons() {
   const outputs = computeETC(nadh, fadh2, inhibitors);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const atpOk = outputs.atpRate >= activeCase.expectedATP[0] && outputs.atpRate <= activeCase.expectedATP[1];
-    const s = atpOk ? 100 : Math.max(0, 100 - Math.abs(outputs.atpRate - (activeCase.expectedATP[0] + activeCase.expectedATP[1]) / 2) * 5);
+    const s = Math.round(atpOk ? 100 : Math.max(0, 100 - Math.abs(outputs.atpRate - (activeCase.expectedATP[0] + activeCase.expectedATP[1]) / 2) * 5));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { nadh, fadh2, inhibitors, atpRate: outputs.atpRate } });
+    if (!submitted) submitResults({ score: s, actions: { nadh, fadh2, inhibitors, atpRate: outputs.atpRate } });
+    return s;
   }, [activeCase, outputs, nadh, fadh2, inhibitors, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
