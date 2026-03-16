@@ -282,7 +282,23 @@ export default function SimuladorEletrofisiologiaCardiaca() {
       <SimulatorChallengeMode
         challengeSet={getEletrofisiologiaCardiacaChallenges()}
         simulatorState={{ na, k, ca }}
+        onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }}
       />
+
+      {isVirtualRoom && submitted && (
+        <Card className="border-primary/20">
+          <CardContent className="pt-4 space-y-2">
+            <Button variant="outline" className="w-full" onClick={() => setShowFeedback(!showFeedback)}>
+              {showFeedback ? "Ocultar Resultados" : "Mostrar Resultados"}
+            </Button>
+            {showFeedback && (
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                <p className="text-sm font-semibold">Pontuação: {lastScore}%</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
