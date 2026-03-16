@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, Droplets } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -98,7 +99,7 @@ export default function SimuladorRegulacaoGlicemica() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<GlycemicCase | null>(null);
   const [carbIntake, setCarbIntake] = useState(50);
@@ -110,9 +111,9 @@ export default function SimuladorRegulacaoGlicemica() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialCarbIntake: cd.initialCarbIntake ?? 50, initialInsulinSensitivity: cd.initialInsulinSensitivity ?? 80,
         initialPancreaticFunction: cd.initialPancreaticFunction ?? 95,
@@ -146,12 +147,12 @@ export default function SimuladorRegulacaoGlicemica() {
   const outputs = computeGlycemic(carbIntake, insulinSensitivity, pancreaticFunction);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = outputs.glycemia >= activeCase.expectedGlycemia[0] && outputs.glycemia <= activeCase.expectedGlycemia[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.glycemia - (activeCase.expectedGlycemia[0] + activeCase.expectedGlycemia[1]) / 2) / 2);
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.glycemia - (activeCase.expectedGlycemia[0] + activeCase.expectedGlycemia[1]) / 2) / 2));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { carbIntake, insulinSensitivity, pancreaticFunction, glycemia: outputs.glycemia } });
+    if (!submitted) submitResults({ score: s, actions: { carbIntake, insulinSensitivity, pancreaticFunction, glycemia: outputs.glycemia } });
+    return s;
   }, [activeCase, outputs, carbIntake, insulinSensitivity, pancreaticFunction, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -238,7 +239,7 @@ export default function SimuladorRegulacaoGlicemica() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
+              <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={handleFinish} fallbackLabel="Finalizar" />
             </div>
           </CardContent>
         </Card>

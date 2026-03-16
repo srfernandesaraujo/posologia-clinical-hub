@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -82,7 +83,7 @@ export default function SimuladorLipinski() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<LipCase | null>(null);
   const [mw, setMw] = useState(350);
@@ -92,8 +93,8 @@ export default function SimuladorLipinski() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialMW: cd.initialMW ?? 350, initialLogP: cd.initialLogP ?? 2.5, initialHBD: cd.initialHBD ?? 2, initialHBA: cd.initialHBA ?? 5, expectedViolations: cd.expectedViolations ?? 0, clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialMW: cd.initialMW ?? 350, initialLogP: cd.initialLogP ?? 2.5, initialHBD: cd.initialHBD ?? 2, initialHBA: cd.initialHBA ?? 5, expectedViolations: cd.expectedViolations ?? 0, clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -105,9 +106,11 @@ export default function SimuladorLipinski() {
   const scatterData = [...KNOWN_DRUGS.map(d => ({ ...d, z: 8 })), { name: "Seu Composto", mw, logP, hbd, hba, z: 12 }];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = result.violations === activeCase.expectedViolations;
-    submitResults({ score: ok ? 100 : 40, actions: { mw, logP, hbd, hba, violations: result.violations } });
+    const s = ok ? 100 : 40;
+    submitResults({ score: s, actions: { mw, logP, hbd, hba, violations: result.violations } });
+    return s;
   }, [activeCase, result, mw, logP, hbd, hba, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialMW: c.initialMW ?? 350, initialLogP: c.initialLogP ?? 2.5, initialHBD: c.initialHBD ?? 2, initialHBA: c.initialHBA ?? 5, expectedViolations: c.expectedViolations ?? 0, clinicalTip: c.clinicalTip ?? "" });
@@ -159,7 +162,7 @@ export default function SimuladorLipinski() {
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP</label><span className={`text-sm font-bold ${logP > 5 ? 'text-destructive' : ''}`}>{logP}</span></div><Slider value={[logP * 10]} onValueChange={([v]) => setLogP(v / 10)} min={-20} max={80} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Donors (HBD)</label><span className={`text-sm font-bold ${hbd > 5 ? 'text-destructive' : ''}`}>{hbd}</span></div><Slider value={[hbd]} onValueChange={([v]) => setHbd(v)} min={0} max={15} step={1} /></div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Acceptors (HBA)</label><span className={`text-sm font-bold ${hba > 10 ? 'text-destructive' : ''}`}>{hba}</span></div><Slider value={[hba]} onValueChange={([v]) => setHba(v)} min={0} max={25} step={1} /></div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

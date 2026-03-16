@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -99,7 +100,7 @@ export default function SimuladorCineticaEnzimatica() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<EnzymeCase | null>(null);
   const [vmax, setVmax] = useState(100);
@@ -111,9 +112,9 @@ export default function SimuladorCineticaEnzimatica() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialVmax: cd.initialVmax ?? 100, initialKm: cd.initialKm ?? 50,
         expectedVmax: cd.expectedVmax ?? [90, 110], expectedKm: cd.expectedKm ?? [45, 55], clinicalTip: cd.clinicalTip ?? "",
@@ -137,12 +138,12 @@ export default function SimuladorCineticaEnzimatica() {
   );
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const vmaxOk = effectiveVmax >= activeCase.expectedVmax[0] && effectiveVmax <= activeCase.expectedVmax[1];
     const kmOk = effectiveKm >= activeCase.expectedKm[0] && effectiveKm <= activeCase.expectedKm[1];
     const s = (vmaxOk ? 50 : 0) + (kmOk ? 50 : 0);
-    if (submitted) return;
-    submitResults({ score: s, actions: { vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, effectiveVmax, effectiveKm } });
+    if (!submitted) submitResults({ score: s, actions: { vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, effectiveVmax, effectiveKm } });
+    return s;
   }, [activeCase, effectiveVmax, effectiveKm, vmax, km, competitiveInhibitor, nonCompetitiveInhibitor, inhibitorConc, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -235,7 +236,7 @@ export default function SimuladorCineticaEnzimatica() {
                 </div>
               )}
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

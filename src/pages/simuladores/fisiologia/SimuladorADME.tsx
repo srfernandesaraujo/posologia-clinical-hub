@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -118,7 +119,7 @@ export default function SimuladorADME() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<ADMECase | null>(null);
   const [bioavailability, setBioavailability] = useState(85);
@@ -129,9 +130,9 @@ export default function SimuladorADME() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialBioavailability: cd.initialBioavailability ?? 85, initialVd: cd.initialVd ?? 50,
         initialClearance: cd.initialClearance ?? 20, initialKa: cd.initialKa ?? 70, initialFirstPass: cd.initialFirstPass ?? true,
@@ -153,11 +154,11 @@ export default function SimuladorADME() {
   const pk = generatePKCurve(bioavailability, vd, clearance, ka, firstPass);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = pk.cmax >= activeCase.expectedCmax[0] && pk.cmax <= activeCase.expectedCmax[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(pk.cmax - (activeCase.expectedCmax[0] + activeCase.expectedCmax[1]) / 2) * 3);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { bioavailability, vd, clearance, ka, firstPass, cmax: pk.cmax, tmax: pk.tmax } });
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(pk.cmax - (activeCase.expectedCmax[0] + activeCase.expectedCmax[1]) / 2) * 3));
+    if (!submitted) submitResults({ score: s, actions: { bioavailability, vd, clearance, ka, firstPass, cmax: pk.cmax, tmax: pk.tmax } });
+    return s;
   }, [activeCase, pk, bioavailability, vd, clearance, ka, firstPass, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -250,7 +251,7 @@ export default function SimuladorADME() {
               <div><p className="text-sm font-medium">Metabolismo de 1ª Passagem</p><p className="text-xs text-muted-foreground">Extração hepática pré-sistêmica</p></div>
               <Switch checked={firstPass} onCheckedChange={setFirstPass} />
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Avaliação</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Avaliação" />
           </CardContent>
         </Card>
 

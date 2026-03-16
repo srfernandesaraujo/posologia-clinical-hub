@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, Heart } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -112,7 +113,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<EletroCase | null>(null);
   const [na, setNa] = useState(100);
@@ -122,9 +123,9 @@ export default function SimuladorEletrofisiologiaCardiaca() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialNa: cd.initialNa ?? 100, initialK: cd.initialK ?? 100, initialCa: cd.initialCa ?? 100,
         cellType: cd.cellType ?? "ventricular", expectedPhase: cd.expectedPhase ?? "", clinicalTip: cd.clinicalTip ?? "",
@@ -139,8 +140,10 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   const apData = useMemo(() => generateActionPotential(na, k, ca, cellType), [na, k, ca, cellType]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { na, k, ca, cellType } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { na, k, ca, cellType } });
+    return s;
   }, [activeCase, na, k, ca, cellType, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -228,7 +231,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Condutância Ca²⁺</label><span className="text-sm font-bold">{ca}%</span></div>
               <Slider value={[ca]} onValueChange={([v]) => setCa(v)} min={0} max={150} step={5} />
             </div>
-            <Button onClick={handleFinish} className="w-full" disabled={submitted}>Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

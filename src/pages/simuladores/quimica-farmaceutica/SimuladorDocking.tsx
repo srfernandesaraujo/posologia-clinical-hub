@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -126,7 +127,7 @@ export default function SimuladorDocking() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<DockCase | null>(null);
   const [targetId, setTargetId] = useState("cox2");
@@ -135,8 +136,8 @@ export default function SimuladorDocking() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialTarget: cd.initialTarget ?? "cox2", initialDistance: cd.initialDistance ?? 3.5, expectedDeltaGRange: cd.expectedDeltaGRange ?? [-12, -8], clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialTarget: cd.initialTarget ?? "cox2", initialDistance: cd.initialDistance ?? 3.5, expectedDeltaGRange: cd.expectedDeltaGRange ?? [-12, -8], clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -151,9 +152,11 @@ export default function SimuladorDocking() {
   };
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = result.deltaG >= activeCase.expectedDeltaGRange[0] && result.deltaG <= activeCase.expectedDeltaGRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { targetId, distance, activeInter, deltaG: result.deltaG } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { targetId, distance, activeInter, deltaG: result.deltaG } });
+    return s;
   }, [activeCase, result, targetId, distance, activeInter, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialTarget: c.initialTarget ?? "cox2", initialDistance: c.initialDistance ?? 3.5, expectedDeltaGRange: c.expectedDeltaGRange ?? [-12, -8], clinicalTip: c.clinicalTip ?? "" });
@@ -219,7 +222,7 @@ export default function SimuladorDocking() {
                 ))}
               </div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

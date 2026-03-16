@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Sparkles, Loader2, Shield } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -103,16 +104,16 @@ export default function SimuladorCascataCoagulacao() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<CoagCase | null>(null);
   const [disabledFactors, setDisabledFactors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         disabledFactors: cd.disabledFactors ?? [],
         expectedTP: cd.expectedTP ?? [10, 14], expectedINR: cd.expectedINR ?? [0.8, 1.2], expectedTTPa: cd.expectedTTPa ?? [25, 35],
@@ -138,12 +139,12 @@ export default function SimuladorCascataCoagulacao() {
   const outputs = computeCoagulation(disabledFactors);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const tpOk = outputs.tp >= activeCase.expectedTP[0] && outputs.tp <= activeCase.expectedTP[1];
     const ttpaOk = outputs.ttpa >= activeCase.expectedTTPa[0] && outputs.ttpa <= activeCase.expectedTTPa[1];
     const s = (tpOk ? 50 : 0) + (ttpaOk ? 50 : 0);
-    if (submitted) return;
-    submitResults({ score: s, actions: { disabledFactors: Array.from(disabledFactors), tp: outputs.tp, inr: outputs.inr, ttpa: outputs.ttpa } });
+    if (!submitted) submitResults({ score: s, actions: { disabledFactors: Array.from(disabledFactors), tp: outputs.tp, inr: outputs.inr, ttpa: outputs.ttpa } });
+    return s;
   }, [activeCase, outputs, disabledFactors, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -255,7 +256,7 @@ export default function SimuladorCascataCoagulacao() {
               </div>
             </div>
 
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Avaliação</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Avaliação" />
           </CardContent>
         </Card>
 

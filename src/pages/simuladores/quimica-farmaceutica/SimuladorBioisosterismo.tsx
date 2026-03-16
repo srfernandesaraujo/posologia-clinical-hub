@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -97,7 +98,7 @@ export default function SimuladorBioisosterismo() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<BioCase | null>(null);
   const [groupId, setGroupId] = useState("cooh");
@@ -105,8 +106,8 @@ export default function SimuladorBioisosterismo() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialGroup: cd.initialGroup ?? "cooh", initialBioisostere: cd.initialBioisostere ?? "tetrazole", bestBioisostere: cd.bestBioisostere ?? "tetrazole", clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialGroup: cd.initialGroup ?? "cooh", initialBioisostere: cd.initialBioisostere ?? "tetrazole", bestBioisostere: cd.bestBioisostere ?? "tetrazole", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -131,9 +132,11 @@ export default function SimuladorBioisosterismo() {
   }, [originalGroup, selectedBio]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = bioId === activeCase.bestBioisostere;
-    submitResults({ score: ok ? 100 : 40, actions: { groupId, bioId } });
+    const s = ok ? 100 : 40;
+    submitResults({ score: s, actions: { groupId, bioId } });
+    return s;
   }, [activeCase, bioId, groupId, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialGroup: c.initialGroup ?? "cooh", initialBioisostere: c.initialBioisostere ?? "tetrazole", bestBioisostere: c.bestBioisostere ?? "tetrazole", clinicalTip: c.clinicalTip ?? "" });
@@ -201,7 +204,7 @@ export default function SimuladorBioisosterismo() {
                 <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">ΔlogP</p><p className="text-sm font-bold">{(selectedBio.logP - originalGroup.logP).toFixed(1)}</p></div>
               </div>
             )}
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

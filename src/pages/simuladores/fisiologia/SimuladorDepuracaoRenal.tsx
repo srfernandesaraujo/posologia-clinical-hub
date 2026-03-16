@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, Droplets } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -87,7 +88,7 @@ export default function SimuladorDepuracaoRenal() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<RenalCase | null>(null);
   const [afferent, setAfferent] = useState(70);
@@ -97,9 +98,9 @@ export default function SimuladorDepuracaoRenal() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialAfferent: cd.initialAfferent ?? 70, initialEfferent: cd.initialEfferent ?? 60,
         initialHydration: cd.initialHydration ?? 80, initialPermeability: cd.initialPermeability ?? 100,
@@ -121,9 +122,11 @@ export default function SimuladorDepuracaoRenal() {
   ];
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const tfgOk = renal.tfg >= activeCase.expectedTFG[0] && renal.tfg <= activeCase.expectedTFG[1];
-    submitResults({ score: tfgOk ? 100 : 40, actions: { afferent, efferent, hydration, permeability, tfg: renal.tfg } });
+    const s = tfgOk ? 100 : 40;
+    submitResults({ score: s, actions: { afferent, efferent, hydration, permeability, tfg: renal.tfg } });
+    return s;
   }, [activeCase, renal, afferent, efferent, hydration, permeability, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -201,7 +204,7 @@ export default function SimuladorDepuracaoRenal() {
                 <Slider value={[ctrl.value]} onValueChange={([v]) => ctrl.set(v)} min={10} max={100} step={5} />
               </div>
             ))}
-            <Button onClick={handleFinish} className="w-full" disabled={submitted}>Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
 

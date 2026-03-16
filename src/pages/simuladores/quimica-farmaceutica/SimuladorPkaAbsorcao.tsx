@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -100,7 +101,7 @@ export default function SimuladorPkaAbsorcao() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<PkaCase | null>(null);
   const [drugType, setDrugType] = useState("weak_acid");
@@ -109,8 +110,8 @@ export default function SimuladorPkaAbsorcao() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialPka: cd.initialPka ?? 3.5, initialType: cd.initialType ?? "weak_acid", initialPH: cd.initialPH ?? 1.5, expectedAbsorptionSite: cd.expectedAbsorptionSite ?? "estomago", clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialPka: cd.initialPka ?? 3.5, initialType: cd.initialType ?? "weak_acid", initialPH: cd.initialPH ?? 1.5, expectedAbsorptionSite: cd.expectedAbsorptionSite ?? "estomago", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -130,8 +131,10 @@ export default function SimuladorPkaAbsorcao() {
   const currentFraction = useMemo(() => getFractionAtPH(drugType, pKa, pH), [drugType, pKa, pH]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
+    return s;
   }, [activeCase, drugType, pKa, pH, currentFraction, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialPka: c.initialPka ?? 3.5, initialType: c.initialType ?? "weak_acid", initialPH: c.initialPH ?? 1.5, expectedAbsorptionSite: c.expectedAbsorptionSite ?? "estomago", clinicalTip: c.clinicalTip ?? "" });
@@ -193,7 +196,7 @@ export default function SimuladorPkaAbsorcao() {
               <p className="text-3xl font-bold text-primary">{currentFraction.toFixed(1)}%</p>
             </div>
             <div className="text-xs text-muted-foreground">Fármacos referência: {EXAMPLE_DRUGS.map(d => `${d.name} (pKa ${d.pKa})`).join(", ")}</div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

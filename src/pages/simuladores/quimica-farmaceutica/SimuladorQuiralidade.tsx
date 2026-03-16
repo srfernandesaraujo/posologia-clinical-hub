@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -69,7 +70,7 @@ export default function SimuladorQuiralidade() {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<ChirCase | null>(null);
   const [drugId, setDrugId] = useState("omeprazol");
@@ -77,8 +78,8 @@ export default function SimuladorQuiralidade() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated, patient: cd.patient, scenario: cd.scenario, initialDrug: cd.initialDrug ?? "omeprazol", initialEnantiomericExcess: cd.initialEnantiomericExcess ?? 100, expectedAnswer: cd.expectedAnswer ?? "eutomer", clinicalTip: cd.clinicalTip ?? "" });
+      const cd = virtualRoomCase as any;
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, initialDrug: cd.initialDrug ?? "omeprazol", initialEnantiomericExcess: cd.initialEnantiomericExcess ?? 100, expectedAnswer: cd.expectedAnswer ?? "eutomer", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
@@ -98,8 +99,10 @@ export default function SimuladorQuiralidade() {
   ], [drug, eutomerFraction, distomerFraction]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { drugId, ee, eutomerFraction } });
+    if (!activeCase || submitted) return 0;
+    const s = 80;
+    submitResults({ score: s, actions: { drugId, ee, eutomerFraction } });
+    return s;
   }, [activeCase, drugId, ee, eutomerFraction, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialDrug: c.initialDrug ?? "omeprazol", initialEnantiomericExcess: c.initialEnantiomericExcess ?? 100, expectedAnswer: c.expectedAnswer ?? "eutomer", clinicalTip: c.clinicalTip ?? "" });
@@ -163,7 +166,7 @@ export default function SimuladorQuiralidade() {
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Razão Eudísmica</p><p className="text-xl font-bold">{drug.eudismicRatio}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Chiral Switch?</p><p className="text-xl font-bold">{drug.chiralSwitch ? "✓ Sim" : "✗ Não"}</p></div>
             </div>
-            <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
         <Card>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, Shield } from "lucide-react";
+import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -91,7 +92,7 @@ export default function SimuladorEixoHPA() {
   const isRoom = location.pathname.startsWith("/sala");
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
-  const { virtualRoomCase, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
+  const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG);
 
   const [activeCase, setActiveCase] = useState<HPACase | null>(null);
   const [stress, setStress] = useState(30);
@@ -102,9 +103,9 @@ export default function SimuladorEixoHPA() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialStress: cd.initialStress ?? 30, initialExogenousCortisol: cd.initialExogenousCortisol ?? 0,
         expectedCortisol: cd.expectedCortisol ?? [5, 25], clinicalTip: cd.clinicalTip ?? "",
@@ -136,12 +137,12 @@ export default function SimuladorEixoHPA() {
   const outputs = computeHPA(stress, exogenousCortisol);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase) return;
+    if (!activeCase) return 0;
     const inRange = outputs.totalCortisol >= activeCase.expectedCortisol[0] && outputs.totalCortisol <= activeCase.expectedCortisol[1];
-    const s = inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.totalCortisol - (activeCase.expectedCortisol[0] + activeCase.expectedCortisol[1]) / 2) * 2);
+    const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.totalCortisol - (activeCase.expectedCortisol[0] + activeCase.expectedCortisol[1]) / 2) * 2));
     setRunning(false);
-    if (submitted) return;
-    submitResults({ score: Math.round(s), actions: { stress, exogenousCortisol, totalCortisol: outputs.totalCortisol } });
+    if (!submitted) submitResults({ score: s, actions: { stress, exogenousCortisol, totalCortisol: outputs.totalCortisol } });
+    return s;
   }, [activeCase, outputs, stress, exogenousCortisol, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
@@ -221,7 +222,7 @@ export default function SimuladorEixoHPA() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              <Button variant="outline" onClick={handleFinish} disabled={(!running && history.length === 0) || submitted}>Finalizar</Button>
+              <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} disabled={!running && history.length === 0} onSubmit={handleFinish} fallbackLabel="Finalizar" />
             </div>
           </CardContent>
         </Card>
