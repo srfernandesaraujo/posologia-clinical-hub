@@ -57,7 +57,7 @@ const BUILT_IN: CaseData[] = [
 
 export default function SimuladorAntimicrobianos() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("antimicrobianos", BUILT_IN);
-  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("antimicrobianos");
+  const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("antimicrobianos", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [day1Antibiotics, setDay1Antibiotics] = useState<string[]>([]);
