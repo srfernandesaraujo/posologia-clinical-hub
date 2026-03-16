@@ -79,12 +79,17 @@ export default function SimuladorTransducaoSinal() {
     const receptorOk = selectedReceptor === activeCase.targetReceptor;
     const blockOk = activeCase.expectedBlockStep < 0 ? blockStep < 0 : blockStep === activeCase.expectedBlockStep;
     const s = (receptorOk ? 60 : 0) + (blockOk ? 40 : 0);
+    setLastScore(s);
     submitResults({ score: s, actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });
     return s;
   }, [activeCase, selectedReceptor, blockStep, agonistConc, blockIntensity, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, targetReceptor: c.targetReceptor ?? "gpcr-gs", expectedBlockStep: c.expectedBlockStep ?? -1, clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
