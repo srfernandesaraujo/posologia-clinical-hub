@@ -130,7 +130,9 @@ export default function SimuladorLiberacaoFarmacos() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
-    submitResults({ score: 80, actions: { coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal } });
+    const score = 80;
+    setLastScore(score);
+    submitResults({ score, actions: { coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal } });
   }, [activeCase, coating, particleSize, showImmediate, showProlonged, showEnteric, showPulsatile, showTransdermal, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialCoating: c.initialCoating ?? 50, initialParticleSize: c.initialParticleSize ?? 50, expectedT80Range: c.expectedT80Range ?? [4, 12], clinicalTip: c.clinicalTip ?? "" });
