@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
-import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
+import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -103,6 +102,9 @@ export default function SimuladorBioisosterismo() {
   const [activeCase, setActiveCase] = useState<BioCase | null>(null);
   const [groupId, setGroupId] = useState("cooh");
   const [bioId, setBioId] = useState("tetrazole");
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedbackVR, setShowFeedbackVR] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
@@ -139,9 +141,24 @@ export default function SimuladorBioisosterismo() {
     return s;
   }, [activeCase, bioId, groupId, submitted, submitResults]);
 
+  useEffect(() => {
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      const score = handleFinish();
+      setLastScore(typeof score === "number" ? score : 0);
+    }
+  }, [challengeCompleted]);
+
+  useEffect(() => {
+    if (isVirtualRoom && submitted) {
+      const timer = setTimeout(() => navigate("/"), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialGroup: c.initialGroup ?? "cooh", initialBioisostere: c.initialBioisostere ?? "tetrazole", bestBioisostere: c.bestBioisostere ?? "tetrazole", clinicalTip: c.clinicalTip ?? "" });
 
   if (!activeCase) {
+    if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -162,7 +179,7 @@ export default function SimuladorBioisosterismo() {
             {aiCases.filter((c: any) => c.isAI).map((c: any) => (
               <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
+            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
           </CardContent>
         </Card>
       </div>
@@ -174,7 +191,7 @@ export default function SimuladorBioisosterismo() {
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
       </div>
@@ -204,7 +221,17 @@ export default function SimuladorBioisosterismo() {
                 <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">ΔlogP</p><p className="text-sm font-bold">{(selectedBio.logP - originalGroup.logP).toFixed(1)}</p></div>
               </div>
             )}
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
           </CardContent>
         </Card>
         <Card>
@@ -226,7 +253,7 @@ export default function SimuladorBioisosterismo() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ groupId, bioId }} />
+      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ groupId, bioId }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
     </div>
   );
 }
