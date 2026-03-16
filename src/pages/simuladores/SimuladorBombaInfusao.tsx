@@ -160,6 +160,24 @@ export default function SimuladorBombaInfusao() {
     setScreen("sim");
   }
 
+  // Auto-submit when infusion completes in VR
+  useEffect(() => {
+    if (isVR && !vrSubmitted && pumpState === "alarm" && alarmType === null && remainingVolume === 0) {
+      const score = 85;
+      setVrScore(score);
+      setVrSubmitted(true);
+      submitVRResults({ score, actions: { drugName: activeCase?.drugName, mode, rateMLH, totalVolume } });
+    }
+  }, [pumpState, alarmType, remainingVolume, isVR, vrSubmitted]);
+
+  // 15s redirect after VR submission
+  useEffect(() => {
+    if (isVR && vrSubmitted) {
+      const t = setTimeout(() => goBack(), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [isVR, vrSubmitted, goBack]);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
