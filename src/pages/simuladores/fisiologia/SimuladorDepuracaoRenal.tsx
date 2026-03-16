@@ -95,6 +95,9 @@ export default function SimuladorDepuracaoRenal() {
   const [efferent, setEfferent] = useState(60);
   const [hydration, setHydration] = useState(80);
   const [permeability, setPermeability] = useState(100);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (virtualRoomCase) {
