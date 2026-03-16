@@ -135,6 +135,8 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     ? { current: (roomCtxRef.current.activityIndex ?? 0) + 1, total: roomCtxRef.current.totalActivities }
     : null;
 
+  const customChallenges = roomCtxRef.current?.customChallenges || null;
+
   return {
     virtualRoomCase,
     isVirtualRoom,
@@ -145,5 +147,6 @@ export function useVirtualRoomCase(simulatorSlug: string) {
     examProgress,
     examFeedback,
     proceedToNext,
+    customChallenges,
   };
 }
