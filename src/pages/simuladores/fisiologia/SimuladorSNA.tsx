@@ -93,9 +93,9 @@ export default function SimuladorSNA() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialSympathetic: cd.initialSympathetic ?? 40, initialParasympathetic: cd.initialParasympathetic ?? 50,
         expectedFC: cd.expectedFC ?? [60, 80], expectedPAS: cd.expectedPAS ?? [110, 130], clinicalTip: cd.clinicalTip ?? "",
