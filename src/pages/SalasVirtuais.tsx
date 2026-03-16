@@ -267,6 +267,7 @@ export default function SalasVirtuais() {
         simulator_slug: a.simulatorSlug,
         case_id: a.caseId || null,
         position: i,
+        custom_challenges: a.customChallenges || null,
       }));
 
       const { error: actError } = await supabase
