@@ -94,12 +94,17 @@ export default function SimuladorFarmacogenomica() {
     const phenOk = phenotype === activeCase.expectedPhenotype;
     const doseOk = dose >= activeCase.expectedDoseAdjust[0] && dose <= activeCase.expectedDoseAdjust[1];
     const s = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    setLastScore(s);
     submitResults({ score: s, actions: { phenotype, dose, drugType } });
     return s;
   }, [activeCase, phenotype, dose, drugType, submitted, submitResults]);
 
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
+
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, drugType: c.drugType ?? "pro-farmaco", enzyme: c.enzyme ?? "CYP2D6", expectedPhenotype: c.expectedPhenotype ?? "extensivo", expectedDoseAdjust: c.expectedDoseAdjust ?? [80, 120], clinicalTip: c.clinicalTip ?? "" });
 
+  if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
       <div className="space-y-6">
