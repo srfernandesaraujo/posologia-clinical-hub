@@ -131,9 +131,11 @@ export default function SimuladorSAR() {
   const result = useMemo(() => computeSAR(scaffoldId, halogen, oh, ch3, cf3), [scaffoldId, halogen, oh, ch3, cf3]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     const ok = result.potency >= activeCase.expectedPotencyRange[0] && result.potency <= activeCase.expectedPotencyRange[1];
-    submitResults({ score: ok ? 100 : 30, actions: { scaffoldId, halogen, oh, ch3, cf3, potency: result.potency } });
+    const s = ok ? 100 : 30;
+    submitResults({ score: s, actions: { scaffoldId, halogen, oh, ch3, cf3, potency: result.potency } });
+    return s;
   }, [activeCase, result, scaffoldId, halogen, oh, ch3, cf3, submitted, submitResults]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialHalogen: c.initialHalogen ?? 50, initialOH: c.initialOH ?? 20, initialCH3: c.initialCH3 ?? 30, initialCF3: c.initialCF3 ?? 10, expectedPotencyRange: c.expectedPotencyRange ?? [60, 90], clinicalTip: c.clinicalTip ?? "" });
