@@ -103,9 +103,9 @@ export default function SimuladorEixoHPA() {
 
   useEffect(() => {
     if (virtualRoomCase) {
-      const cd = virtualRoomCase.case_data as any;
+      const cd = virtualRoomCase as any;
       setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.is_ai_generated,
+        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient, scenario: cd.scenario,
         initialStress: cd.initialStress ?? 30, initialExogenousCortisol: cd.initialExogenousCortisol ?? 0,
         expectedCortisol: cd.expectedCortisol ?? [5, 25], clinicalTip: cd.clinicalTip ?? "",
