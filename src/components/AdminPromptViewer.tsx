@@ -22,7 +22,9 @@ export default function AdminPromptViewer({ toolSlug, toolName, toolType, prompt
   const [editedPrompt, setEditedPrompt] = useState(prompt);
   const [copied, setCopied] = useState(false);
 
-  if (!isAdmin) return null;
+  // Never show in virtual room context or to non-admins
+  const isVirtualRoom = !!sessionStorage.getItem("virtualRoom");
+  if (!isAdmin || isVirtualRoom) return null;
 
   const typeLabels: Record<string, string> = {
     calculator: "Calculadora",
