@@ -200,9 +200,10 @@ export default function SimuladorTitulacaoAminoacidos() {
   }, [running, currentpH]);
 
   const handleFinish = useCallback(() => {
-    if (!activeCase || submitted) return;
+    if (!activeCase || submitted) return 0;
     setRunning(false);
     submitResults({ score: 100, actions: { aminoAcid: aa.name, currentpH } });
+    return 100;
   }, [activeCase, aa, currentpH, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
