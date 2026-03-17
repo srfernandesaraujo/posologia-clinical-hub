@@ -200,6 +200,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     sessionStorage.removeItem("virtualRoom");
     sessionStorage.removeItem("hasChallenges");
     sessionStorage.removeItem("challengeSubmitted");
+    sessionStorage.removeItem("challengeScore");
     navigate("/");
   };
 
