@@ -84,7 +84,7 @@ export default function SimuladorTransducaoSinal() {
     return s;
   }, [activeCase, selectedReceptor, blockStep, agonistConc, blockIntensity, submitted, submitResults]);
 
-  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); const cs = sessionStorage.getItem("challengeScore"); if (cs) setLastScore(Number(cs)); } }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, targetReceptor: c.targetReceptor ?? "gpcr-gs", expectedBlockStep: c.expectedBlockStep ?? -1, clinicalTip: c.clinicalTip ?? "" });

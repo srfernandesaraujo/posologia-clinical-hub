@@ -142,8 +142,9 @@ export default function SimuladorSAR() {
 
   useEffect(() => {
     if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
-      const score = handleFinish();
-      setLastScore(typeof score === "number" ? score : 0);
+      handleFinish();
+      const cs = sessionStorage.getItem("challengeScore");
+      if (cs) setLastScore(Number(cs));
     }
   }, [challengeCompleted]);
 
