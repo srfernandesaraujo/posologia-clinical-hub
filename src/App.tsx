@@ -195,6 +195,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RouteTracker />
           <Routes>
             {/* Public routes */}
             <Route element={<PublicLayout />}>
