@@ -130,8 +130,8 @@ export default function SimuladorJanelaTerapeutica() {
           <CardHeader><CardTitle className="text-base">Índice Terapêutico</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DE50</p><p className="text-2xl font-bold">{de50}</p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DL50</p><p className="text-2xl font-bold">{dl50}</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DE50</p><p className="text-2xl font-bold">{de50} <span className="text-sm font-normal">mg/kg</span></p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DL50</p><p className="text-2xl font-bold">{dl50} <span className="text-sm font-normal">mg/kg</span></p></div>
               <div className={`p-3 rounded-lg text-center ${it < 3 ? "bg-destructive/10" : it < 5 ? "bg-yellow-500/10" : "bg-green-500/10"}`}><p className="text-xs text-muted-foreground">IT (DL50/DE50)</p><p className={`text-2xl font-bold ${it < 3 ? "text-destructive" : it < 5 ? "text-yellow-600" : "text-green-600"}`}>{it}</p></div>
             </div>
             <p className="text-xs text-muted-foreground">{it < 3 ? "⚠️ Janela estreita – TDM obrigatório" : it < 5 ? "⚡ Janela moderada – monitorar" : "✅ Janela ampla – maior segurança"}</p>
