@@ -371,13 +371,13 @@ export default function Analytics() {
     });
   };
 
-  const { data: logs = [] } = useQuery({
-    queryKey: ["analytics-logs", user?.id],
+  const { data: visits = [] } = useQuery({
+    queryKey: ["analytics-visits", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("usage_logs")
-        .select("*, tools(name)")
+      const { data, error } = await (supabase as any)
+        .from("tool_visits")
+        .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(500);
