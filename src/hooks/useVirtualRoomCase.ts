@@ -175,6 +175,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     // Clean up challenge flags
     sessionStorage.removeItem("hasChallenges");
     sessionStorage.removeItem("challengeSubmitted");
+    sessionStorage.removeItem("challengeScore");
 
     const nextIndex = ctx.activityIndex + 1;
     if (nextIndex < ctx.totalActivities) {
