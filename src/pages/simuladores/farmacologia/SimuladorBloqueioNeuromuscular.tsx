@@ -62,14 +62,22 @@ function generateNMBCurve(agent: string, agentDose: number, reversal: string, re
     if (reversal !== "nenhum" && reversalDose > 0 && t > 5) {
       const timeSinceReversal = t - 5;
       if (isDepo) {
-        // For depolarizing: neostigmina can worsen phase I block (increases ACh),
-        // sugammadex has no effect on succinilcolina
+        // For depolarizing: neostigmina worsens phase I block (increases ACh at depolarized junction)
+        // sugammadex has no effect on succinilcolina (only encapsulates steroidal NMBAs)
         if (reversal === "neostigmina") {
-          // Neostigmina worsens depolarizing block (more ACh at already depolarized junction)
-          const worsenFactor = Math.min(1, timeSinceReversal / 5) * 0.3 * (reversalDose / 100);
+          // Neostigmina inhibits AChE → more ACh → prolongs/deepens depolarizing block
+          const worsenOnset = Math.min(1, timeSinceReversal / 4);
+          const doseEffect = reversalDose / 100;
+          // Significantly deepen the block: reduce twitch by up to 60% at full dose
+          const worsenFactor = worsenOnset * 0.6 * doseEffect;
           twitch = twitch * (1 - worsenFactor);
+          // Also delay spontaneous recovery proportionally to dose
+          if (twitch > 0 && t < onset + duration * (1 + 0.5 * doseEffect)) {
+            const delayPenalty = Math.max(0, 1 - (t - onset) / (duration * (1 + 0.5 * doseEffect)));
+            twitch = Math.min(twitch, (100 - peak) + peak * (1 - delayPenalty));
+          }
         }
-        // Sugammadex has no effect on succinilcolina (only encapsulates steroidal NMBAs)
+        // Sugammadex: no pharmacological effect on succinylcholine (not a steroidal NMBA)
       } else {
         // Non-depolarizing: both agents help
         const reversalEffect = reversal === "sugammadex" ? 0.95 : 0.6;
