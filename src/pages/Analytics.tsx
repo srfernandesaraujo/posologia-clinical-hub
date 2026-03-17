@@ -965,7 +965,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <p className="text-3xl font-bold text-primary">{logs.length}</p>
+                <p className="text-3xl font-bold text-primary">{visits.length}</p>
                 <p className="text-sm text-muted-foreground">Total de Usos</p>
               </CardContent>
             </Card>
