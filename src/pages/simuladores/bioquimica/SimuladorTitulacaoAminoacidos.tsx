@@ -152,7 +152,11 @@ export default function SimuladorTitulacaoAminoacidos() {
   const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); }
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+      handleFinish();
+      const cs = sessionStorage.getItem("challengeScore");
+      if (cs) setLastScore(Number(cs));
+    }
   }, [challengeCompleted]);
 
   useEffect(() => {
