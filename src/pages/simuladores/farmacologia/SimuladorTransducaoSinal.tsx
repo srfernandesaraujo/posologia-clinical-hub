@@ -70,7 +70,7 @@ export default function SimuladorTransducaoSinal() {
     return info.cascade.map((step, i) => {
       let activity = agonistConc;
       if (blockStep >= 0 && i >= blockStep) activity = Math.max(0, activity * (1 - blockIntensity / 100));
-      return { step: `Etapa ${i + 1}`, name: step, activity: Math.round(activity) };
+      return { step: `Etapa ${i + 1}`, label: step, name: step, activity: Math.round(activity) };
     });
   }, [selectedReceptor, agonistConc, blockStep, blockIntensity]);
 
