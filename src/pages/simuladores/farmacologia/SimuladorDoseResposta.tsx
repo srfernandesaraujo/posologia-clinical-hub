@@ -68,17 +68,21 @@ function generateDRCurve(ec50: number, emax: number, partialAgonist: boolean, co
   if (competitiveAntag) effEC50 = ec50 * (1 + inh * 5);
   if (nonCompAntag) effEmax = emax / (1 + inh * 3);
 
+  const hasModifier = partialAgonist || competitiveAntag || nonCompAntag;
+
   const points = [];
   for (let logD = -2; logD <= 3; logD += 0.1) {
     const dose = Math.pow(10, logD);
     const effect = (effEmax * dose) / (effEC50 + dose);
+    const baseline = (emax * dose) / (ec50 + dose);
     points.push({
       logDose: Math.round(logD * 100) / 100,
       dose: Math.round(dose * 100) / 100,
       effect: Math.round(effect * 100) / 100,
+      baseline: hasModifier ? Math.round(baseline * 100) / 100 : undefined,
     });
   }
-  return { points, effEC50: Math.round(effEC50 * 10) / 10, effEmax: Math.round(effEmax * 10) / 10 };
+  return { points, effEC50: Math.round(effEC50 * 10) / 10, effEmax: Math.round(effEmax * 10) / 10, hasModifier };
 }
 
 export default function SimuladorDoseResposta() {
