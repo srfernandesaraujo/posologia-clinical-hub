@@ -209,6 +209,7 @@ export default function SimulatorChallengeMode({
 
       // Signal that VR submission was done by challenge mode
       sessionStorage.setItem("challengeSubmitted", "true");
+      sessionStorage.setItem("challengeScore", String(pctScore));
     } catch (err) {
       console.error("Error submitting challenge results:", err);
     }

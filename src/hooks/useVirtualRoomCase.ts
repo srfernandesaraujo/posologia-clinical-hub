@@ -78,6 +78,10 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     const hasChallenges = sessionStorage.getItem("hasChallenges");
     const challengeSubmitted = sessionStorage.getItem("challengeSubmitted");
     if (hasChallenges === "true") {
+      // Use challenge score from sessionStorage instead of simulator score
+      const storedChallengeScore = sessionStorage.getItem("challengeScore");
+      const challengeScore = storedChallengeScore ? Number(storedChallengeScore) : opts.score;
+
       // If challenge already submitted, just mark as submitted for UI state
       if (challengeSubmitted === "true") {
         setSubmitted(true);
@@ -85,7 +89,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
         if (ctx.allActivities && ctx.activityIndex !== undefined) {
           const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
           setExamFeedback({
-            score: opts.score,
+            score: challengeScore,
             simulatorSlug: ctx.simulatorSlug,
             caseTitle: virtualRoomCase?.title,
             isFinalActivity: isFinal,
@@ -98,7 +102,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
       if (ctx.allActivities && ctx.activityIndex !== undefined) {
         const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
         setExamFeedback({
-          score: opts.score,
+          score: challengeScore,
           simulatorSlug: ctx.simulatorSlug,
           caseTitle: virtualRoomCase?.title,
           isFinalActivity: isFinal,
@@ -171,6 +175,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     // Clean up challenge flags
     sessionStorage.removeItem("hasChallenges");
     sessionStorage.removeItem("challengeSubmitted");
+    sessionStorage.removeItem("challengeScore");
 
     const nextIndex = ctx.activityIndex + 1;
     if (nextIndex < ctx.totalActivities) {
@@ -195,6 +200,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     sessionStorage.removeItem("virtualRoom");
     sessionStorage.removeItem("hasChallenges");
     sessionStorage.removeItem("challengeSubmitted");
+    sessionStorage.removeItem("challengeScore");
     navigate("/");
   };
 
