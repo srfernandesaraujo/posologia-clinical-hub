@@ -200,7 +200,7 @@ export default function SimuladorBloqueioNeuromuscular() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal }} onComplete={() => setChallengeCompleted(true)} />
+      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal, agentDose, reversalDose }} onComplete={() => setChallengeCompleted(true)} />
       {isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
