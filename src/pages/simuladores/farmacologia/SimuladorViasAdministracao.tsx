@@ -72,8 +72,13 @@ function generatePKProfiles(dose: number, enabledRoutes: string[], bioFactor: nu
   }
   return points;
 }
+const BUILT_IN_CASES: VACase[] = [
+  { title: "Emergência – Anafilaxia", difficulty: "Fácil", patient: { name: "Lucas Mendes", age: 30, weight: 80, diagnosis: "Anafilaxia após picada de vespa" }, scenario: "A adrenalina deve ser administrada pela via que garanta absorção rápida e previsível em emergência. Compare os perfis.", expectedRoute: "im", clinicalTip: "Na anafilaxia, a adrenalina IM (face anterolateral da coxa) é preferida à IV por ser mais segura e ter absorção rápida e previsível." },
+  { title: "Nitroglicerina Sublingual", difficulty: "Fácil", patient: { name: "Antônio Vieira", age: 65, weight: 72, diagnosis: "Angina estável de esforço" }, scenario: "A nitroglicerina sublingual evita o efeito de primeira passagem hepática. Compare com a via oral.", expectedRoute: "sublingual", clinicalTip: "A nitroglicerina tem metabolismo de primeira passagem >90%. Via sublingual atinge Tmax em ~5 min com biodisponibilidade ~40% (vs ~1% oral)." },
+  { title: "Vancomicina IV – Infusão Contínua", difficulty: "Médio", patient: { name: "Carla Braga", age: 58, weight: 68, diagnosis: "MRSA bacteremia em UTI" }, scenario: "A vancomicina IV deve ser administrada em infusão lenta para evitar síndrome do homem vermelho. Compare IV bolus vs infusão.", expectedRoute: "iv-infusao", clinicalTip: "Vancomicina IV rápida causa liberação de histamina (red man syndrome). Infusão em ≥60 min é obrigatória. Meta AUC/MIC 400-600." },
+];
 
-export default function SimuladorViasAdministracao() {
+
   const navigate = useNavigate();
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
