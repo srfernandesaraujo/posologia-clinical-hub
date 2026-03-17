@@ -114,7 +114,7 @@ export default function SimuladorDoseResposta() {
     if (activeCase) { setEC50(activeCase.initialEC50); setEmax(activeCase.initialEmax); setPartialAgonist(false); setCompetitiveAntag(false); setNonCompAntag(false); setAntagConc(50); }
   }, [activeCase]);
 
-  const { points, effEC50, effEmax } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
+  const { points, effEC50, effEmax, hasModifier } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
