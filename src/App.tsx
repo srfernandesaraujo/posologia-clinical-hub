@@ -9,6 +9,7 @@ import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { AppLayout } from "@/components/layouts/AppLayout";
+import { RouteTracker } from "@/components/RouteTracker";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
