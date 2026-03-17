@@ -29,39 +29,42 @@ interface VACase {
 }
 
 const ROUTES = [
-  { key: "iv-bolus", label: "IV Bolus", bioavail: 100, tmax: 0, absorption: 999, color: "hsl(var(--primary))" },
-  { key: "iv-infusao", label: "IV Infusão", bioavail: 100, tmax: 60, absorption: 2, color: "hsl(var(--chart-2))" },
-  { key: "im", label: "Intramuscular", bioavail: 85, tmax: 30, absorption: 8, color: "hsl(var(--chart-3))" },
-  { key: "sc", label: "Subcutânea", bioavail: 75, tmax: 60, absorption: 5, color: "hsl(var(--chart-4))" },
-  { key: "oral", label: "Oral", bioavail: 50, tmax: 90, absorption: 3, color: "hsl(var(--chart-5))" },
-  { key: "sublingual", label: "Sublingual", bioavail: 65, tmax: 15, absorption: 12, color: "hsl(var(--destructive))" },
-];
-
-const BUILT_IN_CASES: VACase[] = [
-  { title: "Emergência – Anafilaxia", difficulty: "Fácil", patient: { name: "Lucas Mendes", age: 30, weight: 80, diagnosis: "Anafilaxia após picada de vespa" }, scenario: "A adrenalina deve ser administrada pela via que garanta absorção rápida e previsível em emergência. Compare os perfis.", expectedRoute: "im", clinicalTip: "Na anafilaxia, a adrenalina IM (face anterolateral da coxa) é preferida à IV por ser mais segura e ter absorção rápida e previsível." },
-  { title: "Nitroglicerina Sublingual", difficulty: "Fácil", patient: { name: "Antônio Vieira", age: 65, weight: 72, diagnosis: "Angina estável de esforço" }, scenario: "A nitroglicerina sublingual evita o efeito de primeira passagem hepática. Compare com a via oral.", expectedRoute: "sublingual", clinicalTip: "A nitroglicerina tem metabolismo de primeira passagem >90%. Via sublingual atinge Tmax em ~5 min com biodisponibilidade ~40% (vs ~1% oral)." },
-  { title: "Vancomicina IV – Infusão Contínua", difficulty: "Médio", patient: { name: "Carla Braga", age: 58, weight: 68, diagnosis: "MRSA bacteremia em UTI" }, scenario: "A vancomicina IV deve ser administrada em infusão lenta para evitar síndrome do homem vermelho. Compare IV bolus vs infusão.", expectedRoute: "iv-infusao", clinicalTip: "Vancomicina IV rápida causa liberação de histamina (red man syndrome). Infusão em ≥60 min é obrigatória. Meta AUC/MIC 400-600." },
+  { key: "iv-bolus", label: "IV Bolus", bioavail: 100, ka: 0, infusionMin: 0, color: "hsl(var(--primary))" },
+  { key: "iv-infusao", label: "IV Infusão", bioavail: 100, ka: 0, infusionMin: 60, color: "hsl(var(--chart-2))" },
+  { key: "im", label: "Intramuscular", bioavail: 85, ka: 0.08, infusionMin: 0, color: "hsl(var(--chart-3))" },
+  { key: "sc", label: "Subcutânea", bioavail: 75, ka: 0.03, infusionMin: 0, color: "hsl(var(--chart-4))" },
+  { key: "oral", label: "Oral", bioavail: 50, ka: 0.02, infusionMin: 0, color: "hsl(var(--chart-5))" },
+  { key: "sublingual", label: "Sublingual", bioavail: 65, ka: 0.5, infusionMin: 0, color: "hsl(var(--destructive))" },
 ];
 
 function generatePKProfiles(dose: number, enabledRoutes: string[], bioFactor: number, elimRate: number) {
   const points = [];
+  const ke = elimRate * 0.003; // ke ~0.015/min at slider=5 → t½ ~46 min
   for (let t = 0; t <= 360; t += 5) {
     const point: any = { time: t };
     ROUTES.forEach(r => {
       if (!enabledRoutes.includes(r.key)) return;
       const F = (r.bioavail / 100) * (bioFactor / 100);
-      const ka = r.absorption * 0.05;
-      const ke = elimRate * 0.01;
-      let cp;
+      let cp = 0;
       if (r.key === "iv-bolus") {
+        // Instant peak, monoexponential decay
         cp = dose * F * Math.exp(-ke * t);
       } else if (r.key === "iv-infusao") {
-        const T = r.tmax;
-        if (t <= T) cp = (dose * F / T) * (1 / ke) * (1 - Math.exp(-ke * t));
-        else cp = (dose * F / T) * (1 / ke) * (1 - Math.exp(-ke * T)) * Math.exp(-ke * (t - T));
+        // Zero-order infusion over T minutes
+        const T = r.infusionMin;
+        if (t <= T) {
+          cp = (dose * F / T) * (1 / ke) * (1 - Math.exp(-ke * t));
+        } else {
+          cp = (dose * F / T) * (1 / ke) * (1 - Math.exp(-ke * T)) * Math.exp(-ke * (t - T));
+        }
       } else {
-        if (ka === ke) cp = dose * F * ka * t * Math.exp(-ke * t);
-        else cp = (dose * F * ka / (ka - ke)) * (Math.exp(-ke * t) - Math.exp(-ka * t));
+        // Bateman equation: first-order absorption + first-order elimination
+        const ka = r.ka;
+        if (Math.abs(ka - ke) < 0.0001) {
+          cp = dose * F * ka * t * Math.exp(-ke * t);
+        } else {
+          cp = (dose * F * ka / (ka - ke)) * (Math.exp(-ke * t) - Math.exp(-ka * t));
+        }
       }
       point[r.key] = Math.max(0, Math.round((cp || 0) * 100) / 100);
     });
