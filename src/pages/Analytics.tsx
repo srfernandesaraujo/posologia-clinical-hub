@@ -371,13 +371,13 @@ export default function Analytics() {
     });
   };
 
-  const { data: logs = [] } = useQuery({
-    queryKey: ["analytics-logs", user?.id],
+  const { data: visits = [] } = useQuery({
+    queryKey: ["analytics-visits", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("usage_logs")
-        .select("*, tools(name)")
+      const { data, error } = await (supabase as any)
+        .from("tool_visits")
+        .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(500);
@@ -571,8 +571,8 @@ export default function Analytics() {
     .map(([step, v]) => ({ name: `Etapa ${Number(step) + 1}`, acerto: Math.round(v.total / v.count) }));
 
   const toolUsage: Record<string, number> = {};
-  logs.forEach((l: any) => {
-    const name = l.tools?.name || "Removida";
+  visits.forEach((v: any) => {
+    const name = v.tool_name || "Desconhecida";
     toolUsage[name] = (toolUsage[name] || 0) + 1;
   });
   const toolChartData = Object.entries(toolUsage)
@@ -580,8 +580,8 @@ export default function Analytics() {
     .sort((a, b) => b.usos - a.usos);
 
   const usageByDay: Record<string, number> = {};
-  logs.forEach((l: any) => {
-    const day = new Date(l.created_at).toLocaleDateString("pt-BR");
+  visits.forEach((v: any) => {
+    const day = new Date(v.created_at).toLocaleDateString("pt-BR");
     usageByDay[day] = (usageByDay[day] || 0) + 1;
   });
   const usageTimeData = Object.entries(usageByDay)
@@ -965,7 +965,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <p className="text-3xl font-bold text-primary">{logs.length}</p>
+                <p className="text-3xl font-bold text-primary">{visits.length}</p>
                 <p className="text-sm text-muted-foreground">Total de Usos</p>
               </CardContent>
             </Card>
@@ -1043,16 +1043,19 @@ export default function Analytics() {
 
               <div className="mt-6">
                 <Card>
-                  <CardHeader><CardTitle className="text-base">Últimos Acessos ({logs.length})</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base">Últimos Acessos ({visits.length})</CardTitle></CardHeader>
                   <CardContent>
-                    {logs.length === 0 ? (
+                    {visits.length === 0 ? (
                       <p className="text-muted-foreground">Nenhum registro de uso ainda.</p>
                     ) : (
                       <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {logs.map((log: any) => (
-                          <div key={log.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
-                            <span className="font-medium">{log.tools?.name || "Ferramenta removida"}</span>
-                            <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                        {visits.map((v: any) => (
+                          <div key={v.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                            <div>
+                              <span className="font-medium">{v.tool_name}</span>
+                              <Badge variant="outline" className="ml-2 text-[10px]">{v.tool_category}</Badge>
+                            </div>
+                            <span className="text-muted-foreground">{new Date(v.created_at).toLocaleString("pt-BR")}</span>
                           </div>
                         ))}
                       </div>

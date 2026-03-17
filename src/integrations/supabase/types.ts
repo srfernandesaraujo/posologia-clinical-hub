@@ -578,6 +578,33 @@ export type Database = {
           },
         ]
       }
+      tool_visits: {
+        Row: {
+          created_at: string
+          id: string
+          tool_category: string
+          tool_name: string
+          tool_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tool_category?: string
+          tool_name: string
+          tool_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tool_category?: string
+          tool_name?: string
+          tool_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tools: {
         Row: {
           category_id: string | null
