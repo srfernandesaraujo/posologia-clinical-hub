@@ -215,7 +215,8 @@ export default function SimuladorDoseResposta() {
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
               <ReferenceLine y={effEmax} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Emax=${effEmax}`, fill: "hsl(var(--destructive))" }} />
-              <Line type="monotone" dataKey="effect" name="Efeito (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+              {hasModifier && <Line type="monotone" dataKey="baseline" name="Sem Modificador (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1.5} strokeDasharray="6 3" />}
+              <Line type="monotone" dataKey="effect" name={hasModifier ? "Com Modificador (%)" : "Efeito (%)"} stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

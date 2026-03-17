@@ -154,7 +154,7 @@ export default function SimuladorTransducaoSinal() {
           <CardHeader><CardTitle className="text-base">Cascata: {info.name}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground mb-3">Efetor final: {info.effector}</p>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={cascadeData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
@@ -163,6 +163,13 @@ export default function SimuladorTransducaoSinal() {
                 <Bar dataKey="activity" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-3 space-y-1">
+              {cascadeData.map((d, i) => (
+                <p key={i} className={`text-xs ${d.activity < 30 ? "text-destructive" : "text-muted-foreground"}`}>
+                  <strong>{d.step}:</strong> {d.label} — {d.activity}%
+                </p>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

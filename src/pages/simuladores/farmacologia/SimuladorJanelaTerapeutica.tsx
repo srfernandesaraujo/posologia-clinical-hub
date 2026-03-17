@@ -120,9 +120,9 @@ export default function SimuladorJanelaTerapeutica() {
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros</CardTitle></CardHeader>
           <CardContent className="space-y-5">
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose administrada</label><span className="text-sm font-bold">{dose}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={0} max={100} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DE50</label><span className="text-sm font-bold">{de50}</span></div><Slider value={[de50]} onValueChange={([v]) => setDE50(v)} min={5} max={80} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DL50</label><span className="text-sm font-bold">{dl50}</span></div><Slider value={[dl50]} onValueChange={([v]) => setDL50(v)} min={20} max={100} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose administrada</label><span className="text-sm font-bold">{dose} mg/kg</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={0} max={100} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DE50</label><span className="text-sm font-bold">{de50} mg/kg</span></div><Slider value={[de50]} onValueChange={([v]) => setDE50(v)} min={5} max={80} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DL50</label><span className="text-sm font-bold">{dl50} mg/kg</span></div><Slider value={[dl50]} onValueChange={([v]) => setDL50(v)} min={20} max={100} step={1} /></div>
             
           </CardContent>
         </Card>
