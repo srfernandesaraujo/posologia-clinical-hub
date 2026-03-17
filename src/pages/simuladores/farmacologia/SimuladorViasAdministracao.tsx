@@ -78,7 +78,7 @@ const BUILT_IN_CASES: VACase[] = [
   { title: "Vancomicina IV – Infusão Contínua", difficulty: "Médio", patient: { name: "Carla Braga", age: 58, weight: 68, diagnosis: "MRSA bacteremia em UTI" }, scenario: "A vancomicina IV deve ser administrada em infusão lenta para evitar síndrome do homem vermelho. Compare IV bolus vs infusão.", expectedRoute: "iv-infusao", clinicalTip: "Vancomicina IV rápida causa liberação de histamina (red man syndrome). Infusão em ≥60 min é obrigatória. Meta AUC/MIC 400-600." },
 ];
 
-
+export default function SimuladorViasAdministracao() {
   const navigate = useNavigate();
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/sala");
