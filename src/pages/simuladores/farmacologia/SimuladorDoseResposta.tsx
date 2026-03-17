@@ -126,7 +126,7 @@ export default function SimuladorDoseResposta() {
     return s;
   }, [activeCase, effEC50, effEmax, ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc, submitted, submitResults]);
 
-  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); const cs = sessionStorage.getItem("challengeScore"); if (cs) setLastScore(Number(cs)); } }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialEC50: c.initialEC50 ?? 50, initialEmax: c.initialEmax ?? 100, expectedEC50: c.expectedEC50 ?? [40, 60], expectedEmax: c.expectedEmax ?? [90, 110], clinicalTip: c.clinicalTip ?? "" });
