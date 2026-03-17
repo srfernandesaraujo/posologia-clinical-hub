@@ -1043,16 +1043,19 @@ export default function Analytics() {
 
               <div className="mt-6">
                 <Card>
-                  <CardHeader><CardTitle className="text-base">Últimos Acessos ({logs.length})</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base">Últimos Acessos ({visits.length})</CardTitle></CardHeader>
                   <CardContent>
-                    {logs.length === 0 ? (
+                    {visits.length === 0 ? (
                       <p className="text-muted-foreground">Nenhum registro de uso ainda.</p>
                     ) : (
                       <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {logs.map((log: any) => (
-                          <div key={log.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
-                            <span className="font-medium">{log.tools?.name || "Ferramenta removida"}</span>
-                            <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                        {visits.map((v: any) => (
+                          <div key={v.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                            <div>
+                              <span className="font-medium">{v.tool_name}</span>
+                              <Badge variant="outline" className="ml-2 text-[10px]">{v.tool_category}</Badge>
+                            </div>
+                            <span className="text-muted-foreground">{new Date(v.created_at).toLocaleString("pt-BR")}</span>
                           </div>
                         ))}
                       </div>
