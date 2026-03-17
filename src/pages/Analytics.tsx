@@ -571,8 +571,8 @@ export default function Analytics() {
     .map(([step, v]) => ({ name: `Etapa ${Number(step) + 1}`, acerto: Math.round(v.total / v.count) }));
 
   const toolUsage: Record<string, number> = {};
-  logs.forEach((l: any) => {
-    const name = l.tools?.name || "Removida";
+  visits.forEach((v: any) => {
+    const name = v.tool_name || "Desconhecida";
     toolUsage[name] = (toolUsage[name] || 0) + 1;
   });
   const toolChartData = Object.entries(toolUsage)
@@ -580,8 +580,8 @@ export default function Analytics() {
     .sort((a, b) => b.usos - a.usos);
 
   const usageByDay: Record<string, number> = {};
-  logs.forEach((l: any) => {
-    const day = new Date(l.created_at).toLocaleDateString("pt-BR");
+  visits.forEach((v: any) => {
+    const day = new Date(v.created_at).toLocaleDateString("pt-BR");
     usageByDay[day] = (usageByDay[day] || 0) + 1;
   });
   const usageTimeData = Object.entries(usageByDay)
