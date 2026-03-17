@@ -54,9 +54,14 @@ function generateNMBCurve(agent: string, agentDose: number, reversal: string, re
       twitch = 100;
     }
 
-    // Fasciculations for depolarizing (brief spike)
+    // Fasciculations for depolarizing: visible spike in the first ~2 min
     let fasciculation = 0;
-    if (isDepo && t >= 0.3 && t <= 1) fasciculation = 30 * agentDose / 100;
+    if (isDepo && t >= 0 && t <= 2) {
+      const intensity = agentDose / 100;
+      if (t === 0) fasciculation = 15 * intensity;
+      else if (t === 1) fasciculation = 40 * intensity;
+      else if (t === 2) fasciculation = 10 * intensity;
+    }
 
     // Reversal effect - works for BOTH depolarizing and non-depolarizing
     if (reversal !== "nenhum" && reversalDose > 0 && t > 5) {
