@@ -70,7 +70,7 @@ export default function SimuladorTransducaoSinal() {
     return info.cascade.map((step, i) => {
       let activity = agonistConc;
       if (blockStep >= 0 && i >= blockStep) activity = Math.max(0, activity * (1 - blockIntensity / 100));
-      return { step: `Etapa ${i + 1}`, name: step, activity: Math.round(activity) };
+      return { step: `Etapa ${i + 1}`, label: step, name: step, activity: Math.round(activity) };
     });
   }, [selectedReceptor, agonistConc, blockStep, blockIntensity]);
 
@@ -154,7 +154,7 @@ export default function SimuladorTransducaoSinal() {
           <CardHeader><CardTitle className="text-base">Cascata: {info.name}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground mb-3">Efetor final: {info.effector}</p>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={cascadeData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
@@ -163,12 +163,19 @@ export default function SimuladorTransducaoSinal() {
                 <Bar dataKey="activity" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-3 space-y-1">
+              {cascadeData.map((d, i) => (
+                <p key={i} className={`text-xs ${d.activity < 30 ? "text-destructive" : "text-muted-foreground"}`}>
+                  <strong>{d.step}:</strong> {d.label} — {d.activity}%
+                </p>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getTransducaoSinalChallenges()} simulatorState={{ selectedReceptor, blockStep }} onComplete={() => setChallengeCompleted(true)} />
+      <SimulatorChallengeMode challengeSet={getTransducaoSinalChallenges()} simulatorState={{ selectedReceptor, blockStep, agonistConc, blockIntensity }} onComplete={() => setChallengeCompleted(true)} />
       {isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">

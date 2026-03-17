@@ -58,14 +58,26 @@ function generateNMBCurve(agent: string, agentDose: number, reversal: string, re
     let fasciculation = 0;
     if (isDepo && t >= 0.3 && t <= 1) fasciculation = 30 * agentDose / 100;
 
-    // Reversal effect
-    if (reversal !== "nenhum" && reversalDose > 0 && t > 10) {
-      const reversalEffect = reversal === "sugammadex" ? 0.95 : 0.6;
-      const reversalOnset = reversal === "sugammadex" ? 2 : 8;
-      const timeSinceReversal = t - 10;
-      if (timeSinceReversal > 0) {
-        const factor = Math.min(1, timeSinceReversal / reversalOnset) * reversalEffect * (reversalDose / 100);
-        twitch = twitch + (100 - twitch) * factor;
+    // Reversal effect - works for BOTH depolarizing and non-depolarizing
+    if (reversal !== "nenhum" && reversalDose > 0 && t > 5) {
+      const timeSinceReversal = t - 5;
+      if (isDepo) {
+        // For depolarizing: neostigmina can worsen phase I block (increases ACh),
+        // sugammadex has no effect on succinilcolina
+        if (reversal === "neostigmina") {
+          // Neostigmina worsens depolarizing block (more ACh at already depolarized junction)
+          const worsenFactor = Math.min(1, timeSinceReversal / 5) * 0.3 * (reversalDose / 100);
+          twitch = twitch * (1 - worsenFactor);
+        }
+        // Sugammadex has no effect on succinilcolina (only encapsulates steroidal NMBAs)
+      } else {
+        // Non-depolarizing: both agents help
+        const reversalEffect = reversal === "sugammadex" ? 0.95 : 0.6;
+        const reversalOnset = reversal === "sugammadex" ? 2 : 8;
+        if (timeSinceReversal > 0) {
+          const factor = Math.min(1, timeSinceReversal / reversalOnset) * reversalEffect * (reversalDose / 100);
+          twitch = twitch + (100 - twitch) * factor;
+        }
       }
     }
 
@@ -188,7 +200,7 @@ export default function SimuladorBloqueioNeuromuscular() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal }} onComplete={() => setChallengeCompleted(true)} />
+      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal, agentDose, reversalDose }} onComplete={() => setChallengeCompleted(true)} />
       {isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">

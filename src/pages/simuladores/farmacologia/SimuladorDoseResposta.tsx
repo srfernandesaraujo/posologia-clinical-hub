@@ -68,17 +68,21 @@ function generateDRCurve(ec50: number, emax: number, partialAgonist: boolean, co
   if (competitiveAntag) effEC50 = ec50 * (1 + inh * 5);
   if (nonCompAntag) effEmax = emax / (1 + inh * 3);
 
+  const hasModifier = partialAgonist || competitiveAntag || nonCompAntag;
+
   const points = [];
   for (let logD = -2; logD <= 3; logD += 0.1) {
     const dose = Math.pow(10, logD);
     const effect = (effEmax * dose) / (effEC50 + dose);
+    const baseline = (emax * dose) / (ec50 + dose);
     points.push({
       logDose: Math.round(logD * 100) / 100,
       dose: Math.round(dose * 100) / 100,
       effect: Math.round(effect * 100) / 100,
+      baseline: hasModifier ? Math.round(baseline * 100) / 100 : undefined,
     });
   }
-  return { points, effEC50: Math.round(effEC50 * 10) / 10, effEmax: Math.round(effEmax * 10) / 10 };
+  return { points, effEC50: Math.round(effEC50 * 10) / 10, effEmax: Math.round(effEmax * 10) / 10, hasModifier };
 }
 
 export default function SimuladorDoseResposta() {
@@ -110,7 +114,7 @@ export default function SimuladorDoseResposta() {
     if (activeCase) { setEC50(activeCase.initialEC50); setEmax(activeCase.initialEmax); setPartialAgonist(false); setCompetitiveAntag(false); setNonCompAntag(false); setAntagConc(50); }
   }, [activeCase]);
 
-  const { points, effEC50, effEmax } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
+  const { points, effEC50, effEmax, hasModifier } = useMemo(() => generateDRCurve(ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc), [ec50, emax, partialAgonist, competitiveAntag, nonCompAntag, antagConc]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
@@ -211,7 +215,8 @@ export default function SimuladorDoseResposta() {
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
               <ReferenceLine y={effEmax} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Emax=${effEmax}`, fill: "hsl(var(--destructive))" }} />
-              <Line type="monotone" dataKey="effect" name="Efeito (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+              {hasModifier && <Line type="monotone" dataKey="baseline" name="Sem Modificador (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1.5} strokeDasharray="6 3" />}
+              <Line type="monotone" dataKey="effect" name={hasModifier ? "Com Modificador (%)" : "Efeito (%)"} stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

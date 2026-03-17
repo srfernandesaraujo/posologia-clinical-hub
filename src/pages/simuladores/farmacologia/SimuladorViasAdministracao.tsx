@@ -175,7 +175,7 @@ export default function SimuladorViasAdministracao() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getViasAdministracaoChallenges()} simulatorState={{ dose, enabledRoutes }} onComplete={() => setChallengeCompleted(true)} />
+      <SimulatorChallengeMode challengeSet={getViasAdministracaoChallenges()} simulatorState={{ dose, enabledRoutes, bioFactor, elimRate }} onComplete={() => setChallengeCompleted(true)} />
       {isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
