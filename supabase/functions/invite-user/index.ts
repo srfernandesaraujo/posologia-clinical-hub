@@ -72,27 +72,26 @@ serve(async (req) => {
       (u: any) => u.email === email
     );
 
+    let targetUserId: string;
+
     if (existingUser) {
-      return new Response(
-        JSON.stringify({ error: "Este email já está cadastrado no sistema." }),
-        {
-          status: 409,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+      // Allow re-sending invite for existing users
+      targetUserId = existingUser.id;
+      console.log("Re-sending invite for existing user:", email);
+    } else {
+      // Create user with a random password (they'll reset it)
+      const tempPassword = crypto.randomUUID() + "Aa1!";
+      const { data: newUser, error: createError } =
+        await adminClient.auth.admin.createUser({
+          email,
+          password: tempPassword,
+          email_confirm: true,
+        });
 
-    // Create user with a random password (they'll reset it)
-    const tempPassword = crypto.randomUUID() + "Aa1!";
-    const { data: newUser, error: createError } =
-      await adminClient.auth.admin.createUser({
-        email,
-        password: tempPassword,
-        email_confirm: true,
-      });
-
-    if (createError) {
-      throw createError;
+      if (createError) {
+        throw createError;
+      }
+      targetUserId = newUser.user.id;
     }
 
     // Update profile: set status to approved and unlimited access
@@ -102,7 +101,7 @@ serve(async (req) => {
         status: "approved",
         has_unlimited_access: true,
       })
-      .eq("user_id", newUser.user.id);
+      .eq("user_id", targetUserId);
 
     // Generate password reset link
     const { data: linkData, error: linkError } =
