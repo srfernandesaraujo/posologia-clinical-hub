@@ -337,6 +337,9 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Sales Agent */}
+      <SalesAgent />
     </div>
   );
 }
