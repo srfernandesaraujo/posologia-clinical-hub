@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.search-sketchfab]
 verify_jwt = false
+
+[functions.sales-agent]
+verify_jwt = false

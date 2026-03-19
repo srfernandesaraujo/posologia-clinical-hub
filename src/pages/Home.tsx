@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { SalesAgent } from "@/components/SalesAgent";
 import { useTranslation } from "react-i18next";
 import {
   Pill, Calculator, FlaskConical, Zap, Shield, Users,
@@ -336,6 +337,9 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Sales Agent */}
+      <SalesAgent />
     </div>
   );
 }
