@@ -247,7 +247,7 @@ export default function SimuladorDocking() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={result.interactionContributions} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                <XAxis type="number" label={{ value: "ΔG (kcal/mol)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis type="category" dataKey="name" width={120} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Bar dataKey="contribution" name="ΔG (kcal/mol)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />

@@ -157,7 +157,7 @@ export default function SimuladorTransducaoSinal() {
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={cascadeData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <XAxis type="number" domain={[0, 100]} label={{ value: "Atividade (%)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis type="category" dataKey="step" width={60} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: number, _: string, entry: any) => [`${v}% – ${entry.payload.name}`, "Atividade"]} />
                 <Bar dataKey="activity" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />

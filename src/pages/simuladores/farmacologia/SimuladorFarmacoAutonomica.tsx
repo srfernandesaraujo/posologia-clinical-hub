@@ -150,7 +150,7 @@ export default function SimuladorFarmacoAutonomica() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={organEffects} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                <XAxis type="number" label={{ value: "Valor", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis type="category" dataKey="organ" width={110} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Valor Atual" />

@@ -216,7 +216,7 @@ export default function SimuladorGranulometria() {
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={histogram}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="size" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                <XAxis dataKey="size" label={{ value: "Tamanho (µm)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
                 <YAxis yAxisId="left" label={{ value: "Freq. (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} label={{ value: "Acum. (%)", angle: 90, position: "insideRight" }} stroke="hsl(var(--chart-2))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />

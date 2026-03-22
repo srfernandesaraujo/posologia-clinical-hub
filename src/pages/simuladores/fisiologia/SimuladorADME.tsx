@@ -305,7 +305,7 @@ export default function SimuladorADME() {
               <AreaChart data={pk.points.filter((_, i) => i % 2 === 0)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" label={{ value: "h", position: "insideBottomRight" }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Massa (mg)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Area type="monotone" dataKey="gut" name="TGI (mg)" stackId="1" fill="hsl(var(--primary) / 0.3)" stroke="hsl(var(--primary))" />

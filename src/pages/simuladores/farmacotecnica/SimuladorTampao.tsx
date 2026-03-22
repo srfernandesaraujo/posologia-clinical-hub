@@ -237,7 +237,7 @@ export default function SimuladorTampao() {
                 <LineChart data={titrationData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="acidAdded" label={{ value: "Ácido (mL)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[2, 12]} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[2, 12]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <ReferenceLine y={pKa} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `pKa=${pKa}`, fill: "hsl(var(--destructive))" }} />
                   <Line type="monotone" dataKey="pH" name="pH" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
@@ -251,8 +251,8 @@ export default function SimuladorTampao() {
               <ResponsiveContainer width="100%" height={160}>
                 <AreaChart data={betaCurve}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="pH" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="pH" label={{ value: "pH", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "β (capacidade)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <ReferenceLine x={pKa} stroke="hsl(var(--destructive))" strokeDasharray="5 5" />
                   <Area type="monotone" dataKey="beta" name="β" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.2} />

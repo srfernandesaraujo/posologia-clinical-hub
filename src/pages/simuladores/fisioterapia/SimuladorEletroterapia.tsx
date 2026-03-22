@@ -216,7 +216,7 @@ export default function SimuladorEletroterapia() {
               </div>
               <div className="h-32">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={waveData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" /><XAxis dataKey="t" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" /><YAxis domain={[-1.2, 1.2]} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" /><Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" dot={false} strokeWidth={1.5} /></LineChart>
+                  <LineChart data={waveData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" /><XAxis dataKey="t" label={{ value: "Tempo (ms)", position: "insideBottom", offset: -5 }} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" /><YAxis domain={[-1.2, 1.2]} label={{ value: "Amplitude", angle: -90, position: "insideLeft" }} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" /><Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" dot={false} strokeWidth={1.5} /></LineChart>
                 </ResponsiveContainer>
               </div>
               {!completedModules.has(3) && <Button size="sm" className="w-full" onClick={() => completeModule(3)}>Confirmar Parâmetros</Button>}

@@ -153,7 +153,7 @@ export default function SimuladorToleranciaDependencia() {
               <LineChart data={points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[0, 110]} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 110]} label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <ReferenceLine x={weeksOfUse} stroke="hsl(var(--foreground))" strokeDasharray="5 5" label={{ value: "Suspensão", fill: "hsl(var(--foreground))" }} />

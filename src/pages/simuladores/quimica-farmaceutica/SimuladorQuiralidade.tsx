@@ -200,7 +200,7 @@ export default function SimuladorQuiralidade() {
               <BarChart data={comparisonData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="property" stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 100]} label={{ value: "Valor (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Bar dataKey="eutomer" name="Eutômero" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />

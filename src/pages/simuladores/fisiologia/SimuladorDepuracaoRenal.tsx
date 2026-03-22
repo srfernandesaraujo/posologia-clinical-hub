@@ -256,7 +256,7 @@ export default function SimuladorDepuracaoRenal() {
                 <BarChart data={barData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "Volume (L/dia)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Volume" radius={[4, 4, 0, 0]}>
                     {barData.map((_, i) => <Cell key={i} fill={BAR_COLORS[i]} />)}
