@@ -1,73 +1,56 @@
 
 
-## Plan: Implementar 5 Calculadoras Pediátricas
+## Calculadoras de Ginecologia e Obstetrícia — Proposta
 
-### Overview
-Create 5 new pediatric clinical calculators following the existing pattern (dual mode clinico/educativo, PDF export, calculation history, clinical references, related calculators).
+### Análise de Mercado
 
-### New Calculators
+A maioria dos apps médicos brasileiros oferece apenas a Idade Gestacional e a Data Provável do Parto. Há uma lacuna enorme em ferramentas integradas que cubram o pré-natal completo, rastreio de risco e manejo clínico obstétrico. Isso representa uma oportunidade de diferencial significativo.
 
-| # | Calculator | Route | File |
-|---|-----------|-------|------|
-| 1 | Curvas de Crescimento OMS (Z-Score) | `/calculadoras/curvas-crescimento-oms` | `src/pages/CurvasCrescimentoOMS.tsx` |
-| 2 | Bilirrubina Neonatal (Bhutani/AAP) | `/calculadoras/bilirrubina-neonatal` | `src/pages/BilirrubinanNeonatal.tsx` |
-| 3 | TFG Pediátrica (Schwartz) | `/calculadoras/schwartz-pediatrico` | `src/pages/SchwartzPediatrico.tsx` |
-| 4 | PEWS (Pediatric Early Warning Score) | `/calculadoras/pews` | `src/pages/Pews.tsx` |
-| 5 | Drogas Vasoativas Pediátricas | `/calculadoras/drogas-vasoativas-pediatricas` | `src/pages/DrogasVasoativasPediatricas.tsx` |
+### Calculadoras Propostas (por prioridade)
 
-### Calculator Details
+**Tier 1 — Uso Diário (alta frequência, impacto imediato)**
 
-**1. Curvas de Crescimento OMS (Z-Score)**
-- Inputs: sexo, idade (meses), peso (kg), comprimento/estatura (cm), perimetro cefalico (cm)
-- Calculates Z-scores using simplified LMS tables (WHO 0-5 years)
-- Recharts LineChart showing percentile curves (P3, P15, P50, P85, P97) with patient point plotted
-- Classification: magreza severa, magreza, eutrofico, sobrepeso, obesidade
-- References: WHO 2006 Growth Standards
+| Calculadora | Descrição | Diferencial |
+|---|---|---|
+| **Idade Gestacional + DPP** | Calcula IG por DUM ou USG, data provável do parto (Naegele), idade gestacional corrigida | Base essencial — mas com visualização de timeline gestacional por trimestre (Recharts) |
+| **Ganho de Peso Gestacional (IOM)** | Ganho recomendado por IMC pré-gestacional e IG atual, com gráfico de faixas ideais | Poucos apps mostram o gráfico com a curva da paciente plotada |
+| **Risco Pré-Eclâmpsia (ACOG/NICE)** | Score baseado em fatores maternos (idade, IMC, história, PA, doppler uterino) | Calculadora rara em português; indica uso de AAS profilático |
 
-**2. Bilirrubina Neonatal (Bhutani/AAP)**
-- Inputs: bilirrubina total (mg/dL), idade do RN (horas), idade gestacional, fatores de risco
-- Nomograma de Bhutani: classifica em zonas (baixo, intermediario-baixo, intermediario-alto, alto risco)
-- Recharts AreaChart with risk zones and patient point plotted
-- Indica necessidade de fototerapia/exsanguineotransfusao baseado em AAP 2004/2022
-- References: AAP Clinical Practice Guideline, Bhutani VK et al. Pediatrics 1999
+**Tier 2 — Valor Clínico Diferencial**
 
-**3. TFG Pediátrica (Schwartz)**
-- Inputs: creatinina serica (mg/dL), altura (cm), constante k (selecao por faixa etaria)
-- Formula: TFG = k × altura(cm) / creatinina
-- Constantes: RN prematuro (0.33), RN a termo (0.45), crianca 1-12a (0.55), adolescente F (0.55), adolescente M (0.70)
-- Bedside Schwartz 2009: k=0.413 (universal)
-- RiskGauge visualization + staging KDIGO
-- References: Schwartz GJ et al. JASN 2009
+| Calculadora | Descrição | Diferencial |
+|---|---|---|
+| **Bishop Score** | Avalia amadurecimento cervical para indução do parto (5 parâmetros) | Simples mas muito usado; poucos apps integram conduta por faixa |
+| **Perfil Biofísico Fetal (PBF)** | Score 0-10 baseado em 5 parâmetros ultrassonográficos + CTG | Com recomendações de conduta por pontuação |
+| **Rastreio de Diabetes Gestacional** | Interpreta TOTG 75g (critérios IADPSG/OMS), classifica resultado | Inclui fluxograma de conduta pós-diagnóstico |
 
-**4. PEWS (Pediatric Early Warning Score)**
-- Inputs: comportamento, cardiovascular, respiratorio (0-3 pontos cada)
-- Score 0-9, com faixas: 0-2 (baixo risco), 3-4 (moderado), ≥5 (alto - acionar equipe de emergencia)
-- ScoreBar visualization with color bands
-- Recomendacoes de conduta por faixa
-- References: Monaghan A. Nursing Times 2005
+**Tier 3 — Nicho Premium (grande diferencial de mercado)**
 
-**5. Drogas Vasoativas Pediátricas**
-- Inputs: peso (kg), droga selecionada, dose desejada (mcg/kg/min), concentracao da solucao
-- Drogas: Dopamina, Dobutamina, Noradrenalina, Adrenalina, Milrinona, Nitroprussiato
-- Calcula: velocidade de infusao (mL/h), diluicao padrao, dose em mcg/min
-- Table with common dose ranges per drug
-- References: PALS/AHA Guidelines
+| Calculadora | Descrição | Diferencial |
+|---|---|---|
+| **Risco de Parto Prematuro (QR Fibronectina + Colo)** | Integra comprimento cervical + fibronectina fetal para estratificação de risco | Praticamente inexistente em apps brasileiros |
+| **Dosagem de Sulfato de Magnésio** | Calcula dose de ataque e manutenção (Zuspan vs Pritchard), alerta de toxicidade | Ferramenta crítica para eclâmpsia/pré-eclâmpsia grave |
+| **Vitalidade Fetal — Índice de Líquido Amniótico** | Classifica ILA e maior bolsão, com conduta por faixa (oligoâmnio/polidrâmnio) | Visual gauge com zonas de risco |
 
-### Files to Modify
+### Recomendação de Implementação (5 calculadoras)
 
-1. **5 new page files** (listed above) - each ~200-250 lines following DosePediatrica/HollidaySegar pattern
-2. **`src/pages/Calculadoras.tsx`** - Add 5 entries to `NATIVE_CALCULATORS` array and slugs to `NATIVE_SLUGS`
-3. **`src/App.tsx`** - Add imports and routes for all 5 calculators (both authenticated `/calculadoras/...` routes)
-4. **`src/data/nativeSystemPrompts.ts`** - Add system prompts for admin viewer
-5. **`src/components/calculators/ClinicalReferences.tsx`** - Add reference entries for each calculator
+1. **Idade Gestacional + DPP** — base obrigatória, timeline visual
+2. **Ganho de Peso Gestacional (IOM)** — gráfico de curva com ponto da paciente
+3. **Risco de Pré-Eclâmpsia** — diferencial competitivo forte
+4. **Bishop Score** — uso clínico frequente em centros obstétricos
+5. **Dosagem de Sulfato de Magnésio** — ferramenta crítica de emergência, quase inexistente
 
-### Technical Pattern (per calculator)
-- Dual mode toggle (clinico/educativo)
-- Patient name + date fields
-- jsPDF export
-- `useCalculationHistory` integration via `SaveToHistoryButton`
-- `ShareToolButton` for embedding
-- `ClinicalReferences` and `RelatedCalculators` components
-- Recharts visualizations with proper axis labels
-- Responsive layout with Tailwind
+### Padrão Técnico
+
+Cada calculadora seguirá o padrão existente:
+- Dual mode (clínico/educativo), PDF export, histórico
+- Visualizações Recharts com labels nos eixos
+- `ClinicalReferences` com guidelines (ACOG, NICE, FIGO, FEBRASGO)
+- `RelatedCalculators` cruzando as 5 entre si
+- Categoria "Ginecologia e Obstetrícia" no catálogo com ícone temático
+
+### Arquivos
+
+- **5 novos**: `IdadeGestacional.tsx`, `GanhoPesoGestacional.tsx`, `RiscoPreEclampsia.tsx`, `BishopScore.tsx`, `SulfatoMagnesio.tsx`
+- **Editados**: `Calculadoras.tsx` (categoria + 5 entradas), `App.tsx` (rotas), `ClinicalReferences.tsx`, `RelatedCalculators.tsx`
 
