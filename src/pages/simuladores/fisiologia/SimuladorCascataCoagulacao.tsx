@@ -318,8 +318,8 @@ export default function SimuladorCascataCoagulacao() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <XAxis dataKey="name" label={{ value: "Parâmetro", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Bar dataKey="valor" name="Paciente" fill="hsl(var(--destructive))" radius={[4,4,0,0]} />

@@ -304,7 +304,7 @@ export default function SimuladorInsulina() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" /><YAxis domain={[40, 350]} />
+                  <XAxis dataKey="time" label={{ value: "Horário", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis domain={[40, 350]} label={{ value: "Glicemia (mg/dL)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <ReferenceArea y1={targetMin} y2={targetMax} fill="#22c55e" fillOpacity={0.1} />
                   <ReferenceLine y={targetMax} stroke="#22c55e" strokeDasharray="3 3" />
                   <ReferenceLine y={targetMin} stroke="#eab308" strokeDasharray="3 3" />

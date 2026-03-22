@@ -293,9 +293,9 @@ export default function SimuladorEquilibrioAcidoBase() {
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={history}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="step" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis yAxisId="ph" domain={[6.9, 7.7]} stroke="hsl(var(--primary))" />
-                  <YAxis yAxisId="other" orientation="right" stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="step" label={{ value: "Etapa", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis yAxisId="ph" domain={[6.9, 7.7]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--primary))" />
+                  <YAxis yAxisId="other" orientation="right" label={{ value: "mmHg / mEq/L", angle: 90, position: "insideRight" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <ReferenceLine yAxisId="ph" y={7.35} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />

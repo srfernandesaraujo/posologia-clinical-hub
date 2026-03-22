@@ -217,7 +217,7 @@ export default function SimuladorMetabolismo() {
             <AreaChart data={points}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="hour" label={{ value: "Horas", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis domain={[0, 110]} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[0, 110]} label={{ value: "Concentração (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
               <Area type="monotone" dataKey="profarmaco" name="Pró-fármaco" stroke="hsl(var(--muted-foreground))" fill="hsl(var(--muted-foreground))" fillOpacity={0.1} />

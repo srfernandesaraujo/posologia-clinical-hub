@@ -241,7 +241,7 @@ export default function SimuladorBioisosterismo() {
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={comparisonData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                <XAxis type="number" label={{ value: "Valor", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis type="category" dataKey="property" width={100} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />

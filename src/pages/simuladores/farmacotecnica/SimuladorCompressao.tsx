@@ -207,8 +207,8 @@ export default function SimuladorCompressao() {
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={heckelData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="pressure" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="pressure" label={{ value: "Pressão (MPa)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <YAxis label={{ value: "ln(1/(1-D))", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Line type="monotone" dataKey="heckel" name="ln(1/(1-D))" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                 </LineChart>
@@ -221,8 +221,8 @@ export default function SimuladorCompressao() {
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={kawakitaData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="pressure" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="pressure" label={{ value: "Pressão (MPa)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <YAxis label={{ value: "P/C", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Line type="monotone" dataKey="kawakita" name="P/C" stroke="hsl(var(--chart-2))" dot={false} strokeWidth={2} />
                 </LineChart>
