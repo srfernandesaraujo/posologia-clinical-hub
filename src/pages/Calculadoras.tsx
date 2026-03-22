@@ -54,6 +54,11 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "Predição de Risco de Não Adesão Oncológica", description: "ARMS, MOATT, Morisky e AQT para avaliar risco de não adesão em pacientes oncológicos.", category: "Oncologia", path: "/calculadoras/adesao-oncologia", icon: Pill, searchKey: "adesao oncologia arms moatt morisky aqt" },
   { name: "Predição de Reações Adversas a Antineoplásicos", description: "CARG, CRASH e HFA-ICOS para predição de toxicidade e cardiotoxicidade.", category: "Oncologia", path: "/calculadoras/toxicidade-antineoplasicos", icon: Activity, searchKey: "toxicidade antineoplasicos carg crash hfa icos cardiotoxicidade" },
   { name: "Ajuste de Dose Oncológico (Renal/Hepático)", description: "Carboplatina (Calvert), ajuste renal (Cockcroft-Gault) e hepático (NCI-ODWG / Child-Pugh).", category: "Oncologia", path: "/calculadoras/ajuste-dose-oncologico", icon: FlaskConical, searchKey: "ajuste dose oncologico carboplatina calvert renal hepatico child pugh nci odwg" },
+  { name: "Curvas de Crescimento OMS (Z-Score)", description: "Peso-para-idade com percentis WHO 2006 — criancas 0-5 anos.", category: "Pediatria", path: "/calculadoras/curvas-crescimento-oms", icon: Baby, searchKey: "curvas crescimento oms zscore peso idade percentil who pediatria" },
+  { name: "Bilirrubina Neonatal (Bhutani/AAP)", description: "Nomograma de risco e indicacao de fototerapia neonatal.", category: "Pediatria", path: "/calculadoras/bilirrubina-neonatal", icon: Baby, searchKey: "bilirrubina neonatal bhutani aap fototerapia ictericia recem nascido" },
+  { name: "TFG Pediatrica (Schwartz)", description: "Estimativa da TFG em criancas — Bedside Schwartz 2009.", category: "Pediatria", path: "/calculadoras/schwartz-pediatrico", icon: Baby, searchKey: "schwartz pediatrico tfg taxa filtracao glomerular crianca creatinina" },
+  { name: "PEWS (Pediatric Early Warning Score)", description: "Deteccao precoce de deterioracao clinica em criancas hospitalizadas.", category: "Pediatria", path: "/calculadoras/pews", icon: Baby, searchKey: "pews pediatric early warning score deterioracao crianca" },
+  { name: "Drogas Vasoativas Pediatricas", description: "Calculo de infusao e diluicao para vasopressores e inotropicos pediatricos.", category: "Pediatria", path: "/calculadoras/drogas-vasoativas-pediatricas", icon: Baby, searchKey: "drogas vasoativas pediatricas dopamina dobutamina noradrenalina adrenalina milrinona" },
 ];
 
 const NATIVE_SLUGS = new Set([
@@ -63,6 +68,7 @@ const NATIVE_SLUGS = new Set([
   "vancomicina-auc", "insulina-basal-bolus", "holliday-segar", "meld-score",
   "qtc-corrigido", "dose-pediatrica", "rass-sedacao", "nutricao-parenteral", "interacoes-cyp",
   "adesao-oncologia", "toxicidade-antineoplasicos", "ajuste-dose-oncologico",
+  "curvas-crescimento-oms", "bilirrubina-neonatal", "schwartz-pediatrico", "pews", "drogas-vasoativas-pediatricas",
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
   "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",

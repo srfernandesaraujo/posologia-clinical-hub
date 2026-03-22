@@ -136,6 +136,31 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "Child-Pugh Classification for TKI Dose Adjustment", source: "Hepatology", year: "2001" },
     { title: "FDA Guidance: Pharmacokinetics in Patients with Hepatic Impairment", source: "FDA", year: "2020" },
   ],
+  "curvas-crescimento-oms": [
+    { title: "WHO Child Growth Standards", source: "World Health Organization", year: "2006", url: "https://www.who.int/tools/child-growth-standards" },
+    { title: "WHO Anthro Software and Macros", source: "WHO", year: "2024", url: "https://www.who.int/tools/child-growth-standards/software" },
+    { title: "Nelson Textbook of Pediatrics: Growth and Development", source: "Elsevier", year: "2023" },
+  ],
+  "bilirrubina-neonatal": [
+    { title: "Predictive Ability of Predischarge Hour-Specific Serum Bilirubin", source: "Pediatrics (Bhutani VK et al.)", year: "1999", url: "https://doi.org/10.1542/peds.103.1.6" },
+    { title: "AAP Clinical Practice Guideline: Management of Hyperbilirubinemia", source: "Pediatrics", year: "2022", url: "https://doi.org/10.1542/peds.2022-058859" },
+    { title: "Phototherapy and Exchange Transfusion Thresholds", source: "AAP", year: "2022" },
+  ],
+  "schwartz-pediatrico": [
+    { title: "New Equations to Estimate GFR in Children (Bedside Schwartz)", source: "JASN (Schwartz GJ et al.)", year: "2009", url: "https://doi.org/10.1681/ASN.2008030287" },
+    { title: "KDIGO 2024 Clinical Practice Guideline for CKD", source: "Kidney International", year: "2024", url: "https://kdigo.org/guidelines/ckd-evaluation-and-management/" },
+    { title: "Harriet Lane Handbook: Nephrology", source: "Johns Hopkins", year: "2024" },
+  ],
+  "pews": [
+    { title: "Paediatric Early Warning System (PEWS)", source: "Nursing Times (Monaghan A)", year: "2005" },
+    { title: "Pediatric Early Warning Scores: A Systematic Review", source: "Pediatrics", year: "2019", url: "https://doi.org/10.1542/peds.2018-2599" },
+    { title: "Rapid Response Systems in Pediatrics", source: "Resuscitation", year: "2020" },
+  ],
+  "drogas-vasoativas-pediatricas": [
+    { title: "PALS Provider Manual", source: "American Heart Association", year: "2020" },
+    { title: "Pediatric Advanced Life Support Guidelines", source: "Circulation (AHA)", year: "2020", url: "https://doi.org/10.1161/CIR.0000000000000901" },
+    { title: "Vasoactive-Inotropic Score in Pediatric Critical Care", source: "Pediatr Crit Care Med", year: "2010" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {

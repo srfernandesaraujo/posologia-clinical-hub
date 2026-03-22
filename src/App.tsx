@@ -43,6 +43,11 @@ import InteracoesCYP from "./pages/InteracoesCYP";
 import AdesaoOncologia from "./pages/AdesaoOncologia";
 import ToxicidadeAntineoplasicos from "./pages/ToxicidadeAntineoplasicos";
 import AjusteDoseOncologico from "./pages/AjusteDoseOncologico";
+import CurvasCrescimentoOMS from "./pages/CurvasCrescimentoOMS";
+import BilirrubinanNeonatal from "./pages/BilirrubinanNeonatal";
+import SchwartzPediatrico from "./pages/SchwartzPediatrico";
+import Pews from "./pages/Pews";
+import DrogasVasoativasPediatricas from "./pages/DrogasVasoativasPediatricas";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -422,6 +427,11 @@ const App = () => (
               <Route path="/calculadoras/adesao-oncologia" element={<AdesaoOncologia />} />
               <Route path="/calculadoras/toxicidade-antineoplasicos" element={<ToxicidadeAntineoplasicos />} />
               <Route path="/calculadoras/ajuste-dose-oncologico" element={<AjusteDoseOncologico />} />
+              <Route path="/calculadoras/curvas-crescimento-oms" element={<CurvasCrescimentoOMS />} />
+              <Route path="/calculadoras/bilirrubina-neonatal" element={<BilirrubinanNeonatal />} />
+              <Route path="/calculadoras/schwartz-pediatrico" element={<SchwartzPediatrico />} />
+              <Route path="/calculadoras/pews" element={<Pews />} />
+              <Route path="/calculadoras/drogas-vasoativas-pediatricas" element={<DrogasVasoativasPediatricas />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
