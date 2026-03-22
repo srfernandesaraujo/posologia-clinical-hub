@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Calculator, Search, Heart, Pill, Syringe, Beaker, Brain, Activity, ShieldAlert, Crown, Plus,
   Lock, Share2, Droplets, Bone, HeartPulse, Thermometer, FlaskConical, Baby, Flame, Zap, Moon,
-  Utensils, Dna, ChevronRight, LayoutGrid, List,
+  Utensils, Dna, ChevronRight, LayoutGrid, List, Stethoscope,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useRef } from "react";
@@ -59,6 +59,11 @@ const NATIVE_CALCULATORS: NativeCalculator[] = [
   { name: "TFG Pediatrica (Schwartz)", description: "Estimativa da TFG em criancas — Bedside Schwartz 2009.", category: "Pediatria", path: "/calculadoras/schwartz-pediatrico", icon: Baby, searchKey: "schwartz pediatrico tfg taxa filtracao glomerular crianca creatinina" },
   { name: "PEWS (Pediatric Early Warning Score)", description: "Deteccao precoce de deterioracao clinica em criancas hospitalizadas.", category: "Pediatria", path: "/calculadoras/pews", icon: Baby, searchKey: "pews pediatric early warning score deterioracao crianca" },
   { name: "Drogas Vasoativas Pediatricas", description: "Calculo de infusao e diluicao para vasopressores e inotropicos pediatricos.", category: "Pediatria", path: "/calculadoras/drogas-vasoativas-pediatricas", icon: Baby, searchKey: "drogas vasoativas pediatricas dopamina dobutamina noradrenalina adrenalina milrinona" },
+  { name: "Idade Gestacional + DPP", description: "Calculo por DUM ou USG com timeline gestacional e data provavel do parto.", category: "Ginecologia e Obstetrícia", path: "/calculadoras/idade-gestacional", icon: HeartPulse, searchKey: "idade gestacional dum usg dpp naegele obstetrica" },
+  { name: "Ganho de Peso Gestacional (IOM)", description: "Avaliacao do ganho ponderal conforme IMC pre-gestacional (IOM 2009).", category: "Ginecologia e Obstetrícia", path: "/calculadoras/ganho-peso-gestacional", icon: HeartPulse, searchKey: "ganho peso gestacional iom imc gravidez obstetrica" },
+  { name: "Risco de Pre-Eclampsia (ACOG/NICE)", description: "Rastreio de fatores de risco e indicacao de AAS profilatico.", category: "Ginecologia e Obstetrícia", path: "/calculadoras/risco-pre-eclampsia", icon: HeartPulse, searchKey: "pre eclampsia acog nice aas aspirina risco obstetrica" },
+  { name: "Bishop Score", description: "Avaliacao do amadurecimento cervical para inducao do parto.", category: "Ginecologia e Obstetrícia", path: "/calculadoras/bishop-score", icon: HeartPulse, searchKey: "bishop score inducao parto cervical obstetrica" },
+  { name: "Dosagem de Sulfato de Magnesio", description: "Protocolos Zuspan e Pritchard para eclampsia/pre-eclampsia grave.", category: "Ginecologia e Obstetrícia", path: "/calculadoras/sulfato-magnesio", icon: HeartPulse, searchKey: "sulfato magnesio zuspan pritchard eclampsia obstetrica" },
 ];
 
 const NATIVE_SLUGS = new Set([
@@ -69,6 +74,7 @@ const NATIVE_SLUGS = new Set([
   "qtc-corrigido", "dose-pediatrica", "rass-sedacao", "nutricao-parenteral", "interacoes-cyp",
   "adesao-oncologia", "toxicidade-antineoplasicos", "ajuste-dose-oncologico",
   "curvas-crescimento-oms", "bilirrubina-neonatal", "schwartz-pediatrico", "pews", "drogas-vasoativas-pediatricas",
+  "idade-gestacional", "ganho-peso-gestacional", "risco-pre-eclampsia", "bishop-score", "sulfato-magnesio",
   "calculadora-de-risco-cardiovascular", "calculadora-de-desmame-de-corticoide",
   "calculadora-de-equivalencia-de-opioides", "calculadora-de-ajuste-de-dose-renal",
   "calculadora-de-equivalencia-de-antidepressivos", "calculadora-de-resistencia-insulinica-homa-ir",
@@ -87,6 +93,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Hepatologia": Flame,
   "Terapia Intensiva": HeartPulse,
   "Oncologia": ShieldAlert,
+  "Ginecologia e Obstetrícia": Stethoscope,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -101,6 +108,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Hepatologia": "15 80% 50%",
   "Terapia Intensiva": "190 70% 45%",
   "Oncologia": "300 60% 50%",
+  "Ginecologia e Obstetrícia": "330 65% 55%",
 };
 
 export default function Calculadoras() {

@@ -48,6 +48,11 @@ import BilirrubinanNeonatal from "./pages/BilirrubinanNeonatal";
 import SchwartzPediatrico from "./pages/SchwartzPediatrico";
 import Pews from "./pages/Pews";
 import DrogasVasoativasPediatricas from "./pages/DrogasVasoativasPediatricas";
+import IdadeGestacional from "./pages/IdadeGestacional";
+import GanhoPesoGestacional from "./pages/GanhoPesoGestacional";
+import RiscoPreEclampsia from "./pages/RiscoPreEclampsia";
+import BishopScore from "./pages/BishopScore";
+import SulfatoMagnesio from "./pages/SulfatoMagnesio";
 import SimuladorPRM from "./pages/simuladores/SimuladorPRM";
 import SimuladorAntimicrobianos from "./pages/simuladores/SimuladorAntimicrobianos";
 import SimuladorTDM from "./pages/simuladores/SimuladorTDM";
@@ -432,6 +437,11 @@ const App = () => (
               <Route path="/calculadoras/schwartz-pediatrico" element={<SchwartzPediatrico />} />
               <Route path="/calculadoras/pews" element={<Pews />} />
               <Route path="/calculadoras/drogas-vasoativas-pediatricas" element={<DrogasVasoativasPediatricas />} />
+              <Route path="/calculadoras/idade-gestacional" element={<IdadeGestacional />} />
+              <Route path="/calculadoras/ganho-peso-gestacional" element={<GanhoPesoGestacional />} />
+              <Route path="/calculadoras/risco-pre-eclampsia" element={<RiscoPreEclampsia />} />
+              <Route path="/calculadoras/bishop-score" element={<BishopScore />} />
+              <Route path="/calculadoras/sulfato-magnesio" element={<SulfatoMagnesio />} />
               <Route path="/calculadoras/:slug" element={<ToolDetail />} />
               <Route path="/simuladores/:slug" element={<ToolDetail />} />
               <Route path="/minha-conta" element={<MinhaConta />} />

@@ -39,6 +39,11 @@ const NATIVE_PATHS: Record<string, string> = {
   "schwartz-pediatrico": "/calculadoras/schwartz-pediatrico",
   "pews": "/calculadoras/pews",
   "drogas-vasoativas-pediatricas": "/calculadoras/drogas-vasoativas-pediatricas",
+  "idade-gestacional": "/calculadoras/idade-gestacional",
+  "ganho-peso-gestacional": "/calculadoras/ganho-peso-gestacional",
+  "risco-pre-eclampsia": "/calculadoras/risco-pre-eclampsia",
+  "bishop-score": "/calculadoras/bishop-score",
+  "sulfato-magnesio": "/calculadoras/sulfato-magnesio",
 };
 
 const RELATED_MAP: Record<string, string[]> = {
@@ -65,6 +70,11 @@ const RELATED_MAP: Record<string, string[]> = {
   "schwartz-pediatrico": ["ckd-epi", "ajuste-dose-renal", "dose-pediatrica"],
   "pews": ["qsofa", "drogas-vasoativas-pediatricas", "dose-pediatrica"],
   "drogas-vasoativas-pediatricas": ["pews", "holliday-segar", "dose-pediatrica"],
+  "idade-gestacional": ["ganho-peso-gestacional", "risco-pre-eclampsia", "bishop-score"],
+  "ganho-peso-gestacional": ["idade-gestacional", "risco-pre-eclampsia", "bishop-score"],
+  "risco-pre-eclampsia": ["sulfato-magnesio", "idade-gestacional", "bishop-score"],
+  "bishop-score": ["idade-gestacional", "sulfato-magnesio", "risco-pre-eclampsia"],
+  "sulfato-magnesio": ["risco-pre-eclampsia", "bishop-score", "drogas-vasoativas-pediatricas"],
   "rass-sedacao": ["qsofa", "nutricao-parenteral"],
   "nutricao-parenteral": ["holliday-segar", "meld-score"],
   "interacoes-cyp": ["vancomicina-auc", "qtc-corrigido", "equivalencia-antidepressivos"],
@@ -103,6 +113,11 @@ const CALC_NAMES: Record<string, string> = {
   "schwartz-pediatrico": "TFG Pediatrica (Schwartz)",
   "pews": "PEWS",
   "drogas-vasoativas-pediatricas": "Drogas Vasoativas Ped.",
+  "idade-gestacional": "Idade Gestacional + DPP",
+  "ganho-peso-gestacional": "Ganho Peso Gestacional",
+  "risco-pre-eclampsia": "Risco Pre-Eclampsia",
+  "bishop-score": "Bishop Score",
+  "sulfato-magnesio": "Sulfato de Magnesio",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {
