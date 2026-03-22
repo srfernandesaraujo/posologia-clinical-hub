@@ -712,7 +712,8 @@ export default function Admin() {
                   return (
                     <div key={u.id} className="flex items-center justify-between rounded-xl border border-border p-4 gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium">{u.full_name || "Sem nome"}</p>
+                        <p className="font-medium">{u.full_name || u.email || "Sem nome"}</p>
+                        {u.email && <p className="text-xs text-muted-foreground truncate">{u.email}</p>}
                         <p className="text-xs text-muted-foreground truncate">ID: {u.user_id}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 flex-wrap">
