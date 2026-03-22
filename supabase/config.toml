@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.sales-agent]
 verify_jwt = false
+
+[functions.list-all-users]
+verify_jwt = false
