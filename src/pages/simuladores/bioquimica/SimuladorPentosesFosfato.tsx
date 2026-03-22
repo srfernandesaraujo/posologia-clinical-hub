@@ -304,7 +304,7 @@ export default function SimuladorPentosesFosfato() {
                 <BarChart data={pathwayData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Bar dataKey="normal" name="Normal" fill="hsl(var(--muted-foreground))" opacity={0.3} radius={[4, 4, 0, 0]} />
@@ -320,8 +320,8 @@ export default function SimuladorPentosesFosfato() {
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={damageTimeline}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="hora" label={{ value: "Tempo (h)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="hemoglobina" name="Hb (g/dL)" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
@@ -347,7 +347,7 @@ export default function SimuladorPentosesFosfato() {
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="hemolysis" name="Hemólise (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />

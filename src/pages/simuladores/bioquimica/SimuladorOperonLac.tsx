@@ -305,7 +305,7 @@ export default function SimuladorOperonLac() {
                 <BarChart data={regulationData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -341,8 +341,8 @@ export default function SimuladorOperonLac() {
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={expressionTimeline}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="tempo" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="tempo" label={{ value: "Tempo (min)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} label={{ value: "Expressão (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Line type="monotone" dataKey="betaGal" name="β-Galactosidase (%)" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
@@ -413,7 +413,7 @@ export default function SimuladorOperonLac() {
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 100]} label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="transcription" name="Transcrição (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
