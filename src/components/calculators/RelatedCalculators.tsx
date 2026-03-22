@@ -34,6 +34,11 @@ const NATIVE_PATHS: Record<string, string> = {
   "adesao-oncologia": "/calculadoras/adesao-oncologia",
   "toxicidade-antineoplasicos": "/calculadoras/toxicidade-antineoplasicos",
   "ajuste-dose-oncologico": "/calculadoras/ajuste-dose-oncologico",
+  "curvas-crescimento-oms": "/calculadoras/curvas-crescimento-oms",
+  "bilirrubina-neonatal": "/calculadoras/bilirrubina-neonatal",
+  "schwartz-pediatrico": "/calculadoras/schwartz-pediatrico",
+  "pews": "/calculadoras/pews",
+  "drogas-vasoativas-pediatricas": "/calculadoras/drogas-vasoativas-pediatricas",
 };
 
 const RELATED_MAP: Record<string, string[]> = {
@@ -51,10 +56,15 @@ const RELATED_MAP: Record<string, string[]> = {
   "qsofa": ["wells-score", "rass-sedacao"],
   "vancomicina-auc": ["ajuste-dose-renal", "ckd-epi", "interacoes-cyp"],
   "insulina-basal-bolus": ["homa-ir", "findrisc", "correcao-sodio"],
-  "holliday-segar": ["dose-pediatrica", "correcao-sodio"],
+  "holliday-segar": ["dose-pediatrica", "curvas-crescimento-oms", "correcao-sodio"],
   "meld-score": ["ckd-epi", "correcao-sodio", "nutricao-parenteral"],
   "qtc-corrigido": ["interacoes-cyp", "equivalencia-antidepressivos"],
-  "dose-pediatrica": ["holliday-segar"],
+  "dose-pediatrica": ["holliday-segar", "curvas-crescimento-oms", "pews"],
+  "curvas-crescimento-oms": ["dose-pediatrica", "holliday-segar", "bilirrubina-neonatal"],
+  "bilirrubina-neonatal": ["curvas-crescimento-oms", "dose-pediatrica", "holliday-segar"],
+  "schwartz-pediatrico": ["ckd-epi", "ajuste-dose-renal", "dose-pediatrica"],
+  "pews": ["qsofa", "drogas-vasoativas-pediatricas", "dose-pediatrica"],
+  "drogas-vasoativas-pediatricas": ["pews", "holliday-segar", "dose-pediatrica"],
   "rass-sedacao": ["qsofa", "nutricao-parenteral"],
   "nutricao-parenteral": ["holliday-segar", "meld-score"],
   "interacoes-cyp": ["vancomicina-auc", "qtc-corrigido", "equivalencia-antidepressivos"],
@@ -88,6 +98,11 @@ const CALC_NAMES: Record<string, string> = {
   "adesao-oncologia": "Adesao Oncologica",
   "toxicidade-antineoplasicos": "Toxicidade Antineoplasicos",
   "ajuste-dose-oncologico": "Ajuste Dose Oncologico",
+  "curvas-crescimento-oms": "Curvas de Crescimento OMS",
+  "bilirrubina-neonatal": "Bilirrubina Neonatal (Bhutani)",
+  "schwartz-pediatrico": "TFG Pediatrica (Schwartz)",
+  "pews": "PEWS",
+  "drogas-vasoativas-pediatricas": "Drogas Vasoativas Ped.",
 };
 
 export function RelatedCalculators({ currentSlug, categoryId, relatedSlugs }: RelatedCalculatorsProps) {
