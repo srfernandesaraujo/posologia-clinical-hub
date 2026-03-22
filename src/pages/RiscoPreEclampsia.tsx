@@ -87,7 +87,7 @@ export default function RiscoPreEclampsia() {
       patientName: nomePaciente || undefined,
       date: data,
       summary: `${risco} | AAS: ${indicaAAS ? "Indicado" : "Nao indicado"} | ${nAlto} alto(s), ${nModerado} moderado(s)`,
-      details: { Risco: risco, AAS: indicaAAS, FatoresAlto: Array.from(altosChecked), FatoresModerado: Array.from(moderadosChecked) },
+      details: { Risco: risco, AAS: indicaAAS ? "Sim" : "Nao", FatoresAlto: Array.from(altosChecked).join(", "), FatoresModerado: Array.from(moderadosChecked).join(", ") },
     });
   };
 
@@ -168,7 +168,7 @@ export default function RiscoPreEclampsia() {
               <div className={`rounded-2xl border p-6 ${resultado.indicaAAS ? "border-red-500/30 bg-red-500/10" : "border-green-500/30 bg-green-500/10"}`}>
                 <h2 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
                 <p className="text-xl font-bold" style={{ color: resultado.color }}>{resultado.risco}</p>
-                <ScoreBar value={resultado.score} maxValue={10} segments={scoreSegments} label={`Score: ${resultado.score}`} />
+                <ScoreBar value={resultado.score} minValue={0} maxValue={10} segments={scoreSegments} />
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-6">

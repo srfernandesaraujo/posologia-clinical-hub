@@ -98,7 +98,7 @@ export default function BishopScore() {
       patientName: nomePaciente || undefined,
       date: data,
       summary: `Bishop Score: ${score}/13 | ${score >= 6 ? "Colo favoravel" : "Colo desfavoravel"}`,
-      details: { Score: score, Conduta: conduta, Parametros: PARAMS.map((p, i) => `${p.name}: ${values[i]}`) },
+      details: { Score: score, Conduta: conduta, Parametros: PARAMS.map((p, i) => `${p.name}: ${values[i]}`).join("; ") },
     });
   };
 
@@ -180,7 +180,7 @@ export default function BishopScore() {
               <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-6">
                 <h2 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
                 <p className="text-3xl font-bold" style={{ color: resultado.color }}>{resultado.score}/13</p>
-                <ScoreBar value={resultado.score} maxValue={13} segments={scoreSegments} label={`Bishop Score: ${resultado.score}`} />
+                <ScoreBar value={resultado.score} minValue={0} maxValue={13} segments={scoreSegments} />
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-6">
