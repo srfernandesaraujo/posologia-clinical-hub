@@ -1,100 +1,73 @@
 
 
-# Plano: Simuladores de Bioquímica
+## Plan: Implementar 5 Calculadoras Pediátricas
 
-## Visão Geral
+### Overview
+Create 5 new pediatric clinical calculators following the existing pattern (dual mode clinico/educativo, PDF export, calculation history, clinical references, related calculators).
 
-Criação de 10 simuladores de Bioquímica seguindo o padrão existente dos simuladores de Fisiologia Humana: casos built-in, suporte a casos IA (`useSimulatorCases`), gráficos Recharts interativos, integração com salas virtuais e modo exame.
+### New Calculators
 
-## Arquitetura
+| # | Calculator | Route | File |
+|---|-----------|-------|------|
+| 1 | Curvas de Crescimento OMS (Z-Score) | `/calculadoras/curvas-crescimento-oms` | `src/pages/CurvasCrescimentoOMS.tsx` |
+| 2 | Bilirrubina Neonatal (Bhutani/AAP) | `/calculadoras/bilirrubina-neonatal` | `src/pages/BilirrubinanNeonatal.tsx` |
+| 3 | TFG Pediátrica (Schwartz) | `/calculadoras/schwartz-pediatrico` | `src/pages/SchwartzPediatrico.tsx` |
+| 4 | PEWS (Pediatric Early Warning Score) | `/calculadoras/pews` | `src/pages/Pews.tsx` |
+| 5 | Drogas Vasoativas Pediátricas | `/calculadoras/drogas-vasoativas-pediatricas` | `src/pages/DrogasVasoativasPediatricas.tsx` |
 
-- Novos componentes em `src/pages/simuladores/bioquimica/`
-- Nova categoria **"Bioquímica"** no `NATIVE_SIMULATORS` de `Simuladores.tsx`
-- Rotas registradas em `App.tsx` (padrão + sala virtual)
-- Slugs adicionados em `useSimulatorCases.ts`
+### Calculator Details
 
-## Simuladores por Lotes
+**1. Curvas de Crescimento OMS (Z-Score)**
+- Inputs: sexo, idade (meses), peso (kg), comprimento/estatura (cm), perimetro cefalico (cm)
+- Calculates Z-scores using simplified LMS tables (WHO 0-5 years)
+- Recharts LineChart showing percentile curves (P3, P15, P50, P85, P97) with patient point plotted
+- Classification: magreza severa, magreza, eutrofico, sobrepeso, obesidade
+- References: WHO 2006 Growth Standards
 
-### Lote 1 (4 simuladores — Metabolismo energético e enzimologia)
+**2. Bilirrubina Neonatal (Bhutani/AAP)**
+- Inputs: bilirrubina total (mg/dL), idade do RN (horas), idade gestacional, fatores de risco
+- Nomograma de Bhutani: classifica em zonas (baixo, intermediario-baixo, intermediario-alto, alto risco)
+- Recharts AreaChart with risk zones and patient point plotted
+- Indica necessidade de fototerapia/exsanguineotransfusao baseado em AAP 2004/2022
+- References: AAP Clinical Practice Guideline, Bhutani VK et al. Pediatrics 1999
 
-1. **SimuladorCadeiaTransporteEletrons** (`cadeia-eletrons`)
-   - Visualização da membrana mitocondrial com Complexos I-IV e ATP Sintase
-   - Sliders: concentração de NADH, FADH2
-   - Botões para inibidores (rotenona, antimicina A, cianeto) e desacopladores (DNP)
-   - Outputs: gradiente de H⁺, taxa de síntese de ATP, consumo de O₂
-   - Gráfico temporal da produção de ATP e gradiente
+**3. TFG Pediátrica (Schwartz)**
+- Inputs: creatinina serica (mg/dL), altura (cm), constante k (selecao por faixa etaria)
+- Formula: TFG = k × altura(cm) / creatinina
+- Constantes: RN prematuro (0.33), RN a termo (0.45), crianca 1-12a (0.55), adolescente F (0.55), adolescente M (0.70)
+- Bedside Schwartz 2009: k=0.413 (universal)
+- RiskGauge visualization + staging KDIGO
+- References: Schwartz GJ et al. JASN 2009
 
-2. **SimuladorDissociacaoHemoglobina** (`dissociacao-hemoglobina`)
-   - Curva sigmoidal de Hb e hiperbólica de mioglobina com Recharts
-   - Sliders: pH, pCO₂, temperatura, 2,3-BPG
-   - Cálculo de P50 dinâmico com desvio da curva
-   - Casos: anemia falciforme, intoxicação por CO, exercício intenso
+**4. PEWS (Pediatric Early Warning Score)**
+- Inputs: comportamento, cardiovascular, respiratorio (0-3 pontos cada)
+- Score 0-9, com faixas: 0-2 (baixo risco), 3-4 (moderado), ≥5 (alto - acionar equipe de emergencia)
+- ScoreBar visualization with color bands
+- Recomendacoes de conduta por faixa
+- References: Monaghan A. Nursing Times 2005
 
-3. **SimuladorGlicoliseGliconeogenese** (`glicolise-gliconeogenese`)
-   - Toggle alimentado (insulina) vs jejum (glucagon)
-   - Diagrama de fluxo: glicose → piruvato vs piruvato → glicose
-   - Destaque de enzimas regulatórias (PFK-1, F1,6-bifosfatase, piruvato quinase/carboxilase)
-   - Indicadores de fosforilação/desfosforilação enzimática
+**5. Drogas Vasoativas Pediátricas**
+- Inputs: peso (kg), droga selecionada, dose desejada (mcg/kg/min), concentracao da solucao
+- Drogas: Dopamina, Dobutamina, Noradrenalina, Adrenalina, Milrinona, Nitroprussiato
+- Calcula: velocidade de infusao (mL/h), diluicao padrao, dose em mcg/min
+- Table with common dose ranges per drug
+- References: PALS/AHA Guidelines
 
-4. **SimuladorCineticaAvancada** (`cinetica-avancada`)
-   - Extensão do simulador existente com inibição **acompetitiva**
-   - Gráficos simultâneos: Michaelis-Menten + Lineweaver-Burk
-   - Sliders: [S], [E], concentração do inibidor
-   - Visualização de alterações em Km, Vmax, inclinação e interceções
+### Files to Modify
 
-### Lote 2 (3 simuladores — Metabolismo lipídico e azotado)
+1. **5 new page files** (listed above) - each ~200-250 lines following DosePediatrica/HollidaySegar pattern
+2. **`src/pages/Calculadoras.tsx`** - Add 5 entries to `NATIVE_CALCULATORS` array and slugs to `NATIVE_SLUGS`
+3. **`src/App.tsx`** - Add imports and routes for all 5 calculators (both authenticated `/calculadoras/...` routes)
+4. **`src/data/nativeSystemPrompts.ts`** - Add system prompts for admin viewer
+5. **`src/components/calculators/ClinicalReferences.tsx`** - Add reference entries for each calculator
 
-5. **SimuladorCicloUreia** (`ciclo-ureia`)
-   - Fluxograma do ciclo: ornitina → citrulina → argininossuccinato → arginina → ureia
-   - Toggle para deficiência de cada enzima (CPS I, OTC, ASS, ASL, arginase)
-   - Outputs: níveis de amónia, intermediários acumulados, ureia produzida
-   - Indicador de neurotoxicidade
-
-6. **SimuladorCascataAcidoAraquidonico** (`acido-araquidonico`)
-   - Diagrama: fosfolípido de membrana → AA → COX/LOX → prostaglandinas/tromboxanos/leucotrienos
-   - Botões farmacológicos: AINEs (ibuprofeno, aspirina), corticosteróides, inibidores LOX
-   - Outputs: níveis de PGE2, TXA2, LTB4
-   - Casos: inflamação aguda, asma, prevenção cardiovascular
-
-7. **SimuladorLipoproteinas** (`lipoproteinas`)
-   - Vias exógena (quilomícrons) e endógena (VLDL → IDL → LDL) + transporte reverso (HDL)
-   - Sliders: ingestão lipídica, atividade de LPL, expressão de receptores LDL
-   - Botões: estatinas, resinas, ezetimiba, inibidores PCSK9
-   - Outputs: níveis de LDL-c, HDL-c, triglicerídeos
-
-### Lote 3 (3 simuladores — Bioquímica celular e genética)
-
-8. **SimuladorPentosesFosfato** (`pentoses-fosfato`)
-   - Eritrócito: G6PD → NADPH → glutationa reduzida → proteção contra ROS
-   - Toggle: célula normal vs deficiência de G6PD
-   - Botões: introduzir agentes oxidantes (primaquina, favas, dapsona)
-   - Outputs: níveis de NADPH, GSH/GSSG, integridade da membrana
-   - Indicador visual de hemólise
-
-9. **SimuladorTitulacaoAminoacidos** (`titulacao-aminoacidos`)
-   - Selector de aminoácido (glicina, ácido glutâmico, lisina, histidina)
-   - Slider de volume de NaOH/HCl adicionado
-   - Curva de titulação em tempo real com indicação de pKa e pI
-   - Cálculo dinâmico de carga líquida em função do pH
-
-10. **SimuladorOperonLac** (`operon-lac`)
-    - Representação do DNA: promotor, operador, genes estruturais (lacZ, lacY, lacA)
-    - Sliders: glicose e lactose no meio
-    - Lógica: glicose alta → cAMP baixo → CAP não liga; lactose presente → alolactose → repressor inativo
-    - Output: nível de transcrição de β-galactosidase
-    - Gráfico temporal da expressão génica
-
-## Alterações em arquivos existentes
-
-- **`App.tsx`**: 20 novas rotas (10 padrão + 10 sala virtual)
-- **`Simuladores.tsx`**: 10 novas entradas em `NATIVE_SIMULATORS` com categoria "Bioquímica"
-- **`useSimulatorCases.ts`**: 10 novos slugs em `SIMULATOR_SLUGS`
-
-## Detalhes Técnicos
-
-- Cada simulador ~400-700 linhas, padrão idêntico ao `SimuladorSNA.tsx`
-- Modelos matemáticos no front-end com `useEffect`/`useMemo`
-- Gráficos Recharts (`LineChart`, `AreaChart`, `BarChart`)
-- Ícones Lucide: `Flame`, `Droplets`, `FlaskConical`, `Dna`, `Pill`, `Heart`, `Shield`, `Beaker`, `TestTube`, `Microscope`
-- 3 casos built-in por simulador com dificuldades variadas
+### Technical Pattern (per calculator)
+- Dual mode toggle (clinico/educativo)
+- Patient name + date fields
+- jsPDF export
+- `useCalculationHistory` integration via `SaveToHistoryButton`
+- `ShareToolButton` for embedding
+- `ClinicalReferences` and `RelatedCalculators` components
+- Recharts visualizations with proper axis labels
+- Responsive layout with Tailwind
 
