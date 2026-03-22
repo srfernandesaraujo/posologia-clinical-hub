@@ -94,6 +94,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Terapia Intensiva": HeartPulse,
   "Oncologia": ShieldAlert,
   "Ginecologia e Obstetrícia": Stethoscope,
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Cardiologia": "0 62% 50%",
