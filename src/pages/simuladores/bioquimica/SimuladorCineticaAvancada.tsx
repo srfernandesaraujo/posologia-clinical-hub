@@ -339,7 +339,7 @@ export default function SimuladorCineticaAvancada() {
                   <LineChart data={history}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                     <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                     <Legend />
                     <Line type="monotone" dataKey="kmApp" name="Km aparente" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />

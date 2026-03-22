@@ -314,7 +314,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
                 <BarChart data={eicosanoidData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 100]} label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -369,7 +369,7 @@ export default function SimuladorCascataAcidoAraquidonico() {
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Nível (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="pge2" name="PGE2 (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />

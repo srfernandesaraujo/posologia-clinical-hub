@@ -298,7 +298,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={enzymeBarData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                <XAxis type="number" domain={[0, 100]} label={{ value: "Atividade (%)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 {outputs.enzymes.filter(e => e.pathway === "glycolysis").length > 0 && (
@@ -318,7 +318,7 @@ export default function SimuladorGlicoliseGliconeogenese() {
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Fluxo (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="gly" name="Glicólise (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />

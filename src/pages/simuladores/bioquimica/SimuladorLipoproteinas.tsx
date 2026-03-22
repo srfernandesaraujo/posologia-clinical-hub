@@ -343,7 +343,7 @@ export default function SimuladorLipoproteinas() {
                 <BarChart data={lipidData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "Concentração (mg/dL)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Bar dataKey="value" name="Atual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -359,7 +359,7 @@ export default function SimuladorLipoproteinas() {
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={transportData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                  <XAxis type="number" label={{ value: "Nível", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                   <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="value" name="Nível" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
@@ -385,7 +385,7 @@ export default function SimuladorLipoproteinas() {
               <LineChart data={history}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Concentração (mg/dL)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Line type="monotone" dataKey="ldl" name="LDL-c (mg/dL)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
