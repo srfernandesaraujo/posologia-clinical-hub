@@ -161,6 +161,32 @@ const CALCULATOR_REFERENCES: Record<string, Reference[]> = {
     { title: "Pediatric Advanced Life Support Guidelines", source: "Circulation (AHA)", year: "2020", url: "https://doi.org/10.1161/CIR.0000000000000901" },
     { title: "Vasoactive-Inotropic Score in Pediatric Critical Care", source: "Pediatr Crit Care Med", year: "2010" },
   ],
+  "idade-gestacional": [
+    { title: "ACOG Committee Opinion: Methods for Estimating Due Date", source: "Obstet Gynecol", year: "2017", url: "https://doi.org/10.1097/AOG.0000000000002046" },
+    { title: "Ultrasound in Pregnancy (ISUOG)", source: "Ultrasound Obstet Gynecol", year: "2019" },
+    { title: "Manual FEBRASGO: Assistencia Pre-Natal", source: "FEBRASGO", year: "2023" },
+  ],
+  "ganho-peso-gestacional": [
+    { title: "IOM Weight Gain During Pregnancy: Reexamining the Guidelines", source: "National Academies Press", year: "2009", url: "https://doi.org/10.17226/12584" },
+    { title: "ACOG Practice Bulletin: Gestational Weight Gain", source: "Obstet Gynecol", year: "2021" },
+    { title: "WHO Recommendations on Antenatal Care", source: "WHO", year: "2016" },
+  ],
+  "risco-pre-eclampsia": [
+    { title: "ACOG Practice Advisory: Low-Dose Aspirin for Preeclampsia Prevention", source: "Obstet Gynecol", year: "2021", url: "https://doi.org/10.1097/AOG.0000000000004529" },
+    { title: "NICE Guideline: Hypertension in Pregnancy", source: "NICE (NG133)", year: "2019", url: "https://www.nice.org.uk/guidance/ng133" },
+    { title: "USPSTF: Aspirin Use to Prevent Preeclampsia", source: "JAMA", year: "2017" },
+  ],
+  "bishop-score": [
+    { title: "Bishop EH. Pelvic Scoring for Elective Induction", source: "Obstet Gynecol", year: "1964" },
+    { title: "ACOG Practice Bulletin: Induction of Labor", source: "Obstet Gynecol", year: "2009", url: "https://doi.org/10.1097/AOG.0b013e3181b48ef5" },
+    { title: "WHO Recommendations: Induction of Labour", source: "WHO", year: "2011" },
+  ],
+  "sulfato-magnesio": [
+    { title: "MAGPIE Trial: Magnesium Sulphate for Preeclampsia", source: "Lancet", year: "2002", url: "https://doi.org/10.1016/S0140-6736(02)09449-0" },
+    { title: "ACOG Practice Bulletin: Gestational Hypertension and Preeclampsia", source: "Obstet Gynecol", year: "2020" },
+    { title: "Zuspan FP. Treatment of Severe Preeclampsia and Eclampsia", source: "Clin Obstet Gynecol", year: "1966" },
+    { title: "Pritchard JA. Use of Magnesium Sulfate in Preeclampsia-Eclampsia", source: "J Reprod Med", year: "1979" },
+  ],
 };
 
 export function ClinicalReferences({ references }: ClinicalReferencesProps) {
