@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FlaskConical, AlertTriangle, CheckCircle2, XCircle, Activity, ArrowRight, GitCompareArrows } from "lucide-react";
+import { Loader2, FlaskConical, AlertTriangle, CheckCircle2, XCircle, Activity, ArrowRight, GitCompareArrows, Sparkles, TrendingUp, TrendingDown, Minus, Lightbulb, Beaker } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -28,6 +28,24 @@ interface AdmetResult {
   half_life_estimate: string;
   overall_score: number;
   summary: string;
+}
+
+interface ModificationAnalysis {
+  modifications_detected: Array<{
+    group: string;
+    action: "adicionado" | "removido" | "substituído";
+    position_hint: string;
+  }>;
+  property_impacts: Array<{
+    property: string;
+    direction: "melhorou" | "piorou" | "estável";
+    explanation: string;
+  }>;
+  overall_assessment: string;
+  optimization_suggestions: Array<{
+    suggestion: string;
+    expected_benefit: string;
+  }>;
 }
 
 interface InSilicoPredictionPanelProps {
@@ -124,6 +142,134 @@ function DeltaBadge({ original, modified, unit, invert }: { original: number; mo
   );
 }
 
+function DirectionIcon({ direction }: { direction: string }) {
+  if (direction === "melhorou") return <TrendingUp className="h-3.5 w-3.5 text-emerald-500 shrink-0" />;
+  if (direction === "piorou") return <TrendingDown className="h-3.5 w-3.5 text-destructive shrink-0" />;
+  return <Minus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />;
+}
+
+function ModificationAnalysisSection({ analysis, loading, onRun, canRun }: {
+  analysis: ModificationAnalysis | null;
+  loading: boolean;
+  onRun: () => void;
+  canRun: boolean;
+}) {
+  if (!canRun && !analysis) return null;
+
+  return (
+    <div className="space-y-3 border-t border-border/50 pt-3">
+      {!analysis && (
+        <Button
+          className="w-full"
+          variant="secondary"
+          size="sm"
+          onClick={onRun}
+          disabled={loading || !canRun}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-2" />
+          )}
+          Analisar Impacto das Modificações (IA)
+        </Button>
+      )}
+
+      {loading && !analysis && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Analisando modificações estruturais e seus impactos farmacológicos...
+        </div>
+      )}
+
+      {analysis && (
+        <div className="space-y-3">
+          {/* Modifications Detected */}
+          <div className="space-y-1.5">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Beaker className="h-3.5 w-3.5" />
+              Modificações Identificadas
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {analysis.modifications_detected.map((mod, i) => (
+                <Badge key={i} variant="outline" className="text-[11px] gap-1">
+                  <span className={
+                    mod.action === "adicionado" ? "text-emerald-500" :
+                    mod.action === "removido" ? "text-destructive" : "text-amber-500"
+                  }>
+                    {mod.action === "adicionado" ? "+" : mod.action === "removido" ? "−" : "↔"}
+                  </span>
+                  {mod.group}
+                  {mod.position_hint && (
+                    <span className="text-muted-foreground">({mod.position_hint})</span>
+                  )}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Property Impacts */}
+          <div className="space-y-1.5">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Activity className="h-3.5 w-3.5" />
+              Análise de Impacto por Propriedade
+            </h4>
+            <div className="space-y-2">
+              {analysis.property_impacts.map((impact, i) => (
+                <div key={i} className={`rounded-md border p-2.5 text-xs ${
+                  impact.direction === "melhorou" ? "border-emerald-500/30 bg-emerald-500/5" :
+                  impact.direction === "piorou" ? "border-destructive/30 bg-destructive/5" :
+                  "border-border/50 bg-muted/10"
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <DirectionIcon direction={impact.direction} />
+                    <span className="font-medium">{PROPERTY_LABELS[impact.property] || impact.property}</span>
+                    <Badge variant="outline" className={`text-[10px] ${
+                      impact.direction === "melhorou" ? "text-emerald-500 border-emerald-500/50" :
+                      impact.direction === "piorou" ? "text-destructive border-destructive/50" :
+                      "text-muted-foreground"
+                    }`}>
+                      {impact.direction === "melhorou" ? "Melhorou" : impact.direction === "piorou" ? "Piorou" : "Estável"}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">{impact.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Overall Assessment */}
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+            <h4 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" />
+              Avaliação Geral da Modificação
+            </h4>
+            <p className="text-xs text-foreground leading-relaxed">{analysis.overall_assessment}</p>
+          </div>
+
+          {/* Optimization Suggestions */}
+          {analysis.optimization_suggestions.length > 0 && (
+            <div className="space-y-1.5">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+                Sugestões de Otimização
+              </h4>
+              <div className="space-y-1.5">
+                {analysis.optimization_suggestions.map((sug, i) => (
+                  <div key={i} className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs">
+                    <p className="font-medium text-foreground">{sug.suggestion}</p>
+                    <p className="text-muted-foreground mt-0.5">Benefício esperado: {sug.expected_benefit}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, disabled, onLipinskiCalculated }: InSilicoPredictionPanelProps) {
   const { user } = useAuth();
   const [lipinski, setLipinski] = useState<LipinskiData | null>(null);
@@ -132,15 +278,17 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
   const [admet, setAdmet] = useState<AdmetResult | null>(null);
   const [originalAdmet, setOriginalAdmet] = useState<AdmetResult | null>(null);
   const [admetLoading, setAdmetLoading] = useState(false);
+  const [modAnalysis, setModAnalysis] = useState<ModificationAnalysis | null>(null);
+  const [modAnalysisLoading, setModAnalysisLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const isModified = useMemo(() => originalSmiles && smiles && originalSmiles !== smiles, [originalSmiles, smiles]);
 
-  // Fetch Lipinski for current SMILES
   const fetchLipinski = useCallback(async (smi: string) => {
     setLipinskiLoading(true);
     setLipinski(null);
     setAdmet(null);
+    setModAnalysis(null);
     try {
       const data = await fetchLipinskiFromPubChem(smi);
       setLipinski(data);
@@ -153,7 +301,6 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
     }
   }, [onLipinskiCalculated]);
 
-  // Fetch Lipinski for original SMILES when it changes
   useEffect(() => {
     if (!originalSmiles) { setOriginalLipinski(null); return; }
     fetchLipinskiFromPubChem(originalSmiles).then(setOriginalLipinski);
@@ -171,8 +318,8 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
 
   const runAdmet = async () => {
     setAdmetLoading(true);
+    setModAnalysis(null);
     try {
-      // If modified, run both in parallel
       if (isModified && originalSmiles) {
         const [modifiedRes, originalRes] = await Promise.all([
           supabase.functions.invoke("predict-admet", { body: { smiles, compoundName: `${compoundName} (modificado)`, userId: user?.id } }),
@@ -201,9 +348,33 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
     }
   };
 
-  // Reset original ADMET when original smiles changes
+  const runModificationAnalysis = async () => {
+    if (!originalSmiles || !admet || !originalAdmet) return;
+    setModAnalysisLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-modification", {
+        body: {
+          originalSmiles,
+          modifiedSmiles: smiles,
+          compoundName,
+          originalAdmet,
+          modifiedAdmet: admet,
+          userId: user?.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setModAnalysis(data as ModificationAnalysis);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro na análise de modificações");
+    } finally {
+      setModAnalysisLoading(false);
+    }
+  };
+
   useEffect(() => {
     setOriginalAdmet(null);
+    setModAnalysis(null);
   }, [originalSmiles]);
 
   return (
@@ -231,7 +402,6 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
           {lipinski ? (
             <>
               {isModified && originalLipinski ? (
-                /* Side-by-side Lipinski comparison */
                 <div className="space-y-2">
                   <div className="grid grid-cols-[1fr_auto_1fr] gap-2 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">
                     <span>Original</span>
@@ -272,7 +442,6 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
                   </div>
                 </div>
               ) : (
-                /* Single Lipinski view */
                 <>
                   <div className="grid grid-cols-2 gap-2">
                     <LipinskiIndicator value={lipinski.mw} max={500} label="MW ≤ 500" unit="g/mol" />
@@ -321,7 +490,6 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
         {admet && (
           <div className="space-y-3">
             {isModified && originalAdmet ? (
-              /* Side-by-side ADMET comparison */
               <>
                 <div className="grid grid-cols-[1fr_auto_1fr] gap-2 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
                   <div className="flex items-center justify-between">
@@ -380,9 +548,16 @@ export function InSilicoPredictionPanel({ smiles, originalSmiles, compoundName, 
                     <div>Meia-vida: <span className="font-medium text-foreground">{admet.half_life_estimate}</span></div>
                   </div>
                 )}
+
+                {/* Modification Impact Analysis */}
+                <ModificationAnalysisSection
+                  analysis={modAnalysis}
+                  loading={modAnalysisLoading}
+                  onRun={runModificationAnalysis}
+                  canRun={!!originalAdmet && !!admet && !!originalSmiles}
+                />
               </>
             ) : (
-              /* Single ADMET view */
               <>
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resultados ADMET</h4>
