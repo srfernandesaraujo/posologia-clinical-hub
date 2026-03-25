@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
-  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye,
+  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarContactForm } from "@/components/SidebarContactForm";
 import { OracleAgent } from "@/components/OracleAgent";
 import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
+import { PipelineModal } from "@/components/PipelineModal";
+import { useSystemUpdates } from "@/hooks/useSystemUpdates";
 
 export function AppLayout() {
   useCookieAnalytics();
