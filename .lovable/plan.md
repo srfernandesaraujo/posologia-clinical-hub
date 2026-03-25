@@ -1,56 +1,76 @@
 
 
-## Calculadoras de Ginecologia e Obstetrícia — Proposta
+## Análise: Elevar o Laboratório de Desenvolvimento de Fármacos ao Nível de Pesquisa Científica
 
-### Análise de Mercado
+### O que existe hoje
 
-A maioria dos apps médicos brasileiros oferece apenas a Idade Gestacional e a Data Provável do Parto. Há uma lacuna enorme em ferramentas integradas que cubram o pré-natal completo, rastreio de risco e manejo clínico obstétrico. Isso representa uma oportunidade de diferencial significativo.
+O laboratório atual possui 5 módulos em pipeline linear:
+1. **Validação do Alvo** — Seleção de proteínas via UniProt/AlphaFold com visualização 3D
+2. **Design do Protótipo** — Sliders de propriedades (MW, LogP, HBD, HBA) + input SMILES com Lipinski
+3. **Docking & ADME** — Simulação rápida com cálculos determinísticos de ΔG, Ki, radar ADME
+4. **Ensaio Clínico** — Curva Kaplan-Meier simplificada, variação farmacogenética
+5. **Mini-Relatório** — Texto livre (hipótese, resultados, conclusão) + PDF
 
-### Calculadoras Propostas (por prioridade)
+### Limitações para uso em pesquisa real
 
-**Tier 1 — Uso Diário (alta frequência, impacto imediato)**
+- Propriedades calculadas internamente com fórmulas simplificadas (não consulta dados reais)
+- Sem integração com bancos de dados reais de moléculas (PubChem, ChEMBL, DrugBank)
+- Sem capacidade de comparar múltiplos candidatos lado a lado
+- Sem predição ADMET baseada em IA (a edge function `predict-admet` existe mas não é usada)
+- Sem exportação de dados estruturados (CSV/Excel) para análise externa
+- Sem histórico de experimentos salvos no banco
+- Sem análise SAR (relação estrutura-atividade) entre compostos testados
 
-| Calculadora | Descrição | Diferencial |
+### Melhorias Propostas (por impacto)
+
+**Tier 1 — Dados Reais e Publicáveis**
+
+| Funcionalidade | Descrição | Impacto |
 |---|---|---|
-| **Idade Gestacional + DPP** | Calcula IG por DUM ou USG, data provável do parto (Naegele), idade gestacional corrigida | Base essencial — mas com visualização de timeline gestacional por trimestre (Recharts) |
-| **Ganho de Peso Gestacional (IOM)** | Ganho recomendado por IMC pré-gestacional e IG atual, com gráfico de faixas ideais | Poucos apps mostram o gráfico com a curva da paciente plotada |
-| **Risco Pré-Eclâmpsia (ACOG/NICE)** | Score baseado em fatores maternos (idade, IMC, história, PA, doppler uterino) | Calculadora rara em português; indica uso de AAS profilático |
+| **Busca PubChem integrada ao M2** | Buscar compostos reais por nome/SMILES no PubChem, importando MW, LogP, TPSA, HBD, HBA automaticamente em vez de ajustar manualmente | Elimina dados fictícios; propriedades reais e citáveis |
+| **Predição ADMET com IA (M3)** | Conectar o M3 à edge function `predict-admet` já existente para obter predições baseadas em IA (absorção, hepatotoxicidade, mutagenicidade, inibição CYP, penetração BHE, meia-vida) | Predições sofisticadas em vez de fórmulas determinísticas |
+| **Consulta ChEMBL para bioatividade** | Buscar dados de bioatividade conhecida (IC50, EC50, Ki) de compostos reais contra o alvo selecionado no M1 | Contextualiza o protótipo com a literatura existente |
 
-**Tier 2 — Valor Clínico Diferencial**
+**Tier 2 — Fluxo de Pesquisa Profissional**
 
-| Calculadora | Descrição | Diferencial |
+| Funcionalidade | Descrição | Impacto |
 |---|---|---|
-| **Bishop Score** | Avalia amadurecimento cervical para indução do parto (5 parâmetros) | Simples mas muito usado; poucos apps integram conduta por faixa |
-| **Perfil Biofísico Fetal (PBF)** | Score 0-10 baseado em 5 parâmetros ultrassonográficos + CTG | Com recomendações de conduta por pontuação |
-| **Rastreio de Diabetes Gestacional** | Interpreta TOTG 75g (critérios IADPSG/OMS), classifica resultado | Inclui fluxograma de conduta pós-diagnóstico |
+| **Biblioteca de Candidatos (Compound Library)** | Painel para adicionar múltiplos compostos, compará-los lado a lado em tabela com sorting por propriedade (MW, LogP, ADMET score, ΔG) | Permite screening virtual de séries de compostos |
+| **Análise SAR automatizada** | Ao ter 3+ compostos na biblioteca, gerar automaticamente gráficos de correlação (LogP vs Absorção, MW vs ΔG) e identificar tendências | Gera insights publicáveis de relação estrutura-atividade |
+| **Histórico de Experimentos (Supabase)** | Salvar cada experimento completo (alvo, compostos, resultados ADMET, docking, ensaio clínico) no banco de dados com timestamp | Permite retomar pesquisas e construir datasets |
 
-**Tier 3 — Nicho Premium (grande diferencial de mercado)**
+**Tier 3 — Diferencial de Mercado Único**
 
-| Calculadora | Descrição | Diferencial |
+| Funcionalidade | Descrição | Impacto |
 |---|---|---|
-| **Risco de Parto Prematuro (QR Fibronectina + Colo)** | Integra comprimento cervical + fibronectina fetal para estratificação de risco | Praticamente inexistente em apps brasileiros |
-| **Dosagem de Sulfato de Magnésio** | Calcula dose de ataque e manutenção (Zuspan vs Pritchard), alerta de toxicidade | Ferramenta crítica para eclâmpsia/pré-eclâmpsia grave |
-| **Vitalidade Fetal — Índice de Líquido Amniótico** | Classifica ILA e maior bolsão, com conduta por faixa (oligoâmnio/polidrâmnio) | Visual gauge com zonas de risco |
+| **Exportação Científica (CSV + PDF estruturado)** | Exportar toda a biblioteca de compostos + resultados em CSV para análise em R/Python, e PDF formatado como relatório de pesquisa (com tabelas, gráficos, referências) | Resultados prontos para publicação/TCC |
+| **Módulo de Otimização Hit-to-Lead** | Painel com sugestões de modificações estruturais baseadas em IA: "Adicionar grupo hidroxila na posição X para melhorar absorção" | Simula o processo real de otimização medicinal |
+| **Score de Druglikeness Composto** | Score unificado (0-100) combinando Lipinski, Veber (TPSA, rotatable bonds), PAINS alerts e Lead-likeness em um dashboard visual | Avaliação multi-critério como em softwares profissionais |
 
-### Recomendação de Implementação (5 calculadoras)
+### Recomendação de Implementação (5 funcionalidades prioritárias)
 
-1. **Idade Gestacional + DPP** — base obrigatória, timeline visual
-2. **Ganho de Peso Gestacional (IOM)** — gráfico de curva com ponto da paciente
-3. **Risco de Pré-Eclâmpsia** — diferencial competitivo forte
-4. **Bishop Score** — uso clínico frequente em centros obstétricos
-5. **Dosagem de Sulfato de Magnésio** — ferramenta crítica de emergência, quase inexistente
+1. **Busca PubChem no M2** — Importar propriedades reais de compostos conhecidos
+2. **Predição ADMET com IA no M3** — Usar a edge function existente `predict-admet`
+3. **Biblioteca de Candidatos** — Tabela comparativa de múltiplos compostos
+4. **Exportação CSV + PDF estruturado** — Dados exportáveis para análise e publicação
+5. **Score de Druglikeness Composto** — Dashboard visual multi-critério (Lipinski + Veber + PAINS)
 
-### Padrão Técnico
+### Detalhes Técnicos
 
-Cada calculadora seguirá o padrão existente:
-- Dual mode (clínico/educativo), PDF export, histórico
-- Visualizações Recharts com labels nos eixos
-- `ClinicalReferences` com guidelines (ACOG, NICE, FIGO, FEBRASGO)
-- `RelatedCalculators` cruzando as 5 entre si
-- Categoria "Ginecologia e Obstetrícia" no catálogo com ícone temático
+**Arquivos novos:**
+- `src/components/lab-virtual/CompoundLibraryPanel.tsx` — Tabela de compostos com sorting/filtering
+- `src/components/lab-virtual/DruglikenessScorePanel.tsx` — Dashboard visual multi-critério
 
-### Arquivos
+**Arquivos modificados:**
+- `DrugDesignPanel.tsx` — Adicionar busca PubChem (API PUG REST) para importar propriedades reais
+- `DockingADMEPanel.tsx` — Integrar chamada à edge function `predict-admet` na aba Docking
+- `BancadaFarmacos.tsx` — Adicionar estado de compound library, novo módulo, exportação CSV
+- `LabReportPanel.tsx` — Enriquecer PDF com tabelas de dados e gráficos
 
-- **5 novos**: `IdadeGestacional.tsx`, `GanhoPesoGestacional.tsx`, `RiscoPreEclampsia.tsx`, `BishopScore.tsx`, `SulfatoMagnesio.tsx`
-- **Editados**: `Calculadoras.tsx` (categoria + 5 entradas), `App.tsx` (rotas), `ClinicalReferences.tsx`, `RelatedCalculators.tsx`
+**APIs externas (já usadas no projeto):**
+- PubChem PUG REST (já usado na bancada de Modelagem Molecular)
+- Edge function `predict-admet` (já deployada, não conectada ao lab)
+
+**Banco de dados:**
+- Nova tabela `lab_experiments` para persistir sessões de pesquisa (opcional, pode ser implementada depois)
 
