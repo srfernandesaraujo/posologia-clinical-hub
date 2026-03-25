@@ -163,6 +163,7 @@ import BancadaSimulacaoRealistica from "./pages/lab-virtual/BancadaSimulacaoReal
 import BancadaPericiaForense from "./pages/lab-virtual/BancadaPericiaForense";
 import BancadaModelagemMolecular from "./pages/lab-virtual/BancadaModelagemMolecular";
 import AgenteFeedback from "./pages/AgenteFeedback";
+import PipelinePage from "./pages/PipelinePage";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
@@ -477,6 +478,7 @@ const App = () => (
             {/* Admin routes */}
             <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/pipeline" element={<PipelinePage />} />
             </Route>
 
             {/* Smart Planos route - renders with sidebar for logged-in users */}
