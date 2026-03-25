@@ -36,7 +36,7 @@ export function PubChemSearchBar({ onImport }: PubChemSearchBarProps) {
     setResult(null);
 
     try {
-      const propUrl = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(query.trim())}/property/CanonicalSMILES,IsomericSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula,RotatableBondCount/JSON`;
+      const propUrl = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(query.trim())}/property/SMILES,CanonicalSMILES,IsomericSMILES,ConnectivitySMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula,RotatableBondCount/JSON`;
       const res = await fetch(propUrl);
       if (!res.ok) throw new Error("Composto não encontrado no PubChem");
 
@@ -44,7 +44,8 @@ export function PubChemSearchBar({ onImport }: PubChemSearchBarProps) {
       const props = json.PropertyTable?.Properties?.[0];
       if (!props) throw new Error("Dados não disponíveis");
 
-      const smiles = props.CanonicalSMILES || props.IsomericSMILES || "";
+      const smiles = [props.CanonicalSMILES, props.IsomericSMILES, props.SMILES, props.ConnectivitySMILES]
+        .find((v) => typeof v === "string" && v.trim().length > 0)?.trim() || "";
       if (!smiles) throw new Error("SMILES não disponível");
 
       const compound: PubChemCompound = {
