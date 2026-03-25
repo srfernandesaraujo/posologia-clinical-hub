@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FlaskConical, Info, AlertTriangle, Beaker, Atom } from "lucide-react";
+import { PubChemSearchBar, type PubChemCompound } from "./PubChemSearchBar";
 
 export interface DrugProperties {
   mw: number;
@@ -21,6 +22,7 @@ interface DrugDesignPanelProps {
   onChange: (props: DrugProperties) => void;
   activeTab: "sliders" | "smiles";
   onTabChange: (tab: "sliders" | "smiles") => void;
+  onPubChemImport?: (compound: PubChemCompound) => void;
 }
 
 const SMILES_EXAMPLES = [
@@ -195,7 +197,12 @@ function SmilesTab({ properties, onChange }: { properties: DrugProperties; onCha
   );
 }
 
-export function DrugDesignPanel({ properties, onChange, activeTab, onTabChange }: DrugDesignPanelProps) {
+export function DrugDesignPanel({ properties, onChange, activeTab, onTabChange, onPubChemImport }: DrugDesignPanelProps) {
+  const handlePubChemImport = (props: DrugProperties, compound: PubChemCompound) => {
+    onChange(props);
+    onPubChemImport?.(compound);
+  };
+
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3">
@@ -204,7 +211,8 @@ export function DrugDesignPanel({ properties, onChange, activeTab, onTabChange }
           Módulo 2 — Design do Protótipo
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <PubChemSearchBar onImport={handlePubChemImport} />
         <Tabs value={activeTab} onValueChange={(v) => onTabChange(v as "sliders" | "smiles")} className="w-full">
           <TabsList className="mb-4 w-full">
             <TabsTrigger value="sliders" className="flex-1">Sliders</TabsTrigger>
