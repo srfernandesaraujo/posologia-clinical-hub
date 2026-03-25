@@ -57,9 +57,9 @@ const PROPERTY_LABELS: Record<string, string> = {
 };
 
 function RiskBadge({ risk }: { risk: string }) {
-  if (risk === "low") return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-[10px] px-1.5 py-0">Baixo</Badge>;
-  if (risk === "moderate") return <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] px-1.5 py-0">Moderado</Badge>;
-  return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Alto</Badge>;
+  if (risk === "low") return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-[10px] px-1.5 py-0">Risco Baixo</Badge>;
+  if (risk === "moderate") return <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] px-1.5 py-0">Risco Moderado</Badge>;
+  return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Risco Alto</Badge>;
 }
 
 function LipinskiIndicator({ value, max, label, unit }: { value: number | null; max: number; label: string; unit: string }) {
