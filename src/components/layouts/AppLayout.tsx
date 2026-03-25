@@ -147,6 +147,7 @@ export function AppLayout() {
         </main>
       </div>
       <OracleAgent />
+      {isAdmin && <PipelineModal />}
     </div>
   );
 }
