@@ -13,7 +13,7 @@ import { BioactivityPanel } from "@/components/lab-virtual/molmod/BioactivityPan
 import { MolModCompoundLibrary, type MolModCompoundEntry } from "@/components/lab-virtual/molmod/MolModCompoundLibrary";
 import { DruglikenessPanel } from "@/components/lab-virtual/molmod/DruglikenessPanel";
 import { SimilaritySearchPanel } from "@/components/lab-virtual/molmod/SimilaritySearchPanel";
-import { ProteinTargetPanel } from "@/components/lab-virtual/molmod/ProteinTargetPanel";
+import { DockingComparativoPanel } from "@/components/lab-virtual/molmod/DockingComparativoPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -30,6 +30,7 @@ export default function BancadaModelagemMolecular() {
   const [library, setLibrary] = useState<MolModCompoundEntry[]>([]);
   const [lastAdmetScore, setLastAdmetScore] = useState<number | undefined>();
   const [lastLipinskiViolations, setLastLipinskiViolations] = useState<number | undefined>();
+  const [analogCompound, setAnalogCompound] = useState<CompoundData | null>(null);
 
   const handleCompoundSelected = (data: CompoundData) => {
     setCompound(data);
@@ -213,10 +214,16 @@ export default function BancadaModelagemMolecular() {
           compoundName={compound?.name}
           disabled={!currentSmiles}
           onAddToLibrary={(c) => addToLibrary(c)}
+          onSelectForDocking={(c) => setAnalogCompound(c)}
         />
-
-        <ProteinTargetPanel />
       </div>
+
+      {/* Docking Comparativo — full width */}
+      <DockingComparativoPanel
+        originalCompound={compound}
+        modifiedSmiles={currentSmiles}
+        analogCompound={analogCompound}
+      />
 
       {/* M5 — Report */}
       <LabReportPanel

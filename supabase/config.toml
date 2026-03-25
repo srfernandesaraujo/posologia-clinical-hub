@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.analyze-modification]
 verify_jwt = false
+
+[functions.docking-comparativo]
+verify_jwt = false
