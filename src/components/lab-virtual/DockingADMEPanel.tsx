@@ -6,13 +6,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
-import { Zap, Info, AlertTriangle, Activity } from "lucide-react";
+import { Zap, Info, AlertTriangle, Activity, Brain, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { DrugProperties } from "./DrugDesignPanel";
 
 interface DockingADMEPanelProps {
   drugProperties: DrugProperties;
   hasTarget: boolean;
   designMode: "sliders" | "smiles";
+  smiles?: string;
+  compoundName?: string;
+  onADMETResult?: (score: number) => void;
 }
 
 /* ─── Shared computation helpers ─── */
@@ -322,10 +327,137 @@ function DockingTab({ drugProperties, hasTarget }: { drugProperties: DrugPropert
   );
 }
 
+/* ─── AI ADMET tab ─── */
+
+interface ADMETPrediction {
+  property: string;
+  score: number;
+  risk: "low" | "moderate" | "high";
+  explanation: string;
+}
+
+interface AIADMETResult {
+  predictions: ADMETPrediction[];
+  half_life_estimate: string;
+  overall_score: number;
+  summary: string;
+}
+
+function AIADMETTab({ smiles, compoundName, onResult }: { smiles?: string; compoundName?: string; onResult?: (score: number) => void }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AIADMETResult | null>(null);
+
+  const handlePredict = async () => {
+    if (!smiles) {
+      toast.error("Insira um SMILES no Módulo 2 para utilizar a predição por IA.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("predict-admet", {
+        body: { smiles, compoundName },
+      });
+      if (error) throw error;
+      setResult(data as AIADMETResult);
+      onResult?.(data.overall_score);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro na predição ADMET");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const riskColors: Record<string, string> = {
+    low: "bg-emerald-600",
+    moderate: "bg-yellow-600",
+    high: "bg-destructive",
+  };
+
+  const riskLabels: Record<string, string> = {
+    low: "Baixo",
+    moderate: "Moderado",
+    high: "Alto",
+  };
+
+  const propertyLabels: Record<string, string> = {
+    absorption: "Absorção",
+    solubility: "Solubilidade",
+    hepatotoxicity: "Hepatotoxicidade",
+    mutagenicity: "Mutagenicidade",
+    bbb_penetration: "Penetração BHE",
+    plasma_binding: "Lig. Proteínas",
+    cyp_inhibition: "Inibição CYP",
+  };
+
+  const radarData = result?.predictions.map(p => ({
+    property: propertyLabels[p.property] || p.property,
+    value: p.score,
+    fullMark: 100,
+  })) || [];
+
+  return (
+    <div className="space-y-4">
+      <Button onClick={handlePredict} disabled={loading || !smiles} className="w-full h-12 text-base font-semibold" size="lg">
+        {loading ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Brain className="h-5 w-5 mr-2" />}
+        {loading ? "Analisando com IA..." : "Predição ADMET com IA"}
+      </Button>
+      {!smiles && <p className="text-xs text-muted-foreground">Busque um composto no PubChem ou insira um SMILES no Módulo 2 para habilitar.</p>}
+
+      {result && (
+        <>
+          {/* Overall score */}
+          <div className="text-center p-4 rounded-lg border border-border bg-background">
+            <span className={`text-3xl font-bold font-mono ${result.overall_score >= 60 ? "text-emerald-400" : result.overall_score >= 40 ? "text-yellow-400" : "text-destructive"}`}>
+              {result.overall_score}
+            </span>
+            <span className="text-lg text-muted-foreground">/100</span>
+            <p className="text-xs text-muted-foreground mt-1">Drug-likeness Score (IA)</p>
+            {result.half_life_estimate && (
+              <Badge variant="outline" className="mt-2 text-xs">Meia-vida estimada: {result.half_life_estimate}</Badge>
+            )}
+          </div>
+
+          {/* Radar */}
+          <div className="h-[260px] rounded-lg border border-border bg-background p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis dataKey="property" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+                <Radar name="ADMET-IA" dataKey="value" stroke="hsl(262, 80%, 55%)" fill="hsl(262, 80%, 55%)" fillOpacity={0.25} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Per-property details */}
+          <div className="space-y-2">
+            {result.predictions.map(p => (
+              <div key={p.property} className="flex items-center gap-2 rounded-md border border-border p-2">
+                <Badge className={`text-[10px] ${riskColors[p.risk]}`}>{riskLabels[p.risk]}</Badge>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-medium">{propertyLabels[p.property] || p.property}</span>
+                  <span className="text-xs text-muted-foreground ml-2">({p.score}%)</span>
+                  <p className="text-[11px] text-muted-foreground truncate">{p.explanation}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <Alert className="border-primary/30 bg-primary/5">
+            <Brain className="h-4 w-4" />
+            <AlertDescription className="text-xs">{result.summary}</AlertDescription>
+          </Alert>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main component ─── */
 
-export function DockingADMEPanel({ drugProperties, hasTarget, designMode }: DockingADMEPanelProps) {
-  const [localTab, setLocalTab] = useState<"rapido" | "docking">(designMode === "smiles" ? "docking" : "rapido");
+export function DockingADMEPanel({ drugProperties, hasTarget, designMode, smiles, compoundName, onADMETResult }: DockingADMEPanelProps) {
+  const [localTab, setLocalTab] = useState<"rapido" | "docking" | "ai-admet">(designMode === "smiles" ? "docking" : "rapido");
 
   // Sync when designMode changes from parent
   useEffect(() => {
@@ -341,16 +473,22 @@ export function DockingADMEPanel({ drugProperties, hasTarget, designMode }: Dock
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={localTab} onValueChange={(v) => setLocalTab(v as "rapido" | "docking")} className="w-full">
+        <Tabs value={localTab} onValueChange={(v) => setLocalTab(v as any)} className="w-full">
           <TabsList className="mb-4 w-full">
             <TabsTrigger value="rapido" className="flex-1">Rápido</TabsTrigger>
             <TabsTrigger value="docking" className="flex-1">Docking</TabsTrigger>
+            <TabsTrigger value="ai-admet" className="flex-1">
+              <Brain className="h-3.5 w-3.5 mr-1" /> IA ADMET
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="rapido">
             <RapidoTab drugProperties={drugProperties} hasTarget={hasTarget} />
           </TabsContent>
           <TabsContent value="docking">
             <DockingTab drugProperties={drugProperties} hasTarget={hasTarget} />
+          </TabsContent>
+          <TabsContent value="ai-admet">
+            <AIADMETTab smiles={smiles} compoundName={compoundName} onResult={onADMETResult} />
           </TabsContent>
         </Tabs>
       </CardContent>
