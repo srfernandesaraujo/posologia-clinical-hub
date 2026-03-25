@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, GitCompare, Plus } from "lucide-react";
+import { Loader2, GitCompare, Plus, Target } from "lucide-react";
 import { toast } from "sonner";
 import type { CompoundData } from "./CompoundSearchPanel";
 
@@ -24,11 +24,12 @@ interface SimilaritySearchPanelProps {
   compoundName?: string;
   disabled?: boolean;
   onAddToLibrary: (compound: CompoundData) => void;
+  onSelectForDocking?: (compound: CompoundData) => void;
 }
 
 const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
 
-export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToLibrary }: SimilaritySearchPanelProps) {
+export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToLibrary, onSelectForDocking }: SimilaritySearchPanelProps) {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SimilarCompound[]>([]);
   const [threshold, setThreshold] = useState(80);
@@ -170,9 +171,16 @@ export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToL
                     <span>TPSA: {c.tpsa.toFixed(1)}</span>
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" className="h-7 text-xs shrink-0" onClick={() => handleAdd(c)}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Biblioteca
-                </Button>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleAdd(c)}>
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Biblioteca
+                  </Button>
+                  {onSelectForDocking && (
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-primary" onClick={() => onSelectForDocking({ cid: c.cid, name: c.name, smiles: c.smiles, mw: c.mw, xLogP: c.xLogP, hbd: c.hbd, hba: c.hba, tpsa: c.tpsa, formula: c.formula })}>
+                      <Target className="h-3.5 w-3.5 mr-1" /> Docking
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
