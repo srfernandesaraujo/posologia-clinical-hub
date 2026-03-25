@@ -298,8 +298,14 @@ export default function PipelinePage() {
       {isLoading ? (
         <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-muted-foreground space-y-3">
           <p className="text-sm">Nenhum item encontrado nesta aba.</p>
+          {updates.length === 0 && (
+            <Button variant="outline" size="sm" onClick={handleSeedData} disabled={seeding}>
+              {seeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Rocket className="h-4 w-4 mr-2" />}
+              Carregar Histórico Retroativo ({RETROACTIVE_ENTRIES.length} entradas)
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
