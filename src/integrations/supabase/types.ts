@@ -540,6 +540,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_updates: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          implemented_at: string | null
+          priority: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          implemented_at?: string | null
+          priority?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          implemented_at?: string | null
+          priority?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       tool_reviews: {
         Row: {
           comment: string | null
