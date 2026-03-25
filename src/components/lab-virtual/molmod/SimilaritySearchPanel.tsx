@@ -41,13 +41,33 @@ export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToL
     setResults([]);
 
     try {
-      // PubChem 2D similarity search
-      const url = `${PUBCHEM_BASE}/compound/fastsimilarity_2d/smiles/${encodeURIComponent(smiles)}/property/CID,Title,CanonicalSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON?Threshold=${threshold}&MaxRecords=10`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Busca de similaridade falhou");
+      // Step 1: POST SMILES to get CID list via fastsimilarity_2d
+      const listRes = await fetch(
+        `${PUBCHEM_BASE}/compound/fastsimilarity_2d/smiles/cids/JSON?Threshold=${threshold}&MaxRecords=10`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `smiles=${encodeURIComponent(smiles)}`,
+        }
+      );
+      if (!listRes.ok) throw new Error("Busca de similaridade falhou");
 
-      const json = await res.json();
-      const props = json.PropertyTable?.Properties || [];
+      const listJson = await listRes.json();
+      const cids: number[] = listJson.IdentifierList?.CID || [];
+      if (cids.length === 0) {
+        setResults([]);
+        toast.info("Nenhum análogo encontrado com esse limiar de similaridade");
+        return;
+      }
+
+      // Step 2: Fetch properties for found CIDs
+      const propRes = await fetch(
+        `${PUBCHEM_BASE}/compound/cid/${cids.join(",")}/property/CID,Title,CanonicalSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON`
+      );
+      if (!propRes.ok) throw new Error("Erro ao buscar propriedades dos análogos");
+
+      const propJson = await propRes.json();
+      const props = propJson.PropertyTable?.Properties || [];
 
       const compounds: SimilarCompound[] = props
         .filter((p: any) => p.CanonicalSMILES)
