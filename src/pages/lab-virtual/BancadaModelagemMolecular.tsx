@@ -188,6 +188,7 @@ export default function BancadaModelagemMolecular() {
 
         <InSilicoPredictionPanel
           smiles={currentSmiles}
+          originalSmiles={compound?.smiles}
           compoundName={compound?.name}
           disabled={!currentSmiles}
           onLipinskiCalculated={handleLipinskiCalculated}
