@@ -46,8 +46,11 @@ export function AppLayout() {
     { label: t("nav.gamification"), to: "/gamificacao", icon: Trophy },
   ];
 
+  const { pendingIdeas } = useSystemUpdates();
+
   const adminItems = [
     { label: t("nav.admin"), to: "/admin", icon: Shield },
+    { label: "Pipeline", to: "/admin/pipeline", icon: Rocket, badge: pendingIdeas.length > 0 ? pendingIdeas.length : undefined },
   ];
 
   const allItems = [
@@ -68,13 +71,16 @@ export function AppLayout() {
       onClick={onClick}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-        location.pathname.startsWith(item.to)
+        location.pathname.startsWith(item.to) && (item.to !== "/admin" || location.pathname === "/admin")
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
       <item.icon className="h-4 w-4" />
       <span className="flex-1">{item.label}</span>
+      {item.badge && (
+        <Badge variant="destructive" className="text-[9px] h-4 min-w-[16px] px-1 justify-center">{item.badge}</Badge>
+      )}
       {item.premium && !isPremium && (
         <Lock className="h-3 w-3 text-muted-foreground/50" />
       )}
