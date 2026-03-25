@@ -49,6 +49,33 @@ const emptyForm: Omit<SystemUpdateInsert, "created_by"> = {
   implemented_at: null,
 };
 
+const RETROACTIVE_ENTRIES: Omit<SystemUpdateInsert, "created_by">[] = [
+  { type: "update", status: "done", title: "Calculadoras Clínicas Base", description: "20+ calculadoras: Risco Cardiovascular, CKD-EPI, Wells Score, Q-SOFA, HOMA-IR, FINDRISC, Vancomicina AUC, etc.", category: "Calculadoras", priority: "critical", version: "1.0.0", implemented_at: "2025-01-15T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Farmácia Clínica", description: "PRM, Antimicrobianos, TDM, Acompanhamento, Insulina, Bomba de Infusão, Desmame Benzo e Interações", category: "Simuladores", priority: "critical", version: "1.1.0", implemented_at: "2025-02-01T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Fisiologia", description: "10 simuladores: SNA, Eletrofisiologia, Depuração Renal, Equilíbrio Ácido-Base, Regulação Glicêmica, Eixo HPA, Cinética Enzimática, etc.", category: "Simuladores", priority: "critical", version: "1.2.0", implemented_at: "2025-02-15T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Bioquímica", description: "10 simuladores: Cadeia de Elétrons, Hemoglobina, Glicólise, Ciclo da Ureia, Ácido Araquidônico, Lipoproteínas, etc.", category: "Simuladores", priority: "high", version: "1.3.0", implemented_at: "2025-02-20T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Farmacologia", description: "9 simuladores: Dose-Resposta, Transdução, Janela Terapêutica, Vias Administração, Bloqueio Neuromuscular, etc.", category: "Simuladores", priority: "high", version: "1.4.0", implemented_at: "2025-03-01T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Farmacotécnica", description: "8 simuladores: Estabilidade, Liberação, Diluição, Reologia, HLB, Granulometria, Compressão e Tampão", category: "Simuladores", priority: "high", version: "1.5.0", implemented_at: "2025-03-05T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Química Farmacêutica", description: "8 simuladores: SAR, Lipinski, Bioisosterismo, Metabolismo, Docking, Quiralidade, pKa e QSAR", category: "Simuladores", priority: "high", version: "1.6.0", implemented_at: "2025-03-08T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Docência", description: "7 simuladores: Feedback Formativo, Questões, Condução de Caso, Planejamento, Gestão de Sala, Rubrica e Preceptoria", category: "Simuladores", priority: "medium", version: "1.7.0", implemented_at: "2025-03-10T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Odontologia", description: "8 simuladores: Odontograma, Endodontia, Periodontograma, Anestesiologia, Cefalometria, Radiografia, Farmacologia e Cirurgia", category: "Simuladores", priority: "medium", version: "1.8.0", implemented_at: "2025-03-12T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Fisioterapia", description: "8 simuladores: Goniometria, Postura, Força Muscular, Dermátomos, Respiratório, Eletroterapia, Testes Ortopédicos e Berg", category: "Simuladores", priority: "medium", version: "1.9.0", implemented_at: "2025-03-14T10:00:00Z" },
+  { type: "update", status: "done", title: "Simuladores de Nutrição", description: "8 simuladores: Avaliação, Triagem, Necessidades Energéticas, TNE, TNP, Disfagia, Renal e Materno-Infantil", category: "Simuladores", priority: "medium", version: "2.0.0", implemented_at: "2025-03-15T10:00:00Z" },
+  { type: "update", status: "done", title: "Laboratório Virtual de Pesquisa", description: "11 bancadas científicas com fluxo de 5 etapas e desafios de interpretação", category: "Laboratório Virtual", priority: "critical", version: "2.1.0", implemented_at: "2025-03-16T10:00:00Z" },
+  { type: "update", status: "done", title: "Jogos Clínicos", description: "20+ jogos educacionais gamificados com ranking e estrelas", category: "Jogos Clínicos", priority: "high", version: "2.2.0", implemented_at: "2025-03-17T10:00:00Z" },
+  { type: "update", status: "done", title: "Salas Virtuais", description: "Sistema de salas com PIN, atividades em grupo, submissão e ranking de participantes", category: "Salas Virtuais", priority: "critical", version: "2.3.0", implemented_at: "2025-03-18T10:00:00Z" },
+  { type: "update", status: "done", title: "MedView 3D", description: "Demonstração de procedimentos com modelos 3D Sketchfab e Z-Anatomy em 6 categorias", category: "MedView 3D", priority: "high", version: "2.4.0", implemented_at: "2025-03-19T10:00:00Z" },
+  { type: "update", status: "done", title: "Marketplace e Gamificação", description: "Marketplace de ferramentas, sistema de pontos, badges e leaderboard", category: "Integrações", priority: "medium", version: "2.5.0", implemented_at: "2025-03-20T10:00:00Z" },
+  { type: "update", status: "done", title: "Calculadoras Pediátricas", description: "Curvas OMS (Z-Score), Bilirrubina Neonatal (Bhutani), Schwartz, PEWS e Drogas Vasoativas", category: "Calculadoras", priority: "high", version: "2.6.0", implemented_at: "2025-03-21T10:00:00Z" },
+  { type: "update", status: "done", title: "Calculadoras de Ginecologia", description: "Idade Gestacional + DPP, Ganho de Peso (IOM), Pré-Eclâmpsia, Bishop Score e Sulfato de Magnésio", category: "Calculadoras", priority: "high", version: "2.7.0", implemented_at: "2025-03-22T10:00:00Z" },
+  { type: "update", status: "done", title: "Lab Fármacos: PubChem + ADMET IA", description: "Busca PubChem integrada e predições ADMET via IA com rótulos de risco", category: "Laboratório Virtual", priority: "high", version: "2.8.0", implemented_at: "2025-03-23T10:00:00Z" },
+  { type: "update", status: "done", title: "Lab Fármacos: Biblioteca + Druglikeness", description: "Biblioteca comparativa com exportação CSV e Druglikeness multi-critério", category: "Laboratório Virtual", priority: "high", version: "2.8.1", implemented_at: "2025-03-23T10:00:00Z" },
+  { type: "update", status: "done", title: "Lab Modelagem: Pesquisa Avançada", description: "Biblioteca de compostos, Druglikeness, Similaridade Molecular e Alvo Proteico (UniProt + PDB)", category: "Laboratório Virtual", priority: "high", version: "2.9.0", implemented_at: "2025-03-24T10:00:00Z" },
+  { type: "update", status: "done", title: "Lab Modelagem: Comparação ADMET + IA", description: "Comparação lado a lado Original vs Modificado com análise de impacto farmacológico via IA", category: "Laboratório Virtual", priority: "high", version: "2.9.1", implemented_at: "2025-03-24T10:00:00Z" },
+  { type: "update", status: "done", title: "Lab Modelagem: Docking Comparativo", description: "Docking de 3 compostos contra alvo proteico com scores determinísticos + análise IA comparativa", category: "Laboratório Virtual", priority: "high", version: "2.9.2", implemented_at: "2025-03-25T10:00:00Z" },
+  { type: "update", status: "done", title: "Pipeline de Atualizações", description: "Sistema de changelog e planejamento com notificação proativa ao admin", category: "Admin", priority: "medium", version: "2.9.3", implemented_at: "2025-03-25T12:00:00Z" },
+];
+
 export default function PipelinePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -58,6 +85,21 @@ export default function PipelinePage() {
   const [form, setForm] = useState(emptyForm);
   const [tab, setTab] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "priority">("date");
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedData = async () => {
+    setSeeding(true);
+    try {
+      for (const entry of RETROACTIVE_ENTRIES) {
+        await createUpdate.mutateAsync({ ...entry, created_by: user?.id || null });
+      }
+      toast.success(`${RETROACTIVE_ENTRIES.length} entradas retroativas adicionadas!`);
+    } catch (err) {
+      toast.error("Erro ao inserir dados retroativos");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Título é obrigatório"); return; }
