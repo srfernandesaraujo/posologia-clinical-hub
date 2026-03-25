@@ -62,7 +62,7 @@ export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToL
 
       // Step 2: Fetch properties for found CIDs
       const propRes = await fetch(
-        `${PUBCHEM_BASE}/compound/cid/${cids.join(",")}/property/CID,Title,CanonicalSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON`
+        `${PUBCHEM_BASE}/compound/cid/${cids.join(",")}/property/CID,IUPACName,CanonicalSMILES,MolecularWeight,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,MolecularFormula/JSON`
       );
       if (!propRes.ok) throw new Error("Erro ao buscar propriedades dos análogos");
 
@@ -73,7 +73,7 @@ export function SimilaritySearchPanel({ smiles, compoundName, disabled, onAddToL
         .filter((p: any) => p.CanonicalSMILES)
         .map((p: any) => ({
           cid: Number(p.CID),
-          name: p.Title || `CID ${p.CID}`,
+          name: p.IUPACName || `CID ${p.CID}`,
           smiles: p.CanonicalSMILES,
           mw: Number(p.MolecularWeight) || 0,
           xLogP: p.XLogP != null ? Number(p.XLogP) : null,
