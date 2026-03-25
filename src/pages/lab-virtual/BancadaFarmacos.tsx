@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { TargetValidationPanel } from "@/components/lab-virtual/TargetValidationPanel";
 import { DrugDesignPanel, type DrugProperties } from "@/components/lab-virtual/DrugDesignPanel";
@@ -6,12 +6,16 @@ import { DockingADMEPanel } from "@/components/lab-virtual/DockingADMEPanel";
 import { ClinicalTrialPanel } from "@/components/lab-virtual/ClinicalTrialPanel";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { AIContextGenerator } from "@/components/lab-virtual/AIContextGenerator";
+import { CompoundLibraryPanel, type CompoundEntry } from "@/components/lab-virtual/CompoundLibraryPanel";
+import { DruglikenessScorePanel } from "@/components/lab-virtual/DruglikenessScorePanel";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { LAB_SYSTEM_PROMPTS } from "@/data/labSystemPrompts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft } from "lucide-react";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { toast } from "sonner";
+import type { PubChemCompound } from "@/components/lab-virtual/PubChemSearchBar";
 
 export default function BancadaFarmacos() {
   const navigate = useNavigate();
@@ -29,6 +33,84 @@ export default function BancadaFarmacos() {
   const [selectedTarget, setSelectedTarget] = useState<{ id: string; name: string } | null>(null);
   const [designMode, setDesignMode] = useState<"sliders" | "smiles">("sliders");
 
+  // PubChem compound data
+  const [currentCompound, setCurrentCompound] = useState<PubChemCompound | null>(null);
+
+  // Compound library
+  const [compounds, setCompounds] = useState<CompoundEntry[]>([]);
+  const [latestADMET, setLatestADMET] = useState<number | undefined>();
+
+  const handlePubChemImport = useCallback((compound: PubChemCompound) => {
+    setCurrentCompound(compound);
+  }, []);
+
+  const handleAddToLibrary = useCallback(() => {
+    const name = currentCompound?.name || `Composto ${compounds.length + 1}`;
+    const entry: CompoundEntry = {
+      id: crypto.randomUUID(),
+      name,
+      smiles: currentCompound?.smiles || "",
+      properties: { ...drugProperties },
+      tpsa: currentCompound?.tpsa,
+      rotatableBonds: currentCompound?.rotatableBonds,
+      formula: currentCompound?.formula,
+      cid: currentCompound?.cid,
+      admetScore: latestADMET,
+    };
+    setCompounds(prev => [...prev, entry]);
+    toast.success(`"${name}" adicionado à biblioteca!`);
+  }, [currentCompound, drugProperties, compounds.length, latestADMET]);
+
+  const handleRemoveFromLibrary = useCallback((id: string) => {
+    setCompounds(prev => prev.filter(c => c.id !== id));
+  }, []);
+
+  const handleSelectFromLibrary = useCallback((entry: CompoundEntry) => {
+    setDrugProperties(entry.properties);
+    if (entry.smiles) {
+      setCurrentCompound({
+        cid: entry.cid || 0,
+        name: entry.name,
+        smiles: entry.smiles,
+        mw: entry.properties.mw,
+        logP: entry.properties.logP,
+        hbd: entry.properties.hbd,
+        hba: entry.properties.hba,
+        tpsa: entry.tpsa || 0,
+        formula: entry.formula || "",
+        rotatableBonds: entry.rotatableBonds || 0,
+      });
+    }
+  }, []);
+
+  const handleExportCSV = useCallback(() => {
+    if (compounds.length === 0) return;
+    const headers = ["Nome", "SMILES", "CID", "Formula", "MW", "LogP", "HBD", "HBA", "TPSA", "Rot. Bonds", "ADMET Score", "ΔG"];
+    const rows = compounds.map(c => [
+      c.name,
+      c.smiles,
+      c.cid ?? "",
+      c.formula ?? "",
+      c.properties.mw,
+      c.properties.logP,
+      c.properties.hbd,
+      c.properties.hba,
+      c.tpsa?.toFixed(1) ?? "",
+      c.rotatableBonds ?? "",
+      c.admetScore ?? "",
+      c.dG?.toFixed(2) ?? "",
+    ].join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `biblioteca-candidatos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado com sucesso!");
+  }, [compounds]);
+
   const experimentSummary = selectedTarget ? {
     "Alvo": `${selectedTarget.name} (${selectedTarget.id})`,
     "MW": `${drugProperties.mw}`,
@@ -36,6 +118,8 @@ export default function BancadaFarmacos() {
     "HBD": `${drugProperties.hbd}`,
     "HBA": `${drugProperties.hba}`,
     "Modo de design": designMode,
+    ...(currentCompound ? { "Composto PubChem": `${currentCompound.name} (CID: ${currentCompound.cid})` } : {}),
+    "Compostos na biblioteca": `${compounds.length}`,
   } : undefined;
 
   const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => {
@@ -51,7 +135,7 @@ export default function BancadaFarmacos() {
     const score = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
     submitVRResults({
       score,
-      actions: { decisions, report: reportData, experimentSummary },
+      actions: { decisions, report: reportData, experimentSummary, library: compounds },
       timeSpentSeconds: Math.round((Date.now() - startTimeRef.current) / 1000),
     });
   };
@@ -85,6 +169,11 @@ export default function BancadaFarmacos() {
               Alvo: {selectedTarget.name} ({selectedTarget.id})
             </Badge>
           )}
+          {currentCompound && (
+            <Badge variant="outline" className="text-xs">
+              Composto: {currentCompound.name}
+            </Badge>
+          )}
           <AdminPromptViewer
             toolSlug={LAB_SYSTEM_PROMPTS.farmacos.slug}
             toolName={LAB_SYSTEM_PROMPTS.farmacos.name}
@@ -111,14 +200,33 @@ export default function BancadaFarmacos() {
           onChange={setDrugProperties}
           activeTab={designMode}
           onTabChange={setDesignMode}
+          onPubChemImport={handlePubChemImport}
         />
         <DockingADMEPanel
           drugProperties={drugProperties}
           hasTarget={!!selectedTarget}
           designMode={designMode}
+          smiles={currentCompound?.smiles}
+          compoundName={currentCompound?.name}
+          onADMETResult={setLatestADMET}
+        />
+        <DruglikenessScorePanel
+          properties={drugProperties}
+          tpsa={currentCompound?.tpsa}
+          rotatableBonds={currentCompound?.rotatableBonds}
+          smiles={currentCompound?.smiles}
         />
         <ClinicalTrialPanel drugProperties={drugProperties} hasTarget={!!selectedTarget} />
       </div>
+
+      {/* Compound Library */}
+      <CompoundLibraryPanel
+        compounds={compounds}
+        onAdd={handleAddToLibrary}
+        onRemove={handleRemoveFromLibrary}
+        onSelect={handleSelectFromLibrary}
+        onExportCSV={handleExportCSV}
+      />
 
       {/* M5 — Mini-Relatório */}
       <LabReportPanel
