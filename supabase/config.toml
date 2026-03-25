@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.list-all-users]
 verify_jwt = false
+
+[functions.analyze-modification]
+verify_jwt = false
