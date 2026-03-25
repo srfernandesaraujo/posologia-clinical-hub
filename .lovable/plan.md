@@ -1,76 +1,75 @@
 
 
-## Análise: Elevar o Laboratório de Desenvolvimento de Fármacos ao Nível de Pesquisa Científica
+## Analise: Elevar o Laboratorio de Modelagem Molecular ao Nivel de Pesquisa Cientifica
 
 ### O que existe hoje
 
-O laboratório atual possui 5 módulos em pipeline linear:
-1. **Validação do Alvo** — Seleção de proteínas via UniProt/AlphaFold com visualização 3D
-2. **Design do Protótipo** — Sliders de propriedades (MW, LogP, HBD, HBA) + input SMILES com Lipinski
-3. **Docking & ADME** — Simulação rápida com cálculos determinísticos de ΔG, Ki, radar ADME
-4. **Ensaio Clínico** — Curva Kaplan-Meier simplificada, variação farmacogenética
-5. **Mini-Relatório** — Texto livre (hipótese, resultados, conclusão) + PDF
+O laboratorio possui 4 modulos + relatorio:
+1. **M1 - Busca de Composto** -- Busca por nome no PubChem, importa propriedades (MW, LogP, HBD, HBA, TPSA, SMILES, formula) e exibe estrutura 2D
+2. **M2 - Editor Molecular** -- Visualizacao 2D/3D (3Dmol.js com fallback em cadeia), modificacoes funcionais por append de SMILES (metila, hidroxila, amina, fluor, cloro, carbonila), edicao manual, historico de modificacoes com undo
+3. **M3 - Predicao In Silico** -- Lipinski automatico via PubChem (atualiza com debounce), ADMET via edge function `predict-admet` com IA (absorcao, hepatotoxicidade, mutagenicidade, BHE, CYP450, ligacao plasmatica)
+4. **M4 - Bioatividade e Alvos** -- Busca ChEMBL (IC50, EC50, Ki contra alvos) + Open Targets (associacoes doenca-alvo com score)
+5. **M5 - Relatorio** -- Texto livre + PDF
 
-### Limitações para uso em pesquisa real
+### Limitacoes para pesquisa real
 
-- Propriedades calculadas internamente com fórmulas simplificadas (não consulta dados reais)
-- Sem integração com bancos de dados reais de moléculas (PubChem, ChEMBL, DrugBank)
-- Sem capacidade de comparar múltiplos candidatos lado a lado
-- Sem predição ADMET baseada em IA (a edge function `predict-admet` existe mas não é usada)
-- Sem exportação de dados estruturados (CSV/Excel) para análise externa
-- Sem histórico de experimentos salvos no banco
-- Sem análise SAR (relação estrutura-atividade) entre compostos testados
+- Sem biblioteca de compostos comparativa (analisa 1 composto por vez)
+- Sem score de druglikeness multi-criterio (so Lipinski basico)
+- Sem exportacao de dados estruturados (CSV)
+- Sem historico de sessoes salvo no banco
+- Editor molecular limitado (append de grupos funcionais no final do SMILES, nao substitui/modifica posicoes)
+- Sem similaridade molecular (buscar analogos de um composto)
+- Sem visualizacao de propriedades comparativas (graficos radar/scatter)
+- Sem integracao com UniProt/RCSB PDB para alvos proteicos
 
 ### Melhorias Propostas (por impacto)
 
-**Tier 1 — Dados Reais e Publicáveis**
+**Tier 1 -- Capacidade de Pesquisa Comparativa**
 
-| Funcionalidade | Descrição | Impacto |
+| Funcionalidade | Descricao | Impacto |
 |---|---|---|
-| **Busca PubChem integrada ao M2** | Buscar compostos reais por nome/SMILES no PubChem, importando MW, LogP, TPSA, HBD, HBA automaticamente em vez de ajustar manualmente | Elimina dados fictícios; propriedades reais e citáveis |
-| **Predição ADMET com IA (M3)** | Conectar o M3 à edge function `predict-admet` já existente para obter predições baseadas em IA (absorção, hepatotoxicidade, mutagenicidade, inibição CYP, penetração BHE, meia-vida) | Predições sofisticadas em vez de fórmulas determinísticas |
-| **Consulta ChEMBL para bioatividade** | Buscar dados de bioatividade conhecida (IC50, EC50, Ki) de compostos reais contra o alvo selecionado no M1 | Contextualiza o protótipo com a literatura existente |
+| **Biblioteca de Compostos** | Painel para adicionar multiplos compostos, compara-los em tabela com sorting (MW, LogP, ADMET score, bioatividade). Exportacao CSV | Permite screening virtual de series de compostos |
+| **Score Druglikeness Multi-Criterio** | Score 0-100 combinando Lipinski, Veber (TPSA ≤ 140, rotatable bonds ≤ 10), Ghose, Lead-likeness e alertas PAINS em dashboard visual | Avaliacao profissional como em softwares comerciais |
+| **Busca de Similaridade Molecular** | Dado um composto, buscar analogos no PubChem por similaridade (Tanimoto ≥ 0.8) para encontrar candidatos alternativos | Expande o espaco quimico explorado |
 
-**Tier 2 — Fluxo de Pesquisa Profissional**
+**Tier 2 -- Integracao com Bases de Dados Proteicos**
 
-| Funcionalidade | Descrição | Impacto |
+| Funcionalidade | Descricao | Impacto |
 |---|---|---|
-| **Biblioteca de Candidatos (Compound Library)** | Painel para adicionar múltiplos compostos, compará-los lado a lado em tabela com sorting por propriedade (MW, LogP, ADMET score, ΔG) | Permite screening virtual de séries de compostos |
-| **Análise SAR automatizada** | Ao ter 3+ compostos na biblioteca, gerar automaticamente gráficos de correlação (LogP vs Absorção, MW vs ΔG) e identificar tendências | Gera insights publicáveis de relação estrutura-atividade |
-| **Histórico de Experimentos (Supabase)** | Salvar cada experimento completo (alvo, compostos, resultados ADMET, docking, ensaio clínico) no banco de dados com timestamp | Permite retomar pesquisas e construir datasets |
+| **Modulo de Alvo Proteico (UniProt/RCSB PDB)** | Buscar proteinas-alvo por nome ou gene, visualizar estrutura 3D via RCSB PDB, exibir informacoes funcionais do UniProt | Conecta o composto ao seu alvo biologico real |
+| **Docking Conceitual** | Visualizar composto e proteina-alvo simultaneamente, calcular estimativas de afinidade baseadas em propriedades moleculares | Simula o pipeline real de drug discovery |
 
-**Tier 3 — Diferencial de Mercado Único**
+**Tier 3 -- Diferencial de Mercado**
 
-| Funcionalidade | Descrição | Impacto |
+| Funcionalidade | Descricao | Impacto |
 |---|---|---|
-| **Exportação Científica (CSV + PDF estruturado)** | Exportar toda a biblioteca de compostos + resultados em CSV para análise em R/Python, e PDF formatado como relatório de pesquisa (com tabelas, gráficos, referências) | Resultados prontos para publicação/TCC |
-| **Módulo de Otimização Hit-to-Lead** | Painel com sugestões de modificações estruturais baseadas em IA: "Adicionar grupo hidroxila na posição X para melhorar absorção" | Simula o processo real de otimização medicinal |
-| **Score de Druglikeness Composto** | Score unificado (0-100) combinando Lipinski, Veber (TPSA, rotatable bonds), PAINS alerts e Lead-likeness em um dashboard visual | Avaliação multi-critério como em softwares profissionais |
+| **Analise SAR Automatizada** | Com 3+ compostos na biblioteca, gerar graficos de correlacao (LogP vs ADMET score, MW vs bioatividade) e identificar tendencias | Insights publicaveis de relacao estrutura-atividade |
+| **Historico de Experimentos (Supabase)** | Salvar sessoes completas (compostos, propriedades, ADMET, bioatividade) no banco, com possibilidade de retomar | Permite construir datasets longitudinais |
+| **Exportacao Cientifica PDF Estruturado** | PDF formatado como relatorio de pesquisa com tabelas de propriedades, graficos comparativos, referencias bibliograficas | Resultados prontos para publicacao/TCC |
 
-### Recomendação de Implementação (5 funcionalidades prioritárias)
+### Recomendacao de Implementacao (5 funcionalidades prioritarias)
 
-1. **Busca PubChem no M2** — Importar propriedades reais de compostos conhecidos
-2. **Predição ADMET com IA no M3** — Usar a edge function existente `predict-admet`
-3. **Biblioteca de Candidatos** — Tabela comparativa de múltiplos compostos
-4. **Exportação CSV + PDF estruturado** — Dados exportáveis para análise e publicação
-5. **Score de Druglikeness Composto** — Dashboard visual multi-critério (Lipinski + Veber + PAINS)
+1. **Biblioteca de Compostos com Tabela Comparativa** -- Adicionar compostos analisados a uma lista, comparar lado a lado com sorting, exportar CSV
+2. **Score Druglikeness Multi-Criterio** -- Dashboard visual com Lipinski + Veber + Ghose + Lead-likeness + PAINS
+3. **Busca de Similaridade Molecular** -- PubChem Similarity Search API para encontrar analogos estruturais
+4. **Modulo de Alvo Proteico** -- Busca UniProt + visualizacao 3D do alvo via RCSB PDB (reutiliza 3Dmol.js ja integrado)
+5. **Analise SAR + Exportacao Cientifica** -- Graficos de correlacao com Recharts + PDF estruturado com tabelas
 
-### Detalhes Técnicos
+### Detalhes Tecnicos
 
 **Arquivos novos:**
-- `src/components/lab-virtual/CompoundLibraryPanel.tsx` — Tabela de compostos com sorting/filtering
-- `src/components/lab-virtual/DruglikenessScorePanel.tsx` — Dashboard visual multi-critério
+- `src/components/lab-virtual/molmod/CompoundLibraryPanel.tsx` -- Tabela comparativa com sorting, remocao e exportacao CSV
+- `src/components/lab-virtual/molmod/DruglikenessPanel.tsx` -- Dashboard multi-criterio com radar chart (Recharts)
+- `src/components/lab-virtual/molmod/SimilaritySearchPanel.tsx` -- Busca de analogos via PubChem Similarity API
+- `src/components/lab-virtual/molmod/ProteinTargetPanel.tsx` -- Busca UniProt + visualizacao RCSB PDB via 3Dmol.js
 
 **Arquivos modificados:**
-- `DrugDesignPanel.tsx` — Adicionar busca PubChem (API PUG REST) para importar propriedades reais
-- `DockingADMEPanel.tsx` — Integrar chamada à edge function `predict-admet` na aba Docking
-- `BancadaFarmacos.tsx` — Adicionar estado de compound library, novo módulo, exportação CSV
-- `LabReportPanel.tsx` — Enriquecer PDF com tabelas de dados e gráficos
+- `BancadaModelagemMolecular.tsx` -- Adicionar estado de biblioteca, novos modulos, exportacao
+- `CompoundSearchPanel.tsx` -- Botao "Adicionar a Biblioteca" alem de "Usar no Editor"
 
-**APIs externas (já usadas no projeto):**
-- PubChem PUG REST (já usado na bancada de Modelagem Molecular)
-- Edge function `predict-admet` (já deployada, não conectada ao lab)
-
-**Banco de dados:**
-- Nova tabela `lab_experiments` para persistir sessões de pesquisa (opcional, pode ser implementada depois)
+**APIs externas (gratuitas, sem chave):**
+- PubChem PUG REST: Similarity Search (`/compound/fastsimilarity_2d/smiles/.../property/.../JSON`)
+- UniProt REST API: Busca de proteinas (`https://rest.uniprot.org/uniprotkb/search`)
+- RCSB PDB: Estruturas 3D (`https://files.rcsb.org/download/{PDB_ID}.pdb`)
+- 3Dmol.js: Ja integrado no projeto para visualizacao 3D
 
