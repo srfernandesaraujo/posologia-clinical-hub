@@ -35,7 +35,7 @@ Responda APENAS com um JSON array no formato:
 
 Sem markdown, sem explicações, apenas o JSON.`;
 
-    const result = await callAI({
+    const { data } = await callAI({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: "Gere 7 sugestões de roadmap para os próximos 30 dias." },
@@ -43,12 +43,13 @@ Sem markdown, sem explicações, apenas o JSON.`;
       temperature: 0.8,
     });
 
+    const content = data?.choices?.[0]?.message?.content || "";
     let ideas = [];
     try {
-      const cleaned = result.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+      const cleaned = content.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
       ideas = JSON.parse(cleaned);
     } catch {
-      console.error("[ROADMAP] Failed to parse AI response:", result);
+      console.error("[ROADMAP] Failed to parse AI response:", content);
       ideas = [];
     }
 
