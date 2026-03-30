@@ -130,6 +130,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Odontologia": Scan,
   "Fisioterapia": Accessibility,
   "Nutrição": ClipboardList,
+  "Genética": Dna,
 };
 
 // Category color accents (HSL-based using design tokens where possible)
