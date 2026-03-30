@@ -137,6 +137,9 @@ import SimuladorTNP from "./pages/simuladores/nutricao/SimuladorTNP";
 import SimuladorDisfagia from "./pages/simuladores/nutricao/SimuladorDisfagia";
 import SimuladorNutricaoRenal from "./pages/simuladores/nutricao/SimuladorNutricaoRenal";
 import SimuladorNutricaoMaternoInfantil from "./pages/simuladores/nutricao/SimuladorNutricaoMaternoInfantil";
+import SimuladorSequenciamentoDNA from "./pages/simuladores/genetica/SimuladorSequenciamentoDNA";
+import SimuladorSNPFarmacogenetica from "./pages/simuladores/genetica/SimuladorSNPFarmacogenetica";
+import SimuladorCariotipo from "./pages/simuladores/genetica/SimuladorCariotipo";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -303,6 +306,9 @@ const App = () => (
               <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
               <Route path="/sala/simulador/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
+              <Route path="/sala/simulador/sequenciamento-dna" element={<SimuladorSequenciamentoDNA />} />
+              <Route path="/sala/simulador/snp-farmacogenetica" element={<SimuladorSNPFarmacogenetica />} />
+              <Route path="/sala/simulador/cariotipo" element={<SimuladorCariotipo />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
@@ -409,6 +415,9 @@ const App = () => (
               <Route path="/simuladores/disfagia" element={<SimuladorDisfagia />} />
               <Route path="/simuladores/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/simuladores/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
+              <Route path="/simuladores/sequenciamento-dna" element={<SimuladorSequenciamentoDNA />} />
+              <Route path="/simuladores/snp-farmacogenetica" element={<SimuladorSNPFarmacogenetica />} />
+              <Route path="/simuladores/cariotipo" element={<SimuladorCariotipo />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />

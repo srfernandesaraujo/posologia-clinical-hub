@@ -107,6 +107,9 @@ const NATIVE_SIMULATORS = [
   { slug: "nutricao-renal", name: "Nutrição no Paciente Renal Crônico", description: "Prescrição dietética, restrições e suplementação na DRC.", icon: ClipboardList, category: "Nutrição" },
   { slug: "nutricao-materno-infantil", name: "Nutrição Materno-Infantil", description: "Curva de Atalah, suplementação e manejo de intercorrências gestacionais.", icon: ClipboardList, category: "Nutrição" },
   { slug: "dispensacao-344", name: "Dispensação — Portaria 344/98", description: "Treine a dispensação de medicamentos controlados (listas A, B e C) no balcão da farmácia.", icon: Pill, category: "Farmácia Clínica" },
+  { slug: "sequenciamento-dna", name: "Sequenciamento de DNA (Sanger e NGS)", description: "Compare métodos Sanger vs NGS. Visualize eletroferogramas, quality scores (Phred) e cobertura de leitura.", icon: Dna, category: "Genética" },
+  { slug: "snp-farmacogenetica", name: "SNPs e Farmacogenética", description: "Analise polimorfismos CYP450, VKORC1 e DPYD. Correlacione genótipos com fenótipos metabólicos.", icon: Dna, category: "Genética" },
+  { slug: "cariotipo", name: "Cariótipo e Anomalias Cromossômicas", description: "Monte cariótipos virtuais e identifique trissomias, monossomias e translocações.", icon: Dna, category: "Genética" },
 ];
 
 // Category icon mapping
@@ -127,6 +130,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Odontologia": Scan,
   "Fisioterapia": Accessibility,
   "Nutrição": ClipboardList,
+  "Genética": Dna,
 };
 
 // Category color accents (HSL-based using design tokens where possible)
@@ -147,6 +151,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Odontologia": "168 80% 42%",
   "Fisioterapia": "210 70% 50%",
   "Nutrição": "140 60% 45%",
+  "Genética": "260 70% 55%",
 };
 
 export default function Simuladores() {
