@@ -110,6 +110,11 @@ const NATIVE_SIMULATORS = [
   { slug: "sequenciamento-dna", name: "Sequenciamento de DNA (Sanger e NGS)", description: "Compare métodos Sanger vs NGS. Visualize eletroferogramas, quality scores (Phred) e cobertura de leitura.", icon: Dna, category: "Genética" },
   { slug: "snp-farmacogenetica", name: "SNPs e Farmacogenética", description: "Analise polimorfismos CYP450, VKORC1 e DPYD. Correlacione genótipos com fenótipos metabólicos.", icon: Dna, category: "Genética" },
   { slug: "cariotipo", name: "Cariótipo e Anomalias Cromossômicas", description: "Monte cariótipos virtuais e identifique trissomias, monossomias e translocações.", icon: Dna, category: "Genética" },
+  { slug: "heranca-mendeliana", name: "Herança Mendeliana e Heredogramas", description: "Padrões de herança, quadro de Punnett e cálculo de probabilidades genéticas.", icon: Dna, category: "Genética" },
+  { slug: "pcr-eletroforese", name: "PCR e Eletroforese em Gel", description: "Ciclos térmicos, design de primers e visualização de bandas em gel de agarose.", icon: Dna, category: "Genética" },
+  { slug: "epigenetica", name: "Epigenética e Regulação Gênica", description: "Metilação de DNA, acetilação de histonas e impacto na expressão gênica.", icon: Dna, category: "Genética" },
+  { slug: "mutacoes-reparo", name: "Mutações e Reparo de DNA", description: "Simule mutações e identifique mecanismos de reparo (MMR, BER, NER, HR).", icon: Dna, category: "Genética" },
+  { slug: "genetica-populacoes", name: "Genética de Populações (Hardy-Weinberg)", description: "Frequências alélicas, seleção natural e deriva genética ao longo de gerações.", icon: Dna, category: "Genética" },
 ];
 
 // Category icon mapping

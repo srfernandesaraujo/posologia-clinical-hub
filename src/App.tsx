@@ -140,6 +140,11 @@ import SimuladorNutricaoMaternoInfantil from "./pages/simuladores/nutricao/Simul
 import SimuladorSequenciamentoDNA from "./pages/simuladores/genetica/SimuladorSequenciamentoDNA";
 import SimuladorSNPFarmacogenetica from "./pages/simuladores/genetica/SimuladorSNPFarmacogenetica";
 import SimuladorCariotipo from "./pages/simuladores/genetica/SimuladorCariotipo";
+import SimuladorHerancaMendeliana from "./pages/simuladores/genetica/SimuladorHerancaMendeliana";
+import SimuladorPCREletroforese from "./pages/simuladores/genetica/SimuladorPCREletroforese";
+import SimuladorEpigenetica from "./pages/simuladores/genetica/SimuladorEpigenetica";
+import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutacoesReparo";
+import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
