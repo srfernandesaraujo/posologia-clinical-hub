@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, Dna, Eye } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Dna, Eye, Play, Pause } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -11,10 +11,11 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { getSNPFarmacogeneticaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "snp-farmacogenetica";
 
@@ -34,91 +35,84 @@ interface SNPCase {
   expectedPhenotype: Phenotype;
   drug: string;
   standardDoseMg: number;
+  snpSequence: string;
+  snpPosition: number;
   clinicalTip: string;
 }
 
-const PHENOTYPE_LABELS: Record<Phenotype, string> = {
-  UM: "Metabolizador Ultrarrápido",
-  EM: "Metabolizador Extensivo (Normal)",
-  IM: "Metabolizador Intermediário",
-  PM: "Metabolizador Lento",
-};
-
-const PHENOTYPE_COLORS: Record<Phenotype, string> = {
-  UM: "text-red-500",
-  EM: "text-green-600",
-  IM: "text-yellow-600",
-  PM: "text-blue-600",
-};
+const PHENOTYPE_LABELS: Record<Phenotype, string> = { UM: "Metabolizador Ultrarrápido", EM: "Metabolizador Extensivo (Normal)", IM: "Metabolizador Intermediário", PM: "Metabolizador Lento" };
 
 const BUILT_IN_CASES: SNPCase[] = [
   {
     title: "CYP2D6 e Codeína — Metabolizador Ultrarrápido",
     difficulty: "Difícil",
     patient: { name: "Paulo Freitas", age: 42, weight: 75, diagnosis: "Dor pós-operatória — prescrição de codeína" },
-    scenario: "Paciente com duplicação do gene CYP2D6. A codeína (pró-fármaco) é convertida rapidamente em morfina, causando toxicidade opioide.",
-    gene: "CYP2D6",
-    snpId: "rs3892097",
-    allele1: "*1",
-    allele2: "*1xN",
-    expectedPhenotype: "UM",
-    drug: "Codeína",
-    standardDoseMg: 30,
-    clinicalTip: "Metabolizadores ultrarrápidos CYP2D6 convertem codeína em morfina mais rapidamente, com risco de depressão respiratória. Alternativa: analgésicos não metabolizados pelo CYP2D6 (ex: paracetamol, AINEs).",
+    scenario: "Paciente com duplicação do gene CYP2D6. Analise o eletroferograma do SNP e correlacione com a curva farmacocinética.",
+    gene: "CYP2D6", snpId: "rs3892097", allele1: "*1", allele2: "*1xN",
+    expectedPhenotype: "UM", drug: "Codeína", standardDoseMg: 30,
+    snpSequence: "ATGCCTGAACTTGACGGTAACCTG", snpPosition: 8,
+    clinicalTip: "Metabolizadores ultrarrápidos CYP2D6 convertem codeína em morfina mais rapidamente, com risco de depressão respiratória. Alternativa: analgésicos não metabolizados pelo CYP2D6.",
   },
   {
     title: "CYP2C19 e Clopidogrel — Metabolizador Lento",
     difficulty: "Médio",
-    patient: { name: "Maria Santos", age: 65, weight: 68, diagnosis: "Pós-stent coronariano — antiagregação com clopidogrel" },
-    scenario: "Paciente com genótipo CYP2C19 *2/*2 (metabolizador lento). Clopidogrel é um pró-fármaco que depende de CYP2C19 para ativação.",
-    gene: "CYP2C19",
-    snpId: "rs4244285",
-    allele1: "*2",
-    allele2: "*2",
-    expectedPhenotype: "PM",
-    drug: "Clopidogrel",
-    standardDoseMg: 75,
-    clinicalTip: "Metabolizadores lentos CYP2C19 não ativam adequadamente o clopidogrel, aumentando o risco de trombose de stent. Alternativas: ticagrelor ou prasugrel (não dependem de CYP2C19).",
+    patient: { name: "Maria Santos", age: 65, weight: 68, diagnosis: "Pós-stent coronariano — clopidogrel" },
+    scenario: "Genótipo CYP2C19 *2/*2. Observe no eletroferograma o SNP homozigoto e interprete o impacto na ativação do pró-fármaco.",
+    gene: "CYP2C19", snpId: "rs4244285", allele1: "*2", allele2: "*2",
+    expectedPhenotype: "PM", drug: "Clopidogrel", standardDoseMg: 75,
+    snpSequence: "GCTAGCTTGAACCTGCAATCGGTAA", snpPosition: 11,
+    clinicalTip: "PMs CYP2C19 não ativam clopidogrel, aumentando risco de trombose de stent. Alternativas: ticagrelor ou prasugrel.",
   },
   {
     title: "VKORC1 e Varfarina — Sensibilidade Aumentada",
     difficulty: "Fácil",
-    patient: { name: "Ana Oliveira", age: 55, weight: 60, diagnosis: "Fibrilação atrial — anticoagulação com varfarina" },
-    scenario: "Paciente com SNP rs9923231 (VKORC1 -1639G>A, genótipo A/A). Sensibilidade aumentada à varfarina com risco de sangramento.",
-    gene: "VKORC1",
-    snpId: "rs9923231",
-    allele1: "A",
-    allele2: "A",
-    expectedPhenotype: "PM",
-    drug: "Varfarina",
-    standardDoseMg: 5,
-    clinicalTip: "O SNP VKORC1 -1639G>A reduz a expressão da vitamina K epóxido redutase. Genótipo A/A requer ~50% menos varfarina. Dose inicial sugerida: 2-3 mg/dia com monitoramento rigoroso de INR.",
+    patient: { name: "Ana Oliveira", age: 55, weight: 60, diagnosis: "FA — anticoagulação com varfarina" },
+    scenario: "SNP rs9923231 (VKORC1 -1639G>A, genótipo A/A). Observe o eletroferograma monoalélico e correlacione com a dose reduzida necessária.",
+    gene: "VKORC1", snpId: "rs9923231", allele1: "A", allele2: "A",
+    expectedPhenotype: "PM", drug: "Varfarina", standardDoseMg: 5,
+    snpSequence: "TTGGTGGTAAATCGATCCTAATCGA", snpPosition: 9,
+    clinicalTip: "VKORC1 -1639G>A reduz a expressão da enzima. Genótipo A/A requer ~50% menos varfarina (2-3 mg/dia).",
   },
 ];
 
-function computePK(phenotype: Phenotype, doseMg: number, time: number) {
-  const clearanceMultiplier: Record<Phenotype, number> = { UM: 2.5, EM: 1.0, IM: 0.5, PM: 0.2 };
-  const cl = clearanceMultiplier[phenotype];
+function computePK(phenotype: Phenotype, doseMg: number) {
+  const cl: Record<Phenotype, number> = { UM: 2.5, EM: 1.0, IM: 0.5, PM: 0.2 };
+  const f: Record<Phenotype, number> = { PM: 0.3, IM: 0.6, EM: 1.0, UM: 1.5 };
   const ka = 1.2;
-  const ke = 0.1 * cl;
+  const ke = 0.1 * cl[phenotype];
   const vd = 250;
-  const f = phenotype === "PM" ? 0.3 : phenotype === "IM" ? 0.6 : phenotype === "UM" ? 1.5 : 1.0;
-
-  const data = [];
-  for (let t = 0; t <= 24; t++) {
-    const cp = (f * doseMg / vd) * (ka / (ka - ke)) * (Math.exp(-ke * t) - Math.exp(-ka * t));
-    data.push({ time: t, cp: Math.max(0, +(cp * 1000).toFixed(2)) });
-  }
-  return data;
+  return Array.from({ length: 25 }, (_, t) => ({
+    time: t,
+    cp: Math.max(0, +((f[phenotype] * doseMg / vd) * (ka / (ka - ke)) * (Math.exp(-ke * t) - Math.exp(-ka * t)) * 1000).toFixed(2)),
+  }));
 }
 
-function getDoseAdjustment(phenotype: Phenotype, standardDose: number): { adjustedDose: number; recommendation: string } {
-  switch (phenotype) {
-    case "UM": return { adjustedDose: Math.round(standardDose * 0.5), recommendation: "Reduzir dose ou trocar fármaco — risco de toxicidade por conversão acelerada" };
-    case "EM": return { adjustedDose: standardDose, recommendation: "Dose padrão adequada" };
-    case "IM": return { adjustedDose: Math.round(standardDose * 0.75), recommendation: "Considerar redução de 25% ou monitoramento mais frequente" };
-    case "PM": return { adjustedDose: Math.round(standardDose * 0.5), recommendation: "Trocar para alternativa ou reduzir 50% — risco de ineficácia (pró-fármaco) ou acúmulo" };
-  }
+function generateSNPElectropherogram(sequence: string, snpPos: number, isHeterozygous: boolean, progress: number) {
+  const maxPos = Math.min(sequence.length, Math.floor(progress * sequence.length));
+  return Array.from(sequence).slice(0, maxPos).map((base, i) => {
+    const isSNP = i === snpPos;
+    const signal = 800 + Math.random() * 200;
+    const entry: Record<string, any> = { pos: i + 1, base };
+    for (const b of ["A", "T", "G", "C"]) {
+      if (isSNP && isHeterozygous) {
+        const altBase = base === "G" ? "A" : base === "A" ? "G" : base === "C" ? "T" : "C";
+        entry[b] = b === base ? signal * 0.5 : b === altBase ? signal * 0.45 : Math.random() * 40;
+      } else {
+        entry[b] = b === base ? signal : Math.random() * 40;
+      }
+    }
+    return entry;
+  });
+}
+
+function getDoseAdjustment(phenotype: Phenotype, standardDose: number) {
+  const map: Record<Phenotype, { adjustedDose: number; recommendation: string }> = {
+    UM: { adjustedDose: Math.round(standardDose * 0.5), recommendation: "Reduzir dose ou trocar fármaco — risco de toxicidade" },
+    EM: { adjustedDose: standardDose, recommendation: "Dose padrão adequada" },
+    IM: { adjustedDose: Math.round(standardDose * 0.75), recommendation: "Considerar redução de 25%" },
+    PM: { adjustedDose: Math.round(standardDose * 0.5), recommendation: "Trocar para alternativa ou reduzir 50%" },
+  };
+  return map[phenotype];
 }
 
 export default function SimuladorSNPFarmacogenetica() {
@@ -131,23 +125,18 @@ export default function SimuladorSNPFarmacogenetica() {
   const [activeCase, setActiveCase] = useState<SNPCase | null>(null);
   const [selectedPhenotype, setSelectedPhenotype] = useState<Phenotype>("EM");
   const [doseAdjust, setDoseAdjust] = useState(100);
+  const [running, setRunning] = useState(false);
+  const [animProgress, setAnimProgress] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
-      handleFinish();
-      const cs = sessionStorage.getItem("challengeScore");
-      if (cs) setLastScore(Number(cs));
-    }
+    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); }
   }, [challengeCompleted]);
 
   useEffect(() => {
-    if (isVirtualRoom && submitted) {
-      const timer = setTimeout(() => navigate("/"), 15000);
-      return () => clearTimeout(timer);
-    }
+    if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); }
   }, [isVirtualRoom, submitted, navigate]);
 
   useEffect(() => {
@@ -155,52 +144,43 @@ export default function SimuladorSNPFarmacogenetica() {
       const cd = virtualRoomCase as any;
       setActiveCase({
         id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
-        patient: cd.patient, scenario: cd.scenario, gene: cd.gene ?? "CYP2D6", snpId: cd.snpId ?? "rs3892097",
-        allele1: cd.allele1 ?? "*1", allele2: cd.allele2 ?? "*1",
-        expectedPhenotype: cd.expectedPhenotype ?? "EM", drug: cd.drug ?? "Codeína",
-        standardDoseMg: cd.standardDoseMg ?? 30, clinicalTip: cd.clinicalTip ?? "",
+        patient: cd.patient, scenario: cd.scenario, gene: cd.gene ?? "CYP2D6", snpId: cd.snpId ?? "",
+        allele1: cd.allele1 ?? "*1", allele2: cd.allele2 ?? "*1", expectedPhenotype: cd.expectedPhenotype ?? "EM",
+        drug: cd.drug ?? "", standardDoseMg: cd.standardDoseMg ?? 30, snpSequence: cd.snpSequence ?? "ATGCCTGAACTTGAC",
+        snpPosition: cd.snpPosition ?? 8, clinicalTip: cd.clinicalTip ?? "",
       });
     }
   }, [virtualRoomCase]);
 
+  useEffect(() => { if (activeCase) { setSelectedPhenotype("EM"); setDoseAdjust(100); setAnimProgress(0); setRunning(false); } }, [activeCase]);
+
   useEffect(() => {
-    if (activeCase) {
-      setSelectedPhenotype("EM");
-      setDoseAdjust(100);
-    }
-  }, [activeCase]);
+    if (!running) return;
+    const interval = setInterval(() => {
+      setAnimProgress(p => { if (p >= 1) { setRunning(false); return 1; } return Math.min(1, p + 0.025); });
+    }, 60);
+    return () => clearInterval(interval);
+  }, [running]);
+
+  const isHeterozygous = activeCase ? activeCase.allele1 !== activeCase.allele2 : false;
+
+  const electropherogram = useMemo(() => {
+    if (!activeCase) return [];
+    return generateSNPElectropherogram(activeCase.snpSequence || "", activeCase.snpPosition || 0, isHeterozygous, animProgress);
+  }, [activeCase, animProgress, isHeterozygous]);
 
   const pkData = useMemo(() => {
     if (!activeCase) return [];
-    const dose = activeCase.standardDoseMg * (doseAdjust / 100);
-    return computePK(selectedPhenotype, dose, 24);
+    return computePK(selectedPhenotype, activeCase.standardDoseMg * (doseAdjust / 100));
   }, [activeCase, selectedPhenotype, doseAdjust]);
 
-  const pkComparison = useMemo(() => {
-    if (!activeCase) return [];
-    const dose = activeCase.standardDoseMg;
-    const phenotypes: Phenotype[] = ["UM", "EM", "IM", "PM"];
-    const all = phenotypes.map(p => computePK(p, dose, 24));
-    return Array.from({ length: 25 }, (_, t) => ({
-      time: t,
-      UM: all[0][t]?.cp ?? 0,
-      EM: all[1][t]?.cp ?? 0,
-      IM: all[2][t]?.cp ?? 0,
-      PM: all[3][t]?.cp ?? 0,
-    }));
-  }, [activeCase]);
-
-  const adjustment = useMemo(() => {
-    if (!activeCase) return null;
-    return getDoseAdjustment(selectedPhenotype, activeCase.standardDoseMg);
-  }, [activeCase, selectedPhenotype]);
+  const adjustment = useMemo(() => activeCase ? getDoseAdjustment(selectedPhenotype, activeCase.standardDoseMg) : null, [activeCase, selectedPhenotype]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
-    const correct = selectedPhenotype === activeCase.expectedPhenotype;
-    const s = correct ? 100 : 30;
+    const s = selectedPhenotype === activeCase.expectedPhenotype ? 100 : 30;
     setLastScore(s);
-    submitResults({ score: s, actions: { selectedPhenotype, doseAdjust, expectedPhenotype: activeCase.expectedPhenotype } });
+    submitResults({ score: s, actions: { selectedPhenotype, doseAdjust } });
     return s;
   }, [activeCase, selectedPhenotype, doseAdjust, submitted, submitResults]);
 
@@ -208,9 +188,9 @@ export default function SimuladorSNPFarmacogenetica() {
     setActiveCase({
       id: c.id, title: c.title, difficulty: c.difficulty, isAI: true,
       patient: c.patient, scenario: c.scenario, gene: c.gene ?? "CYP2D6", snpId: c.snpId ?? "",
-      allele1: c.allele1 ?? "*1", allele2: c.allele2 ?? "*1",
-      expectedPhenotype: c.expectedPhenotype ?? "EM", drug: c.drug ?? "",
-      standardDoseMg: c.standardDoseMg ?? 50, clinicalTip: c.clinicalTip ?? "",
+      allele1: c.allele1 ?? "*1", allele2: c.allele2 ?? "*1", expectedPhenotype: c.expectedPhenotype ?? "EM",
+      drug: c.drug ?? "", standardDoseMg: c.standardDoseMg ?? 50, snpSequence: c.snpSequence ?? "ATGCCTGAACTTGAC",
+      snpPosition: c.snpPosition ?? 8, clinicalTip: c.clinicalTip ?? "",
     });
   };
 
@@ -258,89 +238,95 @@ export default function SimuladorSNPFarmacogenetica() {
 
       <Card>
         <CardContent className="pt-4 space-y-2">
-          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
+          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
           <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+            <div className="p-2 rounded bg-muted text-center text-xs"><strong>Gene:</strong> {activeCase.gene}</div>
+            <div className="p-2 rounded bg-muted text-center text-xs"><strong>SNP:</strong> {activeCase.snpId}</div>
+            <div className="p-2 rounded bg-muted text-center text-xs"><strong>Alelos:</strong> {activeCase.allele1}/{activeCase.allele2}</div>
+            <div className="p-2 rounded bg-muted text-center text-xs"><strong>Fármaco:</strong> {activeCase.drug}</div>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Start Button + Electropherogram */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Resultado Genotípico</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Eletroferograma — Genotipagem do SNP</CardTitle>
+            <Button size="sm" onClick={() => { if (animProgress >= 1) setAnimProgress(0); setRunning(!running); }} className="gap-1">
+              {running ? <><Pause className="h-3 w-3" /> Pausar</> : <><Play className="h-3 w-3" /> {animProgress >= 1 ? "Reiniciar" : "Iniciar Corrida"}</>}
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div className="p-3 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground">Gene</p>
-              <p className="text-lg font-bold">{activeCase.gene}</p>
+          {electropherogram.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={electropherogram}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="pos" stroke="hsl(var(--muted-foreground))" label={{ value: "Posição (bp)", position: "insideBottom", offset: -5 }} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "RFU", angle: -90, position: "insideLeft", style: { fontSize: 10 } }} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="A" name="A" stroke="#22c55e" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="T" name="T" stroke="#ef4444" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="G" name="G" stroke="#3b82f6" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="C" name="C" stroke="#eab308" dot={false} strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+              {animProgress >= 1 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  📍 Posição {(activeCase.snpPosition || 0) + 1}: {isHeterozygous ? "Dois picos sobrepostos = Heterozigoto" : "Pico único = Homozigoto"}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
+              Clique em "Iniciar Corrida" para visualizar o eletroferograma
             </div>
-            <div className="p-3 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground">SNP ID</p>
-              <p className="text-lg font-bold">{activeCase.snpId}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground">Alelos</p>
-              <p className="text-lg font-bold">{activeCase.allele1}/{activeCase.allele2}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground">Fármaco</p>
-              <p className="text-lg font-bold">{activeCase.drug}</p>
-            </div>
-          </div>
-
-          <p className="text-sm font-medium mb-2">Selecione o fenótipo metabólico:</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-            {(["UM", "EM", "IM", "PM"] as Phenotype[]).map(p => (
-              <Button key={p} variant={selectedPhenotype === p ? "default" : "outline"} size="sm" onClick={() => setSelectedPhenotype(p)} className="text-xs">
-                {p} — {PHENOTYPE_LABELS[p].split(" ")[1]}
-              </Button>
-            ))}
-          </div>
-
-          <div className="p-3 rounded-lg border mb-4">
-            <p className="text-sm"><strong>Fenótipo:</strong> <span className={PHENOTYPE_COLORS[selectedPhenotype]}>{PHENOTYPE_LABELS[selectedPhenotype]}</span></p>
-            {adjustment && <p className="text-sm text-muted-foreground mt-1">{adjustment.recommendation}</p>}
-          </div>
-
-          <div className="mb-4">
-            <div className="flex justify-between mb-2"><label className="text-sm font-medium">Ajuste de Dose</label><span className="text-sm font-bold">{doseAdjust}% ({Math.round(activeCase.standardDoseMg * doseAdjust / 100)} mg)</span></div>
-            <Slider value={[doseAdjust]} onValueChange={([v]) => setDoseAdjust(v)} min={25} max={200} step={5} />
-          </div>
-
-          <div className="flex gap-2">
-            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="flex-1">Finalizar</Button>}
-          </div>
+          )}
         </CardContent>
       </Card>
 
+      {/* Phenotype selection + PK curve side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Classificação do Fenótipo</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              {(["UM", "EM", "IM", "PM"] as Phenotype[]).map(p => (
+                <Button key={p} variant={selectedPhenotype === p ? "default" : "outline"} size="sm" onClick={() => setSelectedPhenotype(p)} className="text-xs">
+                  {p} — {PHENOTYPE_LABELS[p].split(" ")[1]}
+                </Button>
+              ))}
+            </div>
+            {adjustment && (
+              <div className="p-3 rounded-lg border">
+                <p className="text-sm"><strong>Fenótipo:</strong> {PHENOTYPE_LABELS[selectedPhenotype]}</p>
+                <p className="text-xs text-muted-foreground mt-1">{adjustment.recommendation}</p>
+                <p className="text-xs mt-1"><strong>Dose sugerida:</strong> {adjustment.adjustedDose} mg</p>
+              </div>
+            )}
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Ajuste de Dose</label><span className="text-sm font-bold">{doseAdjust}% ({Math.round(activeCase.standardDoseMg * doseAdjust / 100)} mg)</span></div>
+              <Slider value={[doseAdjust]} onValueChange={([v]) => setDoseAdjust(v)} min={25} max={200} step={5} />
+            </div>
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar</Button>}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle className="text-base">Curva Cp×t — Dose Ajustada ({selectedPhenotype})</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={pkData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" label={{ value: "Tempo (h)", position: "insideBottom", offset: -5 }} />
                 <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "Cp (ng/mL)", angle: -90, position: "insideLeft" }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Line type="monotone" dataKey="cp" name="Cp (ng/mL)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">Comparação entre Fenótipos (Dose Padrão)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={pkComparison}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" label={{ value: "Tempo (h)", position: "insideBottom", offset: -5 }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "Cp (ng/mL)", angle: -90, position: "insideLeft" }} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <Line type="monotone" dataKey="UM" name="Ultrarrápido" stroke="#ef4444" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="EM" name="Normal" stroke="#22c55e" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="IM" name="Intermediário" stroke="#eab308" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="PM" name="Lento" stroke="#3b82f6" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="cp" name="Cp (ng/mL)" stroke="hsl(var(--chart-1))" dot={false} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -355,7 +341,7 @@ export default function SimuladorSNPFarmacogenetica() {
       </Card>
 
       <SimulatorChallengeMode
-        challengeSet={{ title: "Desafio: SNPs e Farmacogenética", description: "Teste seus conhecimentos sobre farmacogenética", challenges: [] }}
+        challengeSet={getSNPFarmacogeneticaChallenges()}
         simulatorState={{ selectedPhenotype, doseAdjust }}
         onComplete={() => setChallengeCompleted(true)}
       />
@@ -364,15 +350,14 @@ export default function SimuladorSNPFarmacogenetica() {
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
           </div>
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
               <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
             </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
           </div>
         )
       )}

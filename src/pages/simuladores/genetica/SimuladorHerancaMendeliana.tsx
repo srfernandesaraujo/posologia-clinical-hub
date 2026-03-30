@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Sparkles, Loader2, Dna, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
@@ -10,91 +11,65 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { getHerancaMendelianaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "heranca-mendeliana";
 
 type InheritancePattern = "AD" | "AR" | "XL" | "XD";
 
 interface HerancaCase {
-  id?: string;
-  title: string;
-  difficulty: string;
-  isAI?: boolean;
+  id?: string; title: string; difficulty: string; isAI?: boolean;
   patient: { name: string; age: number; weight: number; diagnosis: string };
-  scenario: string;
-  trait: string;
+  scenario: string; trait: string;
   parentGenotypes: { father: string; mother: string };
   expectedPattern: InheritancePattern;
-  dominantAllele: string;
-  recessiveAllele: string;
+  dominantAllele: string; recessiveAllele: string;
   clinicalTip: string;
 }
 
 const PATTERN_LABELS: Record<InheritancePattern, string> = {
-  AD: "Autossômica Dominante",
-  AR: "Autossômica Recessiva",
-  XL: "Ligada ao X Recessiva",
-  XD: "Ligada ao X Dominante",
+  AD: "Autossômica Dominante", AR: "Autossômica Recessiva",
+  XL: "Ligada ao X Recessiva", XD: "Ligada ao X Dominante",
 };
 
 const BUILT_IN_CASES: HerancaCase[] = [
   {
-    title: "Fibrose Cística — Herança Autossômica Recessiva",
-    difficulty: "Fácil",
-    patient: { name: "Pedro Almeida", age: 3, weight: 12, diagnosis: "Infecções pulmonares recorrentes e esteatorreia" },
-    scenario: "Ambos os pais são portadores (heterozigotos) para a mutação CFTR. Calcule a probabilidade de um filho afetado usando o quadro de Punnett.",
-    trait: "Fibrose Cística (CFTR)",
-    parentGenotypes: { father: "Cc", mother: "Cc" },
-    expectedPattern: "AR",
-    dominantAllele: "C",
-    recessiveAllele: "c",
-    clinicalTip: "Na herança autossômica recessiva, ambos os pais devem ser portadores (Aa) para ter filhos afetados (aa). A probabilidade é de 25% (1/4) para cada gestação. Exemplos: fibrose cística, anemia falciforme, fenilcetonúria.",
+    title: "Fibrose Cística — AR", difficulty: "Fácil",
+    patient: { name: "Pedro Almeida", age: 3, weight: 12, diagnosis: "Infecções pulmonares e esteatorreia" },
+    scenario: "Ambos portadores (Cc). Calcule probabilidades com o quadro de Punnett.",
+    trait: "Fibrose Cística (CFTR)", parentGenotypes: { father: "Cc", mother: "Cc" },
+    expectedPattern: "AR", dominantAllele: "C", recessiveAllele: "c",
+    clinicalTip: "AR: ambos portadores (Aa) → 25% afetados (aa). Exemplos: FC, anemia falciforme, fenilcetonúria.",
   },
   {
-    title: "Doença de Huntington — Herança Autossômica Dominante",
-    difficulty: "Médio",
-    patient: { name: "Ricardo Nunes", age: 40, weight: 80, diagnosis: "Coreia progressiva e declínio cognitivo" },
-    scenario: "Pai afetado heterozigoto (Hh) e mãe não afetada (hh). Determine o padrão de herança e o risco para a prole.",
-    trait: "Doença de Huntington (HTT)",
-    parentGenotypes: { father: "Hh", mother: "hh" },
-    expectedPattern: "AD",
-    dominantAllele: "H",
-    recessiveAllele: "h",
-    clinicalTip: "Na herança autossômica dominante, basta um alelo mutante para manifestar a doença. Pai Hh × mãe hh = 50% dos filhos afetados. A doença de Huntington apresenta penetrância completa e início tardio (30-50 anos).",
+    title: "Doença de Huntington — AD", difficulty: "Médio",
+    patient: { name: "Ricardo Nunes", age: 40, weight: 80, diagnosis: "Coreia progressiva" },
+    scenario: "Pai Hh × mãe hh. Determine o padrão e risco para prole.",
+    trait: "Doença de Huntington (HTT)", parentGenotypes: { father: "Hh", mother: "hh" },
+    expectedPattern: "AD", dominantAllele: "H", recessiveAllele: "h",
+    clinicalTip: "AD: basta 1 alelo mutante. Hh × hh = 50% afetados. Início tardio (30-50 anos), penetrância completa.",
   },
   {
-    title: "Hemofilia A — Herança Ligada ao X",
-    difficulty: "Difícil",
-    patient: { name: "Lucas Ferreira", age: 8, weight: 25, diagnosis: "Hemartroses recorrentes e tempo de coagulação prolongado" },
-    scenario: "Mãe portadora (XᴴXʰ) e pai normal (XᴴY). Analise o heredograma e calcule o risco para filhos e filhas.",
-    trait: "Hemofilia A (F8)",
-    parentGenotypes: { father: "XY", mother: "XᴴXʰ" },
-    expectedPattern: "XL",
-    dominantAllele: "Xᴴ",
-    recessiveAllele: "Xʰ",
-    clinicalTip: "Na herança ligada ao X recessiva, homens hemizigóticos (XʰY) são afetados. Filhas de mãe portadora têm 50% de chance de ser portadoras. Filhos têm 50% de chance de ser afetados. Pais afetados transmitem o X mutante a todas as filhas.",
+    title: "Hemofilia A — Ligada ao X", difficulty: "Difícil",
+    patient: { name: "Lucas Ferreira", age: 8, weight: 25, diagnosis: "Hemartroses recorrentes" },
+    scenario: "Mãe portadora (XᴴXʰ) × pai normal (XᴴY). Calcule risco para filhos e filhas.",
+    trait: "Hemofilia A (F8)", parentGenotypes: { father: "XY", mother: "XᴴXʰ" },
+    expectedPattern: "XL", dominantAllele: "Xᴴ", recessiveAllele: "Xʰ",
+    clinicalTip: "X recessiva: homens hemizigóticos (XʰY) afetados. Filhos de portadora: 50% afetados. Filhas: 50% portadoras.",
   },
 ];
 
 function computePunnett(father: string, mother: string) {
-  const fAlleles = father.length === 2 ? [father[0], father[1]] : [father, father];
-  const mAlleles = mother.length >= 2 ? [mother[0], mother[1]] : [mother, mother];
-
-  const grid = [
-    [fAlleles[0] + mAlleles[0], fAlleles[0] + mAlleles[1]],
-    [fAlleles[1] + mAlleles[0], fAlleles[1] + mAlleles[1]],
-  ];
-
-  const genotypeCounts: Record<string, number> = {};
-  grid.flat().forEach(g => {
-    const sorted = g.split("").sort().join("");
-    genotypeCounts[sorted] = (genotypeCounts[sorted] || 0) + 1;
-  });
-
-  return { grid, genotypeCounts };
+  const fA = father.length === 2 ? [father[0], father[1]] : [father, father];
+  const mA = mother.length >= 2 ? [mother[0], mother[1]] : [mother, mother];
+  const grid = [[fA[0]+mA[0], fA[0]+mA[1]], [fA[1]+mA[0], fA[1]+mA[1]]];
+  const counts: Record<string, number> = {};
+  grid.flat().forEach(g => { const s = g.split("").sort().join(""); counts[s] = (counts[s] || 0) + 1; });
+  return { grid, genotypeCounts: counts };
 }
 
 export default function SimuladorHerancaMendeliana() {
@@ -106,64 +81,62 @@ export default function SimuladorHerancaMendeliana() {
 
   const [activeCase, setActiveCase] = useState<HerancaCase | null>(null);
   const [selectedPattern, setSelectedPattern] = useState<InheritancePattern | null>(null);
+  const [penetrance, setPenetrance] = useState(100);
+  const [generations, setGenerations] = useState(3);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
 
-  useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
-      handleFinish();
-      const cs = sessionStorage.getItem("challengeScore");
-      if (cs) setLastScore(Number(cs));
-    }
-  }, [challengeCompleted]);
-
-  useEffect(() => {
-    if (isVirtualRoom && submitted) {
-      const timer = setTimeout(() => navigate("/"), 15000);
-      return () => clearTimeout(timer);
-    }
-  }, [isVirtualRoom, submitted, navigate]);
+  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
-      setActiveCase({
-        id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
-        patient: cd.patient, scenario: cd.scenario, trait: cd.trait ?? "",
-        parentGenotypes: cd.parentGenotypes ?? { father: "Aa", mother: "Aa" },
-        expectedPattern: cd.expectedPattern ?? "AR", dominantAllele: cd.dominantAllele ?? "A",
-        recessiveAllele: cd.recessiveAllele ?? "a", clinicalTip: cd.clinicalTip ?? "",
-      });
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, trait: cd.trait ?? "", parentGenotypes: cd.parentGenotypes ?? { father: "Aa", mother: "Aa" }, expectedPattern: cd.expectedPattern ?? "AR", dominantAllele: cd.dominantAllele ?? "A", recessiveAllele: cd.recessiveAllele ?? "a", clinicalTip: cd.clinicalTip ?? "" });
     }
   }, [virtualRoomCase]);
 
-  useEffect(() => {
-    if (activeCase) { setSelectedPattern(null); }
-  }, [activeCase]);
+  useEffect(() => { if (activeCase) { setSelectedPattern(null); setPenetrance(100); setGenerations(3); } }, [activeCase]);
 
-  const punnett = useMemo(() => {
-    if (!activeCase) return null;
-    return computePunnett(activeCase.parentGenotypes.father, activeCase.parentGenotypes.mother);
-  }, [activeCase]);
+  const punnett = useMemo(() => activeCase ? computePunnett(activeCase.parentGenotypes.father, activeCase.parentGenotypes.mother) : null, [activeCase]);
+
+  // Probability calculation with penetrance
+  const probabilities = useMemo(() => {
+    if (!punnett || !activeCase) return null;
+    const total = 4;
+    const recessiveGeno = activeCase.recessiveAllele.repeat(2);
+    const affected = Object.entries(punnett.genotypeCounts).reduce((sum, [geno, count]) => {
+      if (activeCase.expectedPattern === "AR") return sum + (geno === recessiveGeno ? count : 0);
+      if (activeCase.expectedPattern === "AD") return sum + (geno.includes(activeCase.dominantAllele) ? count : 0);
+      return sum + count * 0.5; // simplified for X-linked
+    }, 0);
+    const rawProb = (affected / total) * 100;
+    const adjustedProb = rawProb * (penetrance / 100);
+    return { rawProb: Math.round(rawProb), adjustedProb: Math.round(adjustedProb) };
+  }, [punnett, activeCase, penetrance]);
+
+  // Heredogram data
+  const heredogramData = useMemo(() => {
+    if (!probabilities) return [];
+    return Array.from({ length: generations }, (_, g) => ({
+      gen: `G${g + 1}`,
+      afetados: Math.round(probabilities.adjustedProb * (g === 0 ? 0.5 : 1)),
+      portadores: activeCase?.expectedPattern === "AR" ? Math.round(50 * (penetrance / 100)) : 0,
+      normais: Math.round(100 - probabilities.adjustedProb),
+    }));
+  }, [probabilities, generations, activeCase, penetrance]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
-    const correct = selectedPattern === activeCase.expectedPattern;
-    const s = correct ? 100 : 20;
+    const s = selectedPattern === activeCase.expectedPattern ? 100 : 20;
     setLastScore(s);
-    submitResults({ score: s, actions: { selectedPattern, expectedPattern: activeCase.expectedPattern } });
+    submitResults({ score: s, actions: { selectedPattern, penetrance, generations } });
     return s;
-  }, [activeCase, selectedPattern, submitted, submitResults]);
+  }, [activeCase, selectedPattern, penetrance, generations, submitted, submitResults]);
 
   const loadAICase = (c: any) => {
-    setActiveCase({
-      id: c.id, title: c.title, difficulty: c.difficulty, isAI: true,
-      patient: c.patient, scenario: c.scenario, trait: c.trait ?? "",
-      parentGenotypes: c.parentGenotypes ?? { father: "Aa", mother: "Aa" },
-      expectedPattern: c.expectedPattern ?? "AR", dominantAllele: c.dominantAllele ?? "A",
-      recessiveAllele: c.recessiveAllele ?? "a", clinicalTip: c.clinicalTip ?? "",
-    });
+    setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, trait: c.trait ?? "", parentGenotypes: c.parentGenotypes ?? { father: "Aa", mother: "Aa" }, expectedPattern: c.expectedPattern ?? "AR", dominantAllele: c.dominantAllele ?? "A", recessiveAllele: c.recessiveAllele ?? "a", clinicalTip: c.clinicalTip ?? "" });
   };
 
   if (loadingVR) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -176,7 +149,7 @@ export default function SimuladorHerancaMendeliana() {
           <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
             <h1 className="text-2xl font-bold">Herança Mendeliana e Heredogramas</h1>
-            <p className="text-muted-foreground">Padrões de herança, quadro de Punnett e cálculo de probabilidades.</p>
+            <p className="text-muted-foreground">Padrões de herança, Punnett e cálculo de probabilidades.</p>
             <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Herança Mendeliana" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
           </div>
         </div>
@@ -210,71 +183,103 @@ export default function SimuladorHerancaMendeliana() {
 
       <Card>
         <CardContent className="pt-4 space-y-2">
-          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
-          <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
+          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
           <p className="text-sm"><strong>Condição:</strong> {activeCase.trait}</p>
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
 
-      {/* Genotypes */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">Genótipos Parentais</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="p-4 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground mb-1">♂ Pai</p>
-              <p className="text-3xl font-mono font-bold">{activeCase.parentGenotypes.father}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Parameters */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Genéticos</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 mb-2">
+              <div className="p-3 rounded-lg bg-muted text-center">
+                <p className="text-xs text-muted-foreground mb-1">♂ Pai</p>
+                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.father}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted text-center">
+                <p className="text-xs text-muted-foreground mb-1">♀ Mãe</p>
+                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.mother}</p>
+              </div>
             </div>
-            <div className="p-4 rounded-lg bg-muted text-center">
-              <p className="text-xs text-muted-foreground mb-1">♀ Mãe</p>
-              <p className="text-3xl font-mono font-bold">{activeCase.parentGenotypes.mother}</p>
-            </div>
-          </div>
 
-          {/* Punnett Square */}
-          {punnett && (
-            <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Quadro de Punnett</p>
-              <div className="inline-block border-2 border-border rounded-lg overflow-hidden">
-                <table className="border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="w-16 h-10 bg-muted border border-border"></th>
-                      <th className="w-16 h-10 bg-muted border border-border text-sm font-bold">{activeCase.parentGenotypes.mother[0]}</th>
-                      <th className="w-16 h-10 bg-muted border border-border text-sm font-bold">{activeCase.parentGenotypes.mother.length >= 2 ? activeCase.parentGenotypes.mother[1] : activeCase.parentGenotypes.mother[0]}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {punnett.grid.map((row, ri) => (
-                      <tr key={ri}>
-                        <td className="w-16 h-14 bg-muted border border-border text-sm font-bold text-center">
-                          {activeCase.parentGenotypes.father[ri] || activeCase.parentGenotypes.father[0]}
-                        </td>
-                        {row.map((cell, ci) => {
-                          const isHomoRecessive = cell === activeCase.recessiveAllele.repeat(2);
-                          return (
-                            <td key={ci} className={`w-16 h-14 border border-border text-center text-lg font-mono font-bold ${isHomoRecessive ? "bg-destructive/15 text-destructive" : "bg-background"}`}>
-                              {cell}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {Object.entries(punnett.genotypeCounts).map(([geno, count]) => (
-                  <Badge key={geno} variant="secondary" className="text-xs">
-                    {geno}: {count}/4 ({Math.round(count / 4 * 100)}%)
-                  </Badge>
-                ))}
-              </div>
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Penetrância</label><span className="text-sm font-bold">{penetrance}%</span></div>
+              <Slider value={[penetrance]} onValueChange={([v]) => setPenetrance(v)} min={10} max={100} step={5} />
+              <p className="text-xs text-muted-foreground mt-1">% dos portadores que manifestam a doença</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Gerações no Heredograma</label><span className="text-sm font-bold">{generations}</span></div>
+              <Slider value={[generations]} onValueChange={([v]) => setGenerations(v)} min={2} max={5} step={1} />
+            </div>
+
+            {probabilities && (
+              <div className="p-3 rounded-lg border space-y-1">
+                <p className="text-sm"><strong>Probabilidade bruta:</strong> {probabilities.rawProb}%</p>
+                <p className="text-sm"><strong>Com penetrância ({penetrance}%):</strong> {probabilities.adjustedProb}%</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Punnett + Chart */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Quadro de Punnett</CardTitle></CardHeader>
+          <CardContent>
+            {punnett && (
+              <>
+                <div className="inline-block border-2 border-border rounded-lg overflow-hidden mb-3">
+                  <table className="border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="w-14 h-10 bg-muted border border-border"></th>
+                        <th className="w-14 h-10 bg-muted border border-border text-sm font-bold">{activeCase.parentGenotypes.mother[0]}</th>
+                        <th className="w-14 h-10 bg-muted border border-border text-sm font-bold">{activeCase.parentGenotypes.mother.length >= 2 ? activeCase.parentGenotypes.mother[1] : activeCase.parentGenotypes.mother[0]}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {punnett.grid.map((row, ri) => (
+                        <tr key={ri}>
+                          <td className="w-14 h-12 bg-muted border border-border text-sm font-bold text-center">{activeCase.parentGenotypes.father[ri] || activeCase.parentGenotypes.father[0]}</td>
+                          {row.map((cell, ci) => {
+                            const isRec = cell === activeCase.recessiveAllele.repeat(2);
+                            return (
+                              <td key={ci} className={`w-14 h-12 border border-border text-center text-lg font-mono font-bold ${isRec ? "bg-destructive/15 text-destructive" : "bg-background"}`}>
+                                {cell}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {Object.entries(punnett.genotypeCounts).map(([geno, count]) => (
+                    <Badge key={geno} variant="secondary" className="text-xs">{geno}: {count}/4 ({Math.round(count / 4 * 100)}%)</Badge>
+                  ))}
+                </div>
+
+                {/* Heredogram chart */}
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={heredogramData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="gen" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" label={{ value: "%", angle: -90, position: "insideLeft" }} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                    <Bar dataKey="afetados" name="Afetados (%)" fill="hsl(var(--destructive))" stackId="a" />
+                    {activeCase.expectedPattern === "AR" && <Bar dataKey="portadores" name="Portadores (%)" fill="hsl(var(--chart-3))" stackId="a" />}
+                    <Bar dataKey="normais" name="Normais (%)" fill="hsl(var(--chart-1))" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Pattern Selection */}
       <Card>
@@ -282,31 +287,19 @@ export default function SimuladorHerancaMendeliana() {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             {(Object.entries(PATTERN_LABELS) as [InheritancePattern, string][]).map(([key, label]) => (
-              <Button
-                key={key}
-                variant={selectedPattern === key ? "default" : "outline"}
-                onClick={() => setSelectedPattern(key)}
-                className="text-xs h-auto py-3"
-                disabled={submitted}
-              >
+              <Button key={key} variant={selectedPattern === key ? "default" : "outline"} onClick={() => setSelectedPattern(key)} className="text-xs h-auto py-3" disabled={submitted}>
                 <span className="font-bold mr-1">{key}</span> — {label}
               </Button>
             ))}
           </div>
-
           {submitted && selectedPattern && (
             <div className={`p-3 rounded-lg border ${selectedPattern === activeCase.expectedPattern ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10"}`}>
               <p className="text-sm font-medium">
-                {selectedPattern === activeCase.expectedPattern
-                  ? "✅ Correto!"
-                  : `❌ Incorreto. Resposta correta: ${activeCase.expectedPattern} — ${PATTERN_LABELS[activeCase.expectedPattern]}`}
+                {selectedPattern === activeCase.expectedPattern ? "✅ Correto!" : `❌ Resposta: ${activeCase.expectedPattern} — ${PATTERN_LABELS[activeCase.expectedPattern]}`}
               </p>
             </div>
           )}
-
-          <div className="flex gap-2">
-            {!isVirtualRoom && <Button onClick={() => handleFinish()} disabled={submitted || !selectedPattern} className="flex-1">Finalizar</Button>}
-          </div>
+          {!isVirtualRoom && <Button onClick={() => handleFinish()} disabled={submitted || !selectedPattern} className="w-full">Finalizar</Button>}
         </CardContent>
       </Card>
 
@@ -318,8 +311,8 @@ export default function SimuladorHerancaMendeliana() {
       </Card>
 
       <SimulatorChallengeMode
-        challengeSet={{ title: "Desafio: Herança Mendeliana", description: "Teste seus conhecimentos sobre genética mendeliana", challenges: [] }}
-        simulatorState={{ selectedPattern }}
+        challengeSet={getHerancaMendelianaChallenges()}
+        simulatorState={{ selectedPattern, penetrance, generations }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
@@ -327,15 +320,12 @@ export default function SimuladorHerancaMendeliana() {
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-destructive"}`}>{lastScore}%</div></div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
           </div>
         )
       )}

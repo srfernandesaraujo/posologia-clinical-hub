@@ -1913,6 +1913,138 @@ REFERÊNCIAS:
 - Cockcroft DW, Gault MH. Nephron 1976;16:31-41
 - NCI Organ Dysfunction Working Group. J Clin Oncol 2006
 - FDA Guidance: Pharmacokinetics in Hepatic Impairment, 2020`,
+
+  // ===================== SIMULADORES — GENÉTICA =====================
+
+  "sim-sequenciamento-dna": `Você é um especialista em biologia molecular e genômica. Crie um simulador interativo de Sequenciamento de DNA (Sanger e NGS).
+
+REQUISITOS:
+- Simular eletroferogramas animados com picos A (verde), T (vermelho), G (azul), C (amarelo)
+- Parâmetros ajustáveis: temperatura de annealing, comprimento dos primers, cobertura (NGS), read length
+- Quality scores (Phred) por posição: Q = -10 × log10(P_erro)
+- Comparação visual Sanger (reads longos, 1 leitura) vs NGS (reads curtos, alta cobertura)
+- Detecção de variantes com cálculo de frequência alélica
+- Gel de eletroforese capilar animado com fragmentos de diferentes tamanhos
+- Interpretação clínica dos resultados
+
+CASO CLÍNICO obrigatório com paciente, diagnóstico e gene-alvo.
+
+REFERÊNCIAS:
+- Sanger F et al. PNAS 1977;74:5463-5467
+- Metzker ML. Nature Reviews Genetics 2010;11:31-46`,
+
+  "sim-snp-farmacogenetica": `Você é um especialista em farmacogenética e farmacologia clínica. Crie um simulador de SNPs e Farmacogenética.
+
+REQUISITOS:
+- Análise de polimorfismos em genes CYP450 (CYP2D6, CYP2C19, CYP2C9), VKORC1, DPYD
+- Correlação genótipo → fenótipo metabólico (UM, EM, IM, PM)
+- Curva farmacocinética Cp×t com modelo monocompartimental
+- Eletroferograma animado mostrando SNP (dois picos sobrepostos = heterozigoto)
+- Slider de ajuste de dose com impacto em tempo real na curva PK
+- Recomendações CPIC/DPWG para ajuste de dose
+
+CASO CLÍNICO com paciente, fármaco, genótipo e fenótipo esperado.
+
+REFERÊNCIAS:
+- Relling MV, Klein TE. Clin Pharmacol Ther 2011;89:464-467
+- PharmGKB (www.pharmgkb.org)`,
+
+  "sim-cariotipo": `Você é um especialista em citogenética clínica. Crie um simulador de Cariótipo e Anomalias Cromossômicas.
+
+REQUISITOS:
+- Visualização de cromossomos com tamanhos proporcionais reais (Grupo A-G)
+- Cromossomos embaralhados para o aluno montar os pares corretos
+- Identificação de anomalias: trissomias, monossomias, translocações, deleções
+- Escrita da nomenclatura ISCN (ex: 47,XX,+21)
+- Correlação com síndromes clínicas (Down, Turner, Klinefelter, Edwards)
+- Bandeamento G simulado com padrões de bandas
+
+CASO CLÍNICO com paciente, fenótipo e cariótipo esperado.
+
+REFERÊNCIAS:
+- ISCN 2020 - International System for Human Cytogenomic Nomenclature
+- Nussbaum RL et al. Thompson & Thompson Genetics in Medicine, 8th ed.`,
+
+  "sim-heranca-mendeliana": `Você é um especialista em genética médica. Crie um simulador de Herança Mendeliana e Heredogramas.
+
+REQUISITOS:
+- Heredograma interativo com símbolos padrão (círculo=♀, quadrado=♂, preenchido=afetado)
+- Padrões de herança: AD, AR, Ligada ao X recessiva, Ligada ao X dominante
+- Quadro de Punnett interativo com cálculo de probabilidades
+- Sliders para penetrância e expressividade variável
+- Cálculo de risco para descendentes
+- Distinção entre consanguinidade e heredogramas complexos
+
+CASO CLÍNICO com família, histórico e padrão de herança esperado.
+
+REFERÊNCIAS:
+- Nussbaum RL et al. Thompson & Thompson Genetics in Medicine
+- Jorde LB et al. Medical Genetics, 6th ed.`,
+
+  "sim-pcr-eletroforese": `Você é um especialista em biologia molecular. Crie um simulador de PCR e Eletroforese em Gel.
+
+REQUISITOS:
+- Ciclo térmico animado: desnaturação (94-95°C), annealing (variável), extensão (72°C)
+- Design de primers: sequência, Tm (fórmula de Wallace ou nearest-neighbor)
+- Curva de amplificação em tempo real (sigmoide) com Ct
+- Gel de agarose animado com corrida eletroforética
+- Marcador de peso molecular (ladder) e bandas de amostra
+- Efeito de temperatura de annealing na especificidade
+- Efeito de MgCl2 na stringência
+
+CASO CLÍNICO com gene-alvo, primers e tamanho esperado do amplicon.
+
+REFERÊNCIAS:
+- Mullis K et al. Cold Spring Harb Symp Quant Biol 1986;51:263-273
+- Rychlik W et al. Nucleic Acids Res 1990;18:6409-6412`,
+
+  "sim-epigenetica": `Você é um especialista em epigenética e biologia molecular. Crie um simulador de Epigenética e Regulação Gênica.
+
+REQUISITOS:
+- Sliders para metilação de DNA (CpG) e acetilação de histonas (H3/H4)
+- Visualização de cromatina: eucromatina (aberta) ↔ heterocromatina (fechada)
+- Gráfico de expressão gênica em tempo real
+- Atividade enzimática: DNMT, TET, HAT, HDAC
+- Simulação de imprinting genômico e inativação do X
+- Efeito de agentes farmacológicos: azacitidina, vorinostat
+
+CASO CLÍNICO com gene-alvo, estado epigenético e expressão esperada.
+
+REFERÊNCIAS:
+- Allis CD et al. Epigenetics, 2nd ed. Cold Spring Harbor
+- Jones PA, Baylin SB. Cell 2007;128:683-692`,
+
+  "sim-mutacoes-reparo": `Você é um especialista em genética molecular. Crie um simulador de Mutações e Reparo de DNA.
+
+REQUISITOS:
+- Tipos de mutação: substituição (missense, nonsense, silenciosa), deleção, inserção, frameshift
+- Tradução interativa: sequência DNA → mRNA → proteína (tabela de códons)
+- Vias de reparo: MMR, BER, NER, HR, NHEJ
+- Gráfico de consequências: taxa de mutação acumulada ao longo do tempo
+- Efeito da escolha correta/incorreta do sistema de reparo na integridade genômica
+- Correlação com doenças: Lynch, XP, Fanconi
+
+CASO CLÍNICO com sequência original, tipo de mutação e via de reparo esperada.
+
+REFERÊNCIAS:
+- Friedberg EC et al. DNA Repair and Mutagenesis, 2nd ed.
+- Alberts B et al. Molecular Biology of the Cell, 7th ed.`,
+
+  "sim-genetica-populacoes": `Você é um especialista em genética de populações. Crie um simulador de Genética de Populações (Hardy-Weinberg).
+
+REQUISITOS:
+- Equilíbrio de Hardy-Weinberg: p² + 2pq + q² = 1
+- Sliders: frequência alélica p, tamanho da população N, coeficiente de seleção s
+- Simulação ao longo de gerações com gráfico animado
+- Forças evolutivas: seleção, deriva genética, migração, mutação
+- Teste de qui-quadrado para equilíbrio HW
+- Efeito fundador e gargalo genético
+
+CASO CLÍNICO com doença, frequência alélica e análise populacional.
+
+REFERÊNCIAS:
+- Hartl DL, Clark AG. Principles of Population Genetics, 4th ed.
+- Hedrick PW. Genetics of Populations, 4th ed.`,
 };
 
 
