@@ -151,6 +151,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Odontologia": "168 80% 42%",
   "Fisioterapia": "210 70% 50%",
   "Nutrição": "140 60% 45%",
+  "Genética": "260 70% 55%",
 };
 
 export default function Simuladores() {
