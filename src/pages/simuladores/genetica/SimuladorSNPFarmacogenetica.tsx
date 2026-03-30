@@ -355,7 +355,7 @@ export default function SimuladorSNPFarmacogenetica() {
       </Card>
 
       <SimulatorChallengeMode
-        challengeSet={[]}
+        challengeSet={{ title: "Desafio: SNPs e Farmacogenética", description: "Teste seus conhecimentos sobre farmacogenética", challenges: [] }}
         simulatorState={{ selectedPhenotype, doseAdjust }}
         onComplete={() => setChallengeCompleted(true)}
       />

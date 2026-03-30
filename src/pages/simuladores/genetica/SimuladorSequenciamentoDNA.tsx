@@ -389,7 +389,7 @@ export default function SimuladorSequenciamentoDNA() {
       </Card>
 
       <SimulatorChallengeMode
-        challengeSet={[]}
+        challengeSet={{ title: "Desafio: Sequenciamento de DNA", description: "Teste seus conhecimentos sobre sequenciamento", challenges: [] }}
         simulatorState={{ coverage, readLength, errorRate, phredScore: outputs?.phredScore }}
         onComplete={() => setChallengeCompleted(true)}
       />

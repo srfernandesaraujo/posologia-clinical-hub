@@ -335,7 +335,7 @@ export default function SimuladorCariotipo() {
       </Card>
 
       <SimulatorChallengeMode
-        challengeSet={[]}
+        challengeSet={{ title: "Desafio: Cariótipo", description: "Teste seus conhecimentos sobre anomalias cromossômicas", challenges: [] }}
         simulatorState={{ selectedAnomalies, userKaryotype }}
         onComplete={() => setChallengeCompleted(true)}
       />
