@@ -306,6 +306,9 @@ const App = () => (
               <Route path="/sala/simulador/nutricao-renal" element={<SimuladorNutricaoRenal />} />
               <Route path="/sala/simulador/nutricao-materno-infantil" element={<SimuladorNutricaoMaternoInfantil />} />
               <Route path="/sala/simulador/simulacao-realistica" element={<BancadaSimulacaoRealistica />} />
+              <Route path="/sala/simulador/sequenciamento-dna" element={<SimuladorSequenciamentoDNA />} />
+              <Route path="/sala/simulador/snp-farmacogenetica" element={<SimuladorSNPFarmacogenetica />} />
+              <Route path="/sala/simulador/cariotipo" element={<SimuladorCariotipo />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
