@@ -1,75 +1,63 @@
 
 
-## Analise: Elevar o Laboratorio de Modelagem Molecular ao Nivel de Pesquisa Cientifica
+## Plano: Nova Categoria de Simuladores — Genética
 
-### O que existe hoje
+### Visão Geral
+Criar uma nova categoria **"Genética"** com 8 simuladores interativos, seguindo os mesmos padrões visuais e funcionais das categorias existentes (Bioquímica, Fisiologia, etc.): casos nativos, integração com Salas Virtuais, gráficos Recharts e suporte a modo exame.
 
-O laboratorio possui 4 modulos + relatorio:
-1. **M1 - Busca de Composto** -- Busca por nome no PubChem, importa propriedades (MW, LogP, HBD, HBA, TPSA, SMILES, formula) e exibe estrutura 2D
-2. **M2 - Editor Molecular** -- Visualizacao 2D/3D (3Dmol.js com fallback em cadeia), modificacoes funcionais por append de SMILES (metila, hidroxila, amina, fluor, cloro, carbonila), edicao manual, historico de modificacoes com undo
-3. **M3 - Predicao In Silico** -- Lipinski automatico via PubChem (atualiza com debounce), ADMET via edge function `predict-admet` com IA (absorcao, hepatotoxicidade, mutagenicidade, BHE, CYP450, ligacao plasmatica)
-4. **M4 - Bioatividade e Alvos** -- Busca ChEMBL (IC50, EC50, Ki contra alvos) + Open Targets (associacoes doenca-alvo com score)
-5. **M5 - Relatorio** -- Texto livre + PDF
+### Simuladores Propostos
 
-### Limitacoes para pesquisa real
+| # | Slug | Nome | Descrição |
+|---|------|------|-----------|
+| 1 | `sequenciamento-dna` | **Sequenciamento de DNA (Sanger e NGS)** | Compare métodos Sanger vs NGS. Visualize eletroferogramas, quality scores (Phred) e cobertura de leitura. Identifique variantes em reads simulados. |
+| 2 | `snp-farmacogenetica` | **SNPs e Farmacogenética** | Analise polimorfismos de nucleotídeo único em genes CYP450, VKORC1 e DPYD. Correlacione genótipos com fenótipos metabólicos e ajuste de dose. |
+| 3 | `cariotipo` | **Cariótipo e Anomalias Cromossômicas** | Monte cariótipos virtuais arrastando cromossomos. Identifique trissomias, monossomias, translocações e inversões com correlação clínica. |
+| 4 | `heranca-mendeliana` | **Herança Mendeliana e Heredogramas** | Construa heredogramas interativos. Determine padrões de herança (AD, AR, ligada ao X) e calcule probabilidades com quadro de Punnett. |
+| 5 | `pcr-eletroforese` | **PCR e Eletroforese em Gel** | Simule reações de PCR com design de primers, ciclos térmicos e visualização de bandas em gel de agarose com marcador de peso molecular. |
+| 6 | `epigenetica` | **Epigenética e Regulação Gênica** | Manipule metilação de DNA e acetilação de histonas. Observe efeitos na expressão gênica com gráficos de atividade transcricional. |
+| 7 | `mutacoes-reparo` | **Mutações e Reparo de DNA** | Simule mutações (substituição, deleção, inserção, frameshift) e mecanismos de reparo (MMR, BER, NER). Visualize impacto na proteína final. |
+| 8 | `genetica-populacoes` | **Genética de Populações (Hardy-Weinberg)** | Calcule frequências alélicas e genotípicas. Simule desvios por seleção, deriva genética, migração e endogamia ao longo de gerações. |
 
-- Sem biblioteca de compostos comparativa (analisa 1 composto por vez)
-- Sem score de druglikeness multi-criterio (so Lipinski basico)
-- Sem exportacao de dados estruturados (CSV)
-- Sem historico de sessoes salvo no banco
-- Editor molecular limitado (append de grupos funcionais no final do SMILES, nao substitui/modifica posicoes)
-- Sem similaridade molecular (buscar analogos de um composto)
-- Sem visualizacao de propriedades comparativas (graficos radar/scatter)
-- Sem integracao com UniProt/RCSB PDB para alvos proteicos
+### Arquitetura Técnica
 
-### Melhorias Propostas (por impacto)
+**Arquivos a criar** (pasta `src/pages/simuladores/genetica/`):
+- `SimuladorSequenciamentoDNA.tsx`
+- `SimuladorSNPFarmacogenetica.tsx`
+- `SimuladorCariotipo.tsx`
+- `SimuladorHerancaMendeliana.tsx`
+- `SimuladorPCREletroforese.tsx`
+- `SimuladorEpigenetica.tsx`
+- `SimuladorMutacoesReparo.tsx`
+- `SimuladorGeneticaPopulacoes.tsx`
 
-**Tier 1 -- Capacidade de Pesquisa Comparativa**
+**Arquivos a editar**:
+- `src/pages/Simuladores.tsx` — Adicionar os 8 simuladores ao array `NATIVE_SIMULATORS` com `category: "Genética"`, e adicionar entrada em `CATEGORY_ICONS` (ícone `Dna`) e `CATEGORY_COLORS`
+- `src/App.tsx` — Importar os 8 componentes e adicionar rotas `/simuladores/{slug}`
+- `src/data/nativeSystemPrompts.ts` — Adicionar system prompts para geração de casos IA
+- `src/data/simulatorChallenges.ts` — Adicionar desafios para modo challenge
 
-| Funcionalidade | Descricao | Impacto |
-|---|---|---|
-| **Biblioteca de Compostos** | Painel para adicionar multiplos compostos, compara-los em tabela com sorting (MW, LogP, ADMET score, bioatividade). Exportacao CSV | Permite screening virtual de series de compostos |
-| **Score Druglikeness Multi-Criterio** | Score 0-100 combinando Lipinski, Veber (TPSA ≤ 140, rotatable bonds ≤ 10), Ghose, Lead-likeness e alertas PAINS em dashboard visual | Avaliacao profissional como em softwares comerciais |
-| **Busca de Similaridade Molecular** | Dado um composto, buscar analogos no PubChem por similaridade (Tanimoto ≥ 0.8) para encontrar candidatos alternativos | Expande o espaco quimico explorado |
+**Padrão de cada simulador**:
+- Casos nativos embutidos (3 por simulador, Fácil/Médio/Difícil)
+- Gráficos interativos com Recharts (sliders para manipular parâmetros)
+- Integração com `useSimulatorCases` e `useVirtualRoomCase` para Salas Virtuais
+- Botão "Mostrar Resultados" com redirecionamento de 15s para home
+- Componentes `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`
+- Suporte a light/dark mode
 
-**Tier 2 -- Integracao com Bases de Dados Proteicos**
+### Detalhes por Simulador
 
-| Funcionalidade | Descricao | Impacto |
-|---|---|---|
-| **Modulo de Alvo Proteico (UniProt/RCSB PDB)** | Buscar proteinas-alvo por nome ou gene, visualizar estrutura 3D via RCSB PDB, exibir informacoes funcionais do UniProt | Conecta o composto ao seu alvo biologico real |
-| **Docking Conceitual** | Visualizar composto e proteina-alvo simultaneamente, calcular estimativas de afinidade baseadas em propriedades moleculares | Simula o pipeline real de drug discovery |
+1. **Sequenciamento de DNA**: Eletroferograma SVG animado, barra de quality score por base, comparação Sanger (reads longos) vs NGS (reads curtos + cobertura), slider de profundidade de cobertura
+2. **SNPs e Farmacogenética**: Mapa de gene com posições de SNPs, quadro de genótipo→fenótipo, gráfico Recharts de curva Cp×t por fenótipo metabolizador
+3. **Cariótipo**: Grid visual de 23 pares cromossômicos, drag-and-drop para classificação, identificação de anomalias com feedback clínico
+4. **Herança Mendeliana**: Editor de heredograma SVG com símbolos padrão (círculo/quadrado/preenchido), quadro de Punnett interativo, cálculo de risco
+5. **PCR e Eletroforese**: Painel de ciclos térmicos com gráfico de temperatura, visualização de gel com bandas fluorescentes, design de primers com Tm
+6. **Epigenética**: Diagrama de cromatina (condensada/aberta), sliders de metilação CpG e acetilação H3/H4, gráfico de expressão gênica resultante
+7. **Mutações e Reparo**: Sequência de DNA editável, visualização de tradução (códon→aminoácido), comparação proteína normal vs mutada, seleção de via de reparo
+8. **Genética de Populações**: Sliders para p/q, tamanho da população, coeficiente de seleção; gráficos de frequência alélica ao longo de gerações; teste de equilíbrio HW
 
-**Tier 3 -- Diferencial de Mercado**
-
-| Funcionalidade | Descricao | Impacto |
-|---|---|---|
-| **Analise SAR Automatizada** | Com 3+ compostos na biblioteca, gerar graficos de correlacao (LogP vs ADMET score, MW vs bioatividade) e identificar tendencias | Insights publicaveis de relacao estrutura-atividade |
-| **Historico de Experimentos (Supabase)** | Salvar sessoes completas (compostos, propriedades, ADMET, bioatividade) no banco, com possibilidade de retomar | Permite construir datasets longitudinais |
-| **Exportacao Cientifica PDF Estruturado** | PDF formatado como relatorio de pesquisa com tabelas de propriedades, graficos comparativos, referencias bibliograficas | Resultados prontos para publicacao/TCC |
-
-### Recomendacao de Implementacao (5 funcionalidades prioritarias)
-
-1. **Biblioteca de Compostos com Tabela Comparativa** -- Adicionar compostos analisados a uma lista, comparar lado a lado com sorting, exportar CSV
-2. **Score Druglikeness Multi-Criterio** -- Dashboard visual com Lipinski + Veber + Ghose + Lead-likeness + PAINS
-3. **Busca de Similaridade Molecular** -- PubChem Similarity Search API para encontrar analogos estruturais
-4. **Modulo de Alvo Proteico** -- Busca UniProt + visualizacao 3D do alvo via RCSB PDB (reutiliza 3Dmol.js ja integrado)
-5. **Analise SAR + Exportacao Cientifica** -- Graficos de correlacao com Recharts + PDF estruturado com tabelas
-
-### Detalhes Tecnicos
-
-**Arquivos novos:**
-- `src/components/lab-virtual/molmod/CompoundLibraryPanel.tsx` -- Tabela comparativa com sorting, remocao e exportacao CSV
-- `src/components/lab-virtual/molmod/DruglikenessPanel.tsx` -- Dashboard multi-criterio com radar chart (Recharts)
-- `src/components/lab-virtual/molmod/SimilaritySearchPanel.tsx` -- Busca de analogos via PubChem Similarity API
-- `src/components/lab-virtual/molmod/ProteinTargetPanel.tsx` -- Busca UniProt + visualizacao RCSB PDB via 3Dmol.js
-
-**Arquivos modificados:**
-- `BancadaModelagemMolecular.tsx` -- Adicionar estado de biblioteca, novos modulos, exportacao
-- `CompoundSearchPanel.tsx` -- Botao "Adicionar a Biblioteca" alem de "Usar no Editor"
-
-**APIs externas (gratuitas, sem chave):**
-- PubChem PUG REST: Similarity Search (`/compound/fastsimilarity_2d/smiles/.../property/.../JSON`)
-- UniProt REST API: Busca de proteinas (`https://rest.uniprot.org/uniprotkb/search`)
-- RCSB PDB: Estruturas 3D (`https://files.rcsb.org/download/{PDB_ID}.pdb`)
-- 3Dmol.js: Ja integrado no projeto para visualizacao 3D
+### Ordem de Implementação
+Dado o volume (8 simuladores), a implementação será dividida em 2-3 etapas:
+1. **Etapa 1**: Infraestrutura (categoria + rotas) + Sequenciamento DNA + SNP + Cariótipo
+2. **Etapa 2**: Herança Mendeliana + PCR + Epigenética
+3. **Etapa 3**: Mutações e Reparo + Genética de Populações
 
