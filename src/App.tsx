@@ -140,6 +140,11 @@ import SimuladorNutricaoMaternoInfantil from "./pages/simuladores/nutricao/Simul
 import SimuladorSequenciamentoDNA from "./pages/simuladores/genetica/SimuladorSequenciamentoDNA";
 import SimuladorSNPFarmacogenetica from "./pages/simuladores/genetica/SimuladorSNPFarmacogenetica";
 import SimuladorCariotipo from "./pages/simuladores/genetica/SimuladorCariotipo";
+import SimuladorHerancaMendeliana from "./pages/simuladores/genetica/SimuladorHerancaMendeliana";
+import SimuladorPCREletroforese from "./pages/simuladores/genetica/SimuladorPCREletroforese";
+import SimuladorEpigenetica from "./pages/simuladores/genetica/SimuladorEpigenetica";
+import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutacoesReparo";
+import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
@@ -309,6 +314,11 @@ const App = () => (
               <Route path="/sala/simulador/sequenciamento-dna" element={<SimuladorSequenciamentoDNA />} />
               <Route path="/sala/simulador/snp-farmacogenetica" element={<SimuladorSNPFarmacogenetica />} />
               <Route path="/sala/simulador/cariotipo" element={<SimuladorCariotipo />} />
+              <Route path="/sala/simulador/heranca-mendeliana" element={<SimuladorHerancaMendeliana />} />
+              <Route path="/sala/simulador/pcr-eletroforese" element={<SimuladorPCREletroforese />} />
+              <Route path="/sala/simulador/epigenetica" element={<SimuladorEpigenetica />} />
+              <Route path="/sala/simulador/mutacoes-reparo" element={<SimuladorMutacoesReparo />} />
+              <Route path="/sala/simulador/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
@@ -418,6 +428,11 @@ const App = () => (
               <Route path="/simuladores/sequenciamento-dna" element={<SimuladorSequenciamentoDNA />} />
               <Route path="/simuladores/snp-farmacogenetica" element={<SimuladorSNPFarmacogenetica />} />
               <Route path="/simuladores/cariotipo" element={<SimuladorCariotipo />} />
+              <Route path="/simuladores/heranca-mendeliana" element={<SimuladorHerancaMendeliana />} />
+              <Route path="/simuladores/pcr-eletroforese" element={<SimuladorPCREletroforese />} />
+              <Route path="/simuladores/epigenetica" element={<SimuladorEpigenetica />} />
+              <Route path="/simuladores/mutacoes-reparo" element={<SimuladorMutacoesReparo />} />
+              <Route path="/simuladores/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
