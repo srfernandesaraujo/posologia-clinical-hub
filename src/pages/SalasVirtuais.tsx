@@ -30,16 +30,23 @@ type ToolType = "simulator" | "laboratory";
 const SIMULATOR_OPTIONS: ToolOption[] = [
   // Farmácia Clínica
   { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos", category: "Farmácia Clínica" },
-  { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Farmácia Clínica" },
-  { slug: "tdm", label: "TDM – Monitoramento Terapêutico", category: "Farmácia Clínica" },
-  { slug: "acompanhamento", label: "Acompanhamento Farmacoterapêutico", category: "Farmácia Clínica" },
-  { slug: "insulina", label: "Dose de Insulina", category: "Farmácia Clínica" },
   { slug: "metodo-soap", label: "Simulador do Método SOAP", category: "Farmácia Clínica" },
   { slug: "mai", label: "Simulador MAI", category: "Farmácia Clínica" },
   { slug: "cascata-prescricao", label: "Cascata de Prescrição", category: "Farmácia Clínica" },
-  { slug: "bomba-infusao", label: "Bomba de Infusão", category: "Farmácia Clínica" },
-  { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos", category: "Farmácia Clínica" },
-  { slug: "interacoes", label: "Interações Medicamentosas", category: "Farmácia Clínica" },
+  { slug: "acompanhamento", label: "Acompanhamento Farmacoterapêutico", category: "Farmácia Clínica" },
+  { slug: "dispensacao-344", label: "Dispensação — Portaria 344/98", category: "Farmácia Clínica" },
+  // Infectologia
+  { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Infectologia" },
+  // Farmacocinética
+  { slug: "tdm", label: "TDM – Monitoramento Terapêutico", category: "Farmacocinética" },
+  // Endocrinologia
+  { slug: "insulina", label: "Dose de Insulina", category: "Endocrinologia" },
+  // Enfermagem / UTI
+  { slug: "bomba-infusao", label: "Bomba de Infusão", category: "Enfermagem / UTI" },
+  // Psiquiatria
+  { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos", category: "Psiquiatria" },
+  // Farmacologia Clínica
+  { slug: "interacoes", label: "Interações Medicamentosas", category: "Farmacologia Clínica" },
   // Fisiologia Humana
   { slug: "sna", label: "Sistema Nervoso Autônomo", category: "Fisiologia Humana" },
   { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca", category: "Fisiologia Humana" },
