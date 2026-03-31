@@ -124,6 +124,15 @@ const SIMULATOR_OPTIONS: ToolOption[] = [
   { slug: "disfagia", label: "Avaliação de Disfagia", category: "Nutrição" },
   { slug: "nutricao-renal", label: "Nutrição Renal Crônica", category: "Nutrição" },
   { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil", category: "Nutrição" },
+  // Genética
+  { slug: "sequenciamento-dna", label: "Sequenciamento de DNA (Sanger e NGS)", category: "Genética" },
+  { slug: "snp-farmacogenetica", label: "SNPs e Farmacogenética", category: "Genética" },
+  { slug: "cariotipo", label: "Cariótipo e Anomalias Cromossômicas", category: "Genética" },
+  { slug: "heranca-mendeliana", label: "Herança Mendeliana e Heredogramas", category: "Genética" },
+  { slug: "pcr-eletroforese", label: "PCR e Eletroforese em Gel", category: "Genética" },
+  { slug: "epigenetica", label: "Epigenética e Regulação Gênica", category: "Genética" },
+  { slug: "mutacoes-reparo", label: "Mutações e Reparo de DNA", category: "Genética" },
+  { slug: "genetica-populacoes", label: "Genética de Populações (Hardy-Weinberg)", category: "Genética" },
 ];
 
 const LAB_OPTIONS: ToolOption[] = [
