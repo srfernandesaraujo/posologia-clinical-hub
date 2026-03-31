@@ -288,6 +288,167 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 1, title: "Barbitúricos – Lipofilia e Ação no SNC", difficulty: "Médio" },
     { index: 2, title: "Quinolonas – Modelo Multivariado", difficulty: "Difícil" },
   ],
+  // ── Formação Docente ──
+  "avaliacao-rubrica": [
+    { index: 0, title: "Avaliação Formativa em Farmacologia", difficulty: "Fácil" },
+    { index: 1, title: "Rubrica para OSCE", difficulty: "Médio" },
+  ],
+  "preceptoria-clinica": [
+    { index: 0, title: "Preceptoria em Farmácia Hospitalar", difficulty: "Fácil" },
+    { index: 1, title: "Feedback ao Residente", difficulty: "Médio" },
+  ],
+  "feedback-formativo": [
+    { index: 0, title: "Feedback em Estágio Clínico", difficulty: "Fácil" },
+    { index: 1, title: "Feedback Construtivo em Simulação", difficulty: "Médio" },
+  ],
+  "elaboracao-questoes": [
+    { index: 0, title: "Questão de Aplicação (Bloom)", difficulty: "Fácil" },
+    { index: 1, title: "Questão de Análise Clínica", difficulty: "Médio" },
+  ],
+  "conducao-caso-pbl": [
+    { index: 0, title: "Caso PBL em Farmacoterapia", difficulty: "Fácil" },
+    { index: 1, title: "TBL em Farmacologia Clínica", difficulty: "Médio" },
+  ],
+  "planejamento-aula": [
+    { index: 0, title: "Aula de Farmacocinética", difficulty: "Fácil" },
+    { index: 1, title: "Aula Invertida – Interações", difficulty: "Médio" },
+  ],
+  "gestao-sala": [
+    { index: 0, title: "Turma de 60 Alunos – Engajamento", difficulty: "Fácil" },
+    { index: 1, title: "Conflito em Grupo de PBL", difficulty: "Médio" },
+  ],
+  // ── Odontologia ──
+  odontograma: [
+    { index: 0, title: "Paciente Adulto – Exame Completo", difficulty: "Fácil" },
+    { index: 1, title: "Paciente Pediátrico – Dentição Mista", difficulty: "Médio" },
+  ],
+  "anatomia-endodontia": [
+    { index: 0, title: "Molar Inferior – Canais Múltiplos", difficulty: "Médio" },
+    { index: 1, title: "Incisivo Superior – Canal Único", difficulty: "Fácil" },
+  ],
+  periodontograma: [
+    { index: 0, title: "Periodontite Generalizada", difficulty: "Médio" },
+    { index: 1, title: "Gengivite Localizada", difficulty: "Fácil" },
+  ],
+  "anestesiologia-odonto": [
+    { index: 0, title: "Bloqueio do Nervo Alveolar Inferior", difficulty: "Fácil" },
+    { index: 1, title: "Anestesia Infiltrativa em Maxila", difficulty: "Médio" },
+  ],
+  cefalometria: [
+    { index: 0, title: "Classe II Esquelética", difficulty: "Médio" },
+    { index: 1, title: "Classe III – Prognatismo", difficulty: "Difícil" },
+  ],
+  "radiografia-odonto": [
+    { index: 0, title: "Panorâmica – Identificação de Lesões", difficulty: "Fácil" },
+    { index: 1, title: "Periapical – Diagnóstico Endodôntico", difficulty: "Médio" },
+  ],
+  "farmacologia-odonto": [
+    { index: 0, title: "Prescrição Pós-Exodontia", difficulty: "Fácil" },
+    { index: 1, title: "Paciente Cardiopata – Vasoconstritores", difficulty: "Médio" },
+  ],
+  "cirurgia-exodontia": [
+    { index: 0, title: "Exodontia Simples de Molar", difficulty: "Fácil" },
+    { index: 1, title: "Terceiro Molar Incluso", difficulty: "Difícil" },
+  ],
+  // ── Fisioterapia ──
+  goniometria: [
+    { index: 0, title: "Avaliação de Ombro – ADM", difficulty: "Fácil" },
+    { index: 1, title: "Avaliação de Joelho Pós-LCA", difficulty: "Médio" },
+  ],
+  "avaliacao-postural": [
+    { index: 0, title: "Escoliose Funcional", difficulty: "Fácil" },
+    { index: 1, title: "Hiperlordose Lombar", difficulty: "Médio" },
+  ],
+  "forca-muscular": [
+    { index: 0, title: "Teste Manual – Membro Superior", difficulty: "Fácil" },
+    { index: 1, title: "Avaliação Pós-AVE", difficulty: "Médio" },
+  ],
+  dermatomos: [
+    { index: 0, title: "Hérnia Discal L4-L5", difficulty: "Fácil" },
+    { index: 1, title: "Lesão Medular Cervical", difficulty: "Difícil" },
+  ],
+  respiratorio: [
+    { index: 0, title: "DPOC – Técnicas de Higiene Brônquica", difficulty: "Fácil" },
+    { index: 1, title: "Pós-Operatório Torácico", difficulty: "Médio" },
+  ],
+  eletroterapia: [
+    { index: 0, title: "TENS para Dor Lombar", difficulty: "Fácil" },
+    { index: 1, title: "FES para Fortalecimento de Quadríceps", difficulty: "Médio" },
+  ],
+  "testes-ortopedicos": [
+    { index: 0, title: "Teste de Lachman – Joelho", difficulty: "Fácil" },
+    { index: 1, title: "Teste de Neer – Ombro", difficulty: "Médio" },
+  ],
+  berg: [
+    { index: 0, title: "Idoso com Risco de Queda", difficulty: "Fácil" },
+    { index: 1, title: "Paciente Pós-AVE – Equilíbrio", difficulty: "Médio" },
+  ],
+  // ── Nutrição ──
+  "avaliacao-nutricional": [
+    { index: 0, title: "Paciente Adulto – Antropometria", difficulty: "Fácil" },
+    { index: 1, title: "Idoso Hospitalizado – MAN", difficulty: "Médio" },
+  ],
+  "triagem-nutricional": [
+    { index: 0, title: "NRS-2002 em Paciente Cirúrgico", difficulty: "Fácil" },
+    { index: 1, title: "MUST em Paciente Oncológico", difficulty: "Médio" },
+  ],
+  "necessidades-energeticas": [
+    { index: 0, title: "Paciente Queimado – Harris-Benedict", difficulty: "Médio" },
+    { index: 1, title: "Paciente em UTI – Calorimetria", difficulty: "Difícil" },
+  ],
+  tne: [
+    { index: 0, title: "Nutrição Enteral em AVC", difficulty: "Fácil" },
+    { index: 1, title: "Nutrição Enteral em Pancreatite", difficulty: "Médio" },
+  ],
+  tnp: [
+    { index: 0, title: "Nutrição Parenteral Total em Fístula", difficulty: "Médio" },
+    { index: 1, title: "NPT em Neonato Prematuro", difficulty: "Difícil" },
+  ],
+  disfagia: [
+    { index: 0, title: "Disfagia Pós-AVE", difficulty: "Fácil" },
+    { index: 1, title: "Disfagia em Paciente com Parkinson", difficulty: "Médio" },
+  ],
+  "nutricao-renal": [
+    { index: 0, title: "DRC Estágio 3 – Restrição Proteica", difficulty: "Fácil" },
+    { index: 1, title: "Hemodiálise – Ajuste Nutricional", difficulty: "Médio" },
+  ],
+  "nutricao-materno-infantil": [
+    { index: 0, title: "Gestante com DMG", difficulty: "Fácil" },
+    { index: 1, title: "Alimentação Complementar – 6 meses", difficulty: "Médio" },
+  ],
+  // ── Genética ──
+  "sequenciamento-dna": [
+    { index: 0, title: "Sequenciamento de Gene BRCA1", difficulty: "Médio" },
+    { index: 1, title: "Identificação de Mutação Pontual", difficulty: "Fácil" },
+  ],
+  "snp-farmacogenetica": [
+    { index: 0, title: "Genotipagem CYP2D6 – Codeína", difficulty: "Médio" },
+    { index: 1, title: "SNP de VKORC1 – Varfarina", difficulty: "Fácil" },
+  ],
+  cariotipo: [
+    { index: 0, title: "Síndrome de Down – Trissomia 21", difficulty: "Fácil" },
+    { index: 1, title: "Síndrome de Turner – Monossomia X", difficulty: "Médio" },
+  ],
+  "heranca-mendeliana": [
+    { index: 0, title: "Fibrose Cística – Autossômica Recessiva", difficulty: "Fácil" },
+    { index: 1, title: "Doença de Huntington – Dominante", difficulty: "Médio" },
+  ],
+  "pcr-eletroforese": [
+    { index: 0, title: "Detecção de HIV por PCR", difficulty: "Fácil" },
+    { index: 1, title: "Diagnóstico de Anemia Falciforme", difficulty: "Médio" },
+  ],
+  epigenetica: [
+    { index: 0, title: "Metilação em Gene Supressor Tumoral", difficulty: "Médio" },
+    { index: 1, title: "Acetilação de Histonas – Ativação Gênica", difficulty: "Fácil" },
+  ],
+  "mutacoes-reparo": [
+    { index: 0, title: "Dano UV – Dímeros de Pirimidina", difficulty: "Fácil" },
+    { index: 1, title: "Erro de Replicação – Mismatch", difficulty: "Médio" },
+  ],
+  "genetica-populacoes": [
+    { index: 0, title: "Equilíbrio de Hardy-Weinberg – Anemia Falciforme", difficulty: "Fácil" },
+    { index: 1, title: "Deriva Genética em População Pequena", difficulty: "Médio" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {
