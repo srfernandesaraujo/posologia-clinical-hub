@@ -457,6 +457,14 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: Dor Oncológica — Escalonamento", difficulty: "Difícil" },
     { index: 4, title: "Caso 5: Rotação de Opioides e Tolerância", difficulty: "Difícil" },
   ],
+  // ── Inflamação e Anti-inflamatórios ──
+  "inflamacao-aines": [
+    { index: 0, title: "Caso 1: OA de Joelho — Seleção de AINE", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: OA em Idosa Polimedicada", difficulty: "Difícil" },
+    { index: 2, title: "Caso 3: AR Inicial — Introdução de Corticoide", difficulty: "Médio" },
+    { index: 3, title: "Caso 4: EA do Corticoide — Dose vs. Tempo", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: Desmame de Corticoide", difficulty: "Difícil" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {
