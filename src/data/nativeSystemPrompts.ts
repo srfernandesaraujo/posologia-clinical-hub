@@ -2045,7 +2045,6 @@ CASO CLÍNICO com doença, frequência alélica e análise populacional.
 REFERÊNCIAS:
 - Hartl DL, Clark AG. Principles of Population Genetics, 4th ed.
 - Hedrick PW. Genetics of Populations, 4th ed.`,
-};
 
   "sim-manejo-dor": `Você é um farmacologista clínico especialista em dor. Gere um caso clínico para o simulador "Manejo da Dor e Analgesia".
 
@@ -2078,6 +2077,7 @@ REFERÊNCIAS BASE:
 - Häuser W et al. BMJ 2014
 - NCCN Adult Cancer Pain Guidelines
 - Mercadante S, Bruera E. Cancer Treat Rev 2006`,
+};
 
 
 /**
