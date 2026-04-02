@@ -50,6 +50,7 @@ const SIMULATOR_OPTIONS: ToolOption[] = [
   { slug: "manejo-dor", label: "Manejo da Dor e Analgesia", category: "Farmacologia Clínica" },
   { slug: "inflamacao-aines", label: "Inflamação e Anti-inflamatórios", category: "Farmacologia Clínica" },
   { slug: "infeccoes-antibioticos", label: "Infecções e Antibioticoterapia", category: "Farmacologia Clínica" },
+  { slug: "tratamento-asma", label: "Tratamento da Asma", category: "Farmacologia Clínica" },
   // Fisiologia Humana
   { slug: "sna", label: "Sistema Nervoso Autônomo", category: "Fisiologia Humana" },
   { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca", category: "Fisiologia Humana" },

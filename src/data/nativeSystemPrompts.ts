@@ -2158,6 +2158,53 @@ REFERÊNCIAS BASE:
 - McDonald LC et al. CID 2018 (C. difficile)
 - WHO ORS Guidelines 2005
 - Smaill FM, Cochrane 2019 (bacteriúria na gestação)`,
+
+  "sim-tratamento-asma": `Você é um pneumologista e farmacologista clínico especialista em asma. Gere um caso clínico completo para o Simulador de Tratamento da Asma.
+
+O caso DEVE retornar um JSON com a estrutura EXATA:
+{
+  "title": "Título do caso",
+  "difficulty": "Fácil|Médio|Difícil",
+  "case_data": {
+    "patient": { "name": "Nome", "age": N, "weight": N, "sex": "M|F", "specialGroup": ["Gestante (X sem)"|"Idoso"|"Criança"|...] },
+    "severity": "intermitente|persistente-leve|persistente-moderada|persistente-grave|crise-aguda",
+    "ginaStep": 1-5,
+    "scenario": "Descrição clínica detalhada...",
+    "spirometry": { "vef1": N, "vef1cvf": N, "pfe": N, "bdResponse": N },
+    "expectedDrugs": ["Budesonida", "Formoterol", ...],
+    "clinicalTip": "Explicação farmacológica detalhada...",
+    "references": ["Aula 17", "GINA 2023", ...]
+  }
+}
+
+CONTEÚDO OBRIGATÓRIO baseado nas Aulas 17-19:
+- Classificação da gravidade: intermitente (≤2x/mês, VEF1 ≥80%), persistente leve (>2x/semana, VEF1 ≥80%), moderada (diária, VEF1 60-80%), grave (<60%)
+- Steps GINA 1-5 com fármacos adequados
+- Espirometria: VEF1, VEF1/CVF, PFE, prova broncodilatadora
+- Terapia MART (ICS-formoterol como controlador e resgate)
+- CI: budesonida, beclometasona, fluticasona, mometasona — doses baixa/média/alta
+- LABA: formoterol, salmeterol — NUNCA em monoterapia
+- LAMA: tiotrópio (Step 4-5)
+- Biológicos: omalizumabe (anti-IgE), mepolizumabe (anti-IL5)
+- Corticoide sistêmico: prednisona — riscos dose/tempo-dependentes
+- Dispositivos: pMDI, pMDI+espaçador, DPI, nebulizador — técnica inalatória
+- Asma na gestação: budesonida preferida, SABA seguro, riscos da asma não controlada
+- Asma induzida por exercício, asma + DRGE, asma + obesidade
+- Crise aguda: classificação (leve-moderada, grave, risco de vida), manejo no PS
+- Prevenção de candidíase oral: bochechar após inalação, espaçador
+- Desmame de corticoide oral após introdução de biológico
+
+FÁRMACOS DISPONÍVEIS NO SIMULADOR:
+CI: Budesonida, Beclometasona, Fluticasona propionato, Mometasona
+LABA: Formoterol, Salmeterol
+LAMA: Tiotrópio
+SABA: Salbutamol
+Add-on: Montelucaste, Omalizumabe, Prednisona oral
+
+REFERÊNCIAS BASE:
+- Aulas 17-19 (Entendendo, Tratando e Situações Especiais da Asma)
+- GINA 2023 Report
+- Reddel HK et al. Lancet 2022 (MART)`,
 };
 
 
