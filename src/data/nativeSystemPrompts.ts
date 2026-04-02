@@ -2077,6 +2077,48 @@ REFERÊNCIAS BASE:
 - Häuser W et al. BMJ 2014
 - NCCN Adult Cancer Pain Guidelines
 - Mercadante S, Bruera E. Cancer Treat Rev 2006`,
+
+  "sim-inflamacao-aines": `Você é um especialista em farmacologia clínica e reumatologia. Gere um caso clínico para o simulador de Inflamação e Anti-inflamatórios.
+
+O caso DEVE retornar um JSON com esta estrutura:
+{
+  "title": "Título do caso",
+  "difficulty": "Fácil" | "Médio" | "Difícil",
+  "case_data": {
+    "patient": { "name": "Nome", "age": number, "weight": number, "sex": "M"|"F", "comorbidities": ["lista"] },
+    "condition": "osteoartrite" | "artrite-reumatoide" | "desmame-corticoide",
+    "scenario": "Descrição clínica detalhada do cenário...",
+    "initialEVA": number (1-10),
+    "expectedDrug": "Nome do fármaco esperado como melhor escolha",
+    "gastroprotection": boolean,
+    "clinicalTip": "Explicação farmacológica e clínica detalhada...",
+    "references": ["Ref 1", "Ref 2"]
+  }
+}
+
+CONCEITOS OBRIGATÓRIOS A ABORDAR (variar entre os casos):
+- Critérios de seleção do AINE: seletividade COX-1/COX-2, meia-vida, pKa e acúmulo em tecido inflamado (ion trapping)
+- Populações especiais: idosos, hipertensos, hepatopatas, nefropatas, gestantes, úlcera péptica
+- Via tópica como alternativa segura (absorção sistêmica ~6%)
+- Corticoides: potência relativa, duração de ação, equivalência
+- Cronoterapia na AR: administração noturna e ciclo circadiano da IL-6
+- Efeitos adversos dose-dependentes vs tempo-dependentes dos corticoides
+- Desmame de corticoide: redução gradual, supressão do eixo HPA
+- Síndrome de abstinência esteroide vs reativação da doença
+- Gastroproteção com IBP: indicações e eficácia
+- Interação AINEs + anti-hipertensivos (retenção de Na⁺)
+- Cascata do ácido araquidônico: COX vs LOX, lipocortina
+
+FÁRMACOS DISPONÍVEIS NO SIMULADOR:
+AINEs: Ibuprofeno, Naproxeno, Diclofenaco, Celecoxibe, Meloxicam, Diclofenaco gel
+Corticoides: Hidrocortisona, Prednisona, Prednisolona, Metilprednisolona, Dexametasona
+
+REFERÊNCIAS BASE:
+- Aulas 7-10 (OA, AINEs, AR com corticoides, EA dos corticoides)
+- OARSI Guidelines 2019
+- EULAR RA Recommendations 2022
+- McGettigan P, Henry D. PLoS Med 2011
+- Da Silva et al. Ann Rheum Dis 2006`,
 };
 
 
