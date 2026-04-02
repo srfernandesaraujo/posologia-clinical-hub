@@ -147,6 +147,7 @@ import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutac
 import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
+import SimuladorInflamacaoAINEs from "./pages/simuladores/SimuladorInflamacaoAINEs";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";
