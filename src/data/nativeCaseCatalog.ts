@@ -465,6 +465,14 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: EA do Corticoide — Dose vs. Tempo", difficulty: "Difícil" },
     { index: 4, title: "Caso 5: Desmame de Corticoide", difficulty: "Difícil" },
   ],
+  // ── Infecções e Antibioticoterapia ──
+  "infeccoes-antibioticos": [
+    { index: 0, title: "Caso 1: Cistite em Mulher Jovem — Seleção de Antibiótico", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Pielonefrite com E. coli ESBL — Escalonamento", difficulty: "Difícil" },
+    { index: 2, title: "Caso 3: ITU na Gestação — Antibióticos Seguros", difficulty: "Médio" },
+    { index: 3, title: "Caso 4: Diarreia Aquosa vs Disenteria — Algoritmo", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Diarreia por C. difficile — Complicações", difficulty: "Difícil" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {

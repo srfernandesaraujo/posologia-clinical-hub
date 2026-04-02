@@ -2119,6 +2119,45 @@ REFERÊNCIAS BASE:
 - EULAR RA Recommendations 2022
 - McGettigan P, Henry D. PLoS Med 2011
 - Da Silva et al. Ann Rheum Dis 2006`,
+
+  "sim-infeccoes-antibioticos": `Você é um especialista em infectologia clínica e farmacologia antimicrobiana. Gere um caso clínico ORIGINAL para o simulador "Infecções e Antibioticoterapia".
+
+O caso deve seguir EXATAMENTE esta estrutura JSON:
+{
+  "patient": { "name": "Nome completo", "age": número, "weight": número, "sex": "M ou F", "specialGroup": ["lista de grupos especiais: Gestante, Idoso, DRC, Criança, Cateter vesical, Imunossuprimido ou vazio"] },
+  "infectionType": "itu-nao-complicada | itu-complicada | pielonefrite | diarreia-aquosa | disenteria | c-difficile",
+  "scenario": "Descrição clínica detalhada do cenário incluindo história, exame físico e dados laboratoriais",
+  "labResults": { "nitrito": boolean, "esterase": boolean, "leucocitos": "string", "urocultura": "string", "coprocultura": "string", "leucocitosFecais": boolean, "toxinaCD": boolean },
+  "initialBacterialLoad": número (log10 UFC/mL, entre 4 e 8),
+  "expectedDrug": "Nome do antibiótico mais adequado (exatamente como aparece no simulador)",
+  "expectedHydration": boolean,
+  "clinicalTip": "Explicação detalhada da conduta ideal, raciocínio farmacológico e evidências",
+  "references": ["lista de referências"]
+}
+
+TEMAS OBRIGATÓRIOS A ABORDAR (variar entre casos):
+- Algoritmos de seleção de antibióticos para ITU: nitrofurantoína, fosfomicina, SMX-TMP como 1ª linha
+- Critérios para NÃO usar fluoroquinolonas na ITU não-complicada
+- Nitrofurantoína: alta concentração urinária mas NÃO trata pielonefrite (não atinge parênquima)
+- Escalonamento e descalonamento (step-down) baseado em antibiograma
+- Resistência bacteriana: ESBL, padrões locais de resistência
+- ITU em grupos especiais: gestante (bacteriúria assintomática obrigatória, antibióticos seguros vs contraindicados), idoso, DRC, cateter
+- Diarreia aquosa vs disenteria: algoritmo de decisão (SRO sem antibiótico vs antibiótico necessário)
+- SRO como base obrigatória do tratamento da diarreia (co-transporte Na-glicose)
+- C. difficile: fatores de risco, suspender causador, vancomicina oral vs metronidazol, complicações
+- Contraindicações por grupo especial: fluoroquinolonas na gestação, SMX-TMP no 1º/3º trimestre
+- Hidratação e correção de distúrbios eletrolíticos
+
+FÁRMACOS DISPONÍVEIS NO SIMULADOR:
+ITU: Nitrofurantoína, Fosfomicina, SMX-TMP, Ciprofloxacino, Norfloxacino, Amoxicilina, Cefalexina, Ceftriaxona
+Diarreia: Ciprofloxacino, Azitromicina, Metronidazol, Doxiciclina, Vancomicina oral, SRO
+
+REFERÊNCIAS BASE:
+- Aulas 11-16 (ITU, tratamento ITU, grupos especiais, diarreia infecciosa, disenteria, complicações)
+- IDSA Guidelines 2011 (ITU)
+- McDonald LC et al. CID 2018 (C. difficile)
+- WHO ORS Guidelines 2005
+- Smaill FM, Cochrane 2019 (bacteriúria na gestação)`,
 };
 
 
