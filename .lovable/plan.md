@@ -1,63 +1,54 @@
 
 
-## Plano: Nova Categoria de Simuladores — Genética
+## Plano: Simulador de Manejo da Dor e Analgesia
 
 ### Visão Geral
-Criar uma nova categoria **"Genética"** com 8 simuladores interativos, seguindo os mesmos padrões visuais e funcionais das categorias existentes (Bioquímica, Fisiologia, etc.): casos nativos, integração com Salas Virtuais, gráficos Recharts e suporte a modo exame.
+Criar o simulador **"Manejo da Dor e Analgesia"** (slug: `manejo-dor`) na categoria **Farmacologia Clínica**, baseado no conteúdo das 6 aulas sobre dor. O simulador terá gráficos dinâmicos com Recharts, botão "Iniciar" para simulação animada, 5 casos clínicos nativos e modo desafio.
 
-### Simuladores Propostos
+### Conceito Pedagógico
+O aluno recebe um paciente com dor e deve:
+1. **Classificar o tipo de dor** (nociceptiva, neuropática, fibromialgia, oncológica)
+2. **Avaliar intensidade** (EVA 0-10) e comorbidades
+3. **Selecionar tratamento** pela Escala Analgésica da OMS (Degraus 1-3)
+4. **Ajustar doses** via sliders e observar gráficos dinâmicos de: curva de concentração plasmática (Cp x t), nível de dor ao longo do tempo, efeitos adversos
+5. **Interpretar consequências** das escolhas (toxicidade hepática do paracetamol, elevação da PA por AINEs, depressão respiratória por opioides, tolerância)
 
-| # | Slug | Nome | Descrição |
-|---|------|------|-----------|
-| 1 | `sequenciamento-dna` | **Sequenciamento de DNA (Sanger e NGS)** | Compare métodos Sanger vs NGS. Visualize eletroferogramas, quality scores (Phred) e cobertura de leitura. Identifique variantes em reads simulados. |
-| 2 | `snp-farmacogenetica` | **SNPs e Farmacogenética** | Analise polimorfismos de nucleotídeo único em genes CYP450, VKORC1 e DPYD. Correlacione genótipos com fenótipos metabólicos e ajuste de dose. |
-| 3 | `cariotipo` | **Cariótipo e Anomalias Cromossômicas** | Monte cariótipos virtuais arrastando cromossomos. Identifique trissomias, monossomias, translocações e inversões com correlação clínica. |
-| 4 | `heranca-mendeliana` | **Herança Mendeliana e Heredogramas** | Construa heredogramas interativos. Determine padrões de herança (AD, AR, ligada ao X) e calcule probabilidades com quadro de Punnett. |
-| 5 | `pcr-eletroforese` | **PCR e Eletroforese em Gel** | Simule reações de PCR com design de primers, ciclos térmicos e visualização de bandas em gel de agarose com marcador de peso molecular. |
-| 6 | `epigenetica` | **Epigenética e Regulação Gênica** | Manipule metilação de DNA e acetilação de histonas. Observe efeitos na expressão gênica com gráficos de atividade transcricional. |
-| 7 | `mutacoes-reparo` | **Mutações e Reparo de DNA** | Simule mutações (substituição, deleção, inserção, frameshift) e mecanismos de reparo (MMR, BER, NER). Visualize impacto na proteína final. |
-| 8 | `genetica-populacoes` | **Genética de Populações (Hardy-Weinberg)** | Calcule frequências alélicas e genotípicas. Simule desvios por seleção, deriva genética, migração e endogamia ao longo de gerações. |
+### Elementos Interativos Dinâmicos (botão Iniciar)
+- **Gráfico 1 — Escala de Dor (EVA)**: Linha animada mostrando a intensidade da dor nas primeiras 72h conforme o tratamento escolhido
+- **Gráfico 2 — Concentração Plasmática**: Curvas Cp x t dos fármacos escolhidos com faixa terapêutica e limiar de toxicidade
+- **Gráfico 3 — Efeitos Adversos**: BarChart mostrando risco relativo de EA (constipação, náusea, depressão respiratória, nefrotoxicidade, hepatotoxicidade)
+- **Painel de Sinais Vitais**: FC, PA, FR, SpO2 — reagindo em tempo real às escolhas farmacológicas
 
-### Arquitetura Técnica
+### Parâmetros Ajustáveis (Sliders)
+- Classe farmacológica (não-opioide, opioide fraco, opioide forte, adjuvante)
+- Fármaco específico dentro da classe
+- Dose (mg) com limites baseados em evidência
+- Intervalo posológico (h)
+- Via de administração (VO, EV, TD, SC)
+- Adjuvantes (gabapentina, pregabalina, duloxetina, amitriptilina)
 
-**Arquivos a criar** (pasta `src/pages/simuladores/genetica/`):
-- `SimuladorSequenciamentoDNA.tsx`
-- `SimuladorSNPFarmacogenetica.tsx`
-- `SimuladorCariotipo.tsx`
-- `SimuladorHerancaMendeliana.tsx`
-- `SimuladorPCREletroforese.tsx`
-- `SimuladorEpigenetica.tsx`
-- `SimuladorMutacoesReparo.tsx`
-- `SimuladorGeneticaPopulacoes.tsx`
+### 5 Casos Clínicos Nativos
 
-**Arquivos a editar**:
-- `src/pages/Simuladores.tsx` — Adicionar os 8 simuladores ao array `NATIVE_SIMULATORS` com `category: "Genética"`, e adicionar entrada em `CATEGORY_ICONS` (ícone `Dna`) e `CATEGORY_COLORS`
-- `src/App.tsx` — Importar os 8 componentes e adicionar rotas `/simuladores/{slug}`
-- `src/data/nativeSystemPrompts.ts` — Adicionar system prompts para geração de casos IA
-- `src/data/simulatorChallenges.ts` — Adicionar desafios para modo challenge
+| # | Tipo de Dor | Título | Cenário |
+|---|-------------|--------|---------|
+| 1 | **Aguda** | Dor pós-operatória | Paciente 45 anos, pós-colecistectomia, EVA 7/10, sem comorbidades. Escalonamento de analgésicos não-opioides a opioides fracos. |
+| 2 | **Neuropática** | Lombalgia com radiculopatia | Paciente 62 anos (caso J.P. das aulas), HAS, obesidade, depressão. Paracetamol ineficaz, dose excessiva. Antidepressivos/anticonvulsivantes como alternativa. |
+| 3 | **Fibromialgia** | Fibromialgia com insônia | Mulher 38 anos, dor difusa crônica, fadiga, sono não-reparador. Sensibilização central. Duloxetina + pregabalina + terapia não-farmacológica. Opioides contraindicados. |
+| 4 | **Oncológica** | Dor oncológica — Escalonamento | Paciente 58 anos (caso L.V.), carcinoma estágio IV, dor neuropática + nociceptiva. Escala OMS degrau 3: morfina → hidromorfona → fentanil TD. Manejo de tolerância. |
+| 5 | **Oncológica (avançada)** | Rotação de opioides e desmame | Continuação do caso L.V. Tolerância ao fentanil, intoxicação opioide, rotação para metadona, planejamento de desmame. Síndrome de abstinência. |
 
-**Padrão de cada simulador**:
-- Casos nativos embutidos (3 por simulador, Fácil/Médio/Difícil)
-- Gráficos interativos com Recharts (sliders para manipular parâmetros)
-- Integração com `useSimulatorCases` e `useVirtualRoomCase` para Salas Virtuais
-- Botão "Mostrar Resultados" com redirecionamento de 15s para home
-- Componentes `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`
-- Suporte a light/dark mode
+### Arquivos a Criar
+- `src/pages/simuladores/SimuladorManejoDor.tsx` — Componente principal (~800 linhas)
 
-### Detalhes por Simulador
+### Arquivos a Editar
+- `src/pages/Simuladores.tsx` — Adicionar entrada no array NATIVE_SIMULATORS (categoria "Farmacologia Clínica")
+- `src/App.tsx` — Adicionar rotas `/simuladores/manejo-dor` e `/sala/simulador/manejo-dor/:visitorId`
+- `src/hooks/useSimulatorCases.ts` — Adicionar slug `manejo-dor` ao SIMULATOR_SLUGS
+- `src/pages/SalasVirtuais.tsx` — Adicionar ao SIMULATOR_OPTIONS na categoria "Farmacologia Clínica"
+- `src/data/nativeCaseCatalog.ts` — Adicionar os 5 casos nativos
+- `src/data/nativeSystemPrompts.ts` — Adicionar system prompt para geração de casos IA
+- `src/data/simulatorChallenges.ts` — Adicionar 10 desafios (mix de múltipla escolha e ajuste)
 
-1. **Sequenciamento de DNA**: Eletroferograma SVG animado, barra de quality score por base, comparação Sanger (reads longos) vs NGS (reads curtos + cobertura), slider de profundidade de cobertura
-2. **SNPs e Farmacogenética**: Mapa de gene com posições de SNPs, quadro de genótipo→fenótipo, gráfico Recharts de curva Cp×t por fenótipo metabolizador
-3. **Cariótipo**: Grid visual de 23 pares cromossômicos, drag-and-drop para classificação, identificação de anomalias com feedback clínico
-4. **Herança Mendeliana**: Editor de heredograma SVG com símbolos padrão (círculo/quadrado/preenchido), quadro de Punnett interativo, cálculo de risco
-5. **PCR e Eletroforese**: Painel de ciclos térmicos com gráfico de temperatura, visualização de gel com bandas fluorescentes, design de primers com Tm
-6. **Epigenética**: Diagrama de cromatina (condensada/aberta), sliders de metilação CpG e acetilação H3/H4, gráfico de expressão gênica resultante
-7. **Mutações e Reparo**: Sequência de DNA editável, visualização de tradução (códon→aminoácido), comparação proteína normal vs mutada, seleção de via de reparo
-8. **Genética de Populações**: Sliders para p/q, tamanho da população, coeficiente de seleção; gráficos de frequência alélica ao longo de gerações; teste de equilíbrio HW
-
-### Ordem de Implementação
-Dado o volume (8 simuladores), a implementação será dividida em 2-3 etapas:
-1. **Etapa 1**: Infraestrutura (categoria + rotas) + Sequenciamento DNA + SNP + Cariótipo
-2. **Etapa 2**: Herança Mendeliana + PCR + Epigenética
-3. **Etapa 3**: Mutações e Reparo + Genética de Populações
+### Padrão Técnico
+Segue exatamente o padrão dos simuladores existentes: `useSimulatorCases`, `useVirtualRoomCase`, `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`, botão "Mostrar Resultados" com redirecionamento 15s, suporte light/dark mode.
 
