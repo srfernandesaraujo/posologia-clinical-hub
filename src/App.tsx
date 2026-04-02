@@ -149,6 +149,7 @@ import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
 import SimuladorInflamacaoAINEs from "./pages/simuladores/SimuladorInflamacaoAINEs";
 import SimuladorInfeccoesAntibioticos from "./pages/simuladores/SimuladorInfeccoesAntibioticos";
+import SimuladorTratamentoAsma from "./pages/simuladores/SimuladorTratamentoAsma";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";

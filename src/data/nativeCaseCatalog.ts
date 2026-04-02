@@ -473,6 +473,14 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: Diarreia Aquosa vs Disenteria — Algoritmo", difficulty: "Médio" },
     { index: 4, title: "Caso 5: Diarreia por C. difficile — Complicações", difficulty: "Difícil" },
   ],
+  // ── Tratamento da Asma ──
+  "tratamento-asma": [
+    { index: 0, title: "Caso 1: Classificação e Espirometria Inicial", difficulty: "Fácil" },
+    { index: 1, title: "Caso 2: Escalonamento Terapêutico", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: Asma Grave — Terapia Biológica", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Asma na Gestação — Segurança do CI", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Exacerbação Grave no PS", difficulty: "Difícil" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {
