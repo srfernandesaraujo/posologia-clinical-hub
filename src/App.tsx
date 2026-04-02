@@ -146,6 +146,7 @@ import SimuladorEpigenetica from "./pages/simuladores/genetica/SimuladorEpigenet
 import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutacoesReparo";
 import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
+import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";
@@ -241,6 +242,7 @@ const App = () => (
               <Route path="/sala/simulador/bomba-infusao" element={<SimuladorBombaInfusao />} />
               <Route path="/sala/simulador/desmame-benzo" element={<SimuladorDesmameBenzo />} />
               <Route path="/sala/simulador/interacoes" element={<SimuladorInteracoes />} />
+              <Route path="/sala/simulador/manejo-dor" element={<SimuladorManejoDor />} />
               <Route path="/sala/simulador/sna" element={<SimuladorSNA />} />
               <Route path="/sala/simulador/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/sala/simulador/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
@@ -349,6 +351,7 @@ const App = () => (
               <Route path="/simuladores/bomba-infusao" element={<SimuladorBombaInfusao />} />
               <Route path="/simuladores/desmame-benzo" element={<SimuladorDesmameBenzo />} />
               <Route path="/simuladores/interacoes" element={<SimuladorInteracoes />} />
+              <Route path="/simuladores/manejo-dor" element={<SimuladorManejoDor />} />
               <Route path="/simuladores/sna" element={<SimuladorSNA />} />
               <Route path="/simuladores/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/simuladores/depuracao-renal" element={<SimuladorDepuracaoRenal />} />

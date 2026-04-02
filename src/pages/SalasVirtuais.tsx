@@ -47,6 +47,7 @@ const SIMULATOR_OPTIONS: ToolOption[] = [
   { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos", category: "Psiquiatria" },
   // Farmacologia Clínica
   { slug: "interacoes", label: "Interações Medicamentosas", category: "Farmacologia Clínica" },
+  { slug: "manejo-dor", label: "Manejo da Dor e Analgesia", category: "Farmacologia Clínica" },
   // Fisiologia Humana
   { slug: "sna", label: "Sistema Nervoso Autônomo", category: "Fisiologia Humana" },
   { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca", category: "Fisiologia Humana" },

@@ -2045,6 +2045,38 @@ CASO CLÍNICO com doença, frequência alélica e análise populacional.
 REFERÊNCIAS:
 - Hartl DL, Clark AG. Principles of Population Genetics, 4th ed.
 - Hedrick PW. Genetics of Populations, 4th ed.`,
+
+  "sim-manejo-dor": `Você é um farmacologista clínico especialista em dor. Gere um caso clínico para o simulador "Manejo da Dor e Analgesia".
+
+O caso deve conter OBRIGATORIAMENTE os seguintes campos JSON:
+- title: string (título do caso)
+- difficulty: "Fácil" | "Médio" | "Difícil"
+- case_data: objeto com:
+  - patient: { name, age, weight, sex, comorbidities: string[] }
+  - painType: "aguda" | "neuropatica" | "fibromialgia" | "oncologica"
+  - scenario: string longo (~100 palavras) descrevendo o cenário clínico detalhadamente
+  - initialEVA: number (1-10) — intensidade inicial da dor
+  - expectedDrug: nome exato do fármaco esperado como melhor resposta (ex: "Morfina", "Tramadol", "Paracetamol", "Fentanil TD", "Metadona", "Codeína", "Ibuprofeno", "Dipirona")
+  - expectedAdjuvant: "Nenhum" | "Gabapentina 300mg" | "Pregabalina 75mg" | "Duloxetina 60mg" | "Amitriptilina 25mg"
+  - clinicalTip: string (~80 palavras) com raciocínio farmacológico
+  - references: string[] — 2-3 referências científicas
+
+TEMAS A COBRIR (varie entre gerações):
+- Escada Analgésica da OMS (Degraus 1, 2 e 3)
+- Dor aguda vs crônica, nociceptiva vs neuropática
+- Fibromialgia e sensibilização central (opioides contraindicados!)
+- Dor oncológica: titulação, rotação de opioides, tolerância cruzada incompleta
+- Adjuvantes: gabapentinoides (α2δ), IRSN (duloxetina), tricíclicos
+- Efeitos adversos: constipação, depressão respiratória, nefrotoxicidade de AINEs, hepatotoxicidade do paracetamol
+- Síndrome de abstinência e desmame de opioides
+- Comorbidades que influenciam a escolha (HAS, IR, hepatopatia, depressão)
+
+REFERÊNCIAS BASE:
+- OMS Cancer Pain Relief 1986/1996
+- Finnerup NB et al. Lancet Neurol 2015
+- Häuser W et al. BMJ 2014
+- NCCN Adult Cancer Pain Guidelines
+- Mercadante S, Bruera E. Cancer Treat Rev 2006`,
 };
 
 
