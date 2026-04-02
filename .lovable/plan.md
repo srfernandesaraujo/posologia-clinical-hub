@@ -1,56 +1,56 @@
 
 
-## Plano: Simulador de Inflamação e Anti-inflamatórios
+## Plano: Simulador de Infecções e Antibioticoterapia
 
 ### Visao Geral
-Criar o simulador **"Inflamação e Anti-inflamatórios"** (slug: `inflamacao-aines`) na categoria **Farmacologia Clínica**, baseado nas 4 aulas (Aulas 7-10) sobre osteoartrite, AINEs, artrite reumatoide com corticoides e efeitos adversos dos corticoides. Seguira o mesmo padrao dos simuladores de Fisiologia com botao "Iniciar", graficos dinamicos Recharts e modo desafio.
+Criar o simulador **"Infecções e Antibioticoterapia"** (slug: `infeccoes-antibioticos`) na categoria **Farmacologia Clínica**, baseado nas 6 aulas (11-16) sobre ITU (epidemiologia, tratamento, grupos especiais) e Diarreia Infecciosa (tipos, disenteria vs diarreia aquosa, complicacoes). Seguira o padrao dos simuladores existentes com botao "Iniciar", graficos dinamicos Recharts e modo desafio.
 
 ### Conceito Pedagogico
-O aluno recebe um paciente com condição inflamatória e deve:
-1. **Classificar a condição** (osteoartrite vs artrite reumatoide)
-2. **Selecionar o anti-inflamatório** considerando critérios de seleção do AINE (seletividade COX-1/COX-2, meia-vida, pKa) ou corticoide (potência, duração de ação)
-3. **Ajustar dose e intervalo** via sliders
-4. **Avaliar comorbidades e populações especiais** (HAS, úlcera péptica, osteopenia, idosos, doença renal)
-5. **Observar consequências dinâmicas** nos gráficos: concentração plasmática, nível de inflamação/dor, riscos de efeitos adversos
+O aluno recebe um paciente com infeccao (ITU ou diarreia infecciosa) e deve:
+1. **Classificar a infeccao** (ITU nao-complicada, ITU complicada/pielonefrite, ITU de repeticao, diarreia aquosa, disenteria)
+2. **Interpretar exames** (uroanalise: nitrito, esterase, piuria, cultura; coprocultura, leucocitos fecais)
+3. **Selecionar antibiotico** conforme algoritmo de seleção (espectro, resistencia local, concentracao urinaria/intestinal)
+4. **Ajustar dose e duracao** via sliders, considerando grupo especial (gestante, idoso, DRC, crianca, cateter)
+5. **Observar dinamicamente** nos graficos: carga bacteriana ao longo do tempo, concentracao do antibiotico no sitio de infeccao, e riscos de efeitos adversos
 
 ### Elementos Interativos Dinamicos (botao Iniciar)
-- **Grafico 1 -- Concentração Plasmatica (Cp x t)**: Curva animada do AINE ou corticoide ao longo de 72h, com faixa terapêutica e limiar toxico
-- **Grafico 2 -- Nivel de Inflamação/Dor**: LineChart animado mostrando reducao da inflamação articular e dor (EVA) ao longo do tempo
-- **Grafico 3 -- Riscos de Efeitos Adversos**: BarChart com risco relativo por sistema (GI/gastrico, cardiovascular, renal, osseo, endocrino, imunologico) -- reagindo a seletividade COX e dose de corticoide
-- **Painel de Sinais Vitais**: PA, FC, TFG estimada, glicemia -- reagindo as escolhas farmacológicas
+- **Grafico 1 -- Carga Bacteriana (UFC/mL x tempo)**: LineChart animado mostrando a reducao da contagem bacteriana ao longo de 7-14 dias conforme o antibiotico e dose escolhidos. Linha de referencia em 10^5 UFC/mL (limiar de ITU)
+- **Grafico 2 -- Concentracao no Sitio (Cp x t)**: Curva do antibiotico no plasma e no sitio-alvo (urina ou intestino) com MIC do patogeno como linha de referencia
+- **Grafico 3 -- Riscos de Efeitos Adversos**: BarChart com risco relativo por sistema (GI, tendinite/ruptura, nefrotoxicidade, disbiose/C.difficile, fotossensibilidade, prolongamento QT)
+- **Painel Clinico**: Temperatura, leucocitos, PCR, sintomas residuais -- reagindo em tempo real
 
 ### Parametros Ajustaveis (Sliders/Selects)
-- Condição inflamatória (osteoartrite / artrite reumatoide)
-- Classe farmacológica (AINE não-seletivo, AINE COX-2 seletivo, Corticoide, Tópico)
-- Fármaco específico: AINEs (ibuprofeno, naproxeno, diclofenaco, celecoxibe, meloxicam) e Corticoides (hidrocortisona, prednisona, prednisolona, metilprednisolona, dexametasona)
-- Dose (mg) com limites baseados em evidência
-- Intervalo posológico (h)
-- Via de administração (VO, tópica, intra-articular)
-- Gastroproteção (IBP sim/não)
-- Comorbidades do paciente (toggles: HAS, DRC, úlcera péptica, osteoporose, diabetes)
+- Tipo de infeccao (ITU nao-complicada / ITU complicada / Pielonefrite / Diarreia aquosa / Disenteria)
+- Classe do antibiotico (Fluoroquinolona, Betalactamico, Sulfonamida, Nitrofurantoina, Fosfomicina, Macrolideo, Aminoglicosideo)
+- Farmaco especifico: ITU (nitrofurantoina, fosfomicina, SMX-TMP, ciprofloxacino, norfloxacino, amoxicilina, cefalexina, ceftriaxona) e Diarreia (ciprofloxacino, azitromicina, metronidazol, doxiciclina, SRO)
+- Dose (mg) com limites baseados em evidencia
+- Intervalo posologico (h) e duracao do tratamento (dias)
+- Via de administracao (VO, EV, IM)
+- Grupo especial (toggles: gestante, idoso >65a, DRC, crianca, cateter vesical, imunossuprimido)
+- Hidratacao/SRO (para diarreia)
 
 ### 5 Casos Clinicos Nativos
 
-| # | Condição | Titulo | Cenário |
+| # | Condicao | Titulo | Cenario |
 |---|----------|--------|---------|
-| 1 | **Osteoartrite** | OA de joelho -- Seleção de AINE | R.T., 60 anos, dor joelho direito, HAS, dislipidemia, história de úlcera péptica. Paracetamol insuficiente. Aluno deve escolher AINE considerando risco GI e cardiovascular, seletividade COX e necessidade de IBP. |
-| 2 | **Osteoartrite com comorbidades** | OA em idosa polimedicada | S.L., 67 anos, joelho esquerdo, HAS + osteopenia + depressão + DRGE. Paracetamol 4g/dia ineficaz. Aluno avalia interações (metoprolol, citalopram), escolhe entre celecoxibe + IBP ou tópico (diclofenaco gel). Critérios de pKa e meia-vida. |
-| 3 | **Artrite reumatoide** | AR inicial -- Introdução de corticoide | T.W., 42 anos, rigidez matinal prolongada, edema simétrico mãos/pés, olhos secos. Aluno seleciona corticoide (prednisona), ajusta dose e horário (ciclo circadiano -- administrar à noite para pico matinal). |
-| 4 | **AR crônica -- EA do corticoide** | Efeitos adversos dose e tempo-dependentes | W.M., usando prednisona 10mg/dia há 1 ano, PA descontrolada, insônia. Aluno identifica EA dose-dependentes vs tempo-dependentes, planeja redução de dose e monitora riscos (osteoporose, Cushing, supressão adrenal). |
-| 5 | **AR -- Desmame de corticoide** | Desmame e síndrome de abstinência | Continuação do caso W.M. Aluno planeja esquema de desmame gradual (redução de 1-2,5mg a cada 2-4 semanas), monitora reativação da doença vs síndrome de abstinência, compreende supressão do eixo HPA. |
+| 1 | **ITU nao-complicada** | Cistite em mulher jovem -- Selecao de antibiotico | V.Q., 20 anos, disuria, polaciuria, dor suprapubica, sem febre. Uroanalise: nitrito+, leucocitos 10-15/campo, bastonetes gram-negativos. Aluno deve selecionar entre nitrofurantoina, fosfomicina ou SMX-TMP conforme padroes de resistencia local. Evitar fluoroquinolonas na ITU nao-complicada. |
+| 2 | **ITU complicada / Pielonefrite** | Pielonefrite com escalonamento | M.R., 35 anos, febre 38.8C, dor lombar, nausea, vomito, leucocitose. Urocultura: E. coli ESBL. Aluno escala de VO para EV (ceftriaxona -> ertapenem), interpreta antibiograma, planeja step-down. |
+| 3 | **ITU em grupo especial -- Gestante** | ITU na gestacao -- Antibioticos seguros | A.L., 28 anos, 24 semanas gestacao, bacteriuria assintomatica com E. coli. Aluno identifica que bacteriuria assintomatica DEVE ser tratada na gestante. Seleciona antibiotico seguro (cefalexina, amoxicilina, nitrofurantoina ate 36 sem). Contraindica SMX-TMP (1o/3o tri) e fluoroquinolonas. |
+| 4 | **Diarreia aquosa vs Disenteria** | Diarreia infecciosa -- Algoritmo de conduta | J.S., 45 anos, diarreia aquosa ha 3 dias, sem sangue, sem febre. Aluno diferencia diarreia aquosa (viral/toxigenica) de disenteria, decide por SRO + medidas nao-farmacologicas. Evolucao: paciente retorna com fezes sanguinolentas e febre -> disenteria, aluno seleciona ciprofloxacino ou azitromicina. |
+| 5 | **Complicacoes da diarreia** | Diarreia grave com desidratacao e C. difficile | F.T., 72 anos, internado, diarreia pos-antibioticoterapia (clindamicina), desidratacao moderada, toxina C. difficile positiva. Aluno corrige desidratacao (SRO/EV), suspende antibiotico causador, inicia metronidazol ou vancomicina oral. Monitora complicacoes: megacolon toxico, disturbio eletrolitico. |
 
 ### Arquivos a Criar
-- `src/pages/simuladores/SimuladorInflamacaoAINEs.tsx` -- Componente principal (~800 linhas)
+- `src/pages/simuladores/SimuladorInfeccoesAntibioticos.tsx` -- Componente principal (~800 linhas)
 
 ### Arquivos a Editar
-- `src/pages/Simuladores.tsx` -- Adicionar entrada no array NATIVE_SIMULATORS (categoria "Farmacologia Clínica")
-- `src/App.tsx` -- Adicionar rotas `/simuladores/inflamacao-aines` e `/sala/simulador/inflamacao-aines/:visitorId`
-- `src/hooks/useSimulatorCases.ts` -- Adicionar slug `inflamacao-aines` ao SIMULATOR_SLUGS
-- `src/pages/SalasVirtuais.tsx` -- Adicionar ao SIMULATOR_OPTIONS na categoria "Farmacologia Clínica"
+- `src/pages/Simuladores.tsx` -- Adicionar entrada no array NATIVE_SIMULATORS (categoria "Farmacologia Clinica")
+- `src/App.tsx` -- Adicionar rotas `/simuladores/infeccoes-antibioticos` e `/sala/simulador/infeccoes-antibioticos/:visitorId`
+- `src/hooks/useSimulatorCases.ts` -- Adicionar slug `infeccoes-antibioticos` ao SIMULATOR_SLUGS
+- `src/pages/SalasVirtuais.tsx` -- Adicionar ao SIMULATOR_OPTIONS na categoria "Farmacologia Clinica"
 - `src/data/nativeCaseCatalog.ts` -- Adicionar os 5 casos nativos
-- `src/data/nativeSystemPrompts.ts` -- Adicionar system prompt para geração de casos IA
-- `src/data/simulatorChallenges.ts` -- Adicionar 10 desafios (mix de múltipla escolha e ajuste)
+- `src/data/nativeSystemPrompts.ts` -- Adicionar system prompt para geracao de casos IA
+- `src/data/simulatorChallenges.ts` -- Adicionar 10 desafios (mix de multipla escolha e ajuste)
 
 ### Padrao Tecnico
-Segue exatamente o padrão dos simuladores existentes: `useSimulatorCases`, `useVirtualRoomCase`, `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`, botão "Mostrar Resultados" com redirecionamento 15s, suporte light/dark mode.
+Segue exatamente o padrao dos simuladores existentes: `useSimulatorCases`, `useVirtualRoomCase`, `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`, botao "Mostrar Resultados" com redirecionamento 15s, suporte light/dark mode.
 
