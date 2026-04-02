@@ -148,6 +148,7 @@ import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorG
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
 import SimuladorInflamacaoAINEs from "./pages/simuladores/SimuladorInflamacaoAINEs";
+import SimuladorInfeccoesAntibioticos from "./pages/simuladores/SimuladorInfeccoesAntibioticos";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import MinhaConta from "./pages/MinhaConta";
@@ -245,6 +246,7 @@ const App = () => (
               <Route path="/sala/simulador/interacoes" element={<SimuladorInteracoes />} />
               <Route path="/sala/simulador/manejo-dor" element={<SimuladorManejoDor />} />
               <Route path="/sala/simulador/inflamacao-aines" element={<SimuladorInflamacaoAINEs />} />
+              <Route path="/sala/simulador/infeccoes-antibioticos" element={<SimuladorInfeccoesAntibioticos />} />
               <Route path="/sala/simulador/sna" element={<SimuladorSNA />} />
               <Route path="/sala/simulador/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/sala/simulador/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
@@ -355,6 +357,7 @@ const App = () => (
               <Route path="/simuladores/interacoes" element={<SimuladorInteracoes />} />
               <Route path="/simuladores/manejo-dor" element={<SimuladorManejoDor />} />
               <Route path="/simuladores/inflamacao-aines" element={<SimuladorInflamacaoAINEs />} />
+              <Route path="/simuladores/infeccoes-antibioticos" element={<SimuladorInfeccoesAntibioticos />} />
               <Route path="/simuladores/sna" element={<SimuladorSNA />} />
               <Route path="/simuladores/eletrofisiologia-cardiaca" element={<SimuladorEletrofisiologiaCardiaca />} />
               <Route path="/simuladores/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
