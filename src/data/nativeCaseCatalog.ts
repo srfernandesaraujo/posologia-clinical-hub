@@ -449,6 +449,14 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 0, title: "Equilíbrio de Hardy-Weinberg – Anemia Falciforme", difficulty: "Fácil" },
     { index: 1, title: "Deriva Genética em População Pequena", difficulty: "Médio" },
   ],
+  // ── Manejo da Dor ──
+  "manejo-dor": [
+    { index: 0, title: "Caso 1: Dor Aguda Pós-Operatória", difficulty: "Fácil" },
+    { index: 1, title: "Caso 2: Dor Neuropática – Lombalgia com Radiculopatia", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: Fibromialgia com Insônia e Fadiga", difficulty: "Médio" },
+    { index: 3, title: "Caso 4: Dor Oncológica — Escalonamento", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: Rotação de Opioides e Tolerância", difficulty: "Difícil" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {
