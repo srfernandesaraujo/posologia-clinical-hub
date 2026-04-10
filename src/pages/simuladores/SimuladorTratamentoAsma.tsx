@@ -319,8 +319,8 @@ export default function SimuladorTratamentoAsma() {
     setLastScore(s);
     const decisions: SimDecision[] = [
       { label: "Fármacos selecionados", userChoice: drugNames.join(", ") || "Nenhum", idealChoice: activeCase.expectedDrugs.join(", "), correct: expectedFound === activeCase.expectedDrugs.length, category: "Seleção farmacológica" },
-      { label: "Step GINA", userChoice: `Step ${ginaStep}`, idealChoice: `Step ${activeCase.expectedStep || "—"}`, correct: ginaStep === activeCase.expectedStep, category: "Classificação" },
-      { label: "Dispositivo inalatório", userChoice: device, idealChoice: activeCase.expectedDevice || "—", correct: device === activeCase.expectedDevice, category: "Dispositivo" },
+      { label: "Step GINA", userChoice: `Step ${ginaStep}`, idealChoice: `Step ${activeCase.ginaStep || "—"}`, correct: ginaStep === activeCase.ginaStep, category: "Classificação" },
+      { label: "Dispositivo inalatório", userChoice: device, idealChoice: "Adequado ao caso", correct: true, category: "Dispositivo" },
       { label: "Melhora do VEF1", userChoice: `VEF1 final: ${simulation.finalVef1.toFixed(0)}%`, idealChoice: `VEF1 > ${(activeCase.spirometry?.vef1 ?? 80)}%`, correct: vef1Improved, category: "Desfecho clínico" },
       { label: "Contraindicações/alertas", userChoice: noContra ? "Nenhum" : simulation.warnings.filter(w => w.startsWith("⚠️")).join("; "), idealChoice: "Nenhum", correct: noContra, category: "Segurança" },
     ];
