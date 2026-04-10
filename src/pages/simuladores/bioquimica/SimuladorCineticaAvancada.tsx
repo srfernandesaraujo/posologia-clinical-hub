@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCineticaAvancadaChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "cinetica-avancada";
 
@@ -168,7 +169,10 @@ export default function SimuladorCineticaAvancada() {
     const vmOk = outputs.vmaxApp >= activeCase.expectedVmaxApp[0] && outputs.vmaxApp <= activeCase.expectedVmaxApp[1];
     const s = (kmOk ? 50 : 0) + (vmOk ? 50 : 0);
     setLastScore(s);
-    if (!submitted) submitResults({ score: s, actions: { vmax, km, inhibitorType, inhibitorConc, ki, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("cinetica-avancada", [
+        { label: "Kmapp", userChoice: String(outputs.kmApp), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Vmaxapp", userChoice: String(outputs.vmaxApp), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, vmax, km, inhibitorType, inhibitorConc, ki, submitted, submitResults]);
 

@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCadeiaTransporteEletronsChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "cadeia-eletrons";
 
@@ -188,7 +189,9 @@ export default function SimuladorCadeiaTransporteEletrons() {
     const s = Math.round(atpOk ? 100 : Math.max(0, 100 - Math.abs(outputs.atpRate - (activeCase.expectedATP[0] + activeCase.expectedATP[1]) / 2) * 5));
     setRunning(false);
     setLastScore(s);
-    submitResults({ score: s, actions: { nadh, fadh2, inhibitors, atpRate: outputs.atpRate } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("cadeia-eletrons", [
+        { label: "Atprate", userChoice: String(outputs.atpRate), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, nadh, fadh2, inhibitors, submitted, submitResults]);
 

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

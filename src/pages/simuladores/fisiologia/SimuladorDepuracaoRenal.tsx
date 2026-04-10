@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDepuracaoRenalChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "depuracao-renal";
 
@@ -128,7 +129,9 @@ export default function SimuladorDepuracaoRenal() {
     if (!activeCase || submitted) return 0;
     const tfgOk = renal.tfg >= activeCase.expectedTFG[0] && renal.tfg <= activeCase.expectedTFG[1];
     const s = tfgOk ? 100 : 40;
-    submitResults({ score: s, actions: { afferent, efferent, hydration, permeability, tfg: renal.tfg } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("depuracao-renal", [
+        { label: "Tfg", userChoice: String(renal.tfg), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, renal, afferent, efferent, hydration, permeability, submitted, submitResults]);
 

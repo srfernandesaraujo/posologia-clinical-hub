@@ -7,6 +7,7 @@ import { ArrowLeft, ClipboardCheck, ChevronRight, RotateCcw, Award, Eye } from "
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 interface RubricCriterion {
   name: string;

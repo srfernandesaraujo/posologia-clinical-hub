@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getOperonLacChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "operon-lac";
 
@@ -186,7 +187,9 @@ export default function SimuladorOperonLac() {
     const ok = model.transcription >= activeCase.expectedTranscription[0] && model.transcription <= activeCase.expectedTranscription[1];
     const s = Math.round(ok ? 100 : Math.max(0, 100 - Math.abs(model.transcription - (activeCase.expectedTranscription[0] + activeCase.expectedTranscription[1]) / 2) * 2));
     setLastScore(s);
-    submitResults({ score: s, actions: { glucose, lactose, transcription: model.transcription } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("operon-lac", [
+        { label: "Transcription", userChoice: String(model.transcription), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, model, glucose, lactose, submitted, submitResults]);
 

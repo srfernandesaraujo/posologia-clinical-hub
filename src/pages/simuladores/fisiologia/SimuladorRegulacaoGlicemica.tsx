@@ -18,6 +18,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getRegulacaoGlicemicaChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "regulacao-glicemica";
 
@@ -154,7 +155,9 @@ export default function SimuladorRegulacaoGlicemica() {
     const inRange = outputs.glycemia >= activeCase.expectedGlycemia[0] && outputs.glycemia <= activeCase.expectedGlycemia[1];
     const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.glycemia - (activeCase.expectedGlycemia[0] + activeCase.expectedGlycemia[1]) / 2) / 2));
     setRunning(false);
-    if (!submitted) submitResults({ score: s, actions: { carbIntake, insulinSensitivity, pancreaticFunction, glycemia: outputs.glycemia } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("regulacao-glicemica", [
+        { label: "Glycemia", userChoice: String(outputs.glycemia), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, carbIntake, insulinSensitivity, pancreaticFunction, submitted, submitResults]);
 

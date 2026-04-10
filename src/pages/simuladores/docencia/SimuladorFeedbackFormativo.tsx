@@ -7,6 +7,7 @@ import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, Chevron
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 type FeedbackModel = "pendleton" | "r2c2" | "aloba";
 

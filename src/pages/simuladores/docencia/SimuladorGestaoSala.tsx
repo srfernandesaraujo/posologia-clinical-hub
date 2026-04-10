@@ -7,6 +7,7 @@ import { ArrowLeft, ShieldAlert, ChevronRight, RotateCcw, Award, Eye } from "luc
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "gestao-sala";
 

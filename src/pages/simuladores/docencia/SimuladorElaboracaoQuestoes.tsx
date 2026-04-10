@@ -7,6 +7,7 @@ import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb, Eye } f
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const BLOOM_LEVELS = [
   { level: 1, name: "Lembrar", color: "bg-red-500", verbs: ["Listar", "Definir", "Identificar", "Nomear", "Citar", "Reconhecer"], description: "Recuperar informações da memória" },

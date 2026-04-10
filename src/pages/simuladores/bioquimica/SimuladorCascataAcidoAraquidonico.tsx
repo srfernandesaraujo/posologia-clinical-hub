@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCascataAcidoAraquidonicoChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "acido-araquidonico";
 
@@ -185,7 +186,10 @@ export default function SimuladorCascataAcidoAraquidonico() {
     const pge2Ok = model.pge2 >= activeCase.expectedPGE2[0] && model.pge2 <= activeCase.expectedPGE2[1];
     const s = Math.round(pge2Ok ? 100 : Math.max(0, 100 - Math.abs(model.pge2 - (activeCase.expectedPGE2[0] + activeCase.expectedPGE2[1]) / 2) * 2));
     setLastScore(s);
-    submitResults({ score: s, actions: { stimulus, drugs, pge2: model.pge2, txa2: model.txa2 } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("acido-araquidonico", [
+        { label: "Pge2", userChoice: String(model.pge2), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Txa2", userChoice: String(model.txa2), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, model, stimulus, drugs, submitted, submitResults]);
 

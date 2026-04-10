@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getSecrecaoGastricaChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "secrecao-gastrica";
 
@@ -170,7 +171,9 @@ export default function SimuladorSecrecaoGastrica() {
     const inRange = outputs.pH >= activeCase.expectedPH[0] && outputs.pH <= activeCase.expectedPH[1];
     const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.pH - (activeCase.expectedPH[0] + activeCase.expectedPH[1]) / 2) * 20));
     setRunning(false);
-    if (!submitted) submitResults({ score: s, actions: { histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic, pH: outputs.pH } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("secrecao-gastrica", [
+        { label: "Ph", userChoice: String(outputs.pH), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, histamine, acetylcholine, gastrin, blockPPI, blockH2, blockAnticholinergic, submitted, submitResults]);
 

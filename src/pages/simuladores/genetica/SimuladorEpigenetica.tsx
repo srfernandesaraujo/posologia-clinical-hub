@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEpigeneticaChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "epigenetica";
 
@@ -87,7 +88,9 @@ export default function SimuladorEpigenetica() {
     const ok = outputs.expression >= activeCase.expectedExpression[0] && outputs.expression <= activeCase.expectedExpression[1];
     const s = Math.round(ok ? 100 : Math.max(0, 100 - Math.abs(outputs.expression - (activeCase.expectedExpression[0] + activeCase.expectedExpression[1]) / 2) * 2));
     setLastScore(s);
-    submitResults({ score: s, actions: { methylation, acetylation, expression: outputs.expression } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("epigenetica", [
+        { label: "Expression", userChoice: String(outputs.expression), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, methylation, acetylation, submitted, submitResults]);
 

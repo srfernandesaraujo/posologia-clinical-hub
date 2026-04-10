@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getPCREletroforeseChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "pcr-eletroforese";
 
@@ -107,7 +108,10 @@ export default function SimuladorPCREletroforese() {
     if (!activeCase || submitted || !outputs) return 0;
     const s = Math.round(outputs.specificity * 0.6 + Math.min(outputs.yield, 100) * 0.4);
     setRunning(false); setLastScore(s);
-    submitResults({ score: s, actions: { annealingTemp, cycles, mgCl2, specificity: outputs.specificity, yield: outputs.yield } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("pcr-eletroforese", [
+        { label: "Specificity", userChoice: String(outputs.specificity), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Yield", userChoice: String(outputs.yield), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, annealingTemp, cycles, mgCl2, submitted, submitResults]);
 

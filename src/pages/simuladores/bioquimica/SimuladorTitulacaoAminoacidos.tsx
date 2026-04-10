@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getTitulacaoAminoacidosChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "titulacao-aminoacidos";
 
@@ -220,7 +221,9 @@ export default function SimuladorTitulacaoAminoacidos() {
     if (!activeCase || submitted) return 0;
     setRunning(false);
     setLastScore(100);
-    submitResults({ score: 100, actions: { aminoAcid: aa.name, currentpH } });
+    submitResults({ score: 100, actions: buildSimulatorDecisions("titulacao-aminoacidos", [
+        { label: "Aminoacid", userChoice: String(aa.name), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return 100;
   }, [activeCase, aa, currentpH, submitted, submitResults]);
 
