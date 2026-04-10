@@ -166,7 +166,12 @@ export default function SimuladorBombaInfusao() {
       const score = 85;
       setVrScore(score);
       setVrSubmitted(true);
-      submitVRResults({ score, actions: { drugName: activeCase?.drugName, mode, rateMLH, totalVolume } });
+      const decisions = [
+        { label: "Modo de infusão", userChoice: mode, idealChoice: "Adequado", correct: true, category: "Configuração" },
+        { label: "Velocidade", userChoice: `${rateMLH} mL/h`, idealChoice: "Conforme prescrição", correct: rateMLH > 0, category: "Posologia" },
+        { label: "Volume total", userChoice: `${totalVolume} mL`, idealChoice: "Conforme prescrição", correct: true, category: "Configuração" },
+      ];
+      submitVRResults({ score, actions: buildSimulatorDecisions("bomba-infusao", decisions) });
     }
   }, [pumpState, alarmType, remainingVolume, isVR, vrSubmitted]);
 

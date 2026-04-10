@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -316,7 +317,14 @@ export default function SimuladorTratamentoAsma() {
     const noContra = simulation.warnings.filter(w => w.startsWith("⚠️")).length === 0;
     const s = Math.round(drugScore + (vef1Improved ? 30 : 0) + (noContra ? 30 : 0));
     setLastScore(s);
-    submitResults({ score: s, actions: { drugs: drugNames, doses: drugDoses, ginaStep, device, finalVef1: simulation.finalVef1, warnings: simulation.warnings } });
+    const decisions: SimDecision[] = [
+      { label: "Fármacos selecionados", userChoice: drugNames.join(", ") || "Nenhum", idealChoice: activeCase.expectedDrugs.join(", "), correct: expectedFound === activeCase.expectedDrugs.length, category: "Seleção farmacológica" },
+      { label: "Step GINA", userChoice: `Step ${ginaStep}`, idealChoice: `Step ${activeCase.ginaStep || "—"}`, correct: ginaStep === activeCase.ginaStep, category: "Classificação" },
+      { label: "Dispositivo inalatório", userChoice: device, idealChoice: "Adequado ao caso", correct: true, category: "Dispositivo" },
+      { label: "Melhora do VEF1", userChoice: `VEF1 final: ${simulation.finalVef1.toFixed(0)}%`, idealChoice: `VEF1 > ${(activeCase.spirometry?.vef1 ?? 80)}%`, correct: vef1Improved, category: "Desfecho clínico" },
+      { label: "Contraindicações/alertas", userChoice: noContra ? "Nenhum" : simulation.warnings.filter(w => w.startsWith("⚠️")).join("; "), idealChoice: "Nenhum", correct: noContra, category: "Segurança" },
+    ];
+    submitResults({ score: s, actions: buildSimulatorDecisions("tratamento-asma", decisions) });
     return s;
   }, [activeCase, selectedDrugs, drugDoses, ginaStep, device, simulation, submitted, submitResults]);
 

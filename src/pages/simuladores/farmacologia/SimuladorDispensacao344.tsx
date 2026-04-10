@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { buildSimulatorDecisions } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -288,10 +289,17 @@ export default function SimuladorDispensacao344() {
   }, [activeCase, acolhimento, fieldChecks, legalAnswers, decisao, orientChecks]);
 
   const finishSimulation = useCallback(() => {
-    const { score } = calculateScore();
+    const { score, decisions } = calculateScore();
     setShowFeedback(true);
-    if (isRoom) submitResults({ score, actions: { acolhimento, fieldChecks, legalAnswers, decisao, orientChecks } });
-  }, [calculateScore, isRoom, submitResults, acolhimento, fieldChecks, legalAnswers, decisao, orientChecks]);
+    if (isRoom) {
+      const simDecs = decisions.map((d: any) => ({
+        label: d.label, userChoice: d.userChoice, idealChoice: d.idealChoice,
+        correct: d.correct, category: "Dispensação 344",
+        explanation: d.explanation || undefined,
+      }));
+      submitResults({ score, actions: buildSimulatorDecisions("dispensacao-344", simDecs) });
+    }
+  }, [calculateScore, isRoom, submitResults]);
 
   const advanceStep = useCallback(() => {
     setCompletedSteps(prev => new Set([...prev, step]));

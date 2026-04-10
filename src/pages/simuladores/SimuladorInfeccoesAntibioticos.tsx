@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -333,7 +334,14 @@ export default function SimuladorInfeccoesAntibioticos() {
     const noContraindication = simulation.warnings.length === 0;
     const s = (drugOk ? 35 : 0) + (hydOk ? 20 : 0) + (loadReduced ? 25 : 0) + (noContraindication ? 20 : 0);
     setLastScore(s);
-    submitResults({ score: s, actions: { drug: drug.name, dose, interval, hydration, finalLoad: simulation.finalBacterialLoad, warnings: simulation.warnings } });
+    const decisions: SimDecision[] = [
+      { label: "Antibiótico selecionado", userChoice: drug.name, idealChoice: activeCase.expectedDrug, correct: drugOk, category: "Seleção" },
+      { label: "Dose", userChoice: `${dose} ${drug.doseUnit}`, idealChoice: `${drug.doseMin}-${drug.doseMax} ${drug.doseUnit}`, correct: true, category: "Posologia" },
+      { label: "Hidratação", userChoice: `${hydration} mL/dia`, idealChoice: `${activeCase.expectedHydration} mL/dia`, correct: hydOk, category: "Suporte clínico" },
+      { label: "Redução da carga bacteriana", userChoice: `${simulation.finalBacterialLoad.toFixed(0)} UFC`, idealChoice: `< ${(activeCase.initialBacterialLoad * 0.5).toFixed(0)} UFC`, correct: loadReduced, category: "Desfecho clínico" },
+      { label: "Contraindicações", userChoice: simulation.warnings.length === 0 ? "Nenhuma" : simulation.warnings.join("; "), idealChoice: "Nenhuma", correct: noContraindication, category: "Segurança" },
+    ];
+    submitResults({ score: s, actions: buildSimulatorDecisions("infeccoes-antibioticos", decisions) });
     return s;
   }, [activeCase, drug, dose, interval, hydration, simulation.finalBacterialLoad, simulation.warnings, submitted, submitResults]);
 

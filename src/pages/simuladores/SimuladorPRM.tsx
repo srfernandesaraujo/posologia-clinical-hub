@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -377,10 +378,19 @@ export default function SimuladorPRM() {
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allReviewed} onClick={() => {
           if (isVirtualRoom) {
-            const { correctCount, totalCount } = getScore();
+            const { correctCount, totalCount, details } = getScore();
+            const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+            const decisions: SimDecision[] = details.map(d => ({
+              label: `${d.drug.drug} ${d.drug.dose}`,
+              userChoice: d.userAnswer?.hasPRM ? `PRM: ${PRM_LABELS[d.userAnswer.type!] || "Não classificado"}` : "Sem PRM",
+              idealChoice: d.hasPRM ? `PRM: ${PRM_LABELS[d.type!]}` : "Sem PRM",
+              correct: d.correct,
+              category: d.hasPRM ? "Identificação de PRM" : "Confirmação de ausência",
+              explanation: d.hasPRM ? d.justification : undefined,
+            }));
             submitResults({
-              score: totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0,
-              actions: { userAnswers, correctCount, totalCount },
+              score,
+              actions: buildSimulatorDecisions("prm", decisions),
             });
           }
           setScreen("report");

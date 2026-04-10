@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -342,9 +343,18 @@ export default function SimuladorCascataPrescricao() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allAnswered} onClick={() => {
-          if (isVirtualRoom) {
-            const { correct, total } = getScore();
-            submitResults({ score: total > 0 ? Math.round((correct / total) * 100) : 0, actions: { userAnswers } });
+          if (isVirtualRoom && currentCase) {
+            const { correct, total, details } = getScore();
+            const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+            const decs: SimDecision[] = details.map((d: any) => ({
+              label: `${d.drug} — Cascata?`,
+              userChoice: d.userAnswer?.isCascade ? `Sim (causado por ${d.userAnswer?.causedBy || "?"})` : "Não",
+              idealChoice: d.isCascade ? `Sim (causado por ${d.causedBy})` : "Não",
+              correct: d.isCorrect,
+              category: "Identificação de cascata",
+              explanation: d.isCascade ? d.sideEffect : undefined,
+            }));
+            submitResults({ score, actions: buildSimulatorDecisions("cascata-prescricao", decs) });
           }
           setScreen("report");
         }}>

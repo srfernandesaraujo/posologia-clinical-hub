@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -291,7 +292,15 @@ export default function SimuladorManejoDor() {
     const evaReduced = simulation.finalEVA <= activeCase.initialEVA * 0.5;
     const s = (drugOk ? 40 : 0) + (adjOk ? 30 : 0) + (evaReduced ? 30 : 0);
     setLastScore(s);
-    submitResults({ score: s, actions: { drug: drug.name, dose, interval, adjuvant: adjuvant.name, finalEVA: simulation.finalEVA } });
+    const decisions: SimDecision[] = [
+      { label: "Fármaco selecionado", userChoice: drug.name, idealChoice: activeCase.expectedDrug, correct: drugOk, category: "Seleção" },
+      { label: "Classe do fármaco", userChoice: drug.class, idealChoice: DRUGS.find(d => d.name === activeCase.expectedDrug)?.class || "—", correct: drugOk, category: "Seleção" },
+      { label: "Dose", userChoice: `${dose} ${drug.doseUnit}`, idealChoice: `Faixa: ${drug.doseMin}-${drug.doseMax} ${drug.doseUnit}`, correct: dose >= drug.doseMin && dose <= drug.doseMax, category: "Posologia" },
+      { label: "Intervalo", userChoice: `${interval}h`, idealChoice: `${drug.intervalMin}-${drug.intervalMax}h`, correct: interval >= drug.intervalMin && interval <= drug.intervalMax, category: "Posologia" },
+      { label: "Adjuvante", userChoice: adjuvant.name, idealChoice: activeCase.expectedAdjuvant || "Nenhum", correct: adjOk, category: "Terapia adjuvante", explanation: !adjOk ? "Adjuvante inadequado para este tipo de dor" : undefined },
+      { label: "Redução da EVA", userChoice: `EVA final: ${simulation.finalEVA.toFixed(1)}`, idealChoice: `EVA ≤ ${(activeCase.initialEVA * 0.5).toFixed(1)}`, correct: evaReduced, category: "Desfecho clínico" },
+    ];
+    submitResults({ score: s, actions: buildSimulatorDecisions("manejo-dor", decisions) });
     return s;
   }, [activeCase, drug, dose, interval, adjuvant, adjuvantIdx, simulation.finalEVA, submitted, submitResults]);
 

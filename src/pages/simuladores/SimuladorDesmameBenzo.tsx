@@ -160,7 +160,13 @@ export default function SimuladorDesmameBenzo() {
       const score = sensitivity === "high" ? 90 : 80;
       setVrScore(score);
       setVrSubmitted(true);
-      submitVRResults({ score, actions: { drugName: selectedDrug, dailyDose, usageDuration, sensitivity, planWeeks: plan.length > 0 ? plan[plan.length - 1].week : 0 } });
+      const decisions = [
+        { label: "BZD selecionado", userChoice: selectedDrug, idealChoice: activeCase?.drugName || "—", correct: true, category: "Seleção" },
+        { label: "Dose diária", userChoice: `${dailyDose} mg`, idealChoice: `${activeCase?.dailyDose} mg`, correct: true, category: "Posologia" },
+        { label: "Sensibilidade", userChoice: sensitivity === "high" ? "Alta" : "Normal", idealChoice: activeCase?.sensitivity === "high" ? "Alta" : "Normal", correct: sensitivity === activeCase?.sensitivity, category: "Avaliação clínica" },
+        { label: "Duração do plano", userChoice: `${plan.length > 0 ? plan[plan.length - 1].week : 0} semanas`, idealChoice: "Adequada ao perfil", correct: true, category: "Planejamento" },
+      ];
+      submitVRResults({ score, actions: buildSimulatorDecisions("desmame-benzo", decisions) });
     }
   }, [plan, isVR, vrSubmitted]);
 

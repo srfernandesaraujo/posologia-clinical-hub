@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,9 +87,14 @@ export default function SimuladorFarmacoAutonomica() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
-    const s = selectedDrug === activeCase.expectedDrug ? 100 : 20;
+    const drugCorrect = selectedDrug === activeCase.expectedDrug;
+    const s = drugCorrect ? 100 : 20;
     setLastScore(s);
-    submitResults({ score: s, actions: { selectedDrug, drugDose } });
+    const decisions: SimDecision[] = [
+      { label: "Fármaco selecionado", userChoice: DRUGS.find(d => d.key === selectedDrug)?.label || selectedDrug, idealChoice: DRUGS.find(d => d.key === activeCase.expectedDrug)?.label || activeCase.expectedDrug, correct: drugCorrect, category: "Seleção farmacológica", explanation: !drugCorrect ? activeCase.clinicalTip : undefined },
+      { label: "Dose aplicada", userChoice: `${drugDose}%`, idealChoice: "80-100%", correct: drugDose >= 60, category: "Posologia" },
+    ];
+    submitResults({ score: s, actions: buildSimulatorDecisions("farmaco-autonomica", decisions) });
     return s;
   }, [activeCase, selectedDrug, drugDose, submitted, submitResults]);
 

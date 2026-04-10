@@ -102,28 +102,33 @@ function ParticipantDetail({ submission, roomSubmissions }: { submission: any; r
   const [open, setOpen] = useState(false);
   const actions = submission.actions;
 
-  // Detect new challenge_results format
+  // Detect format types
   const isChallengeFormat = actions?.type === "challenge_results";
+  const isSimDecisions = actions?.type === "simulator_decisions";
   const questions: any[] = isChallengeFormat ? (actions.questions || []) : [];
   const challengeSummary = isChallengeFormat ? actions.summary : null;
 
+  // simulator_decisions format
+  const simDecisions: any[] = isSimDecisions ? (actions.decisions || []) : [];
+  const simSummary = isSimDecisions ? actions.summary : null;
+
   // Legacy format
-  const decisions: any[] = !isChallengeFormat
+  const decisions: any[] = !isChallengeFormat && !isSimDecisions
     ? (Array.isArray(actions) ? actions : actions?.decisions || [])
     : [];
-  const report = !isChallengeFormat && !Array.isArray(actions) ? actions?.report : null;
+  const report = !isChallengeFormat && !isSimDecisions && !Array.isArray(actions) ? actions?.report : null;
 
-  const hasDetails = questions.length > 0 || decisions.length > 0 || report;
+  const hasDetails = questions.length > 0 || decisions.length > 0 || simDecisions.length > 0 || report;
   if (!hasDetails) return null;
 
-  // Comparative analysis: how this student compares to others in same room
+  // Comparative analysis
   const otherSubmissions = roomSubmissions.filter((s: any) => s.id !== submission.id);
   const roomAvg = otherSubmissions.length > 0
     ? Math.round(otherSubmissions.reduce((a: number, s: any) => a + s.score, 0) / otherSubmissions.length)
     : null;
   const studentScore = submission.score;
 
-  // Per-question difficulty analysis (from all submissions in this room that have challenge data)
+  // Per-question difficulty analysis
   const questionDifficultyMap: Record<number, { total: number; correct: number }> = {};
   roomSubmissions.forEach((s: any) => {
     if (s.actions?.type === "challenge_results" && s.actions.questions) {
@@ -138,11 +143,19 @@ function ParticipantDetail({ submission, roomSubmissions }: { submission: any; r
   // Topic analysis from questions
   const topicStats: Record<string, { correct: number; total: number }> = {};
   questions.forEach((q: any) => {
-    // Use question type as a simple topic grouping
     const topic = q.type === "mcq" ? "Múltipla Escolha" : "Ajuste de Parâmetros";
     if (!topicStats[topic]) topicStats[topic] = { correct: 0, total: 0 };
     topicStats[topic].total += 1;
     if (q.correct) topicStats[topic].correct += 1;
+  });
+
+  // Category analysis for simulator_decisions
+  const categoryStats: Record<string, { correct: number; total: number }> = {};
+  simDecisions.forEach((d: any) => {
+    const cat = d.category || "Geral";
+    if (!categoryStats[cat]) categoryStats[cat] = { correct: 0, total: 0 };
+    categoryStats[cat].total += 1;
+    if (d.correct) categoryStats[cat].correct += 1;
   });
 
   return (
@@ -156,20 +169,26 @@ function ParticipantDetail({ submission, roomSubmissions }: { submission: any; r
         <div className="mt-2 space-y-4 animate-in fade-in-0 slide-in-from-top-2">
 
           {/* ── Comparative Summary ── */}
-          {(roomAvg !== null || challengeSummary) && (
+          {(roomAvg !== null || challengeSummary || simSummary) && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {challengeSummary && (
-                <>
-                  <div className="rounded-lg border border-border p-2 text-center">
-                    <p className="text-lg font-bold text-primary">{challengeSummary.correct}/{challengeSummary.total}</p>
-                    <p className="text-[10px] text-muted-foreground">Acertos</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-2 text-center">
-                    <p className={`text-lg font-bold ${challengeSummary.score >= 80 ? "text-green-600 dark:text-green-400" : challengeSummary.score >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"}`}>{challengeSummary.score}%</p>
-                    <p className="text-[10px] text-muted-foreground">Score</p>
-                  </div>
-                </>
-              )}
+              {(challengeSummary || simSummary) && (() => {
+                const summary = challengeSummary || simSummary;
+                const correct = summary.correct ?? summary.correctDecisions ?? 0;
+                const total = summary.total ?? summary.totalDecisions ?? 0;
+                const score = summary.score ?? 0;
+                return (
+                  <>
+                    <div className="rounded-lg border border-border p-2 text-center">
+                      <p className="text-lg font-bold text-primary">{correct}/{total}</p>
+                      <p className="text-[10px] text-muted-foreground">Acertos</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-2 text-center">
+                      <p className={`text-lg font-bold ${score >= 80 ? "text-green-600 dark:text-green-400" : score >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"}`}>{score}%</p>
+                      <p className="text-[10px] text-muted-foreground">Score</p>
+                    </div>
+                  </>
+                );
+              })()}
               {roomAvg !== null && (
                 <>
                   <div className="rounded-lg border border-border p-2 text-center">
@@ -187,7 +206,7 @@ function ParticipantDetail({ submission, roomSubmissions }: { submission: any; r
             </div>
           )}
 
-          {/* ── Per-Question Breakdown (new format) ── */}
+          {/* ── Per-Question Breakdown (challenge format) ── */}
           {questions.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -270,6 +289,101 @@ function ParticipantDetail({ submission, roomSubmissions }: { submission: any; r
                     }))} cx="50%" cy="50%" outerRadius="70%">
                       <PolarGrid stroke="hsl(var(--border))" />
                       <PolarAngleAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar dataKey="acerto" fill="hsl(var(--primary))" fillOpacity={0.4} stroke="hsl(var(--primary))" strokeWidth={2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Simulator Decisions Format (NEW) ── */}
+          {simDecisions.length > 0 && (
+            <div className="space-y-3">
+              {/* Pedagogical insights */}
+              {simSummary && (simSummary.strengths?.length > 0 || simSummary.weaknesses?.length > 0) && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide">📊 Análise Pedagógica</p>
+                  {simSummary.strengths?.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-green-600 dark:text-green-400">✅ Pontos fortes:</span>{" "}
+                      {simSummary.strengths.join(", ")}
+                    </p>
+                  )}
+                  {simSummary.weaknesses?.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-destructive">⚠️ Pontos a melhorar:</span>{" "}
+                      {simSummary.weaknesses.join(", ")}
+                    </p>
+                  )}
+                  {simSummary.pedagogicalNote && (
+                    <p className="text-xs text-muted-foreground italic">💡 {simSummary.pedagogicalNote}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Category breakdown cards */}
+              {Object.keys(categoryStats).length > 1 && (
+                <div className="rounded-lg border border-border p-3 bg-muted/30">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Desempenho por Categoria</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {Object.entries(categoryStats).map(([cat, stats]) => {
+                      const pct = Math.round((stats.correct / stats.total) * 100);
+                      return (
+                        <div key={cat} className="rounded-md border border-border p-2 text-center">
+                          <p className={`text-sm font-bold ${pct >= 80 ? "text-green-600 dark:text-green-400" : pct >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"}`}>
+                            {stats.correct}/{stats.total}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">{cat}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Individual decisions */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Decisões Clínicas ({simDecisions.filter((d: any) => d.correct).length}/{simDecisions.length} corretas)
+              </p>
+              {simDecisions.map((d: any, i: number) => (
+                <div key={i} className={`rounded-lg p-3 text-xs border ${d.correct ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"}`}>
+                  <div className="flex items-start gap-2">
+                    {d.correct
+                      ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                      : <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">{d.label}</span>
+                        {d.category && <Badge variant="outline" className="text-[10px] h-4">{d.category}</Badge>}
+                      </div>
+                      <p className="text-muted-foreground">
+                        Resposta: <span className={`font-medium ${d.correct ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{d.userChoice}</span>
+                      </p>
+                      {!d.correct && d.idealChoice && (
+                        <p className="text-muted-foreground">
+                          Ideal: <span className="font-medium text-green-600 dark:text-green-400">{d.idealChoice}</span>
+                        </p>
+                      )}
+                      {!d.correct && d.explanation && (
+                        <p className="text-muted-foreground italic mt-1">💡 {d.explanation}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Radar chart for categories */}
+              {Object.keys(categoryStats).length >= 3 && (
+                <div className="mt-2">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={Object.entries(categoryStats).map(([cat, stats]) => ({
+                      label: cat.length > 15 ? cat.substring(0, 15) + "…" : cat,
+                      acerto: Math.round((stats.correct / stats.total) * 100),
+                    }))} cx="50%" cy="50%" outerRadius="70%">
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="label" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                       <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                       <Radar dataKey="acerto" fill="hsl(var(--primary))" fillOpacity={0.4} stroke="hsl(var(--primary))" strokeWidth={2} />
                     </RadarChart>
