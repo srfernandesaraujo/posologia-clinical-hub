@@ -348,9 +348,9 @@ export default function SimuladorCascataPrescricao() {
             const score = total > 0 ? Math.round((correct / total) * 100) : 0;
             const decs: SimDecision[] = details.map((d: any) => ({
               label: `${d.drug} — Cascata?`,
-              userChoice: d.userAnswer || "Não respondido",
+              userChoice: d.userAnswer?.isCascade ? `Sim (causado por ${d.userAnswer?.causedBy || "?"})` : "Não",
               idealChoice: d.isCascade ? `Sim (causado por ${d.causedBy})` : "Não",
-              correct: d.correct,
+              correct: d.isCorrect,
               category: "Identificação de cascata",
               explanation: d.isCascade ? d.sideEffect : undefined,
             }));
