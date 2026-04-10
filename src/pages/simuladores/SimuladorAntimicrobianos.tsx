@@ -287,7 +287,7 @@ export default function SimuladorAntimicrobianos() {
                     actions: buildSimulatorDecisions("antimicrobianos", [
                       { label: "Antibióticos D1", userChoice: day1Antibiotics.join(", ") || "Nenhum", idealChoice: "Conforme caso", correct: s1 >= 70, category: "Seleção D1", explanation: "" },
                       { label: "Culturas D1", userChoice: day1Cultures.join(", ") || "Nenhuma", idealChoice: "Conforme protocolo", correct: s1 >= 70, category: "Diagnóstico", explanation: "" },
-                      { label: "Condutas D3", userChoice: day3Actions.join(", ") || "Nenhuma", idealChoice: "Conforme antibiograma", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
+                      { label: "Condutas D3", userChoice: Object.entries(day3Actions).map(([k,v]) => `${k}: ${v}`).join(", ") || "Nenhuma", idealChoice: "Conforme antibiograma", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
                       { label: "Troca antibiótico D3", userChoice: day3NewAntibiotic || "Nenhuma", idealChoice: "Conforme cultura", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
                     ]),
                   });
