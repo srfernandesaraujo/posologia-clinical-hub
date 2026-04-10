@@ -15,6 +15,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getMutacoesReparoChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "mutacoes-reparo";
 
@@ -114,7 +115,9 @@ export default function SimuladorMutacoesReparo() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
     const s = selectedRepair === activeCase.expectedRepair ? 100 : 25;
-    setLastScore(s); submitResults({ score: s, actions: { selectedRepair, expectedRepair: activeCase.expectedRepair } });
+    setLastScore(s); submitResults({ score: s, actions: buildSimulatorDecisions("mutacoes-reparo", [
+        { label: "Expectedrepair", userChoice: String(activeCase.expectedRepair), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, selectedRepair, submitted, submitResults]);
 

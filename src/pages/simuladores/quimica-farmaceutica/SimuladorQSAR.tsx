@@ -17,6 +17,7 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getChallengesBySlug } from "@/data/simulatorChallenges";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "qsar-simplificado";
 
@@ -92,7 +93,10 @@ export default function SimuladorQSAR() {
     if (!activeCase || submitted) return 0;
     const ok = logP >= activeCase.expectedOptimalLogPRange[0] && logP <= activeCase.expectedOptimalLogPRange[1];
     const s = ok ? 100 : 40;
-    submitResults({ score: s, actions: { seriesId, logP, sigma, activity: result.activity, optimalLogP: result.optimalLogP } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("qsar-simplificado", [
+        { label: "Activity", userChoice: String(result.activity), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Optimallogp", userChoice: String(result.optimalLogP), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, logP, seriesId, sigma, result, submitted, submitResults]);
 

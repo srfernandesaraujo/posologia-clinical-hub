@@ -18,6 +18,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getADMEChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "compartimentos-adme";
 
@@ -160,7 +161,10 @@ export default function SimuladorADME() {
     if (!activeCase) return 0;
     const inRange = pk.cmax >= activeCase.expectedCmax[0] && pk.cmax <= activeCase.expectedCmax[1];
     const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(pk.cmax - (activeCase.expectedCmax[0] + activeCase.expectedCmax[1]) / 2) * 3));
-    if (!submitted) submitResults({ score: s, actions: { bioavailability, vd, clearance, ka, firstPass, cmax: pk.cmax, tmax: pk.tmax } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("compartimentos-adme", [
+        { label: "Cmax", userChoice: String(pk.cmax), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Tmax", userChoice: String(pk.tmax), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, pk, bioavailability, vd, clearance, ka, firstPass, submitted, submitResults]);
 

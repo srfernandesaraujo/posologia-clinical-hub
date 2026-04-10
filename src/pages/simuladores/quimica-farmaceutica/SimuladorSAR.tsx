@@ -17,6 +17,7 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getChallengesBySlug } from "@/data/simulatorChallenges";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "sar-explorer";
 
@@ -136,7 +137,9 @@ export default function SimuladorSAR() {
     if (!activeCase || submitted) return 0;
     const ok = result.potency >= activeCase.expectedPotencyRange[0] && result.potency <= activeCase.expectedPotencyRange[1];
     const s = ok ? 100 : 30;
-    submitResults({ score: s, actions: { scaffoldId, halogen, oh, ch3, cf3, potency: result.potency } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("sar-explorer", [
+        { label: "Potency", userChoice: String(result.potency), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, result, scaffoldId, halogen, oh, ch3, cf3, submitted, submitResults]);
 

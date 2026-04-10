@@ -7,6 +7,7 @@ import { ArrowLeft, Users, ChevronRight, RotateCcw, Award, MessageCircle, Eye } 
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "conducao-caso";
 

@@ -17,6 +17,7 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getChallengesBySlug } from "@/data/simulatorChallenges";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "pka-absorcao";
 
@@ -135,7 +136,9 @@ export default function SimuladorPkaAbsorcao() {
     if (!activeCase || submitted) return 0;
     const s = 80;
     setLastScore(s);
-    submitResults({ score: s, actions: { drugType, pKa, pH, nonIonized: currentFraction } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("pka-absorcao", [
+        { label: "Nonionized", userChoice: String(currentFraction), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, drugType, pKa, pH, currentFraction, submitted, submitResults]);
 

@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCascataCoagulacaoChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "cascata-coagulacao";
 
@@ -146,7 +147,12 @@ export default function SimuladorCascataCoagulacao() {
     const tpOk = outputs.tp >= activeCase.expectedTP[0] && outputs.tp <= activeCase.expectedTP[1];
     const ttpaOk = outputs.ttpa >= activeCase.expectedTTPa[0] && outputs.ttpa <= activeCase.expectedTTPa[1];
     const s = (tpOk ? 50 : 0) + (ttpaOk ? 50 : 0);
-    if (!submitted) submitResults({ score: s, actions: { disabledFactors: Array.from(disabledFactors), tp: outputs.tp, inr: outputs.inr, ttpa: outputs.ttpa } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("cascata-coagulacao", [
+        { label: "Disabledfactors", userChoice: String(Array.from(disabledFactors)), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Tp", userChoice: String(outputs.tp), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Inr", userChoice: String(outputs.inr), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Ttpa", userChoice: String(outputs.ttpa), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, disabledFactors, submitted, submitResults]);
 

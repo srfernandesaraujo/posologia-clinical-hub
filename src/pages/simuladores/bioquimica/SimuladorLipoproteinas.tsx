@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getLipoproteinasChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "lipoproteinas";
 
@@ -208,7 +209,9 @@ export default function SimuladorLipoproteinas() {
     const ldlOk = model.ldlMgDl >= activeCase.expectedLDL[0] && model.ldlMgDl <= activeCase.expectedLDL[1];
     const s = Math.round(ldlOk ? 100 : Math.max(0, 100 - Math.abs(model.ldlMgDl - (activeCase.expectedLDL[0] + activeCase.expectedLDL[1]) / 2)));
     setLastScore(s);
-    submitResults({ score: s, actions: { fatIntake, lplActivity, ldlReceptor, drugs, ldlMgDl: model.ldlMgDl } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("lipoproteinas", [
+        { label: "Ldlmgdl", userChoice: String(model.ldlMgDl), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, model, fatIntake, lplActivity, ldlReceptor, drugs, submitted, submitResults]);
 

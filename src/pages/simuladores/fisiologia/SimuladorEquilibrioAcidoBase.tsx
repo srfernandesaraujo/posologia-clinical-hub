@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEquilibrioAcidoBaseChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "equilibrio-acido-base";
 
@@ -158,7 +159,11 @@ export default function SimuladorEquilibrioAcidoBase() {
     if (!activeCase || submitted) return 0;
     const normalized = ab.ph >= 7.35 && ab.ph <= 7.45;
     const s = normalized ? 100 : 50;
-    submitResults({ score: s, actions: { rrModifier, renalModifier, ph: ab.ph, pCO2: ab.pCO2, hco3: ab.hco3 } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("equilibrio-acido-base", [
+        { label: "Ph", userChoice: String(ab.ph), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Pco2", userChoice: String(ab.pCO2), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Hco3", userChoice: String(ab.hco3), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, ab, rrModifier, renalModifier, submitted, submitResults]);
 

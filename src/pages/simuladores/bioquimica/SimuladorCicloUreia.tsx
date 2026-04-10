@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getCicloUreiaChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "ciclo-ureia";
 
@@ -176,7 +177,10 @@ export default function SimuladorCicloUreia() {
     const ammoniaOk = model.ammoniaLevel >= activeCase.expectedAmmonia[0] && model.ammoniaLevel <= activeCase.expectedAmmonia[1];
     const s = Math.round(ammoniaOk ? 100 : Math.max(0, 100 - Math.abs(model.ammoniaLevel - (activeCase.expectedAmmonia[0] + activeCase.expectedAmmonia[1]) / 2) * 0.5));
     setLastScore(s);
-    submitResults({ score: s, actions: { deficiencies, ammoniaLevel: model.ammoniaLevel, ureiaOutput: model.ureiaOutput } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("ciclo-ureia", [
+        { label: "Ammonialevel", userChoice: String(model.ammoniaLevel), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Ureiaoutput", userChoice: String(model.ureiaOutput), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, model, deficiencies, submitted, submitResults]);
 

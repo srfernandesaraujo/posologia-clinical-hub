@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getGlicoliseGliconeogeneseChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "glicolise-gliconeogenese";
 
@@ -163,7 +164,9 @@ export default function SimuladorGlicoliseGliconeogenese() {
     const ok = outputs.dominantPathway === activeCase.expectedFlux;
     const s = ok ? 100 : 30;
     setLastScore(s);
-    if (!submitted) submitResults({ score: s, actions: { insulin, glucagon, fed, insulinResistance, dominantPathway: outputs.dominantPathway } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("glicolise-gliconeogenese", [
+        { label: "Dominantpathway", userChoice: String(outputs.dominantPathway), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, insulin, glucagon, fed, insulinResistance, submitted, submitResults]);
 

@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getPentosesFosfatoChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "pentoses-fosfato";
 
@@ -167,7 +168,9 @@ export default function SimuladorPentosesFosfato() {
     const hemOk = model.hemolysis >= activeCase.expectedHemolysis[0] && model.hemolysis <= activeCase.expectedHemolysis[1];
     const s = Math.round(hemOk ? 100 : Math.max(0, 100 - Math.abs(model.hemolysis - (activeCase.expectedHemolysis[0] + activeCase.expectedHemolysis[1]) / 2) * 2));
     setLastScore(s);
-    submitResults({ score: s, actions: { g6pdDeficient, oxidantAgent, oxidantDose, hemolysis: model.hemolysis } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("pentoses-fosfato", [
+        { label: "Hemolysis", userChoice: String(model.hemolysis), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, model, g6pdDeficient, oxidantAgent, oxidantDose, submitted, submitResults]);
 

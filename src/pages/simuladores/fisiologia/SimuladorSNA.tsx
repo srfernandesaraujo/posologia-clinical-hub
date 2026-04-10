@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getSNAChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "sna";
 
@@ -135,7 +136,10 @@ export default function SimuladorSNA() {
     const pasOk = outputs.pas >= activeCase.expectedPAS[0] && outputs.pas <= activeCase.expectedPAS[1];
     const s = (fcOk ? 50 : 0) + (pasOk ? 50 : 0);
     setRunning(false);
-    if (!submitted) submitResults({ score: s, actions: { sympathetic, parasympathetic, fc: outputs.fc, pas: outputs.pas } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("sna", [
+        { label: "Fc", userChoice: String(outputs.fc), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" },
+        { label: "Pas", userChoice: String(outputs.pas), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, sympathetic, parasympathetic, submitted, submitResults]);
 

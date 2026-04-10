@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEixoHPAChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "eixo-hpa";
 
@@ -144,7 +145,9 @@ export default function SimuladorEixoHPA() {
     const inRange = outputs.totalCortisol >= activeCase.expectedCortisol[0] && outputs.totalCortisol <= activeCase.expectedCortisol[1];
     const s = Math.round(inRange ? 100 : Math.max(0, 100 - Math.abs(outputs.totalCortisol - (activeCase.expectedCortisol[0] + activeCase.expectedCortisol[1]) / 2) * 2));
     setRunning(false);
-    if (!submitted) submitResults({ score: s, actions: { stress, exogenousCortisol, totalCortisol: outputs.totalCortisol } });
+    if (!submitted) submitResults({ score: s, actions: buildSimulatorDecisions("eixo-hpa", [
+        { label: "Totalcortisol", userChoice: String(outputs.totalCortisol), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, outputs, stress, exogenousCortisol, submitted, submitResults]);
 

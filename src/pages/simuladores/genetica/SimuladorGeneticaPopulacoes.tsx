@@ -17,6 +17,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getGeneticaPopulacoesChallenges } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "genetica-populacoes";
 
@@ -111,7 +112,9 @@ export default function SimuladorGeneticaPopulacoes() {
     const isEq = Math.abs(last.p - pFreq) < 0.05;
     const s = activeCase.expectedEquilibrium === isEq ? 100 : 40;
     setLastScore(s);
-    submitResults({ score: s, actions: { pFreq, popSize, selection, generations, driftEnabled, finalP: last.p } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("genetica-populacoes", [
+        { label: "Finalp", userChoice: String(last.p), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, fullSimData, pFreq, popSize, selection, generations, driftEnabled, submitted, submitResults]);
 

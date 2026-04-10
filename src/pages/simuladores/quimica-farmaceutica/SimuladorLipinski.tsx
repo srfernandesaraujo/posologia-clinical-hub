@@ -16,6 +16,7 @@ import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMo
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getChallengesBySlug } from "@/data/simulatorChallenges";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 
 const SLUG = "lipinski";
 
@@ -111,7 +112,9 @@ export default function SimuladorLipinski() {
     if (!activeCase || submitted) return 0;
     const ok = result.violations === activeCase.expectedViolations;
     const s = ok ? 100 : 40;
-    submitResults({ score: s, actions: { mw, logP, hbd, hba, violations: result.violations } });
+    submitResults({ score: s, actions: buildSimulatorDecisions("lipinski", [
+        { label: "Violations", userChoice: String(result.violations), idealChoice: "Conforme caso", correct: true, category: "Parâmetro", explanation: "" }
+      ]) });
     return s;
   }, [activeCase, result, mw, logP, hbd, hba, submitted, submitResults]);
 
