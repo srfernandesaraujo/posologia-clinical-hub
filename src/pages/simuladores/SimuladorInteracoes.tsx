@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
