@@ -1,56 +1,123 @@
 
 
-## Plano: Simulador de Tratamento da Asma
+## Plano: Analytics Robusto para Simuladores Dinâmicos
 
-### Visao Geral
-Criar o simulador **"Tratamento da Asma"** (slug: `tratamento-asma`) na categoria **Farmacologia Clinica**, baseado nas 3 aulas (17-19) sobre fisiopatologia da asma, tratamento farmacologico (Steps GINA) e asma em situacoes especiais. Seguira o padrao dos simuladores existentes (ManejoDor, InflamacaoAINEs, InfeccoesAntibioticos) com botao "Iniciar", graficos dinamicos Recharts e modo desafio.
+### Problema Identificado
+Existem dois tipos de submissão no sistema:
 
-### Conceito Pedagogico
-O aluno recebe um paciente asmatico e deve:
-1. **Classificar a gravidade** (intermitente, persistente leve/moderada/grave) com base em sintomas e espirometria (VEF1, PFE, VEF1/CVF)
-2. **Selecionar o Step GINA** (1-5) e os farmacos de controle e resgate
-3. **Ajustar dose e dispositivo** via sliders (CI dose, LABA, LAMA, anti-IgE)
-4. **Avaliar situacoes especiais** (gestante, crianca <5 anos, idoso, asma induzida por exercicio, asma + DRGE)
-5. **Observar dinamicamente** nos graficos: funcao pulmonar (VEF1%), frequencia de crises, efeitos adversos
+1. **Simuladores com desafios (challenge_results)** -- enviam dados estruturados questão a questão. O Analytics já renderiza de forma rica (Imagem 1).
 
-### Elementos Interativos Dinamicos (botao Iniciar)
-- **Grafico 1 — Funcao Pulmonar (VEF1% x semanas)**: LineChart animado mostrando melhora do VEF1% predito ao longo de 12 semanas conforme o tratamento
-- **Grafico 2 — Frequencia de Crises**: LineChart mostrando numero de exacerbacoes/semana, uso de SABA de resgate
-- **Grafico 3 — Efeitos Adversos**: BarChart com riscos por sistema (candidíase oral, disfonia, supressao adrenal, taquicardia, tremor, osteoporose)
-- **Painel Clinico**: SpO2, FR, PFE (L/min), sintomas noturnos/semana — reagindo em tempo real
+2. **Simuladores dinâmicos (sem desafios)** -- enviam apenas `actions` com dados brutos mínimos como `{ drug: "Ibuprofeno", dose: 400 }` ou `{ userAnswers, correctCount, totalCount }`. O Analytics mostra apenas "PRM1: —" com o score (Imagem 2).
 
-### Parametros Ajustaveis (Sliders/Selects)
-- Gravidade da asma (Intermitente / Persistente Leve / Moderada / Grave)
-- Step GINA (1-5)
-- Corticoide inalatorio: beclometasona, budesonida, fluticasona propionato, mometasona — com dose (baixa/media/alta em mcg)
-- Broncodilatador de longa duracao: formoterol, salmeterol, tiotropio (LAMA)
-- Resgate: salbutamol (SABA) vs formoterol+CI (MART)
-- Terapia adicional: montelucaste, omalizumabe (anti-IgE), teofilina, corticoide oral
-- Dispositivo inalatorio (pMDI, pMDI+espacador, DPI, nebulizador)
-- Situacao especial (toggles: gestante, crianca <5 anos, idoso, exercicio, DRGE, obesidade)
+### Solução: Duas Frentes
 
-### 5 Casos Clinicos Nativos
+**Frente 1 -- Enriquecer os dados enviados pelos simuladores** (submissão estruturada com `decisions[]`)
 
-| # | Cenario | Titulo | Descricao |
-|---|---------|--------|-----------|
-| 1 | **Asma intermitente — Espirometria** | Classificacao e espirometria inicial | P.S., 22 anos, tosse noturna esporadica, sibilos ao esforco 1x/mes. Espirometria: VEF1 92%, VEF1/CVF 0.82, prova broncodilatadora positiva (+15%). Aluno classifica gravidade, interpreta espirometria e seleciona Step 1 GINA (SABA sob demanda ou CI+formoterol sob demanda). |
-| 2 | **Asma persistente moderada — Step-up** | Escalonamento terapeutico | M.C., 35 anos, sintomas diarios, despertar noturno >1x/semana, VEF1 68%. Em uso de CI dose baixa sem controle. Aluno escalona para Step 3 (CI dose media + LABA) ou Step 4, avalia tecnica inalatoria e adesao, decide entre ICS-formoterol MART vs ICS+SABA. |
-| 3 | **Asma grave — Terapia biologica** | Asma grave refrataria | R.A., 48 anos, multiplas internacoes, uso cronico de prednisona, VEF1 45%, eosinofilos elevados, IgE total 450. Aluno identifica fenomipo (alergico/eosinofilico), seleciona Step 5 (CI dose alta + LABA + LAMA + anti-IgE/anti-IL5), planeja desmame de corticoide oral. |
-| 4 | **Asma na gestacao** | Asma em situacao especial — Gestante | A.F., 30 anos, 20 semanas, asma persistente leve, medo de usar CI. Aluno explica seguranca dos CI na gestacao (budesonida preferida), risco de asma nao controlada para mae e feto, seleciona step adequado. |
-| 5 | **Crise asmatica aguda** | Exacerbacao grave no PS | L.T., 16 anos, dispneia intensa, FR 32, SpO2 89%, PFE 35% predito, fala em palavras. Aluno classifica gravidade da crise (grave vs risco de vida), inicia salbutamol nebulizado + ipratropio + O2 + corticoide sistemico, avalia necessidade de sulfato de magnesio EV. |
+Cada simulador dinâmico passará a enviar os `actions` no formato `{ type: "simulator_decisions", decisions: [...], summary: {...} }`, onde cada `decision` tem:
+- `label` (ex: "Fármaco Selecionado", "Dose", "Gastroproteção")
+- `userChoice` (o que o aluno escolheu)
+- `idealChoice` (o que seria ideal para aquele caso)
+- `correct` (boolean)
+- `category` (agrupamento: "Seleção", "Posologia", "Segurança", "Monitoramento")
+- `weight` (importância relativa na pontuação)
+- `explanation` (justificativa pedagógica breve)
 
-### Arquivos a Criar
-- `src/pages/simuladores/SimuladorTratamentoAsma.tsx` — Componente principal (~800 linhas)
+Os simuladores afetados (cada um terá sua lógica de `buildDecisions` customizada):
+
+| Simulador | Decisões a capturar |
+|-----------|-------------------|
+| **PRM** | Para cada fármaco: identificação do PRM (sim/não), tipo (Segurança/Efetividade/Indicação/Adesão), justificativa |
+| **SOAP** | Para cada seção S/O/A/P: palavras-chave presentes vs ausentes, completude |
+| **MAI** | Para cada critério MAI: classificação A/B/C do aluno vs ideal |
+| **Cascata de Prescrição** | Para cada medicamento: identificação correta da cascata |
+| **Dispensação 344** | Por etapa: acolhimento, verificação de campos, questões legais, decisão, orientação |
+| **Insulina** | Regime, tipo basal/prandial, TDD, repartição basal%, glicemias resultantes |
+| **Manejo da Dor** | Fármaco, dose, adjuvante, EVA final, escada OMS |
+| **Inflamação/AINEs** | Fármaco, seletividade COX, gastroproteção, EVA final, riscos |
+| **Infecções/Antibióticos** | Antibiótico, dose, hidratação, carga bacteriana final, warnings |
+| **Tratamento da Asma** | Fármacos, step GINA, dispositivo, VEF1 final, warnings |
+| **Interações** | Identificação de interações, classificação, conduta |
+| **Bomba de Infusão** | Velocidade, concentração, dose/kg/min |
+| **Desmame Benzo** | Esquema de redução, ritmo, sintomas monitorados |
+
+Todos os simuladores de **Fisiologia**, **Bioquímica**, **Farmacologia básica**, **Farmacotécnica**, **Química Farmacêutica** e **Genética** que não têm desafios também serão atualizados com o mesmo padrão.
+
+**Frente 2 -- Enriquecer a renderização no Analytics** (`ParticipantDetail`)
+
+O componente `ParticipantDetail` no `Analytics.tsx` já trata `challenge_results` (questões) e `decisions[]` (legacy). Precisa ser expandido para tratar o novo formato `simulator_decisions`:
+
+- **Cards de decisão por categoria** com ícone verde/vermelho, agrupados por categoria (Seleção, Posologia, Segurança, Monitoramento)
+- **Resumo por categoria** (ex: "Seleção: 2/3 corretas, Posologia: 1/2, Segurança: 3/3")
+- **Gráfico radar** de competências por categoria
+- **Indicadores pedagógicos**: "Ponto forte: Segurança | Ponto fraco: Posologia"
+- **Explicação pedagógica** para cada decisão incorreta
+- **Comparativo vs sala** (já existente, será reaproveitado)
 
 ### Arquivos a Editar
-- `src/pages/Simuladores.tsx` — Adicionar entrada no array NATIVE_SIMULATORS (categoria "Farmacologia Clinica")
-- `src/App.tsx` — Adicionar rotas `/simuladores/tratamento-asma` e `/sala/simulador/tratamento-asma/:visitorId`
-- `src/hooks/useSimulatorCases.ts` — Adicionar slug `tratamento-asma` ao SIMULATOR_SLUGS
-- `src/pages/SalasVirtuais.tsx` — Adicionar ao SIMULATOR_OPTIONS na categoria "Farmacologia Clinica"
-- `src/data/nativeCaseCatalog.ts` — Adicionar os 5 casos nativos
-- `src/data/nativeSystemPrompts.ts` — Adicionar system prompt para geracao de casos IA
-- `src/data/simulatorChallenges.ts` — Adicionar 10 desafios (mix de multipla escolha e ajuste)
 
-### Padrao Tecnico
-Segue exatamente o padrao dos simuladores existentes: `useSimulatorCases`, `useVirtualRoomCase`, `ExamBanner`, `ExamFeedbackOverlay`, `SimulatorChallengeMode`, botao "Mostrar Resultados" com redirecionamento 15s, suporte light/dark mode.
+**Simuladores (Frente 1)** -- ~30 arquivos, cada um com alteração localizada na chamada `submitResults`:
+- `src/pages/simuladores/SimuladorPRM.tsx`
+- `src/pages/simuladores/SimuladorSOAP.tsx`
+- `src/pages/simuladores/SimuladorMAI.tsx`
+- `src/pages/simuladores/SimuladorCascataPrescricao.tsx`
+- `src/pages/simuladores/SimuladorInsulina.tsx`
+- `src/pages/simuladores/SimuladorManejoDor.tsx`
+- `src/pages/simuladores/SimuladorInflamacaoAINEs.tsx`
+- `src/pages/simuladores/SimuladorInfeccoesAntibioticos.tsx`
+- `src/pages/simuladores/SimuladorTratamentoAsma.tsx`
+- `src/pages/simuladores/SimuladorInteracoes.tsx`
+- `src/pages/simuladores/SimuladorBombaInfusao.tsx`
+- `src/pages/simuladores/SimuladorDesmameBenzo.tsx`
+- `src/pages/simuladores/SimuladorAcompanhamento.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorDispensacao344.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorDoseResposta.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorTransducaoSinal.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorJanelaTerapeutica.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorBloqueioNeuromuscular.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorViasAdministracao.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorFarmacoAutonomica.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorToleranciaDependencia.tsx`
+- `src/pages/simuladores/farmacologia/SimuladorFarmacogenomica.tsx`
+- Todos os simuladores de Fisiologia, Bioquímica, Farmacotécnica, Química Farmacêutica, Genética e Docência (~35 arquivos)
+
+**Analytics (Frente 2)**:
+- `src/pages/Analytics.tsx` -- Expandir `ParticipantDetail` para renderizar `simulator_decisions`
+
+### Formato de Dados Padronizado
+
+```text
+actions = {
+  type: "simulator_decisions",
+  simulatorSlug: "prm",
+  decisions: [
+    {
+      label: "Amoxicilina 500mg — PRM?",
+      userChoice: "Sem PRM",
+      idealChoice: "Sem PRM",
+      correct: true,
+      category: "Identificação",
+      explanation: "Amoxicilina em dose adequada..."
+    },
+    ...
+  ],
+  summary: {
+    score: 75,
+    totalDecisions: 4,
+    correctDecisions: 3,
+    categories: {
+      "Identificação": { correct: 2, total: 2 },
+      "Classificação": { correct: 1, total: 2 }
+    },
+    strengths: ["Identificação de PRM"],
+    weaknesses: ["Classificação do tipo de PRM"],
+    pedagogicalNote: "Revise os critérios de..."
+  }
+}
+```
+
+### Observação Importante
+O formato é retrocompatível: submissões antigas continuarão sendo renderizadas normalmente. O Analytics detecta o `type` do actions para decidir qual template de renderização usar.
+
+### Estimativa
+Devido ao volume de arquivos (~50+), a implementação será feita em lotes: primeiro os simuladores de Farmacologia Clínica (os mais críticos para o professor), depois os de Farmacologia Básica/Fisiologia/Bioquímica, e por fim o Analytics expandido.
 
