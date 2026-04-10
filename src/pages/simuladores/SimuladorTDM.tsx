@@ -233,9 +233,14 @@ export default function SimuladorTDM() {
               setSubmitted(true);
               if (isVirtualRoom && c) {
                 const correct = Math.abs(Number(newDose) - c.expected.newDose) < 50 && Math.abs(Number(newInterval) - c.expected.newInterval) <= 6;
+                const doseOk = Math.abs(Number(newDose) - c.expected.newDose) < 50;
+                const intervalOk = Math.abs(Number(newInterval) - c.expected.newInterval) <= 6;
                 submitResults({
                   score: correct ? 100 : 0,
-                  actions: { newDose, newInterval, expectedDose: c.expected.newDose, expectedInterval: c.expected.newInterval },
+                  actions: buildSimulatorDecisions("tdm", [
+                    { label: "Nova dose", userChoice: `${newDose} mg`, idealChoice: `${c.expected.newDose} mg`, correct: doseOk, category: "Posologia", explanation: "" },
+                    { label: "Novo intervalo", userChoice: `${newInterval}h`, idealChoice: `${c.expected.newInterval}h`, correct: intervalOk, category: "Posologia", explanation: "" },
+                  ]),
                 });
               }
             }} disabled={!newDose || !newInterval} className="w-full">Aplicar Novo Esquema</Button>
