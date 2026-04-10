@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { Button } from "@/components/ui/button";
@@ -382,8 +383,16 @@ export default function SimuladorSOAP() {
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allFilled} onClick={() => {
           if (isVirtualRoom) {
-            const { totalScore } = getScores();
-            submitResults({ score: totalScore, actions: { userSOAP } });
+            const { sections, totalScore } = getScores();
+            const decisions: SimDecision[] = sections.map(s => ({
+              label: SECTION_LABELS[s.key as keyof SOAPKeywords].label,
+              userChoice: `${s.found.length}/${s.found.length + s.missed.length} conceitos (${s.score}%)`,
+              idealChoice: `${s.found.length + s.missed.length}/${s.found.length + s.missed.length} conceitos (100%)`,
+              correct: s.score >= 70,
+              category: "Documentação SOAP",
+              explanation: s.missed.length > 0 ? `Conceitos ausentes: ${s.missed.join(", ")}` : undefined,
+            }));
+            submitResults({ score: totalScore, actions: buildSimulatorDecisions("metodo-soap", decisions) });
           }
           setScreen("report");
         }}>
