@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -301,7 +302,13 @@ export default function SimuladorInflamacaoAINEs() {
     const evaReduced = simulation.finalEVA <= activeCase.initialEVA * 0.5;
     const s = (drugOk ? 40 : 0) + (gastropOk ? 30 : 0) + (evaReduced ? 30 : 0);
     setLastScore(s);
-    submitResults({ score: s, actions: { drug: drug.name, dose, interval, gastroprotection, finalEVA: simulation.finalEVA } });
+    const decisions: SimDecision[] = [
+      { label: "AINE selecionado", userChoice: drug.name, idealChoice: activeCase.expectedDrug, correct: drugOk, category: "Seleção" },
+      { label: "Gastroproteção", userChoice: gastroprotection ? "Sim" : "Não", idealChoice: activeCase.gastroprotection ? "Sim" : "Não", correct: gastropOk, category: "Segurança", explanation: !gastropOk ? "Avalie fatores de risco GI para decidir gastroproteção" : undefined },
+      { label: "Dose", userChoice: `${dose} ${drug.doseUnit}`, idealChoice: `${drug.doseMin}-${drug.doseMax} ${drug.doseUnit}`, correct: true, category: "Posologia" },
+      { label: "Redução da EVA", userChoice: `EVA final: ${simulation.finalEVA.toFixed(1)}`, idealChoice: `EVA ≤ ${(activeCase.initialEVA * 0.5).toFixed(1)}`, correct: evaReduced, category: "Desfecho clínico" },
+    ];
+    submitResults({ score: s, actions: buildSimulatorDecisions("inflamacao-aines", decisions) });
     return s;
   }, [activeCase, drug, dose, interval, gastroprotection, simulation.finalEVA, submitted, submitResults]);
 
