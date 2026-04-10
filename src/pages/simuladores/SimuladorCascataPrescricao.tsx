@@ -343,9 +343,18 @@ export default function SimuladorCascataPrescricao() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allAnswered} onClick={() => {
-          if (isVirtualRoom) {
-            const { correct, total } = getScore();
-            submitResults({ score: total > 0 ? Math.round((correct / total) * 100) : 0, actions: { userAnswers } });
+          if (isVirtualRoom && currentCase) {
+            const { correct, total, details } = getScore();
+            const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+            const decs: SimDecision[] = details.map((d: any) => ({
+              label: `${d.drug} — Cascata?`,
+              userChoice: d.userAnswer || "Não respondido",
+              idealChoice: d.isCascade ? `Sim (causado por ${d.causedBy})` : "Não",
+              correct: d.correct,
+              category: "Identificação de cascata",
+              explanation: d.isCascade ? d.sideEffect : undefined,
+            }));
+            submitResults({ score, actions: buildSimulatorDecisions("cascata-prescricao", decs) });
           }
           setScreen("report");
         }}>
