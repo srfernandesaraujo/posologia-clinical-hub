@@ -197,7 +197,12 @@ export default function SimuladorInteracoes() {
       const score = highCount === 0 ? 90 : 70;
       setVrScore(score);
       setVrSubmitted(true);
-      submitVRResults({ score, actions: { drugs: selectedDrugs.map(d => d.name), interactionsFound: interactions.length, highSeverity: highCount } });
+      const decisions = [
+        { label: "Fármacos avaliados", userChoice: selectedDrugs.map(d => d.name).join(", "), idealChoice: "Todos do caso", correct: true, category: "Seleção" },
+        { label: "Interações encontradas", userChoice: `${interactions.length} interações`, idealChoice: "Todas identificadas", correct: interactions.length > 0, category: "Identificação" },
+        { label: "Interações graves", userChoice: `${highCount} graves`, idealChoice: "0 graves", correct: highCount === 0, category: "Segurança" },
+      ];
+      submitVRResults({ score, actions: buildSimulatorDecisions("interacoes", decisions) });
     }
   }, [interactions, isVR, vrSubmitted, selectedDrugs]);
 

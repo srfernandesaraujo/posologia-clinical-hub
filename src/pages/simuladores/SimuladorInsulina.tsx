@@ -95,7 +95,15 @@ export default function SimuladorInsulina() {
       const score = hba1c <= 7 ? 100 : hba1c <= 8 ? 70 : 40;
       setVrScore(score);
       setVrSubmitted(true);
-      submitResults({ score, actions: { regime, basalType, prandialType, tdd, basalPct, glycemics, hba1c } });
+      const decisions: SimDecision[] = [
+        { label: "Regime de insulina", userChoice: regime, idealChoice: "basal-bolus", correct: regime === "basal-bolus", category: "Seleção" },
+        { label: "Insulina basal", userChoice: basalType, idealChoice: "Glargina", correct: true, category: "Seleção" },
+        { label: "Insulina prandial", userChoice: prandialType, idealChoice: "Lispro", correct: true, category: "Seleção" },
+        { label: "TDD calculada", userChoice: `${tdd} UI`, idealChoice: "Adequada ao peso", correct: tdd > 0, category: "Posologia" },
+        { label: "% Basal", userChoice: `${basalPct}%`, idealChoice: "40-50%", correct: basalPct >= 40 && basalPct <= 60, category: "Posologia" },
+        { label: "HbA1c estimada", userChoice: `${hba1c}%`, idealChoice: "≤ 7%", correct: hba1c <= 7, category: "Desfecho clínico" },
+      ];
+      submitResults({ score, actions: buildSimulatorDecisions("insulina", decisions) });
     }
   }, [screen, isVirtualRoom, vrSubmitted]);
 
