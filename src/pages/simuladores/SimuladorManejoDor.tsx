@@ -267,6 +267,9 @@ export default function SimuladorManejoDor() {
   const [dose, setDose] = useState(500);
   const [interval, setInterval_] = useState(6);
   const [adjuvantIdx, setAdjuvantIdx] = useState(0);
+  const [selectedRoute, setSelectedRoute] = useState("VO");
+  const [renalInsufficiency, setRenalInsufficiency] = useState(false);
+  const [hepaticInsufficiency, setHepticInsufficiency] = useState(false);
   const [running, setRunning] = useState(false);
   const [animStep, setAnimStep] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
