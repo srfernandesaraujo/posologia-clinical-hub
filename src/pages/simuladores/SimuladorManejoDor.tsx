@@ -641,6 +641,18 @@ export default function SimuladorManejoDor() {
         challengeSet={getManejoDorChallenges(activeCaseIndex)}
         customChallengeSet={aiChallengeSet}
         simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum"), route: selectedRoute, renalInsufficiency, hepaticInsufficiency }}
+        onResetForChallenge={() => {
+          const defaultIdx = 0;
+          setSelectedDrugIdx(defaultIdx);
+          setDose(DRUGS[defaultIdx].doseMin);
+          setInterval_(DRUGS[defaultIdx].intervalMin);
+          setAdjuvantIdx(0);
+          setSelectedRoute(DRUGS[defaultIdx].routes[0]);
+          setRenalInsufficiency(false);
+          setHepticInsufficiency(false);
+          setRunning(false);
+          setAnimStep(0);
+        }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
