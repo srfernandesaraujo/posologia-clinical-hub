@@ -252,6 +252,13 @@ export default function SimuladorInflamacaoAINEs() {
   const [lastScore, setLastScore] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Determine active case index for case-specific challenges
+  const activeCaseIndex = useMemo(() => {
+    if (!activeCase) return undefined;
+    const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+    return idx >= 0 ? idx : undefined;
+  }, [activeCase]);
+
   const drug = DRUGS[selectedDrugIdx];
 
   useEffect(() => {
@@ -575,8 +582,8 @@ export default function SimuladorInflamacaoAINEs() {
 
       {/* Challenge Mode */}
       <SimulatorChallengeMode
-        challengeSet={getInflamacaoAINEsChallenges()}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, gastroprotection, condition: activeCase.condition, finalEVA: simulation.finalEVA, vitals: simulation.vitals, cox1: drug.cox1Selectivity, pKa: drug.pKa, halfLife: drug.halfLife }}
+        challengeSet={getInflamacaoAINEsChallenges(activeCaseIndex)}
+        simulatorState={{ drug: drug.name, drugClass: drug.class, drugCategory: drug.category, dose, interval, gastroprotection, comorbidities, condition: activeCase.condition, finalEVA: simulation.finalEVA, vitals: simulation.vitals, cox1: drug.cox1Selectivity, pKa: drug.pKa, halfLife: drug.halfLife, sideEffectData: simulation.sideEffectData, inflammation: simulation.evaData[simulation.evaData.length - 1]?.inflammation ?? 100 }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
