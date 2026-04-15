@@ -217,7 +217,7 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
 
     // Ceiling effect: cap cpRatio so increasing dose/Cp stops adding analgesia
     let cpRatio = Math.min(cp / cpThreshold, 1);
-    if (drug.ceilingEffect) cpRatio = Math.min(cpRatio, 0.5);
+    if (drug.ceilingEffect) cpRatio = Math.min(cpRatio, 0.35);
 
     const reduction = totalPotency * typeMultiplier * cpRatio;
     const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
