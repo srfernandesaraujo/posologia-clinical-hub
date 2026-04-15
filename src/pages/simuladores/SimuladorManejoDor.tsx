@@ -524,8 +524,9 @@ export default function SimuladorManejoDor() {
 
       {/* Challenge Mode */}
       <SimulatorChallengeMode
-        challengeSet={getManejoDorChallenges()}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals }}
+        challengeSet={getManejoDorChallenges(activeCaseIndex)}
+        customChallengeSet={aiChallengeSet}
+        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum") }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
