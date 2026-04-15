@@ -226,6 +226,25 @@ export default function SimuladorManejoDor() {
   const drug = DRUGS[selectedDrugIdx];
   const adjuvant = ADJUVANTS[adjuvantIdx];
 
+  // Determine active case index for case-specific challenges
+  const activeCaseIndex = useMemo(() => {
+    if (!activeCase) return undefined;
+    const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+    return idx >= 0 ? idx : undefined;
+  }, [activeCase]);
+
+  // AI case challenges (from case_data.challenges)
+  const aiChallengeSet = useMemo(() => {
+    if (!activeCase || !activeCase.isAI) return null;
+    const cd = activeCase as any;
+    if (!cd.challenges || !Array.isArray(cd.challenges) || cd.challenges.length === 0) return null;
+    return {
+      title: `Desafio: ${activeCase.title}`,
+      description: "Desafios específicos gerados para este caso clínico.",
+      challenges: cd.challenges,
+    };
+  }, [activeCase]);
+
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
@@ -524,8 +543,9 @@ export default function SimuladorManejoDor() {
 
       {/* Challenge Mode */}
       <SimulatorChallengeMode
-        challengeSet={getManejoDorChallenges()}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals }}
+        challengeSet={getManejoDorChallenges(activeCaseIndex)}
+        customChallengeSet={aiChallengeSet}
+        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum") }}
         onComplete={() => setChallengeCompleted(true)}
       />
 

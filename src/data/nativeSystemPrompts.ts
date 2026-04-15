@@ -2060,6 +2060,20 @@ O caso deve conter OBRIGATORIAMENTE os seguintes campos JSON:
   - expectedAdjuvant: "Nenhum" | "Gabapentina 300mg" | "Pregabalina 75mg" | "Duloxetina 60mg" | "Amitriptilina 25mg"
   - clinicalTip: string (~80 palavras) com raciocínio farmacológico
   - references: string[] — 2-3 referências científicas
+  - challenges: array com EXATAMENTE 6 objetos alternando entre "adjust" e "mcq":
+    [
+      { type: "adjust", question: "Instrução para o aluno ajustar algo no simulador", context: "Contexto clínico que justifica o ajuste", targetParams: { <param>: { min: <number>, max: <number>, label: "<descrição>" } }, explanation: "Explicação após validação", reference: "Referência" },
+      { type: "mcq", question: "Pergunta interpretativa sobre as consequências do ajuste anterior", context: "Contexto para reflexão", options: ["A", "B", "C", "D"], correctIndex: <0-3>, explanation: "Explicação detalhada com mecanismo farmacológico", reference: "Referência" },
+      ... (repetir 3 pares adjust→mcq)
+    ]
+
+REGRAS PARA OS DESAFIOS (challenges):
+1. Devem alternar: adjust → mcq → adjust → mcq → adjust → mcq (total: 6)
+2. Cada MCQ deve ser INTERPRETATIVA: perguntar sobre as CONSEQUÊNCIAS farmacológicas/clínicas do ajuste anterior (efeitos adversos, mecanismos, riscos, indicações)
+3. Os "adjust" devem usar targetParams com chaves válidas do simulador: "drug" (nome do fármaco), "dose" (valor numérico), "interval" (valor numérico), "adjuvant" (nome do adjuvante), "gastroprotection" (booleano)
+4. NÃO inclua campo "validator" nos adjust — será gerado automaticamente pelo sistema
+5. As MCQs devem ter 4 alternativas com apenas 1 correta, exigindo raciocínio clínico, não apenas memorização
+6. Cada desafio deve ter explanation e reference
 
 TEMAS A COBRIR (varie entre gerações):
 - Escada Analgésica da OMS (Degraus 1, 2 e 3)
