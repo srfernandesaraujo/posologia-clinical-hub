@@ -179,17 +179,41 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
 
   const evaData: { hour: number; eva: number; cp: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
+  const isTD = route === "TD";
+
   for (const h of hours) {
     let cp = 0;
-    const nDoses = Math.floor(h / interval) + 1;
-    for (let d = 0; d < nDoses; d++) {
-      const tSinceDose = h - d * interval;
-      if (tSinceDose < 0) continue;
-      const absorption = effectiveBio * (1 - Math.exp(-tSinceDose / effectiveTmax));
-      const elimination = Math.exp(-0.693 * tSinceDose / effectiveHalfLife);
-      cp += absorption * elimination;
+
+    if (isTD) {
+      // Transdermal patch: zero-order (constant rate) infusion model
+      // Cp approaches Css = F * Rate / CL; approach: Cp = Css * (1 - e^(-ke*t))
+      // ke = 0.693 / halfLife; Css normalised so doseFraction * 100 at plateau
+      const nPatches = Math.floor(h / interval) + 1;
+      for (let d = 0; d < nPatches; d++) {
+        const tSincePatch = h - d * interval;
+        if (tSincePatch < 0) continue;
+        const patchDuration = Math.min(tSincePatch, interval); // patch active for up to 72h
+        const ke = 0.693 / effectiveHalfLife;
+        // While patch is on: Css*(1-e^(-ke*t_on))
+        const cpOnPatch = effectiveBio * (1 - Math.exp(-ke * patchDuration));
+        // After patch removed: decay from level at removal
+        const tAfterRemoval = tSincePatch - patchDuration;
+        const decay = tAfterRemoval > 0 ? Math.exp(-ke * tAfterRemoval) : 1;
+        cp += cpOnPatch * decay;
+      }
+      cp = cp * doseFraction * 100;
+    } else {
+      // Standard first-order absorption model for oral/EV/SC
+      const nDoses = Math.floor(h / interval) + 1;
+      for (let d = 0; d < nDoses; d++) {
+        const tSinceDose = h - d * interval;
+        if (tSinceDose < 0) continue;
+        const absorption = effectiveBio * (1 - Math.exp(-tSinceDose / effectiveTmax));
+        const elimination = Math.exp(-0.693 * tSinceDose / effectiveHalfLife);
+        cp += absorption * elimination;
+      }
+      cp = cp * doseFraction * 100;
     }
-    cp = cp * doseFraction * 100;
 
     // Ceiling effect: cap cpRatio so increasing dose/Cp stops adding analgesia
     let cpRatio = Math.min(cp / cpThreshold, 1);
