@@ -529,12 +529,12 @@ export default function SimuladorInfeccoesAntibioticos() {
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 200 ? 25 : drug.doseMax <= 1000 ? 50 : 100} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={(drug.doseMax - drug.doseMin) <= 100 ? 10 : drug.doseMax <= 500 ? 25 : drug.doseMax <= 1000 ? 50 : 100} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Intervalo</label><span className="text-sm font-bold">{interval}h</span></div>
-              <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={Math.max(drug.intervalMax, drug.intervalMin + 1)} step={1} />
+              <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={Math.max(drug.intervalMax, 24)} step={1} />
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={hydration} onCheckedChange={setHydration} id="hid" />
@@ -658,11 +658,16 @@ export default function SimuladorInfeccoesAntibioticos() {
       </Card>
 
       {/* Challenge Mode */}
-      <SimulatorChallengeMode
-        challengeSet={getInfeccoesAntibioticosChallenges()}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, hydration, infectionType: activeCase.infectionType, finalBacterialLoad: simulation.finalBacterialLoad, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: drug.safePregnancy, urinaryConcentration: drug.urinaryConcentration }}
-        onComplete={() => setChallengeCompleted(true)}
-      />
+      {(() => {
+        const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+        return (
+          <SimulatorChallengeMode
+            challengeSet={getInfeccoesAntibioticosChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
+            simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, hydration, infectionType: activeCase.infectionType, finalBacterialLoad: simulation.finalBacterialLoad, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: drug.safePregnancy, safeDRC: drug.safeDRC, safeElderly: drug.safeElderly, urinaryConcentration: drug.urinaryConcentration, intestinalConcentration: drug.intestinalConcentration, spectrum: drug.spectrum, halfLife: drug.halfLife, bioavailability: drug.bioavailability, sideEffectData: simulation.sideEffectData, specialGroups }}
+            onComplete={() => setChallengeCompleted(true)}
+          />
+        );
+      })()}
 
       {/* Virtual Room Results */}
       {isVirtualRoom && submitted && (
