@@ -174,8 +174,8 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
   if (options?.renalInsufficiency) effectiveHalfLife *= 2.5;
   if (options?.hepaticInsufficiency) effectiveHalfLife *= 2.0;
 
-  // Cp threshold normalized by bioavailability so EVA can reach low values
-  const cpThreshold = effectiveBio * 50;
+  // Fixed Cp threshold — NOT bio-dependent so route differences matter in EVA
+  const cpThreshold = 25;
 
   const evaData: { hour: number; eva: number; cp: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
@@ -191,7 +191,11 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     }
     cp = cp * doseFraction * 100;
 
-    const reduction = totalPotency * typeMultiplier * Math.min(cp / cpThreshold, 1);
+    // Ceiling effect: cap cpRatio so increasing dose/Cp stops adding analgesia
+    let cpRatio = Math.min(cp / cpThreshold, 1);
+    if (drug.ceilingEffect) cpRatio = Math.min(cpRatio, 0.5);
+
+    const reduction = totalPotency * typeMultiplier * cpRatio;
     const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
 
     evaData.push({
