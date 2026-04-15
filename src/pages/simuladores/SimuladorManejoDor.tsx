@@ -486,11 +486,27 @@ export default function SimuladorManejoDor() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">Classe: {drug.class} • Via: {drug.routes.join(", ")}</p>
+              <p className="text-xs text-muted-foreground mt-1">Classe: {drug.class}</p>
             </div>
+            {drug.routes.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Via de Administração</label>
+                <Select value={selectedRoute} onValueChange={v => setSelectedRoute(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {drug.routes.map(r => (
+                      <SelectItem key={r} value={r}>{ROUTE_MODIFIERS[r]?.label || r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {drug.routes.length === 1 && (
+              <p className="text-xs text-muted-foreground">Via: {ROUTE_MODIFIERS[drug.routes[0]]?.label || drug.routes[0]}</p>
+            )}
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseUnit === "mcg/h" ? 12.5 : drug.doseMax <= 100 ? 2.5 : 50} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={doseStep} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
@@ -507,6 +523,18 @@ export default function SimuladorManejoDor() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            {/* Clinical toggles */}
+            <div className="border-t pt-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Condições Clínicas</p>
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Insuficiência Renal (ClCr &lt; 30)</label>
+                <Switch checked={renalInsufficiency} onCheckedChange={setRenalInsufficiency} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Insuficiência Hepática (Child-Pugh C)</label>
+                <Switch checked={hepaticInsufficiency} onCheckedChange={setHepticInsufficiency} />
+              </div>
             </div>
             <Button className="w-full gap-2" onClick={handleStart} disabled={running}>
               <Play className="h-4 w-4" /> {running ? "Simulando..." : "Iniciar Simulação"}
@@ -613,7 +641,7 @@ export default function SimuladorManejoDor() {
       <SimulatorChallengeMode
         challengeSet={getManejoDorChallenges(activeCaseIndex)}
         customChallengeSet={aiChallengeSet}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum") }}
+        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum"), route: selectedRoute, renalInsufficiency, hepaticInsufficiency }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
