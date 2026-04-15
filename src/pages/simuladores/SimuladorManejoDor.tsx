@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye, Play, Heart, Activity, Droplets, Wind } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -38,7 +39,7 @@ const DRUGS: Drug[] = [
   { name: "Ibuprofeno", class: "AINE", category: "Degrau 1", doseMin: 200, doseMax: 2400, doseUnit: "mg", intervalMin: 6, intervalMax: 8, bioavailability: 0.9, tmax: 1.5, halfLife: 2, analgesicPotency: 0.35, ceilingEffect: true, sideEffects: { constipation: 0, nausea: 0.15, respiratoryDep: 0, nephrotox: 0.4, hepatotox: 0.1, sedation: 0 }, routes: ["VO"] },
   { name: "Dipirona", class: "Não-opioide", category: "Degrau 1", doseMin: 500, doseMax: 4000, doseUnit: "mg", intervalMin: 6, intervalMax: 8, bioavailability: 0.9, tmax: 1, halfLife: 3, analgesicPotency: 0.35, ceilingEffect: true, sideEffects: { constipation: 0, nausea: 0.05, respiratoryDep: 0, nephrotox: 0.05, hepatotox: 0.05, sedation: 0.05 }, routes: ["VO", "EV"] },
   { name: "Codeína", class: "Opioide fraco", category: "Degrau 2", doseMin: 30, doseMax: 360, doseUnit: "mg", intervalMin: 4, intervalMax: 6, bioavailability: 0.5, tmax: 1.5, halfLife: 3, analgesicPotency: 0.4, ceilingEffect: true, sideEffects: { constipation: 0.4, nausea: 0.3, respiratoryDep: 0.1, nephrotox: 0, hepatotox: 0, sedation: 0.2 }, routes: ["VO"] },
-  { name: "Tramadol", class: "Opioide fraco", category: "Degrau 2", doseMin: 50, doseMax: 400, doseUnit: "mg", intervalMin: 6, intervalMax: 8, bioavailability: 0.7, tmax: 2, halfLife: 6, analgesicPotency: 0.45, ceilingEffect: true, sideEffects: { constipation: 0.2, nausea: 0.35, respiratoryDep: 0.05, nephrotox: 0, hepatotox: 0, sedation: 0.15 }, routes: ["VO", "EV"] },
+  { name: "Tramadol", class: "Opioide fraco", category: "Degrau 2", doseMin: 50, doseMax: 400, doseUnit: "mg", intervalMin: 4, intervalMax: 8, bioavailability: 0.7, tmax: 2, halfLife: 6, analgesicPotency: 0.45, ceilingEffect: true, sideEffects: { constipation: 0.2, nausea: 0.35, respiratoryDep: 0.05, nephrotox: 0, hepatotox: 0, sedation: 0.15 }, routes: ["VO", "EV"] },
   { name: "Morfina", class: "Opioide forte", category: "Degrau 3", doseMin: 5, doseMax: 200, doseUnit: "mg", intervalMin: 4, intervalMax: 6, bioavailability: 0.3, tmax: 1, halfLife: 3, analgesicPotency: 0.8, ceilingEffect: false, sideEffects: { constipation: 0.7, nausea: 0.4, respiratoryDep: 0.5, nephrotox: 0.05, hepatotox: 0, sedation: 0.4 }, routes: ["VO", "EV", "SC"] },
   { name: "Fentanil TD", class: "Opioide forte", category: "Degrau 3", doseMin: 12, doseMax: 200, doseUnit: "mcg/h", intervalMin: 72, intervalMax: 72, bioavailability: 0.92, tmax: 24, halfLife: 20, analgesicPotency: 0.95, ceilingEffect: false, sideEffects: { constipation: 0.5, nausea: 0.25, respiratoryDep: 0.6, nephrotox: 0, hepatotox: 0, sedation: 0.3 }, routes: ["TD"] },
   { name: "Metadona", class: "Opioide forte", category: "Degrau 3", doseMin: 2.5, doseMax: 80, doseUnit: "mg", intervalMin: 8, intervalMax: 12, bioavailability: 0.8, tmax: 3, halfLife: 25, analgesicPotency: 0.85, ceilingEffect: false, sideEffects: { constipation: 0.5, nausea: 0.3, respiratoryDep: 0.55, nephrotox: 0, hepatotox: 0.1, sedation: 0.35 }, routes: ["VO"] },
@@ -129,15 +130,41 @@ const BUILT_IN_CASES: PainCase[] = [
   },
 ];
 
+// ─── Route Modifiers ────────────────────────────────────────────────────────
+interface RouteModifier { bioavailability: number; tmaxMultiplier: number; label: string; }
+const ROUTE_MODIFIERS: Record<string, RouteModifier> = {
+  VO: { bioavailability: 1.0, tmaxMultiplier: 1.0, label: "Via Oral" }, // uses drug default
+  EV: { bioavailability: 1.0, tmaxMultiplier: 0.05, label: "Endovenosa" }, // instant peak, 100% F
+  SC: { bioavailability: 0.9, tmaxMultiplier: 0.5, label: "Subcutânea" },
+  TD: { bioavailability: 1.0, tmaxMultiplier: 1.0, label: "Transdérmica" }, // uses drug default (Fentanil)
+};
+
 // ─── Simulation Engine ──────────────────────────────────────────────────────
-function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant: typeof ADJUVANTS[number], painType: string, initialEVA: number) {
+interface SimOptions {
+  route?: string;
+  renalInsufficiency?: boolean;
+  hepaticInsufficiency?: boolean;
+}
+
+function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant: typeof ADJUVANTS[number], painType: string, initialEVA: number, options?: SimOptions) {
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
-  const basePotency = drug.analgesicPotency * doseFraction;
+
+  // Ceiling effect: more aggressive plateau above 60% of max dose
+  let basePotency = drug.analgesicPotency * doseFraction;
+  if (drug.ceilingEffect) {
+    const ceilingThreshold = 0.6;
+    if (doseFraction > ceilingThreshold) {
+      const excess = doseFraction - ceilingThreshold;
+      basePotency = drug.analgesicPotency * (ceilingThreshold + excess * 0.1); // diminishing returns
+    }
+    basePotency = Math.min(basePotency, drug.analgesicPotency * 0.65);
+  }
+
   const adjBonus = adjuvant.potencyBonus
     + (painType === "neuropatica" ? adjuvant.neuropathicBonus : 0)
     + (painType === "fibromialgia" ? adjuvant.fibroBonus : 0);
-  const totalPotency = Math.min(drug.ceilingEffect ? Math.min(basePotency, 0.55) : basePotency, 1) + adjBonus;
+  const totalPotency = Math.min(basePotency, 1) + adjBonus;
 
   // Pain reduction effectiveness by pain type
   const typeMultiplier = painType === "fibromialgia" && drug.class === "Opioide forte" ? 0.15
@@ -145,6 +172,22 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     : painType === "neuropatica" && drug.class === "Não-opioide" && adjuvant.name === "Nenhum" ? 0.2
     : painType === "neuropatica" && drug.class === "AINE" ? 0.15
     : 1;
+
+  // Route modifiers
+  const route = options?.route || drug.routes[0];
+  const routeMod = ROUTE_MODIFIERS[route] || ROUTE_MODIFIERS.VO;
+  const effectiveBioavailability = route === "EV"
+    ? 1.0
+    : route === "VO"
+      ? drug.bioavailability * (options?.hepaticInsufficiency ? 1.3 : 1.0) // less first-pass
+      : (routeMod.bioavailability * drug.bioavailability) / drug.bioavailability * drug.bioavailability; // SC etc
+  const effectiveBio = route === "EV" ? 1.0 : route === "SC" ? 0.9 : drug.bioavailability * (options?.hepaticInsufficiency ? 1.3 : 1.0);
+  const effectiveTmax = route === "EV" ? 0.05 : route === "SC" ? drug.tmax * 0.5 : drug.tmax;
+
+  // Insufficiency modifiers on half-life
+  let effectiveHalfLife = drug.halfLife;
+  if (options?.renalInsufficiency) effectiveHalfLife *= 2.5;
+  if (options?.hepaticInsufficiency) effectiveHalfLife *= 2.0;
 
   const evaData: { hour: number; eva: number; cp: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
@@ -155,15 +198,15 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     for (let d = 0; d < nDoses; d++) {
       const tSinceDose = h - d * interval;
       if (tSinceDose < 0) continue;
-      const absorption = drug.bioavailability * (1 - Math.exp(-tSinceDose / drug.tmax));
-      const elimination = Math.exp(-0.693 * tSinceDose / drug.halfLife);
+      const absorption = effectiveBio * (1 - Math.exp(-tSinceDose / effectiveTmax));
+      const elimination = Math.exp(-0.693 * tSinceDose / effectiveHalfLife);
       cp += absorption * elimination;
     }
     cp = cp * doseFraction * 100;
 
     // EVA: starts at initial, decreases based on potency and type
-    const reduction = totalPotency * typeMultiplier * Math.min(cp / 80, 1);
-    const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.85);
+    const reduction = totalPotency * typeMultiplier * Math.min(cp / 60, 1);
+    const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
 
     evaData.push({
       hour: h,
@@ -181,19 +224,26 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
   Object.keys(adjuvant.sideEffects).forEach(k => {
     (se as any)[k] = ((se as any)[k] || 0) + (adjuvant.sideEffects as any)[k];
   });
+
+  // Route EV amplifies acute toxicity
+  const routeToxMult = route === "EV" ? 1.3 : 1.0;
+
+  // Insufficiency amplifies specific toxicities
+  const renalToxBonus = options?.renalInsufficiency ? 0.3 : 0;
+  const hepaticToxBonus = options?.hepaticInsufficiency ? 0.4 : 0;
+
   const sideEffectData = [
-    { name: "Constipação", risco: Math.round(Math.min(se.constipation * doseRatio * 100, 100)) },
-    { name: "Náusea", risco: Math.round(Math.min(se.nausea * doseRatio * 100, 100)) },
-    { name: "Dep. Resp.", risco: Math.round(Math.min(se.respiratoryDep * doseRatio * 100, 100)) },
-    { name: "Nefrotox.", risco: Math.round(Math.min(se.nephrotox * doseRatio * 100, 100)) },
-    { name: "Hepatotox.", risco: Math.round(Math.min(se.hepatotox * doseRatio * 100, 100)) },
-    { name: "Sedação", risco: Math.round(Math.min((se.sedation || 0) * doseRatio * 100, 100)) },
+    { name: "Constipação", risco: Math.round(Math.min(se.constipation * doseRatio * 100 * routeToxMult, 100)) },
+    { name: "Náusea", risco: Math.round(Math.min(se.nausea * doseRatio * 100 * routeToxMult, 100)) },
+    { name: "Dep. Resp.", risco: Math.round(Math.min((se.respiratoryDep * doseRatio * routeToxMult + (options?.renalInsufficiency ? 0.15 : 0)) * 100, 100)) },
+    { name: "Nefrotox.", risco: Math.round(Math.min((se.nephrotox * doseRatio + renalToxBonus) * 100, 100)) },
+    { name: "Hepatotox.", risco: Math.round(Math.min((se.hepatotox * doseRatio + hepaticToxBonus) * 100, 100)) },
+    { name: "Sedação", risco: Math.round(Math.min((se.sedation || 0) * doseRatio * 100 * routeToxMult, 100)) },
   ];
 
   // Vital signs
   const lastEVA = evaData[evaData.length - 1]?.eva ?? initialEVA;
-  const lastCp = evaData[evaData.length - 1]?.cp ?? 0;
-  const respDep = se.respiratoryDep * doseRatio;
+  const respDep = se.respiratoryDep * doseRatio * routeToxMult + (options?.renalInsufficiency ? 0.15 : 0);
   const vitals = {
     fc: Math.round(72 + (lastEVA / 10) * 20 - respDep * 15),
     pas: Math.round(120 + (lastEVA / 10) * 15 + (drug.class === "AINE" ? doseRatio * 10 : 0)),
@@ -217,6 +267,9 @@ export default function SimuladorManejoDor() {
   const [dose, setDose] = useState(500);
   const [interval, setInterval_] = useState(6);
   const [adjuvantIdx, setAdjuvantIdx] = useState(0);
+  const [selectedRoute, setSelectedRoute] = useState("VO");
+  const [renalInsufficiency, setRenalInsufficiency] = useState(false);
+  const [hepaticInsufficiency, setHepticInsufficiency] = useState(false);
   const [running, setRunning] = useState(false);
   const [animStep, setAnimStep] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
@@ -264,12 +317,14 @@ export default function SimuladorManejoDor() {
 
   useEffect(() => {
     if (activeCase) {
-      const drugIdx = DRUGS.findIndex(d => d.name === activeCase.expectedDrug);
-      const defaultIdx = drugIdx >= 0 ? 0 : 0; // Start at first drug, student must choose
+      const defaultIdx = 0; // Start at first drug, student must choose
       setSelectedDrugIdx(defaultIdx);
       setDose(DRUGS[defaultIdx].doseMin);
       setInterval_(DRUGS[defaultIdx].intervalMin);
       setAdjuvantIdx(0);
+      setSelectedRoute(DRUGS[defaultIdx].routes[0]);
+      setRenalInsufficiency(false);
+      setHepticInsufficiency(false);
       setRunning(false);
       setAnimStep(0);
     }
@@ -279,12 +334,25 @@ export default function SimuladorManejoDor() {
     if (selectedDrugIdx >= 0) {
       setDose(Math.max(drug.doseMin, Math.min(dose, drug.doseMax)));
       setInterval_(Math.max(drug.intervalMin, Math.min(interval, drug.intervalMax)));
+      // Reset route if not available for new drug
+      if (!drug.routes.includes(selectedRoute)) {
+        setSelectedRoute(drug.routes[0]);
+      }
     }
   }, [selectedDrugIdx]);
 
+  const doseStep = useMemo(() => {
+    if (drug.doseUnit === "mcg/h") return 12.5;
+    return Math.max(1, Math.round((drug.doseMax - drug.doseMin) / 40));
+  }, [drug]);
+
   const simulation = useMemo(() =>
-    computeSimulation(drug, dose, interval, adjuvant, activeCase?.painType ?? "aguda", activeCase?.initialEVA ?? 6),
-    [drug, dose, interval, adjuvant, activeCase?.painType, activeCase?.initialEVA]
+    computeSimulation(drug, dose, interval, adjuvant, activeCase?.painType ?? "aguda", activeCase?.initialEVA ?? 6, {
+      route: selectedRoute,
+      renalInsufficiency,
+      hepaticInsufficiency,
+    }),
+    [drug, dose, interval, adjuvant, activeCase?.painType, activeCase?.initialEVA, selectedRoute, renalInsufficiency, hepaticInsufficiency]
   );
 
   const displayedEvaData = useMemo(() =>
@@ -418,11 +486,27 @@ export default function SimuladorManejoDor() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">Classe: {drug.class} • Via: {drug.routes.join(", ")}</p>
+              <p className="text-xs text-muted-foreground mt-1">Classe: {drug.class}</p>
             </div>
+            {drug.routes.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Via de Administração</label>
+                <Select value={selectedRoute} onValueChange={v => setSelectedRoute(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {drug.routes.map(r => (
+                      <SelectItem key={r} value={r}>{ROUTE_MODIFIERS[r]?.label || r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {drug.routes.length === 1 && (
+              <p className="text-xs text-muted-foreground">Via: {ROUTE_MODIFIERS[drug.routes[0]]?.label || drug.routes[0]}</p>
+            )}
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseUnit === "mcg/h" ? 12.5 : drug.doseMax <= 100 ? 2.5 : 50} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={doseStep} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
@@ -439,6 +523,18 @@ export default function SimuladorManejoDor() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            {/* Clinical toggles */}
+            <div className="border-t pt-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Condições Clínicas</p>
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Insuficiência Renal (ClCr &lt; 30)</label>
+                <Switch checked={renalInsufficiency} onCheckedChange={setRenalInsufficiency} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Insuficiência Hepática (Child-Pugh C)</label>
+                <Switch checked={hepaticInsufficiency} onCheckedChange={setHepticInsufficiency} />
+              </div>
             </div>
             <Button className="w-full gap-2" onClick={handleStart} disabled={running}>
               <Play className="h-4 w-4" /> {running ? "Simulando..." : "Iniciar Simulação"}
@@ -545,7 +641,7 @@ export default function SimuladorManejoDor() {
       <SimulatorChallengeMode
         challengeSet={getManejoDorChallenges(activeCaseIndex)}
         customChallengeSet={aiChallengeSet}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum") }}
+        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, adjuvant: adjuvant.name, painType: activeCase.painType, finalEVA: simulation.finalEVA, vitals: simulation.vitals, gastroprotection: !!(adjuvant.name !== "Nenhum"), route: selectedRoute, renalInsufficiency, hepaticInsufficiency }}
         onComplete={() => setChallengeCompleted(true)}
       />
 
