@@ -156,7 +156,7 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     const ceilingThreshold = 0.6;
     if (doseFraction > ceilingThreshold) {
       const excess = doseFraction - ceilingThreshold;
-      basePotency = drug.analgesicPotency * (ceilingThreshold + excess * 0.1); // diminishing returns
+      basePotency = drug.analgesicPotency * (ceilingThreshold + excess * 0.1);
     }
     basePotency = Math.min(basePotency, drug.analgesicPotency * 0.65);
   }
@@ -175,12 +175,6 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
 
   // Route modifiers
   const route = options?.route || drug.routes[0];
-  const routeMod = ROUTE_MODIFIERS[route] || ROUTE_MODIFIERS.VO;
-  const effectiveBioavailability = route === "EV"
-    ? 1.0
-    : route === "VO"
-      ? drug.bioavailability * (options?.hepaticInsufficiency ? 1.3 : 1.0) // less first-pass
-      : (routeMod.bioavailability * drug.bioavailability) / drug.bioavailability * drug.bioavailability; // SC etc
   const effectiveBio = route === "EV" ? 1.0 : route === "SC" ? 0.9 : drug.bioavailability * (options?.hepaticInsufficiency ? 1.3 : 1.0);
   const effectiveTmax = route === "EV" ? 0.05 : route === "SC" ? drug.tmax * 0.5 : drug.tmax;
 
@@ -189,10 +183,12 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
   if (options?.renalInsufficiency) effectiveHalfLife *= 2.5;
   if (options?.hepaticInsufficiency) effectiveHalfLife *= 2.0;
 
+  // Cp threshold normalized by bioavailability so EVA can reach low values
+  const cpThreshold = effectiveBio * 50;
+
   const evaData: { hour: number; eva: number; cp: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
   for (const h of hours) {
-    // Cp curve: repeated dosing superposition
     let cp = 0;
     const nDoses = Math.floor(h / interval) + 1;
     for (let d = 0; d < nDoses; d++) {
@@ -204,8 +200,7 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     }
     cp = cp * doseFraction * 100;
 
-    // EVA: starts at initial, decreases based on potency and type
-    const reduction = totalPotency * typeMultiplier * Math.min(cp / 60, 1);
+    const reduction = totalPotency * typeMultiplier * Math.min(cp / cpThreshold, 1);
     const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
 
     evaData.push({
@@ -227,29 +222,33 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
 
   // Route EV amplifies acute toxicity
   const routeToxMult = route === "EV" ? 1.3 : 1.0;
+  // Bio ratio: how much more drug exposure vs default oral route
+  const bioRatio = effectiveBio / drug.bioavailability;
 
   // Insufficiency amplifies specific toxicities
   const renalToxBonus = options?.renalInsufficiency ? 0.3 : 0;
   const hepaticToxBonus = options?.hepaticInsufficiency ? 0.4 : 0;
 
   const sideEffectData = [
-    { name: "Constipação", risco: Math.round(Math.min(se.constipation * doseRatio * 100 * routeToxMult, 100)) },
-    { name: "Náusea", risco: Math.round(Math.min(se.nausea * doseRatio * 100 * routeToxMult, 100)) },
-    { name: "Dep. Resp.", risco: Math.round(Math.min((se.respiratoryDep * doseRatio * routeToxMult + (options?.renalInsufficiency ? 0.15 : 0)) * 100, 100)) },
-    { name: "Nefrotox.", risco: Math.round(Math.min((se.nephrotox * doseRatio + renalToxBonus) * 100, 100)) },
-    { name: "Hepatotox.", risco: Math.round(Math.min((se.hepatotox * doseRatio + hepaticToxBonus) * 100, 100)) },
-    { name: "Sedação", risco: Math.round(Math.min((se.sedation || 0) * doseRatio * 100 * routeToxMult, 100)) },
+    { name: "Constipação", risco: Math.round(Math.min(se.constipation * doseRatio * 100 * routeToxMult * bioRatio, 100)) },
+    { name: "Náusea", risco: Math.round(Math.min(se.nausea * doseRatio * 100 * routeToxMult * bioRatio, 100)) },
+    { name: "Dep. Resp.", risco: Math.round(Math.min((se.respiratoryDep * doseRatio * routeToxMult * bioRatio + (options?.renalInsufficiency ? 0.15 : 0)) * 100, 100)) },
+    { name: "Nefrotox.", risco: Math.round(Math.min((se.nephrotox * doseRatio * bioRatio + renalToxBonus) * 100, 100)) },
+    { name: "Hepatotox.", risco: Math.round(Math.min((se.hepatotox * doseRatio * bioRatio + hepaticToxBonus) * 100, 100)) },
+    { name: "Sedação", risco: Math.round(Math.min((se.sedation || 0) * doseRatio * 100 * routeToxMult * bioRatio, 100)) },
   ];
 
-  // Vital signs
+  // Vital signs — use actual peak Cp and bioRatio for realistic response
+  const peakCp = Math.max(...evaData.map(d => d.cp));
   const lastEVA = evaData[evaData.length - 1]?.eva ?? initialEVA;
-  const respDep = se.respiratoryDep * doseRatio * routeToxMult + (options?.renalInsufficiency ? 0.15 : 0);
+  const cpExposure = Math.min(peakCp / (effectiveBio * 80), 1); // normalized drug exposure 0-1
+  const respDep = se.respiratoryDep * doseRatio * routeToxMult * bioRatio + (options?.renalInsufficiency ? 0.15 : 0);
   const vitals = {
     fc: Math.round(72 + (lastEVA / 10) * 20 - respDep * 15),
     pas: Math.round(120 + (lastEVA / 10) * 15 + (drug.class === "AINE" ? doseRatio * 10 : 0)),
     pad: Math.round(80 + (lastEVA / 10) * 8),
-    fr: Math.round(Math.max(8, 16 - respDep * 8)),
-    spo2: Math.round(Math.max(88, 98 - respDep * 10)),
+    fr: Math.round(Math.max(6, 16 - respDep * 12)),
+    spo2: Math.round(Math.max(82, 98 - respDep * 15)),
   };
 
   return { evaData, sideEffectData, vitals, finalEVA: lastEVA };

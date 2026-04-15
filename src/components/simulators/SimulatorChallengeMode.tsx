@@ -216,18 +216,18 @@ export default function SimulatorChallengeMode({
   }, []);
 
   const handleNext = useCallback(() => {
-    const newScore = score; // score already updated by handleMCQAnswer/handleAdjustValidate
+    const newScore = score;
     if (currentIndex + 1 >= challenges.length) {
       setFinished(true);
-      // Use score + current correct (since setScore is batched, score might not reflect last answer yet)
       const finalScore = newScore;
       onComplete?.(finalScore, challenges.length, questionResultsRef.current);
       
-      // Submit to virtual room if in VR mode
       if (isVR) {
         submitToVirtualRoom(finalScore, challenges.length);
       }
     } else {
+      // Reset simulator params to defaults before next challenge
+      onResetForChallenge?.({});
       setCurrentIndex((i) => i + 1);
       setSelectedOption(null);
       setAnswered(false);
@@ -235,7 +235,7 @@ export default function SimulatorChallengeMode({
       setFeedback("");
       setAdjustValidated(false);
     }
-  }, [currentIndex, challenges.length, score, onComplete, isVR, submitToVirtualRoom]);
+  }, [currentIndex, challenges.length, score, onComplete, isVR, submitToVirtualRoom, onResetForChallenge]);
 
   const handleRestart = useCallback(() => {
     setStarted(false);
