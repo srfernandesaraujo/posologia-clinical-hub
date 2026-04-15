@@ -1326,21 +1326,433 @@ export function getInfeccoesAntibioticosChallenges(caseIndex?: number): Challeng
 // FARMACOLOGIA CLÍNICA — Tratamento da Asma
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function getTratamentoAsmaChallenges(): ChallengeSet {
-  return {
-    title: "Desafio: Tratamento da Asma",
-    description: "Teste seus conhecimentos sobre classificação da asma, Steps GINA, espirometria, terapia inalatória e situações especiais.",
-    challenges: [
-      { type: "mcq", question: "Qual parâmetro espirométrico confirma a reversibilidade da obstrução brônquica na asma?", options: ["VEF1/CVF <0.70 isolado", "Melhora ≥12% E ≥200 mL no VEF1 após broncodilatador", "PFE >500 L/min", "CVF normal"], correctIndex: 1, explanation: "A prova broncodilatadora positiva (≥12% e ≥200 mL de aumento no VEF1 após inalação de SABA) confirma a reversibilidade da obstrução, achado característico da asma. É o critério principal para diferenciá-la da DPOC (obstrução fixa).", reference: "Aula 17 – Entendendo a Asma; ATS/ERS 2005" },
-      { type: "mcq", question: "No GINA 2023, qual é a abordagem preferida para Step 1 (asma intermitente)?", options: ["SABA sob demanda isolado", "CI+formoterol sob demanda (preferido) ou SABA sob demanda", "CI dose baixa diário", "LABA em monoterapia"], correctIndex: 1, explanation: "O GINA 2023 recomenda CI+formoterol sob demanda como opção preferida no Step 1, eliminando o uso de SABA isolado como tratamento preferencial. SABA sob demanda é alternativa. LABA em monoterapia é CONTRAINDICADO na asma (risco de morte).", reference: "Aula 18 – Tratando a Asma; GINA 2023" },
-      { type: "mcq", question: "Antes de escalonar o tratamento da asma, o que deve ser verificado PRIMEIRO?", options: ["Solicitar TC de tórax", "Verificar técnica inalatória, adesão e exposição a gatilhos", "Aumentar imediatamente a dose do CI", "Adicionar corticoide oral"], correctIndex: 1, explanation: "Antes de escalonar: 1) Técnica inalatória (>70% dos pacientes cometem erros), 2) Adesão terapêutica (>50% não usam corretamente), 3) Exposição a alérgenos/gatilhos, 4) Comorbidades (rinite, DRGE, obesidade). Só escalonar após corrigir esses fatores.", reference: "Aula 18; GINA 2023 Step-up rules" },
-      { type: "adjust", question: "Configure Step 3 GINA: selecione CI dose média + LABA para asma persistente moderada.", context: "Step 3 = CI dose média + LABA. A terapia MART (ICS-formoterol como controlador E resgate) é preferida.", targetParams: { ginaStep: { min: 3, max: 3, label: "Step GINA" } }, validator: (s) => { const drugs = s.drugs ?? []; const classes = s.drugClasses ?? []; const hasCI = classes.includes("CI"); const hasLABA = classes.includes("LABA"); return (hasCI && hasLABA) ? { correct: true, feedback: "CI + LABA configurado — Step 3 adequado!" } : { correct: false, feedback: `Fármacos atuais: ${drugs.join(", ")}. Adicione CI + LABA.` }; }, explanation: "Step 3 GINA: CI dose média + LABA. A combinação budesonida-formoterol (MART) reduz exacerbações em ~60% comparada a CI+SABA. Formoterol tem início rápido, permitindo uso como resgate.", reference: "Aula 18; GINA 2023" },
-      { type: "mcq", question: "A terapia MART (Maintenance And Reliever Therapy) consiste em:", options: ["SABA + corticoide oral", "ICS-formoterol como controlador E como resgate, eliminando o SABA", "LAMA + LABA sem CI", "Omalizumabe + prednisona"], correctIndex: 1, explanation: "MART usa ICS-formoterol (ex: budesonida-formoterol) como controlador diário E como resgate em vez de SABA. Vantagens: cada dose de resgate também entrega CI (anti-inflamatório), reduzindo exacerbações. O formoterol tem início rápido (~3 min), permitindo uso como resgate.", reference: "Aula 18; Reddel HK et al. Lancet 2022" },
-      { type: "mcq", question: "Na asma grave (Step 5), qual fenótipo indica uso de omalizumabe (anti-IgE)?", options: ["Neutrofílico", "Alérgico com IgE elevada e prick test positivo", "Eosinofílico com IgE normal", "Qualquer fenótipo"], correctIndex: 1, explanation: "Omalizumabe (anti-IgE) é indicado na asma alérgica grave: IgE total 30-1500 UI/mL + sensibilização a aeroalérgenos (prick test ou IgE específica positivos). Para fenótipo eosinofílico sem alergia: mepolizumabe/benralizumabe (anti-IL5).", reference: "Aula 18; Bel EH et al. NEJM 2014" },
-      { type: "mcq", question: "Na gestação, qual CI é PREFERIDO pela maior evidência de segurança?", options: ["Fluticasona propionato", "Budesonida", "Beclometasona", "Mometasona"], correctIndex: 1, explanation: "Budesonida é o CI preferido na gestação (FDA categoria B, maior volume de dados de segurança). Todos os CI inalatórios são considerados seguros, mas budesonida tem mais estudos. 'É mais seguro tratar a asma do que não tratar' — asma não controlada → hipóxia fetal, pré-eclâmpsia, parto prematuro.", reference: "Aula 19 – Asma em Situações Especiais; GINA 2023" },
-      { type: "adjust", question: "Para uma gestante com asma, selecione budesonida como CI.", context: "Budesonida é o CI preferido na gestação. Asma não controlada é mais perigosa que o CI.", targetParams: { drug: { min: 0, max: 0, label: "Fármaco (deve ser Budesonida)" } }, validator: (s) => { const drugs = s.drugs ?? []; return drugs.includes("Budesonida") ? { correct: true, feedback: "Budesonida selecionada — CI preferido na gestação!" } : { correct: false, feedback: `Fármacos atuais: ${drugs.join(", ")}. Selecione Budesonida.` }; }, explanation: "Na gestação: budesonida (preferido), salbutamol (resgate seguro), montelucaste (pode manter). SABA, CI e LABA são considerados seguros. Regra dos terços: 1/3 melhora, 1/3 estável, 1/3 piora na gestação.", reference: "Aula 19; Namazy JA, Schatz M. JACI 2005" },
-      { type: "mcq", question: "Na crise asmática GRAVE (PFE 25-50%, fala em palavras, SpO2 <90%), o tratamento inclui TODOS, EXCETO:", options: ["Salbutamol nebulizado a cada 20 min", "Ipratrópio nas primeiras 3 doses", "Corticoide sistêmico na 1ª hora", "Sedação com benzodiazepínico"], correctIndex: 3, explanation: "NUNCA sedar um paciente em crise asmática (risco de parada respiratória). O tratamento da crise grave: O2 (SpO2 93-95%), SABA nebulizado contínuo, ipratrópio (primeiras 3 doses), corticoide sistêmico precoce (1ª hora — reduz internação em 25%), ± MgSO4 2g EV.", reference: "Aula 18; GINA 2023 Cap. Exacerbações" },
-      { type: "mcq", question: "A candidíase oral associada ao CI pode ser prevenida por:", options: ["Usar dose mais alta de CI", "Bochechar e cuspir água após cada inalação + usar espaçador", "Trocar para corticoide oral", "Adicionar antifúngico profilático"], correctIndex: 1, explanation: "Medidas preventivas: 1) Bochechar e cuspir após inalação (remove CI depositado na orofaringe), 2) Usar espaçador com pMDI (reduz deposição orofaríngea de 80% para ~20%), 3) Preferir DPI de baixa deposição oral. A candidíase é EA dose-dependente.", reference: "Aula 18; GINA 2023 Side Effects" },
+export function getTratamentoAsmaChallenges(caseIndex?: number): ChallengeSet {
+  const caseSets: Challenge[][] = [
+    // ── Caso 1: Pedro, 22a — Asma Intermitente (Step 1) ──
+    [
+      {
+        type: "mcq",
+        question: "Instrução: Selecione apenas Salbutamol (SABA) como único fármaco, sem adicionar nenhum Corticoide Inalatório (CI). Rode a simulação e observe o gráfico de VEF1 ao longo das 12 semanas e o gráfico de Frequência de Crises.\n\nO simulador demonstra que o uso exclusivo de SABA resulta em queda progressiva do VEF1 e aumento das exacerbações ao longo das semanas. Qual é a explicação fisiopatológica para essa falha terapêutica que motivou a mudança nas diretrizes do GINA?",
+        options: [
+          "O SABA induz a produção de anticorpos anti-IgE, mascarando a resposta alérgica inicial.",
+          "O Salbutamol tem meia-vida muito longa, causando acúmulo tóxico no parênquima pulmonar.",
+          "O SABA atua apenas no relaxamento do músculo liso brônquico (broncodilatação), mas não trata a inflamação subjacente das vias aéreas. O uso isolado deixa a inflamação progredir silenciosamente, aumentando o risco de exacerbações graves.",
+          "Ocorre uma up-regulation massiva dos receptores beta-2, tornando os brônquios hiper-reativos a qualquer estímulo ambiental."
+        ],
+        correctIndex: 2,
+        explanation: "O SABA é apenas um broncodilatador de alívio — não possui ação anti-inflamatória. Sem CI, a inflamação crônica das vias aéreas progride, causando remodelamento brônquico e aumento de exacerbações. O GINA 2023 recomenda CI+formoterol sob demanda (MART) mesmo no Step 1.",
+        reference: "GINA 2023; Aula 17 – Entendendo a Asma"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Selecione Budesonida (CI) em dose média. Escolha o dispositivo 'pMDI (sem espaçador)' e observe as barras de Candidíase e Disfonia no painel de Efeitos Adversos. Em seguida, troque para 'pMDI + Espaçador' e observe o que acontece com essas mesmas barras.\n\nA adição do espaçador reduz drasticamente as barras de Candidíase e Disfonia no simulador, sem diminuir a eficácia (VEF1). Qual princípio da terapia inalatória explica esse benefício clínico?",
+        options: [
+          "O espaçador contém filtros antifúngicos que purificam a medicação antes da inalação.",
+          "O espaçador reduz a velocidade do jato e o tamanho das partículas que chegam à boca, diminuindo o impacto orofaríngeo. Isso permite que menos corticoide fique retido na garganta e uma maior fração da dose alcance as vias aéreas inferiores.",
+          "O espaçador converte o corticoide em um pró-fármaco inativo, que só é ativado quando entra em contato com o muco pulmonar.",
+          "Aumenta a absorção sistêmica do corticoide no estômago, garantindo que o efeito imunossupressor não ocorra na cavidade oral."
+        ],
+        correctIndex: 1,
+        explanation: "O espaçador funciona como uma câmara de retenção: reduz a velocidade das partículas, evapora o propelente e seleciona partículas menores (~2-5 µm) que alcançam as vias aéreas inferiores. A deposição orofaríngea cai de ~80% para ~20%, reduzindo drasticamente o risco de candidíase e disfonia.",
+        reference: "GINA 2023 Side Effects; Aula 18 – Tratando a Asma"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Configure o simulador com apenas Formoterol (LABA) ou Salmeterol (LABA), sem nenhum Corticoide Inalatório (CI). Rode a simulação e observe cuidadosamente o gráfico de exacerbações a partir da 4ª-6ª semana.\n\nO simulador demonstra uma melhora inicial rápida do VEF1 nas primeiras semanas, seguida por um aumento perigoso no risco de exacerbações graves. Qual o motivo farmacodinâmico que contraindica absolutamente o uso de LABA sem CI na asma?",
+        options: [
+          "O LABA isolado causa broncoconstrição paradoxal imediata assim que se liga ao receptor beta-2.",
+          "O LABA mascara os sintomas (broncodilata), dando a falsa sensação de controle, enquanto a inflamação subjacente progride sem oposição. Isso leva ao remodelamento brônquico e a crises súbitas e severas.",
+          "O LABA isolado atinge concentrações plasmáticas tóxicas, causando arritmias ventriculares refratárias em 100% dos pacientes.",
+          "LABAs são inativados rapidamente na ausência de corticoides, durando apenas 10 minutos nos pulmões."
+        ],
+        correctIndex: 1,
+        explanation: "A FDA emitiu Black Box Warning para LABA em monoterapia na asma. O LABA melhora o VEF1 e alivia sintomas, mas sem CI a inflamação eosinofílica progride silenciosamente, levando a exacerbações graves e potencialmente fatais. O aluno verá a 'falsa melhora' inicial seguida de piora catastrófica.",
+        reference: "FDA Black Box Warning; GINA 2023; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Compare duas configurações: (1) Budesonida em dose alta via inalatória — observe as barras de Supressão Adrenal e Osteoporose. (2) Depois, troque para Prednisona (oral) em dose média — observe as mesmas barras novamente.\n\nO simulador exibe um salto alarmante nas barras de Supressão Adrenal e Osteoporose ao mudar para a via oral. Qual a diferença fundamental de cinética entre o CI e o Corticoide Oral que justifica deixar a via oral apenas como último recurso?",
+        options: [
+          "Corticoides inalatórios (CI) não sofrem metabolismo de primeira passagem hepática, sendo totalmente eliminados pela respiração.",
+          "A via oral exige doses absolutas muito maiores e resulta em distribuição sistêmica completa, atingindo todos os tecidos (ossos, eixo HPA), enquanto o CI foca a deposição no pulmão e a pequena fração engolida geralmente sofre alto metabolismo de primeira passagem hepática, minimizando efeitos sistêmicos.",
+          "A Prednisona se liga a receptores musculares irreversivelmente, enquanto a Budesonida só se liga a receptores epiteliais.",
+          "O risco sistêmico é idêntico; a mudança nos gráficos ocorre apenas porque a Prednisona oral é prescrita junto com inibidores de bomba de prótons."
+        ],
+        correctIndex: 1,
+        explanation: "O CI atua topicamente nos pulmões ('terapia topográfica'). A fração engolida (~60-80%) sofre metabolismo de primeira passagem hepática intenso (budesonida ~90% inativada). Já a Prednisona oral tem 100% de biodisponibilidade sistêmica, atingindo ossos (osteoporose), eixo HPA (supressão adrenal), metabolismo (DM, HAS), olhos (catarata).",
+        reference: "GINA 2023; Aula 18 – Tratando a Asma"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Configure a melhor terapia inalatória possível (CI dose média/alta + LABA). Observe os gráficos estabilizarem. Agora ative as Situações Especiais 'DRGE associada' e 'Obesidade'. Observe o painel de sintomas noturnos e o gráfico de exacerbações.\n\nO simulador mostra perda de controle da asma ao ativar a DRGE, apesar da terapia farmacológica pulmonar estar otimizada. Qual o mecanismo fisiopatológico que interliga o trato gastrointestinal à piora da função pulmonar noturna?",
+        options: [
+          "O refluxo ácido inativa quimicamente os corticoides inalatórios retidos na faringe.",
+          "A microaspiração de gotículas ácidas para as vias aéreas durante o decúbito e a estimulação do reflexo vagal esôfago-brônquico desencadeiam broncoespasmo severo, suplantando o efeito dos broncodilatadores.",
+          "A DRGE reduz a absorção intestinal dos mediadores inflamatórios, concentrando-os nos pulmões.",
+          "Pacientes com DRGE hiperventilam instintivamente à noite para evitar o refluxo, causando broncoconstrição induzida pelo frio."
+        ],
+        correctIndex: 1,
+        explanation: "O refluxo gastroesofágico causa broncoespasmo por dois mecanismos: (1) microaspiração direta de ácido nas vias aéreas e (2) estimulação do reflexo vagal esôfago-brônquico. Ambos são piores em decúbito (noturno). O aluno deve entender que tratar apenas a via aérea pode falhar se o gatilho extrapulmonar não for abordado.",
+        reference: "GINA 2023; Aula 19 – Asma em Situações Especiais"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Selecione Salbutamol (SABA) e aumente a dose para o máximo disponível (≥600 mcg). Rode a simulação. Observe o gráfico de VEF1 e as barras de Taquicardia e Tremor no painel de Efeitos Adversos.\n\nO simulador demonstra que, com dose abusiva crônica de SABA, a eficácia broncodilatadora (VEF1) cai significativamente, enquanto Taquicardia e Tremor permanecem elevados. Qual o nome desse fenômeno farmacológico?",
+        options: [
+          "Down-regulation (dessensibilização e internalização) dos receptores Beta-2 pulmonares, reduzindo a capacidade de resposta ao fármaco com o tempo.",
+          "Indução enzimática do Citocromo P450, que passa a destruir o SABA antes que ele chegue ao coração.",
+          "Efeito Inotrópico Negativo, onde o coração rouba o fluxo sanguíneo dos pulmões.",
+          "Antagonismo competitivo, onde os metabólitos do próprio Salbutamol bloqueiam os receptores adrenérgicos."
+        ],
+        correctIndex: 0,
+        explanation: "A superestimulação crônica dos receptores β2-adrenérgicos causa internalização e down-regulation: os receptores são removidos da superfície celular, reduzindo a resposta ao broncodilatador. Porém os efeitos colaterais cardíacos (β1) e musculares permanecem, pois esses receptores não sofrem a mesma dessensibilização. Mais 'bombinha' = menos ar + mais tremor e taquicardia.",
+        reference: "Farmacologia de Rang & Dale; GINA 2023"
+      },
     ],
+
+    // ── Caso 2: Marina, 35a — Persistente Moderada (Step 3) ──
+    [
+      {
+        type: "mcq",
+        question: "Instrução: Configure o simulador com apenas Budesonida (CI) em dose baixa (200 mcg). Observe o VEF1 e as crises ao longo de 12 semanas. Depois, adicione Formoterol (LABA) à prescrição. Compare os dois cenários.\n\nAo adicionar o LABA ao CI, o VEF1 melhora de forma significativamente mais rápida e as exacerbações caem mais. Por que a combinação CI+LABA é sinérgica e não apenas aditiva?",
+        options: [
+          "O LABA aumenta a absorção intestinal do CI, multiplicando sua biodisponibilidade.",
+          "O LABA sensibiliza os receptores de glicocorticoides no pulmão (translocação nuclear facilitada) e o CI aumenta a transcrição de receptores β2, criando um ciclo de potenciação mútua.",
+          "O LABA protege o CI da degradação enzimática nos pneumócitos tipo II.",
+          "Ambos os fármacos se ligam ao mesmo receptor, e a soma matemática de suas afinidades explica todo o efeito observado."
+        ],
+        correctIndex: 1,
+        explanation: "A sinergia CI+LABA é molecular: o LABA ativa a translocação nuclear do receptor de glicocorticoide (potenciando o efeito anti-inflamatório), enquanto o CI aumenta a transcrição de novos receptores β2 (prevenindo taquifilaxia ao LABA). Por isso a combinação é superior à soma das partes.",
+        reference: "Aula 18; GINA 2023; Barnes PJ. Chest 2006"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Configure Budesonida + Formoterol (MART — controlador E resgate). Observe as crises ao longo de 12 semanas. Agora reconfigure com Budesonida + Salbutamol (CI contínuo + SABA como resgate separado). Compare o número de exacerbações entre as duas estratégias.\n\nQual é a vantagem fundamental da estratégia MART (ICS-formoterol como controlador E resgate) sobre CI fixo + SABA?",
+        options: [
+          "O Formoterol é mais barato que o Salbutamol em todos os países.",
+          "Na MART, cada dose de resgate também entrega uma dose de CI (anti-inflamatório). Assim, nos momentos de piora — quando o paciente mais precisa de CI — ele automaticamente recebe mais anti-inflamatório. Isso reduz exacerbações em ~60% comparado a CI+SABA.",
+          "O SABA é contraindicado em qualquer paciente acima do Step 1 do GINA.",
+          "A MART elimina completamente a necessidade de controle diário, sendo usada apenas quando há sintomas."
+        ],
+        correctIndex: 1,
+        explanation: "A genialidade da MART é que o resgate e o controle estão no mesmo dispositivo. Quando o paciente piora e usa mais o inalador 'de resgate', ele automaticamente recebe mais CI. Isso evita o cenário perigoso em que o paciente usa cada vez mais SABA sem CI durante as exacerbações.",
+        reference: "Reddel HK et al. Lancet 2022; GINA 2023"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Observe que a paciente Marina não está controlada com CI dose baixa. Antes de escalonar no simulador, considere o cenário clínico: ela usa o pMDI sem espaçador e confessa que esquece o inalador 3-4 vezes por semana.\n\nAntes de escalonar o Step GINA, qual verificação deve ser feita PRIMEIRO e por quê?",
+        options: [
+          "Solicitar TC de tórax de alta resolução para descartar DPOC sobreposta.",
+          "Verificar técnica inalatória, adesão ao tratamento e exposição a gatilhos — mais de 70% dos pacientes cometem erros na técnica e mais de 50% não aderem ao tratamento. Escalonar sem corrigir esses fatores é ineficaz.",
+          "Trocar imediatamente para corticoide oral para garantir absorção adequada.",
+          "Solicitar dosagem de IgE total e eosinófilos para fenotipagem antes de qualquer mudança."
+        ],
+        correctIndex: 1,
+        explanation: "A regra do GINA antes de escalonar: (1) Técnica inalatória (>70% erram), (2) Adesão (>50% não usam corretamente), (3) Comorbidades (rinite, DRGE, obesidade), (4) Exposição a gatilhos. No caso de Marina, o pMDI sem espaçador + esquecimento frequente explicam a falta de controle sem necessidade de escalonar.",
+        reference: "GINA 2023 Step-up rules; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Adicione Montelucaste (LTRA) à prescrição de CI+LABA da paciente. Observe o impacto no VEF1 e nas crises. Compare com o efeito da adição do LABA.\n\nO Montelucaste adiciona um benefício modesto ao VEF1 comparado ao LABA. Em qual situação clínica específica esse fármaco se torna particularmente útil como add-on?",
+        options: [
+          "Em pacientes com asma noturna exclusiva, pois o Montelucaste tem pico sérico entre 2-4h da manhã.",
+          "Na asma induzida por exercício e na asma associada à rinite alérgica, onde os leucotrienos desempenham um papel predominante na broncoconstrição.",
+          "Em crises agudas graves no PS, onde substitui o corticoide sistêmico.",
+          "Em todos os pacientes Step 2+ como primeira escolha antes do CI, por ser via oral e mais cômodo."
+        ],
+        correctIndex: 1,
+        explanation: "O Montelucaste (anti-leucotrieno) tem nicho específico: (1) Asma induzida por exercício — leucotrienos são mediadores principais da broncoconstrição pós-exercício, (2) Asma + rinite alérgica — leucotrienos inflamam tanto brônquios quanto mucosa nasal. Não substitui o CI como controlador principal.",
+        reference: "GINA 2023; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Com a mesma prescrição otimizada (CI+LABA), ative a Situação Especial 'Obesidade'. Observe as mudanças no VEF1 e nas crises comparado ao cenário sem obesidade.\n\nO simulador demonstra redução da eficácia terapêutica ao ativar obesidade. Qual mecanismo fisiopatológico explica a resistência parcial ao tratamento convencional da asma em obesos?",
+        options: [
+          "A gordura corporal absorve e sequestra os corticoides inalatórios, impedindo que cheguem aos pulmões.",
+          "A obesidade promove inflamação sistêmica de baixo grau (não-eosinofílica, mediada por adipocinas e IL-6) que é parcialmente resistente aos corticoides, além de causar restrição mecânica pulmonar que reduz a deposição do fármaco inalado.",
+          "Obesos possuem uma mutação no receptor β2 que impede a ligação do broncodilatador.",
+          "O excesso de tecido adiposo pulmonar bloqueia fisicamente os bronquíolos, tornando qualquer fármaco ineficaz."
+        ],
+        correctIndex: 1,
+        explanation: "A asma do obeso tem fenótipo distinto: inflamação sistêmica predominantemente neutrofílica (mediada por leptina, TNF-α, IL-6) que responde menos ao CI. A restrição mecânica (abdome comprime diafragma) reduz volumes pulmonares e a deposição periférica do aerossol. O tratamento requer abordagem multimodal incluindo perda de peso.",
+        reference: "GINA 2023; Aula 19 – Asma em Situações Especiais"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Mantenha Budesonida como CI e ajuste a dose progressivamente: 200 mcg → 400 mcg → 800 mcg. Observe o gráfico de VEF1 e as barras de Efeitos Adversos (Candidíase, Supressão Adrenal) em cada patamar de dose.\n\nO simulador demonstra que o ganho de VEF1 entre 400→800 mcg é menor do que entre 200→400 mcg, enquanto os EA continuam subindo linearmente. Qual conceito farmacológico este padrão ilustra?",
+        options: [
+          "Antagonismo não-competitivo, onde doses maiores bloqueiam receptores irrelevantes.",
+          "Platô da curva dose-resposta: a maioria do benefício anti-inflamatório é obtida em doses baixas-médias, e doses altas adicionam pouco benefício clínico mas aumentam significativamente os efeitos adversos sistêmicos.",
+          "Indução enzimática, onde o fígado destrói mais fármaco quanto maior a dose.",
+          "Saturação da bomba de efluxo P-gp, que expulsa o CI das células pulmonares em doses altas."
+        ],
+        correctIndex: 1,
+        explanation: "A curva dose-resposta do CI é logarítmica: ~80% do benefício é obtido com doses baixas-médias. Acima disso, o platô da eficácia é atingido enquanto os EA (candidíase, supressão adrenal, osteoporose) continuam crescendo linearmente com a dose. Por isso, o GINA prefere adicionar LABA do que dobrar a dose do CI.",
+        reference: "GINA 2023; Holt S et al. JACI 2001"
+      },
+    ],
+
+    // ── Caso 3: Roberto, 48a — Grave Step 5 ──
+    [
+      {
+        type: "mcq",
+        question: "Instrução: O paciente Roberto tem eosinófilos de 650 céls/µL e IgE total de 450 UI/mL com prick test positivo. Selecione Omalizumabe (anti-IgE) como biológico no simulador e observe a queda nas exacerbações.\n\nPor que o Omalizumabe é o biológico indicado para este perfil (IgE elevada + sensibilização alérgica comprovada) e não o Mepolizumabe (anti-IL5)?",
+        options: [
+          "Porque o Mepolizumabe é contraindicado em maiores de 45 anos.",
+          "Porque o fenótipo deste paciente é alérgico (IgE↑ + prick test+). O Omalizumabe neutraliza a IgE livre circulante, interrompendo a cascata alérgica que desencadeia as crises. O Mepolizumabe (anti-IL5) seria indicado em fenótipo eosinofílico sem componente alérgico predominante.",
+          "Porque o Omalizumabe é mais barato e tem menos efeitos colaterais que qualquer anti-IL5.",
+          "Porque todos os biológicos são intercambiáveis na asma grave, e a escolha é feita apenas por disponibilidade."
+        ],
+        correctIndex: 1,
+        explanation: "A fenotipagem é essencial no Step 5: (1) Alérgico (IgE 30-1500 + prick test+) → Omalizumabe (anti-IgE). (2) Eosinofílico (eos ≥300, sem alergia predominante) → Mepolizumabe/Benralizumabe (anti-IL5). (3) Inflamação T2 alta (FeNO↑) → Dupilumabe (anti-IL4/13). A escolha errada do biológico resulta em falha terapêutica.",
+        reference: "GINA 2023 Step 5; Bel EH et al. NEJM 2014"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Adicione Tiotrópio (LAMA) à prescrição de CI dose alta + LABA do paciente. Observe o impacto adicional no VEF1 e nas crises.\n\nO simulador mostra um ganho modesto mas clinicamente relevante no VEF1 ao adicionar o Tiotrópio. Qual o mecanismo de ação complementar que justifica o LAMA como add-on nos Steps 4-5?",
+        options: [
+          "O Tiotrópio inibe a fosfodiesterase-4, reduzindo a inflamação neutrofílica.",
+          "O Tiotrópio bloqueia os receptores muscarínicos M3 no músculo liso brônquico, inibindo a broncoconstrição colinérgica — um mecanismo independente e complementar à broncodilatação β2-adrenérgica do LABA.",
+          "O Tiotrópio potencializa a ação do CI ao aumentar a transcrição de receptores de glicocorticoide.",
+          "O Tiotrópio atua como mucolítico, dissolvendo o muco espesso das vias aéreas e permitindo que o CI penetre melhor."
+        ],
+        correctIndex: 1,
+        explanation: "O LAMA (anticolinérgico) atua em uma via diferente do LABA: bloqueia a acetilcolina nos receptores M3. Isso é complementar à broncodilatação β2 do LABA. A combinação tripla (CI+LABA+LAMA) oferece broncodilatação por duas vias independentes + anti-inflamação, maximizando o controle.",
+        reference: "GINA 2023; Kerstjens HA et al. NEJM 2012"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: O paciente está em uso crônico de Prednisona oral 20 mg/dia. Observe as barras de Supressão Adrenal e Osteoporose. Agora reduza a dose para 5 mg/dia e observe as barras novamente.\n\nO simulador mostra que reduzir a dose de Prednisona diminui significativamente as barras de EA sistêmicos. Por que o desmame de corticoide oral deve ser GRADUAL e não abrupto?",
+        options: [
+          "Porque a Prednisona é fisicamente viciante e causa síndrome de abstinência semelhante a opioides.",
+          "Porque o uso crônico de corticoide exógeno suprime o eixo Hipotálamo-Hipófise-Adrenal (HPA). A interrupção abrupta pode causar insuficiência adrenal aguda (crise addisoniana), pois as adrenais atrofiadas não conseguem produzir cortisol suficiente imediatamente.",
+          "Porque a redução rápida causa broncoespasmo de rebote mais grave que a crise original.",
+          "Porque os receptores de glicocorticoide sofrem up-regulation com o desmame rápido, causando hiperinflamação paradoxal."
+        ],
+        correctIndex: 1,
+        explanation: "Corticoide crônico suprime a produção endógena de ACTH e causa atrofia das adrenais. O desmame deve ser gradual (2,5-5 mg/semana) para permitir a recuperação do eixo HPA. O início do biológico é o momento ideal para iniciar o desmame, pois o biológico assume o controle das exacerbações.",
+        reference: "GINA 2023; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Compare no simulador: (1) Budesonida dose alta (800 mcg inalatória) — observe as barras de EA. (2) Prednisona oral dose média (20 mg/dia) — observe as mesmas barras.\n\nApesar de ambos serem corticoides, o simulador demonstra perfis de efeitos adversos drasticamente diferentes. Por que a via inalatória causa muito menos EA sistêmicos que a via oral, mesmo em doses altas?",
+        options: [
+          "Porque o CI inalatório é um fármaco completamente diferente do corticoide oral, sem qualquer relação molecular.",
+          "Porque a dose absoluta depositada no pulmão é microgramas (mcg), enquanto a oral é miligramas (mg — 1000x maior). Além disso, a fração engolida do CI sofre extenso metabolismo de primeira passagem hepática (~90% para budesonida), minimizando a exposição sistêmica.",
+          "Porque o pulmão possui enzimas especiais que destroem qualquer corticoide antes que ele atinja a circulação.",
+          "Porque o CI se liga exclusivamente a receptores pulmonares e é fisicamente incapaz de atingir outros órgãos."
+        ],
+        correctIndex: 1,
+        explanation: "A diferença é quantitativa e farmacocinética: budesonida 800 mcg inalada → ~200 mcg chega ao pulmão, ~600 mcg engolidos, destes ~90% inativados no fígado. Resultado: exposição sistêmica mínima. Prednisona 20 mg oral = 20.000 mcg com 100% de biodisponibilidade sistêmica — 100x mais exposição.",
+        reference: "GINA 2023; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Adicione Omalizumabe (biológico) à terapia do paciente e rode a simulação. Observe a queda nas exacerbações ao longo das 12 semanas.\n\nO biológico reduz as crises de forma muito significativa. Qual é a consequência clínica prática mais importante dessa redução para um paciente em uso crônico de Prednisona oral?",
+        options: [
+          "O paciente pode suspender todos os inaladores e manter apenas o biológico.",
+          "A redução das exacerbações permite iniciar o desmame gradual da Prednisona oral, reduzindo progressivamente a exposição aos EA sistêmicos (osteoporose, DM, HAS, catarata, supressão adrenal) que causam maior morbidade a longo prazo.",
+          "O biológico cura definitivamente a asma, permitindo a suspensão de toda medicação após 3 meses.",
+          "O benefício principal é estético, pois o Cushing iatrogênico (face em lua cheia) desaparece em 2 semanas."
+        ],
+        correctIndex: 1,
+        explanation: "O maior benefício do biológico na asma grave é a possibilidade de desmame do corticoide oral. A Prednisona crônica é o maior fator de morbidade nestes pacientes (fraturas, DM, infecções, catarata). Reduzir exacerbações com o biológico permite retirar gradualmente a Prednisona, melhorando a qualidade de vida.",
+        reference: "GINA 2023 Step 5; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Ative a Situação Especial 'Idoso' no simulador mantendo a prescrição de CI dose alta + Prednisona oral. Observe o que acontece com as barras de Osteoporose e Supressão Adrenal.\n\nO simulador mostra que no idoso as barras de Osteoporose e Supressão Adrenal são significativamente maiores. Qual o mecanismo que torna o idoso mais vulnerável a esses efeitos adversos?",
+        options: [
+          "Os idosos possuem receptores de glicocorticoide mutantes que amplificam o sinal em 10x.",
+          "O envelhecimento cursa com perda fisiológica de massa óssea (menor densidade mineral basal) e declínio da reserva funcional adrenal, tornando o impacto adicional do corticoide exógeno proporcionalmente mais grave e clinicamente significativo.",
+          "Os idosos absorvem 100% do CI inalatório diretamente pela mucosa brônquica, eliminando o efeito de primeira passagem.",
+          "A DPOC coexistente neutraliza os corticoides, forçando doses maiores que causam mais EA."
+        ],
+        correctIndex: 1,
+        explanation: "No idoso: (1) massa óssea já está em declínio fisiológico — o corticoide acelera uma perda que já existe. (2) O eixo HPA tem menos reserva funcional — a supressão é mais perigosa. (3) Menor metabolismo hepático pode aumentar a meia-vida do corticoide. Por isso o GINA enfatiza minimizar o uso de corticoide oral em idosos.",
+        reference: "GINA 2023; Aula 19"
+      },
+    ],
+
+    // ── Caso 4: Amanda, 30a — Gestante Step 2 ──
+    [
+      {
+        type: "mcq",
+        question: "Instrução: Ative a Situação Especial 'Gestante'. Selecione Budesonida como CI e observe os avisos do simulador. Depois, troque para Mometasona ou Beclometasona e compare os avisos.\n\nO simulador indica a Budesonida com '✅ preferida na gestação' enquanto outros CI não recebem esta marcação. Por que a Budesonida é especificamente preferida entre todos os CI na gestação?",
+        options: [
+          "Porque é o único CI que não cruza a barreira placentária.",
+          "Porque possui o maior volume de dados de segurança na gestação (FDA categoria B), com estudos de coorte mostrando ausência de aumento de malformações congênitas. Outros CI são provavelmente seguros, mas têm menos evidências publicadas.",
+          "Porque seu mecanismo de ação é diferente dos outros CI, atuando apenas em receptores pulmonares sem efeito sistêmico.",
+          "Porque é o único CI disponível em formulação específica para gestantes."
+        ],
+        correctIndex: 1,
+        explanation: "Todos os CI inalatórios são considerados seguros na gestação, mas a Budesonida tem o maior corpo de evidências (estudos como o de Norjavaara & de Verdier 2003 com >2000 gestantes). A classificação FDA-B indica ausência de risco demonstrado. A regra é: 'é mais seguro tratar a asma do que não tratar'.",
+        reference: "GINA 2023 Gestação; Namazy JA, Schatz M. JACI 2005"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Com 'Gestante' ativada, selecione Prednisona (oral) e observe os avisos do simulador. Depois troque para Budesonida inalatória e compare.\n\nO simulador alerta contra o uso prolongado de Prednisona oral na gestante. Qual é o risco específico do corticoide sistêmico crônico na gestação, diferente do contexto não-gestante?",
+        options: [
+          "O corticoide oral é absolutamente contraindicado em qualquer circunstância na gestação.",
+          "O uso crônico de corticoide sistêmico na gestação está associado a risco aumentado de fenda palatina (1º trimestre), diabetes gestacional, pré-eclâmpsia e restrição de crescimento intrauterino. Porém, ciclos curtos para exacerbações graves são aceitáveis — o risco da crise não controlada é maior.",
+          "O corticoide oral causa anomalias cromossômicas fetais detectáveis por amniocentese.",
+          "A Prednisona é convertida em estrogênio pelo fígado fetal, causando feminização em fetos masculinos."
+        ],
+        correctIndex: 1,
+        explanation: "O corticoide sistêmico na gestação tem risco teratogênico dose-dependente: fenda palatina (OR~1.3-1.5 no 1º trimestre), DM gestacional, e RCIU. Porém, a asma NÃO controlada é MAIS perigosa (hipóxia fetal, pré-eclâmpsia 3x, parto prematuro 1.5x). Ciclos curtos para crises são aceitáveis e necessários.",
+        reference: "GINA 2023; Aula 19"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Com 'Gestante' ativada, selecione Salbutamol (SABA) como resgate e observe as barras de EA e avisos. O simulador não gera alertas para o SABA na gestante.\n\nPor que o Salbutamol é considerado seguro como resgate na gestação, e quais outros fármacos para asma compartilham esse perfil de segurança?",
+        options: [
+          "Apenas o Salbutamol é seguro — todos os outros broncodilatadores são teratogênicos.",
+          "O SABA (salbutamol), os CI inalatórios e os LABA (formoterol, salmeterol) são considerados seguros na gestação, baseado em décadas de uso clínico e estudos observacionais sem evidência de teratogenicidade. O Montelucaste pode ser mantido se já em uso prévio.",
+          "O Salbutamol é seguro porque não é absorvido pela placenta devido ao seu alto peso molecular.",
+          "Na verdade, nenhum broncodilatador é seguro na gestação — o Salbutamol é usado por falta de alternativas."
+        ],
+        correctIndex: 1,
+        explanation: "Fármacos seguros na gestação para asma: SABA (salbutamol), CI (budesonida preferida), LABA (formoterol, salmeterol) e Montelucaste (se já em uso). A terapia MART (budesonida+formoterol) é viável na gestante. Teofilina requer monitoramento de nível sérico. O princípio é: tratar a asma é mais seguro que não tratar.",
+        reference: "GINA 2023; Aula 19"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Com 'Gestante' ativada, adicione Montelucaste à prescrição. Observe que o simulador não emite alertas específicos para este fármaco na gestante.\n\nQual é a recomendação do GINA sobre o uso de Montelucaste na gestação?",
+        options: [
+          "É absolutamente contraindicado por causar malformações cardíacas fetais.",
+          "Pode ser mantido se a paciente já estava em uso prévio e com bom controle. Não deve ser iniciado pela primeira vez na gestação como primeira escolha, pois o CI inalatório é superior como controlador.",
+          "Deve ser substituído por Teofilina, que é mais segura na gestação.",
+          "É o controlador preferido na gestação por ser via oral, evitando inalação."
+        ],
+        correctIndex: 1,
+        explanation: "O Montelucaste tem dados limitados na gestação, mas os estudos disponíveis não mostram aumento de risco. A recomendação é: manter se já em uso prévio com bom controle, mas não iniciar como primeira escolha (CI inalatório é superior). Nunca suspender uma terapia que está controlando bem a asma na gestante.",
+        reference: "GINA 2023; Aula 19"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Com 'Gestante' ativada, remova todos os fármacos do simulador (apenas SABA mínimo ou nenhum CI). Observe o VEF1 cair ao longo das semanas e os sintomas piorarem.\n\nA paciente Amanda suspendeu a Budesonida por medo de 'fazer mal ao bebê'. O simulador mostra piora progressiva sem CI. Qual o maior risco para o feto: usar o CI ou não tratar a asma?",
+        options: [
+          "O risco do CI é maior — budesonida causa malformações em 15% dos fetos expostos.",
+          "Os riscos são equivalentes — tanto o CI quanto a asma não controlada causam os mesmos problemas fetais.",
+          "A asma NÃO controlada é significativamente mais perigosa para o feto. A hipóxia materna crônica reduz a oferta de oxigênio ao feto, aumentando o risco de pré-eclâmpsia (3x), parto prematuro (1,5x), baixo peso ao nascer e mortalidade perinatal.",
+          "Nenhum dos dois representa risco — a asma não afeta a gestação e o CI é inerte."
+        ],
+        correctIndex: 2,
+        explanation: "O princípio fundamental da asma na gestação: 'é mais seguro tratar do que não tratar'. A hipóxia materna por asma descontrolada é diretamente transmitida ao feto. Os CI inalatórios (especialmente budesonida) não demonstraram aumento de risco fetal em estudos de coorte. O medo infundado do CI é mais perigoso que o próprio fármaco.",
+        reference: "GINA 2023; Aula 19; Namazy JA, Schatz M. JACI 2005"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Configure Budesonida + Formoterol (MART) com 'Gestante' ativada. Observe que o simulador não emite alertas para esta combinação na gestante.\n\nA estratégia MART (budesonida+formoterol como controlador e resgate) é considerada viável na gestação. Qual é a principal vantagem desta estratégia especificamente para a gestante asmática?",
+        options: [
+          "O Formoterol é o único LABA que cruza a placenta em doses terapêuticas para tratar o broncoespasmo fetal.",
+          "A MART permite que a gestante use o mínimo necessário de CI: em semanas boas, usa menos; em semanas de piora, a dose de CI aumenta automaticamente com o resgate, otimizando o equilíbrio entre controle da asma e exposição fetal.",
+          "A MART elimina a necessidade de qualquer corticoide, usando apenas o broncodilatador.",
+          "A gestante com MART pode suspender toda medicação após o 1º trimestre."
+        ],
+        correctIndex: 1,
+        explanation: "Na gestação, o princípio de usar 'o mínimo necessário para controlar' é especialmente importante. A MART permite titulação automática: em períodos estáveis a gestante usa pouco, em exacerbações usa mais (recebendo mais CI quando precisa). Isso minimiza a exposição total ao CI mantendo o controle.",
+        reference: "GINA 2023; Aula 19"
+      },
+    ],
+
+    // ── Caso 5: Lucas, 16a — Crise Aguda ──
+    [
+      {
+        type: "mcq",
+        question: "Instrução: Observe os dados clínicos do paciente Lucas: PFE 35% do predito, SpO2 89%, FR 32 irpm, fala em palavras isoladas, uso de musculatura acessória.\n\nBaseado nos parâmetros apresentados no simulador, qual a classificação correta da gravidade desta crise e quais parâmetros são determinantes?",
+        options: [
+          "Crise leve-moderada — a FR de 32 é compatível com ansiedade, não com obstrução grave.",
+          "Crise GRAVE — PFE 25-50% do predito, SpO2 <90%, fala em palavras isoladas e FR >30 são todos critérios de crise grave pelo GINA. A combinação desses parâmetros exige tratamento agressivo imediato.",
+          "Crise com risco de vida — todo paciente com SpO2 <95% deve ser intubado imediatamente.",
+          "Não é possível classificar sem gasometria arterial — os dados clínicos são insuficientes."
+        ],
+        correctIndex: 1,
+        explanation: "Classificação GINA: GRAVE = fala em palavras, FR>30, SpO2<90%, PFE 25-50%. RISCO DE VIDA = tórax silencioso, bradicardia, confusão, cianose, SpO2<88%. O caso de Lucas é GRAVE mas não tem sinais de risco de vida (ainda está consciente, tem sibilos audíveis). Tratamento: O2 + SABA nebulizado + ipratrópio + corticoide sistêmico.",
+        reference: "GINA 2023 Cap. Exacerbações; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Selecione Salbutamol (SABA) em dose alta via nebulizador. Observe a resposta rápida no VEF1/PFE simulado nas primeiras horas.\n\nNa crise aguda grave, por que o SABA nebulizado em doses repetidas (a cada 20 min × 3 doses) é preferido ao pMDI convencional?",
+        options: [
+          "Porque o nebulizador aquece o fármaco, aumentando a absorção brônquica em 500%.",
+          "Na crise grave, o fluxo inspiratório do paciente é muito reduzido (PFE 35%). O nebulizador não depende do esforço inspiratório do paciente para gerar o aerossol, permite doses muito maiores (2,5-5 mg vs 100-800 mcg) e pode ser administrado com oxigênio simultaneamente.",
+          "O pMDI é absolutamente contraindicado em crises — o propelente causa broncoespasmo paradoxal.",
+          "O nebulizador contém soro fisiológico que hidrata o muco brônquico, sendo mais importante que o próprio SABA."
+        ],
+        correctIndex: 1,
+        explanation: "Na crise grave: (1) Fluxo inspiratório muito reduzido → dificuldade de usar pMDI/DPI adequadamente. (2) Nebulizador permite doses muito maiores. (3) Pode ser administrado com O2 simultaneamente. (4) pMDI + espaçador com 4-8 jatos é alternativa aceitável se nebulizador indisponível (eficácia similar em crises leve-moderadas).",
+        reference: "GINA 2023; Rodrigo GJ et al. Chest 2004"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Observe que o protocolo da crise exige 'Corticoide sistêmico na 1ª HORA'. Selecione Prednisona oral e rode a simulação.\n\nPor que a administração precoce de corticoide sistêmico (primeira hora) é mandatória na crise aguda, mesmo sabendo que seu efeito pleno leva 4-6 horas?",
+        options: [
+          "Porque o corticoide tem efeito broncodilatador direto imediato, abrindo as vias aéreas em minutos.",
+          "Porque quanto mais precoce a administração, mais cedo o efeito anti-inflamatório se instala. Estudos demonstram que o corticoide sistêmico na 1ª hora reduz a necessidade de internação em 25% e previne a recaída precoce (rebote inflamatório nas primeiras 48h).",
+          "Porque o corticoide sistêmico potencializa o SABA, triplicando a afinidade do salbutamol pelo receptor β2.",
+          "Na verdade, o corticoide não é necessário na crise — o SABA sozinho resolve em 100% dos casos."
+        ],
+        correctIndex: 1,
+        explanation: "O corticoide sistêmico na crise atua em 4-6h (onset): reduz o edema inflamatório, a secreção de muco e o recrutamento eosinofílico. Estudos mostram redução de 25% na taxa de internação quando administrado na 1ª hora. Sem ele, há alto risco de 'rebote' inflamatório 6-12h após a broncodilatação aguda.",
+        reference: "GINA 2023; Rowe BH et al. Cochrane 2001"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Considere o cenário em que a equipe médica sugere administrar um ansiolítico (benzodiazepínico) ao paciente Lucas, que está muito agitado e dispneico na crise grave.\n\nO simulador NÃO oferece sedativos entre as opções terapêuticas. Por que a sedação é uma contraindicação ABSOLUTA na crise asmática?",
+        options: [
+          "Porque os benzodiazepínicos interagem com o Salbutamol, causando fibrilação ventricular.",
+          "Porque os sedativos deprimem o centro respiratório (drive ventilatório) e relaxam a musculatura acessória que o paciente está usando para compensar a obstrução. Isso pode precipitar fadiga respiratória, hipercapnia aguda e parada respiratória em um paciente que já está no limite ventilatório.",
+          "Porque a agitação é benéfica na crise — mantém o paciente alerta e cooperativo com o nebulizador.",
+          "Porque os benzodiazepínicos causam broncoespasmo direto via receptores GABA nos brônquios."
+        ],
+        correctIndex: 1,
+        explanation: "NUNCA sedar na crise asmática (GINA, diretriz absoluta). O paciente em crise usa musculatura acessória para manter ventilação mínima. Sedá-lo remove esse mecanismo compensatório. A 'agitação' é na verdade um sinal de hipóxia/hipercapnia — tratar com O2 e broncodilatadores, não com sedação.",
+        reference: "GINA 2023; Aula 18"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Considere que Lucas não respondeu adequadamente a 3 ciclos de SABA nebulizado + ipratrópio + corticoide sistêmico. O VEF1/PFE permanece <40% e SpO2 <92%.\n\nQual a próxima intervenção farmacológica indicada e por qual mecanismo ela auxilia na crise refratária?",
+        options: [
+          "Aminofilina EV — inibe a fosfodiesterase e causa broncodilatação, mas tem janela terapêutica estreita e risco de arritmia.",
+          "Sulfato de Magnésio (MgSO4) 2g EV em 20 minutos — causa relaxamento do músculo liso brônquico por antagonismo do cálcio, com rápido início de ação e poucos efeitos adversos na dose única. Indicado na crise grave refratária ao tratamento inicial.",
+          "Adrenalina subcutânea em dose alta — único fármaco capaz de reverter o broncoespasmo refratário em crianças.",
+          "Iniciar intubação orotraqueal imediatamente, pois a falha ao SABA indica obstrução mecânica irreversível."
+        ],
+        correctIndex: 1,
+        explanation: "MgSO4 2g EV em 20 min é o next step na crise grave refratária. O magnésio compete com o cálcio nos canais de cálcio do músculo liso brônquico, causando relaxamento. É seguro, barato e com poucos EA na dose única. A aminofilina EV é alternativa de segunda linha (mais EA). A intubação só é considerada em risco de vida iminente.",
+        reference: "GINA 2023; Rodrigo GJ et al. Chest 2004"
+      },
+      {
+        type: "mcq",
+        question: "Instrução: Considere que Lucas respondeu bem ao tratamento e está pronto para alta: SpO2 95%, PFE >70%, melhora clínica sustentada por 1h.\n\nQual deve ser a prescrição de alta do PS para prevenir recaída nos próximos dias?",
+        options: [
+          "Alta sem medicação — a crise foi tratada com sucesso e não há necessidade de continuação.",
+          "Apenas SABA sob demanda por 7 dias e retorno se piorar.",
+          "CI dose alta (budesonida 800 mcg/dia ou equivalente) + SABA de resgate + ciclo curto de Prednisona oral (5-7 dias) + plano de ação escrito para crises. Consulta de seguimento em 2-7 dias.",
+          "Prednisona oral contínua indefinidamente para prevenir qualquer recorrência."
+        ],
+        correctIndex: 2,
+        explanation: "A prescrição de alta pós-crise é crítica para prevenir recaída (30% recorrem em 2 semanas sem CI): (1) CI dose alta por 2-4 semanas, (2) SABA de resgate, (3) Prednisona oral 40-50mg/dia por 5-7 dias, (4) Plano de ação escrito (quando aumentar medicação, quando ir ao PS), (5) Consulta de seguimento em 2-7 dias.",
+        reference: "GINA 2023 Cap. Exacerbações; Aula 18"
+      },
+    ],
+  ];
+
+  const idx = caseIndex !== undefined && caseIndex >= 0 && caseIndex < caseSets.length ? caseIndex : undefined;
+  const challenges = idx !== undefined ? caseSets[idx] : caseSets[0];
+
+  const caseNames = [
+    "Pedro (Asma Intermitente — Step 1)",
+    "Marina (Persistente Moderada — Step 3)",
+    "Roberto (Asma Grave — Step 5)",
+    "Amanda (Gestante — Step 2)",
+    "Lucas (Crise Aguda)",
+  ];
+
+  return {
+    title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Tratamento da Asma",
+    description: "Ajuste os parâmetros no simulador, interprete os gráficos e painéis, e responda cada questão.",
+    challenges,
   };
 }

@@ -138,6 +138,12 @@ function computeSimulation(
 ) {
   const weeks = Array.from({ length: 13 }, (_, i) => i); // 0-12 weeks
 
+  // Check therapy composition
+  const hasICS = drugs.some(d => d.class === "CI");
+  const hasLABA = drugs.some(d => d.class === "LABA");
+  const hasSABAOnly = drugs.every(d => d.class === "SABA" || d.class === "LTRA");
+  const isLABAMono = hasLABA && !hasICS;
+
   // Compute combined improvement factors
   let totalVef1Improvement = 0;
   let totalCrisisReduction = 0;
@@ -147,14 +153,22 @@ function computeSimulation(
     totalCrisisReduction += d.crisisReduction * doseFrac;
   });
 
+  // SABA tachyphylaxis: dose >= 600mcg → efficacy drops, side effects rise
+  const sabaIdx = drugs.findIndex(d => d.class === "SABA");
+  const sabaDose = sabaIdx >= 0 ? doses[sabaIdx] : 0;
+  const sabaTachyphylaxis = sabaDose >= 600;
+  if (sabaTachyphylaxis) {
+    totalVef1Improvement *= 0.3; // down-regulation
+  }
+
   // Device efficiency
   const deviceFactor = device === "pMDI+espaçador" ? 1.0 : device === "DPI" ? 0.95 : device === "Nebulizador" ? 0.9 : 0.7; // pMDI alone = 0.7
   totalVef1Improvement *= deviceFactor;
   totalCrisisReduction *= deviceFactor;
 
   // Special group modifiers
-  if (specialGroups.obesidade) { totalVef1Improvement *= 0.8; totalCrisisReduction *= 0.8; }
-  if (specialGroups.drge) { totalCrisisReduction *= 0.85; }
+  if (specialGroups.obesidade) { totalVef1Improvement *= 0.7; totalCrisisReduction *= 0.65; }
+  if (specialGroups.drge) { totalCrisisReduction *= 0.6; }
   if (specialGroups.exercicio && !drugs.some(d => d.class === "LABA")) totalCrisisReduction *= 0.7;
 
   // Severity baseline crises
@@ -166,13 +180,43 @@ function computeSimulation(
 
   for (const w of weeks) {
     const progress = Math.min(1, w / 8); // Full effect by week 8
-    const vef1 = Math.min(100, baseVef1 + totalVef1Improvement * (100 - baseVef1) * progress);
-    const pfe = (vef1 / 100) * 500; // approximate PFE
-    const crises = Math.max(0, baseCrisesWeek * (1 - totalCrisisReduction * progress));
-    const sabaUse = Math.max(0, baseSABA * (1 - totalCrisisReduction * progress * 0.9));
+    let vef1: number;
+    let crises: number;
+    let sabaUse: number;
 
+    if (hasSABAOnly && !hasICS) {
+      // SABA alone without ICS: VEF1 degrades ~1%/week (progressive inflammation)
+      vef1 = Math.max(30, baseVef1 - w * 1.0);
+      crises = baseCrisesWeek * (1 + w * 0.15); // crises rise progressively
+      sabaUse = baseSABA * (1 + w * 0.1);
+    } else if (isLABAMono) {
+      // LABA monotherapy: initial improvement weeks 1-4, then dangerous worsening
+      if (w <= 4) {
+        vef1 = baseVef1 + totalVef1Improvement * (100 - baseVef1) * Math.min(1, w / 4) * 1.2;
+        crises = baseCrisesWeek * (1 - 0.5 * Math.min(1, w / 4));
+      } else {
+        // Black box: crises spike after week 4-6
+        const worseningFactor = (w - 4) / 8;
+        vef1 = baseVef1 + totalVef1Improvement * (100 - baseVef1) * 0.5 * (1 - worseningFactor * 0.8);
+        crises = baseCrisesWeek * (1 + worseningFactor * 2.5);
+      }
+      sabaUse = Math.max(0, crises * 1.5);
+    } else {
+      vef1 = Math.min(100, baseVef1 + totalVef1Improvement * (100 - baseVef1) * progress);
+      crises = Math.max(0, baseCrisesWeek * (1 - totalCrisisReduction * progress));
+      sabaUse = Math.max(0, baseSABA * (1 - totalCrisisReduction * progress * 0.9));
+    }
+
+    // DRGE: persistent nocturnal symptoms
+    if (specialGroups.drge) {
+      crises = Math.max(crises, 1.5); // minimum crisis floor with DRGE
+    }
+
+    vef1 = Math.max(30, Math.min(100, vef1));
+
+    const pfe = (vef1 / 100) * 500;
     lungData.push({ week: w, vef1: Math.round(vef1 * 10) / 10, pfe: Math.round(pfe) });
-    crisisData.push({ week: w, crises: Math.round(crises * 100) / 100, sabaUse: Math.round(sabaUse * 100) / 100 });
+    crisisData.push({ week: w, crises: Math.round(crises * 100) / 100, sabaUse: Math.round(Math.max(0, sabaUse) * 100) / 100 });
   }
 
   // Side effects
@@ -183,7 +227,20 @@ function computeSimulation(
       combinedSE[k] += d.sideEffects[k] * doseFrac;
     });
   });
+
+  // Device affects local side effects (candidiase, disfonia)
+  if (device === "pMDI") {
+    // pMDI without spacer: local EA ×2.5
+    combinedSE.candidiase *= 2.5;
+    combinedSE.disfonia *= 2.5;
+  } else if (device === "pMDI+espaçador") {
+    // With spacer: local EA ×0.4
+    combinedSE.candidiase *= 0.4;
+    combinedSE.disfonia *= 0.4;
+  }
+
   if (specialGroups.idoso) { combinedSE.osteoporose *= 2; combinedSE.supressaoAdrenal *= 1.5; }
+  if (sabaTachyphylaxis) { combinedSE.taquicardia *= 2; combinedSE.tremor *= 2; }
 
   const sideEffectData = [
     { name: "Candidíase", risco: Math.round(Math.min(combinedSE.candidiase * 100, 100)) },
@@ -205,18 +262,20 @@ function computeSimulation(
   if (specialGroups.crianca) {
     drugs.forEach(d => { if (!d.safeChild) warnings.push(`⚠️ ${d.name} — Uso em crianças requer avaliação!`); });
   }
-  const hasLABA = drugs.some(d => d.class === "LABA");
-  const hasICS = drugs.some(d => d.class === "CI");
-  if (hasLABA && !hasICS) warnings.push("⚠️ LABA NÃO deve ser usado em monoterapia na asma (risco de morte)!");
+  if (isLABAMono) warnings.push("🚨 LABA NÃO deve ser usado em monoterapia na asma (BLACK BOX WARNING — risco de morte)!");
+  if (hasSABAOnly && !hasICS) warnings.push("⚠️ SABA isolado sem CI: a inflamação NÃO está sendo tratada — VEF1 tende a cair progressivamente.");
+  if (sabaTachyphylaxis) warnings.push("⚠️ Dose excessiva de SABA: dessensibilização (down-regulation) dos receptores β2 — eficácia broncodilatadora reduzida!");
 
   // Clinical panel
   const lastLung = lungData[lungData.length - 1];
   const lastCrisis = crisisData[crisisData.length - 1];
+  let sintomasNoturnos = Math.max(0, Math.round(lastCrisis.crises * 2));
+  if (specialGroups.drge) sintomasNoturnos = Math.max(sintomasNoturnos, sintomasNoturnos + 3);
   const vitals = {
     spo2: Math.min(99, Math.max(85, 93 + (lastLung.vef1 - 50) * 0.12)),
     fr: Math.max(12, Math.round(22 - (lastLung.vef1 - 50) * 0.1)),
     pfe: lastLung.pfe,
-    sintomasNoturnos: Math.max(0, Math.round(lastCrisis.crises * 2)),
+    sintomasNoturnos,
   };
 
   return { lungData, crisisData, sideEffectData, vitals, warnings, finalVef1: lastLung.vef1 };
@@ -467,7 +526,7 @@ export default function SimuladorTratamentoAsma() {
                   </div>
                   <div>
                     <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{drugDoses[pos]} {d.doseUnit}</span></div>
-                    <Slider value={[drugDoses[pos]]} onValueChange={([v]) => setDrugDoses(prev => prev.map((old, i) => i === pos ? v : old))} min={d.doseLow} max={d.doseHigh} step={d.doseHigh <= 50 ? 2.5 : d.doseHigh <= 200 ? 10 : d.doseHigh <= 600 ? 25 : 50} />
+                    <Slider value={[drugDoses[pos]]} onValueChange={([v]) => setDrugDoses(prev => prev.map((old, i) => i === pos ? v : old))} min={d.doseLow} max={d.doseHigh} step={(d.doseHigh - d.doseLow) <= 10 ? 0.5 : (d.doseHigh - d.doseLow) <= 50 ? 2.5 : (d.doseHigh - d.doseLow) <= 100 ? 10 : d.doseHigh <= 200 ? 10 : d.doseHigh <= 600 ? 25 : 50} />
                     <p className="text-xs text-muted-foreground">{d.doseLow}–{d.doseHigh} {d.doseUnit} • Steps: {d.ginaSteps.join(",")}</p>
                   </div>
                 </div>
@@ -616,11 +675,16 @@ export default function SimuladorTratamentoAsma() {
       </Card>
 
       {/* Challenge Mode */}
-      <SimulatorChallengeMode
-        challengeSet={getTratamentoAsmaChallenges()}
-        simulatorState={{ drugs: selectedDrugs.map(d => d.name), drugClasses: selectedDrugs.map(d => d.class), doses: drugDoses, ginaStep, device, severity: activeCase.severity, finalVef1: simulation.finalVef1, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: selectedDrugs.every(d => d.safePregnancy) }}
-        onComplete={() => setChallengeCompleted(true)}
-      />
+      {(() => {
+        const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+        return (
+          <SimulatorChallengeMode
+            challengeSet={getTratamentoAsmaChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
+            simulatorState={{ drugs: selectedDrugs.map(d => d.name), drugClasses: selectedDrugs.map(d => d.class), doses: drugDoses, ginaStep, device, severity: activeCase.severity, finalVef1: simulation.finalVef1, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: selectedDrugs.every(d => d.safePregnancy), sideEffectData: simulation.sideEffectData, lungData: simulation.lungData, crisisData: simulation.crisisData, specialGroups }}
+            onComplete={() => setChallengeCompleted(true)}
+          />
+        );
+      })()}
 
       {/* Virtual Room Results */}
       {isVirtualRoom && submitted && (
