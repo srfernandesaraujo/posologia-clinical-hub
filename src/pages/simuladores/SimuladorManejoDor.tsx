@@ -317,12 +317,14 @@ export default function SimuladorManejoDor() {
 
   useEffect(() => {
     if (activeCase) {
-      const drugIdx = DRUGS.findIndex(d => d.name === activeCase.expectedDrug);
-      const defaultIdx = drugIdx >= 0 ? 0 : 0; // Start at first drug, student must choose
+      const defaultIdx = 0; // Start at first drug, student must choose
       setSelectedDrugIdx(defaultIdx);
       setDose(DRUGS[defaultIdx].doseMin);
       setInterval_(DRUGS[defaultIdx].intervalMin);
       setAdjuvantIdx(0);
+      setSelectedRoute(DRUGS[defaultIdx].routes[0]);
+      setRenalInsufficiency(false);
+      setHepticInsufficiency(false);
       setRunning(false);
       setAnimStep(0);
     }
@@ -332,12 +334,25 @@ export default function SimuladorManejoDor() {
     if (selectedDrugIdx >= 0) {
       setDose(Math.max(drug.doseMin, Math.min(dose, drug.doseMax)));
       setInterval_(Math.max(drug.intervalMin, Math.min(interval, drug.intervalMax)));
+      // Reset route if not available for new drug
+      if (!drug.routes.includes(selectedRoute)) {
+        setSelectedRoute(drug.routes[0]);
+      }
     }
   }, [selectedDrugIdx]);
 
+  const doseStep = useMemo(() => {
+    if (drug.doseUnit === "mcg/h") return 12.5;
+    return Math.max(1, Math.round((drug.doseMax - drug.doseMin) / 40));
+  }, [drug]);
+
   const simulation = useMemo(() =>
-    computeSimulation(drug, dose, interval, adjuvant, activeCase?.painType ?? "aguda", activeCase?.initialEVA ?? 6),
-    [drug, dose, interval, adjuvant, activeCase?.painType, activeCase?.initialEVA]
+    computeSimulation(drug, dose, interval, adjuvant, activeCase?.painType ?? "aguda", activeCase?.initialEVA ?? 6, {
+      route: selectedRoute,
+      renalInsufficiency,
+      hepaticInsufficiency,
+    }),
+    [drug, dose, interval, adjuvant, activeCase?.painType, activeCase?.initialEVA, selectedRoute, renalInsufficiency, hepaticInsufficiency]
   );
 
   const displayedEvaData = useMemo(() =>
