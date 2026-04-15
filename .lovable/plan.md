@@ -1,86 +1,89 @@
 
 
-## Plano: Reformulacao dos Desafios — Simulador Inflamacao e AINEs
+## Plano: Reformulação dos Desafios — Simulador Infecções e Antibioticoterapia
 
 ### Resumo
 
-Criar 30 desafios (5 casos × 6 cada), seguindo o padrao do Manejo da Dor: cada desafio exige que o aluno ajuste parametros no simulador, interprete graficos/paineis e so entao responda. Tambem corrigir problemas da engine para que os graficos reflitam corretamente o que os desafios pedem.
+Criar 30 desafios (5 casos × 6 cada), seguindo o padrão do Manejo da Dor: cada desafio exige que o aluno ajuste parâmetros no simulador, interprete gráficos/painéis e só então responda. Também corrigir problemas preventivos na engine para que os gráficos reflitam corretamente o que os desafios pedem.
 
 ---
 
-### Problemas preventivos (licoes do Manejo da Dor)
+### Problemas preventivos (lições do Manejo da Dor)
 
-| Problema | Correcao preventiva |
+| Problema | Correção preventiva |
 |----------|---------------------|
-| Slider step grande demais impedindo doses especificas | Step adaptativo: `doseMax <= 20 ? 0.5 : doseMax <= 100 ? 2.5 : doseMax <= 500 ? 25 : 50` |
-| EVA nao reflete dissociacao analgesia vs anti-inflamacao em dose baixa | Separar limiares: limiar analgesico (cpRatio ~0.3) vs limiar anti-inflamatorio (cpRatio ~0.7) |
-| PA nao sobe visivelmente com AINE + HAS ao longo das 72h | PA deve ser dinamica por hora (nao so valor final) — ou pelo menos mostrar elevacao proporcional clara |
-| TFG nao cai de forma dramatica com DRC + AINE dose maxima | Ampliar coeficiente: `doseRatio * 35` em vez de 20 |
-| Ibuprofeno 200mg deve mostrar analgesia mas pouca anti-inflamacao | Implementar limiar dose-dependente para efeito anti-inflamatorio |
-| Feedback com termos internos (typeMultiplier, etc) | Sem variaveis internas nos textos |
-| Desafio pede funcionalidade inexistente no simulador | Cada desafio usa apenas controles existentes: fármaco, dose, intervalo, gastroprotecao, comorbidades |
+| Carga bacteriana usa fórmula monotônica (nunca sobe de volta) — impossível mostrar recrescimento com intervalo longo | Refazer cálculo de bacterialLoad para ser dinâmico por hora: se Cp < MIC, bactéria cresce; se Cp > MIC, bactéria morre |
+| Nitrofurantoína com DRC: curva sítio-alvo (urina) não cai visivelmente | Multiplicar `siteConcentration` por fator DRC (ex: 0.2) quando `!drug.safeDRC && specialGroups.drc` |
+| Fosfomicina dose única: engine aplica múltiplas doses (interval=24h gera 7 doses em 168h) | Detectar Fosfomicina (dose única) e limitar a 1 dose apenas |
+| Vancomicina oral (bio=0): curva plasma zerada OK, mas cpSite deveria ser alta (intestinal) independente de plasma | cpSite para bio=0 deve ser calculado diretamente pela concentração intestinal, não derivado de cpPlasma |
+| Gestante toggle não mostra teratogenicidade visualmente além do warning | Adicionar barra "Teratogenicidade" ao sideEffectData quando gestante + fármaco inseguro |
+| Slider step inadequado para faixas pequenas (ex: Nitrofurantoína 50-100mg) | Step adaptativo: `doseMax - doseMin <= 100 ? 10 : doseMax <= 500 ? 25 : 50` |
+| Feedback com termos internos | Sem variáveis internas nos textos dos desafios |
+| Não há `activeCaseIndex` tracking | Adicionar estado para saber qual caso está ativo e passar ao `getInfeccoesAntibioticosChallenges(caseIndex)` |
 
 ---
 
-### Mudancas na Engine (SimuladorInflamacaoAINEs.tsx)
+### Mudanças na Engine (SimuladorInfeccoesAntibioticos.tsx)
 
-1. **Dissociacao analgesica/anti-inflamatoria dose-dependente**: doses baixas de AINEs reduzem EVA mas NAO a linha de inflamacao; doses altas reduzem ambos
-2. **Slider step refinado**: evitar saltos grandes
-3. **TFG mais responsiva**: coeficiente maior para AINEs + DRC
-4. **PA progressiva com HAS**: mostrar elevacao mais pronunciada (ex: 130→145)
-5. **Tracking de activeCaseIndex**: adicionar estado para saber qual caso esta ativo e passar ao `getInflamacaoAINEsChallenges(caseIndex)`
-6. **SimulatorState completo**: passar todos os campos necessarios (comorbidities, inflammation, sideEffectData, etc)
+1. **Carga bacteriana dinâmica por hora**: se Cp no sítio < MIC, bactéria recrescerá (taxa ~0.3 log/h), mostrando falha com intervalos longos (Desafio 4 - Cefalexina 24h). Se Cp > MIC, bactéria reduz proporcionalmente
+2. **Vancomicina oral (bio=0)**: calcular cpSite diretamente pela dose/volume intestinal em vez de derivar de cpPlasma (que é 0)
+3. **Fosfomicina dose única**: limitar nDoses=1 para fármacos com `doseMin === doseMax` e `intervalMax === 24`
+4. **DRC penaliza concentração urinária**: se DRC ativado e drug.safeDRC=false, `urinaryConcentration *= 0.2` — carga bacteriana não cai
+5. **Barra de Teratogenicidade**: quando gestante + !safePregnancy, adicionar barra extra com risco alto
+6. **Slider step adaptativo**
+7. **activeCaseIndex tracking**: adicionar useMemo para determinar índice do caso ativo
+8. **simulatorState completo**: passar specialGroups, sideEffectData, cpSite, bacterialLoad, etc
 
 ---
 
 ### Estrutura dos 30 Desafios (simulatorChallenges.ts)
 
-**Caso 1: OA de Joelho** (Roberto, 60a, HAS + Ulcera)
-1. Paradoxo dose-dependente: Ibuprofeno 200mg — EVA cai mas inflamacao fica alta; aumentar para 600mg e ver inflamacao cair
-2. Gangorra COX: trocar AINE nao-seletivo por Celecoxibe — risco GI cai, risco CV sobe
-3. Nefrotoxicidade + DRC: ativar DRC, AINE dose max — TFG cai
-4. Ilusao da gastroprotecao: IBP zera GI mas nao altera CV/Renal
-5. Interacao AINE + HAS: ativar HAS, observar PA subir
-6. Farmacocinetica montanha-russa: Ibuprofeno t½=2h com intervalo 24h — Cp zera, EVA rebote
+**Caso 1: Cistite — Vanessa, 20a** (ITU não-complicada)
+1. Compartimento alvo: Nitrofurantoína — curva Sítio-alvo alta mas Plasma zerada; por que falha na pielonefrite?
+2. Preço do "canhão": trocar para Ciprofloxacino — barras de EA (Tendinite, Disbiose, QT) acendem; conceito de dano colateral
+3. Interação fármaco-doença (DRC): ativar DRC + Nitrofurantoína — concentração no sítio cai, carga bacteriana não reduz
+4. PK/PD tempo-dependente: Cefalexina com intervalo 24h — carga bacteriana recrescerá entre doses
+5. Dose única sustentada: Fosfomicina — pico alto que decai lentamente, mantém acima da MIC por 48-72h
+6. Teratogenicidade: ativar gestante + SMX-TMP — alerta vermelho + barra teratogenicidade
 
-**Caso 2: OA Idosa Polimedicada** (Sonia, 67a, HAS + Osteopenia + DRGE)
-1. Via topica vs sistemica: comparar Diclofenaco gel vs VO — riscos GI/CV/Renal desproporcional
-2. Ibuprofeno dose alta em idosa com HAS: PA e TFG
-3. Naproxeno t½=14h: intervalo 12h — Cp estavel vs Ibuprofeno t½=2h
-4. Comorbidade osteopenia + corticoide: risco osseo sobe
-5. Meloxicam COX-2 preferencial: risco intermediario CV vs COX-2 puro
-6. Polifarmacia: interacao AINE + anti-hipertensivo
+**Caso 2: Pielonefrite ESBL — Marcos, 35a**
+1. Falha do empírico: Ciprofloxacino em ESBL — carga bacteriana estagna (resistência); conceito de escalonamento
+2. Escalonamento para Ceftriaxona EV: via EV + t½ longa = Cp sustentada acima da MIC
+3. Betalactâmico tempo-dependente: Ceftriaxona 24h vs Cefalexina 6h — por que a ceftriaxona funciona com intervalo longo?
+4. Espectro vs dano colateral: Ceftriaxona (amplo espectro) — disbiose alta; comparar com Cefalexina (espectro estreito)
+5. Step-down: conceito de trocar EV→VO quando afebril por 48h (interpretação dos sinais vitais)
+6. Nefrotoxicidade: dose alta + DRC ativada — risco nefro sobe
 
-**Caso 3: AR — Bridge Therapy** (Tereza, 42a)
-1. AINE sozinho na AR: conditionMultiplier=0.5, EVA mal desce
-2. Prednisona como ponte: EVA e inflamacao caem significativamente
-3. Dose de prednisona >7.5mg: barras endocrino/osseo/imune sobem
-4. Cronoterapia: contexto sobre administrar a noite
-5. Corticoide vs AINE na cascata do AA: bloqueio mais proximal
-6. Dexametasona vs Prednisona: potencia e t½ diferentes
+**Caso 3: ITU na Gestação — Ana Luísa, 28a** (Gestante 24 sem)
+1. Antibiótico seguro: Cefalexina na gestante — sem warning; trocar para SMX-TMP → alerta teratogênico
+2. Fluoroquinolona na gestante: Ciprofloxacino — warning de artropatia fetal + barras EA altas
+3. Nitrofurantoína: segura até 36 sem — comparar barras de EA com Cefalexina (perfis diferentes)
+4. Bacteriúria assintomática: por que tratar se assintomática? (carga inicial baixa → observar que sem tratamento progrediria)
+5. t½ e regime posológico: Cefalexina t½=1h 6/6h vs Amoxicilina t½=1h 8/8h — coberturas diferentes
+6. Ajuste de dose: Amoxicilina 250mg vs 1000mg — curva Cp proporcional, efeito na erradicação
 
-**Caso 4: EA do Corticoide** (Wilson, 55a, AR cronica)
-1. Dose-dependentes vs tempo-dependentes: quais barras sobem com dose alta
-2. Prednisona 10mg + diabetes: glicemia sobe
-3. Reducao para 5mg: barras de EA caem
-4. Osteopenia + corticoide cronico: risco osseo
-5. Hidrocortisona vs Dexametasona: potencia e perfil de EA
-6. Metilprednisolona intra-articular: via local
+**Caso 4: Diarreia Aquosa vs Disenteria — João, 45a**
+1. SRO sem antibiótico: diarreia aquosa — SRO + hidratação; carga bacteriana não cai mas paciente melhora (sinais vitais)
+2. Antibiótico desnecessário: prescrever Ciprofloxacino na diarreia aquosa — carga bacteriana cai mas barras EA sobem sem necessidade
+3. Concentração intestinal: comparar Azitromicina (intestinal alta) vs Nitrofurantoína (intestinal baixa) — sítio-alvo
+4. Espectro e t½: Azitromicina t½=68h dose única diária vs Metronidazol t½=8h 8/8h — curvas Cp diferentes
+5. Evolução para disenteria: trocar para infecção invasiva → agora antibiótico indicado; qual tem melhor perfil?
+6. Fotossensibilidade: Doxiciclina — barra Fotosens. alta; Azitromicina — barra QT alta; trade-offs
 
-**Caso 5: Desmame de Corticoide** (Wilson continuacao)
-1. Prednisona 10mg→5mg: observar mudancas nos sinais vitais
-2. Abstinencia vs reativacao: conceitual com contexto simulado
-3. Dose fisiologica (5mg = 20mg cortisol): limiar
-4. Velocidade do desmame: risco de crise adrenal
-5. Estresse agudo: necessidade de dose de estresse (hidrocortisona EV)
-6. Substituicao por hidrocortisona: t½ curta simula fisiologico
+**Caso 5: C. difficile — Fernando, 72a** (Idoso, internado)
+1. Vancomicina oral vs EV: Vancomicina oral bio=0 → concentração intestinal altíssima, plasma zero; por que oral?
+2. Metronidazol vs Vancomicina oral: Metronidazol é absorvido (Cp plasma sobe) → menos concentração intestinal
+3. Idoso + Fluoroquinolona: ativar idoso → tendinite dobra; por que FQ é fator de risco para C. difficile
+4. Suspender clindamicina (conceitual): remover o antibiótico causador é parte do tratamento
+5. Dose de Vancomicina: 125mg vs 500mg — ambos eficazes mas perfis de EA diferentes
+6. Disbiose iatrogênica: Ceftriaxona (espectro amplo) → disbiose alta; conexão com risco de C. difficile
 
 ---
 
 ### Arquivos modificados
 
-| Arquivo | Mudancas |
+| Arquivo | Mudanças |
 |---------|----------|
-| `src/data/simulatorChallenges.ts` | Reescrever `getInflamacaoAINEsChallenges(caseIndex)` com 5 caseSets × 6 desafios MCQ |
-| `src/pages/simuladores/SimuladorInflamacaoAINEs.tsx` | (1) Fix slider step, (2) Dissociacao analgesica/anti-inflamatoria, (3) TFG mais responsiva, (4) PA mais responsiva com HAS, (5) activeCaseIndex tracking, (6) simulatorState completo |
+| `src/data/simulatorChallenges.ts` | Reescrever `getInfeccoesAntibioticosChallenges(caseIndex)` com 5 caseSets × 6 desafios MCQ |
+| `src/pages/simuladores/SimuladorInfeccoesAntibioticos.tsx` | (1) Carga bacteriana dinâmica (recrescimento se Cp < MIC), (2) Vancomicina oral cpSite direto, (3) Fosfomicina dose única, (4) DRC penaliza urinária, (5) Barra teratogenicidade, (6) Slider step adaptativo, (7) activeCaseIndex tracking, (8) simulatorState completo |
 
