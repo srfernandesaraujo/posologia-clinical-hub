@@ -150,21 +150,12 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
 
-  // Ceiling effect: more aggressive plateau above 60% of max dose
-  let basePotency = drug.analgesicPotency * doseFraction;
-  if (drug.ceilingEffect) {
-    const ceilingThreshold = 0.6;
-    if (doseFraction > ceilingThreshold) {
-      const excess = doseFraction - ceilingThreshold;
-      basePotency = drug.analgesicPotency * (ceilingThreshold + excess * 0.1);
-    }
-    basePotency = Math.min(basePotency, drug.analgesicPotency * 0.65);
-  }
-
+  // Potency: drug's inherent analgesic power + adjuvant bonus
+  // Dose dependency comes solely from Cp curve (doseFraction already in cp calc line 201)
   const adjBonus = adjuvant.potencyBonus
     + (painType === "neuropatica" ? adjuvant.neuropathicBonus : 0)
     + (painType === "fibromialgia" ? adjuvant.fibroBonus : 0);
-  const totalPotency = Math.min(basePotency, 1) + adjBonus;
+  const totalPotency = drug.analgesicPotency + adjBonus;
 
   // Pain reduction effectiveness by pain type
   const typeMultiplier = painType === "fibromialgia" && drug.class === "Opioide forte" ? 0.15
@@ -183,8 +174,8 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
   if (options?.renalInsufficiency) effectiveHalfLife *= 2.5;
   if (options?.hepaticInsufficiency) effectiveHalfLife *= 2.0;
 
-  // Cp threshold normalized by bioavailability so EVA can reach low values
-  const cpThreshold = effectiveBio * 50;
+  // Fixed Cp threshold — NOT bio-dependent so route differences matter in EVA
+  const cpThreshold = 25;
 
   const evaData: { hour: number; eva: number; cp: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
@@ -200,7 +191,11 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     }
     cp = cp * doseFraction * 100;
 
-    const reduction = totalPotency * typeMultiplier * Math.min(cp / cpThreshold, 1);
+    // Ceiling effect: cap cpRatio so increasing dose/Cp stops adding analgesia
+    let cpRatio = Math.min(cp / cpThreshold, 1);
+    if (drug.ceilingEffect) cpRatio = Math.min(cpRatio, 0.5);
+
+    const reduction = totalPotency * typeMultiplier * cpRatio;
     const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
 
     evaData.push({
