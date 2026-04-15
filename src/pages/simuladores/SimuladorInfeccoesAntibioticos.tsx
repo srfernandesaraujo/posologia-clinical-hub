@@ -149,22 +149,36 @@ function computeSimulation(
   const hours = Array.from({ length: 337 }, (_, i) => i * 0.5); // 0-168h (7 days) in 0.5h steps
   const doseFraction = dose / drug.doseMax;
   const isSRO = drug.name.startsWith("SRO");
+  const isVancoOral = drug.bioavailability === 0 && drug.intestinalConcentration > 0;
 
   // Determine if drug targets urine or intestine
   const isUTI = ["itu-nao-complicada", "itu-complicada", "pielonefrite"].includes(infectionType);
-  const siteConcentration = isUTI ? drug.urinaryConcentration : drug.intestinalConcentration;
 
-  // Bactericidal effectiveness
-  const killRate = isSRO ? 0 : siteConcentration * doseFraction * (drug.spectrum / drug.mic) * 80;
+  // Fosfomicina: single dose
+  const isSingleDose = drug.doseMin === drug.doseMax && drug.intervalMax === 24 && drug.name.includes("Fosfomicina");
+
+  // DRC penalty for urinary concentration
+  let effectiveUrinaryConc = drug.urinaryConcentration;
+  if (specialGroups.drc && !drug.safeDRC) {
+    effectiveUrinaryConc *= 0.2; // 80% reduction — drug doesn't reach urine adequately
+  }
+
+  const siteConcentrationFactor = isUTI ? effectiveUrinaryConc : drug.intestinalConcentration;
 
   const data: { hour: number; bacterialLoad: number; cpPlasma: number; cpSite: number; micLine: number; temperature: number; leucocitos: number; pcr: number }[] = [];
 
-  for (const h of hours) {
+  let currentBacterialLoad = initialBacterialLoad;
+  const bacterialGrowthRate = 0.15; // log10/h regrowth when Cp < MIC
+  const maxBacterialLoad = initialBacterialLoad + 0.5; // can slightly exceed initial
+
+  for (let idx = 0; idx < hours.length; idx++) {
+    const h = hours[idx];
+
     // Pharmacokinetic curve
     let cpPlasma = 0;
     if (!isSRO && drug.halfLife > 0) {
-      const nDoses = Math.floor(h / interval) + 1;
-      for (let d = 0; d < nDoses; d++) {
+      const maxDoses = isSingleDose ? 1 : Math.floor(h / interval) + 1;
+      for (let d = 0; d < maxDoses; d++) {
         const tSinceDose = h - d * interval;
         if (tSinceDose < 0) continue;
         const absorption = drug.bioavailability * (1 - Math.exp(-tSinceDose / Math.max(drug.tmax, 0.1)));
@@ -174,14 +188,47 @@ function computeSimulation(
       cpPlasma = cpPlasma * doseFraction * 100;
     }
 
-    const cpSite = cpPlasma * siteConcentration;
+    // Site concentration
+    let cpSite: number;
+    if (isVancoOral) {
+      // Vancomycin oral: bio=0, calculate intestinal concentration directly from dose
+      const intestinalVolume = 0.5; // L (approximate gut volume)
+      const maxDoses = Math.floor(h / interval) + 1;
+      let intestinalCp = 0;
+      const gutHalfLife = 12; // hours — gut transit elimination
+      for (let d = 0; d < maxDoses; d++) {
+        const tSinceDose = h - d * interval;
+        if (tSinceDose < 0) continue;
+        const doseInGut = dose / (intestinalVolume * 1000); // mg/mL → scale to arbitrary units
+        const absorption = 1 - Math.exp(-tSinceDose / 0.5);
+        const elimination = Math.exp(-0.693 * tSinceDose / gutHalfLife);
+        intestinalCp += doseInGut * absorption * elimination * 100;
+      }
+      cpSite = intestinalCp * drug.intestinalConcentration;
+    } else if (isSRO) {
+      cpSite = 0;
+    } else {
+      cpSite = cpPlasma * siteConcentrationFactor;
+    }
 
-    // Bacterial load reduction
-    const bacterialReduction = isSRO ? 0 : killRate * Math.min(h / 24, 1) * Math.log10(h + 1) / 3;
-    const bacterialLoad = Math.max(0, initialBacterialLoad - bacterialReduction);
+    // Dynamic bacterial load: if cpSite > MIC → kill; if cpSite < MIC → regrow
+    if (idx > 0) {
+      const dt = 0.5; // hours per step
+      if (isSRO) {
+        // SRO doesn't kill bacteria
+        currentBacterialLoad = Math.min(maxBacterialLoad, currentBacterialLoad + bacterialGrowthRate * dt * 0.3);
+      } else if (cpSite > drug.mic) {
+        // Kill rate proportional to how far above MIC
+        const killFactor = Math.min((cpSite / drug.mic - 1) * 0.08 * drug.spectrum, 0.5);
+        currentBacterialLoad = Math.max(0, currentBacterialLoad - killFactor * dt);
+      } else if (currentBacterialLoad > 0.5) {
+        // Regrowth when below MIC
+        currentBacterialLoad = Math.min(maxBacterialLoad, currentBacterialLoad + bacterialGrowthRate * dt);
+      }
+    }
 
     // Clinical parameters reacting to bacterial load
-    const infectionSeverity = bacterialLoad / initialBacterialLoad;
+    const infectionSeverity = currentBacterialLoad / initialBacterialLoad;
     const hydrationBonus = hydration ? 0.15 : 0;
     const temperature = 36.5 + infectionSeverity * 2.5 - hydrationBonus;
     const leucocitos = 5000 + infectionSeverity * 15000;
@@ -189,7 +236,7 @@ function computeSimulation(
 
     data.push({
       hour: Math.round(h * 10) / 10,
-      bacterialLoad: Math.round(bacterialLoad * 100) / 100,
+      bacterialLoad: Math.round(currentBacterialLoad * 100) / 100,
       cpPlasma: Math.round(cpPlasma * 10) / 10,
       cpSite: Math.round(cpSite * 10) / 10,
       micLine: drug.mic,
@@ -212,7 +259,7 @@ function computeSimulation(
   const fotoRisk = se.foto * doseRatio * 100;
   const qtRisk = se.qt * doseRatio * 100;
 
-  const sideEffectData = [
+  const sideEffectData: { name: string; risco: number }[] = [
     { name: "GI", risco: Math.round(Math.min(giRisk, 100)) },
     { name: "Tendinite", risco: Math.round(Math.min(tendiniteRisk, 100)) },
     { name: "Nefro", risco: Math.round(Math.min(nefroRisk, 100)) },
@@ -220,6 +267,11 @@ function computeSimulation(
     { name: "Fotosens.", risco: Math.round(Math.min(fotoRisk, 100)) },
     { name: "QT", risco: Math.round(Math.min(qtRisk, 100)) },
   ];
+
+  // Teratogenicity bar for pregnant + unsafe drug
+  if (specialGroups.gestante && !drug.safePregnancy) {
+    sideEffectData.push({ name: "Teratogen.", risco: Math.round(Math.min(85 + doseRatio * 15, 100)) });
+  }
 
   // Safety warnings
   const warnings: string[] = [];
@@ -477,12 +529,12 @@ export default function SimuladorInfeccoesAntibioticos() {
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 200 ? 25 : drug.doseMax <= 1000 ? 50 : 100} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={(drug.doseMax - drug.doseMin) <= 100 ? 10 : drug.doseMax <= 500 ? 25 : drug.doseMax <= 1000 ? 50 : 100} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Intervalo</label><span className="text-sm font-bold">{interval}h</span></div>
-              <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={Math.max(drug.intervalMax, drug.intervalMin + 1)} step={1} />
+              <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={Math.max(drug.intervalMax, 24)} step={1} />
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={hydration} onCheckedChange={setHydration} id="hid" />
@@ -606,11 +658,16 @@ export default function SimuladorInfeccoesAntibioticos() {
       </Card>
 
       {/* Challenge Mode */}
-      <SimulatorChallengeMode
-        challengeSet={getInfeccoesAntibioticosChallenges()}
-        simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, hydration, infectionType: activeCase.infectionType, finalBacterialLoad: simulation.finalBacterialLoad, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: drug.safePregnancy, urinaryConcentration: drug.urinaryConcentration }}
-        onComplete={() => setChallengeCompleted(true)}
-      />
+      {(() => {
+        const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+        return (
+          <SimulatorChallengeMode
+            challengeSet={getInfeccoesAntibioticosChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
+            simulatorState={{ drug: drug.name, drugClass: drug.class, dose, interval, hydration, infectionType: activeCase.infectionType, finalBacterialLoad: simulation.finalBacterialLoad, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: drug.safePregnancy, safeDRC: drug.safeDRC, safeElderly: drug.safeElderly, urinaryConcentration: drug.urinaryConcentration, intestinalConcentration: drug.intestinalConcentration, spectrum: drug.spectrum, halfLife: drug.halfLife, bioavailability: drug.bioavailability, sideEffectData: simulation.sideEffectData, specialGroups }}
+            onComplete={() => setChallengeCompleted(true)}
+          />
+        );
+      })()}
 
       {/* Virtual Room Results */}
       {isVirtualRoom && submitted && (
