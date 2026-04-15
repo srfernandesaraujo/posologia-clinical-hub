@@ -138,12 +138,17 @@ function computeSimulation(
   const doseFraction = dose / drug.doseMax;
 
   // Anti-inflammatory effectiveness depends on condition
-  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.5 // AINEs alone insufficient for RA
+  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.5
     : condition === "artrite-reumatoide" && drug.category === "Corticoide" ? 1.0
     : condition === "desmame-corticoide" ? 0.6
     : 1.0;
 
   const effectivePotency = drug.potency * doseFraction * conditionMultiplier;
+
+  // ── Dose-dependent dissociation: analgesic vs anti-inflammatory thresholds ──
+  // Low doses achieve analgesia (cpRatio ~0.3 sufficient) but NOT anti-inflammation (needs cpRatio ~0.7)
+  const analyticThreshold = 0.3;  // cpRatio above which analgesic effect is near-maximal
+  const antiInflamThreshold = 0.7; // cpRatio above which anti-inflammatory effect kicks in fully
 
   const evaData: { hour: number; eva: number; cp: number; inflammation: number; toxicLimit: number; therapeuticMin: number; therapeuticMax: number }[] = [];
 
@@ -159,9 +164,23 @@ function computeSimulation(
     }
     cp = cp * doseFraction * 100;
 
-    const reduction = effectivePotency * Math.min(cp / 80, 1);
-    const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.85);
-    const inflammation = Math.max(0, 100 - reduction * 100 * 0.8);
+    const cpRatio = Math.min(cp / 80, 1);
+
+    // Analgesic effect: kicks in early at lower concentrations
+    const analgesicEffect = effectivePotency * Math.min(cpRatio / analyticThreshold, 1);
+    const eva = Math.max(0, initialEVA - initialEVA * analgesicEffect * 0.9);
+
+    // Anti-inflammatory effect: requires higher concentrations
+    let antiInflamEffect: number;
+    if (drug.category === "Corticoide") {
+      // Corticoids are potent anti-inflammatories even at lower doses
+      antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
+    } else {
+      // AINEs: dose-dependent dissociation
+      const antiInflamRatio = Math.max(0, (cpRatio - analyticThreshold) / (antiInflamThreshold - analyticThreshold));
+      antiInflamEffect = effectivePotency * Math.min(antiInflamRatio, 1);
+    }
+    const inflammation = Math.max(0, 100 - antiInflamEffect * 100 * 0.85);
 
     evaData.push({
       hour: h,
@@ -178,12 +197,12 @@ function computeSimulation(
   const doseRatio = doseFraction;
   const se = { ...drug.sideEffects };
   let giRisk = se.gi * doseRatio * 100;
-  if (gastroprotection && drug.category === "AINE") giRisk *= 0.4; // IBP reduces GI risk by ~60%
+  if (gastroprotection && drug.category === "AINE") giRisk *= 0.35; // IBP reduces GI risk by ~65%
   if (comorbidities.ulcer) giRisk *= 1.8;
   let cvRisk = se.cv * doseRatio * 100;
-  if (comorbidities.has) cvRisk *= 1.5;
+  if (comorbidities.has) cvRisk *= 1.6;
   let renalRisk = se.renal * doseRatio * 100;
-  if (comorbidities.drc) renalRisk *= 2.0;
+  if (comorbidities.drc) renalRisk *= 2.5; // more responsive TFG drop
   let boneRisk = se.bone * doseRatio * 100;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
   let endoRisk = se.endocrine * doseRatio * 100;
@@ -199,14 +218,16 @@ function computeSimulation(
     { name: "Imune", risco: Math.round(Math.min(immuneRisk, 100)) },
   ];
 
-  // Vital signs
+  // Vital signs — PA more responsive with HAS + AINE
   const lastEVA = evaData[evaData.length - 1]?.eva ?? initialEVA;
+  const paAineBoost = drug.category === "AINE" ? doseRatio * 18 : drug.category === "Corticoide" ? doseRatio * 10 : 0;
+  const paHasBoost = comorbidities.has ? 15 : 0;
   const vitals = {
-    pas: Math.round(120 + (drug.category === "AINE" ? doseRatio * 12 : drug.category === "Corticoide" ? doseRatio * 8 : 0) + (comorbidities.has ? 10 : 0)),
-    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 6 : 0)),
+    pas: Math.round(120 + paAineBoost + paHasBoost),
+    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 8 : 0) + (comorbidities.has ? 5 : 0)),
     fc: Math.round(72 + (lastEVA / 10) * 10),
-    tfg: Math.round(Math.max(30, 90 - (drug.category === "AINE" ? doseRatio * 20 : 0) - (comorbidities.drc ? 25 : 0))),
-    glicemia: Math.round(95 + (drug.category === "Corticoide" ? doseRatio * 40 : 0) + (comorbidities.diabetes ? 20 : 0)),
+    tfg: Math.round(Math.max(25, 90 - (drug.category === "AINE" ? doseRatio * 35 : 0) - (comorbidities.drc ? 30 : 0))),
+    glicemia: Math.round(95 + (drug.category === "Corticoide" ? doseRatio * 45 : 0) + (comorbidities.diabetes ? 25 : 0)),
   };
 
   return { evaData, sideEffectData, vitals, finalEVA: lastEVA };
@@ -416,7 +437,7 @@ export default function SimuladorInflamacaoAINEs() {
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 20 ? 0.5 : drug.doseMax <= 100 ? 2.5 : 50} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 20 ? 0.5 : drug.doseMax <= 100 ? 2.5 : drug.doseMax <= 500 ? 25 : 50} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
