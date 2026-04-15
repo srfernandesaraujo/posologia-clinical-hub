@@ -1,76 +1,65 @@
 
 
-## Plano: Desafios por Caso no Simulador Manejo da Dor
+## Plano: Correcoes do Simulador Manejo da Dor
 
-### Problema Atual
-O simulador Manejo da Dor tem um unico conjunto de 10 desafios genéricos (`getManejoDorChallenges()`) usado para todos os 5 casos. Os 5 grupos em sala de aula farao casos diferentes, mas enfrentarao os mesmos desafios — que nao se relacionam com o caso clinico especifico.
+### Problemas Identificados
+
+| # | Problema | Causa |
+|---|----------|-------|
+| 1 | Morfina pula de 5→55mg (step=50) | Slider step = 50 para doseMax > 100 |
+| 2 | Desafio pede mudar via VO→EV mas nao existe seletor de via | Funcionalidade ausente |
+| 3 | Desafio 4: efeito teto da Dipirona pouco evidente nos graficos | O cap de 0.55 na potencia com ceilingEffect nao e visivel o suficiente na curva EVA |
+| 4 | Desafio 5: EVA nunca fica abaixo de 3 com Morfina 200mg/4h | A formula `reduction * 0.85` limita a reducao maxima; com Morfina dose maxima, a reducao maxima e ~68% do EVA inicial (EVA 8→~2.5 teoricamente, mas o cap em cp/80 limita) |
+| 5 | Feedback do desafio 5 menciona flutuacoes de nausea/sedacao em 3-5 dias, mas o grafico de EA e estatico (barras fixas, nao temporais) | Grafico nao mostra evolucao temporal |
+| 6 | Desafio 6 (Caso 1): pede reduzir intervalo do Tramadol para 4h, mas intervalMin=6 | Limite do slider |
+| 7 | Usuario quer toggles de insuficiencia renal e hepatica | Funcionalidade ausente |
 
 ### Solucao
-Transformar `getManejoDorChallenges()` para aceitar o indice do caso ativo e retornar desafios especificos para aquele caso. Cada conjunto tera ~6 desafios com a dinamica: **ajuste algo no simulador → responda uma MCQ interpretativa sobre as consequencias desse ajuste**.
 
-### Dinamica dos Desafios (padrao para todos os 5 casos)
-1. **Adjust** — pede ao aluno que selecione um farmaco, dose ou adjuvante
-2. **MCQ interpretativa** — pergunta sobre as consequencias clinicas/farmacologicas daquele ajuste (ex: "Ao selecionar tramadol neste paciente, qual efeito adverso exige monitoramento prioritario?")
-3. **Adjust** — outro ajuste (ex: adicionar adjuvante, mudar dose)
-4. **MCQ interpretativa** — consequencias do segundo ajuste
-5. **Adjust** — ajuste final (ex: gastroprotecao, intervalo)
-6. **MCQ interpretativa** — pergunta de desfecho/seguranca
+**Arquivo: `src/pages/simuladores/SimuladorManejoDor.tsx`**
 
-### Desafios por Caso
+1. **Corrigir step do slider de dose**: Substituir logica de step para usar incrementos proporcionais ao range (ex: step=5 para Morfina, step=10 para Dipirona, etc.). Regra: `Math.max(1, Math.round((doseMax - doseMin) / 40))` para ~40 posicoes no slider.
 
-**Caso 1 — Dor Aguda Pos-Operatoria**
-- Adjust: Selecione Tramadol como analgesico
-- MCQ: Qual EA do tramadol requer vigilancia neste pos-operatorio? (convulsao em dose alta / sindrome serotoninergica)
-- Adjust: Ajuste dose para 100mg
-- MCQ: Se o EVA nao melhorar com tramadol 100mg 6/6h, qual escalonamento segue a escada OMS?
-- Adjust: Mantenha o intervalo em 6h
-- MCQ: Porque a analgesia multimodal e superior a monoterapia neste caso?
+2. **Adicionar seletor de Via de Administracao**: Novo `Select` com as rotas disponiveis do farmaco selecionado (`drug.routes`). A via afeta o `computeSimulation`:
+   - EV: bioavailability=1.0, tmax=0.1 (pico quase instantaneo)
+   - SC: bioavailability=0.9, tmax reduzido pela metade
+   - TD: sem alteracao (ja modelado no Fentanil)
+   - VO: valores padrao do farmaco
 
-**Caso 2 — Dor Neuropatica (Lombalgia/Radiculopatia)**
-- Adjust: Selecione Duloxetina como adjuvante
-- MCQ: Qual mecanismo explica a eficacia da duloxetina na dor neuropatica?
-- Adjust: Mantenha Paracetamol como analgesico base
-- MCQ: O paciente usa paracetamol 4g/dia ha 3 meses. Qual o principal risco?
-- Adjust: Ative gastroprotecao (paciente obeso, hipertenso)
-- MCQ: Por que AINEs sao inadequados como monoterapia neste tipo de dor?
+3. **Adicionar toggles de Insuficiencia Renal e Hepatica**: Dois switches no painel de prescricao:
+   - **Insuficiencia Renal (ClCr < 30)**: multiplica halfLife por 2.5 (eliminacao mais lenta → acumulo), aumenta nefrotoxicidade (+30%), aumenta risco de depressao respiratoria
+   - **Insuficiencia Hepatica (Child-Pugh C)**: multiplica halfLife por 2.0 para farmacos com metabolismo hepatico, aumenta hepatotoxicidade (+40%), aumenta biodisponibilidade VO (menos first-pass)
+   - Ambos afetam curva Cp visivelmente (vales mais altos, acumulo progressivo) e barras de EA
 
-**Caso 3 — Fibromialgia**
-- Adjust: Selecione Pregabalina como adjuvante
-- MCQ: Por que opioides sao contraindicados na fibromialgia?
-- Adjust: Selecione Dipirona (nao-opioide)
-- MCQ: Qual o mecanismo da pregabalina na sensibilizacao central?
-- Adjust: Mantenha dose baixa do analgesico
-- MCQ: Qual medida nao-farmacologica tem nivel de evidencia equivalente aos farmacos na fibromialgia?
+4. **Corrigir formula EVA para permitir valores < 3**: Ajustar o fator de reducao de `0.85` para `0.95` e o cap de `cp/80` para `cp/60`, permitindo que opioides fortes em dose alta atinjam EVA < 3 na dor oncologica.
 
-**Caso 4 — Dor Oncologica (Escalonamento)**
-- Adjust: Selecione Morfina como analgesico
-- MCQ: Ao escalonar para morfina, qual EA obrigatorio requer profilaxia desde o D1?
-- Adjust: Adicione Gabapentina 300mg
-- MCQ: Qual componente da dor desta paciente justifica a gabapentina?
-- Adjust: Ajuste intervalo para 4h
-- MCQ: O principio "by the clock" da OMS significa administrar em horarios fixos porque...?
+5. **Ampliar intervalo minimo do Tramadol**: Reduzir `intervalMin` de 6 para 4h na definicao do farmaco (tramadol pode ser prescrito 4/4h em algumas referencias).
 
-**Caso 5 — Rotacao de Opioides**
-- Adjust: Selecione Fentanil TD
-- MCQ: Na conversao morfina VO 180mg/dia → fentanil TD, por que se reduz 25-50% da dose equianalgesica?
-- Adjust: Mantenha Gabapentina como adjuvante
-- MCQ: A metadona tem vantagem na rotacao por qual mecanismo adicional alem do agonismo mu?
-- Adjust: Ajuste dose adequada
-- MCQ: Quais sinais indicaram necessidade de rotacao nesta paciente (mioclonias, nauseas)?
+6. **Tornar efeito teto mais visivel**: Aumentar a penalidade do ceiling effect — quando `ceilingEffect: true` e dose > 60% da maxima, a potencia para de subir. Isso criara um plato mais claro na EVA.
 
-### Atualizacao do System Prompt (casos IA)
-O prompt `sim-manejo-dor` sera atualizado para instruir a IA a gerar tambem um campo `challenges` dentro de `case_data`, contendo 6 desafios no mesmo padrao (adjust→MCQ interpretativa alternados). O simulador passara a usar esses desafios do caso IA quando disponiveis.
+7. **Ajustar feedback dos desafios**: No desafio 5 do caso 1, remover referencia a "flutuacoes de 3-5 dias" no grafico (ja que EA e estatico). Ajustar para: "O aluno deve notar que a barra de constipacao e a mais alta e, diferente das demais, nao desenvolve tolerancia clinicamente."
 
-### Arquivos a Editar
+**Arquivo: `src/data/simulatorChallenges.ts`**
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/data/simulatorChallenges.ts` | Refatorar `getManejoDorChallenges(caseIndex?: number)` para retornar desafios especificos por caso (5 conjuntos de ~6 desafios cada). Manter fallback generico para caseIndex indefinido. |
-| `src/pages/simuladores/SimuladorManejoDor.tsx` | Passar o indice do caso ativo para `getManejoDorChallenges(activeCaseIndex)` e extrair desafios do caso IA quando disponiveis. |
-| `src/data/nativeSystemPrompts.ts` | Atualizar prompt `sim-manejo-dor` para incluir geracao de `challenges[]` no `case_data` dos casos IA. |
+8. **Revisar desafios de todos os 5 casos** para compatibilidade com as novas funcionalidades:
+   - Caso 1, Desafio 3: agora possivel (via EV adicionada)
+   - Caso 1, Desafio 5: agora possivel (EVA < 3 alcancavel)
+   - Caso 1, Desafio 6: agora possivel (intervalo 4h para Tramadol)
+   - Ajustar textos de feedback que mencionam dados temporais de EA
+   - Adicionar desafios que usem os toggles de insuficiencia renal/hepatica (especialmente nos casos 1, 2 e 5)
+   - Revisar casos 2-5 para divergencias similares com o simulador
 
-### Padrao Tecnico
-- A funcao `getManejoDorChallenges(caseIndex)` retorna `ChallengeSet` com 6 desafios especificos. Se `caseIndex` for `undefined`, retorna o set genérico atual (retrocompativel).
-- Os validators de adjust usam o mesmo padrao existente (checam `simulatorState`).
-- As MCQs interpretativas referenciam diretamente o contexto do caso e as consequencias dos ajustes.
+### Verificacao Cruzada dos Casos 2-5
+
+- **Caso 2**: Pede Ibuprofeno dose alta (2400mg) — step=50, funciona (200→2400). Pede comparar adjuvantes — OK. Nenhum problema de compatibilidade.
+- **Caso 3**: Pede Morfina 60mg na fibromialgia — com novo step, sera possivel ajustar finamente. OK.
+- **Caso 4**: Pede Morfina 60mg e 4h — intervalMin da Morfina ja e 4. Pede titulacao 15/30/60/100mg — com novo step sera possivel. OK.
+- **Caso 5**: Pede Fentanil TD e Metadona — ambos disponiveis. Pede comparar curvas Cp — OK. Nenhum problema.
+
+### Resumo de Arquivos
+
+| Arquivo | Mudancas |
+|---------|----------|
+| `src/pages/simuladores/SimuladorManejoDor.tsx` | (1) Fix slider step, (2) Seletor de via, (3) Toggles IR/IH, (4) Fix formula EVA, (5) Ampliar intervalMin Tramadol, (6) Efeito teto mais evidente, (7) Passar route+insufficiencies ao simulatorState |
+| `src/data/simulatorChallenges.ts` | Ajustar textos de feedback dos desafios incompativeis, atualizar desafio 6 do caso 1 para usar toggle de IR |
 
