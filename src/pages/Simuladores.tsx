@@ -142,6 +142,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Fisioterapia": Accessibility,
   "Nutrição": ClipboardList,
   "Genética": Dna,
+  "Farmacoterapia Laboratorial": TestTube,
 };
 
 // Category color accents (HSL-based using design tokens where possible)
