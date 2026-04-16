@@ -278,23 +278,26 @@ export default function SimuladorInflamacaoAINEs() {
     }
   }, [virtualRoomCase]);
 
+  const resetToInitial = useCallback(() => {
+    if (!activeCase) return;
+    setSelectedDrugIdx(0);
+    setDose(DRUGS[0].doseMin);
+    setInterval_(DRUGS[0].intervalMin);
+    setGastroprotection(false);
+    const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
+    setComorbidities({
+      has: patientComorbidities.some(c => c.includes("has") || c.includes("hipertens")),
+      drc: patientComorbidities.some(c => c.includes("renal") || c.includes("drc")),
+      ulcer: patientComorbidities.some(c => c.includes("úlcera") || c.includes("péptica")),
+      osteoporosis: patientComorbidities.some(c => c.includes("osteo")),
+      diabetes: patientComorbidities.some(c => c.includes("diabet")),
+    });
+    setRunning(false);
+    setAnimStep(0);
+  }, [activeCase]);
+
   useEffect(() => {
-    if (activeCase) {
-      setSelectedDrugIdx(0);
-      setDose(DRUGS[0].doseMin);
-      setInterval_(DRUGS[0].intervalMin);
-      setGastroprotection(false);
-      const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
-      setComorbidities({
-        has: patientComorbidities.some(c => c.includes("has") || c.includes("hipertens")),
-        drc: patientComorbidities.some(c => c.includes("renal") || c.includes("drc")),
-        ulcer: patientComorbidities.some(c => c.includes("úlcera") || c.includes("péptica")),
-        osteoporosis: patientComorbidities.some(c => c.includes("osteo")),
-        diabetes: patientComorbidities.some(c => c.includes("diabet")),
-      });
-      setRunning(false);
-      setAnimStep(0);
-    }
+    resetToInitial();
   }, [activeCase]);
 
   useEffect(() => {
