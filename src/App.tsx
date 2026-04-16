@@ -154,6 +154,10 @@ import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
 import SimuladorHemograma from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorHemograma";
 import SimuladorAcidoBaseLab from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorAcidoBase";
+import SimuladorHepatopatia from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorHepatopatia";
+import SimuladorRenal from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorRenal";
+import SimuladorInfeccaoLab from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorInfeccaoLab";
+import SimuladorDislipidemia from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorDislipidemia";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -332,6 +336,10 @@ const App = () => (
               <Route path="/sala/simulador/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
               <Route path="/sala/simulador/farmacoterapia-hemograma" element={<SimuladorHemograma />} />
               <Route path="/sala/simulador/farmacoterapia-acido-base" element={<SimuladorAcidoBaseLab />} />
+              <Route path="/sala/simulador/farmacoterapia-hepatopatia" element={<SimuladorHepatopatia />} />
+              <Route path="/sala/simulador/farmacoterapia-renal" element={<SimuladorRenal />} />
+              <Route path="/sala/simulador/farmacoterapia-infeccao-lab" element={<SimuladorInfeccaoLab />} />
+              <Route path="/sala/simulador/farmacoterapia-dislipidemia" element={<SimuladorDislipidemia />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
@@ -452,6 +460,10 @@ const App = () => (
               <Route path="/simuladores/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
               <Route path="/simuladores/farmacoterapia-hemograma" element={<SimuladorHemograma />} />
               <Route path="/simuladores/farmacoterapia-acido-base" element={<SimuladorAcidoBaseLab />} />
+              <Route path="/simuladores/farmacoterapia-hepatopatia" element={<SimuladorHepatopatia />} />
+              <Route path="/simuladores/farmacoterapia-renal" element={<SimuladorRenal />} />
+              <Route path="/simuladores/farmacoterapia-infeccao-lab" element={<SimuladorInfeccaoLab />} />
+              <Route path="/simuladores/farmacoterapia-dislipidemia" element={<SimuladorDislipidemia />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />

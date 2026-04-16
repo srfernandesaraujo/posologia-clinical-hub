@@ -121,6 +121,10 @@ const NATIVE_SIMULATORS = [
   { slug: "genetica-populacoes", name: "Genética de Populações (Hardy-Weinberg)", description: "Frequências alélicas, seleção natural e deriva genética ao longo de gerações.", icon: Dna, category: "Genética" },
   { slug: "farmacoterapia-hemograma", name: "Hemograma e Condutas Hematológicas", description: "Interprete hemograma completo (Hb, VCM, leucócitos, plaquetas) e ajuste a farmacoterapia para anemias, neutropenias e plaquetopenias.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
   { slug: "farmacoterapia-acido-base", name: "Distúrbios Ácido-Base e Eletrólitos", description: "Interprete gasometria e eletrólitos (pH, pCO₂, HCO₃⁻, K⁺, Na⁺, Ca²⁺) e corrija distúrbios com intervenções farmacológicas.", icon: Beaker, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-hepatopatia", name: "Hepatopatias e Ajuste Hepático", description: "Interprete transaminases, bilirrubinas e INR. Calcule Child-Pugh e ajuste doses em insuficiência hepática.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-renal", name: "Função Renal e Ajuste de Dose", description: "Calcule ClCr/TFG, estadie DRC (G1-G5) e ajuste doses de nefrotóxicos como vancomicina, gentamicina e metformina.", icon: Droplets, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-infeccao-lab", name: "Marcadores de Infecção e Antibioticoterapia", description: "Interprete PCR, PCT, lactato e leucograma diferencial para guiar escolha e escalonamento de antimicrobianos.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-dislipidemia", name: "Perfil Lipídico e Risco Cardiovascular", description: "Analise LDL, HDL, triglicerídeos e risco Framingham para definir metas e escolher estatinas ou fibratos.", icon: Heart, category: "Farmacoterapia Laboratorial" },
 ];
 
 // Category icon mapping
