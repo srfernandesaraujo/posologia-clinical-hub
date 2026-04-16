@@ -119,6 +119,8 @@ const NATIVE_SIMULATORS = [
   { slug: "epigenetica", name: "Epigenética e Regulação Gênica", description: "Metilação de DNA, acetilação de histonas e impacto na expressão gênica.", icon: Dna, category: "Genética" },
   { slug: "mutacoes-reparo", name: "Mutações e Reparo de DNA", description: "Simule mutações e identifique mecanismos de reparo (MMR, BER, NER, HR).", icon: Dna, category: "Genética" },
   { slug: "genetica-populacoes", name: "Genética de Populações (Hardy-Weinberg)", description: "Frequências alélicas, seleção natural e deriva genética ao longo de gerações.", icon: Dna, category: "Genética" },
+  { slug: "farmacoterapia-hemograma", name: "Hemograma e Condutas Hematológicas", description: "Interprete hemograma completo (Hb, VCM, leucócitos, plaquetas) e ajuste a farmacoterapia para anemias, neutropenias e plaquetopenias.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-acido-base", name: "Distúrbios Ácido-Base e Eletrólitos", description: "Interprete gasometria e eletrólitos (pH, pCO₂, HCO₃⁻, K⁺, Na⁺, Ca²⁺) e corrija distúrbios com intervenções farmacológicas.", icon: Beaker, category: "Farmacoterapia Laboratorial" },
 ];
 
 // Category icon mapping
@@ -161,6 +163,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Fisioterapia": "210 70% 50%",
   "Nutrição": "140 60% 45%",
   "Genética": "260 70% 55%",
+  "Farmacoterapia Laboratorial": "15 75% 50%",
 };
 
 export default function Simuladores() {

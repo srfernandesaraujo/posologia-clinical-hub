@@ -152,6 +152,8 @@ import SimuladorInfeccoesAntibioticos from "./pages/simuladores/SimuladorInfecco
 import SimuladorTratamentoAsma from "./pages/simuladores/SimuladorTratamentoAsma";
 import SimuladorMAI from "./pages/simuladores/SimuladorMAI";
 import SimuladorCascataPrescricao from "./pages/simuladores/SimuladorCascataPrescricao";
+import SimuladorHemograma from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorHemograma";
+import SimuladorAcidoBaseLab from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorAcidoBase";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -328,6 +330,8 @@ const App = () => (
               <Route path="/sala/simulador/epigenetica" element={<SimuladorEpigenetica />} />
               <Route path="/sala/simulador/mutacoes-reparo" element={<SimuladorMutacoesReparo />} />
               <Route path="/sala/simulador/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
+              <Route path="/sala/simulador/farmacoterapia-hemograma" element={<SimuladorHemograma />} />
+              <Route path="/sala/simulador/farmacoterapia-acido-base" element={<SimuladorAcidoBaseLab />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
@@ -446,6 +450,8 @@ const App = () => (
               <Route path="/simuladores/epigenetica" element={<SimuladorEpigenetica />} />
               <Route path="/simuladores/mutacoes-reparo" element={<SimuladorMutacoesReparo />} />
               <Route path="/simuladores/genetica-populacoes" element={<SimuladorGeneticaPopulacoes />} />
+              <Route path="/simuladores/farmacoterapia-hemograma" element={<SimuladorHemograma />} />
+              <Route path="/simuladores/farmacoterapia-acido-base" element={<SimuladorAcidoBaseLab />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />
