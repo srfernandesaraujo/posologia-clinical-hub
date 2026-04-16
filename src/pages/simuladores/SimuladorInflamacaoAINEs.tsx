@@ -164,21 +164,21 @@ function computeSimulation(
     }
     cp = cp * doseFraction * 100;
 
-    const cpRatio = Math.min(cp / 80, 1);
+    // cpRatio scaled so therapeutic doses (>=30% of doseMax) reach effective range
+    const cpRatio = Math.min(cp / 40, 1.2);
 
     // Analgesic effect: kicks in early at lower concentrations
     const analgesicEffect = effectivePotency * Math.min(cpRatio / analyticThreshold, 1);
     const eva = Math.max(0, initialEVA - initialEVA * analgesicEffect * 0.9);
 
-    // Anti-inflammatory effect: requires higher concentrations
+    // Anti-inflammatory effect: requires higher concentrations but still dose-responsive
     let antiInflamEffect: number;
     if (drug.category === "Corticoide") {
-      // Corticoids are potent anti-inflammatories even at lower doses
       antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
     } else {
-      // AINEs: dose-dependent dissociation
-      const antiInflamRatio = Math.max(0, (cpRatio - analyticThreshold) / (antiInflamThreshold - analyticThreshold));
-      antiInflamEffect = effectivePotency * Math.min(antiInflamRatio, 1);
+      // AINEs: progressive dose-dependent effect (no hard threshold that zeroes out lower doses)
+      const antiInflamRatio = Math.min(cpRatio / antiInflamThreshold, 1);
+      antiInflamEffect = effectivePotency * antiInflamRatio;
     }
     const inflammation = Math.max(0, 100 - antiInflamEffect * 100 * 0.85);
 
@@ -278,23 +278,26 @@ export default function SimuladorInflamacaoAINEs() {
     }
   }, [virtualRoomCase]);
 
+  const resetToInitial = useCallback(() => {
+    if (!activeCase) return;
+    setSelectedDrugIdx(0);
+    setDose(DRUGS[0].doseMin);
+    setInterval_(DRUGS[0].intervalMin);
+    setGastroprotection(false);
+    const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
+    setComorbidities({
+      has: patientComorbidities.some(c => c.includes("has") || c.includes("hipertens")),
+      drc: patientComorbidities.some(c => c.includes("renal") || c.includes("drc")),
+      ulcer: patientComorbidities.some(c => c.includes("úlcera") || c.includes("péptica")),
+      osteoporosis: patientComorbidities.some(c => c.includes("osteo")),
+      diabetes: patientComorbidities.some(c => c.includes("diabet")),
+    });
+    setRunning(false);
+    setAnimStep(0);
+  }, [activeCase]);
+
   useEffect(() => {
-    if (activeCase) {
-      setSelectedDrugIdx(0);
-      setDose(DRUGS[0].doseMin);
-      setInterval_(DRUGS[0].intervalMin);
-      setGastroprotection(false);
-      const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
-      setComorbidities({
-        has: patientComorbidities.some(c => c.includes("has") || c.includes("hipertens")),
-        drc: patientComorbidities.some(c => c.includes("renal") || c.includes("drc")),
-        ulcer: patientComorbidities.some(c => c.includes("úlcera") || c.includes("péptica")),
-        osteoporosis: patientComorbidities.some(c => c.includes("osteo")),
-        diabetes: patientComorbidities.some(c => c.includes("diabet")),
-      });
-      setRunning(false);
-      setAnimStep(0);
-    }
+    resetToInitial();
   }, [activeCase]);
 
   useEffect(() => {
@@ -584,6 +587,7 @@ export default function SimuladorInflamacaoAINEs() {
       <SimulatorChallengeMode
         challengeSet={getInflamacaoAINEsChallenges(activeCaseIndex)}
         simulatorState={{ drug: drug.name, drugClass: drug.class, drugCategory: drug.category, dose, interval, gastroprotection, comorbidities, condition: activeCase.condition, finalEVA: simulation.finalEVA, vitals: simulation.vitals, cox1: drug.cox1Selectivity, pKa: drug.pKa, halfLife: drug.halfLife, sideEffectData: simulation.sideEffectData, inflammation: simulation.evaData[simulation.evaData.length - 1]?.inflammation ?? 100 }}
+        onResetForChallenge={resetToInitial}
         onComplete={() => setChallengeCompleted(true)}
       />
 
