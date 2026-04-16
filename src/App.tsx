@@ -158,6 +158,8 @@ import SimuladorHepatopatia from "./pages/simuladores/farmacoterapia-laboratoria
 import SimuladorRenal from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorRenal";
 import SimuladorInfeccaoLab from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorInfeccaoLab";
 import SimuladorDislipidemia from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorDislipidemia";
+import SimuladorGlicemia from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorGlicemia";
+import SimuladorCoagulacao from "./pages/simuladores/farmacoterapia-laboratorial/SimuladorCoagulacao";
 import MinhaConta from "./pages/MinhaConta";
 import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
@@ -340,6 +342,8 @@ const App = () => (
               <Route path="/sala/simulador/farmacoterapia-renal" element={<SimuladorRenal />} />
               <Route path="/sala/simulador/farmacoterapia-infeccao-lab" element={<SimuladorInfeccaoLab />} />
               <Route path="/sala/simulador/farmacoterapia-dislipidemia" element={<SimuladorDislipidemia />} />
+              <Route path="/sala/simulador/farmacoterapia-glicemia" element={<SimuladorGlicemia />} />
+              <Route path="/sala/simulador/farmacoterapia-coagulacao" element={<SimuladorCoagulacao />} />
               {/* Lab routes for virtual rooms */}
               <Route path="/sala/laboratorio/farmacos" element={<BancadaFarmacos />} />
               <Route path="/sala/laboratorio/microbiologia" element={<BancadaMicrobiologia />} />
@@ -464,6 +468,8 @@ const App = () => (
               <Route path="/simuladores/farmacoterapia-renal" element={<SimuladorRenal />} />
               <Route path="/simuladores/farmacoterapia-infeccao-lab" element={<SimuladorInfeccaoLab />} />
               <Route path="/simuladores/farmacoterapia-dislipidemia" element={<SimuladorDislipidemia />} />
+              <Route path="/simuladores/farmacoterapia-glicemia" element={<SimuladorGlicemia />} />
+              <Route path="/simuladores/farmacoterapia-coagulacao" element={<SimuladorCoagulacao />} />
               <Route path="/calculadoras/risco-cardiovascular" element={<RiscoCardiovascular />} />
               <Route path="/calculadoras/desmame-corticoide" element={<DesmaCorticoide />} />
               <Route path="/calculadoras/equivalencia-opioides" element={<EquivalenciaOpioides />} />

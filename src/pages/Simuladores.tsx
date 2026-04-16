@@ -125,6 +125,8 @@ const NATIVE_SIMULATORS = [
   { slug: "farmacoterapia-renal", name: "Função Renal e Ajuste de Dose", description: "Calcule ClCr/TFG, estadie DRC (G1-G5) e ajuste doses de nefrotóxicos como vancomicina, gentamicina e metformina.", icon: Droplets, category: "Farmacoterapia Laboratorial" },
   { slug: "farmacoterapia-infeccao-lab", name: "Marcadores de Infecção e Antibioticoterapia", description: "Interprete PCR, PCT, lactato e leucograma diferencial para guiar escolha e escalonamento de antimicrobianos.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
   { slug: "farmacoterapia-dislipidemia", name: "Perfil Lipídico e Risco Cardiovascular", description: "Analise LDL, HDL, triglicerídeos e risco Framingham para definir metas e escolher estatinas ou fibratos.", icon: Heart, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-glicemia", name: "Glicemia, Diabetes e Insulinoterapia", description: "Interprete glicemia, HbA1c e perfil insulínico para ajuste de antidiabéticos e insulina.", icon: Droplets, category: "Farmacoterapia Laboratorial" },
+  { slug: "farmacoterapia-coagulacao", name: "Coagulação e Anticoagulantes", description: "Interprete INR, TTPa, anti-Xa e coagulograma para manejo de anticoagulação e reversão.", icon: TestTube, category: "Farmacoterapia Laboratorial" },
 ];
 
 // Category icon mapping
