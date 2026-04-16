@@ -587,6 +587,7 @@ export default function SimuladorInflamacaoAINEs() {
       <SimulatorChallengeMode
         challengeSet={getInflamacaoAINEsChallenges(activeCaseIndex)}
         simulatorState={{ drug: drug.name, drugClass: drug.class, drugCategory: drug.category, dose, interval, gastroprotection, comorbidities, condition: activeCase.condition, finalEVA: simulation.finalEVA, vitals: simulation.vitals, cox1: drug.cox1Selectivity, pKa: drug.pKa, halfLife: drug.halfLife, sideEffectData: simulation.sideEffectData, inflammation: simulation.evaData[simulation.evaData.length - 1]?.inflammation ?? 100 }}
+        onResetForChallenge={resetToInitial}
         onComplete={() => setChallengeCompleted(true)}
       />
 
