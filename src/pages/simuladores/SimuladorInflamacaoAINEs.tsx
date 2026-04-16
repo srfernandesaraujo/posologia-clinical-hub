@@ -165,7 +165,11 @@ function computeSimulation(
     cp = cp * doseFraction * 100;
 
     // cpRatio scaled so therapeutic doses (>=30% of doseMax) reach effective range
-    const cpRatio = Math.min(cp / 40, 1.2);
+    // For topical drugs, use local tissue effect (independent of systemic Cp)
+    const isTopical = drug.category === "Tópico";
+    const cpRatio = isTopical
+      ? Math.min(doseFraction * 1.2, 1.2) // local effect proportional to applications
+      : Math.min(cp / 40, 1.2);
 
     // Analgesic effect: kicks in early at lower concentrations
     const analgesicEffect = effectivePotency * Math.min(cpRatio / analyticThreshold, 1);
@@ -174,6 +178,9 @@ function computeSimulation(
     // Anti-inflammatory effect: requires higher concentrations but still dose-responsive
     let antiInflamEffect: number;
     if (drug.category === "Corticoide") {
+      antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
+    } else if (isTopical) {
+      // Tópico: efeito local progressivo, sem threshold sistêmico
       antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
     } else {
       // AINEs: progressive dose-dependent effect (no hard threshold that zeroes out lower doses)
