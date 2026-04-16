@@ -1,90 +1,138 @@
 
 
-## Plano: Reformulação dos Desafios — Simulador Tratamento da Asma
+## Plano: Nova Categoria — Farmacoterapia Laboratorial (8 Simuladores × 5 Casos × 6 Desafios)
 
 ### Resumo
 
-Criar 30 desafios (5 casos × 6 cada) seguindo o padrão do Manejo da Dor. Cada desafio exige ajuste de parâmetros no simulador + interpretação de gráficos antes de responder. Também corrigir a engine para suportar os cenários pedagógicos.
+Criar 8 novos simuladores na categoria "Farmacoterapia Laboratorial" onde o aluno interpreta resultados laboratoriais (hemograma, gasometria, bioquímica, coagulograma, etc.) e faz ajustes farmacoterapêuticos. Cada simulador terá 5 casos clínicos nativos com 6 desafios MCQ interativos no padrão do Manejo da Dor. O diferencial visual será a presença de **painéis laboratoriais interativos** (valores editáveis, gauges coloridos, gráficos de tendência) que o aluno manipula antes de responder.
 
 ---
 
-### Problemas preventivos (lições do Manejo da Dor)
+### Arquitetura Visual (altamente visual)
+
+Cada simulador terá layout consistente:
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│  Painel do Paciente (nome, idade, comorbidades, cenário) │
+├───────────────┬──────────────────────────────────────────┤
+│  CONTROLES    │  PAINEL LABORATORIAL PRINCIPAL           │
+│  - Fármaco    │  ┌────────┐ ┌────────┐ ┌────────┐       │
+│  - Dose       │  │ Hb 7.2 │ │ Leuc   │ │ Plaq   │       │
+│  - Intervalo  │  │ ▼ BAIXO│ │12.500  │ │ 45k    │       │
+│  - Via        │  └────────┘ └────────┘ └────────┘       │
+│  - Toggles    │  Gauge visual com cores (verde/amarelo/  │
+│    DRC, HAS,  │  vermelho) + valores de referência       │
+│    Gestante   │                                          │
+│               │  Gráfico de Tendência (72h/7d/30d)       │
+│               │  → valores lab mudam com a terapia       │
+├───────────────┴──────────────────────────────────────────┤
+│  Sinais Vitais (FC, PA, FR, SpO2, Temp)                  │
+├──────────────────────────────────────────────────────────┤
+│  Gráfico Cp × Tempo   │  Barras Risco de EA              │
+├──────────────────────────────────────────────────────────┤
+│  Desafios (SimulatorChallengeMode)                       │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Elementos visuais especiais por simulador:**
+- **Hemograma**: Gauges para Hb, VCM, HCM, Leucócitos (com diferencial em barras), Plaquetas
+- **Ácido-Base**: Gasometria arterial interativa (pH, pCO2, HCO3, BE, AG) + nomograma visual
+- **Hepatopatias**: Hepatograma com ALT/AST/FA/GGT/Bilirr/Albumina/TP + score Child-Pugh calculado
+- **Disfunção Renal**: Calculadora ClCr/TFG embutida + classificação DRC colorida (G1-G5)
+- **Infecção**: Leucograma diferencial em barras empilhadas + PCR/PCT em gauge + termômetro
+- **Dislipidemia**: Lipidograma + score Framingham calculado + metas LDL coloridas
+- **Glicemia/HbA1c**: Gráfico glicêmico 24h + HbA1c gauge com alvo personalizado
+- **Coagulação**: Coagulograma (TP/INR/TTPa) + cascata visual simplificada com pontos de ação dos fármacos
+
+---
+
+### Os 8 Simuladores
+
+#### 1. Hemograma e Condutas Hematológicas
+**Slug**: `farmacoterapia-hemograma`
+**Engine**: Painel com Hb, Ht, VCM, HCM, CHCM, RDW, Leucócitos totais (neutro/linfo/mono/eosino/baso), Plaquetas. Fármacos: Sulfato Ferroso, Ácido Fólico, Vitamina B12, Eritropoetina, Filgrastim, Ácido Tranexâmico, Transfusão (CH/CP).
+**5 Casos**: (1) Anemia microcítica ferropriva, (2) Anemia megaloblástica B12, (3) Neutropenia febril pós-QT, (4) Plaquetopenia + sangramento, (5) Leucocitose reacional vs leucemia
+
+#### 2. Distúrbios Ácido-Base e Eletrólitos
+**Slug**: `farmacoterapia-acido-base`
+**Engine**: Gasometria (pH, pCO2, pO2, HCO3, BE, AG, lactato) + eletrólitos (Na, K, Ca, Mg, Cl). Fármacos: NaHCO3, KCl, NaCl 0.9%/3%, Gluconato Ca, MgSO4, Furosemida, Poliestirenossulfonato, Insulina+Glicose.
+**5 Casos**: (1) Acidose metabólica AG alto (cetoacidose), (2) Alcalose metabólica hipoclorêmica (vômitos), (3) Hipocalemia + toxicidade digitálica, (4) Hipercalemia + arritmia, (5) Hiponatremia dilucional (SIADH)
+
+#### 3. Hepatopatias e Ajuste Terapêutico
+**Slug**: `farmacoterapia-hepatopatia`
+**Engine**: ALT, AST, FA, GGT, Bilirrubinas (D/I/T), Albumina, TP/INR + Child-Pugh calculado. Fármacos: Paracetamol, NAC, Estatinas, Azólicos, Isoniazida, Amiodarona, Metformina, Lactulose, Rifaximina.
+**5 Casos**: (1) Hepatotoxicidade por paracetamol (dose-dependente), (2) Hepatite medicamentosa por isoniazida, (3) Cirrose Child-Pugh C + ajuste de doses, (4) Interação azólico + estatina, (5) Encefalopatia hepática
+
+#### 4. Disfunção Renal e Ajuste de Dose
+**Slug**: `farmacoterapia-renal`
+**Engine**: Creatinina, Ureia, ClCr (Cockcroft-Gault calculado), TFG (CKD-EPI), K, Na + classificação DRC (G1-G5). Fármacos: Vancomicina, Gentamicina, Metformina, Digoxina, AINEs, Alopurinol, Gabapentina, Lítio.
+**5 Casos**: (1) Vancomicina em DRC G3 — ajuste por TFG, (2) Metformina em DRC G4 — contraindicação, (3) Gentamicina — nefrotoxicidade progressiva, (4) AINE em idoso com DRC G2→G4, (5) Digoxina em DRC — acúmulo e toxicidade
+
+#### 5. Sinais Laboratoriais de Infecção
+**Slug**: `farmacoterapia-infeccao-lab`
+**Engine**: Leucograma diferencial (barras empilhadas), PCR, PCT, Lactato, Hemoculturas, Temp. Fármacos: Amoxicilina, Ceftriaxona, Piperacilina-Tazobactam, Vancomicina, Meropenem, Oseltamivir.
+**5 Casos**: (1) Pneumonia comunitária — leucocitose + PCR alta, (2) Sepse — PCT >10 + lactato >4, (3) Infecção viral vs bacteriana — PCR baixa, linfocitose, (4) Neutropenia febril — antibiótico empírico imediato, (5) Desescalonamento guiado por cultura
+
+#### 6. Dislipidemia e Risco Cardiovascular
+**Slug**: `farmacoterapia-dislipidemia`
+**Engine**: CT, HDL, LDL (calculado Friedewald), TG, Apo-B, CPK + Score de Framingham calculado + meta LDL dinâmica. Fármacos: Atorvastatina, Rosuvastatina, Ezetimiba, Fenofibrato, Evolocumabe (iPCSK9), Ômega-3.
+**5 Casos**: (1) Risco alto — LDL 180 + meta <70, (2) Intolerância à estatina (mialgia + CPK), (3) Hipertrigliceridemia isolada >500 (risco pancreatite), (4) Risco muito alto (pós-IAM) — terapia combinada, (5) Dislipidemia familiar — LDL refratário
+
+#### 7. Glicemia e HbA1c
+**Slug**: `farmacoterapia-glicemia`
+**Engine**: Glicemia jejum, pós-prandial, HbA1c (gauge com alvo), Perfil glicêmico 24h (gráfico). Fármacos: Metformina, Glibenclamida, Empagliflozina, Liraglutida, Insulina NPH, Insulina Lispro, Pioglitazona.
+**5 Casos**: (1) DM2 recém-diagnosticado — metformina 1ª linha, (2) HbA1c >9% — terapia combinada, (3) Hipoglicemia por sulfonilureia em idoso, (4) DM2 + DRC — contraindicação metformina + opções, (5) Insulinização — transição de oral para basal-bolus
+
+#### 8. Distúrbios da Coagulação
+**Slug**: `farmacoterapia-coagulacao`
+**Engine**: TP, INR, TTPa, Plaquetas, Fibrinogênio, D-dímero + cascata visual simplificada. Fármacos: Varfarina, Heparina NF, Enoxaparina, Apixabana, Rivaroxabana, Dabigatrana, Vitamina K, Protamina, Idarucizumabe.
+**5 Casos**: (1) INR supra-terapêutico com varfarina — ajuste vs reversão, (2) TEP — anticoagulação inicial + manutenção, (3) FA + DOAC — escolha e monitoramento, (4) Pré-operatório — suspensão de anticoagulante + bridge, (5) CIVD — interpretação + suporte
+
+---
+
+### Problemas preventivos (lições dos simuladores anteriores)
 
 | Problema | Correção |
 |----------|----------|
-| Sem `activeCaseIndex` — desafios não variam por caso | Adicionar tracking e `getTratamentoAsmaChallenges(caseIndex)` |
-| SABA isolado não degrada VEF1 ao longo das semanas (desafio 1) | Se só SABA sem CI: VEF1 cai ~1%/semana (inflamação progressiva) e crises sobem |
-| LABA monoterapia não mostra piora tardia (desafio 3) | Se LABA sem CI: melhora semanas 1-4, depois crises dobram semanas 6-12 (black box) |
-| Dispositivo não afeta barras de EA local (desafio 2) | pMDI sem espaçador: multiplicar candidíase/disfonia ×2.5; com espaçador ×0.4 |
-| DRGE não afeta sintomas noturnos visivelmente (desafio 5) | DRGE: sintomasNoturnos += 3; crisisReduction *= 0.6 (não apenas 0.85) |
-| Taquifilaxia/abuso de SABA não modelado (desafio 6) | Se SABA dose ≥600mcg: vef1Improvement *= 0.3 (dessensibilização), taquicardia/tremor ×2 |
-| Prednisona oral vs CI: diferença de EA insuficiente (desafio 4) | Prednisona oral: supressaoAdrenal e osteoporose muito mais altas que CI |
-| Slider step inadequado para doses pequenas (ex: Tiotrópio 2.5-5) | Step adaptativo |
+| Slider step grande demais | Step adaptativo por faixa de dose |
+| Valores laboratoriais não mudam com terapia | Engine calcula valores lab pós-terapia (ex: Hb sobe 1g/dL/semana com ferro) |
+| Gráfico monotônico sem variação | Tendência laboratorial dinâmica: melhora/piora conforme fármaco+dose |
+| Desafio pede funcionalidade inexistente | Cada desafio usa APENAS controles presentes no simulador |
 | Feedback com termos internos | Sem variáveis internas nos textos |
-| simulatorState incompleto para challenges | Passar specialGroups, sideEffectData, device, crisisData, lungData |
+| Sem activeCaseIndex | Tracking desde o início em todos os 8 simuladores |
+| simulatorState incompleto para challenges | Passar labValues, selectedDrug, dose, specialGroups, sideEffectData |
 
 ---
 
-### Mudanças na Engine (SimuladorTratamentoAsma.tsx)
+### Arquivos a criar/modificar
 
-1. **SABA isolado degrada**: se nenhum CI presente, VEF1 cai ~1%/semana e crises sobem progressivamente
-2. **LABA monoterapia piora tardia**: sem CI, melhora semanas 1-4, crises disparam semana 6+
-3. **Dispositivo afeta EA locais**: pMDI sem espaçador → candidíase/disfonia ×2.5; com espaçador → ×0.4
-4. **DRGE mais impactante**: crisisReduction *= 0.6, sintomasNoturnos += 3
-5. **Taquifilaxia SABA**: dose ≥600mcg → eficácia broncodilatadora cai, EA cardíacos sobem
-6. **activeCaseIndex tracking** + simulatorState completo
-7. **Slider step adaptativo**
-
----
-
-### Estrutura dos 30 Desafios
-
-**Caso 1: Pedro, 22a — Asma Intermitente (Step 1)**
-1. Fim do SABA isolado: SABA só → VEF1 cai e crises sobem; trocar para MART → estabiliza
-2. Dispositivo e EA local: pMDI sem espaçador → candidíase/disfonia altas; com espaçador → caem
-3. LABA monoterapia (black box): LABA sem CI → melhora inicial, piora tardia perigosa
-4. Iatrogenia: CI alta dose vs Prednisona oral → barras supressão adrenal/osteoporose disparam
-5. DRGE e falha aparente: terapia otimizada + DRGE → sintomas noturnos persistem
-6. Taquifilaxia SABA: dose abusiva → VEF1 não melhora, taquicardia/tremor sobem
-
-**Caso 2: Marina, 35a — Persistente Moderada (Step 3)**
-1. Escalonamento Step 2→3: CI dose baixa insuficiente → adicionar LABA → VEF1 sobe e crises caem
-2. MART vs CI+SABA: formoterol como resgate → exacerbações menores que SABA isolado
-3. Verificação pré-escalonamento: conceitual — técnica, adesão, gatilhos antes de subir step
-4. Montelucaste add-on: LTRA adiciona pouco VEF1 mas ajuda em asma por exercício
-5. Obesidade: ativar obesidade → eficácia reduzida (VEF1 melhora menos, crises persistem)
-6. Dose-resposta CI: budesonida 200→400→800 → curva plateau de eficácia com EA crescentes
-
-**Caso 3: Roberto, 48a — Grave Step 5**
-1. Fenotipagem: IgE alta + eosinófilos → omalizumabe; por que não mepolizumabe?
-2. Tiotrópio add-on: LAMA adiciona VEF1 modesto no Step 4-5
-3. Desmame de prednisona: reduzir dose → barras supressão adrenal e osteoporose caem
-4. CI dose alta vs oral: comparar barras EA — via inalatória muito menos EA sistêmico
-5. Biológico reduz exacerbações: omalizumabe → crises caem significativamente
-6. Idoso: ativar idoso → osteoporose ×2 e supressão adrenal ×1.5
-
-**Caso 4: Amanda, 30a — Gestante Step 2**
-1. Budesonida preferida: selecionar budesonida → warning ✅; trocar para mometasona → sem preferência
-2. Segurança: selecionar prednisona oral na gestante → warning ⚠️; manter CI inalatório → seguro
-3. SABA resgate na gestação: salbutamol é seguro; comparar barras EA
-4. Montelucaste na gestação: pode manter se já em uso
-5. Risco de não tratar: sem CI → VEF1 cai → risco fetal maior que risco do CI
-6. Formoterol + budesonida: LABA seguro na gestação, MART viável
-
-**Caso 5: Lucas, 16a — Crise Aguda**
-1. Classificação da crise: PFE 35%, SpO2 89% → grave; quais parâmetros definem gravidade?
-2. SABA nebulizado contínuo: dose alta de salbutamol → VEF1 sobe rapidamente na crise
-3. Corticoide sistêmico precoce: prednisona na 1ª hora → reduz internação 25%
-4. Contraindicação de sedação: conceitual — NUNCA sedar na crise asmática
-5. MgSO4 EV: quando indicar (sem resposta ao SABA+ipratrópio+corticoide)
-6. Alta da crise: conceitual — CI dose alta + plano de ação escrito
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorHemograma.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorAcidoBase.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorHepatopatia.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorRenal.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorInfeccaoLab.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorDislipidemia.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorGlicemia.tsx` | Criar |
+| `src/pages/simuladores/farmacoterapia-laboratorial/SimuladorCoagulacao.tsx` | Criar |
+| `src/data/simulatorChallenges.ts` | Adicionar 8 funções `get[X]Challenges(caseIndex)` (240 desafios total) |
+| `src/pages/Simuladores.tsx` | Adicionar 8 entradas na lista NATIVE_SIMULATORS com categoria "Farmacoterapia Laboratorial" |
+| `src/App.tsx` | Adicionar 8 rotas + imports |
 
 ---
 
-### Arquivos modificados
+### Implementação incremental sugerida
 
-| Arquivo | Mudanças |
-|---------|----------|
-| `src/data/simulatorChallenges.ts` | Reescrever `getTratamentoAsmaChallenges(caseIndex?)` com 5 caseSets × 6 desafios MCQ |
-| `src/pages/simuladores/SimuladorTratamentoAsma.tsx` | (1) SABA degrada sem CI, (2) LABA monoterapia piora tardia, (3) Dispositivo afeta EA locais, (4) DRGE mais impactante, (5) Taquifilaxia SABA, (6) activeCaseIndex tracking, (7) simulatorState completo, (8) Slider step adaptativo |
+Dado o volume (8 simuladores × ~600 linhas cada + 240 desafios), implementar em 4 etapas:
+
+1. **Etapa 1**: Simuladores 1 e 2 (Hemograma + Ácido-Base) + desafios + rotas
+2. **Etapa 2**: Simuladores 3 e 4 (Hepatopatia + Renal) + desafios
+3. **Etapa 3**: Simuladores 5 e 6 (Infecção Lab + Dislipidemia) + desafios
+4. **Etapa 4**: Simuladores 7 e 8 (Glicemia + Coagulação) + desafios
+
+Cada etapa entrega simuladores funcionais e testáveis.
+
+**Deseja aprovar a Etapa 1 (Hemograma + Ácido-Base) para iniciar a implementação?**
 
