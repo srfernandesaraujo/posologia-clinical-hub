@@ -164,21 +164,21 @@ function computeSimulation(
     }
     cp = cp * doseFraction * 100;
 
-    const cpRatio = Math.min(cp / 80, 1);
+    // cpRatio scaled so therapeutic doses (>=30% of doseMax) reach effective range
+    const cpRatio = Math.min(cp / 40, 1.2);
 
     // Analgesic effect: kicks in early at lower concentrations
     const analgesicEffect = effectivePotency * Math.min(cpRatio / analyticThreshold, 1);
     const eva = Math.max(0, initialEVA - initialEVA * analgesicEffect * 0.9);
 
-    // Anti-inflammatory effect: requires higher concentrations
+    // Anti-inflammatory effect: requires higher concentrations but still dose-responsive
     let antiInflamEffect: number;
     if (drug.category === "Corticoide") {
-      // Corticoids are potent anti-inflammatories even at lower doses
       antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
     } else {
-      // AINEs: dose-dependent dissociation
-      const antiInflamRatio = Math.max(0, (cpRatio - analyticThreshold) / (antiInflamThreshold - analyticThreshold));
-      antiInflamEffect = effectivePotency * Math.min(antiInflamRatio, 1);
+      // AINEs: progressive dose-dependent effect (no hard threshold that zeroes out lower doses)
+      const antiInflamRatio = Math.min(cpRatio / antiInflamThreshold, 1);
+      antiInflamEffect = effectivePotency * antiInflamRatio;
     }
     const inflammation = Math.max(0, 100 - antiInflamEffect * 100 * 0.85);
 
