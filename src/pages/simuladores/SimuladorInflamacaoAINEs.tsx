@@ -130,16 +130,18 @@ const BUILT_IN_CASES: InflamCase[] = [
 
 // ─── Simulation Engine ──────────────────────────────────────────────────────
 function computeSimulation(
-  drug: AntiInflamDrug, dose: number, interval: number,
+  drug: AntiInflamDrug, dose: number, interval: number, route: string,
   gastroprotection: boolean, comorbidities: { has: boolean; drc: boolean; ulcer: boolean; osteoporosis: boolean; diabetes: boolean },
   condition: string, initialEVA: number
 ) {
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
+  const isIntraArticular = route === "Intra-articular";
 
-  // Anti-inflammatory effectiveness depends on condition
-  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.5
-    : condition === "artrite-reumatoide" && drug.category === "Corticoide" ? 1.0
+  // Anti-inflammatory effectiveness depends on condition.
+  // In RA, NSAIDs are markedly less effective (autoimmune cascade beyond COX) and corticosteroids are amplified.
+  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.25
+    : condition === "artrite-reumatoide" && drug.category === "Corticoide" ? 1.4
     : condition === "desmame-corticoide" ? 0.6
     : 1.0;
 
