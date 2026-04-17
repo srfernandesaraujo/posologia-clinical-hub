@@ -261,6 +261,7 @@ export default function SimuladorInflamacaoAINEs() {
   const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
   const [dose, setDose] = useState(200);
   const [interval, setInterval_] = useState(8);
+  const [route, setRoute] = useState<string>("VO");
   const [gastroprotection, setGastroprotection] = useState(false);
   const [comorbidities, setComorbidities] = useState({ has: false, drc: false, ulcer: false, osteoporosis: false, diabetes: false });
   const [running, setRunning] = useState(false);
