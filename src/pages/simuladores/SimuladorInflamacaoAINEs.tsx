@@ -244,9 +244,17 @@ function computeSimulation(
   const boneDoseFactor = boneTimeDependentFloor + (1 - boneTimeDependentFloor) * doseRatio;
   let boneRisk = se.bone * boneDoseFactor * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
-  let endoRisk = se.endocrine * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
+  // Endocrine (HPA suppression) and Immune effects are predominantly TIME-dependent for corticoids:
+  // after chronic use the HPA axis stays suppressed even when the dose is lowered (residual atrophy).
+  // A high floor (~70%) ensures that reducing Prednisona 5mg → 2,5mg keeps Endócrino/Imune bars
+  // elevated — this is the visual hallmark of corticoid WITHDRAWAL syndrome (vs disease relapse).
+  const endoTimeDependentFloor = drug.category === "Corticoide" ? 0.7 : 0;
+  const endoDoseFactor = endoTimeDependentFloor + (1 - endoTimeDependentFloor) * doseRatio;
+  let endoRisk = se.endocrine * endoDoseFactor * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.diabetes) endoRisk *= 1.5;
-  const immuneRisk = se.immune * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
+  const immuneTimeDependentFloor = drug.category === "Corticoide" ? 0.65 : 0;
+  const immuneDoseFactor = immuneTimeDependentFloor + (1 - immuneTimeDependentFloor) * doseRatio;
+  const immuneRisk = se.immune * immuneDoseFactor * 100 * corticoidExposureMultiplier * routeSystemicFactor;
 
   const sideEffectData = [
     { name: "GI", risco: Math.round(Math.min(giRisk, 100)) },

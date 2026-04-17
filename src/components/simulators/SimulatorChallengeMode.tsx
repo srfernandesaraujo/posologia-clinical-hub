@@ -26,6 +26,10 @@ export interface AdjustChallenge {
   validator: (currentState: Record<string, any>) => { correct: boolean; feedback: string };
   explanation: string;
   reference?: string;
+  // Optional MCQ that the student must answer AFTER configuring the simulator.
+  // When present, correctness requires BOTH the validator to pass AND the right option.
+  options?: string[];
+  correctIndex?: number;
 }
 
 export type Challenge = MCQChallenge | AdjustChallenge;
@@ -143,7 +147,7 @@ export default function SimulatorChallengeMode({
     });
   }, [answered, current, currentIndex]);
 
-  const handleAdjustValidate = useCallback(() => {
+  const handleAdjustValidate = useCallback((chosenOption?: number) => {
     if (answered) return;
     const challenge = current as AdjustChallenge;
     let result: { correct: boolean; feedback: string };
@@ -160,26 +164,48 @@ export default function SimulatorChallengeMode({
         ? { correct: true, feedback: "Parâmetros dentro da faixa esperada!" }
         : { correct: false, feedback: "Ajuste os parâmetros para ficarem dentro das faixas indicadas." };
     }
-    
+
+    // Hybrid mode: if challenge has options, require BOTH adjust + correct option
+    const hasOptions = Array.isArray(challenge.options) && challenge.options.length > 0;
+    let optionCorrect = true;
+    let optionFeedback = "";
+    if (hasOptions) {
+      if (chosenOption === undefined || chosenOption === null) return;
+      setSelectedOption(chosenOption);
+      optionCorrect = chosenOption === challenge.correctIndex;
+      if (!optionCorrect) {
+        optionFeedback = `Alternativa incorreta. Resposta correta: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}) ${challenge.options![challenge.correctIndex ?? 0]}.`;
+      }
+    }
+
+    const finalCorrect = result.correct && optionCorrect;
     setAnswered(true);
     setAdjustValidated(true);
-    setIsCorrect(result.correct);
-    setFeedback(result.correct ? challenge.explanation : result.feedback + "\n\n" + challenge.explanation);
-    if (result.correct) setScore((s) => s + 1);
+    setIsCorrect(finalCorrect);
+    const composedFeedback = finalCorrect
+      ? challenge.explanation
+      : [result.correct ? "" : result.feedback, optionFeedback, challenge.explanation].filter(Boolean).join("\n\n");
+    setFeedback(composedFeedback);
+    if (finalCorrect) setScore((s) => s + 1);
 
-    // Track per-question result
     const paramsSummary = Object.entries(challenge.targetParams || {}).map(([key, spec]) => {
       const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
       return `${spec.label}: ${val ?? "?"} (faixa: ${spec.min}–${spec.max})`;
     }).join("; ");
+    const userAnswerStr = hasOptions
+      ? `${paramsSummary} | Alternativa: ${String.fromCharCode(65 + (chosenOption ?? 0))}`
+      : paramsSummary;
+    const correctAnswerStr = hasOptions
+      ? `${Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ")} | Alternativa: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}`
+      : Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ");
 
     questionResultsRef.current.push({
       index: currentIndex,
       type: "adjust",
       question: challenge.question,
-      userAnswer: paramsSummary,
-      correctAnswer: Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; "),
-      correct: result.correct,
+      userAnswer: userAnswerStr,
+      correctAnswer: correctAnswerStr,
+      correct: finalCorrect,
       explanation: challenge.explanation,
       reference: challenge.reference,
     });
@@ -363,25 +389,54 @@ export default function SimulatorChallengeMode({
         )}
 
         {/* Adjust */}
-        {current.type === "adjust" && !answered && (
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-primary/30 text-sm">
-              <p className="text-primary font-medium mb-1">📐 Instruções:</p>
-              <p className="text-muted-foreground">
-                Ajuste os parâmetros do simulador acima para responder a este desafio. 
-                Quando estiver pronto, clique em "Verificar Resposta".
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {Object.entries((current as AdjustChallenge).targetParams).map(([key, spec]) => (
-                  <Badge key={key} variant="outline" className="text-xs">{spec.label}: {spec.min}–{spec.max}</Badge>
-                ))}
+        {current.type === "adjust" && !answered && (() => {
+          const adj = current as AdjustChallenge;
+          const hasOptions = Array.isArray(adj.options) && adj.options.length > 0;
+          return (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-primary/30 text-sm">
+                <p className="text-primary font-medium mb-1">📐 Instruções:</p>
+                <p className="text-muted-foreground">
+                  Ajuste os parâmetros do simulador acima {hasOptions ? "e escolha a alternativa que justifica a observação" : "para responder a este desafio"}.
+                  {hasOptions ? "" : " Quando estiver pronto, clique em \"Verificar Resposta\"."}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {Object.entries(adj.targetParams).map(([key, spec]) => (
+                    <Badge key={key} variant="outline" className="text-xs">{spec.label}: {spec.min}–{spec.max}</Badge>
+                  ))}
+                </div>
               </div>
+
+              {hasOptions && (
+                <div className="space-y-2">
+                  {adj.options!.map((opt, i) => {
+                    const optClass = selectedOption === i
+                      ? "border-primary bg-primary/10"
+                      : "border hover:border-primary/50 hover:bg-primary/5 cursor-pointer";
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedOption(i)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                      >
+                        <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <Button
+                onClick={() => handleAdjustValidate(hasOptions ? (selectedOption ?? undefined) : undefined)}
+                disabled={hasOptions && selectedOption === null}
+                className="w-full gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
+              </Button>
             </div>
-            <Button onClick={handleAdjustValidate} className="w-full gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
-            </Button>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Feedback */}
         {answered && (
