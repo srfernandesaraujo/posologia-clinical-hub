@@ -237,7 +237,12 @@ function computeSimulation(
   if (comorbidities.has) cvRisk *= 1.6;
   let renalRisk = se.renal * doseRatio * 100 * routeSystemicFactor;
   if (comorbidities.drc) renalRisk *= 2.5;
-  let boneRisk = se.bone * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
+  // Bone risk (osteoporosis) is predominantly TIME-dependent for corticoids: a large baseline
+  // floor accumulates with chronic use and only partially scales with dose. This ensures even
+  // low doses (e.g. Prednisona 5mg) maintain elevated bone risk, while higher doses add modestly.
+  const boneTimeDependentFloor = drug.category === "Corticoide" ? 0.65 : 0;
+  const boneDoseFactor = boneTimeDependentFloor + (1 - boneTimeDependentFloor) * doseRatio;
+  let boneRisk = se.bone * boneDoseFactor * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
   let endoRisk = se.endocrine * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.diabetes) endoRisk *= 1.5;
@@ -254,11 +259,24 @@ function computeSimulation(
 
   // Vital signs — PA more responsive with HAS + AINE
   const lastEVA = evaData[evaData.length - 1]?.eva ?? initialEVA;
-  const paAineBoost = drug.category === "AINE" ? doseRatio * 18 : drug.category === "Corticoide" ? doseRatio * 10 : 0;
+  // Mineralocorticoid activity varies: Hidrocortisona (1.0) > Prednisona (0.8) > Metilprednisolona (0.5) > Dexametasona (0)
+  const mineralocorticoidActivity: Record<string, number> = {
+    "Hidrocortisona": 1.0, "Prednisona": 0.8, "Prednisolona": 0.8,
+    "Metilprednisolona": 0.5, "Dexametasona": 0.0,
+  };
+  const mcFactor = mineralocorticoidActivity[drug.name] ?? 0.5;
+  const corticoidEfficacy = getEfficacyDoseFraction(drug, dose);
+  const paAineBoost = drug.category === "AINE" ? doseRatio * 18 : 0;
+  // Corticoid PA boost: baseline + mineralocorticoid retention (Na/H2O), scales with efficacy
+  const paCorticoidBoost = drug.category === "Corticoide"
+    ? (8 + mcFactor * 18) * Math.min(corticoidEfficacy, 1.2) * routeSystemicFactor
+    : 0;
   const paHasBoost = comorbidities.has ? 15 : 0;
+  // HAS amplifies the corticoid Na+ retention effect further
+  const paHasCorticoidSynergy = drug.category === "Corticoide" && comorbidities.has ? mcFactor * 8 : 0;
   const vitals = {
-    pas: Math.round(120 + paAineBoost + paHasBoost),
-    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 8 : 0) + (comorbidities.has ? 5 : 0)),
+    pas: Math.round(120 + paAineBoost + paCorticoidBoost + paHasBoost + paHasCorticoidSynergy),
+    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 8 : 0) + (drug.category === "Corticoide" ? mcFactor * 8 * Math.min(corticoidEfficacy, 1.2) : 0) + (comorbidities.has ? 5 : 0)),
     fc: Math.round(72 + (lastEVA / 10) * 10),
     tfg: Math.round(Math.max(25, 90 - (drug.category === "AINE" ? doseRatio * 35 : 0) - (comorbidities.drc ? 30 : 0))),
     glicemia: Math.round(95 + (drug.category === "Corticoide" ? doseRatio * 45 : 0) + (comorbidities.diabetes ? 25 : 0)),
@@ -485,7 +503,7 @@ export default function SimuladorInflamacaoAINEs() {
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 20 ? 0.5 : drug.doseMax <= 100 ? 2.5 : drug.doseMax <= 500 ? 25 : 50} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 5 ? 0.25 : drug.doseMax <= 20 ? 0.25 : drug.doseMax <= 60 ? 1 : drug.doseMax <= 100 ? 2.5 : drug.doseMax <= 300 ? 5 : drug.doseMax <= 500 ? 25 : 50} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
