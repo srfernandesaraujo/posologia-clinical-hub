@@ -503,7 +503,7 @@ export default function SimuladorInflamacaoAINEs() {
             </div>
             <div>
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Dose</label><span className="text-sm font-bold">{dose} {drug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 20 ? 0.5 : drug.doseMax <= 100 ? 2.5 : drug.doseMax <= 500 ? 25 : 50} />
+              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={drug.doseMin} max={drug.doseMax} step={drug.doseMax <= 5 ? 0.25 : drug.doseMax <= 20 ? 0.25 : drug.doseMax <= 60 ? 1 : drug.doseMax <= 100 ? 2.5 : drug.doseMax <= 300 ? 5 : drug.doseMax <= 500 ? 25 : 50} />
               <p className="text-xs text-muted-foreground">Faixa: {drug.doseMin}–{drug.doseMax} {drug.doseUnit}</p>
             </div>
             <div>
