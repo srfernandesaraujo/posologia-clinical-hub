@@ -389,25 +389,54 @@ export default function SimulatorChallengeMode({
         )}
 
         {/* Adjust */}
-        {current.type === "adjust" && !answered && (
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-primary/30 text-sm">
-              <p className="text-primary font-medium mb-1">📐 Instruções:</p>
-              <p className="text-muted-foreground">
-                Ajuste os parâmetros do simulador acima para responder a este desafio. 
-                Quando estiver pronto, clique em "Verificar Resposta".
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {Object.entries((current as AdjustChallenge).targetParams).map(([key, spec]) => (
-                  <Badge key={key} variant="outline" className="text-xs">{spec.label}: {spec.min}–{spec.max}</Badge>
-                ))}
+        {current.type === "adjust" && !answered && (() => {
+          const adj = current as AdjustChallenge;
+          const hasOptions = Array.isArray(adj.options) && adj.options.length > 0;
+          return (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-primary/30 text-sm">
+                <p className="text-primary font-medium mb-1">📐 Instruções:</p>
+                <p className="text-muted-foreground">
+                  Ajuste os parâmetros do simulador acima {hasOptions ? "e escolha a alternativa que justifica a observação" : "para responder a este desafio"}.
+                  {hasOptions ? "" : " Quando estiver pronto, clique em \"Verificar Resposta\"."}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {Object.entries(adj.targetParams).map(([key, spec]) => (
+                    <Badge key={key} variant="outline" className="text-xs">{spec.label}: {spec.min}–{spec.max}</Badge>
+                  ))}
+                </div>
               </div>
+
+              {hasOptions && (
+                <div className="space-y-2">
+                  {adj.options!.map((opt, i) => {
+                    const optClass = selectedOption === i
+                      ? "border-primary bg-primary/10"
+                      : "border hover:border-primary/50 hover:bg-primary/5 cursor-pointer";
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedOption(i)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                      >
+                        <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <Button
+                onClick={() => handleAdjustValidate(hasOptions ? (selectedOption ?? undefined) : undefined)}
+                disabled={hasOptions && selectedOption === null}
+                className="w-full gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
+              </Button>
             </div>
-            <Button onClick={handleAdjustValidate} className="w-full gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
-            </Button>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Feedback */}
         {answered && (
