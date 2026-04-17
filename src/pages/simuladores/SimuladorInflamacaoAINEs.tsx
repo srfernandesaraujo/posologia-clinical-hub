@@ -301,6 +301,7 @@ export default function SimuladorInflamacaoAINEs() {
     setSelectedDrugIdx(0);
     setDose(DRUGS[0].doseMin);
     setInterval_(DRUGS[0].intervalMin);
+    setRoute(DRUGS[0].routes[0]);
     setGastroprotection(false);
     const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
     setComorbidities({
