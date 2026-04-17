@@ -147,7 +147,7 @@ export default function SimulatorChallengeMode({
     });
   }, [answered, current, currentIndex]);
 
-  const handleAdjustValidate = useCallback(() => {
+  const handleAdjustValidate = useCallback((chosenOption?: number) => {
     if (answered) return;
     const challenge = current as AdjustChallenge;
     let result: { correct: boolean; feedback: string };
@@ -164,26 +164,48 @@ export default function SimulatorChallengeMode({
         ? { correct: true, feedback: "Parâmetros dentro da faixa esperada!" }
         : { correct: false, feedback: "Ajuste os parâmetros para ficarem dentro das faixas indicadas." };
     }
-    
+
+    // Hybrid mode: if challenge has options, require BOTH adjust + correct option
+    const hasOptions = Array.isArray(challenge.options) && challenge.options.length > 0;
+    let optionCorrect = true;
+    let optionFeedback = "";
+    if (hasOptions) {
+      if (chosenOption === undefined || chosenOption === null) return;
+      setSelectedOption(chosenOption);
+      optionCorrect = chosenOption === challenge.correctIndex;
+      if (!optionCorrect) {
+        optionFeedback = `Alternativa incorreta. Resposta correta: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}) ${challenge.options![challenge.correctIndex ?? 0]}.`;
+      }
+    }
+
+    const finalCorrect = result.correct && optionCorrect;
     setAnswered(true);
     setAdjustValidated(true);
-    setIsCorrect(result.correct);
-    setFeedback(result.correct ? challenge.explanation : result.feedback + "\n\n" + challenge.explanation);
-    if (result.correct) setScore((s) => s + 1);
+    setIsCorrect(finalCorrect);
+    const composedFeedback = finalCorrect
+      ? challenge.explanation
+      : [result.correct ? "" : result.feedback, optionFeedback, challenge.explanation].filter(Boolean).join("\n\n");
+    setFeedback(composedFeedback);
+    if (finalCorrect) setScore((s) => s + 1);
 
-    // Track per-question result
     const paramsSummary = Object.entries(challenge.targetParams || {}).map(([key, spec]) => {
       const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
       return `${spec.label}: ${val ?? "?"} (faixa: ${spec.min}–${spec.max})`;
     }).join("; ");
+    const userAnswerStr = hasOptions
+      ? `${paramsSummary} | Alternativa: ${String.fromCharCode(65 + (chosenOption ?? 0))}`
+      : paramsSummary;
+    const correctAnswerStr = hasOptions
+      ? `${Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ")} | Alternativa: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}`
+      : Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ");
 
     questionResultsRef.current.push({
       index: currentIndex,
       type: "adjust",
       question: challenge.question,
-      userAnswer: paramsSummary,
-      correctAnswer: Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; "),
-      correct: result.correct,
+      userAnswer: userAnswerStr,
+      correctAnswer: correctAnswerStr,
+      correct: finalCorrect,
       explanation: challenge.explanation,
       reference: challenge.reference,
     });
