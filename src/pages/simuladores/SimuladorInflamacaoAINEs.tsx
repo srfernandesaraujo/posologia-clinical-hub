@@ -202,21 +202,29 @@ function computeSimulation(
     });
   }
 
-  // Side effects adjusted by comorbidities and gastroprotection
+  // Side effects adjusted by comorbidities, gastroprotection, route and corticoid potency × t½ exposure.
+  // Intra-articular route drastically reduces all systemic side effects (concentrated local action).
+  const routeSystemicFactor = isIntraArticular ? 0.15 : 1.0;
   const doseRatio = doseFraction;
   const se = { ...drug.sideEffects };
-  let giRisk = se.gi * doseRatio * 100;
+  // Corticoid systemic burden scales with potency × halfLife (longer-acting = more HPA suppression).
+  // Reference exposure: prednisone (potency 0.6 × t½ 3.5h = 2.1). Dexamethasone (0.9 × 36 = 32.4) ≈ 5x.
+  const corticoidExposureMultiplier = drug.category === "Corticoide"
+    ? Math.min(0.7 + (drug.potency * drug.halfLife) / 6, 3.0)
+    : 1.0;
+
+  let giRisk = se.gi * doseRatio * 100 * routeSystemicFactor;
   if (gastroprotection && drug.category === "AINE") giRisk *= 0.35; // IBP reduces GI risk by ~65%
   if (comorbidities.ulcer) giRisk *= 1.8;
-  let cvRisk = se.cv * doseRatio * 100;
+  let cvRisk = se.cv * doseRatio * 100 * routeSystemicFactor;
   if (comorbidities.has) cvRisk *= 1.6;
-  let renalRisk = se.renal * doseRatio * 100;
-  if (comorbidities.drc) renalRisk *= 2.5; // more responsive TFG drop
-  let boneRisk = se.bone * doseRatio * 100;
+  let renalRisk = se.renal * doseRatio * 100 * routeSystemicFactor;
+  if (comorbidities.drc) renalRisk *= 2.5;
+  let boneRisk = se.bone * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
-  let endoRisk = se.endocrine * doseRatio * 100;
+  let endoRisk = se.endocrine * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.diabetes) endoRisk *= 1.5;
-  const immuneRisk = se.immune * doseRatio * 100;
+  const immuneRisk = se.immune * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
 
   const sideEffectData = [
     { name: "GI", risco: Math.round(Math.min(giRisk, 100)) },
