@@ -323,12 +323,14 @@ export default function SimuladorInflamacaoAINEs() {
     if (selectedDrugIdx >= 0) {
       setDose(Math.max(drug.doseMin, Math.min(dose, drug.doseMax)));
       setInterval_(Math.max(drug.intervalMin, Math.min(interval, drug.intervalMax)));
+      // Reset route to first available when drug changes
+      if (!drug.routes.includes(route)) setRoute(drug.routes[0]);
     }
   }, [selectedDrugIdx]);
 
   const simulation = useMemo(() =>
-    computeSimulation(drug, dose, interval, gastroprotection, comorbidities, activeCase?.condition ?? "osteoartrite", activeCase?.initialEVA ?? 6),
-    [drug, dose, interval, gastroprotection, comorbidities, activeCase?.condition, activeCase?.initialEVA]
+    computeSimulation(drug, dose, interval, route, gastroprotection, comorbidities, activeCase?.condition ?? "osteoartrite", activeCase?.initialEVA ?? 6),
+    [drug, dose, interval, route, gastroprotection, comorbidities, activeCase?.condition, activeCase?.initialEVA]
   );
 
   const displayedEvaData = useMemo(() =>
