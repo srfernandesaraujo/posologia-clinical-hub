@@ -259,11 +259,24 @@ function computeSimulation(
 
   // Vital signs — PA more responsive with HAS + AINE
   const lastEVA = evaData[evaData.length - 1]?.eva ?? initialEVA;
-  const paAineBoost = drug.category === "AINE" ? doseRatio * 18 : drug.category === "Corticoide" ? doseRatio * 10 : 0;
+  // Mineralocorticoid activity varies: Hidrocortisona (1.0) > Prednisona (0.8) > Metilprednisolona (0.5) > Dexametasona (0)
+  const mineralocorticoidActivity: Record<string, number> = {
+    "Hidrocortisona": 1.0, "Prednisona": 0.8, "Prednisolona": 0.8,
+    "Metilprednisolona": 0.5, "Dexametasona": 0.0,
+  };
+  const mcFactor = mineralocorticoidActivity[drug.name] ?? 0.5;
+  const corticoidEfficacy = getEfficacyDoseFraction(drug, dose);
+  const paAineBoost = drug.category === "AINE" ? doseRatio * 18 : 0;
+  // Corticoid PA boost: baseline + mineralocorticoid retention (Na/H2O), scales with efficacy
+  const paCorticoidBoost = drug.category === "Corticoide"
+    ? (8 + mcFactor * 18) * Math.min(corticoidEfficacy, 1.2) * routeSystemicFactor
+    : 0;
   const paHasBoost = comorbidities.has ? 15 : 0;
+  // HAS amplifies the corticoid Na+ retention effect further
+  const paHasCorticoidSynergy = drug.category === "Corticoide" && comorbidities.has ? mcFactor * 8 : 0;
   const vitals = {
-    pas: Math.round(120 + paAineBoost + paHasBoost),
-    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 8 : 0) + (comorbidities.has ? 5 : 0)),
+    pas: Math.round(120 + paAineBoost + paCorticoidBoost + paHasBoost + paHasCorticoidSynergy),
+    pad: Math.round(80 + (drug.category === "AINE" ? doseRatio * 8 : 0) + (drug.category === "Corticoide" ? mcFactor * 8 * Math.min(corticoidEfficacy, 1.2) : 0) + (comorbidities.has ? 5 : 0)),
     fc: Math.round(72 + (lastEVA / 10) * 10),
     tfg: Math.round(Math.max(25, 90 - (drug.category === "AINE" ? doseRatio * 35 : 0) - (comorbidities.drc ? 30 : 0))),
     glicemia: Math.round(95 + (drug.category === "Corticoide" ? doseRatio * 45 : 0) + (comorbidities.diabetes ? 25 : 0)),
