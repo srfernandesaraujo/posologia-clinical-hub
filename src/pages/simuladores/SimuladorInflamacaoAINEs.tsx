@@ -475,6 +475,20 @@ export default function SimuladorInflamacaoAINEs() {
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Intervalo</label><span className="text-sm font-bold">{interval}h</span></div>
               <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={drug.intervalMax} step={1} />
             </div>
+            {drug.routes.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Via de Administração</label>
+                <Select value={route} onValueChange={setRoute}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {drug.routes.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {route === "Intra-articular" && <p className="text-xs text-chart-3 mt-1">⓵ Infiltração local — riscos sistêmicos drasticamente reduzidos</p>}
+              </div>
+            )}
             {drug.category === "AINE" && (
               <div className="flex items-center gap-2">
                 <Switch checked={gastroprotection} onCheckedChange={setGastroprotection} id="ibp" />
