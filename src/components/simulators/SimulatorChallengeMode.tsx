@@ -26,6 +26,10 @@ export interface AdjustChallenge {
   validator: (currentState: Record<string, any>) => { correct: boolean; feedback: string };
   explanation: string;
   reference?: string;
+  // Optional MCQ that the student must answer AFTER configuring the simulator.
+  // When present, correctness requires BOTH the validator to pass AND the right option.
+  options?: string[];
+  correctIndex?: number;
 }
 
 export type Challenge = MCQChallenge | AdjustChallenge;
