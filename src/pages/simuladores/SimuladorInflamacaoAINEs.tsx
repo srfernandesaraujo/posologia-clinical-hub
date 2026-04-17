@@ -29,6 +29,8 @@ interface AntiInflamDrug {
   intervalMin: number; intervalMax: number;
   bioavailability: number; tmax: number; halfLife: number;
   potency: number; // anti-inflammatory potency 0-1
+  efficacyRefDose?: number; // dose at which clinical anti-inflammatory efficacy is expected
+  residualAntiInflamFloor?: number; // persistent biological effect beyond plasma half-life
   cox1Selectivity: number; // 0 = COX-2 selective, 1 = COX-1 selective, 0.5 = non-selective
   pKa: number;
   sideEffects: { gi: number; cv: number; renal: number; bone: number; endocrine: number; immune: number };
@@ -42,11 +44,11 @@ const DRUGS: AntiInflamDrug[] = [
   { name: "Celecoxibe", class: "AINE COX-2 seletivo", category: "AINE", doseMin: 100, doseMax: 400, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.4, tmax: 3, halfLife: 11, potency: 0.55, cox1Selectivity: 0.05, pKa: 11.1, sideEffects: { gi: 0.1, cv: 0.4, renal: 0.25, bone: 0, endocrine: 0, immune: 0 }, routes: ["VO"] },
   { name: "Meloxicam", class: "AINE COX-2 preferencial", category: "AINE", doseMin: 7.5, doseMax: 15, doseUnit: "mg", intervalMin: 24, intervalMax: 24, bioavailability: 0.89, tmax: 5, halfLife: 20, potency: 0.5, cox1Selectivity: 0.15, pKa: 4.1, sideEffects: { gi: 0.15, cv: 0.3, renal: 0.2, bone: 0, endocrine: 0, immune: 0 }, routes: ["VO"] },
   // Corticoides
-  { name: "Hidrocortisona", class: "Corticoide", category: "Corticoide", doseMin: 10, doseMax: 300, doseUnit: "mg", intervalMin: 6, intervalMax: 8, bioavailability: 0.95, tmax: 1, halfLife: 1.5, potency: 0.3, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.1, cv: 0.15, renal: 0.1, bone: 0.3, endocrine: 0.5, immune: 0.4 }, routes: ["VO", "EV"] },
-  { name: "Prednisona", class: "Corticoide", category: "Corticoide", doseMin: 2.5, doseMax: 60, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.8, tmax: 1.5, halfLife: 3.5, potency: 0.6, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.25, renal: 0.1, bone: 0.5, endocrine: 0.6, immune: 0.5 }, routes: ["VO"] },
-  { name: "Prednisolona", class: "Corticoide", category: "Corticoide", doseMin: 2.5, doseMax: 60, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.9, tmax: 1.5, halfLife: 3.5, potency: 0.6, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.25, renal: 0.1, bone: 0.5, endocrine: 0.6, immune: 0.5 }, routes: ["VO"] },
-  { name: "Metilprednisolona", class: "Corticoide", category: "Corticoide", doseMin: 4, doseMax: 48, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.85, tmax: 1.5, halfLife: 3, potency: 0.65, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.12, cv: 0.2, renal: 0.1, bone: 0.45, endocrine: 0.55, immune: 0.45 }, routes: ["VO", "EV", "Intra-articular"] },
-  { name: "Dexametasona", class: "Corticoide", category: "Corticoide", doseMin: 0.5, doseMax: 16, doseUnit: "mg", intervalMin: 24, intervalMax: 24, bioavailability: 0.8, tmax: 1, halfLife: 36, potency: 0.9, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.3, renal: 0.1, bone: 0.7, endocrine: 0.8, immune: 0.65 }, routes: ["VO", "EV"] },
+  { name: "Hidrocortisona", class: "Corticoide", category: "Corticoide", doseMin: 10, doseMax: 300, doseUnit: "mg", intervalMin: 6, intervalMax: 8, bioavailability: 0.95, tmax: 1, halfLife: 1.5, potency: 0.3, efficacyRefDose: 40, residualAntiInflamFloor: 0.12, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.1, cv: 0.15, renal: 0.1, bone: 0.3, endocrine: 0.5, immune: 0.4 }, routes: ["VO", "EV"] },
+  { name: "Prednisona", class: "Corticoide", category: "Corticoide", doseMin: 2.5, doseMax: 60, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.8, tmax: 1.5, halfLife: 3.5, potency: 0.6, efficacyRefDose: 12.5, residualAntiInflamFloor: 0.3, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.25, renal: 0.1, bone: 0.5, endocrine: 0.6, immune: 0.5 }, routes: ["VO"] },
+  { name: "Prednisolona", class: "Corticoide", category: "Corticoide", doseMin: 2.5, doseMax: 60, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.9, tmax: 1.5, halfLife: 3.5, potency: 0.6, efficacyRefDose: 12.5, residualAntiInflamFloor: 0.3, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.25, renal: 0.1, bone: 0.5, endocrine: 0.6, immune: 0.5 }, routes: ["VO"] },
+  { name: "Metilprednisolona", class: "Corticoide", category: "Corticoide", doseMin: 4, doseMax: 48, doseUnit: "mg", intervalMin: 12, intervalMax: 24, bioavailability: 0.85, tmax: 1.5, halfLife: 3, potency: 0.65, efficacyRefDose: 10, residualAntiInflamFloor: 0.32, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.12, cv: 0.2, renal: 0.1, bone: 0.45, endocrine: 0.55, immune: 0.45 }, routes: ["VO", "EV", "Intra-articular"] },
+  { name: "Dexametasona", class: "Corticoide", category: "Corticoide", doseMin: 0.5, doseMax: 16, doseUnit: "mg", intervalMin: 24, intervalMax: 24, bioavailability: 0.8, tmax: 1, halfLife: 36, potency: 0.9, efficacyRefDose: 1.5, residualAntiInflamFloor: 0.45, cox1Selectivity: 0, pKa: 0, sideEffects: { gi: 0.15, cv: 0.3, renal: 0.1, bone: 0.7, endocrine: 0.8, immune: 0.65 }, routes: ["VO", "EV"] },
   // Tópico
   { name: "Diclofenaco gel", class: "AINE tópico", category: "Tópico", doseMin: 1, doseMax: 4, doseUnit: "aplicações", intervalMin: 8, intervalMax: 12, bioavailability: 0.06, tmax: 10, halfLife: 1.5, potency: 0.3, cox1Selectivity: 0.35, pKa: 4.0, sideEffects: { gi: 0.02, cv: 0.02, renal: 0.02, bone: 0, endocrine: 0, immune: 0 }, routes: ["Tópico"] },
 ];
@@ -129,6 +131,17 @@ const BUILT_IN_CASES: InflamCase[] = [
 ];
 
 // ─── Simulation Engine ──────────────────────────────────────────────────────
+function getEfficacyDoseFraction(drug: AntiInflamDrug, dose: number) {
+  const referenceDose = drug.efficacyRefDose ?? drug.doseMax;
+  const maxFraction = drug.category === "Corticoide" ? 1.2 : 1.0;
+  return Math.min(dose / referenceDose, maxFraction);
+}
+
+function getResidualCorticoidActivity(drug: AntiInflamDrug, efficacyDoseFraction: number) {
+  if (drug.category !== "Corticoide") return 0;
+  return Math.min((drug.residualAntiInflamFloor ?? 0) * Math.min(efficacyDoseFraction, 1.1), 0.5);
+}
+
 function computeSimulation(
   drug: AntiInflamDrug, dose: number, interval: number, route: string,
   gastroprotection: boolean, comorbidities: { has: boolean; drc: boolean; ulcer: boolean; osteoporosis: boolean; diabetes: boolean },
@@ -136,6 +149,7 @@ function computeSimulation(
 ) {
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
+  const efficacyDoseFraction = getEfficacyDoseFraction(drug, dose);
   const isIntraArticular = route === "Intra-articular";
 
   // Anti-inflammatory effectiveness depends on condition.
@@ -145,7 +159,8 @@ function computeSimulation(
     : condition === "desmame-corticoide" ? 0.6
     : 1.0;
 
-  const effectivePotency = drug.potency * doseFraction * conditionMultiplier;
+  const effectivePotency = drug.potency * efficacyDoseFraction * conditionMultiplier;
+  const residualCorticoidActivity = getResidualCorticoidActivity(drug, efficacyDoseFraction);
 
   // ── Dose-dependent dissociation: analgesic vs anti-inflammatory thresholds ──
   // Low doses achieve analgesia (cpRatio ~0.3 sufficient) but NOT anti-inflammation (needs cpRatio ~0.7)
@@ -180,7 +195,9 @@ function computeSimulation(
     // Anti-inflammatory effect: requires higher concentrations but still dose-responsive
     let antiInflamEffect: number;
     if (drug.category === "Corticoide") {
-      antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
+      // Corticoids retain genomic anti-inflammatory activity beyond plasma t½, especially relevant in RA bridge therapy.
+      const corticoidExposure = Math.max(Math.min(cpRatio / 0.4, 1), residualCorticoidActivity);
+      antiInflamEffect = effectivePotency * corticoidExposure;
     } else if (isTopical) {
       // Tópico: efeito local progressivo, sem threshold sistêmico
       antiInflamEffect = effectivePotency * Math.min(cpRatio / 0.4, 1);
