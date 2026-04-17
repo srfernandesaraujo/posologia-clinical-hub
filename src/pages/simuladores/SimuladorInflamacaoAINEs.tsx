@@ -130,16 +130,18 @@ const BUILT_IN_CASES: InflamCase[] = [
 
 // ─── Simulation Engine ──────────────────────────────────────────────────────
 function computeSimulation(
-  drug: AntiInflamDrug, dose: number, interval: number,
+  drug: AntiInflamDrug, dose: number, interval: number, route: string,
   gastroprotection: boolean, comorbidities: { has: boolean; drc: boolean; ulcer: boolean; osteoporosis: boolean; diabetes: boolean },
   condition: string, initialEVA: number
 ) {
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
+  const isIntraArticular = route === "Intra-articular";
 
-  // Anti-inflammatory effectiveness depends on condition
-  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.5
-    : condition === "artrite-reumatoide" && drug.category === "Corticoide" ? 1.0
+  // Anti-inflammatory effectiveness depends on condition.
+  // In RA, NSAIDs are markedly less effective (autoimmune cascade beyond COX) and corticosteroids are amplified.
+  const conditionMultiplier = condition === "artrite-reumatoide" && drug.category === "AINE" ? 0.25
+    : condition === "artrite-reumatoide" && drug.category === "Corticoide" ? 1.4
     : condition === "desmame-corticoide" ? 0.6
     : 1.0;
 
@@ -200,21 +202,29 @@ function computeSimulation(
     });
   }
 
-  // Side effects adjusted by comorbidities and gastroprotection
+  // Side effects adjusted by comorbidities, gastroprotection, route and corticoid potency × t½ exposure.
+  // Intra-articular route drastically reduces all systemic side effects (concentrated local action).
+  const routeSystemicFactor = isIntraArticular ? 0.15 : 1.0;
   const doseRatio = doseFraction;
   const se = { ...drug.sideEffects };
-  let giRisk = se.gi * doseRatio * 100;
+  // Corticoid systemic burden scales with potency × halfLife (longer-acting = more HPA suppression).
+  // Reference exposure: prednisone (potency 0.6 × t½ 3.5h = 2.1). Dexamethasone (0.9 × 36 = 32.4) ≈ 5x.
+  const corticoidExposureMultiplier = drug.category === "Corticoide"
+    ? Math.min(0.7 + (drug.potency * drug.halfLife) / 6, 3.0)
+    : 1.0;
+
+  let giRisk = se.gi * doseRatio * 100 * routeSystemicFactor;
   if (gastroprotection && drug.category === "AINE") giRisk *= 0.35; // IBP reduces GI risk by ~65%
   if (comorbidities.ulcer) giRisk *= 1.8;
-  let cvRisk = se.cv * doseRatio * 100;
+  let cvRisk = se.cv * doseRatio * 100 * routeSystemicFactor;
   if (comorbidities.has) cvRisk *= 1.6;
-  let renalRisk = se.renal * doseRatio * 100;
-  if (comorbidities.drc) renalRisk *= 2.5; // more responsive TFG drop
-  let boneRisk = se.bone * doseRatio * 100;
+  let renalRisk = se.renal * doseRatio * 100 * routeSystemicFactor;
+  if (comorbidities.drc) renalRisk *= 2.5;
+  let boneRisk = se.bone * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
-  let endoRisk = se.endocrine * doseRatio * 100;
+  let endoRisk = se.endocrine * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.diabetes) endoRisk *= 1.5;
-  const immuneRisk = se.immune * doseRatio * 100;
+  const immuneRisk = se.immune * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
 
   const sideEffectData = [
     { name: "GI", risco: Math.round(Math.min(giRisk, 100)) },
@@ -251,6 +261,7 @@ export default function SimuladorInflamacaoAINEs() {
   const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
   const [dose, setDose] = useState(200);
   const [interval, setInterval_] = useState(8);
+  const [route, setRoute] = useState<string>("VO");
   const [gastroprotection, setGastroprotection] = useState(false);
   const [comorbidities, setComorbidities] = useState({ has: false, drc: false, ulcer: false, osteoporosis: false, diabetes: false });
   const [running, setRunning] = useState(false);
@@ -290,6 +301,7 @@ export default function SimuladorInflamacaoAINEs() {
     setSelectedDrugIdx(0);
     setDose(DRUGS[0].doseMin);
     setInterval_(DRUGS[0].intervalMin);
+    setRoute(DRUGS[0].routes[0]);
     setGastroprotection(false);
     const patientComorbidities = activeCase.patient.comorbidities.map(c => c.toLowerCase());
     setComorbidities({
@@ -311,12 +323,14 @@ export default function SimuladorInflamacaoAINEs() {
     if (selectedDrugIdx >= 0) {
       setDose(Math.max(drug.doseMin, Math.min(dose, drug.doseMax)));
       setInterval_(Math.max(drug.intervalMin, Math.min(interval, drug.intervalMax)));
+      // Reset route to first available when drug changes
+      if (!drug.routes.includes(route)) setRoute(drug.routes[0]);
     }
   }, [selectedDrugIdx]);
 
   const simulation = useMemo(() =>
-    computeSimulation(drug, dose, interval, gastroprotection, comorbidities, activeCase?.condition ?? "osteoartrite", activeCase?.initialEVA ?? 6),
-    [drug, dose, interval, gastroprotection, comorbidities, activeCase?.condition, activeCase?.initialEVA]
+    computeSimulation(drug, dose, interval, route, gastroprotection, comorbidities, activeCase?.condition ?? "osteoartrite", activeCase?.initialEVA ?? 6),
+    [drug, dose, interval, route, gastroprotection, comorbidities, activeCase?.condition, activeCase?.initialEVA]
   );
 
   const displayedEvaData = useMemo(() =>
@@ -461,6 +475,20 @@ export default function SimuladorInflamacaoAINEs() {
               <div className="flex justify-between mb-1"><label className="text-sm font-medium">Intervalo</label><span className="text-sm font-bold">{interval}h</span></div>
               <Slider value={[interval]} onValueChange={([v]) => setInterval_(v)} min={drug.intervalMin} max={drug.intervalMax} step={1} />
             </div>
+            {drug.routes.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Via de Administração</label>
+                <Select value={route} onValueChange={setRoute}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {drug.routes.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {route === "Intra-articular" && <p className="text-xs text-chart-3 mt-1">⓵ Infiltração local — riscos sistêmicos drasticamente reduzidos</p>}
+              </div>
+            )}
             {drug.category === "AINE" && (
               <div className="flex items-center gap-2">
                 <Switch checked={gastroprotection} onCheckedChange={setGastroprotection} id="ibp" />
