@@ -237,7 +237,12 @@ function computeSimulation(
   if (comorbidities.has) cvRisk *= 1.6;
   let renalRisk = se.renal * doseRatio * 100 * routeSystemicFactor;
   if (comorbidities.drc) renalRisk *= 2.5;
-  let boneRisk = se.bone * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
+  // Bone risk (osteoporosis) is predominantly TIME-dependent for corticoids: a large baseline
+  // floor accumulates with chronic use and only partially scales with dose. This ensures even
+  // low doses (e.g. Prednisona 5mg) maintain elevated bone risk, while higher doses add modestly.
+  const boneTimeDependentFloor = drug.category === "Corticoide" ? 0.65 : 0;
+  const boneDoseFactor = boneTimeDependentFloor + (1 - boneTimeDependentFloor) * doseRatio;
+  let boneRisk = se.bone * boneDoseFactor * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.osteoporosis) boneRisk *= 1.8;
   let endoRisk = se.endocrine * doseRatio * 100 * corticoidExposureMultiplier * routeSystemicFactor;
   if (comorbidities.diabetes) endoRisk *= 1.5;
