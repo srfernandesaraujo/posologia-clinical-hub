@@ -917,6 +917,135 @@ export default function SalasVirtuais() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Room Dialog */}
+      <Dialog open={!!editRoom} onOpenChange={(open) => { if (!open) setEditRoom(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar Sala Virtual</DialogTitle></DialogHeader>
+          {editRoom && (() => {
+            const isExam = !editRoom.simulator_slug;
+            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
+            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+            const editToolsInCategory = editActiveOptions.filter(s => s.category === editCategory);
+            const editNativeCases = editSimulatorSlug ? getNativeCases(editSimulatorSlug) : [];
+            return (
+              <div className="space-y-4">
+                <div>
+                  <Label>Título</Label>
+                  <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Título da sala" />
+                </div>
+                <div>
+                  <Label>Descrição / Enunciado (opcional)</Label>
+                  <Textarea
+                    value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)}
+                    placeholder="Instruções para os alunos..."
+                    className="min-h-[60px] text-sm"
+                  />
+                </div>
+
+                {!isExam ? (
+                  <>
+                    <Separator />
+                    <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                      <p className="text-sm font-medium">Tipo</p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={editToolType === "simulator" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("simulator"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <Cpu className="h-3.5 w-3.5" />Simuladores
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={editToolType === "laboratory" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("laboratory"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <FlaskConical className="h-3.5 w-3.5" />Laboratórios
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Categoria</Label>
+                      <Select value={editCategory} onValueChange={v => { setEditCategory(v); setEditSimulatorSlug(""); setEditCaseId(""); }}>
+                        <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                        <SelectContent>
+                          {editActiveCategories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {editCategory && (
+                      <div>
+                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                        <Select value={editSimulatorSlug} onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}>
+                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                          <SelectContent>
+                            {editToolsInCategory.map(s => (
+                              <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {editSimulatorSlug && editToolType === "simulator" && (editCases.length > 0 || editNativeCases.length > 0) && (
+                      <div>
+                        <Label className="text-xs">Caso Clínico</Label>
+                        <Select value={editCaseId} onValueChange={v => setEditCaseId(v)}>
+                          <SelectTrigger><SelectValue placeholder="Selecione o caso (opcional)" /></SelectTrigger>
+                          <SelectContent>
+                            {editNativeCases.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Nativos</div>
+                                {editNativeCases.map(nc => (
+                                  <SelectItem key={`native:${nc.index}`} value={`native:${nc.index}`}>
+                                    📋 {nc.title} ({nc.difficulty})
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                            {editCases.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Criados / IA</div>
+                                {editCases.map((c: any) => (
+                                  <SelectItem key={c.id} value={c.id}>🤖 {c.title} ({c.difficulty})</SelectItem>
+                                ))}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
+                    Esta é uma sala de <strong>Atividade Simulada</strong> com múltiplas atividades. Para alterar simuladores e casos, edite as atividades individualmente (em breve) ou recrie a sala.
+                  </div>
+                )}
+
+                <Separator />
+                <div>
+                  <Label>Data de Expiração (opcional)</Label>
+                  <Input type="datetime-local" value={editExpiresAt} onChange={e => setEditExpiresAt(e.target.value)} />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRoom(null)}>Cancelar</Button>
+            <Button onClick={() => updateRoom.mutate()} disabled={updateRoom.isPending || !editTitle.trim()}>
+              {updateRoom.isPending ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Challenge Editor Dialog */}
       {challengeEditorIndex !== null && (
         <ChallengeEditor
