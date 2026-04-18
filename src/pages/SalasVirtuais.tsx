@@ -186,6 +186,14 @@ export default function SalasVirtuais() {
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
+  const [editRoom, setEditRoom] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
+  const [editSimulatorSlug, setEditSimulatorSlug] = useState("");
+  const [editCaseId, setEditCaseId] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editToolType, setEditToolType] = useState<ToolType>("simulator");
   const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
