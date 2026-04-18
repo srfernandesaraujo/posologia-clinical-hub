@@ -339,6 +339,95 @@ export default function SalasVirtuais() {
     },
   });
 
+  // Cases for the simulator currently selected in edit dialog
+  const { data: editCases = [] } = useQuery({
+    queryKey: ["edit-room-cases", editSimulatorSlug],
+    enabled: !!editSimulatorSlug && editToolType === "simulator",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("simulator_cases")
+        .select("id, title, difficulty, simulator_slug")
+        .eq("simulator_slug", editSimulatorSlug)
+        .order("title");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const updateRoom = useMutation({
+    mutationFn: async () => {
+      if (!editRoom) throw new Error("Sem sala");
+      if (!editTitle.trim()) throw new Error("Título obrigatório");
+
+      const isExam = !editRoom.simulator_slug;
+      const updates: any = {
+        title: editTitle,
+        description: editDescription || null,
+        expires_at: editExpiresAt || null,
+      };
+
+      // Only allow simulator/case change for non-exam (single-activity) rooms
+      if (!isExam) {
+        if (!editSimulatorSlug) throw new Error("Selecione um simulador");
+        updates.simulator_slug = editSimulatorSlug;
+        updates.case_id = editCaseId && !editCaseId.startsWith("native:") ? editCaseId : null;
+      }
+
+      const { error } = await supabase
+        .from("virtual_rooms")
+        .update(updates)
+        .eq("id", editRoom.id);
+      if (error) throw error;
+
+      // Update single-activity row if it exists (non-exam mode)
+      if (!isExam) {
+        const nativeIdx = editCaseId?.startsWith("native:")
+          ? parseInt(editCaseId.replace("native:", ""))
+          : null;
+        const { data: existingActs } = await supabase
+          .from("room_activities")
+          .select("id")
+          .eq("room_id", editRoom.id)
+          .order("position");
+
+        const payload = {
+          simulator_slug: editSimulatorSlug,
+          case_id: editCaseId && !editCaseId.startsWith("native:") ? editCaseId : null,
+          custom_challenges: nativeIdx !== null ? { nativeCaseIndex: nativeIdx } : null,
+        };
+
+        if (existingActs && existingActs.length > 0) {
+          await supabase.from("room_activities").update(payload).eq("id", existingActs[0].id);
+        } else {
+          await supabase.from("room_activities").insert({ ...payload, room_id: editRoom.id, position: 0 });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
+      toast.success("Sala atualizada");
+      setEditRoom(null);
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao atualizar sala"),
+  });
+
+  const openEdit = (room: any) => {
+    setEditRoom(room);
+    setEditTitle(room.title || "");
+    setEditDescription(room.description || "");
+    setEditExpiresAt(room.expires_at ? new Date(room.expires_at).toISOString().slice(0, 16) : "");
+    setEditSimulatorSlug(room.simulator_slug || "");
+    setEditCaseId(room.case_id || "");
+    const slug = room.simulator_slug;
+    if (slug) {
+      setEditToolType(LAB_OPTIONS.some(l => l.slug === slug) ? "laboratory" : "simulator");
+      setEditCategory(ALL_OPTIONS.find(o => o.slug === slug)?.category || "");
+    } else {
+      setEditToolType("simulator");
+      setEditCategory("");
+    }
+  };
+
   const resetForm = () => {
     setCreateOpen(false);
     setTitle("");
