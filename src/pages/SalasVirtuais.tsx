@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
@@ -186,6 +186,14 @@ export default function SalasVirtuais() {
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
+  const [editRoom, setEditRoom] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
+  const [editSimulatorSlug, setEditSimulatorSlug] = useState("");
+  const [editCaseId, setEditCaseId] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editToolType, setEditToolType] = useState<ToolType>("simulator");
   const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
@@ -331,6 +339,95 @@ export default function SalasVirtuais() {
     },
   });
 
+  // Cases for the simulator currently selected in edit dialog
+  const { data: editCases = [] } = useQuery({
+    queryKey: ["edit-room-cases", editSimulatorSlug],
+    enabled: !!editSimulatorSlug && editToolType === "simulator",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("simulator_cases")
+        .select("id, title, difficulty, simulator_slug")
+        .eq("simulator_slug", editSimulatorSlug)
+        .order("title");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const updateRoom = useMutation({
+    mutationFn: async () => {
+      if (!editRoom) throw new Error("Sem sala");
+      if (!editTitle.trim()) throw new Error("Título obrigatório");
+
+      const isExam = !editRoom.simulator_slug;
+      const updates: any = {
+        title: editTitle,
+        description: editDescription || null,
+        expires_at: editExpiresAt || null,
+      };
+
+      // Only allow simulator/case change for non-exam (single-activity) rooms
+      if (!isExam) {
+        if (!editSimulatorSlug) throw new Error("Selecione um simulador");
+        updates.simulator_slug = editSimulatorSlug;
+        updates.case_id = editCaseId && !editCaseId.startsWith("native:") ? editCaseId : null;
+      }
+
+      const { error } = await supabase
+        .from("virtual_rooms")
+        .update(updates)
+        .eq("id", editRoom.id);
+      if (error) throw error;
+
+      // Update single-activity row if it exists (non-exam mode)
+      if (!isExam) {
+        const nativeIdx = editCaseId?.startsWith("native:")
+          ? parseInt(editCaseId.replace("native:", ""))
+          : null;
+        const { data: existingActs } = await supabase
+          .from("room_activities")
+          .select("id")
+          .eq("room_id", editRoom.id)
+          .order("position");
+
+        const payload = {
+          simulator_slug: editSimulatorSlug,
+          case_id: editCaseId && !editCaseId.startsWith("native:") ? editCaseId : null,
+          custom_challenges: nativeIdx !== null ? { nativeCaseIndex: nativeIdx } : null,
+        };
+
+        if (existingActs && existingActs.length > 0) {
+          await supabase.from("room_activities").update(payload).eq("id", existingActs[0].id);
+        } else {
+          await supabase.from("room_activities").insert({ ...payload, room_id: editRoom.id, position: 0 });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
+      toast.success("Sala atualizada");
+      setEditRoom(null);
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao atualizar sala"),
+  });
+
+  const openEdit = (room: any) => {
+    setEditRoom(room);
+    setEditTitle(room.title || "");
+    setEditDescription(room.description || "");
+    setEditExpiresAt(room.expires_at ? new Date(room.expires_at).toISOString().slice(0, 16) : "");
+    setEditSimulatorSlug(room.simulator_slug || "");
+    setEditCaseId(room.case_id || "");
+    const slug = room.simulator_slug;
+    if (slug) {
+      setEditToolType(LAB_OPTIONS.some(l => l.slug === slug) ? "laboratory" : "simulator");
+      setEditCategory(ALL_OPTIONS.find(o => o.slug === slug)?.category || "");
+    } else {
+      setEditToolType("simulator");
+      setEditCategory("");
+    }
+  };
+
   const resetForm = () => {
     setCreateOpen(false);
     setTitle("");
@@ -451,10 +548,13 @@ export default function SalasVirtuais() {
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: !room.is_active })}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(room)} title="Editar sala">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: !room.is_active })} title={room.is_active ? "Desativar" : "Ativar"}>
                       {room.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteRoom.mutate(room.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => deleteRoom.mutate(room.id)} title="Excluir">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -814,6 +914,135 @@ export default function SalasVirtuais() {
               })}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Room Dialog */}
+      <Dialog open={!!editRoom} onOpenChange={(open) => { if (!open) setEditRoom(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar Sala Virtual</DialogTitle></DialogHeader>
+          {editRoom && (() => {
+            const isExam = !editRoom.simulator_slug;
+            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
+            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+            const editToolsInCategory = editActiveOptions.filter(s => s.category === editCategory);
+            const editNativeCases = editSimulatorSlug ? getNativeCases(editSimulatorSlug) : [];
+            return (
+              <div className="space-y-4">
+                <div>
+                  <Label>Título</Label>
+                  <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Título da sala" />
+                </div>
+                <div>
+                  <Label>Descrição / Enunciado (opcional)</Label>
+                  <Textarea
+                    value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)}
+                    placeholder="Instruções para os alunos..."
+                    className="min-h-[60px] text-sm"
+                  />
+                </div>
+
+                {!isExam ? (
+                  <>
+                    <Separator />
+                    <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                      <p className="text-sm font-medium">Tipo</p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={editToolType === "simulator" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("simulator"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <Cpu className="h-3.5 w-3.5" />Simuladores
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={editToolType === "laboratory" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("laboratory"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <FlaskConical className="h-3.5 w-3.5" />Laboratórios
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Categoria</Label>
+                      <Select value={editCategory} onValueChange={v => { setEditCategory(v); setEditSimulatorSlug(""); setEditCaseId(""); }}>
+                        <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                        <SelectContent>
+                          {editActiveCategories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {editCategory && (
+                      <div>
+                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                        <Select value={editSimulatorSlug} onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}>
+                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                          <SelectContent>
+                            {editToolsInCategory.map(s => (
+                              <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {editSimulatorSlug && editToolType === "simulator" && (editCases.length > 0 || editNativeCases.length > 0) && (
+                      <div>
+                        <Label className="text-xs">Caso Clínico</Label>
+                        <Select value={editCaseId} onValueChange={v => setEditCaseId(v)}>
+                          <SelectTrigger><SelectValue placeholder="Selecione o caso (opcional)" /></SelectTrigger>
+                          <SelectContent>
+                            {editNativeCases.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Nativos</div>
+                                {editNativeCases.map(nc => (
+                                  <SelectItem key={`native:${nc.index}`} value={`native:${nc.index}`}>
+                                    📋 {nc.title} ({nc.difficulty})
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                            {editCases.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Casos Criados / IA</div>
+                                {editCases.map((c: any) => (
+                                  <SelectItem key={c.id} value={c.id}>🤖 {c.title} ({c.difficulty})</SelectItem>
+                                ))}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
+                    Esta é uma sala de <strong>Atividade Simulada</strong> com múltiplas atividades. Para alterar simuladores e casos, edite as atividades individualmente (em breve) ou recrie a sala.
+                  </div>
+                )}
+
+                <Separator />
+                <div>
+                  <Label>Data de Expiração (opcional)</Label>
+                  <Input type="datetime-local" value={editExpiresAt} onChange={e => setEditExpiresAt(e.target.value)} />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRoom(null)}>Cancelar</Button>
+            <Button onClick={() => updateRoom.mutate()} disabled={updateRoom.isPending || !editTitle.trim()}>
+              {updateRoom.isPending ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
