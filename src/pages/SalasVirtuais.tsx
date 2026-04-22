@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, Eye, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
@@ -328,6 +328,25 @@ export default function SalasVirtuais() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] }),
   });
 
+  const reactivateRoom = useMutation({
+    mutationFn: async (room: any) => {
+      const currentExpiration = room.expires_at ? new Date(room.expires_at) : null;
+      const updateData: Record<string, any> = { is_active: true };
+
+      if (!currentExpiration || currentExpiration < new Date()) {
+        updateData.expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      }
+
+      const { error } = await supabase.from("virtual_rooms").update(updateData).eq("id", room.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
+      toast.success("Sala reativada");
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao reativar sala"),
+  });
+
   const deleteRoom = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("virtual_rooms").delete().eq("id", id);
@@ -551,9 +570,15 @@ export default function SalasVirtuais() {
                     <Button variant="ghost" size="icon" onClick={() => openEdit(room)} title="Editar sala">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: !room.is_active })} title={room.is_active ? "Desativar" : "Ativar"}>
-                      {room.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+                    {room.is_active ? (
+                      <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: false })} title="Desativar sala">
+                        <EyeOff className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="icon" onClick={() => reactivateRoom.mutate(room)} title="Reativar sala">
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => deleteRoom.mutate(room.id)} title="Excluir">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
