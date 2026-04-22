@@ -791,6 +791,7 @@ export type Database = {
           id: string
           is_active: boolean
           pin: string
+          reactivated_at: string | null
           simulator_slug: string | null
           title: string
         }
@@ -804,6 +805,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           pin: string
+          reactivated_at?: string | null
           simulator_slug?: string | null
           title: string
         }
@@ -817,6 +819,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           pin?: string
+          reactivated_at?: string | null
           simulator_slug?: string | null
           title?: string
         }
