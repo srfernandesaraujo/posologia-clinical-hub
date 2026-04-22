@@ -570,9 +570,15 @@ export default function SalasVirtuais() {
                     <Button variant="ghost" size="icon" onClick={() => openEdit(room)} title="Editar sala">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: !room.is_active })} title={room.is_active ? "Desativar" : "Ativar"}>
-                      {room.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+                    {room.is_active ? (
+                      <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: false })} title="Desativar sala">
+                        <EyeOff className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="icon" onClick={() => reactivateRoom.mutate(room)} title="Reativar sala">
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => deleteRoom.mutate(room.id)} title="Excluir">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
