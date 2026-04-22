@@ -149,11 +149,13 @@ interface SimOptions {
 function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant: typeof ADJUVANTS[number], painType: string, initialEVA: number, options?: SimOptions) {
   const hours = Array.from({ length: 73 }, (_, i) => i);
   const doseFraction = dose / drug.doseMax;
+  const isMixedOncologicPain = painType === "oncologica";
 
   // Potency: drug's inherent analgesic power + adjuvant bonus
   // Dose dependency comes solely from Cp curve (doseFraction already in cp calc line 201)
   const adjBonus = adjuvant.potencyBonus
     + (painType === "neuropatica" ? adjuvant.neuropathicBonus : 0)
+    + (isMixedOncologicPain ? adjuvant.neuropathicBonus * 0.75 : 0)
     + (painType === "fibromialgia" ? adjuvant.fibroBonus : 0);
   const totalPotency = drug.analgesicPotency + adjBonus;
 
@@ -219,7 +221,8 @@ function computeSimulation(drug: Drug, dose: number, interval: number, adjuvant:
     let cpRatio = Math.min(cp / cpThreshold, 1);
     if (drug.ceilingEffect) cpRatio = Math.min(cpRatio, 0.35);
 
-    const reduction = totalPotency * typeMultiplier * cpRatio;
+    const mixedPainAdjuvantRelief = isMixedOncologicPain ? adjuvant.neuropathicBonus * 0.35 : 0;
+    const reduction = Math.min(totalPotency * typeMultiplier * cpRatio + mixedPainAdjuvantRelief, 0.92);
     const eva = Math.max(0, initialEVA - initialEVA * reduction * 0.95);
 
     evaData.push({
