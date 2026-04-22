@@ -111,29 +111,6 @@ export default function SalaVirtualAluno() {
       return;
     }
 
-    const roomData = data as any;
-
-    // Check 7-day inactivity. Manual reactivation resets the inactivity window.
-    const { data: lastParticipant } = await supabase
-      .from("room_participants")
-      .select("joined_at")
-      .eq("room_id", data.id)
-      .order("joined_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const lastActivity = new Date(
-      lastParticipant?.joined_at || roomData.reactivated_at || data.created_at
-    );
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    if (lastActivity < sevenDaysAgo) {
-      await supabase.from("virtual_rooms").update({ is_active: false }).eq("id", data.id);
-      setLoading(false);
-      toast.error("Esta sala foi desativada por inatividade (7 dias sem acessos).");
-      return;
-    }
-
     // Fetch room activities
     const { data: acts } = await supabase
       .from("room_activities")
