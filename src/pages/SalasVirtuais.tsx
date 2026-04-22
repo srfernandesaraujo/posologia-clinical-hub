@@ -331,7 +331,10 @@ export default function SalasVirtuais() {
   const reactivateRoom = useMutation({
     mutationFn: async (room: any) => {
       const currentExpiration = room.expires_at ? new Date(room.expires_at) : null;
-      const updateData: Record<string, any> = { is_active: true };
+      const updateData: Record<string, any> = {
+        is_active: true,
+        created_at: new Date().toISOString(),
+      };
 
       if (!currentExpiration || currentExpiration < new Date()) {
         updateData.expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
