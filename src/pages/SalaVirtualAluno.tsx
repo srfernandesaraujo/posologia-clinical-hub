@@ -111,7 +111,9 @@ export default function SalaVirtualAluno() {
       return;
     }
 
-    // Check 7-day inactivity
+    const roomData = data as any;
+
+    // Check 7-day inactivity. Manual reactivation resets the inactivity window.
     const { data: lastParticipant } = await supabase
       .from("room_participants")
       .select("joined_at")
@@ -120,9 +122,9 @@ export default function SalaVirtualAluno() {
       .limit(1)
       .maybeSingle();
 
-    const lastActivity = lastParticipant?.joined_at
-      ? new Date(lastParticipant.joined_at)
-      : new Date(data.created_at);
+    const lastActivity = new Date(
+      lastParticipant?.joined_at || roomData.reactivated_at || data.created_at
+    );
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     if (lastActivity < sevenDaysAgo) {

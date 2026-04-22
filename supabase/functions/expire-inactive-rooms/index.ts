@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     // 2. No participants and room was created more than 7 days ago
     const { data: activeRooms, error: fetchErr } = await supabase
       .from("virtual_rooms")
-      .select("id, created_at")
+      .select("id, created_at, reactivated_at")
       .eq("is_active", true);
 
     if (fetchErr) throw fetchErr;
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      const lastActivity = lastParticipant?.joined_at || room.created_at;
+      const lastActivity = lastParticipant?.joined_at || room.reactivated_at || room.created_at;
       if (new Date(lastActivity) < new Date(sevenDaysAgo)) {
         roomsToDeactivate.push(room.id);
       }

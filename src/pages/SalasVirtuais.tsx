@@ -333,7 +333,7 @@ export default function SalasVirtuais() {
       const currentExpiration = room.expires_at ? new Date(room.expires_at) : null;
       const updateData: Record<string, any> = {
         is_active: true,
-        created_at: new Date().toISOString(),
+        reactivated_at: new Date().toISOString(),
       };
 
       if (!currentExpiration || currentExpiration < new Date()) {
