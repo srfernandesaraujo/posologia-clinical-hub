@@ -1056,6 +1056,19 @@ export default function SalasVirtuais() {
               <Label>Data de Expiração (opcional)</Label>
               <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
             </div>
+
+            <RestrictedAccessSection
+              enabled={restrictedAccess}
+              onEnabledChange={setRestrictedAccess}
+              students={authorizedStudents}
+              onStudentsChange={setAuthorizedStudents}
+              newName={newStudentName}
+              onNewNameChange={setNewStudentName}
+              newEmail={newStudentEmail}
+              onNewEmailChange={setNewStudentEmail}
+              bulkText={bulkStudentText}
+              onBulkTextChange={setBulkStudentText}
+            />
           </div>
           <DialogFooter>
             <Button
