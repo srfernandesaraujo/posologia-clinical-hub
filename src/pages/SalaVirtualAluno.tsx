@@ -126,24 +126,79 @@ export default function SalaVirtualAluno() {
     setStep("identify");
   };
 
-  const addGroupMember = () => setGroupMembers([...groupMembers, ""]);
-  const removeGroupMember = (i: number) => setGroupMembers(groupMembers.filter((_, idx) => idx !== i));
+  const addGroupMember = () => {
+    setGroupMembers([...groupMembers, ""]);
+    setGroupEmails([...groupEmails, ""]);
+  };
+  const removeGroupMember = (i: number) => {
+    setGroupMembers(groupMembers.filter((_, idx) => idx !== i));
+    setGroupEmails(groupEmails.filter((_, idx) => idx !== i));
+  };
   const updateGroupMember = (i: number, val: string) => {
-    const copy = [...groupMembers];
-    copy[i] = val;
-    setGroupMembers(copy);
+    const copy = [...groupMembers]; copy[i] = val; setGroupMembers(copy);
+  };
+  const updateGroupEmail = (i: number, val: string) => {
+    const copy = [...groupEmails]; copy[i] = val; setGroupEmails(copy);
   };
 
   const submitIdentification = async () => {
     const name = participantName.trim();
-    if (!name) {
-      toast.error("Informe o nome");
-      return;
+    if (!name) { toast.error("Informe o nome"); return; }
+
+    const isRestricted = !!room?.restricted_access;
+    const emailRegex = /\S+@\S+\.\S+/;
+
+    // Collect emails to validate (when restricted)
+    let emailsToCheck: string[] = [];
+    let primaryEmail = participantEmail.trim().toLowerCase();
+
+    if (isRestricted) {
+      if (!primaryEmail || !emailRegex.test(primaryEmail)) {
+        toast.error("Informe um e-mail válido");
+        return;
+      }
+      emailsToCheck.push(primaryEmail);
+      if (isGroup) {
+        const memberEmails = groupEmails.map(e => e.trim().toLowerCase()).filter(Boolean);
+        const memberNames = groupMembers.map(m => m.trim()).filter(Boolean);
+        if (memberNames.length === 0) {
+          toast.error("Adicione ao menos um componente do grupo");
+          return;
+        }
+        if (memberEmails.length !== memberNames.length) {
+          toast.error("Informe o e-mail de TODOS os componentes do grupo");
+          return;
+        }
+        for (const em of memberEmails) {
+          if (!emailRegex.test(em)) { toast.error(`E-mail inválido: ${em}`); return; }
+          if (!emailsToCheck.includes(em)) emailsToCheck.push(em);
+        }
+      }
+
+      // Validate against authorized list
+      setLoading(true);
+      const { data: authorized, error: authErr } = await supabase
+        .from("room_authorized_emails" as any)
+        .select("email")
+        .eq("room_id", room.id)
+        .in("email", emailsToCheck);
+      if (authErr) {
+        setLoading(false);
+        toast.error("Erro ao validar acesso");
+        return;
+      }
+      const authorizedSet = new Set(((authorized as any[]) || []).map(a => a.email.toLowerCase()));
+      const notAllowed = emailsToCheck.filter(e => !authorizedSet.has(e));
+      if (notAllowed.length > 0) {
+        setLoading(false);
+        toast.error(`Acesso negado. E-mail(s) não autorizado(s) nesta sala: ${notAllowed.join(", ")}`);
+        return;
+      }
     }
 
     const members = isGroup ? groupMembers.map(m => m.trim()).filter(Boolean) : [];
 
-    setLoading(true);
+    if (!loading) setLoading(true);
     const { data, error } = await supabase
       .from("room_participants")
       .insert({
@@ -151,7 +206,8 @@ export default function SalaVirtualAluno() {
         participant_name: name,
         is_group: isGroup,
         group_members: members,
-      })
+        participant_email: isRestricted ? primaryEmail : null,
+      } as any)
       .select("id")
       .single();
     setLoading(false);
