@@ -547,6 +547,22 @@ export default function Analytics() {
     },
   });
 
+  const deleteParticipant = useMutation({
+    mutationFn: async (participantId: string) => {
+      // Delete submissions first (no FK cascade configured)
+      const { error: subErr } = await supabase.from("room_submissions").delete().eq("participant_id", participantId);
+      if (subErr) throw subErr;
+      const { error } = await supabase.from("room_participants").delete().eq("id", participantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics-participants"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics-submissions"] });
+      toast.success("Envio removido");
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao remover"),
+  });
+
   const activeRooms = rooms.filter((r: any) => !r.deleted_at);
   const trashedRooms = rooms.filter((r: any) => !!r.deleted_at);
   const displayedRooms = showTrash ? trashedRooms : activeRooms;
