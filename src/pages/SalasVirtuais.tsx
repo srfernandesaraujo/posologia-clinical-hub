@@ -220,6 +220,108 @@ function parseStudentList(text: string): AuthorizedStudent[] {
   });
 }
 
+interface RestrictedAccessSectionProps {
+  enabled: boolean;
+  onEnabledChange: (v: boolean) => void;
+  students: AuthorizedStudent[];
+  onStudentsChange: (s: AuthorizedStudent[]) => void;
+  newName: string;
+  onNewNameChange: (v: string) => void;
+  newEmail: string;
+  onNewEmailChange: (v: string) => void;
+  bulkText: string;
+  onBulkTextChange: (v: string) => void;
+}
+
+function RestrictedAccessSection({
+  enabled, onEnabledChange, students, onStudentsChange,
+  newName, onNewNameChange, newEmail, onNewEmailChange,
+  bulkText, onBulkTextChange,
+}: RestrictedAccessSectionProps) {
+  const addManual = () => {
+    const name = newName.trim();
+    const email = newEmail.trim().toLowerCase();
+    if (!name || !email) { toast.error("Preencha nome e e-mail"); return; }
+    if (!/\S+@\S+\.\S+/.test(email)) { toast.error("E-mail inválido"); return; }
+    if (students.some(s => s.email === email)) { toast.error("E-mail já cadastrado"); return; }
+    onStudentsChange([...students, { student_name: name, email }]);
+    onNewNameChange(""); onNewEmailChange("");
+  };
+
+  const addBulk = () => {
+    const parsed = parseStudentList(bulkText);
+    if (parsed.length === 0) { toast.error("Nenhum e-mail válido encontrado"); return; }
+    const existing = new Set(students.map(s => s.email));
+    const merged = [...students];
+    let added = 0;
+    for (const p of parsed) {
+      if (!existing.has(p.email)) { merged.push(p); existing.add(p.email); added++; }
+    }
+    onStudentsChange(merged);
+    onBulkTextChange("");
+    toast.success(`${added} aluno(s) adicionado(s)`);
+  };
+
+  const removeStudent = (email: string) => {
+    onStudentsChange(students.filter(s => s.email !== email));
+  };
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium text-sm flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />Acesso restrito por e-mail</p>
+          <p className="text-xs text-muted-foreground">Apenas alunos cadastrados poderão entrar com seu PIN + e-mail.</p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={onEnabledChange} />
+      </div>
+
+      {enabled && (
+        <div className="space-y-3 pt-2 border-t border-border">
+          <div className="space-y-2">
+            <Label className="text-xs">Adicionar aluno individualmente</Label>
+            <div className="flex gap-2">
+              <Input placeholder="Nome do aluno" value={newName} onChange={e => onNewNameChange(e.target.value)} className="flex-1" />
+              <Input placeholder="email@exemplo.com" type="email" value={newEmail} onChange={e => onNewEmailChange(e.target.value)} className="flex-1"
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addManual(); } }} />
+              <Button type="button" variant="outline" size="sm" onClick={addManual}><Plus className="h-3.5 w-3.5" /></Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Ou cole uma lista (Nome, email — um por linha)</Label>
+            <Textarea value={bulkText} onChange={e => onBulkTextChange(e.target.value)}
+              placeholder={"Maria Silva, maria@exemplo.com\nJoão Souza, joao@exemplo.com"}
+              className="min-h-[80px] text-xs font-mono" />
+            <Button type="button" variant="outline" size="sm" onClick={addBulk} disabled={!bulkText.trim()}>Importar lista</Button>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium">Alunos autorizados ({students.length})</p>
+            {students.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Nenhum aluno cadastrado ainda.</p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto space-y-1 rounded border border-border p-2 bg-muted/30">
+                {students.map(s => (
+                  <div key={s.email} className="flex items-center justify-between gap-2 text-xs py-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{s.student_name}</p>
+                      <p className="text-muted-foreground truncate">{s.email}</p>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStudent(s.email)}>
+                      <X className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SalasVirtuais() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
