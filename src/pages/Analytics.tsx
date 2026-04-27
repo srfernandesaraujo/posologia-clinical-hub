@@ -1097,15 +1097,6 @@ export default function Analytics() {
                               </div>
                               );
                             })()}
-                                      {/* Detailed submission view */}
-                                      {pSubs.map((sub: any) => (
-                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
-                                      ))}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
                           </CardContent>
                         )}
                       </Card>
