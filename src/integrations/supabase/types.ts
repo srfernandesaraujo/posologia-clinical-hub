@@ -340,12 +340,45 @@ export type Database = {
           },
         ]
       }
+      room_authorized_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          room_id: string
+          student_name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          room_id: string
+          student_name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          room_id?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_authorized_emails_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           group_members: Json | null
           id: string
           is_group: boolean
           joined_at: string
+          participant_email: string | null
           participant_name: string
           room_id: string
         }
@@ -354,6 +387,7 @@ export type Database = {
           id?: string
           is_group?: boolean
           joined_at?: string
+          participant_email?: string | null
           participant_name: string
           room_id: string
         }
@@ -362,6 +396,7 @@ export type Database = {
           id?: string
           is_group?: boolean
           joined_at?: string
+          participant_email?: string | null
           participant_name?: string
           room_id?: string
         }
@@ -792,6 +827,7 @@ export type Database = {
           is_active: boolean
           pin: string
           reactivated_at: string | null
+          restricted_access: boolean
           simulator_slug: string | null
           title: string
         }
@@ -806,6 +842,7 @@ export type Database = {
           is_active?: boolean
           pin: string
           reactivated_at?: string | null
+          restricted_access?: boolean
           simulator_slug?: string | null
           title: string
         }
@@ -820,6 +857,7 @@ export type Database = {
           is_active?: boolean
           pin?: string
           reactivated_at?: string | null
+          restricted_access?: boolean
           simulator_slug?: string | null
           title?: string
         }
