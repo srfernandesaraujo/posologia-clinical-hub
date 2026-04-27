@@ -460,7 +460,12 @@ export default function SalasVirtuais() {
         title: editTitle,
         description: editDescription || null,
         expires_at: editExpiresAt || null,
+        restricted_access: editRestrictedAccess,
       };
+
+      if (editRestrictedAccess && editAuthorizedStudents.length === 0) {
+        throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
+      }
 
       // Only allow simulator/case change for non-exam (single-activity) rooms
       if (!isExam) {
@@ -497,6 +502,18 @@ export default function SalasVirtuais() {
         } else {
           await supabase.from("room_activities").insert({ ...payload, room_id: editRoom.id, position: 0 });
         }
+      }
+
+      // Sync authorized emails: delete all and re-insert (simple approach)
+      await supabase.from("room_authorized_emails" as any).delete().eq("room_id", editRoom.id);
+      if (editRestrictedAccess && editAuthorizedStudents.length > 0) {
+        const rows = editAuthorizedStudents.map(s => ({
+          room_id: editRoom.id,
+          student_name: s.student_name,
+          email: s.email.toLowerCase(),
+        }));
+        const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
+        if (emailErr) throw emailErr;
       }
     },
     onSuccess: () => {
