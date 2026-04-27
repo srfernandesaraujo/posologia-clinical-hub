@@ -172,8 +172,52 @@ interface ActivityItem {
   customChallenges?: any;
 }
 
+interface AuthorizedStudent {
+  student_name: string;
+  email: string;
+}
+
 function generatePin(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function parseStudentList(text: string): AuthorizedStudent[] {
+  const out: AuthorizedStudent[] = [];
+  const lines = text.split(/\r?\n/);
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    // Accept: "Name,email" / "Name;email" / "Name<TAB>email" / "Name email"
+    const parts = line.split(/[,;\t]/).map(s => s.trim()).filter(Boolean);
+    let name = "", email = "";
+    if (parts.length >= 2) {
+      // detect which one is the email
+      const emailIdx = parts.findIndex(p => /\S+@\S+\.\S+/.test(p));
+      if (emailIdx >= 0) {
+        email = parts[emailIdx];
+        name = parts.filter((_, i) => i !== emailIdx).join(" ");
+      } else {
+        name = parts[0];
+        email = parts[1];
+      }
+    } else {
+      // single token: maybe just email
+      if (/\S+@\S+\.\S+/.test(line)) {
+        email = line;
+        name = line.split("@")[0];
+      } else continue;
+    }
+    if (email && /\S+@\S+\.\S+/.test(email)) {
+      out.push({ student_name: name || email.split("@")[0], email: email.toLowerCase() });
+    }
+  }
+  // dedupe by email
+  const seen = new Set<string>();
+  return out.filter(s => {
+    if (seen.has(s.email)) return false;
+    seen.add(s.email);
+    return true;
+  });
 }
 
 export default function SalasVirtuais() {
