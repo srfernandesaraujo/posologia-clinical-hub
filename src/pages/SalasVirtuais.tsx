@@ -239,6 +239,21 @@ export default function SalasVirtuais() {
   const [editCategory, setEditCategory] = useState("");
   const [editToolType, setEditToolType] = useState<ToolType>("simulator");
   const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
+
+  // Restricted access state (create dialog)
+  const [restrictedAccess, setRestrictedAccess] = useState(false);
+  const [authorizedStudents, setAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
+  const [bulkStudentText, setBulkStudentText] = useState("");
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentEmail, setNewStudentEmail] = useState("");
+
+  // Restricted access state (edit dialog)
+  const [editRestrictedAccess, setEditRestrictedAccess] = useState(false);
+  const [editAuthorizedStudents, setEditAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
+  const [editBulkStudentText, setEditBulkStudentText] = useState("");
+  const [editNewStudentName, setEditNewStudentName] = useState("");
+  const [editNewStudentEmail, setEditNewStudentEmail] = useState("");
+
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
