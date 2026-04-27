@@ -1030,11 +1030,16 @@ export default function Analytics() {
                               </div>
                             )}
 
-                            {/* Participants */}
-                            {rParticipants.length > 0 && (
+                            {/* Participants — only those with submissions */}
+                            {(() => {
+                              const participantsWithSubs = rParticipants.filter((p: any) =>
+                                rSubmissions.some((s: any) => s.participant_id === p.id)
+                              );
+                              if (participantsWithSubs.length === 0) return null;
+                              return (
                               <div className="space-y-2">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Participantes</p>
-                                {rParticipants.map((p: any) => {
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Participantes ({participantsWithSubs.length})</p>
+                                {participantsWithSubs.map((p: any) => {
                                   const pSubs = rSubmissions.filter((s: any) => s.participant_id === p.id);
                                   const pAvg = pSubs.length > 0 ? Math.round(pSubs.reduce((a: number, s: any) => a + s.score, 0) / pSubs.length) : null;
                                   const pTime = pSubs.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
@@ -1043,18 +1048,30 @@ export default function Analytics() {
                                       <div className="flex items-center justify-between">
                                         <div>
                                           <p className="text-sm font-medium">{p.participant_name}</p>
+                                          {p.participant_email && <p className="text-xs text-muted-foreground">{p.participant_email}</p>}
                                           {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
                                           <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                           {pSubs.length > 0 && pTime > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
-                                          {pAvg !== null ? (
+                                          {pAvg !== null && (
                                             <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}>
                                               {pAvg}%
                                             </Badge>
-                                          ) : (
-                                            <Badge variant="outline">Pendente</Badge>
                                           )}
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            title="Remover este envio"
+                                            onClick={() => {
+                                              if (confirm(`Remover envio de "${p.participant_name}"? Esta ação não pode ser desfeita.`)) {
+                                                deleteParticipant.mutate(p.id);
+                                              }
+                                            }}
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                          </Button>
                                         </div>
                                       </div>
                                       {/* Per-activity breakdown for exam rooms */}
@@ -1070,6 +1087,16 @@ export default function Analytics() {
                                           })}
                                         </div>
                                       )}
+                                      {/* Detailed submission view */}
+                                      {pSubs.map((sub: any) => (
+                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              );
+                            })()}
                                       {/* Detailed submission view */}
                                       {pSubs.map((sub: any) => (
                                         <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
