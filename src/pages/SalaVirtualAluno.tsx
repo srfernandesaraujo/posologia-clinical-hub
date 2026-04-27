@@ -316,6 +316,12 @@ export default function SalaVirtualAluno() {
             <p className="text-sm text-muted-foreground">Identifique-se para começar a atividade</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {room?.restricted_access && (
+              <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-xs text-primary">
+                🔒 Esta sala tem acesso restrito. Apenas alunos previamente cadastrados pelo professor podem entrar.
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Label>Modo Grupo</Label>
               <Switch checked={isGroup} onCheckedChange={setIsGroup} />
@@ -326,16 +332,38 @@ export default function SalaVirtualAluno() {
               <Input value={participantName} onChange={e => setParticipantName(e.target.value)} placeholder={isGroup ? "Ex: Grupo A" : "Ex: Maria Silva"} />
             </div>
 
+            {room?.restricted_access && (
+              <div>
+                <Label>{isGroup ? "Seu E-mail (líder do grupo)" : "Seu E-mail"}</Label>
+                <Input
+                  type="email"
+                  value={participantEmail}
+                  onChange={e => setParticipantEmail(e.target.value)}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+            )}
+
             {isGroup && (
               <div className="space-y-2">
-                <Label>Componentes do Grupo</Label>
+                <Label>Componentes do Grupo {room?.restricted_access && "(nome + e-mail)"}</Label>
                 {groupMembers.map((m, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Input value={m} onChange={e => updateGroupMember(i, e.target.value)} placeholder={`Componente ${i + 1}`} />
-                    {groupMembers.length > 1 && (
-                      <Button variant="ghost" size="icon" onClick={() => removeGroupMember(i)}>
-                        <X className="h-4 w-4" />
-                      </Button>
+                  <div key={i} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Input value={m} onChange={e => updateGroupMember(i, e.target.value)} placeholder={`Componente ${i + 1} — nome`} />
+                      {groupMembers.length > 1 && (
+                        <Button variant="ghost" size="icon" onClick={() => removeGroupMember(i)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {room?.restricted_access && (
+                      <Input
+                        type="email"
+                        value={groupEmails[i] || ""}
+                        onChange={e => updateGroupEmail(i, e.target.value)}
+                        placeholder={`E-mail do componente ${i + 1}`}
+                      />
                     )}
                   </div>
                 ))}
