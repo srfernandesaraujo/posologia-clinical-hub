@@ -339,6 +339,10 @@ export default function SalasVirtuais() {
       const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") ? caseId : null;
       const getNativeCaseIndex = (caseId: string) => caseId?.startsWith("native:") ? parseInt(caseId.replace("native:", "")) : null;
 
+      if (restrictedAccess && authorizedStudents.length === 0) {
+        throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
+      }
+
       const { data: roomData, error: roomError } = await supabase
         .from("virtual_rooms")
         .insert({
@@ -349,7 +353,8 @@ export default function SalasVirtuais() {
           created_by: user!.id,
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
-        })
+          restricted_access: restrictedAccess,
+        } as any)
         .select("id")
         .single();
       if (roomError) throw roomError;
@@ -370,6 +375,16 @@ export default function SalasVirtuais() {
         .from("room_activities")
         .insert(activityRows);
       if (actError) throw actError;
+
+      if (restrictedAccess && authorizedStudents.length > 0) {
+        const rows = authorizedStudents.map(s => ({
+          room_id: roomData.id,
+          student_name: s.student_name,
+          email: s.email.toLowerCase(),
+        }));
+        const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
+        if (emailErr) throw emailErr;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
