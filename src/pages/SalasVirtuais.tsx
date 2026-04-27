@@ -172,8 +172,154 @@ interface ActivityItem {
   customChallenges?: any;
 }
 
+interface AuthorizedStudent {
+  student_name: string;
+  email: string;
+}
+
 function generatePin(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function parseStudentList(text: string): AuthorizedStudent[] {
+  const out: AuthorizedStudent[] = [];
+  const lines = text.split(/\r?\n/);
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    // Accept: "Name,email" / "Name;email" / "Name<TAB>email" / "Name email"
+    const parts = line.split(/[,;\t]/).map(s => s.trim()).filter(Boolean);
+    let name = "", email = "";
+    if (parts.length >= 2) {
+      // detect which one is the email
+      const emailIdx = parts.findIndex(p => /\S+@\S+\.\S+/.test(p));
+      if (emailIdx >= 0) {
+        email = parts[emailIdx];
+        name = parts.filter((_, i) => i !== emailIdx).join(" ");
+      } else {
+        name = parts[0];
+        email = parts[1];
+      }
+    } else {
+      // single token: maybe just email
+      if (/\S+@\S+\.\S+/.test(line)) {
+        email = line;
+        name = line.split("@")[0];
+      } else continue;
+    }
+    if (email && /\S+@\S+\.\S+/.test(email)) {
+      out.push({ student_name: name || email.split("@")[0], email: email.toLowerCase() });
+    }
+  }
+  // dedupe by email
+  const seen = new Set<string>();
+  return out.filter(s => {
+    if (seen.has(s.email)) return false;
+    seen.add(s.email);
+    return true;
+  });
+}
+
+interface RestrictedAccessSectionProps {
+  enabled: boolean;
+  onEnabledChange: (v: boolean) => void;
+  students: AuthorizedStudent[];
+  onStudentsChange: (s: AuthorizedStudent[]) => void;
+  newName: string;
+  onNewNameChange: (v: string) => void;
+  newEmail: string;
+  onNewEmailChange: (v: string) => void;
+  bulkText: string;
+  onBulkTextChange: (v: string) => void;
+}
+
+function RestrictedAccessSection({
+  enabled, onEnabledChange, students, onStudentsChange,
+  newName, onNewNameChange, newEmail, onNewEmailChange,
+  bulkText, onBulkTextChange,
+}: RestrictedAccessSectionProps) {
+  const addManual = () => {
+    const name = newName.trim();
+    const email = newEmail.trim().toLowerCase();
+    if (!name || !email) { toast.error("Preencha nome e e-mail"); return; }
+    if (!/\S+@\S+\.\S+/.test(email)) { toast.error("E-mail inválido"); return; }
+    if (students.some(s => s.email === email)) { toast.error("E-mail já cadastrado"); return; }
+    onStudentsChange([...students, { student_name: name, email }]);
+    onNewNameChange(""); onNewEmailChange("");
+  };
+
+  const addBulk = () => {
+    const parsed = parseStudentList(bulkText);
+    if (parsed.length === 0) { toast.error("Nenhum e-mail válido encontrado"); return; }
+    const existing = new Set(students.map(s => s.email));
+    const merged = [...students];
+    let added = 0;
+    for (const p of parsed) {
+      if (!existing.has(p.email)) { merged.push(p); existing.add(p.email); added++; }
+    }
+    onStudentsChange(merged);
+    onBulkTextChange("");
+    toast.success(`${added} aluno(s) adicionado(s)`);
+  };
+
+  const removeStudent = (email: string) => {
+    onStudentsChange(students.filter(s => s.email !== email));
+  };
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium text-sm flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />Acesso restrito por e-mail</p>
+          <p className="text-xs text-muted-foreground">Apenas alunos cadastrados poderão entrar com seu PIN + e-mail.</p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={onEnabledChange} />
+      </div>
+
+      {enabled && (
+        <div className="space-y-3 pt-2 border-t border-border">
+          <div className="space-y-2">
+            <Label className="text-xs">Adicionar aluno individualmente</Label>
+            <div className="flex gap-2">
+              <Input placeholder="Nome do aluno" value={newName} onChange={e => onNewNameChange(e.target.value)} className="flex-1" />
+              <Input placeholder="email@exemplo.com" type="email" value={newEmail} onChange={e => onNewEmailChange(e.target.value)} className="flex-1"
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addManual(); } }} />
+              <Button type="button" variant="outline" size="sm" onClick={addManual}><Plus className="h-3.5 w-3.5" /></Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Ou cole uma lista (Nome, email — um por linha)</Label>
+            <Textarea value={bulkText} onChange={e => onBulkTextChange(e.target.value)}
+              placeholder={"Maria Silva, maria@exemplo.com\nJoão Souza, joao@exemplo.com"}
+              className="min-h-[80px] text-xs font-mono" />
+            <Button type="button" variant="outline" size="sm" onClick={addBulk} disabled={!bulkText.trim()}>Importar lista</Button>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium">Alunos autorizados ({students.length})</p>
+            {students.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Nenhum aluno cadastrado ainda.</p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto space-y-1 rounded border border-border p-2 bg-muted/30">
+                {students.map(s => (
+                  <div key={s.email} className="flex items-center justify-between gap-2 text-xs py-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{s.student_name}</p>
+                      <p className="text-muted-foreground truncate">{s.email}</p>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStudent(s.email)}>
+                      <X className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function SalasVirtuais() {
@@ -195,6 +341,21 @@ export default function SalasVirtuais() {
   const [editCategory, setEditCategory] = useState("");
   const [editToolType, setEditToolType] = useState<ToolType>("simulator");
   const [challengeEditorIndex, setChallengeEditorIndex] = useState<number | null>(null);
+
+  // Restricted access state (create dialog)
+  const [restrictedAccess, setRestrictedAccess] = useState(false);
+  const [authorizedStudents, setAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
+  const [bulkStudentText, setBulkStudentText] = useState("");
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentEmail, setNewStudentEmail] = useState("");
+
+  // Restricted access state (edit dialog)
+  const [editRestrictedAccess, setEditRestrictedAccess] = useState(false);
+  const [editAuthorizedStudents, setEditAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
+  const [editBulkStudentText, setEditBulkStudentText] = useState("");
+  const [editNewStudentName, setEditNewStudentName] = useState("");
+  const [editNewStudentEmail, setEditNewStudentEmail] = useState("");
+
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
@@ -280,6 +441,10 @@ export default function SalasVirtuais() {
       const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") ? caseId : null;
       const getNativeCaseIndex = (caseId: string) => caseId?.startsWith("native:") ? parseInt(caseId.replace("native:", "")) : null;
 
+      if (restrictedAccess && authorizedStudents.length === 0) {
+        throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
+      }
+
       const { data: roomData, error: roomError } = await supabase
         .from("virtual_rooms")
         .insert({
@@ -290,7 +455,8 @@ export default function SalasVirtuais() {
           created_by: user!.id,
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
-        })
+          restricted_access: restrictedAccess,
+        } as any)
         .select("id")
         .single();
       if (roomError) throw roomError;
@@ -311,6 +477,16 @@ export default function SalasVirtuais() {
         .from("room_activities")
         .insert(activityRows);
       if (actError) throw actError;
+
+      if (restrictedAccess && authorizedStudents.length > 0) {
+        const rows = authorizedStudents.map(s => ({
+          room_id: roomData.id,
+          student_name: s.student_name,
+          email: s.email.toLowerCase(),
+        }));
+        const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
+        if (emailErr) throw emailErr;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
@@ -386,7 +562,12 @@ export default function SalasVirtuais() {
         title: editTitle,
         description: editDescription || null,
         expires_at: editExpiresAt || null,
+        restricted_access: editRestrictedAccess,
       };
+
+      if (editRestrictedAccess && editAuthorizedStudents.length === 0) {
+        throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
+      }
 
       // Only allow simulator/case change for non-exam (single-activity) rooms
       if (!isExam) {
@@ -424,6 +605,18 @@ export default function SalasVirtuais() {
           await supabase.from("room_activities").insert({ ...payload, room_id: editRoom.id, position: 0 });
         }
       }
+
+      // Sync authorized emails: delete all and re-insert (simple approach)
+      await supabase.from("room_authorized_emails" as any).delete().eq("room_id", editRoom.id);
+      if (editRestrictedAccess && editAuthorizedStudents.length > 0) {
+        const rows = editAuthorizedStudents.map(s => ({
+          room_id: editRoom.id,
+          student_name: s.student_name,
+          email: s.email.toLowerCase(),
+        }));
+        const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
+        if (emailErr) throw emailErr;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
@@ -433,7 +626,7 @@ export default function SalasVirtuais() {
     onError: (err: any) => toast.error(err.message || "Erro ao atualizar sala"),
   });
 
-  const openEdit = (room: any) => {
+  const openEdit = async (room: any) => {
     setEditRoom(room);
     setEditTitle(room.title || "");
     setEditDescription(room.description || "");
@@ -448,6 +641,17 @@ export default function SalasVirtuais() {
       setEditToolType("simulator");
       setEditCategory("");
     }
+    setEditRestrictedAccess(!!room.restricted_access);
+    setEditBulkStudentText("");
+    setEditNewStudentName("");
+    setEditNewStudentEmail("");
+    // Load authorized students
+    const { data: emails } = await supabase
+      .from("room_authorized_emails" as any)
+      .select("student_name, email")
+      .eq("room_id", room.id)
+      .order("student_name");
+    setEditAuthorizedStudents(((emails as any[]) || []).map(e => ({ student_name: e.student_name, email: e.email })));
   };
 
   const resetForm = () => {
@@ -458,6 +662,11 @@ export default function SalasVirtuais() {
     setIsExamMode(false);
     setToolType("simulator");
     setChallengeEditorIndex(null);
+    setRestrictedAccess(false);
+    setAuthorizedStudents([]);
+    setBulkStudentText("");
+    setNewStudentName("");
+    setNewStudentEmail("");
   };
 
   const copyPin = (pin: string) => {
@@ -566,6 +775,11 @@ export default function SalasVirtuais() {
                     {isRoomExam(room) && (
                       <Badge variant="outline" className="text-xs">
                         <ClipboardList className="h-3 w-3 mr-1" />Prova
+                      </Badge>
+                    )}
+                    {room.restricted_access && (
+                      <Badge variant="outline" className="text-xs">
+                        <Lock className="h-3 w-3 mr-1" />Restrita
                       </Badge>
                     )}
                   </div>
@@ -847,6 +1061,19 @@ export default function SalasVirtuais() {
               <Label>Data de Expiração (opcional)</Label>
               <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
             </div>
+
+            <RestrictedAccessSection
+              enabled={restrictedAccess}
+              onEnabledChange={setRestrictedAccess}
+              students={authorizedStudents}
+              onStudentsChange={setAuthorizedStudents}
+              newName={newStudentName}
+              onNewNameChange={setNewStudentName}
+              newEmail={newStudentEmail}
+              onNewEmailChange={setNewStudentEmail}
+              bulkText={bulkStudentText}
+              onBulkTextChange={setBulkStudentText}
+            />
           </div>
           <DialogFooter>
             <Button
@@ -1062,6 +1289,19 @@ export default function SalasVirtuais() {
                   <Label>Data de Expiração (opcional)</Label>
                   <Input type="datetime-local" value={editExpiresAt} onChange={e => setEditExpiresAt(e.target.value)} />
                 </div>
+
+                <RestrictedAccessSection
+                  enabled={editRestrictedAccess}
+                  onEnabledChange={setEditRestrictedAccess}
+                  students={editAuthorizedStudents}
+                  onStudentsChange={setEditAuthorizedStudents}
+                  newName={editNewStudentName}
+                  onNewNameChange={setEditNewStudentName}
+                  newEmail={editNewStudentEmail}
+                  onNewEmailChange={setEditNewStudentEmail}
+                  bulkText={editBulkStudentText}
+                  onBulkTextChange={setEditBulkStudentText}
+                />
               </div>
             );
           })()}
