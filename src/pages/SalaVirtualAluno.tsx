@@ -75,8 +75,10 @@ export default function SalaVirtualAluno() {
 
   // Identification
   const [participantName, setParticipantName] = useState("");
+  const [participantEmail, setParticipantEmail] = useState("");
   const [isGroup, setIsGroup] = useState(false);
   const [groupMembers, setGroupMembers] = useState<string[]>([""]);
+  const [groupEmails, setGroupEmails] = useState<string[]>([""]);
   const [participantId, setParticipantId] = useState<string | null>(null);
 
   useEffect(() => {
