@@ -777,6 +777,11 @@ export default function SalasVirtuais() {
                         <ClipboardList className="h-3 w-3 mr-1" />Prova
                       </Badge>
                     )}
+                    {room.restricted_access && (
+                      <Badge variant="outline" className="text-xs">
+                        <Lock className="h-3 w-3 mr-1" />Restrita
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(room)} title="Editar sala">
