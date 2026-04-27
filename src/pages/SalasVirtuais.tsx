@@ -524,7 +524,7 @@ export default function SalasVirtuais() {
     onError: (err: any) => toast.error(err.message || "Erro ao atualizar sala"),
   });
 
-  const openEdit = (room: any) => {
+  const openEdit = async (room: any) => {
     setEditRoom(room);
     setEditTitle(room.title || "");
     setEditDescription(room.description || "");
@@ -539,6 +539,17 @@ export default function SalasVirtuais() {
       setEditToolType("simulator");
       setEditCategory("");
     }
+    setEditRestrictedAccess(!!room.restricted_access);
+    setEditBulkStudentText("");
+    setEditNewStudentName("");
+    setEditNewStudentEmail("");
+    // Load authorized students
+    const { data: emails } = await supabase
+      .from("room_authorized_emails" as any)
+      .select("student_name, email")
+      .eq("room_id", room.id)
+      .order("student_name");
+    setEditAuthorizedStudents(((emails as any[]) || []).map(e => ({ student_name: e.student_name, email: e.email })));
   };
 
   const resetForm = () => {
@@ -549,6 +560,11 @@ export default function SalasVirtuais() {
     setIsExamMode(false);
     setToolType("simulator");
     setChallengeEditorIndex(null);
+    setRestrictedAccess(false);
+    setAuthorizedStudents([]);
+    setBulkStudentText("");
+    setNewStudentName("");
+    setNewStudentEmail("");
   };
 
   const copyPin = (pin: string) => {
