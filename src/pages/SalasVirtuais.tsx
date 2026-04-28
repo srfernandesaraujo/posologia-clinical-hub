@@ -632,7 +632,26 @@ export default function SalasVirtuais() {
     setEditDescription(room.description || "");
     setEditExpiresAt(room.expires_at ? new Date(room.expires_at).toISOString().slice(0, 16) : "");
     setEditSimulatorSlug(room.simulator_slug || "");
-    setEditCaseId(room.case_id || "");
+
+    // Pre-select case: prefer room.case_id; if absent, look up native case index in activity row
+    let preselectedCaseId = room.case_id || "";
+    if (!preselectedCaseId && room.simulator_slug) {
+      const { data: actRows } = await supabase
+        .from("room_activities")
+        .select("case_id, custom_challenges")
+        .eq("room_id", room.id)
+        .order("position")
+        .limit(1);
+      const act: any = actRows?.[0];
+      if (act?.case_id) {
+        preselectedCaseId = act.case_id;
+      } else {
+        const nativeIdx = act?.custom_challenges?.nativeCaseIndex;
+        if (typeof nativeIdx === "number") preselectedCaseId = `native:${nativeIdx}`;
+      }
+    }
+    setEditCaseId(preselectedCaseId);
+
     const slug = room.simulator_slug;
     if (slug) {
       setEditToolType(LAB_OPTIONS.some(l => l.slug === slug) ? "laboratory" : "simulator");
