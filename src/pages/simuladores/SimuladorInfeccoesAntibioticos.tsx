@@ -533,7 +533,7 @@ export default function SimuladorInfeccoesAntibioticos() {
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
                 {drug.class !== "Reidratação"
-                  ? `Espectro: ${Math.round(drug.spectrum * 100)}% • t½: ${drug.halfLife}h • Via: ${drug.routes.join(", ")} • Conc. urinária: ${Math.round(drug.urinaryConcentration * 100)}% • Conc. intestinal: ${Math.round(drug.intestinalConcentration * 100)}%`
+                  ? `Espectro: ${Math.round(drug.spectrum * 100)}% • t½: ${drug.halfLife}h • Via: ${drug.routes.join(", ")} • Penetração urinária: ${drug.urinaryConcentration}× • Penetração intestinal: ${drug.intestinalConcentration}× • MIC alvo: ${drug.mic} u.a.`
                   : "Solução de reidratação oral — base do tratamento da diarreia"}
               </p>
             </div>
