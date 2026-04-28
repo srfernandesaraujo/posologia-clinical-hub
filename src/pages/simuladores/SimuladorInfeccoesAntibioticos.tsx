@@ -149,34 +149,39 @@ function computeSimulation(
   infectionType: string, initialBacterialLoad: number
 ) {
   const hours = Array.from({ length: 337 }, (_, i) => i * 0.5); // 0-168h (7 days) in 0.5h steps
-  const doseFraction = dose / drug.doseMax;
+  // Dose multiplier: how many "standard doses" the user prescribed (1.0 = clinical minimum / standard)
+  const doseMultiplier = dose / drug.doseMin;
   const isSRO = drug.name.startsWith("SRO");
   const isVancoOral = drug.bioavailability === 0 && drug.intestinalConcentration > 0;
+  const isFosfomicina = drug.name.includes("Fosfomicina");
 
   // Determine if drug targets urine or intestine
   const isUTI = ["itu-nao-complicada", "itu-complicada", "pielonefrite"].includes(infectionType);
 
   // Fosfomicina: single dose
-  const isSingleDose = drug.doseMin === drug.doseMax && drug.intervalMax === 24 && drug.name.includes("Fosfomicina");
+  const isSingleDose = isFosfomicina;
 
-  // DRC penalty for urinary concentration
-  let effectiveUrinaryConc = drug.urinaryConcentration;
+  // DRC penalty for urinary concentration (drug doesn't reach urine adequately)
+  let effectiveUrinaryFactor = drug.urinaryConcentration;
   if (specialGroups.drc && !drug.safeDRC) {
-    effectiveUrinaryConc *= 0.2; // 80% reduction — drug doesn't reach urine adequately
+    effectiveUrinaryFactor *= 0.15;
   }
 
-  const siteConcentrationFactor = isUTI ? effectiveUrinaryConc : drug.intestinalConcentration;
+  const tissueFactor = isUTI ? effectiveUrinaryFactor : drug.intestinalConcentration;
 
   const data: { hour: number; bacterialLoad: number; cpPlasma: number; cpSite: number; micLine: number; temperature: number; leucocitos: number; pcr: number }[] = [];
 
   let currentBacterialLoad = initialBacterialLoad;
-  const bacterialGrowthRate = 0.15; // log10/h regrowth when Cp < MIC
-  const maxBacterialLoad = initialBacterialLoad + 0.5; // can slightly exceed initial
+  const bacterialGrowthRate = 0.18; // log10/h regrowth when Cp < MIC
+  const maxBacterialLoad = initialBacterialLoad + 0.5;
+
+  // Cp scale: peak plasma at standard dose ≈ 30 u.a. (chosen so MICs 6-25 are reachable but not trivially)
+  const PLASMA_SCALE = 30;
 
   for (let idx = 0; idx < hours.length; idx++) {
     const h = hours[idx];
 
-    // Pharmacokinetic curve
+    // Plasma concentration (superposition of doses)
     let cpPlasma = 0;
     if (!isSRO && drug.halfLife > 0) {
       const maxDoses = isSingleDose ? 1 : Math.floor(h / interval) + 1;
@@ -187,50 +192,56 @@ function computeSimulation(
         const elimination = Math.exp(-0.693 * tSinceDose / drug.halfLife);
         cpPlasma += absorption * elimination;
       }
-      cpPlasma = cpPlasma * doseFraction * 100;
+      cpPlasma = cpPlasma * doseMultiplier * PLASMA_SCALE;
     }
 
-    // Site concentration
+    // Site (tissue) concentration
     let cpSite: number;
     if (isVancoOral) {
-      // Vancomycin oral: bio=0, calculate intestinal concentration directly from dose
-      const intestinalVolume = 0.5; // L (approximate gut volume)
+      // Vancomycin oral: 0% absorption — concentrate in gut lumen
       const maxDoses = Math.floor(h / interval) + 1;
       let intestinalCp = 0;
-      const gutHalfLife = 12; // hours — gut transit elimination
+      const gutHalfLife = 8;
       for (let d = 0; d < maxDoses; d++) {
         const tSinceDose = h - d * interval;
         if (tSinceDose < 0) continue;
-        const doseInGut = dose / (intestinalVolume * 1000); // mg/mL → scale to arbitrary units
         const absorption = 1 - Math.exp(-tSinceDose / 0.5);
         const elimination = Math.exp(-0.693 * tSinceDose / gutHalfLife);
-        intestinalCp += doseInGut * absorption * elimination * 100;
+        intestinalCp += absorption * elimination;
       }
-      cpSite = intestinalCp * drug.intestinalConcentration;
+      cpPlasma = 0;
+      cpSite = intestinalCp * doseMultiplier * (drug.intestinalConcentration * 4);
     } else if (isSRO) {
+      cpPlasma = 0;
       cpSite = 0;
+    } else if (isFosfomicina && isUTI) {
+      // Fosfomicina: long urinary terminal half-life (~36h) gives sustained urinary concentration after single 3g dose
+      // Build a separate slow-elimination curve for the urinary site
+      const urinaryHalfLife = 36;
+      const tSinceDose = h;
+      const absorption = drug.bioavailability * (1 - Math.exp(-tSinceDose / drug.tmax));
+      const slowElim = Math.exp(-0.693 * tSinceDose / urinaryHalfLife);
+      cpSite = absorption * slowElim * doseMultiplier * effectiveUrinaryFactor * 1.5;
     } else {
-      cpSite = cpPlasma * siteConcentrationFactor;
+      cpSite = cpPlasma * tissueFactor / 4; // tissueFactor scaled (1 ≈ same as plasma)
     }
 
-    // Dynamic bacterial load: if cpSite > MIC → kill; if cpSite < MIC → regrow
+    // Bacterial dynamics: kill if cpSite > MIC, else regrow
     if (idx > 0) {
-      const dt = 0.5; // hours per step
+      const dt = 0.5;
       if (isSRO) {
-        // SRO doesn't kill bacteria
-        currentBacterialLoad = Math.min(maxBacterialLoad, currentBacterialLoad + bacterialGrowthRate * dt * 0.3);
+        currentBacterialLoad = Math.min(maxBacterialLoad, currentBacterialLoad + bacterialGrowthRate * dt * 0.2);
       } else if (cpSite > drug.mic) {
-        // Kill rate proportional to how far above MIC
-        const killFactor = Math.min((cpSite / drug.mic - 1) * 0.08 * drug.spectrum, 0.5);
+        const ratio = cpSite / drug.mic;
+        // Hill-like kill: more aggressive when well above MIC
+        const killFactor = Math.min(0.04 * ratio * (0.4 + drug.spectrum), 0.6);
         currentBacterialLoad = Math.max(0, currentBacterialLoad - killFactor * dt);
       } else if (currentBacterialLoad > 0.5) {
-        // Regrowth when below MIC
         currentBacterialLoad = Math.min(maxBacterialLoad, currentBacterialLoad + bacterialGrowthRate * dt);
       }
     }
 
-    // Clinical parameters reacting to bacterial load
-    const infectionSeverity = currentBacterialLoad / initialBacterialLoad;
+    const infectionSeverity = currentBacterialLoad / Math.max(initialBacterialLoad, 0.1);
     const hydrationBonus = hydration ? 0.15 : 0;
     const temperature = 36.5 + infectionSeverity * 2.5 - hydrationBonus;
     const leucocitos = 5000 + infectionSeverity * 15000;
@@ -248,18 +259,18 @@ function computeSimulation(
     });
   }
 
-  // Side effects adjusted by special groups
-  const doseRatio = doseFraction;
-  const se = { ...drug.sideEffects };
-  let giRisk = se.gi * doseRatio * 100;
-  let tendiniteRisk = se.tendinite * doseRatio * 100;
-  if (specialGroups.idoso) tendiniteRisk *= 2.0; // Elderly: higher tendinopathy risk with FQs
-  let nefroRisk = se.nefro * doseRatio * 100;
+  // Side effects: use clinical doseRatio (1.0 at standard dose), capped at 1.5 to allow some dose-dependence
+  const clinicalRatio = Math.min(1.5, Math.max(0.5, dose / drug.doseMin));
+  const se = drug.sideEffects;
+  let giRisk = se.gi * clinicalRatio * 100;
+  let tendiniteRisk = se.tendinite * clinicalRatio * 100;
+  if (specialGroups.idoso) tendiniteRisk *= 2.0;
+  let nefroRisk = se.nefro * clinicalRatio * 100;
   if (specialGroups.drc) nefroRisk *= 2.5;
-  let disbioseRisk = se.disbiose * doseRatio * 100;
+  let disbioseRisk = se.disbiose * clinicalRatio * 100;
   if (specialGroups.imunossuprimido) disbioseRisk *= 1.8;
-  const fotoRisk = se.foto * doseRatio * 100;
-  const qtRisk = se.qt * doseRatio * 100;
+  const fotoRisk = se.foto * clinicalRatio * 100;
+  const qtRisk = se.qt * clinicalRatio * 100;
 
   const sideEffectData: { name: string; risco: number }[] = [
     { name: "GI", risco: Math.round(Math.min(giRisk, 100)) },
@@ -270,19 +281,16 @@ function computeSimulation(
     { name: "QT", risco: Math.round(Math.min(qtRisk, 100)) },
   ];
 
-  // Teratogenicity bar for pregnant + unsafe drug
   if (specialGroups.gestante && !drug.safePregnancy) {
-    sideEffectData.push({ name: "Teratogen.", risco: Math.round(Math.min(85 + doseRatio * 15, 100)) });
+    sideEffectData.push({ name: "Teratogen.", risco: Math.round(Math.min(85 + clinicalRatio * 10, 100)) });
   }
 
-  // Safety warnings
   const warnings: string[] = [];
   if (specialGroups.gestante && !drug.safePregnancy) warnings.push(`⚠️ ${drug.name} é CONTRAINDICADO na gestação!`);
   if (specialGroups.drc && !drug.safeDRC) warnings.push(`⚠️ ${drug.name} requer ajuste/evitar na DRC!`);
   if (specialGroups.idoso && !drug.safeElderly) warnings.push(`⚠️ ${drug.name} tem riscos aumentados em idosos!`);
   if (drug.class === "Fluoroquinolona" && infectionType === "itu-nao-complicada") warnings.push("⚠️ Fluoroquinolonas NÃO são 1ª linha na ITU não-complicada!");
 
-  // Vital signs
   const lastData = data[data.length - 1];
   const vitals = {
     temp: lastData?.temperature ?? 37,
