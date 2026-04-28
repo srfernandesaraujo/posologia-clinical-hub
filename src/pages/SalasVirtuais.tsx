@@ -429,6 +429,20 @@ export default function SalasVirtuais() {
     },
   });
 
+  const { data: authorizedStudentsForDetail = [] } = useQuery({
+    queryKey: ["room-authorized-emails", detailRoom?.id],
+    enabled: !!detailRoom && !!detailRoom.restricted_access,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_authorized_emails" as any)
+        .select("student_name, email")
+        .eq("room_id", detailRoom.id)
+        .order("student_name");
+      if (error) throw error;
+      return ((data as any[]) || []).map(d => ({ student_name: d.student_name, email: (d.email || "").toLowerCase() }));
+    },
+  });
+
   const createRoom = useMutation({
     mutationFn: async () => {
       const validActivities = activities.filter(a => a.simulatorSlug);
