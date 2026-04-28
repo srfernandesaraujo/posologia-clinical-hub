@@ -216,12 +216,11 @@ function computeSimulation(
       cpSite = 0;
     } else if (isFosfomicina && isUTI) {
       // Fosfomicina: long urinary terminal half-life (~36h) gives sustained urinary concentration after single 3g dose
-      // Build a separate slow-elimination curve for the urinary site
       const urinaryHalfLife = 36;
       const tSinceDose = h;
       const absorption = drug.bioavailability * (1 - Math.exp(-tSinceDose / drug.tmax));
       const slowElim = Math.exp(-0.693 * tSinceDose / urinaryHalfLife);
-      cpSite = absorption * slowElim * doseMultiplier * effectiveUrinaryFactor * 1.5;
+      cpSite = absorption * slowElim * doseMultiplier * effectiveUrinaryFactor * 4;
     } else {
       cpSite = cpPlasma * tissueFactor / 4; // tissueFactor scaled (1 ≈ same as plasma)
     }
