@@ -260,7 +260,7 @@ function computeSimulation(
   }
 
   // Side effects: use clinical doseRatio (1.0 at standard dose), capped at 1.5 to allow some dose-dependence
-  const clinicalRatio = Math.min(1.5, Math.max(0.5, dose / drug.doseMin));
+  const clinicalRatio = Math.min(1.5, dose / drug.doseMin);
   const se = drug.sideEffects;
   let giRisk = se.gi * clinicalRatio * 100;
   let tendiniteRisk = se.tendinite * clinicalRatio * 100;
