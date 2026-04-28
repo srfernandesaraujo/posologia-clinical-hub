@@ -1139,10 +1139,41 @@ export default function SalasVirtuais() {
             </div>
           )}
 
-          <h3 className="text-sm font-semibold mb-2">Participantes</h3>
-          {participants.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">Nenhum participante entrou na sala ainda.</p>
-          ) : (
+          {(() => {
+            const isRestricted = !!detailRoom?.restricted_access;
+            // Build set of joined emails (lowercased) — both leader and group members emails
+            const joinedEmails = new Set<string>();
+            participants.forEach((p: any) => {
+              if (p.participant_email) joinedEmails.add(String(p.participant_email).toLowerCase());
+              if (Array.isArray(p.group_members)) {
+                p.group_members.forEach((m: any) => {
+                  const e = typeof m === "string" ? null : m?.email;
+                  if (e) joinedEmails.add(String(e).toLowerCase());
+                });
+              }
+            });
+            const pendingAuthorized = isRestricted
+              ? authorizedStudentsForDetail.filter((a: any) => !joinedEmails.has(a.email))
+              : [];
+
+            return (
+              <>
+                {isRestricted && (
+                  <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Ingressou</Badge> entrou na sala</span>
+                    <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-primary/40 text-primary"><Lock className="h-2.5 w-2.5 mr-1" />Cadastrado</Badge> autorizado por e-mail</span>
+                    <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-amber-500/40 text-amber-400">Aguardando</Badge> ainda não entrou</span>
+                  </div>
+                )}
+
+                <h3 className="text-sm font-semibold mb-2">Participantes</h3>
+                {participants.length === 0 && pendingAuthorized.length === 0 ? (
+                  <p className="text-muted-foreground text-sm py-4">Nenhum participante entrou na sala ainda.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {participants.length === 0 && (
+                      <p className="text-muted-foreground text-sm">Ninguém ingressou ainda.</p>
+                    )}
             <div className="space-y-4">
               {participants.map((p: any) => {
                 const pSubmissions = submissions.filter((s: any) => s.participant_id === p.id);
