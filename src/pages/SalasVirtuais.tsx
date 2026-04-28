@@ -1174,65 +1174,103 @@ export default function SalasVirtuais() {
                     {participants.length === 0 && (
                       <p className="text-muted-foreground text-sm">Ninguém ingressou ainda.</p>
                     )}
-            <div className="space-y-4">
-              {participants.map((p: any) => {
-                const pSubmissions = submissions.filter((s: any) => s.participant_id === p.id);
-                const avgScore = pSubmissions.length > 0 ? Math.round(pSubmissions.reduce((a: number, s: any) => a + s.score, 0) / pSubmissions.length) : null;
-                const totalTime = pSubmissions.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
-                return (
-                  <Card key={p.id}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="font-medium">{p.participant_name}</p>
-                          {p.is_group && (
-                            <p className="text-xs text-muted-foreground">
-                              Grupo: {(p.group_members as any[] || []).join(", ")}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground">Entrou: {new Date(p.joined_at).toLocaleString("pt-BR")}</p>
-                        </div>
-                        <div className="text-right">
-                          {avgScore !== null ? (
-                            <Badge variant={avgScore >= 80 ? "secondary" : avgScore >= 50 ? "default" : "destructive"} className={avgScore >= 80 ? "bg-green-100 text-green-800" : ""}>
-                              {avgScore}% média
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">Sem submissões</Badge>
-                          )}
+                    {participants.map((p: any) => {
+                      const pSubmissions = submissions.filter((s: any) => s.participant_id === p.id);
+                      const avgScore = pSubmissions.length > 0 ? Math.round(pSubmissions.reduce((a: number, s: any) => a + s.score, 0) / pSubmissions.length) : null;
+                      const totalTime = pSubmissions.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
+                      const pEmail = (p.participant_email || "").toLowerCase();
+                      const isAuthorized = isRestricted && pEmail && authorizedStudentsForDetail.some((a: any) => a.email === pEmail);
+                      return (
+                        <Card key={p.id}>
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between mb-2 gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="font-medium">{p.participant_name}</p>
+                                  <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                  {isAuthorized && (
+                                    <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
+                                      <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
+                                    </Badge>
+                                  )}
+                                </div>
+                                {p.participant_email && (
+                                  <p className="text-xs text-muted-foreground truncate">{p.participant_email}</p>
+                                )}
+                                {p.is_group && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Grupo: {(p.group_members as any[] || []).map((m: any) => typeof m === "string" ? m : (m?.name || m?.email)).join(", ")}
+                                  </p>
+                                )}
+                                <p className="text-xs text-muted-foreground">Entrou: {new Date(p.joined_at).toLocaleString("pt-BR")}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                {avgScore !== null ? (
+                                  <Badge variant={avgScore >= 80 ? "secondary" : avgScore >= 50 ? "default" : "destructive"} className={avgScore >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                    {avgScore}% média
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline">Sem submissões</Badge>
+                                )}
+                              </div>
+                            </div>
+                            {pSubmissions.length > 0 && (
+                              <>
+                                <Separator className="my-2" />
+                                <div className="space-y-1">
+                                  {pSubmissions.map((s: any) => {
+                                    const activity = roomActivities.find((a: any) => a.id === s.activity_id);
+                                    const actLabel = activity
+                                      ? `${getToolLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
+                                      : `Etapa ${s.step_index + 1}`;
+                                    return (
+                                      <div key={s.id} className="flex items-center justify-between text-sm">
+                                        <span>{actLabel}</span>
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-muted-foreground">{Math.floor(s.time_spent_seconds / 60)}m{s.time_spent_seconds % 60}s</span>
+                                          <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                            {s.score}%
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <p className="text-xs text-muted-foreground mt-1">Tempo total: {Math.floor(totalTime / 60)}m{totalTime % 60}s</p>
+                                </div>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+
+                    {pendingAuthorized.length > 0 && (
+                      <div>
+                        <Separator className="my-2" />
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Cadastrados aguardando ingresso ({pendingAuthorized.length})</h4>
+                        <div className="space-y-1.5">
+                          {pendingAuthorized.map((s: any) => (
+                            <div key={s.email} className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="text-sm font-medium truncate">{s.student_name}</p>
+                                  <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
+                                    <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
+                                  </Badge>
+                                  <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Aguardando</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground truncate">{s.email}</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      {pSubmissions.length > 0 && (
-                        <>
-                          <Separator className="my-2" />
-                          <div className="space-y-1">
-                            {pSubmissions.map((s: any) => {
-                              const activity = roomActivities.find((a: any) => a.id === s.activity_id);
-                              const actLabel = activity
-                                ? `${getToolLabel(activity.simulator_slug)} (Ativ. ${activity.position + 1})`
-                                : `Etapa ${s.step_index + 1}`;
-                              return (
-                                <div key={s.id} className="flex items-center justify-between text-sm">
-                                  <span>{actLabel}</span>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-muted-foreground">{Math.floor(s.time_spent_seconds / 60)}m{s.time_spent_seconds % 60}s</span>
-                                    <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-green-100 text-green-800" : ""}>
-                                      {s.score}%
-                                    </Badge>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            <p className="text-xs text-muted-foreground mt-1">Tempo total: {Math.floor(totalTime / 60)}m{totalTime % 60}s</p>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
