@@ -324,6 +324,19 @@ export default function SimulatorChallengeMode({
 
   // ── Finished ──
   if (finished) {
+    if (viewOnly) {
+      return (
+        <Card className="border-primary/30">
+          <CardContent className="pt-6 space-y-3 text-center">
+            <Eye className="h-10 w-10 mx-auto text-amber-500" />
+            <h3 className="text-lg font-bold">Leitura encerrada</h3>
+            <p className="text-sm text-muted-foreground">
+              Você revisou todos os desafios em modo somente-leitura. Nenhuma resposta foi registrada.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
     const pct = Math.round((score / challenges.length) * 100);
     const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : pct >= 30 ? 1 : 0;
     return (
