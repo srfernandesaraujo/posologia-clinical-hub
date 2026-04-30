@@ -96,6 +96,14 @@ export default function SimulatorChallengeMode({
   // Virtual room detection
   const vrContextRef = useRef<any>(null);
   const [isVR, setIsVR] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
+
+  // Confirmation dialog before locking an answer (touch-screen safety)
+  const [pendingConfirm, setPendingConfirm] = useState<
+    | { kind: "mcq"; optionIndex: number }
+    | { kind: "adjust"; chosenOption?: number }
+    | null
+  >(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("virtualRoom");
@@ -104,6 +112,7 @@ export default function SimulatorChallengeMode({
         const ctx = JSON.parse(raw);
         vrContextRef.current = ctx;
         setIsVR(true);
+        if (ctx?.viewOnly === true) setViewOnly(true);
         // Signal that challenges exist so submitResults can skip
         sessionStorage.setItem("hasChallenges", "true");
       } catch {}
