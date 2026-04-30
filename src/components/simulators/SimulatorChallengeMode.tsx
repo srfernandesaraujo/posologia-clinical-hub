@@ -406,9 +406,12 @@ export default function SimulatorChallengeMode({
               return (
                 <button
                   key={i}
-                  onClick={() => handleMCQAnswer(i)}
-                  disabled={answered}
-                  className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                  onClick={() => {
+                    if (viewOnly || answered) return;
+                    setPendingConfirm({ kind: "mcq", optionIndex: i });
+                  }}
+                  disabled={answered || viewOnly}
+                  className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass} ${viewOnly ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
                   {opt}
