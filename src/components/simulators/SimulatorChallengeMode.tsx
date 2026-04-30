@@ -3,7 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -86,6 +96,14 @@ export default function SimulatorChallengeMode({
   // Virtual room detection
   const vrContextRef = useRef<any>(null);
   const [isVR, setIsVR] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
+
+  // Confirmation dialog before locking an answer (touch-screen safety)
+  const [pendingConfirm, setPendingConfirm] = useState<
+    | { kind: "mcq"; optionIndex: number }
+    | { kind: "adjust"; chosenOption?: number }
+    | null
+  >(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("virtualRoom");
@@ -94,6 +112,7 @@ export default function SimulatorChallengeMode({
         const ctx = JSON.parse(raw);
         vrContextRef.current = ctx;
         setIsVR(true);
+        if (ctx?.viewOnly === true) setViewOnly(true);
         // Signal that challenges exist so submitResults can skip
         sessionStorage.setItem("hasChallenges", "true");
       } catch {}
@@ -305,6 +324,19 @@ export default function SimulatorChallengeMode({
 
   // ── Finished ──
   if (finished) {
+    if (viewOnly) {
+      return (
+        <Card className="border-primary/30">
+          <CardContent className="pt-6 space-y-3 text-center">
+            <Eye className="h-10 w-10 mx-auto text-amber-500" />
+            <h3 className="text-lg font-bold">Leitura encerrada</h3>
+            <p className="text-sm text-muted-foreground">
+              Você revisou todos os desafios em modo somente-leitura. Nenhuma resposta foi registrada.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
     const pct = Math.round((score / challenges.length) * 100);
     const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : pct >= 30 ? 1 : 0;
     return (
@@ -353,6 +385,17 @@ export default function SimulatorChallengeMode({
         <Progress value={progress} className="h-2" />
       </CardHeader>
       <CardContent className="space-y-4">
+        {viewOnly && (
+          <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm flex items-start gap-2">
+            <Eye className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Modo somente-leitura</p>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                Seu e-mail já está cadastrado em um grupo nesta sala. Você pode explorar o simulador e ler as questões, mas não pode marcar alternativas.
+              </p>
+            </div>
+          </div>
+        )}
         {current.context && (
           <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground flex items-start gap-2">
             <Lightbulb className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
@@ -376,9 +419,12 @@ export default function SimulatorChallengeMode({
               return (
                 <button
                   key={i}
-                  onClick={() => handleMCQAnswer(i)}
-                  disabled={answered}
-                  className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                  onClick={() => {
+                    if (viewOnly || answered) return;
+                    setPendingConfirm({ kind: "mcq", optionIndex: i });
+                  }}
+                  disabled={answered || viewOnly}
+                  className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass} ${viewOnly ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
                   {opt}
@@ -416,8 +462,9 @@ export default function SimulatorChallengeMode({
                     return (
                       <button
                         key={i}
-                        onClick={() => setSelectedOption(i)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                        onClick={() => { if (!viewOnly) setSelectedOption(i); }}
+                        disabled={viewOnly}
+                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass} ${viewOnly ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
                         {opt}
@@ -428,8 +475,11 @@ export default function SimulatorChallengeMode({
               )}
 
               <Button
-                onClick={() => handleAdjustValidate(hasOptions ? (selectedOption ?? undefined) : undefined)}
-                disabled={hasOptions && selectedOption === null}
+                onClick={() => {
+                  if (viewOnly) return;
+                  setPendingConfirm({ kind: "adjust", chosenOption: hasOptions ? (selectedOption ?? undefined) : undefined });
+                }}
+                disabled={(hasOptions && selectedOption === null) || viewOnly}
                 className="w-full gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
@@ -437,6 +487,26 @@ export default function SimulatorChallengeMode({
             </div>
           );
         })()}
+
+        {/* View-only navigation: lets the student browse questions without answering */}
+        {viewOnly && !answered && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (currentIndex + 1 >= challenges.length) {
+                setFinished(true);
+              } else {
+                onResetForChallenge?.({});
+                setCurrentIndex((i) => i + 1);
+                setSelectedOption(null);
+              }
+            }}
+            className="w-full gap-2"
+          >
+            <ChevronRight className="h-4 w-4" />
+            {currentIndex + 1 >= challenges.length ? "Encerrar leitura" : "Próximo desafio (somente leitura)"}
+          </Button>
+        )}
 
         {/* Feedback */}
         {answered && (
@@ -468,6 +538,46 @@ export default function SimulatorChallengeMode({
           </div>
         )}
       </CardContent>
+
+      {/* Confirmation dialog (touch-screen safety) */}
+      <AlertDialog open={pendingConfirm !== null} onOpenChange={(o) => { if (!o) setPendingConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar resposta</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingConfirm?.kind === "mcq" && current?.type === "mcq" && (
+                <>
+                  Você selecionou: <strong>
+                    {String.fromCharCode(65 + (pendingConfirm as any).optionIndex)}){" "}
+                    {(current as MCQChallenge).options[(pendingConfirm as any).optionIndex]}
+                  </strong>
+                  <br />
+                  Após confirmar, esta alternativa será registrada e não poderá ser alterada.
+                </>
+              )}
+              {pendingConfirm?.kind === "adjust" && (
+                <>
+                  Confirmar a verificação da sua resposta? Após confirmar, ela será registrada e não poderá ser alterada.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const pc = pendingConfirm;
+                setPendingConfirm(null);
+                if (!pc) return;
+                if (pc.kind === "mcq") handleMCQAnswer(pc.optionIndex);
+                else handleAdjustValidate(pc.chosenOption);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

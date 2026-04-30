@@ -196,7 +196,32 @@ export default function SalaVirtualAluno() {
       }
     }
 
-    const members = isGroup ? groupMembers.map(m => m.trim()).filter(Boolean) : [];
+    // Build members array; when restricted, store {name, email} for each member
+    const memberNames = isGroup ? groupMembers.map(m => m.trim()).filter(Boolean) : [];
+    const members: any[] = isGroup
+      ? (isRestricted
+          ? memberNames.map((n, i) => ({ name: n, email: (groupEmails[i] || "").trim().toLowerCase() }))
+          : memberNames)
+      : [];
+
+    // View-only detection: individual mode entering a restricted room where the
+    // student's email is part of an existing group's members. They can browse,
+    // but cannot select answers in the challenge mode.
+    let viewOnly = false;
+    if (!isGroup && isRestricted && primaryEmail) {
+      const { data: existingGroups } = await supabase
+        .from("room_participants")
+        .select("group_members, participant_email")
+        .eq("room_id", room.id)
+        .eq("is_group", true);
+      const inAnyGroup = ((existingGroups as any[]) || []).some((p) => {
+        if ((p.participant_email || "").toLowerCase() === primaryEmail) return true;
+        const gm = p.group_members;
+        if (!Array.isArray(gm)) return false;
+        return gm.some((m: any) => typeof m === "object" && m?.email && m.email.toLowerCase() === primaryEmail);
+      });
+      viewOnly = inAnyGroup;
+    }
 
     if (!loading) setLoading(true);
     const { data, error } = await supabase
@@ -218,11 +243,17 @@ export default function SalaVirtualAluno() {
     }
 
     setParticipantId(data.id);
+    sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
+    if (viewOnly) {
+      toast.info("Seu e-mail já está em um grupo nesta sala. Você entrará em modo somente-leitura: poderá explorar o simulador, mas não poderá responder os desafios.");
+    }
     setStep("ready");
   };
 
   const isExam = activities.length > 1;
   const isLegacy = !isExam && room?.simulator_slug;
+
+  const viewOnlyFlag = sessionStorage.getItem("vrViewOnly") === "true";
 
   const goToSimulator = () => {
     if (isLegacy) {
@@ -236,6 +267,7 @@ export default function SalaVirtualAluno() {
         participantName,
         customChallenges: legacyAct?.custom_challenges || null,
         nativeCaseIndex,
+        viewOnly: viewOnlyFlag,
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
@@ -267,6 +299,7 @@ export default function SalaVirtualAluno() {
         customChallenges: a.custom_challenges || null,
         nativeCaseIndex: a.custom_challenges?.nativeCaseIndex ?? null,
       })),
+      viewOnly: viewOnlyFlag,
     }));
     navigate(getRouteForActivity(act.simulator_slug, act.case_id));
   };
