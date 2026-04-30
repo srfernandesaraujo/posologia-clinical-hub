@@ -3,7 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
