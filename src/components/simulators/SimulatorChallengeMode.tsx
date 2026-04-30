@@ -449,8 +449,9 @@ export default function SimulatorChallengeMode({
                     return (
                       <button
                         key={i}
-                        onClick={() => setSelectedOption(i)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass}`}
+                        onClick={() => { if (!viewOnly) setSelectedOption(i); }}
+                        disabled={viewOnly}
+                        className={`w-full text-left p-3 rounded-lg transition-colors text-sm ${optClass} ${viewOnly ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         <span className="font-medium mr-2">{String.fromCharCode(65 + i)})</span>
                         {opt}
@@ -461,8 +462,11 @@ export default function SimulatorChallengeMode({
               )}
 
               <Button
-                onClick={() => handleAdjustValidate(hasOptions ? (selectedOption ?? undefined) : undefined)}
-                disabled={hasOptions && selectedOption === null}
+                onClick={() => {
+                  if (viewOnly) return;
+                  setPendingConfirm({ kind: "adjust", chosenOption: hasOptions ? (selectedOption ?? undefined) : undefined });
+                }}
+                disabled={(hasOptions && selectedOption === null) || viewOnly}
                 className="w-full gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" /> Verificar Resposta
