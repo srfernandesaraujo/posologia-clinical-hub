@@ -505,6 +505,46 @@ export default function SimulatorChallengeMode({
           </div>
         )}
       </CardContent>
+
+      {/* Confirmation dialog (touch-screen safety) */}
+      <AlertDialog open={pendingConfirm !== null} onOpenChange={(o) => { if (!o) setPendingConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar resposta</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingConfirm?.kind === "mcq" && current?.type === "mcq" && (
+                <>
+                  Você selecionou: <strong>
+                    {String.fromCharCode(65 + (pendingConfirm as any).optionIndex)}){" "}
+                    {(current as MCQChallenge).options[(pendingConfirm as any).optionIndex]}
+                  </strong>
+                  <br />
+                  Após confirmar, esta alternativa será registrada e não poderá ser alterada.
+                </>
+              )}
+              {pendingConfirm?.kind === "adjust" && (
+                <>
+                  Confirmar a verificação da sua resposta? Após confirmar, ela será registrada e não poderá ser alterada.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const pc = pendingConfirm;
+                setPendingConfirm(null);
+                if (!pc) return;
+                if (pc.kind === "mcq") handleMCQAnswer(pc.optionIndex);
+                else handleAdjustValidate(pc.chosenOption);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
