@@ -253,6 +253,8 @@ export default function SalaVirtualAluno() {
   const isExam = activities.length > 1;
   const isLegacy = !isExam && room?.simulator_slug;
 
+  const viewOnlyFlag = sessionStorage.getItem("vrViewOnly") === "true";
+
   const goToSimulator = () => {
     if (isLegacy) {
       const legacyAct = activities[0]; // single activity
@@ -265,6 +267,7 @@ export default function SalaVirtualAluno() {
         participantName,
         customChallenges: legacyAct?.custom_challenges || null,
         nativeCaseIndex,
+        viewOnly: viewOnlyFlag,
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
