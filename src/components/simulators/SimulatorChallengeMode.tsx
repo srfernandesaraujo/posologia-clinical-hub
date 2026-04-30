@@ -372,6 +372,17 @@ export default function SimulatorChallengeMode({
         <Progress value={progress} className="h-2" />
       </CardHeader>
       <CardContent className="space-y-4">
+        {viewOnly && (
+          <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm flex items-start gap-2">
+            <Eye className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Modo somente-leitura</p>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                Seu e-mail já está cadastrado em um grupo nesta sala. Você pode explorar o simulador e ler as questões, mas não pode marcar alternativas.
+              </p>
+            </div>
+          </div>
+        )}
         {current.context && (
           <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground flex items-start gap-2">
             <Lightbulb className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
