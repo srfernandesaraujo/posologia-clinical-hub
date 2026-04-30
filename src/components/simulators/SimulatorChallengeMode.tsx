@@ -475,6 +475,26 @@ export default function SimulatorChallengeMode({
           );
         })()}
 
+        {/* View-only navigation: lets the student browse questions without answering */}
+        {viewOnly && !answered && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (currentIndex + 1 >= challenges.length) {
+                setFinished(true);
+              } else {
+                onResetForChallenge?.({});
+                setCurrentIndex((i) => i + 1);
+                setSelectedOption(null);
+              }
+            }}
+            className="w-full gap-2"
+          >
+            <ChevronRight className="h-4 w-4" />
+            {currentIndex + 1 >= challenges.length ? "Encerrar leitura" : "Próximo desafio (somente leitura)"}
+          </Button>
+        )}
+
         {/* Feedback */}
         {answered && (
           <div className={`p-4 rounded-lg border ${isCorrect ? "border-green-500/50 bg-green-500/5" : "border-destructive/50 bg-destructive/5"}`}>
