@@ -299,6 +299,7 @@ export default function SalaVirtualAluno() {
         customChallenges: a.custom_challenges || null,
         nativeCaseIndex: a.custom_challenges?.nativeCaseIndex ?? null,
       })),
+      viewOnly: viewOnlyFlag,
     }));
     navigate(getRouteForActivity(act.simulator_slug, act.case_id));
   };
