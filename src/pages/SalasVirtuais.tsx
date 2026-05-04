@@ -161,9 +161,16 @@ const LAB_OPTIONS: ToolOption[] = [
   { slug: "lab-modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
 ];
 
-const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS];
+const GAME_OPTIONS: ToolOption[] = VIRTUAL_ROOM_GAMES.map(g => ({
+  slug: g.slug,
+  label: g.label,
+  category: g.category,
+}));
+
+const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS, ...GAME_OPTIONS];
 const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
 const LAB_CATEGORIES = [...new Set(LAB_OPTIONS.map(s => s.category))];
+const GAME_CATEGORIES = VIRTUAL_ROOM_GAME_CATEGORIES as string[];
 
 interface ActivityItem {
   category: string;
