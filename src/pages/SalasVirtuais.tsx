@@ -26,7 +26,7 @@ interface ToolOption {
   category: string;
 }
 
-type ToolType = "simulator" | "laboratory";
+type ToolType = "simulator" | "laboratory" | "game";
 
 const SIMULATOR_OPTIONS: ToolOption[] = [
   // Farmácia Clínica
