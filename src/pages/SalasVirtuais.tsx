@@ -1355,6 +1355,14 @@ export default function SalasVirtuais() {
                         >
                           <FlaskConical className="h-3.5 w-3.5" />Laboratórios
                         </Button>
+                        <Button
+                          size="sm"
+                          variant={editToolType === "game" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("game"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <Gamepad2 className="h-3.5 w-3.5" />Jogos
+                        </Button>
                       </div>
                     </div>
 
