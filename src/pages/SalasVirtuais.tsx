@@ -1380,7 +1380,7 @@ export default function SalasVirtuais() {
 
                     {editCategory && (
                       <div>
-                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : editToolType === "game" ? "Jogo" : "Simulador"}</Label>
                         <Select value={editSimulatorSlug} onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}>
                           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                           <SelectContent>
