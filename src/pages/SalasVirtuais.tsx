@@ -898,10 +898,14 @@ export default function SalasVirtuais() {
               <div>
                 <p className="font-medium text-sm">Tipo de Ferramenta</p>
                 <p className="text-xs text-muted-foreground">
-                  {toolType === "simulator" ? "Simuladores clínicos com casos" : "Laboratórios virtuais de pesquisa"}
+                  {toolType === "simulator"
+                    ? "Simuladores clínicos com casos"
+                    : toolType === "laboratory"
+                      ? "Laboratórios virtuais de pesquisa"
+                      : "Jogos clínicos interativos"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <Button
                   size="sm"
                   variant={toolType === "simulator" ? "default" : "outline"}
@@ -919,6 +923,15 @@ export default function SalasVirtuais() {
                 >
                   <FlaskConical className="h-3.5 w-3.5" />
                   Laboratórios
+                </Button>
+                <Button
+                  size="sm"
+                  variant={toolType === "game" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("game")}
+                  className="gap-1.5 h-8"
+                >
+                  <Gamepad2 className="h-3.5 w-3.5" />
+                  Jogos
                 </Button>
               </div>
             </div>
