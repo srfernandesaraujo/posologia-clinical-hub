@@ -166,6 +166,7 @@ import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import SalasVirtuais from "./pages/SalasVirtuais";
 import SalaVirtualAluno from "./pages/SalaVirtualAluno";
+import SalaJogoRunner from "./pages/SalaJogoRunner";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
