@@ -676,7 +676,12 @@ export default function SalasVirtuais() {
 
     const slug = room.simulator_slug;
     if (slug) {
-      setEditToolType(LAB_OPTIONS.some(l => l.slug === slug) ? "laboratory" : "simulator");
+      const detected: ToolType = isGameSlug(slug)
+        ? "game"
+        : LAB_OPTIONS.some(l => l.slug === slug)
+          ? "laboratory"
+          : "simulator";
+      setEditToolType(detected);
       setEditCategory(ALL_OPTIONS.find(o => o.slug === slug)?.category || "");
     } else {
       setEditToolType("simulator");
