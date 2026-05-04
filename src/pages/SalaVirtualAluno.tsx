@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
+import { GAME_LABELS, isGameSlug } from "@/data/virtualRoomGames";
 
 const LAB_PREFIX = "lab-";
 
@@ -48,9 +49,14 @@ const TOOL_LABELS: Record<string, string> = {
   "lab-simulacao-realistica": "Lab: Simulação Realística",
   "lab-pericia-forense": "Lab: Perícia Forense",
   "lab-modelagem-molecular": "Lab: Modelagem Molecular",
+  ...GAME_LABELS,
 };
 
 function getRouteForActivity(slug: string, caseId?: string | null): string {
+  if (isGameSlug(slug)) {
+    return `/sala/jogo/${slug}`;
+  }
+
   if (LAB_SLUGS.has(slug)) {
     return `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`;
   }

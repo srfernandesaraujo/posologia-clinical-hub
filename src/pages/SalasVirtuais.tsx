@@ -13,11 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2 } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
 import { getNativeCases } from "@/data/nativeCaseCatalog";
+import { VIRTUAL_ROOM_GAMES, VIRTUAL_ROOM_GAME_CATEGORIES, isGameSlug } from "@/data/virtualRoomGames";
 
 interface ToolOption {
   slug: string;
@@ -25,7 +26,7 @@ interface ToolOption {
   category: string;
 }
 
-type ToolType = "simulator" | "laboratory";
+type ToolType = "simulator" | "laboratory" | "game";
 
 const SIMULATOR_OPTIONS: ToolOption[] = [
   // Farmácia Clínica
@@ -160,9 +161,16 @@ const LAB_OPTIONS: ToolOption[] = [
   { slug: "lab-modelagem-molecular", label: "Modelagem Molecular", category: "Laboratório Virtual" },
 ];
 
-const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS];
+const GAME_OPTIONS: ToolOption[] = VIRTUAL_ROOM_GAMES.map(g => ({
+  slug: g.slug,
+  label: g.label,
+  category: g.category,
+}));
+
+const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS, ...GAME_OPTIONS];
 const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
 const LAB_CATEGORIES = [...new Set(LAB_OPTIONS.map(s => s.category))];
+const GAME_CATEGORIES = VIRTUAL_ROOM_GAME_CATEGORIES as string[];
 
 interface ActivityItem {
   category: string;
@@ -668,7 +676,12 @@ export default function SalasVirtuais() {
 
     const slug = room.simulator_slug;
     if (slug) {
-      setEditToolType(LAB_OPTIONS.some(l => l.slug === slug) ? "laboratory" : "simulator");
+      const detected: ToolType = isGameSlug(slug)
+        ? "game"
+        : LAB_OPTIONS.some(l => l.slug === slug)
+          ? "laboratory"
+          : "simulator";
+      setEditToolType(detected);
       setEditCategory(ALL_OPTIONS.find(o => o.slug === slug)?.category || "");
     } else {
       setEditToolType("simulator");
@@ -732,8 +745,9 @@ export default function SalasVirtuais() {
   };
 
   const isLabTool = (slug: string) => LAB_OPTIONS.some(l => l.slug === slug);
-  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
-  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+  const isGameTool = (slug: string) => isGameSlug(slug);
+  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : toolType === "laboratory" ? LAB_OPTIONS : GAME_OPTIONS;
+  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : toolType === "laboratory" ? LAB_CATEGORIES : GAME_CATEGORIES;
 
   const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
   const getToolsForCategory = (cat: string) => activeOptions.filter(s => s.category === cat);
@@ -848,6 +862,8 @@ export default function SalasVirtuais() {
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     {isLabTool(room.simulator_slug) ? (
                       <><FlaskConical className="h-3 w-3" /> Lab: {getToolLabel(room.simulator_slug)}</>
+                    ) : isGameTool(room.simulator_slug) ? (
+                      <><Gamepad2 className="h-3 w-3" /> Jogo: {getToolLabel(room.simulator_slug)}</>
                     ) : (
                       <>Simulador: {getToolLabel(room.simulator_slug)}</>
                     )}
@@ -889,10 +905,14 @@ export default function SalasVirtuais() {
               <div>
                 <p className="font-medium text-sm">Tipo de Ferramenta</p>
                 <p className="text-xs text-muted-foreground">
-                  {toolType === "simulator" ? "Simuladores clínicos com casos" : "Laboratórios virtuais de pesquisa"}
+                  {toolType === "simulator"
+                    ? "Simuladores clínicos com casos"
+                    : toolType === "laboratory"
+                      ? "Laboratórios virtuais de pesquisa"
+                      : "Jogos clínicos interativos"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <Button
                   size="sm"
                   variant={toolType === "simulator" ? "default" : "outline"}
@@ -911,6 +931,15 @@ export default function SalasVirtuais() {
                   <FlaskConical className="h-3.5 w-3.5" />
                   Laboratórios
                 </Button>
+                <Button
+                  size="sm"
+                  variant={toolType === "game" ? "default" : "outline"}
+                  onClick={() => handleToolTypeChange("game")}
+                  className="gap-1.5 h-8"
+                >
+                  <Gamepad2 className="h-3.5 w-3.5" />
+                  Jogos
+                </Button>
               </div>
             </div>
 
@@ -919,9 +948,13 @@ export default function SalasVirtuais() {
               <div>
                 <p className="font-medium text-sm">Tipo de Atividade</p>
                 <p className="text-xs text-muted-foreground">
-                  {isExamMode
-                    ? `Atividade Simulada — múltiplos ${toolType === "laboratory" ? "laboratórios" : "simuladores"} com enunciados`
-                    : `Atividade Unitária — ${toolType === "laboratory" ? "um laboratório" : "um simulador e um caso clínico"}`}
+                  {(() => {
+                    const plural = toolType === "laboratory" ? "laboratórios" : toolType === "game" ? "jogos" : "simuladores";
+                    const singular = toolType === "laboratory" ? "um laboratório" : toolType === "game" ? "um jogo clínico" : "um simulador e um caso clínico";
+                    return isExamMode
+                      ? `Atividade Simulada — múltiplos ${plural} com enunciados`
+                      : `Atividade Unitária — ${singular}`;
+                  })()}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -935,7 +968,7 @@ export default function SalasVirtuais() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <Label className="text-base font-semibold">
-                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : "Simulador")}
+                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador")}
                 </Label>
                 {isExamMode && (
                   <Button variant="outline" size="sm" onClick={addActivity}>
@@ -986,9 +1019,9 @@ export default function SalasVirtuais() {
                           {/* Step 2: Tool (only after category) */}
                           {act.category && (
                             <div>
-                              <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                              <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador"}</Label>
                               <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
-                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : "Selecione o simulador"} /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : toolType === "game" ? "Selecione o jogo" : "Selecione o simulador"} /></SelectTrigger>
                                 <SelectContent>
                                   {toolsInCategory.map(s => (
                                     <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
@@ -1280,8 +1313,8 @@ export default function SalasVirtuais() {
           <DialogHeader><DialogTitle>Editar Sala Virtual</DialogTitle></DialogHeader>
           {editRoom && (() => {
             const isExam = !editRoom.simulator_slug;
-            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
-            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : editToolType === "laboratory" ? LAB_OPTIONS : GAME_OPTIONS;
+            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : editToolType === "laboratory" ? LAB_CATEGORIES : GAME_CATEGORIES;
             const editToolsInCategory = editActiveOptions.filter(s => s.category === editCategory);
             const editNativeCases = editSimulatorSlug ? getNativeCases(editSimulatorSlug) : [];
             return (
@@ -1322,6 +1355,14 @@ export default function SalasVirtuais() {
                         >
                           <FlaskConical className="h-3.5 w-3.5" />Laboratórios
                         </Button>
+                        <Button
+                          size="sm"
+                          variant={editToolType === "game" ? "default" : "outline"}
+                          onClick={() => { setEditToolType("game"); setEditCategory(""); setEditSimulatorSlug(""); setEditCaseId(""); }}
+                          className="gap-1.5 h-8"
+                        >
+                          <Gamepad2 className="h-3.5 w-3.5" />Jogos
+                        </Button>
                       </div>
                     </div>
 
@@ -1339,7 +1380,7 @@ export default function SalasVirtuais() {
 
                     {editCategory && (
                       <div>
-                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                        <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : editToolType === "game" ? "Jogo" : "Simulador"}</Label>
                         <Select value={editSimulatorSlug} onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}>
                           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                           <SelectContent>

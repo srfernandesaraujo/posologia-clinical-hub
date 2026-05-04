@@ -15,8 +15,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
+import { GAME_LABELS } from "@/data/virtualRoomGames";
 
 const SIMULATOR_LABELS: Record<string, string> = {
+  ...GAME_LABELS,
   prm: "PRM",
   antimicrobianos: "Antimicrobianos",
   tdm: "TDM",
