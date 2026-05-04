@@ -941,9 +941,13 @@ export default function SalasVirtuais() {
               <div>
                 <p className="font-medium text-sm">Tipo de Atividade</p>
                 <p className="text-xs text-muted-foreground">
-                  {isExamMode
-                    ? `Atividade Simulada — múltiplos ${toolType === "laboratory" ? "laboratórios" : "simuladores"} com enunciados`
-                    : `Atividade Unitária — ${toolType === "laboratory" ? "um laboratório" : "um simulador e um caso clínico"}`}
+                  {(() => {
+                    const plural = toolType === "laboratory" ? "laboratórios" : toolType === "game" ? "jogos" : "simuladores";
+                    const singular = toolType === "laboratory" ? "um laboratório" : toolType === "game" ? "um jogo clínico" : "um simulador e um caso clínico";
+                    return isExamMode
+                      ? `Atividade Simulada — múltiplos ${plural} com enunciados`
+                      : `Atividade Unitária — ${singular}`;
+                  })()}
                 </p>
               </div>
               <div className="flex items-center gap-2">
