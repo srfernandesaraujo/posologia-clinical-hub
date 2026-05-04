@@ -1012,9 +1012,9 @@ export default function SalasVirtuais() {
                           {/* Step 2: Tool (only after category) */}
                           {act.category && (
                             <div>
-                              <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : "Simulador"}</Label>
+                              <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador"}</Label>
                               <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
-                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : "Selecione o simulador"} /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : toolType === "game" ? "Selecione o jogo" : "Selecione o simulador"} /></SelectTrigger>
                                 <SelectContent>
                                   {toolsInCategory.map(s => (
                                     <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
