@@ -740,8 +740,9 @@ export default function SalasVirtuais() {
   };
 
   const isLabTool = (slug: string) => LAB_OPTIONS.some(l => l.slug === slug);
-  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
-  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+  const isGameTool = (slug: string) => isGameSlug(slug);
+  const activeOptions = toolType === "simulator" ? SIMULATOR_OPTIONS : toolType === "laboratory" ? LAB_OPTIONS : GAME_OPTIONS;
+  const activeCategories = toolType === "simulator" ? SIMULATOR_CATEGORIES : toolType === "laboratory" ? LAB_CATEGORIES : GAME_CATEGORIES;
 
   const getCasesForSlug = (slug: string) => allCases.filter((c: any) => c.simulator_slug === slug);
   const getToolsForCategory = (cat: string) => activeOptions.filter(s => s.category === cat);
