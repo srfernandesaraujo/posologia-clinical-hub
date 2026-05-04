@@ -857,6 +857,8 @@ export default function SalasVirtuais() {
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     {isLabTool(room.simulator_slug) ? (
                       <><FlaskConical className="h-3 w-3" /> Lab: {getToolLabel(room.simulator_slug)}</>
+                    ) : isGameTool(room.simulator_slug) ? (
+                      <><Gamepad2 className="h-3 w-3" /> Jogo: {getToolLabel(room.simulator_slug)}</>
                     ) : (
                       <>Simulador: {getToolLabel(room.simulator_slug)}</>
                     )}
