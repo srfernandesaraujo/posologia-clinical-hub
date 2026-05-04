@@ -961,7 +961,7 @@ export default function SalasVirtuais() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <Label className="text-base font-semibold">
-                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : "Simulador")}
+                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador")}
                 </Label>
                 {isExamMode && (
                   <Button variant="outline" size="sm" onClick={addActivity}>
