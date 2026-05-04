@@ -1313,8 +1313,8 @@ export default function SalasVirtuais() {
           <DialogHeader><DialogTitle>Editar Sala Virtual</DialogTitle></DialogHeader>
           {editRoom && (() => {
             const isExam = !editRoom.simulator_slug;
-            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : LAB_OPTIONS;
-            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : LAB_CATEGORIES;
+            const editActiveOptions = editToolType === "simulator" ? SIMULATOR_OPTIONS : editToolType === "laboratory" ? LAB_OPTIONS : GAME_OPTIONS;
+            const editActiveCategories = editToolType === "simulator" ? SIMULATOR_CATEGORIES : editToolType === "laboratory" ? LAB_CATEGORIES : GAME_CATEGORIES;
             const editToolsInCategory = editActiveOptions.filter(s => s.category === editCategory);
             const editNativeCases = editSimulatorSlug ? getNativeCases(editSimulatorSlug) : [];
             return (
