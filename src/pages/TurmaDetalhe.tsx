@@ -217,6 +217,16 @@ export default function TurmaDetalhe() {
           )}
         </TabsContent>
 
+        {/* ANALYTICS */}
+        <TabsContent value="analytics" className="space-y-4">
+          <ClassAnalyticsPanel
+            rooms={rooms as any[]}
+            participants={classParticipants as any[]}
+            submissions={classSubmissions as any[]}
+            students={studentsQ.data || []}
+          />
+        </TabsContent>
+
         {/* CONFIG */}
         <TabsContent value="config">
           <ConfigPanel turma={turma} onSave={(patch) => update.mutate({ id: turma.id, ...patch })} onDelete={async () => {
