@@ -726,6 +726,7 @@ export default function SalasVirtuais() {
     setBulkStudentText("");
     setNewStudentName("");
     setNewStudentEmail("");
+    setClassId("none");
   };
 
   const copyPin = (pin: string) => {
