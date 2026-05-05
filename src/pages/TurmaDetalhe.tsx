@@ -119,6 +119,7 @@ export default function TurmaDetalhe() {
         <TabsList>
           <TabsTrigger value="alunos"><Users className="h-3.5 w-3.5 mr-1" /> Alunos ({studentsQ.data?.length || 0})</TabsTrigger>
           <TabsTrigger value="salas"><DoorOpen className="h-3.5 w-3.5 mr-1" /> Salas ({rooms.length})</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
           <TabsTrigger value="config"><SettingsIcon className="h-3.5 w-3.5 mr-1" /> Configurações</TabsTrigger>
         </TabsList>
 
