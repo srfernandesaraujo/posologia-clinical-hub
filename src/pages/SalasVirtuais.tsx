@@ -339,6 +339,16 @@ export default function SalasVirtuais() {
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
+  const [classId, setClassId] = useState<string>("none");
+  const [searchParams] = useSearchParams();
+  const { list: classesList } = useClasses();
+  useEffect(() => {
+    const qs = searchParams.get("classId");
+    if (qs) {
+      setClassId(qs);
+      setCreateOpen(true);
+    }
+  }, [searchParams]);
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
