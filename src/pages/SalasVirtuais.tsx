@@ -490,6 +490,7 @@ export default function SalasVirtuais() {
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
           restricted_access: restrictedAccess,
+          class_id: classId && classId !== "none" ? classId : null,
         } as any)
         .select("id")
         .single();
