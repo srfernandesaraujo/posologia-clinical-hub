@@ -373,3 +373,118 @@ function StatBox({ label, value }: { label: string; value: any }) {
     </Card>
   );
 }
+
+function UnlinkRoomButton({ roomId, classId }: { roomId: string; classId: string }) {
+  const qc = useQueryClient();
+  const unlink = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).from("virtual_rooms").update({ class_id: null }).eq("id", roomId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["class-rooms", classId] });
+      toast.success("Sala desvinculada");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Button
+      size="sm" variant="ghost" title="Desvincular sala"
+      onClick={() => { if (confirm("Desvincular esta sala da turma? A sala não será apagada.")) unlink.mutate(); }}
+    >
+      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+    </Button>
+  );
+}
+
+function LinkExistingRoomDialog({ classId, linkedIds }: { classId: string; linkedIds: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  const { data: availableRooms = [] } = useQuery({
+    queryKey: ["link-available-rooms", user?.id, open],
+    enabled: !!user && open,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("virtual_rooms")
+        .select("id, title, pin, is_active, class_id, created_at")
+        .eq("created_by", user!.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).filter((r: any) => !linkedIds.includes(r.id));
+    },
+  });
+
+  const link = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selected);
+      if (!ids.length) return;
+      const { error } = await (supabase as any).from("virtual_rooms").update({ class_id: classId }).in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["class-rooms", classId] });
+      qc.invalidateQueries({ queryKey: ["classes-rooms-count"] });
+      toast.success(`${selected.size} sala(s) vinculada(s)`);
+      setSelected(new Set());
+      setOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const toggle = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><Link2 className="h-4 w-4 mr-1" /> Vincular sala existente</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Vincular salas existentes a esta turma</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+          {availableRooms.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma sala disponível para vincular. Todas as suas salas já estão nesta turma ou foram excluídas.
+            </p>
+          ) : (
+            availableRooms.map((r: any) => (
+              <label
+                key={r.id}
+                className="flex items-center gap-3 p-3 rounded-md border border-border hover:border-primary/50 cursor-pointer"
+              >
+                <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggle(r.id)} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm truncate">{r.title}</p>
+                    <Badge variant={r.is_active ? "default" : "secondary"} className="text-[10px]">
+                      {r.is_active ? "Ativa" : "Encerrada"}
+                    </Badge>
+                    {r.class_id && (
+                      <Badge variant="outline" className="text-[10px]">Já em outra turma</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">PIN: <span className="font-mono">{r.pin}</span></p>
+                </div>
+              </label>
+            ))
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => link.mutate()} disabled={!selected.size || link.isPending}>
+            Vincular {selected.size > 0 ? `(${selected.size})` : ""}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
