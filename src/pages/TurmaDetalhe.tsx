@@ -41,6 +41,35 @@ export default function TurmaDetalhe() {
     },
   });
 
+  const roomIds = useMemo(() => (rooms as any[]).map(r => r.id), [rooms]);
+
+  const { data: classSubmissions = [] } = useQuery({
+    queryKey: ["class-submissions", id, roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("room_submissions")
+        .select("*")
+        .in("room_id", roomIds)
+        .order("submitted_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: classParticipants = [] } = useQuery({
+    queryKey: ["class-participants", id, roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("room_participants")
+        .select("*")
+        .in("room_id", roomIds);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const handleImport = async () => {
     // Accept lines like "Name, email" or "Name <email>" or just "email"
     const lines = importText.split(/\n+/).map(l => l.trim()).filter(Boolean);
