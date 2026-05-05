@@ -40,6 +40,7 @@ export function AppLayout() {
   ];
 
   const premiumItems = [
+    { label: "Turmas", to: "/turmas", icon: GraduationCap, premium: true },
     { label: t("nav.virtualRooms"), to: "/salas-virtuais", icon: DoorOpen, premium: true },
     { label: t("nav.analytics"), to: "/analytics", icon: BarChart3, premium: true },
     { label: "Marketplace", to: "/marketplace", icon: Store, premium: true },
