@@ -514,6 +514,10 @@ const App = () => (
               <Route path="/minha-conta" element={<MinhaConta />} />
               {/* /planos is handled as a standalone route below */}
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
+              <Route path="/turmas" element={<Turmas />} />
+              <Route path="/turmas/:id" element={<TurmaDetalhe />} />
+              <Route path="/turmas/:classId/salas/:roomId" element={<SalaDetalhe />} />
+              <Route path="/salas/:roomId" element={<SalaDetalhe />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
