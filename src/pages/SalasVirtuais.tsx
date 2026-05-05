@@ -911,6 +911,23 @@ export default function SalasVirtuais() {
               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2025.1 – Farmácia Clínica" />
             </div>
 
+            <div>
+              <Label className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
+              <Select value={classId} onValueChange={setClassId}>
+                <SelectTrigger><SelectValue placeholder="Sem turma" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem turma</SelectItem>
+                  {(classesList.data || []).map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Vincule a sala a uma turma para reaproveitar a lista de alunos cadastrados e ver analytics agrupados.
+                {" "}<Link to="/turmas" className="underline">Gerenciar turmas</Link>
+              </p>
+            </div>
+
             <Separator />
 
             {/* Tool Type Selector */}
