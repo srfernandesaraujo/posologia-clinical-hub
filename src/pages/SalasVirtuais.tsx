@@ -241,13 +241,44 @@ interface RestrictedAccessSectionProps {
   onNewEmailChange: (v: string) => void;
   bulkText: string;
   onBulkTextChange: (v: string) => void;
+  classId?: string;
 }
 
 function RestrictedAccessSection({
   enabled, onEnabledChange, students, onStudentsChange,
   newName, onNewNameChange, newEmail, onNewEmailChange,
-  bulkText, onBulkTextChange,
+  bulkText, onBulkTextChange, classId,
 }: RestrictedAccessSectionProps) {
+  const { data: classRoster = [] } = useQuery({
+    queryKey: ["class-roster-picker", classId],
+    enabled: !!classId && classId !== "none",
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("class_students")
+        .select("full_name, email")
+        .eq("class_id", classId)
+        .order("full_name");
+      if (error) throw error;
+      return (data || []) as { full_name: string; email: string }[];
+    },
+  });
+
+  const importFromClass = () => {
+    if (!classRoster.length) { toast.error("Turma sem alunos cadastrados"); return; }
+    const existing = new Set(students.map(s => s.email));
+    const merged = [...students];
+    let added = 0;
+    for (const r of classRoster) {
+      const email = r.email.toLowerCase();
+      if (!existing.has(email)) {
+        merged.push({ student_name: r.full_name, email });
+        existing.add(email);
+        added++;
+      }
+    }
+    onStudentsChange(merged);
+    toast.success(`${added} aluno(s) importado(s) da turma`);
+  };
   const addManual = () => {
     const name = newName.trim();
     const email = newEmail.trim().toLowerCase();
