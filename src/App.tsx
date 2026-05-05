@@ -518,7 +518,7 @@ const App = () => (
               <Route path="/turmas/:id" element={<TurmaDetalhe />} />
               <Route path="/turmas/:classId/salas/:roomId" element={<SalaDetalhe />} />
               <Route path="/salas/:roomId" element={<SalaDetalhe />} />
-              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/analytics" element={<Navigate to="/salas-virtuais" replace />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
               <Route path="/jogos-clinicos" element={<JogosClinicos />} />
