@@ -183,11 +183,14 @@ export default function TurmaDetalhe() {
 
         {/* SALAS */}
         <TabsContent value="salas" className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-sm text-muted-foreground">Salas virtuais vinculadas a esta turma.</p>
-            <Button asChild size="sm">
-              <Link to={`/salas-virtuais?classId=${turma.id}`}><Plus className="h-4 w-4 mr-1" /> Nova sala</Link>
-            </Button>
+            <div className="flex gap-2">
+              <LinkExistingRoomDialog classId={turma.id} linkedIds={(rooms as any[]).map((r: any) => r.id)} />
+              <Button asChild size="sm">
+                <Link to={`/salas-virtuais?classId=${turma.id}`}><Plus className="h-4 w-4 mr-1" /> Nova sala</Link>
+              </Button>
+            </div>
           </div>
           {rooms.length === 0 ? (
             <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -203,13 +206,16 @@ export default function TurmaDetalhe() {
                       <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Ativa" : "Encerrada"}</Badge>
                     </div>
                     {r.description && <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>}
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center justify-between pt-2 gap-2">
                       <span className="text-xs text-muted-foreground">PIN: <span className="font-mono">{r.pin}</span></span>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/turmas/${turma.id}/salas/${r.id}`}>
-                          <BarChart3 className="h-3.5 w-3.5 mr-1" /> Abrir
-                        </Link>
-                      </Button>
+                      <div className="flex gap-1">
+                        <UnlinkRoomButton roomId={r.id} classId={turma.id} />
+                        <Button size="sm" variant="outline" asChild>
+                          <Link to={`/turmas/${turma.id}/salas/${r.id}`}>
+                            <BarChart3 className="h-3.5 w-3.5 mr-1" /> Abrir
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
