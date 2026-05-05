@@ -1219,6 +1219,7 @@ export default function SalasVirtuais() {
               onNewEmailChange={setNewStudentEmail}
               bulkText={bulkStudentText}
               onBulkTextChange={setBulkStudentText}
+              classId={classId}
             />
           </div>
           <DialogFooter>
