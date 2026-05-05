@@ -185,6 +185,74 @@ export type Database = {
         }
         Relationships: []
       }
+      class_students: {
+        Row: {
+          class_id: string
+          created_at: string
+          email: string
+          external_id: string | null
+          full_name: string
+          id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          email: string
+          external_id?: string | null
+          full_name: string
+          id?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          email?: string
+          external_id?: string | null
+          full_name?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          semester: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          semester?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          semester?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -374,6 +442,7 @@ export type Database = {
       }
       room_participants: {
         Row: {
+          class_student_id: string | null
           group_members: Json | null
           id: string
           is_group: boolean
@@ -383,6 +452,7 @@ export type Database = {
           room_id: string
         }
         Insert: {
+          class_student_id?: string | null
           group_members?: Json | null
           id?: string
           is_group?: boolean
@@ -392,6 +462,7 @@ export type Database = {
           room_id: string
         }
         Update: {
+          class_student_id?: string | null
           group_members?: Json | null
           id?: string
           is_group?: boolean
@@ -401,6 +472,13 @@ export type Database = {
           room_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "room_participants_class_student_id_fkey"
+            columns: ["class_student_id"]
+            isOneToOne: false
+            referencedRelation: "class_students"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "room_participants_room_id_fkey"
             columns: ["room_id"]
@@ -818,6 +896,7 @@ export type Database = {
       virtual_rooms: {
         Row: {
           case_id: string | null
+          class_id: string | null
           created_at: string
           created_by: string
           deleted_at: string | null
@@ -833,6 +912,7 @@ export type Database = {
         }
         Insert: {
           case_id?: string | null
+          class_id?: string | null
           created_at?: string
           created_by: string
           deleted_at?: string | null
@@ -848,6 +928,7 @@ export type Database = {
         }
         Update: {
           case_id?: string | null
+          class_id?: string | null
           created_at?: string
           created_by?: string
           deleted_at?: string | null
@@ -867,6 +948,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "simulator_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_rooms_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
         ]

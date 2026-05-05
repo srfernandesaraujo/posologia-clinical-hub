@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,12 +14,13 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2 } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3 } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
 import { getNativeCases } from "@/data/nativeCaseCatalog";
 import { VIRTUAL_ROOM_GAMES, VIRTUAL_ROOM_GAME_CATEGORIES, isGameSlug } from "@/data/virtualRoomGames";
+import { useClasses } from "@/hooks/useClasses";
 
 interface ToolOption {
   slug: string;
@@ -337,6 +339,16 @@ export default function SalasVirtuais() {
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
+  const [classId, setClassId] = useState<string>("none");
+  const [searchParams] = useSearchParams();
+  const { list: classesList } = useClasses();
+  useEffect(() => {
+    const qs = searchParams.get("classId");
+    if (qs) {
+      setClassId(qs);
+      setCreateOpen(true);
+    }
+  }, [searchParams]);
   const [toolType, setToolType] = useState<ToolType>("simulator");
   const [activities, setActivities] = useState<ActivityItem[]>([{ category: "", simulatorSlug: "", caseId: "", instruction: "" }]);
   const [detailRoom, setDetailRoom] = useState<any>(null);
@@ -478,6 +490,7 @@ export default function SalasVirtuais() {
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
           restricted_access: restrictedAccess,
+          class_id: classId && classId !== "none" ? classId : null,
         } as any)
         .select("id")
         .single();
@@ -713,6 +726,7 @@ export default function SalasVirtuais() {
     setBulkStudentText("");
     setNewStudentName("");
     setNewStudentEmail("");
+    setClassId("none");
   };
 
   const copyPin = (pin: string) => {
@@ -879,9 +893,16 @@ export default function SalasVirtuais() {
                     Expira: {new Date(room.expires_at).toLocaleDateString("pt-BR")}
                   </p>
                 )}
-                <Button variant="outline" size="sm" className="w-full" onClick={() => setDetailRoom(room)}>
-                  <Users className="h-4 w-4 mr-2" />Ver Participantes
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setDetailRoom(room)}>
+                    <Users className="h-4 w-4 mr-2" />Participantes
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Link to={room.class_id ? `/turmas/${room.class_id}/salas/${room.id}` : `/salas/${room.id}`}>
+                      <BarChart3 className="h-4 w-4 mr-2" />Analytics
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -896,6 +917,23 @@ export default function SalasVirtuais() {
             <div>
               <Label>Título da Sala</Label>
               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2025.1 – Farmácia Clínica" />
+            </div>
+
+            <div>
+              <Label className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
+              <Select value={classId} onValueChange={setClassId}>
+                <SelectTrigger><SelectValue placeholder="Sem turma" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem turma</SelectItem>
+                  {(classesList.data || []).map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Vincule a sala a uma turma para reaproveitar a lista de alunos cadastrados e ver analytics agrupados.
+                {" "}<Link to="/turmas" className="underline">Gerenciar turmas</Link>
+              </p>
             </div>
 
             <Separator />

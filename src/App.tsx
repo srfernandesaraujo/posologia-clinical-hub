@@ -165,6 +165,9 @@ import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import SalasVirtuais from "./pages/SalasVirtuais";
+import Turmas from "./pages/Turmas";
+import TurmaDetalhe from "./pages/TurmaDetalhe";
+import SalaDetalhe from "./pages/SalaDetalhe";
 import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import SalaJogoRunner from "./pages/SalaJogoRunner";
 import RedefinirSenha from "./pages/RedefinirSenha";
@@ -511,6 +514,10 @@ const App = () => (
               <Route path="/minha-conta" element={<MinhaConta />} />
               {/* /planos is handled as a standalone route below */}
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
+              <Route path="/turmas" element={<Turmas />} />
+              <Route path="/turmas/:id" element={<TurmaDetalhe />} />
+              <Route path="/turmas/:classId/salas/:roomId" element={<SalaDetalhe />} />
+              <Route path="/salas/:roomId" element={<SalaDetalhe />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />

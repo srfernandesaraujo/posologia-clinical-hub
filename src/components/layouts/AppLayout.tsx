@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
-  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket,
+  User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket, GraduationCap,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ export function AppLayout() {
   ];
 
   const premiumItems = [
+    { label: "Turmas", to: "/turmas", icon: GraduationCap, premium: true },
     { label: t("nav.virtualRooms"), to: "/salas-virtuais", icon: DoorOpen, premium: true },
     { label: t("nav.analytics"), to: "/analytics", icon: BarChart3, premium: true },
     { label: "Marketplace", to: "/marketplace", icon: Store, premium: true },
