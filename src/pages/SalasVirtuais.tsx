@@ -1525,6 +1525,7 @@ export default function SalasVirtuais() {
                   onNewEmailChange={setEditNewStudentEmail}
                   bulkText={editBulkStudentText}
                   onBulkTextChange={setEditBulkStudentText}
+                  classId={editRoom?.class_id || undefined}
                 />
               </div>
             );
