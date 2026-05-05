@@ -319,6 +319,17 @@ function RestrictedAccessSection({
 
       {enabled && (
         <div className="space-y-3 pt-2 border-t border-border">
+          {classId && classId !== "none" && (
+            <div className="flex items-center justify-between gap-2 rounded-md bg-primary/5 border border-primary/20 p-2.5">
+              <div className="text-xs">
+                <p className="font-medium flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma vinculada</p>
+                <p className="text-muted-foreground">{classRoster.length} aluno(s) no roster da turma</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={importFromClass} disabled={!classRoster.length}>
+                Importar da turma
+              </Button>
+            </div>
+          )}
           <div className="space-y-2">
             <Label className="text-xs">Adicionar aluno individualmente</Label>
             <div className="flex gap-2">
