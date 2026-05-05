@@ -1,20 +1,25 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, BarChart3, Settings as SettingsIcon, Info, Copy, CheckCircle2, XCircle, Mail, UserCheck, UserPlus } from "lucide-react";
+import {
+  ArrowLeft, Users, BarChart3, Settings as SettingsIcon, Info, Copy, Mail,
+  UserCheck, UserPlus, ClipboardList, Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useClassStudents } from "@/hooks/useClasses";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
+import { ParticipantDetail, SIMULATOR_LABELS } from "./Analytics";
 
 export default function SalaDetalhe() {
   const { classId, roomId } = useParams<{ classId: string; roomId: string }>();
+  const qc = useQueryClient();
 
   const { data: room } = useQuery({
     queryKey: ["room", roomId],
@@ -46,15 +51,73 @@ export default function SalaDetalhe() {
     },
   });
 
+  const { data: activities = [] } = useQuery({
+    queryKey: ["room-activities", roomId],
+    enabled: !!roomId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_activities")
+        .select("*, simulator_cases(title)")
+        .eq("room_id", roomId!)
+        .order("position");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const { list: studentsQ } = useClassStudents(classId);
+
+  const deleteParticipant = useMutation({
+    mutationFn: async (pid: string) => {
+      await supabase.from("room_submissions").delete().eq("participant_id", pid);
+      const { error } = await supabase.from("room_participants").delete().eq("id", pid);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-participants", roomId] });
+      qc.invalidateQueries({ queryKey: ["room-submissions", roomId] });
+      toast.success("Envio removido");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const stats = useMemo(() => {
     const subs = submissions as any[];
     const count = subs.length;
     const avgScore = count ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / count) : 0;
-    const avgTime = count ? Math.round(subs.reduce((a, s) => a + (s.time_spent_seconds || 0), 0) / count) : 0;
-    return { count, avgScore, avgTime, participants: participants.length };
+    const max = count ? Math.max(...subs.map((s: any) => s.score || 0)) : 0;
+    const min = count ? Math.min(...subs.map((s: any) => s.score || 0)) : 0;
+    return { count, avgScore, max, min, participants: participants.length };
   }, [submissions, participants]);
+
+  const isExam = activities.length > 0;
+
+  // Score distribution
+  const scoreDist = useMemo(() => {
+    const subs = submissions as any[];
+    if (!subs.length) return [];
+    return [
+      { range: "0-39%", count: subs.filter((s: any) => s.score < 40).length },
+      { range: "40-59%", count: subs.filter((s: any) => s.score >= 40 && s.score < 60).length },
+      { range: "60-79%", count: subs.filter((s: any) => s.score >= 60 && s.score < 80).length },
+      { range: "80-100%", count: subs.filter((s: any) => s.score >= 80).length },
+    ];
+  }, [submissions]);
+
+  // Per-participant ranking
+  const perParticipant = useMemo(() => {
+    const map = new Map<string, any[]>();
+    (submissions as any[]).forEach(s => {
+      const arr = map.get(s.participant_id) || [];
+      arr.push(s);
+      map.set(s.participant_id, arr);
+    });
+    return (participants as any[]).map(p => {
+      const subs = map.get(p.id) || [];
+      const score = subs.length ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / subs.length) : 0;
+      return { id: p.id, name: (p.participant_name || "—").slice(0, 20), score, subs: subs.length };
+    }).filter(d => d.subs > 0).sort((a, b) => b.score - a.score);
+  }, [participants, submissions]);
 
   const copyPin = () => {
     if (!room) return;
@@ -77,8 +140,13 @@ export default function SalaDetalhe() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold">{room.title}</h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Encerrada"}</Badge>
+              {isExam ? (
+                <Badge variant="outline"><ClipboardList className="h-3 w-3 mr-1" />Prova · {activities.length} atividades</Badge>
+              ) : room.simulator_slug ? (
+                <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
+              ) : null}
               <button onClick={copyPin} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                 PIN: <span className="font-mono">{room.pin}</span> <Copy className="h-3 w-3" />
               </button>
@@ -87,25 +155,162 @@ export default function SalaDetalhe() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="analytics" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview"><Info className="h-3.5 w-3.5 mr-1" /> Visão geral</TabsTrigger>
-          <TabsTrigger value="participants"><Users className="h-3.5 w-3.5 mr-1" /> Participantes</TabsTrigger>
           <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
+          <TabsTrigger value="participants"><Users className="h-3.5 w-3.5 mr-1" /> Participantes</TabsTrigger>
+          <TabsTrigger value="overview"><Info className="h-3.5 w-3.5 mr-1" /> Visão geral</TabsTrigger>
           <TabsTrigger value="config"><SettingsIcon className="h-3.5 w-3.5 mr-1" /> Configurações</TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW */}
-        <TabsContent value="overview" className="space-y-4">
-          {room.description && (
-            <Card><CardContent className="py-4 text-sm text-muted-foreground">{room.description}</CardContent></Card>
-          )}
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+        {/* ANALYTICS — RICH VIEW */}
+        <TabsContent value="analytics" className="space-y-4">
+          {/* KPIs */}
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
             <StatCard label="Cadastrados" value={studentsQ.data?.length || 0} />
             <StatCard label="Ingressos" value={stats.participants} />
             <StatCard label="Submissões" value={stats.count} />
-            <StatCard label="Nota média" value={`${stats.avgScore}`} />
+            <StatCard label="Nota média" value={`${stats.avgScore}%`} />
+            <StatCard label="Maior / Menor" value={stats.count ? `${stats.max}% / ${stats.min}%` : "—"} />
           </div>
+
+          {/* Activities for exam */}
+          {isExam && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Atividades da prova</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {(activities as any[]).map((act: any, i: number) => {
+                    const actSubs = (submissions as any[]).filter((s: any) => s.activity_id === act.id);
+                    const actAvg = actSubs.length ? Math.round(actSubs.reduce((a, s) => a + s.score, 0) / actSubs.length) : null;
+                    return (
+                      <div key={act.id} className="text-xs border border-border rounded-lg px-3 py-2 bg-muted/30">
+                        <span className="font-medium">{i + 1}. {SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                        {act.simulator_cases?.title && (
+                          <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
+                        )}
+                        {actAvg !== null && (
+                          <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}`}>
+                            {actAvg}%
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Score distribution + ranking */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Distribuição de Scores</CardTitle></CardHeader>
+              <CardContent>
+                {scoreDist.length === 0 || stats.count === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">Sem submissões ainda.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={scoreDist}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                      <Bar dataKey="count" name="Alunos" radius={[4, 4, 0, 0]}>
+                        {scoreDist.map((_, i) => (
+                          <Cell key={i} fill={["hsl(var(--destructive))", "hsl(var(--chart-4))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][i]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Ranking de participantes</CardTitle></CardHeader>
+              <CardContent>
+                {perParticipant.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">Sem submissões ainda.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={Math.max(220, perParticipant.length * 26)}>
+                    <BarChart data={perParticipant.slice(0, 20)} layout="vertical" margin={{ left: 80, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                      <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Per-participant detail with ParticipantDetail (decisions, mini-report, etc.) */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Análise detalhada por aluno</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {(() => {
+                const participantsWithSubs = (participants as any[]).filter((p: any) =>
+                  (submissions as any[]).some((s: any) => s.participant_id === p.id)
+                );
+                if (participantsWithSubs.length === 0) {
+                  return <p className="text-sm text-muted-foreground py-4 text-center">Nenhum aluno enviou ainda.</p>;
+                }
+                return participantsWithSubs.map((p: any) => {
+                  const pSubs = (submissions as any[]).filter((s: any) => s.participant_id === p.id);
+                  const pAvg = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + s.score, 0) / pSubs.length) : 0;
+                  const pTime = pSubs.reduce((a, s) => a + (s.time_spent_seconds || 0), 0);
+                  return (
+                    <div key={p.id} className="rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{p.participant_name}</p>
+                          {p.participant_email && <p className="text-xs text-muted-foreground">{p.participant_email}</p>}
+                          {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
+                          <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {pTime > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
+                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}>
+                            {pAvg}%
+                          </Badge>
+                          <Button
+                            variant="ghost" size="icon" className="h-7 w-7"
+                            title="Remover este envio"
+                            onClick={() => {
+                              if (confirm(`Remover envio de "${p.participant_name}"? Esta ação não pode ser desfeita.`)) {
+                                deleteParticipant.mutate(p.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      {/* Per-activity breakdown for exams */}
+                      {isExam && pSubs.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {(activities as any[]).map((act: any, i: number) => {
+                            const actSub = pSubs.find((s: any) => s.activity_id === act.id);
+                            return (
+                              <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : actSub.score >= 50 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400") : "bg-muted text-muted-foreground"}`}>
+                                {(SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug).substring(0, 5)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {pSubs.map((sub: any) => (
+                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} />
+                      ))}
+                    </div>
+                  );
+                });
+              })()}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* PARTICIPANTS */}
@@ -113,13 +318,19 @@ export default function SalaDetalhe() {
           <ParticipantsList students={studentsQ.data || []} participants={participants} restricted={!!room.restricted_access} />
         </TabsContent>
 
-        {/* ANALYTICS */}
-        <TabsContent value="analytics" className="space-y-4">
-          <RoomAnalyticsPanel participants={participants} submissions={submissions} />
-          <p className="text-xs text-muted-foreground text-center">
-            Para análise detalhada por decisão e mini-relatórios, abra o{" "}
-            <Link to="/analytics" className="underline">Analytics consolidado</Link>.
-          </p>
+        {/* OVERVIEW */}
+        <TabsContent value="overview" className="space-y-4">
+          {room.description && (
+            <Card><CardContent className="py-4 text-sm text-muted-foreground">{room.description}</CardContent></Card>
+          )}
+          <Card>
+            <CardContent className="py-4 text-sm space-y-1">
+              <p><span className="text-muted-foreground">PIN:</span> <span className="font-mono">{room.pin}</span></p>
+              <p><span className="text-muted-foreground">Criada em:</span> {new Date(room.created_at).toLocaleString("pt-BR")}</p>
+              {room.expires_at && <p><span className="text-muted-foreground">Expira em:</span> {new Date(room.expires_at).toLocaleString("pt-BR")}</p>}
+              <p><span className="text-muted-foreground">Acesso restrito:</span> {room.restricted_access ? "Sim" : "Não"}</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="config">
@@ -149,9 +360,7 @@ function StatCard({ label, value }: { label: string; value: any }) {
 }
 
 function ParticipantsList({ students, participants, restricted }: { students: any[]; participants: any[]; restricted: boolean }) {
-  // Merge: registered students (from class) + ingressos. Show one row each, marked.
   const ingressByEmail = new Map<string, any>();
-  const submittedIds = new Set<string>();
   participants.forEach(p => {
     if (p.participant_email) ingressByEmail.set(p.participant_email.toLowerCase(), p);
   });
@@ -163,7 +372,6 @@ function ParticipantsList({ students, participants, restricted }: { students: an
       const p = ingressByEmail.get(email);
       rows.push({ name: s.full_name, email: s.email, registered: true, joined: !!p });
     });
-    // Ingressos sem cadastro (e.g. grupos ou outros)
     participants.forEach(p => {
       const em = (p.participant_email || "").toLowerCase();
       if (!em || !students.find(s => s.email.toLowerCase() === em)) {
@@ -203,43 +411,6 @@ function ParticipantsList({ students, participants, restricted }: { students: an
               </div>
             ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RoomAnalyticsPanel({ participants, submissions }: { participants: any[]; submissions: any[] }) {
-  // Group submissions by participant
-  const byParticipant = new Map<string, any[]>();
-  submissions.forEach(s => {
-    const arr = byParticipant.get(s.participant_id) || [];
-    arr.push(s);
-    byParticipant.set(s.participant_id, arr);
-  });
-
-  const chartData = participants.map(p => {
-    const subs = byParticipant.get(p.id) || [];
-    const score = subs.length ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / subs.length) : 0;
-    return { name: (p.participant_name || "—").slice(0, 18), score };
-  }).filter(d => d.score > 0).sort((a, b) => b.score - a.score).slice(0, 20);
-
-  return (
-    <Card>
-      <CardHeader><CardTitle className="text-base">Desempenho por participante</CardTitle></CardHeader>
-      <CardContent>
-        {chartData.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Sem submissões com pontuação ainda.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={Math.max(220, chartData.length * 28)}>
-            <BarChart data={chartData} layout="vertical" margin={{ left: 80, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={120} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
         )}
       </CardContent>
     </Card>

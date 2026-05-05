@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import { GAME_LABELS } from "@/data/virtualRoomGames";
 
-const SIMULATOR_LABELS: Record<string, string> = {
+export const SIMULATOR_LABELS: Record<string, string> = {
   ...GAME_LABELS,
   prm: "PRM",
   antimicrobianos: "Antimicrobianos",
@@ -100,7 +100,7 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 /** Expandable participant detail showing decisions + report */
-function ParticipantDetail({ submission, roomSubmissions }: { submission: any; roomSubmissions: any[] }) {
+export function ParticipantDetail({ submission, roomSubmissions }: { submission: any; roomSubmissions: any[] }) {
   const [open, setOpen] = useState(false);
   const actions = submission.actions;
 

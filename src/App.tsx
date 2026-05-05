@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
@@ -518,7 +518,7 @@ const App = () => (
               <Route path="/turmas/:id" element={<TurmaDetalhe />} />
               <Route path="/turmas/:classId/salas/:roomId" element={<SalaDetalhe />} />
               <Route path="/salas/:roomId" element={<SalaDetalhe />} />
-              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/analytics" element={<Navigate to="/salas-virtuais" replace />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/gamificacao" element={<Gamificacao />} />
               <Route path="/jogos-clinicos" element={<JogosClinicos />} />
