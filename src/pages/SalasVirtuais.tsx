@@ -893,9 +893,16 @@ export default function SalasVirtuais() {
                     Expira: {new Date(room.expires_at).toLocaleDateString("pt-BR")}
                   </p>
                 )}
-                <Button variant="outline" size="sm" className="w-full" onClick={() => setDetailRoom(room)}>
-                  <Users className="h-4 w-4 mr-2" />Ver Participantes
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setDetailRoom(room)}>
+                    <Users className="h-4 w-4 mr-2" />Participantes
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Link to={room.class_id ? `/turmas/${room.class_id}/salas/${room.id}` : `/salas/${room.id}`}>
+                      <BarChart3 className="h-4 w-4 mr-2" />Analytics
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
