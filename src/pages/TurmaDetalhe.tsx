@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2, Users, DoorOpen, BarChart3, Settings as SettingsIcon, Mail } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -36,6 +37,35 @@ export default function TurmaDetalhe() {
         .eq("class_id", id)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const roomIds = useMemo(() => (rooms as any[]).map(r => r.id), [rooms]);
+
+  const { data: classSubmissions = [] } = useQuery({
+    queryKey: ["class-submissions", id, roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("room_submissions")
+        .select("*")
+        .in("room_id", roomIds)
+        .order("submitted_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: classParticipants = [] } = useQuery({
+    queryKey: ["class-participants", id, roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("room_participants")
+        .select("*")
+        .in("room_id", roomIds);
       if (error) throw error;
       return data || [];
     },
@@ -89,6 +119,7 @@ export default function TurmaDetalhe() {
         <TabsList>
           <TabsTrigger value="alunos"><Users className="h-3.5 w-3.5 mr-1" /> Alunos ({studentsQ.data?.length || 0})</TabsTrigger>
           <TabsTrigger value="salas"><DoorOpen className="h-3.5 w-3.5 mr-1" /> Salas ({rooms.length})</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
           <TabsTrigger value="config"><SettingsIcon className="h-3.5 w-3.5 mr-1" /> Configurações</TabsTrigger>
         </TabsList>
 
@@ -186,6 +217,16 @@ export default function TurmaDetalhe() {
           )}
         </TabsContent>
 
+        {/* ANALYTICS */}
+        <TabsContent value="analytics" className="space-y-4">
+          <ClassAnalyticsPanel
+            rooms={rooms as any[]}
+            participants={classParticipants as any[]}
+            submissions={classSubmissions as any[]}
+            students={studentsQ.data || []}
+          />
+        </TabsContent>
+
         {/* CONFIG */}
         <TabsContent value="config">
           <ConfigPanel turma={turma} onSave={(patch) => update.mutate({ id: turma.id, ...patch })} onDelete={async () => {
@@ -214,6 +255,113 @@ function ConfigPanel({ turma, onSave, onDelete }: { turma: any; onSave: (p: any)
           <Button variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4 mr-1" /> Excluir turma</Button>
           <Button onClick={() => onSave({ name, semester, description })}>Salvar</Button>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ClassAnalyticsPanel({ rooms, participants, submissions, students }: { rooms: any[]; participants: any[]; submissions: any[]; students: any[] }) {
+  const totalSubs = submissions.length;
+  const avgScore = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.score || 0), 0) / totalSubs) : 0;
+  const avgTime = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.time_spent_seconds || 0), 0) / totalSubs) : 0;
+
+  // Per-room aggregation
+  const roomStats = rooms.map(r => {
+    const subs = submissions.filter((s: any) => s.room_id === r.id);
+    const ps = participants.filter((p: any) => p.room_id === r.id);
+    const score = subs.length ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / subs.length) : 0;
+    return { id: r.id, name: (r.title || "—").slice(0, 22), title: r.title, ingressos: ps.length, submissoes: subs.length, score };
+  });
+
+  // Per-student (by email) aggregation across rooms
+  const partByEmail = new Map<string, any[]>();
+  participants.forEach((p: any) => {
+    const em = (p.participant_email || "").toLowerCase();
+    if (!em) return;
+    const arr = partByEmail.get(em) || [];
+    arr.push(p);
+    partByEmail.set(em, arr);
+  });
+  const studentRows = students.map(s => {
+    const em = s.email.toLowerCase();
+    const ps = partByEmail.get(em) || [];
+    const pIds = new Set(ps.map((p: any) => p.id));
+    const subs = submissions.filter((sub: any) => pIds.has(sub.participant_id));
+    const score = subs.length ? Math.round(subs.reduce((a: number, x: any) => a + (x.score || 0), 0) / subs.length) : 0;
+    const roomsAttended = new Set(ps.map((p: any) => p.room_id)).size;
+    return { name: s.full_name, email: s.email, score, submissoes: subs.length, salas: roomsAttended };
+  }).sort((a, b) => b.score - a.score);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <StatBox label="Salas" value={rooms.length} />
+        <StatBox label="Alunos cadastrados" value={students.length} />
+        <StatBox label="Submissões" value={totalSubs} />
+        <StatBox label="Nota média" value={avgScore} />
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Desempenho por sala</CardTitle></CardHeader>
+        <CardContent>
+          {roomStats.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma sala vinculada.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(220, roomStats.length * 36)}>
+              <BarChart data={roomStats} layout="vertical" margin={{ left: 80, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={150} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Bar dataKey="score" name="Nota média" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Desempenho por aluno (consolidado)</CardTitle></CardHeader>
+        <CardContent>
+          {studentRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Sem alunos cadastrados na turma ainda.</p>
+          ) : (
+            <div className="border rounded-md divide-y divide-border">
+              <div className="grid grid-cols-12 gap-2 p-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/30">
+                <div className="col-span-5">Aluno</div>
+                <div className="col-span-2 text-center">Salas</div>
+                <div className="col-span-2 text-center">Submissões</div>
+                <div className="col-span-3 text-right">Nota média</div>
+              </div>
+              {studentRows.map((r, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 p-2 text-sm items-center">
+                  <div className="col-span-5 min-w-0">
+                    <p className="font-medium truncate">{r.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                  </div>
+                  <div className="col-span-2 text-center">{r.salas}</div>
+                  <div className="col-span-2 text-center">{r.submissoes}</div>
+                  <div className="col-span-3 text-right">
+                    <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
+                      {r.submissoes > 0 ? r.score : "—"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: any }) {
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-bold mt-1">{value}</p>
       </CardContent>
     </Card>
   );

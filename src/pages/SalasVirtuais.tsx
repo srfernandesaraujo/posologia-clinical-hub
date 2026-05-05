@@ -241,13 +241,44 @@ interface RestrictedAccessSectionProps {
   onNewEmailChange: (v: string) => void;
   bulkText: string;
   onBulkTextChange: (v: string) => void;
+  classId?: string;
 }
 
 function RestrictedAccessSection({
   enabled, onEnabledChange, students, onStudentsChange,
   newName, onNewNameChange, newEmail, onNewEmailChange,
-  bulkText, onBulkTextChange,
+  bulkText, onBulkTextChange, classId,
 }: RestrictedAccessSectionProps) {
+  const { data: classRoster = [] } = useQuery({
+    queryKey: ["class-roster-picker", classId],
+    enabled: !!classId && classId !== "none",
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("class_students")
+        .select("full_name, email")
+        .eq("class_id", classId)
+        .order("full_name");
+      if (error) throw error;
+      return (data || []) as { full_name: string; email: string }[];
+    },
+  });
+
+  const importFromClass = () => {
+    if (!classRoster.length) { toast.error("Turma sem alunos cadastrados"); return; }
+    const existing = new Set(students.map(s => s.email));
+    const merged = [...students];
+    let added = 0;
+    for (const r of classRoster) {
+      const email = r.email.toLowerCase();
+      if (!existing.has(email)) {
+        merged.push({ student_name: r.full_name, email });
+        existing.add(email);
+        added++;
+      }
+    }
+    onStudentsChange(merged);
+    toast.success(`${added} aluno(s) importado(s) da turma`);
+  };
   const addManual = () => {
     const name = newName.trim();
     const email = newEmail.trim().toLowerCase();
@@ -288,6 +319,17 @@ function RestrictedAccessSection({
 
       {enabled && (
         <div className="space-y-3 pt-2 border-t border-border">
+          {classId && classId !== "none" && (
+            <div className="flex items-center justify-between gap-2 rounded-md bg-primary/5 border border-primary/20 p-2.5">
+              <div className="text-xs">
+                <p className="font-medium flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma vinculada</p>
+                <p className="text-muted-foreground">{classRoster.length} aluno(s) no roster da turma</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={importFromClass} disabled={!classRoster.length}>
+                Importar da turma
+              </Button>
+            </div>
+          )}
           <div className="space-y-2">
             <Label className="text-xs">Adicionar aluno individualmente</Label>
             <div className="flex gap-2">
@@ -1177,6 +1219,7 @@ export default function SalasVirtuais() {
               onNewEmailChange={setNewStudentEmail}
               bulkText={bulkStudentText}
               onBulkTextChange={setBulkStudentText}
+              classId={classId}
             />
           </div>
           <DialogFooter>
@@ -1482,6 +1525,7 @@ export default function SalasVirtuais() {
                   onNewEmailChange={setEditNewStudentEmail}
                   bulkText={editBulkStudentText}
                   onBulkTextChange={setEditBulkStudentText}
+                  classId={editRoom?.class_id || undefined}
                 />
               </div>
             );
