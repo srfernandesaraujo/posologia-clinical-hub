@@ -232,26 +232,70 @@ export default function SalaVirtualAluno() {
     }
 
     if (!loading) setLoading(true);
-    const { data, error } = await supabase
-      .from("room_participants")
-      .insert({
-        room_id: room.id,
-        participant_name: name,
-        is_group: isGroup,
-        group_members: members,
-        participant_email: isRestricted ? primaryEmail : null,
-      } as any)
-      .select("id")
-      .single();
-    setLoading(false);
 
-    if (error) {
-      toast.error("Erro ao entrar na sala");
-      return;
+    // Try to RESUME an existing participant in this room (by email if restricted, else by name)
+    let existingId: string | null = null;
+    try {
+      let q = supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("is_group", isGroup);
+      if (isRestricted && primaryEmail) {
+        q = q.eq("participant_email", primaryEmail);
+      } else {
+        q = q.ilike("participant_name", name);
+      }
+      const { data: existing } = await q.order("joined_at", { ascending: true }).limit(1).maybeSingle();
+      if (existing?.id) existingId = existing.id;
+    } catch {}
+
+    let pid = existingId;
+    if (!pid) {
+      const { data, error } = await supabase
+        .from("room_participants")
+        .insert({
+          room_id: room.id,
+          participant_name: name,
+          is_group: isGroup,
+          group_members: members,
+          participant_email: isRestricted ? primaryEmail : null,
+        } as any)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setLoading(false);
+        toast.error("Erro ao entrar na sala");
+        return;
+      }
+      pid = data.id;
     }
 
-    setParticipantId(data.id);
+    // Compute resume index from existing submissions
+    let resumeIdx = 0;
+    let completed = 0;
+    try {
+      const { data: subs } = await supabase
+        .from("room_submissions")
+        .select("activity_id, step_index")
+        .eq("room_id", room.id)
+        .eq("participant_id", pid);
+      const submittedActivityIds = new Set((subs || []).map((s: any) => s.activity_id).filter(Boolean));
+      completed = submittedActivityIds.size;
+      if (activities.length > 0) {
+        const firstUnsubmitted = activities.findIndex((a) => !submittedActivityIds.has(a.id));
+        resumeIdx = firstUnsubmitted === -1 ? activities.length : firstUnsubmitted;
+      }
+    } catch {}
+
+    setLoading(false);
+    setParticipantId(pid);
+    setResumeFromIndex(resumeIdx);
+    setCompletedCount(completed);
     sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
+    if (existingId && completed > 0) {
+      toast.success(`Retomando atividade — ${completed} de ${activities.length} já enviada(s).`);
+    }
     if (viewOnly) {
       toast.info("Seu e-mail já está em um grupo nesta sala. Você entrará em modo somente-leitura: poderá explorar o simulador, mas não poderá responder os desafios.");
     }
