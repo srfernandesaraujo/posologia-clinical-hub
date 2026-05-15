@@ -86,6 +86,8 @@ export default function SalaVirtualAluno() {
   const [groupMembers, setGroupMembers] = useState<string[]>([""]);
   const [groupEmails, setGroupEmails] = useState<string[]>([""]);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [resumeFromIndex, setResumeFromIndex] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
 
   useEffect(() => {
     if (pinFromUrl) {
