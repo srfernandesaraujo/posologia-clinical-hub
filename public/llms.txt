@@ -1,0 +1,20 @@
+# Posologia Clinical Hub
+
+> Plataforma brasileira com mais de 80 calculadoras e simuladores clínicos interativos para profissionais e estudantes de farmácia, medicina e enfermagem. Inclui salas virtuais para professores, casos clínicos, gamificação e laboratórios virtuais.
+
+O Posologia Clinical Hub reúne ferramentas de cálculo de doses, simuladores fisiológicos (cinética enzimática, equilíbrio ácido-base, ADME, depuração renal), simuladores farmacológicos (PRM, SOAP, MAI, antimicrobianos, TDM, insulina, bomba de infusão) e jogos clínicos. Professores podem criar salas virtuais com PIN para aplicar atividades a turmas.
+
+## Páginas principais
+
+- [Início](/): Visão geral e acesso às ferramentas.
+- [Vitrine](/vitrine): Catálogo público de calculadoras e simuladores.
+- [Documentação](/docs): Guias de uso das ferramentas clínicas.
+- [Contato](/contato): Fale com a equipe.
+- [Login](/login): Acesso de usuários.
+- [Cadastro](/cadastro): Criar conta.
+
+## Optional
+
+- [Termos de serviço](/termos-de-servico)
+- [Política de privacidade](/politica-privacidade)
+- [Política de cookies](/politica-cookies)
