@@ -86,6 +86,8 @@ export default function SalaVirtualAluno() {
   const [groupMembers, setGroupMembers] = useState<string[]>([""]);
   const [groupEmails, setGroupEmails] = useState<string[]>([""]);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [resumeFromIndex, setResumeFromIndex] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
 
   useEffect(() => {
     if (pinFromUrl) {
@@ -230,26 +232,70 @@ export default function SalaVirtualAluno() {
     }
 
     if (!loading) setLoading(true);
-    const { data, error } = await supabase
-      .from("room_participants")
-      .insert({
-        room_id: room.id,
-        participant_name: name,
-        is_group: isGroup,
-        group_members: members,
-        participant_email: isRestricted ? primaryEmail : null,
-      } as any)
-      .select("id")
-      .single();
-    setLoading(false);
 
-    if (error) {
-      toast.error("Erro ao entrar na sala");
-      return;
+    // Try to RESUME an existing participant in this room (by email if restricted, else by name)
+    let existingId: string | null = null;
+    try {
+      let q = supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("is_group", isGroup);
+      if (isRestricted && primaryEmail) {
+        q = q.eq("participant_email", primaryEmail);
+      } else {
+        q = q.ilike("participant_name", name);
+      }
+      const { data: existing } = await q.order("joined_at", { ascending: true }).limit(1).maybeSingle();
+      if (existing?.id) existingId = existing.id;
+    } catch {}
+
+    let pid = existingId;
+    if (!pid) {
+      const { data, error } = await supabase
+        .from("room_participants")
+        .insert({
+          room_id: room.id,
+          participant_name: name,
+          is_group: isGroup,
+          group_members: members,
+          participant_email: isRestricted ? primaryEmail : null,
+        } as any)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setLoading(false);
+        toast.error("Erro ao entrar na sala");
+        return;
+      }
+      pid = data.id;
     }
 
-    setParticipantId(data.id);
+    // Compute resume index from existing submissions
+    let resumeIdx = 0;
+    let completed = 0;
+    try {
+      const { data: subs } = await supabase
+        .from("room_submissions")
+        .select("activity_id, step_index")
+        .eq("room_id", room.id)
+        .eq("participant_id", pid);
+      const submittedActivityIds = new Set((subs || []).map((s: any) => s.activity_id).filter(Boolean));
+      completed = submittedActivityIds.size;
+      if (activities.length > 0) {
+        const firstUnsubmitted = activities.findIndex((a) => !submittedActivityIds.has(a.id));
+        resumeIdx = firstUnsubmitted === -1 ? activities.length : firstUnsubmitted;
+      }
+    } catch {}
+
+    setLoading(false);
+    setParticipantId(pid);
+    setResumeFromIndex(resumeIdx);
+    setCompletedCount(completed);
     sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
+    if (existingId && completed > 0) {
+      toast.success(`Retomando atividade — ${completed} de ${activities.length} já enviada(s).`);
+    }
     if (viewOnly) {
       toast.info("Seu e-mail já está em um grupo nesta sala. Você entrará em modo somente-leitura: poderá explorar o simulador, mas não poderá responder os desafios.");
     }
@@ -277,7 +323,12 @@ export default function SalaVirtualAluno() {
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
-      startActivity(0);
+      if (resumeFromIndex >= activities.length) {
+        toast.success("Você já completou todas as atividades desta sala.");
+        navigate("/");
+        return;
+      }
+      startActivity(resumeFromIndex);
     }
   };
 
@@ -444,21 +495,44 @@ export default function SalaVirtualAluno() {
           {isExam && (
             <div className="text-left space-y-2 bg-muted/50 rounded-lg p-4">
               <p className="text-sm font-semibold">Atividades ({activities.length}):</p>
-              {activities.map((act: any, i: number) => (
-                <div key={act.id} className="flex items-center gap-2 text-sm">
-                  <Badge variant="outline" className="text-xs min-w-[24px] justify-center">{i + 1}</Badge>
-                  <span>{TOOL_LABELS[act.simulator_slug] || act.simulator_slug}</span>
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground mt-2">
-                Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
-              </p>
+              {activities.map((act: any, i: number) => {
+                const done = i < resumeFromIndex;
+                return (
+                  <div key={act.id} className="flex items-center gap-2 text-sm">
+                    <Badge variant={done ? "default" : "outline"} className="text-xs min-w-[24px] justify-center">
+                      {done ? "✓" : i + 1}
+                    </Badge>
+                    <span className={done ? "line-through text-muted-foreground" : ""}>
+                      {TOOL_LABELS[act.simulator_slug] || act.simulator_slug}
+                    </span>
+                  </div>
+                );
+              })}
+              {completedCount > 0 && resumeFromIndex < activities.length && (
+                <p className="text-xs text-primary font-medium mt-2">
+                  Você já enviou {completedCount} atividade(s). Vamos retomar a partir da atividade {resumeFromIndex + 1}.
+                </p>
+              )}
+              {resumeFromIndex >= activities.length && (
+                <p className="text-xs text-green-600 font-medium mt-2">
+                  Todas as atividades já foram enviadas. Obrigado!
+                </p>
+              )}
+              {completedCount === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
+                </p>
+              )}
             </div>
           )}
 
-          <Button onClick={goToSimulator} size="lg" className="w-full">
+          <Button onClick={goToSimulator} size="lg" className="w-full" disabled={isExam && resumeFromIndex >= activities.length}>
             {isExam ? (
-              <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              completedCount > 0 && resumeFromIndex < activities.length ? (
+                <>Retomar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              ) : (
+                <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              )
             ) : (
               "Iniciar Simulador"
             )}
