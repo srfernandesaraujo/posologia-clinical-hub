@@ -323,7 +323,12 @@ export default function SalaVirtualAluno() {
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id));
     } else {
-      startActivity(0);
+      if (resumeFromIndex >= activities.length) {
+        toast.success("Você já completou todas as atividades desta sala.");
+        navigate("/");
+        return;
+      }
+      startActivity(resumeFromIndex);
     }
   };
 
