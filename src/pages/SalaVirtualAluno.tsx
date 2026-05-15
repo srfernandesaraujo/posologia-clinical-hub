@@ -175,20 +175,17 @@ export default function SalaVirtualAluno() {
         }
       }
 
-      // Validate against authorized list
+      // Validate against authorized list (via edge function)
       setLoading(true);
-      const { data: authorized, error: authErr } = await supabase
-        .from("room_authorized_emails" as any)
-        .select("email")
-        .eq("room_id", room.id)
-        .in("email", emailsToCheck);
-      if (authErr) {
+      const { data: vresp, error: authErr } = await supabase.functions.invoke("room-access", {
+        body: { action: "validate-emails", room_id: room.id, emails: emailsToCheck },
+      });
+      if (authErr || !vresp) {
         setLoading(false);
         toast.error("Erro ao validar acesso");
         return;
       }
-      const authorizedSet = new Set(((authorized as any[]) || []).map(a => a.email.toLowerCase()));
-      const notAllowed = emailsToCheck.filter(e => !authorizedSet.has(e));
+      const notAllowed: string[] = vresp.unauthorized || [];
       if (notAllowed.length > 0) {
         setLoading(false);
         toast.error(`Acesso negado. E-mail(s) não autorizado(s) nesta sala: ${notAllowed.join(", ")}`);
@@ -204,88 +201,48 @@ export default function SalaVirtualAluno() {
           : memberNames)
       : [];
 
-    // View-only detection: individual mode entering a restricted room where the
-    // student's email is part of an existing group's members. They can browse,
-    // but cannot select answers in the challenge mode.
+    // View-only detection (via edge function)
     let viewOnly = false;
     if (!isGroup && isRestricted && primaryEmail) {
-      const { data: existingGroups } = await supabase
-        .from("room_participants")
-        .select("group_members, participant_email")
-        .eq("room_id", room.id)
-        .eq("is_group", true);
-      const inAnyGroup = ((existingGroups as any[]) || []).some((p) => {
-        if ((p.participant_email || "").toLowerCase() === primaryEmail) return true;
-        const gm = p.group_members;
-        if (!Array.isArray(gm)) return false;
-        return gm.some((m: any) => typeof m === "object" && m?.email && m.email.toLowerCase() === primaryEmail);
+      const { data: gresp } = await supabase.functions.invoke("room-access", {
+        body: { action: "check-group-membership", room_id: room.id, email: primaryEmail },
       });
-      viewOnly = inAnyGroup;
+      viewOnly = !!gresp?.inAnyGroup;
     }
 
     if (!loading) setLoading(true);
 
-    // Try to RESUME an existing participant in this room (by email if restricted, else by name)
-    let existingId: string | null = null;
-    try {
-      let q = supabase
-        .from("room_participants")
-        .select("id")
-        .eq("room_id", room.id)
-        .eq("is_group", isGroup);
-      if (isRestricted && primaryEmail) {
-        q = q.eq("participant_email", primaryEmail);
-      } else {
-        q = q.ilike("participant_name", name);
-      }
-      const { data: existing } = await q.order("joined_at", { ascending: true }).limit(1).maybeSingle();
-      if (existing?.id) existingId = existing.id;
-    } catch {}
-
-    let pid = existingId;
-    if (!pid) {
-      const { data, error } = await supabase
-        .from("room_participants")
-        .insert({
-          room_id: room.id,
-          participant_name: name,
-          is_group: isGroup,
-          group_members: members,
-          participant_email: isRestricted ? primaryEmail : null,
-        } as any)
-        .select("id")
-        .single();
-      if (error || !data) {
-        setLoading(false);
-        toast.error("Erro ao entrar na sala");
-        return;
-      }
-      pid = data.id;
+    // Find or create participant + compute resume index (server-side)
+    const { data: presp, error: pErr } = await supabase.functions.invoke("room-access", {
+      body: {
+        action: "find-or-create-participant",
+        room_id: room.id,
+        name,
+        email: isRestricted ? primaryEmail : null,
+        is_group: isGroup,
+        group_members: members,
+      },
+    });
+    if (pErr || !presp?.participantId) {
+      setLoading(false);
+      toast.error("Erro ao entrar na sala");
+      return;
     }
-
-    // Compute resume index from existing submissions
+    const pid: string = presp.participantId;
+    const submittedActivityIds = new Set<string>(presp.submittedActivityIds || []);
     let resumeIdx = 0;
-    let completed = 0;
-    try {
-      const { data: subs } = await supabase
-        .from("room_submissions")
-        .select("activity_id, step_index")
-        .eq("room_id", room.id)
-        .eq("participant_id", pid);
-      const submittedActivityIds = new Set((subs || []).map((s: any) => s.activity_id).filter(Boolean));
-      completed = submittedActivityIds.size;
-      if (activities.length > 0) {
-        const firstUnsubmitted = activities.findIndex((a) => !submittedActivityIds.has(a.id));
-        resumeIdx = firstUnsubmitted === -1 ? activities.length : firstUnsubmitted;
-      }
-    } catch {}
+    let completed = submittedActivityIds.size;
+    if (activities.length > 0) {
+      const firstUnsubmitted = activities.findIndex((a) => !submittedActivityIds.has(a.id));
+      resumeIdx = firstUnsubmitted === -1 ? activities.length : firstUnsubmitted;
+    }
 
     setLoading(false);
     setParticipantId(pid);
     setResumeFromIndex(resumeIdx);
     setCompletedCount(completed);
     sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
-    if (existingId && completed > 0) {
+    if (presp.resumed && completed > 0) {
       toast.success(`Retomando atividade — ${completed} de ${activities.length} já enviada(s).`);
     }
     if (viewOnly) {
