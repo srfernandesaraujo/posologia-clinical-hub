@@ -495,21 +495,44 @@ export default function SalaVirtualAluno() {
           {isExam && (
             <div className="text-left space-y-2 bg-muted/50 rounded-lg p-4">
               <p className="text-sm font-semibold">Atividades ({activities.length}):</p>
-              {activities.map((act: any, i: number) => (
-                <div key={act.id} className="flex items-center gap-2 text-sm">
-                  <Badge variant="outline" className="text-xs min-w-[24px] justify-center">{i + 1}</Badge>
-                  <span>{TOOL_LABELS[act.simulator_slug] || act.simulator_slug}</span>
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground mt-2">
-                Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
-              </p>
+              {activities.map((act: any, i: number) => {
+                const done = i < resumeFromIndex;
+                return (
+                  <div key={act.id} className="flex items-center gap-2 text-sm">
+                    <Badge variant={done ? "default" : "outline"} className="text-xs min-w-[24px] justify-center">
+                      {done ? "✓" : i + 1}
+                    </Badge>
+                    <span className={done ? "line-through text-muted-foreground" : ""}>
+                      {TOOL_LABELS[act.simulator_slug] || act.simulator_slug}
+                    </span>
+                  </div>
+                );
+              })}
+              {completedCount > 0 && resumeFromIndex < activities.length && (
+                <p className="text-xs text-primary font-medium mt-2">
+                  Você já enviou {completedCount} atividade(s). Vamos retomar a partir da atividade {resumeFromIndex + 1}.
+                </p>
+              )}
+              {resumeFromIndex >= activities.length && (
+                <p className="text-xs text-green-600 font-medium mt-2">
+                  Todas as atividades já foram enviadas. Obrigado!
+                </p>
+              )}
+              {completedCount === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
+                </p>
+              )}
             </div>
           )}
 
-          <Button onClick={goToSimulator} size="lg" className="w-full">
+          <Button onClick={goToSimulator} size="lg" className="w-full" disabled={isExam && resumeFromIndex >= activities.length}>
             {isExam ? (
-              <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              completedCount > 0 && resumeFromIndex < activities.length ? (
+                <>Retomar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              ) : (
+                <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
+              )
             ) : (
               "Iniciar Simulador"
             )}
