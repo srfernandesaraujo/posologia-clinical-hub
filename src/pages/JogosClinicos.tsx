@@ -337,12 +337,13 @@ export default function JogosClinicos() {
   const awardGamePoints = useCallback(async (gameId: string, points: number, reason: string) => {
     if (!user) return;
     setSessionScore((prev) => prev + points);
-    const { error } = await supabase.from("student_points").insert({
-      user_id: user.id,
-      source: `game:${gameId}`,
-      points,
-      simulator_slug: gameId,
-      source_id: reason,
+    const { error } = await supabase.functions.invoke("award-points", {
+      body: {
+        source: "game_completion",
+        points,
+        simulator_slug: gameId,
+        source_id: `${gameId}:${reason}`,
+      },
     });
     if (error) console.error("Pontuação não registrada:", error.message);
   }, [user]);

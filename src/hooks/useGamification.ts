@@ -130,45 +130,34 @@ export function useGamification() {
 
   const badgeContext: BadgeContext = { totalPoints, totalCases, simulatorCounts, streak, activeDays };
 
-  // Award points
+  // Award points (server-side via edge function; validates + bounds + dedupes,
+  // and grants any newly earned badges atomically)
   const awardPoints = useCallback(
     async (pts: number, source: string, simulatorSlug?: string, sourceId?: string) => {
       if (!user) return;
-      const { error } = await supabase.from("student_points").insert({
-        user_id: user.id,
-        points: pts,
-        source,
-        simulator_slug: simulatorSlug || null,
-        source_id: sourceId || null,
-      } as any);
+      const { error } = await supabase.functions.invoke("award-points", {
+        body: {
+          points: pts,
+          source,
+          simulator_slug: simulatorSlug || null,
+          source_id: sourceId || null,
+        },
+      });
       if (!error) {
         qc.invalidateQueries({ queryKey: ["gamification-points"] });
+        qc.invalidateQueries({ queryKey: ["gamification-badges"] });
       }
     },
     [user, qc]
   );
 
-  // Check and award new badges
+  // Badges are now granted server-side as a side effect of award-points.
+  // This kept as a no-op for backwards compatibility with callers.
   const checkBadges = useCallback(async () => {
     if (!user) return [];
-    const newBadges: BadgeDef[] = [];
-    const earnedIds = new Set(earnedBadges.map((b: any) => b.badge_id));
-
-    for (const badge of BADGE_DEFINITIONS) {
-      if (!earnedIds.has(badge.id) && badge.requirement(badgeContext)) {
-        const { error } = await supabase.from("user_badges").insert({
-          user_id: user.id,
-          badge_id: badge.id,
-        } as any);
-        if (!error) newBadges.push(badge);
-      }
-    }
-
-    if (newBadges.length > 0) {
-      qc.invalidateQueries({ queryKey: ["gamification-badges"] });
-    }
-    return newBadges;
-  }, [user, earnedBadges, badgeContext, qc]);
+    qc.invalidateQueries({ queryKey: ["gamification-badges"] });
+    return [];
+  }, [user, qc]);
 
   // Daily login check
   useEffect(() => {
