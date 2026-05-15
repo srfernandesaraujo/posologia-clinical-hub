@@ -102,34 +102,26 @@ export default function SalaVirtualAluno() {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
-      .from("virtual_rooms")
-      .select("*")
-      .eq("pin", p)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (error || !data) {
+    const { data: resp, error } = await supabase.functions.invoke("room-access", {
+      body: { action: "lookup", pin: p },
+    });
+    if (error || !resp) {
       setLoading(false);
       toast.error("Sala não encontrada ou inativa. Verifique o PIN.");
       return;
     }
-
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    if (resp.expired) {
       setLoading(false);
       toast.error("Esta sala já expirou.");
       return;
     }
-
-    // Fetch room activities
-    const { data: acts } = await supabase
-      .from("room_activities")
-      .select("*")
-      .eq("room_id", data.id)
-      .order("position");
-
-    setRoom(data);
-    setActivities(acts || []);
+    if (!resp.room) {
+      setLoading(false);
+      toast.error("Sala não encontrada ou inativa. Verifique o PIN.");
+      return;
+    }
+    setRoom(resp.room);
+    setActivities(resp.activities || []);
     setLoading(false);
     setStep("identify");
   };
