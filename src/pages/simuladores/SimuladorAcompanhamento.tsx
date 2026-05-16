@@ -341,7 +341,7 @@ export default function SimuladorAcompanhamento() {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Prescrição Atual</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {consultation.currentPrescription.map((rx, i) => {
+            {displayedRx.map((rx, i) => {
               const ua = (userActions[consultIdx] || []).find(a => a.drug === rx.drug);
               return (
                 <div key={i} className={`p-3 rounded-lg border flex items-center justify-between ${ua ? "border-primary/50" : ""}`}>
