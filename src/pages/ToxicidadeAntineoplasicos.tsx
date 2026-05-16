@@ -252,13 +252,7 @@ export default function ToxicidadeAntineoplasicos() {
     doc.save("toxicidade-antineoplasicos.pdf");
   }
 
-  const YesNoField = (props: { label: string; field: string }) => (
-    <YesNoFieldBase {...props} data={data} updateField={updateField} />
-  );
 
-  const NumberField = (props: { label: string; field: string; placeholder?: string; unit?: string }) => (
-    <NumberFieldBase {...props} data={data} updateField={updateField} />
-  );
 
   return (
     <div className="space-y-6">
