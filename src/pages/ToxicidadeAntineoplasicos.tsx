@@ -160,6 +160,42 @@ function calcHFAICOS(data: Record<string, string>): Resultado {
   return { score, percentual, faixa, cor, recomendacoes };
 }
 
+type FieldProps = {
+  label: string;
+  field: string;
+  data: Record<string, string>;
+  updateField: (key: string, value: string) => void;
+};
+
+const YesNoField = ({ label, field, data, updateField }: FieldProps) => (
+  <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+    <span className="text-sm">{label}</span>
+    <RadioGroup value={data[field] || ""} onValueChange={v => updateField(field, v)} className="flex gap-3">
+      <div className="flex items-center gap-1">
+        <RadioGroupItem value="1" id={`${field}-s`} />
+        <Label htmlFor={`${field}-s`} className="text-xs">Sim</Label>
+      </div>
+      <div className="flex items-center gap-1">
+        <RadioGroupItem value="0" id={`${field}-n`} />
+        <Label htmlFor={`${field}-n`} className="text-xs">Não</Label>
+      </div>
+    </RadioGroup>
+  </div>
+);
+
+const NumberField = ({ label, field, placeholder, unit, data, updateField }: FieldProps & { placeholder?: string; unit?: string }) => (
+  <div>
+    <Label className="text-sm">{label}{unit ? ` (${unit})` : ""}</Label>
+    <Input
+      type="number"
+      value={data[field] || ""}
+      onChange={e => updateField(field, e.target.value)}
+      placeholder={placeholder}
+      className="mt-1"
+    />
+  </div>
+);
+
 export default function ToxicidadeAntineoplasicos() {
   const navigate = useNavigate();
   const isEmbed = useIsEmbed();
@@ -216,34 +252,7 @@ export default function ToxicidadeAntineoplasicos() {
     doc.save("toxicidade-antineoplasicos.pdf");
   }
 
-  const YesNoField = ({ label, field }: { label: string; field: string }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-      <span className="text-sm">{label}</span>
-      <RadioGroup value={data[field] || ""} onValueChange={v => updateField(field, v)} className="flex gap-3">
-        <div className="flex items-center gap-1">
-          <RadioGroupItem value="1" id={`${field}-s`} />
-          <Label htmlFor={`${field}-s`} className="text-xs">Sim</Label>
-        </div>
-        <div className="flex items-center gap-1">
-          <RadioGroupItem value="0" id={`${field}-n`} />
-          <Label htmlFor={`${field}-n`} className="text-xs">Não</Label>
-        </div>
-      </RadioGroup>
-    </div>
-  );
 
-  const NumberField = ({ label, field, placeholder, unit }: { label: string; field: string; placeholder?: string; unit?: string }) => (
-    <div>
-      <Label className="text-sm">{label}{unit ? ` (${unit})` : ""}</Label>
-      <Input
-        type="number"
-        value={data[field] || ""}
-        onChange={e => updateField(field, e.target.value)}
-        placeholder={placeholder}
-        className="mt-1"
-      />
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -293,7 +302,7 @@ export default function ToxicidadeAntineoplasicos() {
                 <p className="text-xs text-muted-foreground mb-2">
                   Escore CARG — Predição de toxicidade grau 3-5 em idosos oncológicos (Hurria et al., 2011).
                 </p>
-                <NumberField label="Idade" field="idade" placeholder="Ex: 75" unit="anos" />
+                <NumberField label="Idade" field="idade" placeholder="Ex: 75" unit="anos" data={data} updateField={updateField} />
                 <div>
                   <Label className="text-sm">Tipo de tumor</Label>
                   <Select value={data.tipoTumor || ""} onValueChange={v => updateField("tipoTumor", v)}>
@@ -304,9 +313,9 @@ export default function ToxicidadeAntineoplasicos() {
                     </SelectContent>
                   </Select>
                 </div>
-                <NumberField label="Número de drogas no esquema" field="numDrogas" placeholder="Ex: 2" />
-                <NumberField label="Hemoglobina" field="hemoglobina" placeholder="Ex: 10.5" unit="g/dL" />
-                <NumberField label="Clearance de creatinina" field="clcr" placeholder="Ex: 45" unit="mL/min" />
+                <NumberField label="Número de drogas no esquema" field="numDrogas" placeholder="Ex: 2" data={data} updateField={updateField} />
+                <NumberField label="Hemoglobina" field="hemoglobina" placeholder="Ex: 10.5" unit="g/dL" data={data} updateField={updateField} />
+                <NumberField label="Clearance de creatinina" field="clcr" placeholder="Ex: 45" unit="mL/min" data={data} updateField={updateField} />
                 <div>
                   <Label className="text-sm">Audição</Label>
                   <Select value={data.audicao || ""} onValueChange={v => updateField("audicao", v)}>
@@ -317,10 +326,10 @@ export default function ToxicidadeAntineoplasicos() {
                     </SelectContent>
                   </Select>
                 </div>
-                <YesNoField label="≥ 1 queda nos últimos 6 meses?" field="quedas" />
-                <YesNoField label="Caminhada limitada (≤ 1 quarteirão)?" field="caminhadaLimitada" />
-                <YesNoField label="Diminuição de atividades sociais?" field="atividadeSocial" />
-                <YesNoField label="Precisa de ajuda para tomar medicamentos?" field="assistenciaMed" />
+                <YesNoField label="≥ 1 queda nos últimos 6 meses?" field="quedas" data={data} updateField={updateField} />
+                <YesNoField label="Caminhada limitada (≤ 1 quarteirão)?" field="caminhadaLimitada" data={data} updateField={updateField} />
+                <YesNoField label="Diminuição de atividades sociais?" field="atividadeSocial" data={data} updateField={updateField} />
+                <YesNoField label="Precisa de ajuda para tomar medicamentos?" field="assistenciaMed" data={data} updateField={updateField} />
               </TabsContent>
 
               {/* CRASH */}
@@ -350,8 +359,8 @@ export default function ToxicidadeAntineoplasicos() {
                     </SelectContent>
                   </Select>
                 </div>
-                <NumberField label="LDH" field="ldh" placeholder="Ex: 500" unit="U/L" />
-                <NumberField label="Albumina" field="albumina" placeholder="Ex: 3.2" unit="g/dL" />
+                <NumberField label="LDH" field="ldh" placeholder="Ex: 500" unit="U/L" data={data} updateField={updateField} />
+                <NumberField label="Albumina" field="albumina" placeholder="Ex: 3.2" unit="g/dL" data={data} updateField={updateField} />
                 <div>
                   <Label className="text-sm">ECOG Performance Status</Label>
                   <Select value={data.ecog || ""} onValueChange={v => updateField("ecog", v)}>
@@ -365,9 +374,9 @@ export default function ToxicidadeAntineoplasicos() {
                     </SelectContent>
                   </Select>
                 </div>
-                <NumberField label="IADL (Lawton)" field="iadl" placeholder="Ex: 24" unit="pontos" />
-                <NumberField label="Mini-Mental (MEEM)" field="miniMental" placeholder="Ex: 28" unit="pontos" />
-                <NumberField label="PA Diastólica" field="padiastolica" placeholder="Ex: 80" unit="mmHg" />
+                <NumberField label="IADL (Lawton)" field="iadl" placeholder="Ex: 24" unit="pontos" data={data} updateField={updateField} />
+                <NumberField label="Mini-Mental (MEEM)" field="miniMental" placeholder="Ex: 28" unit="pontos" data={data} updateField={updateField} />
+                <NumberField label="PA Diastólica" field="padiastolica" placeholder="Ex: 80" unit="mmHg" data={data} updateField={updateField} />
               </TabsContent>
 
               {/* HFA-ICOS */}
@@ -375,16 +384,16 @@ export default function ToxicidadeAntineoplasicos() {
                 <p className="text-xs text-muted-foreground mb-2">
                   HFA-ICOS (ESC 2022) — Estratificação de risco de cardiotoxicidade por antineoplásicos.
                 </p>
-                <NumberField label="Idade" field="idade" placeholder="Ex: 68" unit="anos" />
-                <YesNoField label="Hipertensão arterial?" field="hipertensao" />
-                <YesNoField label="Diabetes mellitus?" field="diabetes" />
-                <YesNoField label="Tabagismo ativo?" field="tabagismo" />
-                <YesNoField label="Dislipidemia?" field="dislipidemia" />
-                <YesNoField label="Obesidade (IMC ≥ 30)?" field="obesidade" />
-                <YesNoField label="Doença cardiovascular prévia?" field="doencaCV" />
-                <YesNoField label="Tratamento cardiotóxico prévio?" field="txCardiotoxPrevia" />
-                <YesNoField label="Troponina ou BNP elevados?" field="troponinaBNP" />
-                <NumberField label="FEVE basal" field="feve" placeholder="Ex: 55" unit="%" />
+                <NumberField label="Idade" field="idade" placeholder="Ex: 68" unit="anos" data={data} updateField={updateField} />
+                <YesNoField label="Hipertensão arterial?" field="hipertensao" data={data} updateField={updateField} />
+                <YesNoField label="Diabetes mellitus?" field="diabetes" data={data} updateField={updateField} />
+                <YesNoField label="Tabagismo ativo?" field="tabagismo" data={data} updateField={updateField} />
+                <YesNoField label="Dislipidemia?" field="dislipidemia" data={data} updateField={updateField} />
+                <YesNoField label="Obesidade (IMC ≥ 30)?" field="obesidade" data={data} updateField={updateField} />
+                <YesNoField label="Doença cardiovascular prévia?" field="doencaCV" data={data} updateField={updateField} />
+                <YesNoField label="Tratamento cardiotóxico prévio?" field="txCardiotoxPrevia" data={data} updateField={updateField} />
+                <YesNoField label="Troponina ou BNP elevados?" field="troponinaBNP" data={data} updateField={updateField} />
+                <NumberField label="FEVE basal" field="feve" placeholder="Ex: 55" unit="%" data={data} updateField={updateField} />
                 <div>
                   <Label className="text-sm">Risco do fármaco antineoplásico</Label>
                   <Select value={data.riscoFarmaco || ""} onValueChange={v => updateField("riscoFarmaco", v)}>
