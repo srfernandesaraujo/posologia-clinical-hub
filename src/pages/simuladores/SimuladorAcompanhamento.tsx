@@ -185,6 +185,32 @@ export default function SimuladorAcompanhamento() {
     return c.consultations[0]?.labs[0]?.unit ?? "";
   }, [c]);
 
+  // Derive the current prescription by replaying user modifications
+  // from previous consultations onto the baseline prescription.
+  const displayedRx = useMemo<DrugRx[]>(() => {
+    if (!c || !consultation) return [];
+    let rx: DrugRx[] = (c.consultations[0]?.currentPrescription || []).map(r => ({ ...r }));
+    for (let i = 0; i < consultIdx; i++) {
+      const acts = userActions[i] || [];
+      acts.forEach(a => {
+        if (a.action === "suspender") {
+          rx = rx.filter(r => r.drug !== a.drug);
+        } else if (a.action === "aumentar" || a.action === "reduzir") {
+          rx = rx.map(r => r.drug === a.drug
+            ? { ...r, dose: a.newDose || r.dose, frequency: a.newFrequency || r.frequency }
+            : r);
+        } else if (a.action === "adicionar") {
+          if (!rx.find(r => r.drug === a.drug)) {
+            rx.push({ drug: a.drug, dose: a.newDose || "", frequency: a.newFrequency || "" });
+          }
+        } else if (a.action === "manter" && a.newFrequency) {
+          rx = rx.map(r => r.drug === a.drug ? { ...r, frequency: a.newFrequency || r.frequency } : r);
+        }
+      });
+    }
+    return rx;
+  }, [c, consultation, consultIdx, userActions]);
+
   const chartData = useMemo(() => {
     if (!c || !mainLabName) return [];
     return c.consultations.slice(0, consultIdx + 1).map(cons => ({
