@@ -252,33 +252,12 @@ export default function ToxicidadeAntineoplasicos() {
     doc.save("toxicidade-antineoplasicos.pdf");
   }
 
-  const YesNoField = ({ label, field }: { label: string; field: string }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-      <span className="text-sm">{label}</span>
-      <RadioGroup value={data[field] || ""} onValueChange={v => updateField(field, v)} className="flex gap-3">
-        <div className="flex items-center gap-1">
-          <RadioGroupItem value="1" id={`${field}-s`} />
-          <Label htmlFor={`${field}-s`} className="text-xs">Sim</Label>
-        </div>
-        <div className="flex items-center gap-1">
-          <RadioGroupItem value="0" id={`${field}-n`} />
-          <Label htmlFor={`${field}-n`} className="text-xs">Não</Label>
-        </div>
-      </RadioGroup>
-    </div>
+  const YesNoField = (props: { label: string; field: string }) => (
+    <YesNoFieldBase {...props} data={data} updateField={updateField} />
   );
 
-  const NumberField = ({ label, field, placeholder, unit }: { label: string; field: string; placeholder?: string; unit?: string }) => (
-    <div>
-      <Label className="text-sm">{label}{unit ? ` (${unit})` : ""}</Label>
-      <Input
-        type="number"
-        value={data[field] || ""}
-        onChange={e => updateField(field, e.target.value)}
-        placeholder={placeholder}
-        className="mt-1"
-      />
-    </div>
+  const NumberField = (props: { label: string; field: string; placeholder?: string; unit?: string }) => (
+    <NumberFieldBase {...props} data={data} updateField={updateField} />
   );
 
   return (
