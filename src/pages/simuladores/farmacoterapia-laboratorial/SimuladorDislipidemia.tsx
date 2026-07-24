@@ -116,7 +116,7 @@ export default function SimuladorDislipidemia() {
     <div className="space-y-4">
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge className={riskColor(activeCase.riskLevel)}>Risco {activeCase.riskLevel}</Badge><Badge variant="outline">{activeCase.difficulty}</Badge></div>
+      <div className="flex items-center gap-3 flex-wrap"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge className={riskColor(activeCase.riskLevel)}>Risco {activeCase.riskLevel}</Badge><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" /></div></div>
       <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
 
       {/* Lipid Gauges */}
