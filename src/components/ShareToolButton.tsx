@@ -25,6 +25,7 @@ interface ShareToolButtonProps {
 export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
   const { user } = useAuth();
   const { isPremium } = useFeatureGating();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
@@ -96,7 +97,7 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
     onError: () => toast.error("Erro ao atualizar compartilhamento"),
   });
 
-  if (!user || !isPremium) return null;
+  if (!user || (!isPremium && !isAdmin)) return null;
 
   const embedUrl = share ? `${window.location.origin}/embed/${share.share_token}` : "";
   const iframeCode = share ? `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" style="border-radius:12px;border:1px solid #e5e7eb;"></iframe>` : "";
