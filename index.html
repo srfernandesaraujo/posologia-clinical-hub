@@ -38,6 +38,37 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // oEmbed + Open Graph discovery for /embed/* pages so link-embedders
+      // (iframely, embed.ly, Microlink) auto-convert the URL into an iframe,
+      // the same way YouTube/Vimeo links do.
+      (function () {
+        var m = window.location.pathname.match(/^\/embed\/([^\/?#]+)/);
+        if (!m) return;
+        var pageUrl = "https://simulador.posologia.app/embed/" + m[1];
+        var oembedUrl =
+          "https://hxfzgjxwozzuzgdsrrpb.supabase.co/functions/v1/oembed?url=" +
+          encodeURIComponent(pageUrl) + "&format=json";
+        var head = document.head;
+        function add(tag, attrs) {
+          var el = document.createElement(tag);
+          for (var k in attrs) el.setAttribute(k, attrs[k]);
+          head.appendChild(el);
+        }
+        add("link", { rel: "alternate", type: "application/json+oembed", href: oembedUrl, title: "Posologia Clinical Hub" });
+        add("meta", { property: "og:type", content: "video.other" });
+        add("meta", { property: "og:url", content: pageUrl });
+        add("meta", { property: "og:video:url", content: pageUrl });
+        add("meta", { property: "og:video:secure_url", content: pageUrl });
+        add("meta", { property: "og:video:type", content: "text/html" });
+        add("meta", { property: "og:video:width", content: "800" });
+        add("meta", { property: "og:video:height", content: "600" });
+        add("meta", { name: "twitter:card", content: "player" });
+        add("meta", { name: "twitter:player", content: pageUrl });
+        add("meta", { name: "twitter:player:width", content: "800" });
+        add("meta", { name: "twitter:player:height", content: "600" });
+      })();
+    </script>
     <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

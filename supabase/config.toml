@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.docking-comparativo]
 verify_jwt = false
+
+[functions.oembed]
+verify_jwt = false
