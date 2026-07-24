@@ -183,18 +183,13 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
                     </div>
                   </div>
 
-                  {share.expires_at && (
-                    <p className="text-xs text-muted-foreground">
-                      ⏰ Este link expira em{" "}
-                      {new Date(share.expires_at).toLocaleString("pt-BR", {
-                        day: "2-digit", month: "2-digit", year: "numeric",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground">
+                    🔗 Este link permanece ativo até que você o revogue manualmente pelo botão acima.
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     ⚠️ Se seu plano for alterado para gratuito, este link será automaticamente desativado.
                   </p>
+
                 </>
               )}
             </>
