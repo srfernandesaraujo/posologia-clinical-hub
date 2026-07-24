@@ -80,10 +80,8 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
 
   const toggleShare = useMutation({
     mutationFn: async (active: boolean) => {
-      const updateData: Record<string, unknown> = { is_active: active };
-      if (active) {
-        updateData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      }
+      const updateData: Record<string, unknown> = { is_active: active, expires_at: null };
+
       const { error } = await supabase
         .from("shared_tools")
         .update(updateData)
