@@ -15,11 +15,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useIsEmbed } from "@/contexts/EmbedContext";
 
 interface ShareToolButtonProps {
   toolId?: string;
   toolSlug?: string;
   toolName: string;
+  /** Optional case identifier — when set, the generated share link opens
+   *  directly into this specific clinical case inside the simulator. */
+  caseId?: string;
 }
 
 export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
