@@ -126,7 +126,7 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
           ) : !share ? (
             <div className="text-center py-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Gere um link público para incorporar esta calculadora em qualquer página web.
+                Gere um link público para incorporar esta ferramenta em qualquer página web.
               </p>
               <Button onClick={() => createShare.mutate()} disabled={createShare.isPending} className="gap-2">
                 {createShare.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
