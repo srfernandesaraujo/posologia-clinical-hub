@@ -25,6 +25,7 @@ interface ShareToolButtonProps {
 export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
   const { user } = useAuth();
   const { isPremium } = useFeatureGating();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
