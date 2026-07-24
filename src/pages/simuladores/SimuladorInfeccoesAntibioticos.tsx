@@ -18,6 +18,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getInfeccoesAntibioticosChallenges } from "@/data/simulatorChallenges";
 
@@ -310,6 +311,15 @@ export default function SimuladorInfeccoesAntibioticos() {
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
   const [activeCase, setActiveCase] = useState<InfectionCase | null>(null);
+  const isEmbed = useIsEmbed();
+  const embedCaseId = useEmbedCaseId();
+  useEffect(() => {
+    if (isEmbed && embedCaseId && !activeCase) {
+      const decoded = decodeURIComponent(embedCaseId);
+      const found = BUILT_IN_CASES.find((c: any) => c.title === decoded);
+      if (found) setActiveCase(found as any);
+    }
+  }, [isEmbed, embedCaseId, activeCase]);
   const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
   const [dose, setDose] = useState(100);
   const [interval, setInterval_] = useState(8);
@@ -481,11 +491,11 @@ export default function SimuladorInfeccoesAntibioticos() {
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
 
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
+        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge variant="secondary">{typeLabels[activeCase.infectionType] ?? activeCase.infectionType}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" /></div>
+        <div className="ml-auto"><ShareToolButton toolSlug="infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" caseId={activeCase.title} /></div>
       </div>
 
       {/* Patient Info + Lab Results */}
