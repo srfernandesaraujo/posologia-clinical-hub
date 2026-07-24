@@ -100,6 +100,9 @@ export function ShareToolButton({ toolId, toolSlug, toolName, caseId }: ShareToo
     onError: () => toast.error("Erro ao atualizar compartilhamento"),
   });
 
+  // Hide entirely when rendering inside an embed iframe — end users of a
+  // shared activity should not see share controls or admin chrome.
+  if (isEmbed) return null;
   if (!user || (!isPremium && !isAdmin)) return null;
 
   // Always use the public custom domain for embeds — Lovable preview/id URLs
@@ -108,7 +111,8 @@ export function ShareToolButton({ toolId, toolSlug, toolName, caseId }: ShareToo
   const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const isPreviewHost = /lovable\.(app|dev)|lovableproject\.com/.test(currentOrigin);
   const embedBase = isPreviewHost || !currentOrigin ? PUBLIC_BASE : currentOrigin;
-  const embedUrl = share ? `${embedBase}/embed/${share.share_token}` : "";
+  const caseSuffix = caseId ? `?case=${encodeURIComponent(caseId)}` : "";
+  const embedUrl = share ? `${embedBase}/embed/${share.share_token}${caseSuffix}` : "";
   const iframeCode = share ? `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" allow="clipboard-write" style="border-radius:12px;border:1px solid #e5e7eb;"></iframe>` : "";
 
   const copyToClipboard = (text: string) => {
