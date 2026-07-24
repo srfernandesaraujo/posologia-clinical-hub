@@ -485,6 +485,7 @@ export default function SimuladorInfeccoesAntibioticos() {
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge variant="secondary">{typeLabels[activeCase.infectionType] ?? activeCase.infectionType}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" /></div>
       </div>
 
       {/* Patient Info + Lab Results */}
