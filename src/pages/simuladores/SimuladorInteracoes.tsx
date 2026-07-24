@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -153,6 +154,15 @@ export default function SimuladorInteracoes() {
 
   // Dashboard vs simulator
   const [activeCase, setActiveCase] = useState<any | null>(null);
+  const isEmbed = useIsEmbed();
+  const embedCaseId = useEmbedCaseId();
+  useEffect(() => {
+    if (isEmbed && embedCaseId && !activeCase) {
+      const decoded = decodeURIComponent(embedCaseId);
+      const found = BUILT_IN_CASES.find((c: any) => c.title === decoded);
+      if (found) setActiveCase(found as any);
+    }
+  }, [isEmbed, embedCaseId, activeCase]);
   const [vrAutoStarted, setVrAutoStarted] = useState(false);
   const [vrSubmitted, setVrSubmitted] = useState(false);
   const [showVRFeedback, setShowVRFeedback] = useState(false);
@@ -358,14 +368,15 @@ export default function SimuladorInteracoes() {
       )}
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
+        {!isEmbed && (<Button variant="ghost" size="icon" onClick={isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
           <ArrowLeft className="h-5 w-5" />
-        </Button>
+        </Button>)}
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold truncate">{activeCase.title || "Interações Medicamentosas"}</h1>
           <p className="text-xs text-muted-foreground">Dados: RxNav / National Library of Medicine</p>
         </div>
-        <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" />
+        <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" caseId={activeCase?.title} />
+
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1"><HelpCircle className="h-4 w-4" /> Glossário</Button>

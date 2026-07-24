@@ -15,17 +15,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useIsEmbed } from "@/contexts/EmbedContext";
 
 interface ShareToolButtonProps {
   toolId?: string;
   toolSlug?: string;
   toolName: string;
+  /** Optional case identifier — when set, the generated share link opens
+   *  directly into this specific clinical case inside the simulator. */
+  caseId?: string;
 }
 
-export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
+export function ShareToolButton({ toolId, toolSlug, toolName, caseId }: ShareToolButtonProps) {
   const { user } = useAuth();
   const { isPremium } = useFeatureGating();
   const { isAdmin } = useAuth();
+  const isEmbed = useIsEmbed();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
@@ -95,6 +100,9 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
     onError: () => toast.error("Erro ao atualizar compartilhamento"),
   });
 
+  // Hide entirely when rendering inside an embed iframe — end users of a
+  // shared activity should not see share controls or admin chrome.
+  if (isEmbed) return null;
   if (!user || (!isPremium && !isAdmin)) return null;
 
   // Always use the public custom domain for embeds — Lovable preview/id URLs
@@ -103,7 +111,8 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
   const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const isPreviewHost = /lovable\.(app|dev)|lovableproject\.com/.test(currentOrigin);
   const embedBase = isPreviewHost || !currentOrigin ? PUBLIC_BASE : currentOrigin;
-  const embedUrl = share ? `${embedBase}/embed/${share.share_token}` : "";
+  const caseSuffix = caseId ? `?case=${encodeURIComponent(caseId)}` : "";
+  const embedUrl = share ? `${embedBase}/embed/${share.share_token}${caseSuffix}` : "";
   const iframeCode = share ? `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" allow="clipboard-write" style="border-radius:12px;border:1px solid #e5e7eb;"></iframe>` : "";
 
   const copyToClipboard = (text: string) => {

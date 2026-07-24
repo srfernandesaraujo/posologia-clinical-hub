@@ -17,6 +17,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
+import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getInfeccaoLabChallenges } from "@/data/simulatorChallenges";
 
@@ -78,6 +79,15 @@ export default function SimuladorInfeccaoLab() {
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
   const [activeCase, setActiveCase] = useState<InfCase | null>(null);
+  const isEmbed = useIsEmbed();
+  const embedCaseId = useEmbedCaseId();
+  useEffect(() => {
+    if (isEmbed && embedCaseId && !activeCase) {
+      const decoded = decodeURIComponent(embedCaseId);
+      const found = BUILT_IN_CASES.find((c: any) => c.title === decoded);
+      if (found) setActiveCase(found as any);
+    }
+  }, [isEmbed, embedCaseId, activeCase]);
   const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
   const [dose, setDose] = useState(DRUGS[0].doseMin);
   const [running, setRunning] = useState(false);
@@ -123,7 +133,7 @@ export default function SimuladorInfeccaoLab() {
     <div className="space-y-4">
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" /></div></div>
+      <div className="flex items-center gap-3 flex-wrap">{!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}<h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" caseId={activeCase.title} /></div></div>
       <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p><p className="text-xs font-mono bg-muted/50 p-2 rounded">Hemocultura: {activeCase.baseLab.hemocultura}</p></CardContent></Card>
 
       <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Marcadores (após tratamento)</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 sm:grid-cols-5 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent></Card>

@@ -1,9 +1,21 @@
 import { createContext, useContext } from "react";
 
-const EmbedContext = createContext(false);
+interface EmbedState {
+  isEmbed: boolean;
+  caseId: string | null;
+}
 
-export const EmbedProvider = ({ children }: { children: React.ReactNode }) => (
-  <EmbedContext.Provider value={true}>{children}</EmbedContext.Provider>
+const EmbedContext = createContext<EmbedState>({ isEmbed: false, caseId: null });
+
+export const EmbedProvider = ({
+  children,
+  caseId = null,
+}: {
+  children: React.ReactNode;
+  caseId?: string | null;
+}) => (
+  <EmbedContext.Provider value={{ isEmbed: true, caseId }}>{children}</EmbedContext.Provider>
 );
 
-export const useIsEmbed = () => useContext(EmbedContext);
+export const useIsEmbed = () => useContext(EmbedContext).isEmbed;
+export const useEmbedCaseId = () => useContext(EmbedContext).caseId;

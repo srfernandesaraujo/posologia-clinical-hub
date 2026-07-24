@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { EmbedProvider } from "@/contexts/EmbedContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,6 +112,8 @@ function gerarPDF(toolName: string, values: Record<string, string>, fields: Tool
 
 export default function EmbedTool() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const embedCaseId = searchParams.get("case");
   const [values, setValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Interpretation | null>(null);
   const [calculated, setCalculated] = useState(false);
@@ -219,7 +221,7 @@ export default function EmbedTool() {
   if (NativeComponent) {
     return (
       <div className="min-h-screen bg-background">
-        <EmbedProvider>
+        <EmbedProvider caseId={embedCaseId}>
           <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-48 bg-muted animate-pulse rounded" /></div>}>
             <NativeComponent />
           </Suspense>
