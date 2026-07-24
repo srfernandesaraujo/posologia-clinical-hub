@@ -117,7 +117,7 @@ function calcChildPugh(lab: HepatoCase["baseLab"], encefalopatia: number, ascite
 
 function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["baseLab"]) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.3 + doseFrac * 0.7;
+  const intensity = 0.65 + doseFrac * 0.35;
   const trend: any[] = [];
   for (let d = 0; d <= 7; d++) {
     const p = d >= drug.daysToEffect ? Math.min((d - drug.daysToEffect + 1) / 5, 1) : 0;

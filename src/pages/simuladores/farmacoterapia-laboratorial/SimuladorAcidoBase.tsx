@@ -131,7 +131,10 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     let lactato = baseLab.lactato;
 
     drugs.forEach((d, i) => {
-      const doseFrac = doses[i] / d.doseMax;
+      // Therapeutic intensity: 65% at doseMin → 100% at doseMax, so switching
+      // between drugs at default dose already produces visible curve changes.
+      const range = Math.max(d.doseMax - d.doseMin, 1);
+      const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
       const progress = Math.min(1, Math.max(0, (h - d.hoursToEffect) / Math.max(1, 4)));
       if (h >= d.hoursToEffect) {
         pH += d.effects.pH * doseFrac * progress;
@@ -168,7 +171,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
   // Side effects
   const combinedSE = { hipotensao: 0, arritmia: 0, sobrecarga: 0, hipocalcemia: 0, hipernatremia: 0 };
   drugs.forEach((d, i) => {
-    const doseFrac = doses[i] / d.doseMax;
+    const range = Math.max(d.doseMax - d.doseMin, 1);
+    const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
     (Object.keys(combinedSE) as (keyof typeof combinedSE)[]).forEach(key => {
       combinedSE[key] += d.sideEffects[key] * doseFrac;
     });
