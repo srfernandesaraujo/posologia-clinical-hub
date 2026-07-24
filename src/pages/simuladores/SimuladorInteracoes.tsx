@@ -365,6 +365,7 @@ export default function SimuladorInteracoes() {
           <h1 className="text-xl font-bold truncate">{activeCase.title || "Interações Medicamentosas"}</h1>
           <p className="text-xs text-muted-foreground">Dados: RxNav / National Library of Medicine</p>
         </div>
+        <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" />
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1"><HelpCircle className="h-4 w-4" /> Glossário</Button>
