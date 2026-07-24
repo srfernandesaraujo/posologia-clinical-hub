@@ -62,10 +62,9 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
 
   const createShare = useMutation({
     mutationFn: async () => {
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("shared_tools")
-        .insert({ tool_id: effectiveToolId!, user_id: user!.id, expires_at: expiresAt })
+        .insert({ tool_id: effectiveToolId!, user_id: user!.id, expires_at: null })
         .select()
         .single();
       if (error) throw error;
@@ -77,6 +76,7 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
     },
     onError: () => toast.error("Erro ao criar link"),
   });
+
 
   const toggleShare = useMutation({
     mutationFn: async (active: boolean) => {
