@@ -26,10 +26,11 @@ interface ShareToolButtonProps {
   caseId?: string;
 }
 
-export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonProps) {
+export function ShareToolButton({ toolId, toolSlug, toolName, caseId }: ShareToolButtonProps) {
   const { user } = useAuth();
   const { isPremium } = useFeatureGating();
   const { isAdmin } = useAuth();
+  const isEmbed = useIsEmbed();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
