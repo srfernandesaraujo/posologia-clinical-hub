@@ -112,6 +112,8 @@ function gerarPDF(toolName: string, values: Record<string, string>, fields: Tool
 
 export default function EmbedTool() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const embedCaseId = searchParams.get("case");
   const [values, setValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Interpretation | null>(null);
   const [calculated, setCalculated] = useState(false);
