@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -299,7 +300,7 @@ export default function SimuladorInteracoes() {
           <div>
             <h1 className="text-2xl font-bold">Simulador de Interações Medicamentosas</h1>
             <p className="text-sm text-muted-foreground">Analise interações entre fármacos com dados do RxNav (NIH)</p>
-            <AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} />
+            <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" /><AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} />
           </div>
         </div>
 

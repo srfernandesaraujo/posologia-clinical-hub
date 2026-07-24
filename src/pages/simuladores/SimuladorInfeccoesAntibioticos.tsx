@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getInfeccoesAntibioticosChallenges } from "@/data/simulatorChallenges";
 
@@ -441,7 +442,7 @@ export default function SimuladorInfeccoesAntibioticos() {
           <div>
             <h1 className="text-2xl font-bold">Infecções e Antibioticoterapia</h1>
             <p className="text-muted-foreground">Selecione antibióticos considerando tipo de infecção, espectro, resistência, grupos especiais e efeitos adversos.</p>
-            <AdminPromptViewer toolSlug="sim-infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" toolType="simulator" prompt={getNativePrompt("sim-infeccoes-antibioticos") || ""} />
+            <ShareToolButton toolSlug="infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" /><AdminPromptViewer toolSlug="sim-infeccoes-antibioticos" toolName="Infecções e Antibioticoterapia" toolType="simulator" prompt={getNativePrompt("sim-infeccoes-antibioticos") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

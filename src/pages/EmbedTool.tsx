@@ -21,7 +21,23 @@ const NATIVE_CALCULATORS: Record<string, React.LazyExoticComponent<React.Compone
   "equivalencia-antidepressivos": lazy(() => import("./EquivalenciaAntidepressivos")),
   "homa-ir": lazy(() => import("./HomaIR")),
   "findrisc": lazy(() => import("./Findrisc")),
+  // Farmacologia Clínica simulators
+  "interacoes": lazy(() => import("./simuladores/SimuladorInteracoes")),
+  "manejo-dor": lazy(() => import("./simuladores/SimuladorManejoDor")),
+  "inflamacao-aines": lazy(() => import("./simuladores/SimuladorInflamacaoAINEs")),
+  "infeccoes-antibioticos": lazy(() => import("./simuladores/SimuladorInfeccoesAntibioticos")),
+  "tratamento-asma": lazy(() => import("./simuladores/SimuladorTratamentoAsma")),
+  // Farmacoterapia Laboratorial simulators
+  "farmacoterapia-hemograma": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorHemograma")),
+  "farmacoterapia-acido-base": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorAcidoBase")),
+  "farmacoterapia-hepatopatia": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorHepatopatia")),
+  "farmacoterapia-renal": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorRenal")),
+  "farmacoterapia-infeccao-lab": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorInfeccaoLab")),
+  "farmacoterapia-dislipidemia": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorDislipidemia")),
+  "farmacoterapia-glicemia": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorGlicemia")),
+  "farmacoterapia-coagulacao": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorCoagulacao")),
 };
+
 
 /* ─── Types (duplicated from ToolDetail for isolation) ─── */
 interface ToolField {

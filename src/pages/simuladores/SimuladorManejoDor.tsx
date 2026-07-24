@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getManejoDorChallenges } from "@/data/simulatorChallenges";
 
@@ -446,7 +447,7 @@ export default function SimuladorManejoDor() {
           <div>
             <h1 className="text-2xl font-bold">Manejo da Dor e Analgesia</h1>
             <p className="text-muted-foreground">Classifique a dor, selecione o tratamento pela Escada da OMS e observe os desfechos clínicos.</p>
-            <AdminPromptViewer toolSlug="sim-manejo-dor" toolName="Manejo da Dor e Analgesia" toolType="simulator" prompt={getNativePrompt("sim-manejo-dor") || ""} />
+            <ShareToolButton toolSlug="manejo-dor" toolName="Manejo da Dor e Analgesia" /><AdminPromptViewer toolSlug="sim-manejo-dor" toolName="Manejo da Dor e Analgesia" toolType="simulator" prompt={getNativePrompt("sim-manejo-dor") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
