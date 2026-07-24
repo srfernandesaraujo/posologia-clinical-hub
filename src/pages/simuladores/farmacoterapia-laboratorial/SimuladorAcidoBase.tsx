@@ -363,6 +363,7 @@ export default function SimuladorAcidoBase() {
         <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-acido-base" toolName="Distúrbios Ácido-Base e Eletrólitos" /></div>
       </div>
 
       {/* Patient */}

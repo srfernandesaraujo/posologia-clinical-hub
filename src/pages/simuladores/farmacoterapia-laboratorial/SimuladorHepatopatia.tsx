@@ -258,7 +258,9 @@ export default function SimuladorHepatopatia() {
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge className={`ml-auto ${cpColor}`}>Child-Pugh {childPugh.class} ({childPugh.score}pts)</Badge>
+        <ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" />
       </div>
+
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
         {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
