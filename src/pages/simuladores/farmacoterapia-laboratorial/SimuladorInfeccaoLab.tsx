@@ -46,7 +46,7 @@ const BUILT_IN_CASES: InfCase[] = [
 
 function computeSimulation(drug: InfDrug, dose: number, baseLab: InfCase["baseLab"]) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.3 + doseFrac * 0.7;
+  const intensity = 0.65 + doseFrac * 0.35;
   const trend: any[] = [];
   for (let h = 0; h <= 48; h += 6) {
     const p = h >= drug.hoursToEffect ? Math.min((h - drug.hoursToEffect + 1) / 24, 1) : 0;
