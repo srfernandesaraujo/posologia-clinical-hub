@@ -47,7 +47,9 @@ const BUILT_IN_CASES: LipidCase[] = [
 
 function computeSimulation(drug: LipidDrug, dose: number, baseLab: LipidCase["baseLab"]) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.3 + doseFrac * 0.7;
+  // Therapeutic intensity: 65% at doseMin, 100% at doseMax — ensures switching
+  // drugs produces visibly different curves without requiring dose escalation.
+  const intensity = 0.65 + doseFrac * 0.35;
   const trend: any[] = [];
   for (let w = 0; w <= 8; w++) {
     const p = w >= drug.weeksToEffect ? Math.min((w - drug.weeksToEffect + 1) / 6, 1) : 0;

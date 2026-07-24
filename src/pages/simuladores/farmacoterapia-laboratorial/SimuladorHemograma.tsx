@@ -130,11 +130,13 @@ function computeSimulation(drugs: HemoDrug[], doses: number[], baseLab: HemoCase
     let retic = baseLab.reticulocitos;
 
     drugs.forEach((d, i) => {
-      const doseFrac = doses[i] / d.doseMax;
+      // Therapeutic intensity: 65% at doseMin → 100% at doseMax, so switching
+      // between drugs at default dose already produces visible curve changes.
+      const range = Math.max(d.doseMax - d.doseMin, 1);
+      const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
       const progress = Math.min(1, Math.max(0, (w - d.weekToEffect) / Math.max(1, 4 - d.weekToEffect)));
       if (w >= d.weekToEffect) {
-        hb += d.effects.hb * doseFrac * progress * (doses[i] / d.doseMax);
-        hb += d.effects.hb * doseFrac * progress; // simplified: each drug contributes additively
+        hb += d.effects.hb * doseFrac * progress;
         vcm += d.effects.vcm * doseFrac * progress;
         leuc += d.effects.leucocitos * doseFrac * progress * 1000;
         plaq += d.effects.plaquetas * doseFrac * progress * 1000;
@@ -162,7 +164,8 @@ function computeSimulation(drugs: HemoDrug[], doses: number[], baseLab: HemoCase
   const sideEffectData: { name: string; risco: number }[] = [];
   const combinedSE = { gi: 0, alergia: 0, sobrecargaFerro: 0, febre: 0, hipotensao: 0 };
   drugs.forEach((d, i) => {
-    const doseFrac = doses[i] / d.doseMax;
+    const range = Math.max(d.doseMax - d.doseMin, 1);
+    const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
     (Object.keys(combinedSE) as (keyof typeof combinedSE)[]).forEach(k => {
       combinedSE[k] += d.sideEffects[k] * doseFrac;
     });

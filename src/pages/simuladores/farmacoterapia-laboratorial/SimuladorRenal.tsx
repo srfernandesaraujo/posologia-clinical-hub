@@ -73,7 +73,7 @@ function drcStage(c: number) {
 
 function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["baseLab"], clCr: number) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.3 + doseFrac * 0.7;
+  const intensity = 0.65 + doseFrac * 0.35;
   const accumFactor = clCr < 30 ? 2.0 : clCr < 60 ? 1.5 : 1.0;
   const trend: any[] = [];
   for (let d = 0; d <= 7; d++) {
