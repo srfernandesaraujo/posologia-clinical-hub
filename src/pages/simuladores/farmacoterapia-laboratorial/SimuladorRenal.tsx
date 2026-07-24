@@ -191,6 +191,7 @@ export default function SimuladorRenal() {
         <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-renal" toolName="Função Renal e Ajuste de Dose" /></div>
       </div>
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
