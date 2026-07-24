@@ -97,8 +97,14 @@ export function ShareToolButton({ toolId, toolSlug, toolName }: ShareToolButtonP
 
   if (!user || (!isPremium && !isAdmin)) return null;
 
-  const embedUrl = share ? `${window.location.origin}/embed/${share.share_token}` : "";
-  const iframeCode = share ? `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" style="border-radius:12px;border:1px solid #e5e7eb;"></iframe>` : "";
+  // Always use the public custom domain for embeds — Lovable preview/id URLs
+  // do a 302 redirect that many embed platforms won't follow inside an iframe.
+  const PUBLIC_BASE = "https://simulador.posologia.app";
+  const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const isPreviewHost = /lovable\.(app|dev)|lovableproject\.com/.test(currentOrigin);
+  const embedBase = isPreviewHost || !currentOrigin ? PUBLIC_BASE : currentOrigin;
+  const embedUrl = share ? `${embedBase}/embed/${share.share_token}` : "";
+  const iframeCode = share ? `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" allow="clipboard-write" style="border-radius:12px;border:1px solid #e5e7eb;"></iframe>` : "";
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
