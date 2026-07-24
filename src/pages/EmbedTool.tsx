@@ -221,7 +221,7 @@ export default function EmbedTool() {
   if (NativeComponent) {
     return (
       <div className="min-h-screen bg-background">
-        <EmbedProvider>
+        <EmbedProvider caseId={embedCaseId}>
           <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-48 bg-muted animate-pulse rounded" /></div>}>
             <NativeComponent />
           </Suspense>
