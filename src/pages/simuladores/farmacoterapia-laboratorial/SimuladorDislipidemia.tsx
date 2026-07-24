@@ -16,6 +16,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDislipidemiaLabChallenges } from "@/data/simulatorChallenges";
 
@@ -100,7 +101,7 @@ export default function SimuladorDislipidemia() {
   if (!activeCase) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Dislipidemia e Risco Cardiovascular</h1><p className="text-muted-foreground">Interprete lipidograma, calcule risco CV e ajuste hipolipemiantes.</p><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Dislipidemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
+        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Dislipidemia e Risco Cardiovascular</h1><p className="text-muted-foreground">Interprete lipidograma, calcule risco CV e ajuste hipolipemiantes.</p><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Dislipidemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card><CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader><CardContent className="space-y-3">
           {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}

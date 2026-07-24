@@ -16,6 +16,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getInfeccaoLabChallenges } from "@/data/simulatorChallenges";
 
@@ -105,7 +106,7 @@ export default function SimuladorInfeccaoLab() {
   if (!activeCase) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Sinais Laboratoriais de Infecção</h1><p className="text-muted-foreground">Interprete leucograma, PCR, PCT e lactato para guiar antibioticoterapia.</p><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Infecção Lab" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
+        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Sinais Laboratoriais de Infecção</h1><p className="text-muted-foreground">Interprete leucograma, PCR, PCT e lactato para guiar antibioticoterapia.</p><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Infecção Lab" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
         <Card><CardHeader><CardTitle className="flex items-center gap-2"><Bug className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader><CardContent className="space-y-3">
           {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}

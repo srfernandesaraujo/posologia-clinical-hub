@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getHemogramaChallenges } from "@/data/simulatorChallenges";
 
@@ -341,7 +342,7 @@ export default function SimuladorHemograma() {
           <div>
             <h1 className="text-2xl font-bold">Hemograma e Condutas Hematológicas</h1>
             <p className="text-muted-foreground">Interprete o hemograma completo e ajuste a farmacoterapia com base nos resultados laboratoriais.</p>
-            <AdminPromptViewer toolSlug="sim-farmacoterapia-hemograma" toolName="Hemograma" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-hemograma") || ""} />
+            <ShareToolButton toolSlug="farmacoterapia-hemograma" toolName="Hemograma e Condutas Hematológicas" /><AdminPromptViewer toolSlug="sim-farmacoterapia-hemograma" toolName="Hemograma" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-hemograma") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

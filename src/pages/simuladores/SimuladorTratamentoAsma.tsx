@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getTratamentoAsmaChallenges } from "@/data/simulatorChallenges";
 
@@ -420,7 +421,7 @@ export default function SimuladorTratamentoAsma() {
           <div>
             <h1 className="text-2xl font-bold">Tratamento da Asma</h1>
             <p className="text-muted-foreground">Classifique, trate e monitore pacientes asmáticos conforme os Steps GINA, espirometria e situações especiais.</p>
-            <AdminPromptViewer toolSlug="sim-tratamento-asma" toolName="Tratamento da Asma" toolType="simulator" prompt={getNativePrompt("sim-tratamento-asma") || ""} />
+            <ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" /><AdminPromptViewer toolSlug="sim-tratamento-asma" toolName="Tratamento da Asma" toolType="simulator" prompt={getNativePrompt("sim-tratamento-asma") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getInflamacaoAINEsChallenges } from "@/data/simulatorChallenges";
 
@@ -441,7 +442,7 @@ export default function SimuladorInflamacaoAINEs() {
           <div>
             <h1 className="text-2xl font-bold">Inflamação e Anti-inflamatórios</h1>
             <p className="text-muted-foreground">Selecione AINEs e corticoides considerando seletividade COX, pKa, meia-vida, comorbidades e riscos.</p>
-            <AdminPromptViewer toolSlug="sim-inflamacao-aines" toolName="Inflamação e Anti-inflamatórios" toolType="simulator" prompt={getNativePrompt("sim-inflamacao-aines") || ""} />
+            <ShareToolButton toolSlug="inflamacao-aines" toolName="Inflamação e Anti-inflamatórios" /><AdminPromptViewer toolSlug="sim-inflamacao-aines" toolName="Inflamação e Anti-inflamatórios" toolType="simulator" prompt={getNativePrompt("sim-inflamacao-aines") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

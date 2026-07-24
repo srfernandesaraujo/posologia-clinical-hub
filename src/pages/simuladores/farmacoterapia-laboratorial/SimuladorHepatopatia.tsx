@@ -16,6 +16,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getHeppatopatiaChallenges } from "@/data/simulatorChallenges";
 
@@ -230,7 +231,7 @@ export default function SimuladorHepatopatia() {
           <div>
             <h1 className="text-2xl font-bold">Hepatopatias e Ajuste Terapêutico</h1>
             <p className="text-muted-foreground">Interprete hepatograma, calcule Child-Pugh e ajuste doses em hepatopatas.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Hepatopatias" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
+            <ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Hepatopatias" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />

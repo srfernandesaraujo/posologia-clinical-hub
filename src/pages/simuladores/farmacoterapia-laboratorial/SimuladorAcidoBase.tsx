@@ -17,6 +17,7 @@ import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
+import { ShareToolButton } from "@/components/ShareToolButton";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getAcidoBaseChallenges } from "@/data/simulatorChallenges";
 
@@ -331,7 +332,7 @@ export default function SimuladorAcidoBase() {
           <div>
             <h1 className="text-2xl font-bold">Distúrbios Ácido-Base e Eletrólitos</h1>
             <p className="text-muted-foreground">Interprete gasometrias, identifique distúrbios e corrija com farmacoterapia guiada por laboratório.</p>
-            <AdminPromptViewer toolSlug="sim-farmacoterapia-acido-base" toolName="Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-acido-base") || ""} />
+            <ShareToolButton toolSlug="farmacoterapia-acido-base" toolName="Distúrbios Ácido-Base e Eletrólitos" /><AdminPromptViewer toolSlug="sim-farmacoterapia-acido-base" toolName="Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-acido-base") || ""} />
           </div>
         </div>
         <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
