@@ -478,6 +478,7 @@ export default function SimuladorInflamacaoAINEs() {
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge variant="secondary">{conditionLabel[activeCase.condition] ?? activeCase.condition}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="inflamacao-aines" toolName="Inflamação e Anti-inflamatórios" /></div>
       </div>
 
       {/* Patient Info */}

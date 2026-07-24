@@ -464,6 +464,7 @@ export default function SimuladorTratamentoAsma() {
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge variant="secondary">{severityLabels[activeCase.severity]}</Badge>
         <Badge>Step {activeCase.ginaStep}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" /></div>
       </div>
 
       {/* Patient Info + Spirometry */}

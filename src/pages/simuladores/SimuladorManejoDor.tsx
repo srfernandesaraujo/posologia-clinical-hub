@@ -483,6 +483,7 @@ export default function SimuladorManejoDor() {
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
         <Badge variant="secondary">{painTypeLabel[activeCase.painType] ?? activeCase.painType}</Badge>
+        <div className="ml-auto"><ShareToolButton toolSlug="manejo-dor" toolName="Manejo da Dor e Analgesia" /></div>
       </div>
 
       {/* Patient Info */}
