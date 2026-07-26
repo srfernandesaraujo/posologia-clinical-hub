@@ -170,39 +170,6 @@ async function tryProvider(provider: AiProvider, options: AiRequestOptions): Pro
   return data;
 }
 
-async function tryLovableAI(options: AiRequestOptions): Promise<any> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-  console.log("[AI-PROVIDER] Using Lovable AI (fallback)...");
-
-  const body: any = {
-    model: options.model || "google/gemini-3-flash-preview",
-    messages: options.messages,
-  };
-  if (options.temperature !== undefined) body.temperature = options.temperature;
-  if (options.tools) body.tools = options.tools;
-  if (options.tool_choice) body.tool_choice = options.tool_choice;
-
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) throw new Error("RATE_LIMIT");
-    if (response.status === 402) throw new Error("PAYMENT_REQUIRED");
-    const t = await response.text();
-    throw new Error(`Lovable AI returned ${response.status}: ${t.slice(0, 200)}`);
-  }
-
-  return await response.json();
-}
-
 // Cost per 1M tokens (USD) - approximate
 const COST_PER_MILLION: Record<string, { input: number; output: number }> = {
   "gpt-4o-mini": { input: 0.15, output: 0.60 },
@@ -210,7 +177,6 @@ const COST_PER_MILLION: Record<string, { input: number; output: number }> = {
   "llama-3.3-70b-versatile": { input: 0.59, output: 0.79 },
   "claude-sonnet-4-20250514": { input: 3.00, output: 15.00 },
   "gemini-2.5-flash": { input: 0.15, output: 0.60 },
-  "google/gemini-3-flash-preview": { input: 0.15, output: 0.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
 };
 
@@ -251,7 +217,12 @@ export async function callAI(options: AiRequestOptions & { userId?: string; prom
   const userId = options.userId || null;
   const promptType = options.promptType || "unknown";
 
-  // Try external providers first (sorted by priority)
+  if (providers.length === 0) {
+    throw new Error("Nenhum provedor de IA configurado. Peça a um administrador para cadastrar uma chave de API em Admin > API Keys.");
+  }
+
+  // Try external providers in priority order
+  let lastError: string | null = null;
   for (const provider of providers) {
     try {
       const data = await tryProvider(provider, options);
@@ -260,21 +231,10 @@ export async function callAI(options: AiRequestOptions & { userId?: string; prom
       logAiUsage(userId, provider.provider, model, promptType, data);
       return { data, provider: provider.display_name };
     } catch (err) {
-      console.warn(`[AI-PROVIDER] ${provider.display_name} failed:`, err instanceof Error ? err.message : err);
+      lastError = err instanceof Error ? err.message : String(err);
+      console.warn(`[AI-PROVIDER] ${provider.display_name} failed:`, lastError);
     }
   }
 
-  // Fallback to Lovable AI
-  try {
-    const data = await tryLovableAI(options);
-    const model = options.model || "google/gemini-3-flash-preview";
-    console.log("[AI-PROVIDER] Success with Lovable AI (fallback)");
-    logAiUsage(userId, "lovable", model, promptType, data);
-    return { data, provider: "Lovable AI" };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg === "RATE_LIMIT") throw new Error("Limite de requisições excedido. Tente novamente.");
-    if (msg === "PAYMENT_REQUIRED") throw new Error("Créditos insuficientes.");
-    throw new Error(`Todos os provedores de IA falharam. Último erro: ${msg}`);
-  }
+  throw new Error(`Todos os provedores de IA configurados falharam. Último erro: ${lastError}`);
 }

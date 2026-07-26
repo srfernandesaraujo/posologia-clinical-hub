@@ -300,7 +300,7 @@ Minimum 8 rounds, maximum 15. Exactly 4 options per round, exactly 1 correct.`,
   } catch (e) {
     console.error("generate-game error:", e);
     const msg = e instanceof Error ? e.message : "Erro desconhecido";
-    const status = msg.includes("RATE_LIMIT") ? 429 : msg.includes("PAYMENT_REQUIRED") ? 402 : 500;
+    const status = /\b429\b/.test(msg) ? 429 : /\b402\b/.test(msg) ? 402 : 500;
     return new Response(JSON.stringify({ error: msg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

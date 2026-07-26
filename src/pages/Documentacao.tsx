@@ -386,7 +386,6 @@ const techSections = [
       { label: "SKETCHFAB_API_KEY", value: "Chave da API Sketchfab (Edge Functions)" },
       { label: "HUB_SERVICE_KEY / HUB_SERVICE_ID", value: "Credenciais do hub de métricas externo" },
       { label: "HUB_METRICS_KEY", value: "Chave de métricas do hub" },
-      { label: "LOVABLE_API_KEY", value: "Chave interna do Lovable" },
     ],
   },
   {

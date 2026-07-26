@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Eye, EyeOff, Trash2, Loader2, Plus, ExternalLink, GripVertical, CheckCircle2, XCircle } from "lucide-react";
+import { Key, Eye, EyeOff, Trash2, Loader2, Plus, ExternalLink, ArrowUp, ArrowDown, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,12 +60,13 @@ export default function AdminApiKeys() {
   const addKey = useMutation({
     mutationFn: async () => {
       const provider = PROVIDERS.find(p => p.value === newProvider)!;
+      const nextPriority = apiKeys.length > 0 ? Math.max(...apiKeys.map(k => k.priority)) + 1 : 0;
       const { error } = await supabase.from("ai_api_keys").insert({
         provider: newProvider,
         api_key: newApiKey.trim(),
         display_name: provider.label,
         model: newModel.trim() || null,
-        priority: apiKeys.length,
+        priority: nextPriority,
         is_active: true,
       } as any);
       if (error) throw error;
@@ -92,6 +93,33 @@ export default function AdminApiKeys() {
     },
     onError: (err: any) => toast.error(err.message),
   });
+
+  const swapPriority = useMutation({
+    mutationFn: async ({ aId, aPriority, bId, bPriority }: { aId: string; aPriority: number; bId: string; bPriority: number }) => {
+      const { error: err1 } = await supabase.from("ai_api_keys").update({ priority: bPriority } as any).eq("id", aId);
+      if (err1) throw err1;
+      const { error: err2 } = await supabase.from("ai_api_keys").update({ priority: aPriority } as any).eq("id", bId);
+      if (err2) throw err2;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ai-api-keys"] });
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const current = apiKeys[index];
+    const above = apiKeys[index - 1];
+    swapPriority.mutate({ aId: current.id, aPriority: current.priority, bId: above.id, bPriority: above.priority });
+  };
+
+  const moveDown = (index: number) => {
+    if (index === apiKeys.length - 1) return;
+    const current = apiKeys[index];
+    const below = apiKeys[index + 1];
+    swapPriority.mutate({ aId: current.id, aPriority: current.priority, bId: below.id, bPriority: below.priority });
+  };
 
   const deleteKey = useMutation({
     mutationFn: async (id: string) => {
@@ -138,7 +166,7 @@ export default function AdminApiKeys() {
           Configure as API Keys das suas LLMs favoritas. Elas serão usadas em todas as chamadas de IA do sistema.
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Se nenhuma chave estiver configurada, o sistema usará o modelo padrão da plataforma. Se a chamada com sua chave falhar, o sistema fará fallback automático.
+          As chaves ativas são tentadas na ordem de prioridade abaixo (a primeira da lista é tentada primeiro). Se uma chamada falhar, o sistema tenta automaticamente a próxima da lista. Se nenhuma chave estiver ativa, os recursos de IA ficam indisponíveis.
         </p>
 
         {/* Provider status overview */}
@@ -179,7 +207,7 @@ export default function AdminApiKeys() {
         </div>
       ) : (
         <div className="space-y-4">
-          {apiKeys.map((key) => {
+          {apiKeys.map((key, index) => {
             const provider = PROVIDERS.find(p => p.value === key.provider);
             const isVisible = visibleKeys.has(key.id);
             const isEditing = editingId === key.id;
@@ -193,6 +221,29 @@ export default function AdminApiKeys() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
+                    <div className="flex flex-col -my-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        disabled={index === 0 || swapPriority.isPending}
+                        onClick={() => moveUp(index)}
+                        title="Aumentar prioridade"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        disabled={index === apiKeys.length - 1 || swapPriority.isPending}
+                        onClick={() => moveDown(index)}
+                        title="Diminuir prioridade"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Badge variant="secondary" className="text-xs font-mono px-2">#{index + 1}</Badge>
                     <Key className="h-4 w-4 text-primary" />
                     <span className="font-semibold">{key.display_name}</span>
                     {key.model && (

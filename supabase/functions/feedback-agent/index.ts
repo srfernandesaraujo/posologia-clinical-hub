@@ -154,7 +154,7 @@ IMPORTANTE: Ao analisar as "actions" de cada submission, identifique:
   } catch (e) {
     console.error("feedback-agent error:", e);
     const msg = e instanceof Error ? e.message : "Erro desconhecido";
-    const status = msg.includes("RATE_LIMIT") ? 429 : msg.includes("PAYMENT_REQUIRED") ? 402 : 500;
+    const status = /\b429\b/.test(msg) ? 429 : /\b402\b/.test(msg) ? 402 : 500;
     return new Response(
       JSON.stringify({ error: msg }),
       { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
