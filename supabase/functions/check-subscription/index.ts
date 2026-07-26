@@ -40,6 +40,28 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { email: user.email });
 
+    // Fast path: read the persisted status synced by stripe-webhook, no Stripe round-trip.
+    const { data: cached } = await supabaseClient
+      .from("subscribers")
+      .select("status, plan, current_period_end")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (cached) {
+      logStep("Serving from subscribers cache", cached);
+      return new Response(
+        JSON.stringify({
+          subscribed: cached.status === "active",
+          plan: cached.status === "active" ? "premium" : "free",
+          subscription_end: cached.current_period_end,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Fallback: no cached row yet (e.g. subscribed before this table existed, or the
+    // webhook hasn't landed). Ask Stripe directly and backfill subscribers for next time.
+    logStep("No subscribers row, falling back to live Stripe check");
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
@@ -61,6 +83,14 @@ serve(async (req) => {
     });
 
     if (subscriptions.data.length === 0) {
+      await supabaseClient.from("subscribers").upsert({
+        user_id: user.id,
+        stripe_customer_id: customerId,
+        status: "none",
+        plan: "free",
+        current_period_end: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
       logStep("No active subscription");
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -81,6 +111,16 @@ serve(async (req) => {
     }
     const productId = subscription.items.data[0].price.product;
     logStep("Active subscription found", { productId, subscriptionEnd });
+
+    await supabaseClient.from("subscribers").upsert({
+      user_id: user.id,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      status: "active",
+      plan: "premium",
+      current_period_end: subscriptionEnd,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
 
     return new Response(
       JSON.stringify({

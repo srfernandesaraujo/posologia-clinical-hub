@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, Brain, User, Stethoscope, AlertTriangle, Info } from "lucide-react";
+import { ArrowLeft, Brain, User, Stethoscope, AlertTriangle, Info } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 type Modo = "clinico" | "academico";
@@ -440,9 +441,7 @@ export default function EquivalenciaAntidepressivos() {
                 <ul className="space-y-1.5">{resultado.observacoes.map((o, i) => <li key={i} className="text-sm text-muted-foreground flex gap-2"><Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />{o}</li>)}</ul>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo)}>
-                <FileText className="h-4 w-4" /> Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado, modo)} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES["equivalencia-antidepressivos"]} />
               <RelatedCalculators currentSlug="equivalencia-antidepressivos" />

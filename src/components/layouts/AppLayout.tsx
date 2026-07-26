@@ -6,7 +6,7 @@ import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
   User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket, GraduationCap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -16,6 +16,17 @@ import { OracleAgent } from "@/components/OracleAgent";
 import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 import { PipelineModal } from "@/components/PipelineModal";
 import { useSystemUpdates } from "@/hooks/useSystemUpdates";
+import { PremiumGate } from "@/components/PremiumGate";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { Card, CardContent } from "@/components/ui/card";
+
+// Route prefixes whose sub-pages are Premium-only. Matched against location.pathname
+// so direct/deep-link navigation is gated the same way hub-page card locks already are —
+// individual calculator/simulator/lab/medview3d page components don't check anything
+// themselves, so this is the only thing stopping a bookmarked or shared URL from
+// bypassing the plan gate entirely.
+const PREMIUM_ROUTE_PREFIXES = ["/laboratorio-virtual/", "/medview-3d/", "/simuladores/"];
+const CALCULATOR_ROUTE_PREFIX = "/calculadoras/";
 
 export function AppLayout() {
   useCookieAnalytics();
@@ -24,7 +35,24 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isPremium } = useFeatureGating();
+  const {
+    isPremium, loading: gatingLoading, canUseCalculator, recordCalculatorUse,
+    upgradeOpen, setUpgradeOpen, upgradeFeature,
+  } = useFeatureGating();
+
+  const isPremiumRoute = PREMIUM_ROUTE_PREFIXES.some((prefix) => location.pathname.startsWith(prefix));
+  const isCalculatorRoute = location.pathname.startsWith(CALCULATOR_ROUTE_PREFIX);
+
+  // Consume one unit of the free daily calculator quota per navigation into a
+  // calculator page — covers native calculator routes and the dynamic ToolDetail
+  // catch-all alike, regardless of whether the user arrived via the hub's click
+  // handler, a deep link, or a page refresh.
+  const [calculatorBlocked, setCalculatorBlocked] = useState(false);
+  useEffect(() => {
+    if (!isCalculatorRoute || gatingLoading) return;
+    setCalculatorBlocked(!recordCalculatorUse());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, gatingLoading]);
 
   const navItems = [
     { label: t("nav.dashboard"), to: "/dashboard", icon: LayoutDashboard },
@@ -143,7 +171,41 @@ export function AppLayout() {
         )}
 
         <main className="flex-1 p-4 md:p-8">
-          <Outlet />
+          {isPremiumRoute && !isPremium ? (
+            <PremiumGate
+              title={
+                location.pathname.startsWith("/laboratorio-virtual/") ? "Laboratório Virtual"
+                : location.pathname.startsWith("/medview-3d/") ? "MedView 3D"
+                : "Simuladores"
+              }
+              feature={
+                location.pathname.startsWith("/laboratorio-virtual/") ? "O Laboratório Virtual"
+                : location.pathname.startsWith("/medview-3d/") ? "O MedView 3D"
+                : "Simuladores interativos"
+              }
+            >
+              <Outlet />
+            </PremiumGate>
+          ) : isCalculatorRoute && calculatorBlocked ? (
+            <div className="max-w-3xl mx-auto">
+              <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
+              <div className="flex items-center gap-3 mb-8">
+                <Calculator className="h-7 w-7 text-primary" />
+                <h1 className="text-3xl font-bold">Calculadoras</h1>
+              </div>
+              <Card>
+                <CardContent className="py-12 text-center space-y-4">
+                  <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    Você atingiu o limite diário de calculadoras do plano Gratuito.
+                  </p>
+                  <Button onClick={() => navigate("/planos")}>Assinar Premium</Button>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
       <OracleAgent />

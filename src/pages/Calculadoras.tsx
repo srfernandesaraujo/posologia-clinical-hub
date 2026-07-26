@@ -119,7 +119,7 @@ export default function Calculadoras() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, recordCalculatorUse, remainingCalculators, showUpgrade } = useFeatureGating();
+  const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, canUseCalculator, remainingCalculators, showUpgrade } = useFeatureGating();
   const [createOpen, setCreateOpen] = useState(false);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -219,10 +219,13 @@ export default function Calculadoras() {
   }, [filteredNative, filteredDynamic]);
 
   const handleCalcClick = (e: React.MouseEvent, path: string) => {
-    if (recordCalculatorUse()) {
+    // Only a pre-flight check for immediate UX feedback here — AppLayout is the
+    // sole place that actually records usage, so this also covers deep links.
+    if (canUseCalculator()) {
       navigate(path);
     } else {
       e.preventDefault();
+      showUpgrade(`Você atingiu o limite de calculadoras por dia`);
     }
   };
 

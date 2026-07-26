@@ -1,4 +1,6 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
+import { getFullAccess } from "../_shared/subscription.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -137,7 +139,31 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { labType, theme, userId } = await req.json();
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authenticatedUserId = claimsData.claims.sub as string;
+    if (!(await getFullAccess(authenticatedUserId))) {
+      return new Response(JSON.stringify({ error: "Recurso exclusivo do plano Premium" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { labType, theme } = await req.json();
 
     if (!labType) {
       return new Response(JSON.stringify({ error: "labType is required" }), {
@@ -157,7 +183,7 @@ Deno.serve(async (req) => {
       tools: [config.tool],
       tool_choice: { type: "function", function: { name: "generate_context" } },
       temperature: 0.8,
-      userId: userId || undefined,
+      userId: authenticatedUserId,
       promptType: "lab-context-generation",
     });
 

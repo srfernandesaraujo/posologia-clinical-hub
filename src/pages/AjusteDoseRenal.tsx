@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, Beaker, User, Stethoscope, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Beaker, User, Stethoscope, AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 type Sexo = "m" | "f";
@@ -496,9 +497,7 @@ export default function AjusteDoseRenal() {
                 </div>
               )}
 
-              <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo)}>
-                <FileText className="h-4 w-4" /> Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado, modo)} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES["ajuste-dose-renal"]} />
               <RelatedCalculators currentSlug="ajuste-dose-renal" />

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 /* ─── types ─── */
@@ -795,10 +796,7 @@ export default function DesmaCorticoide() {
             </Button>
             <Button variant="outline" onClick={limpar}>Limpar</Button>
             {resultado && (
-              <Button variant="outline" onClick={() => gerarPDF(form, resultado, modo, metodo)} className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Gerar PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado, modo, metodo)} label="Gerar PDF" />
             )}
           </div>
 

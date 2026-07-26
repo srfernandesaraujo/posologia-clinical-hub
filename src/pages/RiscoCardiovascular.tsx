@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { ArrowLeft, FileText, Heart, User, Stethoscope } from "lucide-react";
+import { ArrowLeft, Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 /* ─── types ─── */
@@ -746,14 +747,7 @@ export default function RiscoCardiovascular() {
               </div>
 
               {/* PDF */}
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => gerarPDF(form, resultado, modo)}
-              >
-                <FileText className="h-4 w-4" />
-                Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado, modo)} />
 
               {/* References */}
               <ClinicalReferences references={CALCULATOR_REFERENCES["risco-cardiovascular"]} />

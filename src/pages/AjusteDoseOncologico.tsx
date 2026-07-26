@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, FileText, Pill, AlertTriangle, Beaker, FlaskConical } from "lucide-react";
+import { ArrowLeft, Pill, AlertTriangle, Beaker, FlaskConical } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 /* ─── RENAL DRUG TABLE ─── */
@@ -658,9 +659,7 @@ export default function AjusteDoseOncologico() {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleExportPDF} variant="outline" className="flex-1 gap-2">
-              <FileText className="h-4 w-4" /> PDF
-            </Button>
+            <PdfExportButton onExport={handleExportPDF} label="PDF" />
             {hasConsent && (
               <Button onClick={handleSave} variant="outline" className="flex-1 gap-2">
                 <Pill className="h-4 w-4" /> Salvar

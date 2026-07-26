@@ -47,7 +47,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 107+ simuladores em 12 categorias.",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 107+ simuladores em 12 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "MAI (Medication Appropriateness Index)", desc: "Avaliação de adequação em 10 critérios", link: "/simuladores/mai" },
@@ -238,7 +238,7 @@ const sections = [
   {
     title: "MedView 3D",
     icon: Scan,
-    description: "Visualizador de modelos 3D anatômicos e procedimentos clínicos (via Sketchfab/Z-Anatomy) organizado em 6 categorias: Ortopedia, Cardiologia Intervencionista, Odontologia, Farmacologia/Dispositivos, Dermatologia/Cirurgia Plástica e Cirurgia Geral.",
+    description: "Visualizador de modelos 3D anatômicos e procedimentos clínicos (via Sketchfab/Z-Anatomy) organizado em 6 categorias: Ortopedia, Cardiologia Intervencionista, Odontologia, Farmacologia/Dispositivos, Dermatologia/Cirurgia Plástica e Cirurgia Geral. Recurso exclusivo do plano Premium, bloqueado por rota (/medview-3d/*) via AppLayout.",
     items: [
       { name: "Ortopedia e Traumatologia", desc: "Próteses de joelho/quadril e fixação com placas", link: "/medview-3d/ortopedia-proteses" },
       { name: "Cardiologia Intervencionista", desc: "Angioplastia com stent e cateterismo cardíaco", link: "/medview-3d/cardiologia-stent" },
@@ -251,7 +251,7 @@ const sections = [
   {
     title: "Laboratório Virtual",
     icon: Microscope,
-    description: "11 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF. Integrado com Salas Virtuais e Analytics.",
+    description: "11 bancadas de pesquisa modulares com fluxo sequencial (Módulo 1→5), onde cada escolha impacta os resultados seguintes, mais mini-relatório com exportação PDF (premium). Integrado com Salas Virtuais e Analytics. Recurso exclusivo do plano Premium, bloqueado por rota (/laboratorio-virtual/*) via AppLayout.",
     items: [
       { name: "Desenvolvimento de Fármacos", desc: "Alvo → ligante → docking → ensaio clínico → relatório", link: "/laboratorio-virtual" },
       { name: "Microbiologia", desc: "Cepa → antibióticos → placa de Petri → curva de crescimento", link: "/laboratorio-virtual" },
@@ -319,7 +319,7 @@ const sections = [
     description: "Funcionalidades transversais da plataforma.",
     items: [
       { name: "Histórico de cálculos por paciente", desc: "Salve resultados e acompanhe tendências" },
-      { name: "Relatórios em PDF", desc: "Gere laudos clínicos e relatórios de laboratório" },
+      { name: "Relatórios em PDF", desc: "Gere laudos clínicos e relatórios de laboratório (premium)" },
       { name: "Compartilhamento de ferramentas", desc: "Links públicos com token seguro" },
       { name: "Modo clínico e educativo", desc: "Recomendações adaptadas ao contexto" },
       { name: "Multilíngue", desc: "Português, inglês e espanhol" },
@@ -385,6 +385,7 @@ const techSections = [
       { label: "ai_usage_log", value: "Log de uso de IA (tokens_input/output, estimated_cost_usd, prompt_type)" },
       { label: "contact_messages", value: "Mensagens de contato (name, email, subject, message)" },
       { label: "usage_logs", value: "Logs de uso de ferramentas (tool_id, user_id)" },
+      { label: "subscribers", value: "Status de assinatura Stripe persistido (user_id, status, plan, stripe_customer_id, stripe_subscription_id, current_period_end) — sincronizado por stripe-webhook, fonte de verdade para check-subscription e getFullAccess()" },
       { label: "leaderboard (View)", value: "View agregada com total_points, active_days, badge_count por usuário" },
     ],
   },
@@ -399,6 +400,11 @@ const techSections = [
       { label: "Padrão de acesso", value: "Propriedade (auth.uid() = user_id/created_by) ou role admin" },
       { label: "Salas Virtuais", value: "Acesso público para leitura (is_active=true), CRUD restrito ao criador" },
       { label: "Marketplace", value: "Leitura pública de tools ativos + marketplace; escrita restrita ao dono" },
+      { label: "Bloqueio de auto-promoção", value: "Trigger BEFORE UPDATE em profiles impede que o próprio usuário altere has_unlimited_access; somente admin pode conceder" },
+      { label: "Gating Premium server-side", value: "getFullAccess() (supabase/functions/_shared/subscription.ts) valida assinatura ativa, has_unlimited_access e role admin dentro de generate-tool, generate-game, generate-lab-context e generate-simulation-scenario, fechando o bypass de chamar a edge function direto sem passar pela checagem do cliente" },
+      { label: "Gating Premium por rota", value: "AppLayout aplica PremiumGate em /laboratorio-virtual/*, /medview-3d/* e /simuladores/*, bloqueando deep links/refresh para páginas Premium — inclui simuladores dinâmicos criados por IA" },
+      { label: "Limite de calculadoras", value: "3 calculadoras/dia do plano Gratuito verificadas centralmente em AppLayout a cada navegação para /calculadoras/*, cobrindo links diretos e refresh (antes só era checado a partir do hub)" },
+      { label: "Autenticação obrigatória", value: "generate-simulation-scenario e generate-lab-context agora exigem JWT válido (antes eram chamáveis sem autenticação)" },
       { label: "Cookies", value: "Banner LGPD com consentimento granular (CookieConsentContext)" },
     ],
   },
@@ -418,7 +424,8 @@ const techSections = [
       { label: "oracle-agent", value: "Chat 'Oráculo' — assistente de IA que orienta usuários logados sobre a plataforma" },
       { label: "sales-agent", value: "Chat 'Lia' — consultora comercial de IA para visitantes" },
       { label: "generate-roadmap", value: "Gera sugestões de roadmap/funcionalidades via IA (uso administrativo)" },
-      { label: "check-subscription", value: "Verifica status de assinatura do usuário" },
+      { label: "check-subscription", value: "Lê status de assinatura da tabela subscribers (fast path); se não houver registro, consulta a Stripe ao vivo e faz backfill" },
+      { label: "stripe-webhook", value: "Recebe eventos do Stripe (checkout.session.completed, customer.subscription.updated/created/deleted) e sincroniza a tabela subscribers, com verificação de assinatura via STRIPE_WEBHOOK_SECRET" },
       { label: "create-checkout", value: "Cria sessão de checkout Stripe para assinaturas" },
       { label: "customer-portal", value: "Portal de gerenciamento de assinatura (Stripe)" },
       { label: "purchase-tool", value: "Processa compras do marketplace" },
@@ -441,7 +448,7 @@ const techSections = [
     icon: Network,
     content: [
       { label: "Multi-provedor de IA", value: "Google Gemini (prioridade padrão), Groq, OpenAI, Anthropic e OpenRouter — ordem definida por prioridade em ai_api_keys" },
-      { label: "Stripe", value: "Pagamentos, assinaturas e portal do cliente (STRIPE_SECRET_KEY)" },
+      { label: "Stripe", value: "Pagamentos, assinaturas e portal do cliente (STRIPE_SECRET_KEY); eventos sincronizados via stripe-webhook (STRIPE_WEBHOOK_SECRET) para a tabela subscribers" },
       { label: "Resend", value: "Envio de emails transacionais (RESEND_API_KEY)" },
       { label: "Sketchfab", value: "Busca e embed de modelos 3D anatômicos (SKETCHFAB_API_KEY)" },
       { label: "RxNav (NIH)", value: "Interações medicamentosas no simulador de Interações" },
@@ -457,6 +464,7 @@ const techSections = [
       { label: "VITE_SUPABASE_PUBLISHABLE_KEY", value: "Chave anon/pública do Supabase (frontend)" },
       { label: "SUPABASE_SERVICE_ROLE_KEY", value: "Chave de serviço (somente Edge Functions — nunca no frontend)" },
       { label: "STRIPE_SECRET_KEY", value: "Chave secreta Stripe (Edge Functions)" },
+      { label: "STRIPE_WEBHOOK_SECRET", value: "Segredo de verificação de assinatura do webhook Stripe (Edge Function stripe-webhook)" },
       { label: "RESEND_API_KEY", value: "Chave da API Resend (Edge Functions)" },
       { label: "SKETCHFAB_API_KEY", value: "Chave da API Sketchfab (Edge Functions)" },
       { label: "HUB_SERVICE_KEY / HUB_SERVICE_ID", value: "Credenciais do hub de métricas externo" },
@@ -474,6 +482,7 @@ const techSections = [
       { label: "Gamificação", value: "useGamification() — pontos, badges, streaks (student_points + user_badges)" },
       { label: "Histórico", value: "useCalculationHistory() — CRUD de cálculos salvos por paciente" },
       { label: "Assinatura", value: "useSubscription() — verifica plano ativo via Edge Function" },
+      { label: "Componentes de gating", value: "PremiumGate (bloqueio de rota inteira) e PdfExportButton (bloqueio da exportação PDF) centralizam a checagem de plano, evitando repetir isPremium em cada página" },
       { label: "Salas Virtuais", value: "useVirtualRoomCase() — carrega caso e simulador de uma sala" },
       { label: "Design System", value: "Tokens semânticos em index.css (--primary, --background, etc.) + tailwind.config.ts" },
       { label: "Componentes UI", value: "shadcn/ui (40+ componentes) com variantes customizadas" },

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, FlaskConical, User, Stethoscope } from "lucide-react";
+import { ArrowLeft, FlaskConical, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 type Modo = "clinico" | "educativo";
@@ -293,9 +294,7 @@ export default function VancomicinaAUC() {
                 <div className="mt-4 p-3 rounded-lg bg-muted/50 text-sm"><strong>Sugestao:</strong> {resultado.doseRecomendada}</div>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado)}>
-                <FileText className="h-4 w-4" /> Gerar Relatorio PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado)} label="Gerar Relatorio PDF" />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES["vancomicina-auc"]} />
               <RelatedCalculators currentSlug="vancomicina-auc" />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
-import { ArrowLeft, FileText, Bone, User, Stethoscope } from "lucide-react";
+import { ArrowLeft, Bone, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -12,6 +12,7 @@ import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 type Modo = "clinico" | "educativo";
@@ -218,9 +219,7 @@ export default function CorrecaoCalcio() {
                 <ul className="space-y-2">{resultado.recomendacoes.map((r, i) => <li key={i} className="text-sm text-muted-foreground">• {r}</li>)}</ul>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado)}>
-                <FileText className="h-4 w-4" /> Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado)} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES["correcao-calcio"]} />
               <RelatedCalculators currentSlug="correcao-calcio" />

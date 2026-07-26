@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, FileText, Activity, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Activity, AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 function sanitizePDF(text: string): string {
@@ -436,10 +437,7 @@ export default function ToxicidadeAntineoplasicos() {
                 </ul>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={gerarPDF}>
-                <FileText className="h-4 w-4" />
-                Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={gerarPDF} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES[SLUG]} />
               <RelatedCalculators currentSlug={SLUG} />

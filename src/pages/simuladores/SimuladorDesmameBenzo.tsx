@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, HelpCircle, FileDown, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle, Eye } from "lucide-react";
+import { ArrowLeft, HelpCircle, AlertTriangle, Sparkles, Loader2, CheckCircle, PauseCircle, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -19,6 +19,7 @@ import { AdminCaseActions } from "@/components/AdminCaseActions";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 // ─── Drug equivalence table (Ashton Protocol) ───
@@ -567,9 +568,7 @@ export default function SimuladorDesmameBenzo() {
           <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)} className="gap-1">
             <HelpCircle className="h-4 w-4" /> Ajuda
           </Button>
-          <Button size="sm" onClick={exportPDF} className="gap-1">
-            <FileDown className="h-4 w-4" /> Exportar PDF
-          </Button>
+          <PdfExportButton onExport={exportPDF} label="Exportar PDF" />
         </div>
       </div>
 

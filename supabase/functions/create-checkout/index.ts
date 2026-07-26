@@ -42,6 +42,8 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
+      client_reference_id: user.id,
+      subscription_data: { metadata: { supabase_user_id: user.id } },
       success_url: `${req.headers.get("origin")}/dashboard?checkout=success`,
       cancel_url: `${req.headers.get("origin")}/planos?checkout=canceled`,
     });

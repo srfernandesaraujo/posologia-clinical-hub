@@ -34,7 +34,7 @@ const sections: DocSection[] = [
       { q: "O que são as calculadoras?", a: "São ferramentas de apoio à decisão clínica que calculam scores, índices e fórmulas validadas pela literatura. Exemplos: CKD-EPI, Wells Score, MELD, Vancomicina AUC/MIC, entre outros." },
       { q: "Quantas calculadoras estão disponíveis?", a: "Atualmente a plataforma conta com 34 calculadoras clínicas cobrindo áreas como nefrologia, cardiologia, emergência, farmacologia clínica, endocrinologia, oncologia, pediatria/neonatologia e ginecologia/obstetrícia." },
       { q: "Posso salvar os resultados?", a: "Sim! Usuários autenticados podem salvar cálculos no histórico pessoal, incluindo nome do paciente e data." },
-      { q: "Existe limite de uso?", a: "No plano Gratuito há um limite diário. O plano Premium oferece uso ilimitado." },
+      { q: "Existe limite de uso?", a: "No plano Gratuito há um limite de 3 calculadoras por dia, verificado a cada acesso a uma calculadora (inclusive por link direto ou atualização de página). O plano Premium oferece uso ilimitado." },
     ],
   },
   {
@@ -43,7 +43,7 @@ const sections: DocSection[] = [
       { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 107 simuladores." },
       { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (16), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Genética (8), Farmacoterapia Laboratorial (8) e Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
-      { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium. Usuários gratuitos podem visualizar a lista." },
+      { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium, incluindo os simuladores dinâmicos criados por IA. Usuários gratuitos podem visualizar a lista, mas abrir qualquer simulador (mesmo por link direto) exige assinatura ativa." },
     ],
   },
   {
@@ -70,6 +70,7 @@ const sections: DocSection[] = [
       { q: "Como funciona o fluxo modular?", a: "Cada bancada tem 4 módulos experimentais + 1 módulo de mini-relatório. O módulo 2 só desbloqueia após completar o módulo 1, e assim por diante. Suas escolhas iniciais impactam diretamente os resultados dos módulos seguintes." },
       { q: "O que é o mini-relatório?", a: "É o módulo final de cada bancada onde você escreve hipótese, resultados e conclusão sobre o experimento realizado. Pode exportar o relatório completo em PDF com os dados de todos os módulos." },
       { q: "Os laboratórios funcionam em Salas Virtuais?", a: "Sim! Professores podem adicionar bancadas do laboratório como atividades em salas virtuais. Os resultados (decisões, relatório e score) aparecem no Analytics do professor com gráfico radar e detalhamento completo." },
+      { q: "O Laboratório Virtual é gratuito?", a: "Não, é uma funcionalidade exclusiva do plano Premium — todas as 11 bancadas exigem assinatura ativa, mesmo ao acessar por link direto." },
     ],
   },
   {
@@ -77,6 +78,7 @@ const sections: DocSection[] = [
     items: [
       { q: "O que é o MedView 3D?", a: "É um visualizador de modelos 3D anatômicos e de procedimentos clínicos, organizado em 6 categorias: Ortopedia e Traumatologia, Cardiologia Intervencionista, Odontologia e Bucomaxilofacial, Farmacologia e Dispositivos, Dermatologia e Cirurgia Plástica e Cirurgia Geral." },
       { q: "Como funcionam os modelos 3D?", a: "Os modelos são embutidos via Sketchfab/Z-Anatomy e permitem rotação, zoom e exploração interativa de estruturas anatômicas e etapas de procedimentos." },
+      { q: "O MedView 3D é gratuito?", a: "Não, é uma funcionalidade exclusiva do plano Premium, com acesso bloqueado por rota mesmo para quem chega por um link direto." },
     ],
   },
   {

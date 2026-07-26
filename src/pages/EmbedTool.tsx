@@ -3,13 +3,14 @@ import { EmbedProvider } from "@/contexts/EmbedContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useCallback, useMemo, lazy, Suspense } from "react";
-import { Calculator, FileText } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { Json } from "@/integrations/supabase/types";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 /* ─── Native calculator components (lazy) ─── */
@@ -322,9 +323,7 @@ export default function EmbedTool() {
                     </ul>
                   </div>
                 )}
-                <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(tool.name, values, fields, result)}>
-                  <FileText className="h-4 w-4" />Gerar Relatório PDF
-                </Button>
+                <PdfExportButton onExport={() => gerarPDF(tool.name, values, fields, result)} />
               </>
             ) : (
               <div className="rounded-2xl border border-border bg-card p-4 text-center">

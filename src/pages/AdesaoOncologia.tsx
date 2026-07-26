@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, FileText, Pill, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Pill, AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -17,6 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 /* ─── ARMS ─── */
@@ -439,10 +440,7 @@ export default function AdesaoOncologia() {
                 </ul>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={gerarPDF}>
-                <FileText className="h-4 w-4" />
-                Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={gerarPDF} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES[SLUG]} />
               <RelatedCalculators currentSlug={SLUG} />

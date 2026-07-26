@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Lock, Send, CheckCircle2 } from "lucide-react";
+import { FileText, Lock, Send, CheckCircle2 } from "lucide-react";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 
@@ -172,10 +173,7 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary, isVi
           )
         ) : (
           <>
-            <Button onClick={exportPDF} disabled={!canExport} className="w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Relatório em PDF
-            </Button>
+            <PdfExportButton onExport={() => canExport && exportPDF()} label="Exportar Relatório em PDF" />
             {!canExport && (
               <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para exportar</p>
             )}

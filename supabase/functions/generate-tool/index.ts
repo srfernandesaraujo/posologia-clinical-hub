@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
+import { getFullAccess } from "../_shared/subscription.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +33,11 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
+    if (!(await getFullAccess(userId))) {
+      return new Response(JSON.stringify({ error: "Recurso exclusivo do plano Premium" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { prompt, type, mode, existingTool } = await req.json();
 

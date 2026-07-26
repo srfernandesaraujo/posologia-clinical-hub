@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, ShieldAlert, User, Stethoscope } from "lucide-react";
+import { ArrowLeft, ShieldAlert, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 
 type Modo = "pro" | "educativo";
@@ -380,9 +381,7 @@ export default function Findrisc() {
                 <ul className="space-y-2">{resultado.recomendacoes.map((r, i) => <li key={i} className="text-sm text-muted-foreground">• {r}</li>)}</ul>
               </div>
 
-              <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(form, resultado, modo, imc)}>
-                <FileText className="h-4 w-4" /> Gerar Relatório PDF
-              </Button>
+              <PdfExportButton onExport={() => gerarPDF(form, resultado, modo, imc)} />
 
               <ClinicalReferences references={CALCULATOR_REFERENCES["findrisc"]} />
               <RelatedCalculators currentSlug="findrisc" />

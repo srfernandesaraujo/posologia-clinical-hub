@@ -4,7 +4,7 @@ import { useMarketplacePurchases } from "@/hooks/useMarketplacePurchases";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  ArrowLeft, Calculator, FileText, Trash2, MessageCircleWarning, Loader2,
+  ArrowLeft, Calculator, Trash2, MessageCircleWarning, Loader2,
   User, ClipboardCheck, CheckCircle, XCircle, ChevronRight, Info, Star,
   Activity, Gauge, ShoppingBag,
 } from "lucide-react";
@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useCallback, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { PdfExportButton } from "@/components/PdfExportButton";
 import jsPDF from "jspdf";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { RiskGauge as RiskGaugeComponent } from "@/components/calculators/RiskGauge";
@@ -1130,9 +1131,7 @@ export default function ToolDetail() {
                   <ClinicalReferences references={formula.references} />
                 )}
 
-                <Button variant="outline" className="w-full gap-2" onClick={() => gerarPDF(tool.name, values, fields, result)}>
-                  <FileText className="h-4 w-4" />Gerar Relatório PDF
-                </Button>
+                <PdfExportButton onExport={() => gerarPDF(tool.name, values, fields, result)} />
 
                 {/* Related Calculators */}
                 {tool.type === "calculadora" && (
