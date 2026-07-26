@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,14 @@ const sections: DocSection[] = [
       { q: "Como fazer login?", a: "Acesse a página de Login e utilize seu e-mail e senha cadastrados, ou faça login com sua conta Google." },
       { q: "O que acontece após o cadastro?", a: "Novos cadastros ficam com status 'Pendente' até a aprovação de um administrador. Após aprovação, você terá acesso ao plano Gratuito com limite diário de uso." },
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
+      { q: "A plataforma tem um assistente para tirar dúvidas?", a: "Sim! O Oráculo é um chat de IA disponível para usuários logados que orienta sobre qual ferramenta usar e como aproveitar cada funcionalidade." },
     ],
   },
   {
     id: "calculadoras", title: "Calculadoras Clínicas", icon: Calculator, color: "text-blue-400 bg-blue-500/10",
     items: [
-      { q: "O que são as calculadoras?", a: "São ferramentas de apoio à decisão clínica que calculam scores, índices e fórmulas validadas pela literatura. Exemplos: CKD-EPI, Wells Score, MELD, CHA₂DS₂-VASc, Vancomicina AUC/MIC, entre outros." },
-      { q: "Quantas calculadoras estão disponíveis?", a: "Atualmente a plataforma conta com mais de 20 calculadoras clínicas cobrindo áreas como nefrologia, cardiologia, emergência, farmacologia e pediatria." },
+      { q: "O que são as calculadoras?", a: "São ferramentas de apoio à decisão clínica que calculam scores, índices e fórmulas validadas pela literatura. Exemplos: CKD-EPI, Wells Score, MELD, Vancomicina AUC/MIC, entre outros." },
+      { q: "Quantas calculadoras estão disponíveis?", a: "Atualmente a plataforma conta com 34 calculadoras clínicas cobrindo áreas como nefrologia, cardiologia, emergência, farmacologia clínica, endocrinologia, oncologia, pediatria/neonatologia e ginecologia/obstetrícia." },
       { q: "Posso salvar os resultados?", a: "Sim! Usuários autenticados podem salvar cálculos no histórico pessoal, incluindo nome do paciente e data." },
       { q: "Existe limite de uso?", a: "No plano Gratuito há um limite diário. O plano Premium oferece uso ilimitado." },
     ],
@@ -39,8 +40,8 @@ const sections: DocSection[] = [
   {
     id: "simuladores", title: "Simuladores Interativos", icon: FlaskConical, color: "text-cyan-400 bg-cyan-500/10",
     items: [
-      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 96 simuladores." },
-      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (11), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Formação Docente (7), além de simuladores criados pelo usuário." },
+      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 107 simuladores." },
+      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (16), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Genética (8), Farmacoterapia Laboratorial (8) e Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
       { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium. Usuários gratuitos podem visualizar a lista." },
     ],
@@ -69,6 +70,13 @@ const sections: DocSection[] = [
       { q: "Como funciona o fluxo modular?", a: "Cada bancada tem 4 módulos experimentais + 1 módulo de mini-relatório. O módulo 2 só desbloqueia após completar o módulo 1, e assim por diante. Suas escolhas iniciais impactam diretamente os resultados dos módulos seguintes." },
       { q: "O que é o mini-relatório?", a: "É o módulo final de cada bancada onde você escreve hipótese, resultados e conclusão sobre o experimento realizado. Pode exportar o relatório completo em PDF com os dados de todos os módulos." },
       { q: "Os laboratórios funcionam em Salas Virtuais?", a: "Sim! Professores podem adicionar bancadas do laboratório como atividades em salas virtuais. Os resultados (decisões, relatório e score) aparecem no Analytics do professor com gráfico radar e detalhamento completo." },
+    ],
+  },
+  {
+    id: "medview3d", title: "MedView 3D", icon: Box, color: "text-indigo-400 bg-indigo-500/10",
+    items: [
+      { q: "O que é o MedView 3D?", a: "É um visualizador de modelos 3D anatômicos e de procedimentos clínicos, organizado em 6 categorias: Ortopedia e Traumatologia, Cardiologia Intervencionista, Odontologia e Bucomaxilofacial, Farmacologia e Dispositivos, Dermatologia e Cirurgia Plástica e Cirurgia Geral." },
+      { q: "Como funcionam os modelos 3D?", a: "Os modelos são embutidos via Sketchfab/Z-Anatomy e permitem rotação, zoom e exploração interativa de estruturas anatômicas e etapas de procedimentos." },
     ],
   },
   {
@@ -133,7 +141,7 @@ export default function DocumentacaoPublica() {
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Central de Ajuda</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Documentação do Posologia Clinical Hub</h1>
-          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 96+ simuladores, 11 bancadas de laboratório, jogos, formação docente, salas virtuais e mais.</p>
+          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 107+ simuladores, 11 bancadas de laboratório, MedView 3D, jogos, formação docente, salas virtuais e mais.</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input
