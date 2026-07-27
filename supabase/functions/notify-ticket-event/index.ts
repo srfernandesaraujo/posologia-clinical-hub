@@ -6,7 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_NOTIFICATION_EMAIL = "srfernandesaraujo@gmail.com";
+// Resend está em modo sandbox (remetente onboarding@resend.dev, sem domínio
+// verificado): só é possível entregar e-mails para o endereço dono da conta
+// Resend. Para notificar outro e-mail, verifique um domínio em
+// resend.com/domains e troque o "from" para um endereço desse domínio.
+const ADMIN_NOTIFICATION_EMAIL = "sergio.araujo@ufrn.br";
 
 const CATEGORY_LABEL: Record<string, string> = {
   bug: "Bug",
