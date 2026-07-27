@@ -1,33 +1,25 @@
-# Welcome to your Lovable project
+# Posologia Clinical Hub
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL**: https://simulador.posologia.app
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating). This project targets the Node version pinned in `.nvmrc`.
 
 Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/srfernandesaraujo/posologia-clinical-hub.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd posologia-clinical-hub
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -59,15 +51,18 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+This project deploys to [Cloudflare Pages](https://pages.cloudflare.com/), connected to this GitHub repository for automatic builds on every push to `main`.
 
-## Can I connect a custom domain to my Lovable project?
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Required environment variables (Production and Preview): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`
 
-Yes, you can!
+Client-side routing fallback for the SPA is handled by [public/_redirects](public/_redirects) (`/* /index.html 200`), which Vite copies into `dist/` on build.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Can I connect a custom domain?
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Yes. In the Cloudflare Pages project, go to **Custom domains** and add `simulador.posologia.app`, then point its DNS record (CNAME) to the `*.pages.dev` domain Cloudflare assigns the project.
