@@ -5,6 +5,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
   User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket, GraduationCap,
+  LifeBuoy, Headset,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { OracleAgent } from "@/components/OracleAgent";
 import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 import { PipelineModal } from "@/components/PipelineModal";
 import { useSystemUpdates } from "@/hooks/useSystemUpdates";
+import { useSupportTickets } from "@/hooks/useSupportTickets";
 import { PremiumGate } from "@/components/PremiumGate";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,6 +67,7 @@ export function AppLayout() {
     { label: t("nav.myAccount"), to: "/minha-conta", icon: User },
     { label: t("nav.plans"), to: "/planos", icon: Crown },
     { label: "Documentação", to: "/documentacao", icon: FileText },
+    { label: "Suporte", to: "/suporte", icon: LifeBuoy },
   ];
 
   const premiumItems = [
@@ -75,10 +78,12 @@ export function AppLayout() {
   ];
 
   const { pendingIdeas } = useSystemUpdates();
+  const { openCount: openTicketsCount } = useSupportTickets();
 
   const adminItems = [
     { label: t("nav.admin"), to: "/admin", icon: Shield },
     { label: "Pipeline", to: "/admin/pipeline", icon: Rocket, badge: pendingIdeas.length > 0 ? pendingIdeas.length : undefined },
+    { label: "Chamados", to: "/admin/tickets", icon: Headset, badge: openTicketsCount > 0 ? openTicketsCount : undefined },
   ];
 
   const allItems = [

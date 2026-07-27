@@ -186,6 +186,9 @@ Perfil, avatar, histórico de cálculos.
 ### Planos (/planos)
 Gratuito (acesso limitado), Premium (acesso completo) e funcionalidades enterprise. Relatórios em PDF (laudos clínicos e relatórios de laboratório) são um recurso exclusivo do plano Premium.
 
+### Suporte Técnico (/suporte)
+Usuários logados abrem chamados de suporte técnico com assunto, categoria (bug, dúvida, financeiro, sugestão ou outro), descrição e anexo opcional. Acompanham status (aberto, em andamento, resolvido, fechado) e prioridade, e respondem em thread com o admin — responder um chamado resolvido ou fechado o reabre automaticamente. O usuário recebe um e-mail quando a equipe responde. Administradores gerenciam todos os chamados em /admin/tickets (item "Chamados" no menu admin), com filtros por status/prioridade/busca, thread de resposta, alteração de status/prioridade, e uma aba de Diagnóstico com dados de conta/plano do usuário, contexto técnico do navegador capturado na abertura do chamado (user agent, rota, resolução de tela, idioma) e atividade recente do usuário.
+
 ## REGRAS DE RESPOSTA
 1. Sempre indique a ferramenta MAIS adequada para a necessidade do usuário
 2. Explique brevemente o que a ferramenta faz e como acessá-la

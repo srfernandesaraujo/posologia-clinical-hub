@@ -1,4 +1,4 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility, Server, Database, Code, Cloud, Lock, Layers, Cpu, Network, Key, GitBranch } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility, Server, Database, Code, Cloud, Lock, Layers, Cpu, Network, Key, GitBranch, LifeBuoy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -314,6 +314,18 @@ const sections = [
     ],
   },
   {
+    title: "Suporte Técnico",
+    icon: LifeBuoy,
+    description: "Central de chamados técnicos com thread de mensagens entre usuário e admin. Usuários logados abrem chamados com assunto, categoria, descrição e anexo opcional, acompanham status e prioridade, e respondem para reabrir chamados resolvidos/fechados. Administradores contam com painel dedicado de triagem e uma aba de Diagnóstico com dados de conta/plano, contexto técnico do navegador e atividade recente do usuário.",
+    items: [
+      { name: "Abrir chamado", desc: "Assunto, categoria (bug, dúvida, financeiro, sugestão ou outro), descrição e anexo opcional", link: "/suporte" },
+      { name: "Acompanhar chamados", desc: "Status (aberto/em andamento/resolvido/fechado) e prioridade — responder reabre chamados resolvidos ou fechados", link: "/suporte" },
+      { name: "Notificação por e-mail", desc: "Aviso ao admin na abertura do chamado e ao usuário quando a equipe responde (via Resend)" },
+      { name: "Painel admin de chamados", desc: "Filtros por status/prioridade/busca, thread de resposta e alteração de status/prioridade", link: "/admin/tickets" },
+      { name: "Diagnóstico (admin)", desc: "Conta e plano do usuário, contexto técnico do navegador na abertura do chamado e atividade recente (tool_visits, analytics_events, usage_logs)", link: "/admin/tickets" },
+    ],
+  },
+  {
     title: "Recursos Gerais",
     icon: Shield,
     description: "Funcionalidades transversais da plataforma.",
@@ -386,6 +398,8 @@ const techSections = [
       { label: "contact_messages", value: "Mensagens de contato (name, email, subject, message)" },
       { label: "usage_logs", value: "Logs de uso de ferramentas (tool_id, user_id)" },
       { label: "subscribers", value: "Status de assinatura Stripe persistido (user_id, status, plan, stripe_customer_id, stripe_subscription_id, current_period_end) — sincronizado por stripe-webhook, fonte de verdade para check-subscription e getFullAccess()" },
+      { label: "support_tickets", value: "Chamados de suporte (user_id, subject, category, status, priority, diagnostic_snapshot JSONB com contexto do navegador)" },
+      { label: "support_ticket_messages", value: "Thread de mensagens dos chamados (ticket_id, sender_id, sender_role, message, attachment_url)" },
       { label: "leaderboard (View)", value: "View agregada com total_points, active_days, badge_count por usuário" },
     ],
   },
@@ -400,6 +414,7 @@ const techSections = [
       { label: "Padrão de acesso", value: "Propriedade (auth.uid() = user_id/created_by) ou role admin" },
       { label: "Salas Virtuais", value: "Acesso público para leitura (is_active=true), CRUD restrito ao criador" },
       { label: "Marketplace", value: "Leitura pública de tools ativos + marketplace; escrita restrita ao dono" },
+      { label: "Chamados de suporte", value: "Usuário vê/cria os próprios chamados e mensagens; status/prioridade só mudam pela mão do admin. Bucket privado support-attachments com acesso restrito ao dono do arquivo ou admin" },
       { label: "Bloqueio de auto-promoção", value: "Trigger BEFORE UPDATE em profiles impede que o próprio usuário altere has_unlimited_access; somente admin pode conceder" },
       { label: "Gating Premium server-side", value: "getFullAccess() (supabase/functions/_shared/subscription.ts) valida assinatura ativa, has_unlimited_access e role admin dentro de generate-tool, generate-game, generate-lab-context e generate-simulation-scenario, fechando o bypass de chamar a edge function direto sem passar pela checagem do cliente" },
       { label: "Gating Premium por rota", value: "AppLayout aplica PremiumGate em /laboratorio-virtual/*, /medview-3d/* e /simuladores/*, bloqueando deep links/refresh para páginas Premium — inclui simuladores dinâmicos criados por IA" },
@@ -441,6 +456,7 @@ const techSections = [
       { label: "hub-metrics / send-metrics-to-hub", value: "Métricas e integração com hub externo" },
       { label: "expire-inactive-rooms", value: "Expira salas virtuais inativas (cron/manual)" },
       { label: "verify-share", value: "Valida tokens de compartilhamento de ferramentas" },
+      { label: "notify-ticket-event", value: "Envia email via Resend ao admin (novo chamado) e ao usuário (nova resposta) nos chamados de suporte" },
     ],
   },
   {
@@ -449,7 +465,7 @@ const techSections = [
     content: [
       { label: "Multi-provedor de IA", value: "Google Gemini (prioridade padrão), Groq, OpenAI, Anthropic e OpenRouter — ordem definida por prioridade em ai_api_keys" },
       { label: "Stripe", value: "Pagamentos, assinaturas e portal do cliente (STRIPE_SECRET_KEY); eventos sincronizados via stripe-webhook (STRIPE_WEBHOOK_SECRET) para a tabela subscribers" },
-      { label: "Resend", value: "Envio de emails transacionais (RESEND_API_KEY)" },
+      { label: "Resend", value: "Envio de emails transacionais — contato e chamados de suporte (RESEND_API_KEY)" },
       { label: "Sketchfab", value: "Busca e embed de modelos 3D anatômicos (SKETCHFAB_API_KEY)" },
       { label: "RxNav (NIH)", value: "Interações medicamentosas no simulador de Interações" },
       { label: "Z-Anatomy", value: "Visualizador 3D anatômico integrado (MedView 3D)" },

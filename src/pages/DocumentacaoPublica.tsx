@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box, LifeBuoy,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,15 @@ const sections: DocSection[] = [
       { q: "Quem pode criar salas?", a: "Criação exclusiva para usuários Premium, professores convidados e administradores." },
       { q: "Posso usar laboratórios nas salas?", a: "Sim! As salas suportam tanto simuladores (96+) quanto bancadas do Laboratório Virtual (11). O professor escolhe entre 'Simuladores' ou 'Laboratórios' no momento da criação." },
       { q: "Posso criar roteiros com múltiplas atividades?", a: "Sim! No modo 'Atividade Simulada' é possível compor um roteiro multi-etapas com diferentes simuladores/laboratórios, cada um com enunciado pedagógico personalizado." },
+    ],
+  },
+  {
+    id: "suporte", title: "Suporte Técnico", icon: LifeBuoy, color: "text-sky-400 bg-sky-500/10",
+    items: [
+      { q: "Como abro um chamado de suporte?", a: "Acesse 'Suporte' no menu lateral (usuário logado), clique em 'Novo Chamado' e informe assunto, categoria (bug, dúvida, financeiro, sugestão ou outro), descrição e, se quiser, um anexo." },
+      { q: "Como acompanho meu chamado?", a: "A página Suporte lista todos os seus chamados com status (Aberto, Em Andamento, Resolvido ou Fechado) e prioridade. Você pode responder na thread a qualquer momento — responder um chamado Resolvido ou Fechado o reabre automaticamente." },
+      { q: "Recebo notificação quando meu chamado é respondido?", a: "Sim, você recebe um e-mail assim que a equipe responder ao seu chamado." },
+      { q: "Preciso enviar print de erro junto do chamado?", a: "Não é obrigatório: ao abrir o chamado, a plataforma já captura automaticamente informações técnicas do seu navegador (rota, resolução de tela e idioma) para ajudar no diagnóstico. Anexar um arquivo é opcional." },
     ],
   },
   {
