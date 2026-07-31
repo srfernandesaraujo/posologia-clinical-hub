@@ -339,6 +339,9 @@ const sections = [
       { name: "Analytics", desc: "Métricas de uso e engajamento (premium)" },
       { name: "Oráculo (assistente de IA)", desc: "Chat flutuante que orienta o usuário logado sobre qual ferramenta usar" },
       { name: "Lia (consultora comercial de IA)", desc: "Assistente de vendas para visitantes não autenticados" },
+      { name: "Recomendado para você (Dashboard)", desc: "Bloco no Dashboard com até 5 sugestões baseadas em recência/cobertura de uso: ferramentas paradas há 14+ dias e calculadoras de categorias que você frequenta mas nunca abriu" },
+      { name: "Revisão espaçada semanal (e-mail)", desc: "E-mail semanal (segunda-feira, via Resend) com a mesma lógica de recomendação do Dashboard. Opt-in em Minha Conta → Preferências (ativado por padrão)" },
+      { name: "App instalável e uso offline (PWA)", desc: "Instale a plataforma como aplicativo; as 34 calculadoras continuam funcionando offline após a primeira visita — um aviso informa que os resultados só são salvos no histórico ao reconectar" },
     ],
   },
 ];
@@ -359,6 +362,7 @@ const techSections = [
       { label: "Testes", value: "Vitest + Testing Library" },
       { label: "Linting", value: "ESLint com config flat (eslint.config.js)" },
       { label: "Build", value: "Vite com tree-shaking, code splitting por rota (lazy imports)" },
+      { label: "PWA / Offline", value: "vite-plugin-pwa (Workbox) — precache do app shell para uso offline das calculadoras após a primeira visita, com cache runtime NetworkFirst para chamadas REST do Supabase" },
     ],
   },
   {
@@ -377,7 +381,7 @@ const techSections = [
     title: "Banco de Dados — Tabelas",
     icon: Database,
     content: [
-      { label: "profiles", value: "Perfis de usuário (user_id, full_name, avatar_url, has_unlimited_access, status)" },
+      { label: "profiles", value: "Perfis de usuário (user_id, full_name, avatar_url, has_unlimited_access, status, weekly_digest_opt_in)" },
       { label: "user_roles", value: "Roles separadas (admin, user, professor) — enum app_role" },
       { label: "tools", value: "Ferramentas/calculadoras (name, slug, type, fields JSON, formula JSON, category_id)" },
       { label: "categories", value: "Categorias de ferramentas (name, slug, icon)" },
@@ -457,6 +461,7 @@ const techSections = [
       { label: "expire-inactive-rooms", value: "Expira salas virtuais inativas (cron/manual)" },
       { label: "verify-share", value: "Valida tokens de compartilhamento de ferramentas" },
       { label: "notify-ticket-event", value: "Envia email via Resend ao admin (novo chamado) e ao usuário (nova resposta) nos chamados de suporte" },
+      { label: "generate-review-digest", value: "Envia e-mail semanal (via Resend) com sugestões de ferramentas paradas/não exploradas para usuários com weekly_digest_opt_in; disparada por pg_cron toda segunda-feira" },
     ],
   },
   {
@@ -465,7 +470,7 @@ const techSections = [
     content: [
       { label: "Multi-provedor de IA", value: "Google Gemini (prioridade padrão), Groq, OpenAI, Anthropic e OpenRouter — ordem definida por prioridade em ai_api_keys" },
       { label: "Stripe", value: "Pagamentos, assinaturas e portal do cliente (STRIPE_SECRET_KEY); eventos sincronizados via stripe-webhook (STRIPE_WEBHOOK_SECRET) para a tabela subscribers" },
-      { label: "Resend", value: "Envio de emails transacionais — contato e chamados de suporte (RESEND_API_KEY)" },
+      { label: "Resend", value: "Envio de emails transacionais — contato, chamados de suporte e resumo semanal de revisão espaçada (RESEND_API_KEY)" },
       { label: "Sketchfab", value: "Busca e embed de modelos 3D anatômicos (SKETCHFAB_API_KEY)" },
       { label: "RxNav (NIH)", value: "Interações medicamentosas no simulador de Interações" },
       { label: "Z-Anatomy", value: "Visualizador 3D anatômico integrado (MedView 3D)" },

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface CalculationEntry {
   id: string;
@@ -56,7 +57,11 @@ export function useCalculationHistory() {
         summary: entry.summary,
         details: entry.details as any,
       });
-      if (!error) await fetchHistory();
+      if (!error) {
+        await fetchHistory();
+      } else if (!navigator.onLine) {
+        toast.error("Sem conexão — o resultado foi calculado, mas não foi salvo no histórico.");
+      }
     },
     [user, fetchHistory]
   );

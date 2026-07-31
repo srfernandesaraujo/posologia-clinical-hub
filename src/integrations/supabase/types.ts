@@ -340,6 +340,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          weekly_digest_opt_in: boolean
         }
         Insert: {
           avatar_url?: string | null
@@ -350,6 +351,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          weekly_digest_opt_in?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -360,6 +362,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          weekly_digest_opt_in?: boolean
         }
         Relationships: []
       }

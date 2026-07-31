@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Crown, Loader2, ShieldCheck } from "lucide-react";
+import { Crown, Loader2, ShieldCheck, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function MinhaConta() {
@@ -19,6 +20,8 @@ export default function MinhaConta() {
   const { isPremium, subscriptionEnd, loading: subLoading, openCustomerPortal } = useSubscription();
   const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [weeklyDigestOptIn, setWeeklyDigestOptIn] = useState(true);
+  const [savingDigestPref, setSavingDigestPref] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -46,14 +49,34 @@ export default function MinhaConta() {
     if (user) {
       supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, weekly_digest_opt_in")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
-          if (data) setFullName(data.full_name || "");
+          if (data) {
+            setFullName(data.full_name || "");
+            setWeeklyDigestOptIn(data.weekly_digest_opt_in);
+          }
         });
     }
   }, [user]);
+
+  const handleToggleDigest = async (checked: boolean) => {
+    if (!user) return;
+    setWeeklyDigestOptIn(checked);
+    setSavingDigestPref(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ weekly_digest_opt_in: checked })
+      .eq("user_id", user.id);
+    setSavingDigestPref(false);
+    if (error) {
+      setWeeklyDigestOptIn(!checked);
+      toast.error(t("account.error"));
+    } else {
+      toast.success(t("account.saved"));
+    }
+  };
 
   const isInvitedOrAdmin = hasUnlimitedAccess || isAdmin;
   const hasFullAccess = isPremium || isInvitedOrAdmin;
@@ -151,6 +174,28 @@ export default function MinhaConta() {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* Preferências */}
+      <div className="mt-8 rounded-2xl border border-border bg-card p-8">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Mail className="h-5 w-5" />
+          Preferências
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Resumo semanal por e-mail</p>
+            <p className="text-sm text-muted-foreground">
+              Receba, toda semana, sugestões de calculadoras e simuladores que você usou e não voltou a usar.
+            </p>
+          </div>
+          <Switch
+            checked={weeklyDigestOptIn}
+            onCheckedChange={handleToggleDigest}
+            disabled={savingDigestPref}
+            aria-label="Receber resumo semanal por e-mail"
+          />
+        </div>
       </div>
     </div>
   );

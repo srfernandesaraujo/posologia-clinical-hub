@@ -39,6 +39,9 @@ verify_jwt = false
 [functions.expire-inactive-rooms]
 verify_jwt = false
 
+[functions.generate-review-digest]
+verify_jwt = false
+
 [functions.update-game]
 verify_jwt = false
 

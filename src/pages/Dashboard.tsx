@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, FlaskConical, Gamepad2, ArrowRight, Trophy, Flame, Star, Sparkles } from "lucide-react";
+import { Calculator, FlaskConical, Gamepad2, ArrowRight, Trophy, Flame, Star, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
+import { useRecommendations } from "@/hooks/useRecommendations";
 
 const WELCOME_DISMISSED_KEY = "posologia_welcome_dismissed";
 
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [profileName, setProfileName] = useState("");
   const { totalPoints, streak, earnedBadges } = useGamification();
+  const { data: recommendations } = useRecommendations();
   const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
@@ -125,6 +127,38 @@ export default function Dashboard() {
           </div>
           <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
         </Link>
+      )}
+
+      {/* Recomendado para você - baseado em recência/cobertura de uso, sem dado de acerto/erro */}
+      {!!recommendations?.length && (
+        <div className="mb-8 rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <RotateCcw className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold">Recomendado para você</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {recommendations.map((rec) => {
+              const Icon = rec.type === "calculadora" ? Calculator : FlaskConical;
+              return (
+                <Link
+                  key={`${rec.type}-${rec.slug}`}
+                  to={rec.link}
+                  className="flex items-start gap-3 rounded-xl p-3 hover:bg-muted/40 transition-colors"
+                >
+                  <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{rec.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {rec.reason === "parado" ? `Há ${rec.daysSince} dias sem usar` : "Você ainda não tentou"}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

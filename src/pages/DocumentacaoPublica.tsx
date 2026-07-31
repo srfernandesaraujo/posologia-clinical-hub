@@ -26,6 +26,7 @@ const sections: DocSection[] = [
       { q: "O que acontece após o cadastro?", a: "Novos cadastros ficam com status 'Pendente' até a aprovação de um administrador. Após aprovação, você terá acesso ao plano Gratuito com limite diário de uso." },
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
       { q: "A plataforma tem um assistente para tirar dúvidas?", a: "Sim! O Oráculo é um chat de IA disponível para usuários logados que orienta sobre qual ferramenta usar e como aproveitar cada funcionalidade." },
+      { q: "Recebo algum e-mail de revisão ou lembrete de uso?", a: "Sim, toda segunda-feira enviamos um resumo semanal com sugestões de até 5 ferramentas: calculadoras/simuladores que você usou mas não toca há 14+ dias, e calculadoras de categorias que você frequenta mas ainda não abriu. Essa recomendação também aparece em tempo real no Dashboard, no bloco 'Recomendado para você'. Você pode ativar ou desativar o recebimento do e-mail em Minha Conta → Preferências." },
     ],
   },
   {
@@ -35,6 +36,7 @@ const sections: DocSection[] = [
       { q: "Quantas calculadoras estão disponíveis?", a: "Atualmente a plataforma conta com 34 calculadoras clínicas cobrindo áreas como nefrologia, cardiologia, emergência, farmacologia clínica, endocrinologia, oncologia, pediatria/neonatologia e ginecologia/obstetrícia." },
       { q: "Posso salvar os resultados?", a: "Sim! Usuários autenticados podem salvar cálculos no histórico pessoal, incluindo nome do paciente e data." },
       { q: "Existe limite de uso?", a: "No plano Gratuito há um limite de 3 calculadoras por dia, verificado a cada acesso a uma calculadora (inclusive por link direto ou atualização de página). O plano Premium oferece uso ilimitado." },
+      { q: "As calculadoras funcionam sem internet?", a: "Sim! A plataforma pode ser instalada como aplicativo (PWA) e, depois da primeira visita, as 34 calculadoras continuam funcionando offline. Um aviso na tela informa quando você está offline, já que os resultados só são salvos no histórico ao reconectar." },
     ],
   },
   {

@@ -181,7 +181,13 @@ Loja de ferramentas criadas pela comunidade. Calculadoras custam R$5, simuladore
 Sistema de pontos (+10 login, +20 caso clínico, +5 calculadora, +10 jogo), badges, streaks e ranking global.
 
 ### Minha Conta (/minha-conta)
-Perfil, avatar, histórico de cálculos.
+Perfil, avatar, histórico de cálculos. Seção "Preferências" com o switch "Resumo semanal por e-mail" (ativado por padrão) para controlar o recebimento da revisão espaçada semanal.
+
+### Revisão espaçada semanal (e-mail + Dashboard)
+Toda segunda-feira, usuários com o opt-in ativo recebem um e-mail (via Resend) com até 5 sugestões de ferramentas: calculadoras/simuladores que já usaram mas não tocam há 14+ dias ("parado"), e calculadoras de categorias que costumam usar mas nunca abriram ("descoberta"). É baseado em recência/cobertura de uso — não existe dado de acerto/erro no sistema, então não é personalização por desempenho. A mesma lógica alimenta em tempo real o bloco "Recomendado para você" no Dashboard. Para parar de receber o e-mail, o usuário desativa o switch em Minha Conta → Preferências.
+
+### App instalável e uso offline (PWA)
+A plataforma pode ser instalada como aplicativo (PWA). Depois da primeira visita, as 34 calculadoras continuam funcionando sem internet — um banner avisa quando o usuário está offline, lembrando que os resultados só são salvos no histórico ao reconectar.
 
 ### Planos (/planos)
 Gratuito (acesso limitado), Premium (acesso completo) e funcionalidades enterprise. Relatórios em PDF (laudos clínicos e relatórios de laboratório) são um recurso exclusivo do plano Premium.

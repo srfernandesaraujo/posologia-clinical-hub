@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { AppLayout } from "@/components/layouts/AppLayout";
@@ -566,6 +567,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />
+          <OfflineBanner />
         </BrowserRouter>
       </TooltipProvider>
       </CookieConsentProvider>
