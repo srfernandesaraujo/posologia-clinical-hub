@@ -18,7 +18,12 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Versão fixa em vez de "latest": resolver "latest" chama a API do
+          # GitHub sem autenticação e esbarra em rate limit nos runners
+          # (IP compartilhado). Atualize manualmente de vez em quando.
+          version: 2.111.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Link project
         run: supabase link --project-ref hxfzgjxwozzuzgdsrrpb
