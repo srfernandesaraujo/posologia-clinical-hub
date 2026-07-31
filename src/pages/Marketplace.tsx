@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Search, Calculator, FlaskConical, Lock, Star, TrendingUp,
-  Sparkles, ChevronRight, ShoppingBag, BookOpen,
+  Sparkles, ChevronRight, ShoppingBag, BookOpen, ShieldCheck,
 } from "lucide-react";
 import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -251,6 +251,11 @@ export default function Marketplace() {
           <p className="text-xs text-muted-foreground line-clamp-2">
             {tool.short_description || tool.description || "Sem descrição"}
           </p>
+          {tool.clinically_validated && (
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-2 py-0.5">
+              <ShieldCheck className="h-3 w-3" /> Validado clinicamente
+            </span>
+          )}
         </div>
         <div className="px-5 pb-4 flex items-center justify-between border-t border-border pt-3">
           <div className="flex items-center gap-1">

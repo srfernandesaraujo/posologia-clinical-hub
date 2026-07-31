@@ -191,6 +191,7 @@ import AgenteFeedback from "./pages/AgenteFeedback";
 import PipelinePage from "./pages/PipelinePage";
 import Suporte from "./pages/Suporte";
 import AdminTickets from "./pages/AdminTickets";
+import AdminMarketplaceReview from "./pages/AdminMarketplaceReview";
 import EmbedTool from "./pages/EmbedTool";
 import Documentacao from "./pages/Documentacao";
 import NotFound from "./pages/NotFound";
@@ -554,6 +555,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/pipeline" element={<PipelinePage />} />
               <Route path="/admin/tickets" element={<AdminTickets />} />
+              <Route path="/admin/marketplace-review" element={<AdminMarketplaceReview />} />
             </Route>
 
             {/* Smart Planos route - renders with sidebar for logged-in users */}

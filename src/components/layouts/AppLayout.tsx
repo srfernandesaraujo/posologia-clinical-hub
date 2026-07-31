@@ -5,9 +5,11 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import {
   Pill, LayoutDashboard, Calculator, FlaskConical, Gamepad2, Dna,
   User, LogOut, Shield, BarChart3, Menu, X, Crown, Store, Trophy, DoorOpen, Lock, FileText, MessageSquare, ScanEye, Rocket, GraduationCap,
-  LifeBuoy, Headset,
+  LifeBuoy, Headset, ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -79,11 +81,24 @@ export function AppLayout() {
 
   const { pendingIdeas } = useSystemUpdates();
   const { openCount: openTicketsCount } = useSupportTickets();
+  const { data: pendingReviewCount = 0 } = useQuery({
+    queryKey: ["marketplace-pending-review-count"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("tools")
+        .select("id", { count: "exact", head: true })
+        .eq("is_marketplace", true)
+        .eq("clinically_validated", false);
+      return count || 0;
+    },
+  });
 
   const adminItems = [
     { label: t("nav.admin"), to: "/admin", icon: Shield },
     { label: "Pipeline", to: "/admin/pipeline", icon: Rocket, badge: pendingIdeas.length > 0 ? pendingIdeas.length : undefined },
     { label: "Chamados", to: "/admin/tickets", icon: Headset, badge: openTicketsCount > 0 ? openTicketsCount : undefined },
+    { label: "Curadoria", to: "/admin/marketplace-review", icon: ShieldCheck, badge: pendingReviewCount > 0 ? pendingReviewCount : undefined },
   ];
 
   const allItems = [

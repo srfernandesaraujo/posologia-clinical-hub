@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box, LifeBuoy, Trophy,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box, LifeBuoy, Trophy, Store,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -101,6 +101,15 @@ const sections: DocSection[] = [
       { q: "O que é o Mapa de Competências?", a: "É uma aba em 'Gamificação' que mostra, por categoria de simulador (Farmácia Clínica, Bioquímica, Farmacologia Básica, etc.), um placar de 0 a 100 que resume o seu desempenho recente naquela área — dando mais peso aos casos resolvidos nos últimos dias do que aos mais antigos. Categorias em que você resolveu poucos casos aparecem à parte, como 'poucos dados ainda', para não sugerir uma confiança que os dados ainda não sustentam." },
       { q: "O Mapa de Competências usa inteligência artificial para prever meu conhecimento?", a: "Não. É uma média ponderada por recência sobre as suas notas reais em cada tentativa — simples e transparente, sem modelo preditivo por trás. Serve como um retrato do seu histórico recente, não uma previsão." },
       { q: "Onde vejo um resumo rápido da minha maestria?", a: "O Dashboard mostra um card com a sua categoria mais forte e a mais fraca (quando já há dados suficientes), com um link direto para o Mapa de Competências completo." },
+    ],
+  },
+  {
+    id: "marketplace", title: "Marketplace", icon: Store, color: "text-fuchsia-400 bg-fuchsia-500/10",
+    items: [
+      { q: "O que é o Marketplace?", a: "É um espaço onde usuários podem publicar calculadoras que criaram (com o gerador de IA) para que outras pessoas usem, além de poder avaliar e comentar as ferramentas publicadas." },
+      { q: "O que significa o selo 'Validado clinicamente'?", a: "É um selo (ícone de escudo) que aparece nos cards do Marketplace quando um administrador da plataforma revisou manualmente a calculadora e confirmou que a fórmula e os campos estão corretos. Só calculadoras aprovadas por um admin recebem o selo." },
+      { q: "Toda calculadora publicada é revisada antes de aparecer no Marketplace?", a: "A publicação é imediata — você não espera aprovação para compartilhar sua calculadora. Mas assim que ela é publicada, uma auditoria automática de IA analisa a fórmula e os campos contra a literatura clínica. Se essa auditoria identificar um risco real (fórmula errada, faixa de referência incorreta, etc.), a calculadora é removida do Marketplace automaticamente até um administrador revisar." },
+      { q: "Uma calculadora sem o selo é perigosa?", a: "Não necessariamente — o selo indica revisão humana confirmada, não a ausência dele. Use o mesmo bom senso clínico que usaria com qualquer ferramenta de terceiros até que ela seja validada." },
     ],
   },
   {

@@ -795,7 +795,13 @@ export type Database = {
       }
       tools: {
         Row: {
+          ai_audit_notes: string | null
+          ai_audit_status: string
+          ai_audited_at: string | null
           category_id: string | null
+          clinically_validated: boolean
+          clinically_validated_at: string | null
+          clinically_validated_by: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -812,7 +818,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_audit_notes?: string | null
+          ai_audit_status?: string
+          ai_audited_at?: string | null
           category_id?: string | null
+          clinically_validated?: boolean
+          clinically_validated_at?: string | null
+          clinically_validated_by?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -829,7 +841,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_audit_notes?: string | null
+          ai_audit_status?: string
+          ai_audited_at?: string | null
           category_id?: string | null
+          clinically_validated?: boolean
+          clinically_validated_at?: string | null
+          clinically_validated_by?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null

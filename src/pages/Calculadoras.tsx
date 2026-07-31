@@ -247,6 +247,12 @@ export default function Calculadoras() {
     } else {
       toast.success(!current ? "Publicada no Marketplace!" : "Removida do Marketplace");
       queryClient.invalidateQueries({ queryKey: ["user-tools"] });
+      // Dispara a auditoria clínica de IA em segundo plano só ao publicar —
+      // não trava a UI, o resultado aparece depois em /admin/marketplace-review.
+      if (!current) {
+        supabase.functions.invoke("audit-marketplace-tool", { body: { toolId } })
+          .catch((err) => console.error("Error triggering clinical audit:", err));
+      }
     }
   };
 
