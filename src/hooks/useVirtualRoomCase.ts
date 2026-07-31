@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { POINTS } from "@/hooks/useGamification";
 
 interface ExamFeedback {
   score: number;
@@ -11,6 +13,7 @@ interface ExamFeedback {
 
 export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [virtualRoomCase, setVirtualRoomCase] = useState<any>(null);
   const [isVirtualRoom, setIsVirtualRoom] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,6 +74,27 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     if (submitted) return;
     if (!ctx) {
       setSubmitted(true);
+      // Uso individual (fora de Sala Virtual): até aqui o score calculado por
+      // cada simulador era descartado. Persiste a tentativa e credita pontos
+      // proporcionais ao score, sem bloquear a UI se algo falhar.
+      if (user) {
+        supabase.from("simulator_attempts").insert({
+          user_id: user.id,
+          simulator_slug: simulatorSlug,
+          score: opts.score,
+          actions: opts.actions,
+        }).then(({ error }) => {
+          if (error) console.error("Error saving simulator attempt:", error);
+        });
+
+        supabase.functions.invoke("award-points", {
+          body: {
+            points: Math.round(POINTS.SIMULATOR_CASE * (opts.score / 100)),
+            source: "simulator_case",
+            simulator_slug: simulatorSlug,
+          },
+        }).catch((err) => console.error("Error awarding simulator points:", err));
+      }
       return;
     }
 

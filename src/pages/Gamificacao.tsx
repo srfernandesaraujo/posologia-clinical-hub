@@ -1,10 +1,12 @@
-import { Trophy, Flame, Target, Medal, Star, Award, TrendingUp } from "lucide-react";
+import { Trophy, Flame, Target, Medal, Star, Award, TrendingUp, Brain } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { useGamification, BADGE_DEFINITIONS, POINTS } from "@/hooks/useGamification";
+import { useMastery } from "@/hooks/useMastery";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +90,9 @@ export default function Gamificacao() {
     earnedBadges,
     leaderboard,
   } = useGamification();
+  const { data: mastery = [] } = useMastery();
+  const reliableMastery = mastery.filter((m) => m.reliable);
+  const unreliableMastery = mastery.filter((m) => !m.reliable);
 
   const earnedSet = new Set(earnedBadges.map((b) => b.badge_id));
   const earnedList = BADGE_DEFINITIONS.filter((b) => earnedSet.has(b.id));
@@ -144,6 +149,7 @@ export default function Gamificacao() {
           <TabsTrigger value="badges"><Award className="h-4 w-4 mr-1" />Badges</TabsTrigger>
           <TabsTrigger value="ranking"><Trophy className="h-4 w-4 mr-1" />Ranking</TabsTrigger>
           <TabsTrigger value="streak"><Flame className="h-4 w-4 mr-1" />Streak</TabsTrigger>
+          <TabsTrigger value="competencias"><Brain className="h-4 w-4 mr-1" />Competências</TabsTrigger>
         </TabsList>
 
         {/* ── Badges Tab ── */}
@@ -271,6 +277,70 @@ export default function Gamificacao() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* ── Competências Tab ── */}
+        <TabsContent value="competencias" className="space-y-6">
+          {mastery.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Ainda sem tentativas de simulador registradas. Resolva um caso para começar a ver seu mapa de competências.
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Mapa de Competências</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Média do seu desempenho por categoria de simulador, com mais peso para tentativas recentes.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {reliableMastery.length >= 3 ? (
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={reliableMastery.map((m) => ({
+                          label: m.category.length > 15 ? m.category.substring(0, 15) + "…" : m.category,
+                          maestria: m.masteryPct,
+                        }))} cx="50%" cy="50%" outerRadius="70%">
+                          <PolarGrid stroke="hsl(var(--border))" />
+                          <PolarAngleAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                          <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                          <Radar dataKey="maestria" fill="hsl(var(--primary))" fillOpacity={0.4} stroke="hsl(var(--primary))" strokeWidth={2} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {reliableMastery.map((m) => (
+                        <div key={m.category} className="flex justify-between p-2 rounded-lg bg-muted/50 text-sm">
+                          <span>{m.category}</span>
+                          <span className="font-bold text-primary">{m.masteryPct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {unreliableMastery.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-muted-foreground text-sm">
+                    Poucos dados ainda ({unreliableMastery.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {unreliableMastery.map((m) => (
+                      <div key={m.category} className="flex justify-between p-2 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+                        <span>{m.category}</span>
+                        <span>{m.attemptCount === 1 ? "1 tentativa" : `${m.attemptCount} tentativas`}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>

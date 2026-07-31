@@ -590,6 +590,33 @@ export type Database = {
           },
         ]
       }
+      simulator_attempts: {
+        Row: {
+          actions: Json | null
+          created_at: string
+          id: string
+          score: number
+          simulator_slug: string
+          user_id: string
+        }
+        Insert: {
+          actions?: Json | null
+          created_at?: string
+          id?: string
+          score: number
+          simulator_slug: string
+          user_id: string
+        }
+        Update: {
+          actions?: Json | null
+          created_at?: string
+          id?: string
+          score?: number
+          simulator_slug?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       simulator_cases: {
         Row: {
           case_data: Json

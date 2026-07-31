@@ -4,7 +4,7 @@ import {
   Calculator, FlaskConical, Gamepad2, Users, CreditCard,
   BookOpen, Search, ArrowRight, Shield,
   ChevronDown, ChevronRight, HelpCircle, Microscope, GraduationCap,
-  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box, LifeBuoy,
+  UserPlus, DoorOpen, Brain, Beaker, Dna, HeartPulse, Pill, Scan, Accessibility, Box, LifeBuoy, Trophy,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,16 @@ const sections: DocSection[] = [
       { q: "Quantos jogos estão disponíveis?", a: "A plataforma possui mais de 20 jogos incluindo Milionário da Farmacologia, Código Azul, Detetive Toxicológico, Batalha Naval Clínica, entre outros." },
       { q: "Os jogos utilizam IA?", a: "Sim, os jogos utilizam IA para gerar perguntas, narrativas e cenários dinâmicos." },
       { q: "Existe ranking?", a: "Sim! Os jogos possuem ranking e integram-se ao sistema de gamificação (pontos, badges e streaks)." },
+    ],
+  },
+  {
+    id: "gamificacao", title: "Gamificação", icon: Trophy, color: "text-yellow-400 bg-yellow-500/10",
+    items: [
+      { q: "Como funciona o sistema de pontos, badges e streaks?", a: "Você ganha pontos ao usar calculadoras, simuladores e jogos, conquista badges por marcos de uso (Explorer, Maratonista, etc.) e mantém um streak diário. Tudo isso é visível em 'Gamificação' no menu, junto com o leaderboard global." },
+      { q: "Agora ganho pontos resolvendo um simulador sozinho, fora de uma Sala Virtual?", a: "Sim! Antes, a pontuação por simulador só era dada dentro de Salas Virtuais. Agora, resolver qualquer simulador individualmente também credita pontos, proporcionais ao score que você tirou no caso." },
+      { q: "O que é o Mapa de Competências?", a: "É uma aba em 'Gamificação' que mostra, por categoria de simulador (Farmácia Clínica, Bioquímica, Farmacologia Básica, etc.), um placar de 0 a 100 que resume o seu desempenho recente naquela área — dando mais peso aos casos resolvidos nos últimos dias do que aos mais antigos. Categorias em que você resolveu poucos casos aparecem à parte, como 'poucos dados ainda', para não sugerir uma confiança que os dados ainda não sustentam." },
+      { q: "O Mapa de Competências usa inteligência artificial para prever meu conhecimento?", a: "Não. É uma média ponderada por recência sobre as suas notas reais em cada tentativa — simples e transparente, sem modelo preditivo por trás. Serve como um retrato do seu histórico recente, não uma previsão." },
+      { q: "Onde vejo um resumo rápido da minha maestria?", a: "O Dashboard mostra um card com a sua categoria mais forte e a mais fraca (quando já há dados suficientes), com um link direto para o Mapa de Competências completo." },
     ],
   },
   {

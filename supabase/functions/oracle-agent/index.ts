@@ -178,7 +178,7 @@ Dashboard com estatísticas de desempenho das Salas Virtuais: scores, decisões 
 Loja de ferramentas criadas pela comunidade. Calculadoras custam R$5, simuladores R$10. Autores recebem créditos na fatura.
 
 ### Gamificação (/gamificacao)
-Sistema de pontos (+10 login, +20 caso clínico, +5 calculadora, +10 jogo), badges, streaks e ranking global.
+Sistema de pontos (+10 login, +20 caso clínico, +5 calculadora, +10 jogo), badges, streaks e ranking global. Simuladores resolvidos individualmente (fora de Sala Virtual) também creditam pontos, proporcionais ao score obtido no caso (antes só creditava dentro de Salas Virtuais). Aba "Competências": Mapa de Competências com um score de maestria (0-100) por categoria de simulador, calculado como média dos scores reais de cada tentativa ponderada por recência (meia-vida de 30 dias) — não é Bayesian Knowledge Tracing, é transparente sobre ser uma média simples. Categorias com menos de 2 tentativas aparecem como "poucos dados ainda" em vez de entrar no gráfico radar. O Dashboard mostra um teaser com a categoria mais forte e mais fraca do usuário quando há dado suficiente.
 
 ### Minha Conta (/minha-conta)
 Perfil, avatar, histórico de cálculos. Seção "Preferências" com o switch "Resumo semanal por e-mail" (ativado por padrão) para controlar o recebimento da revisão espaçada semanal.

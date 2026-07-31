@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, FlaskConical, Gamepad2, ArrowRight, Trophy, Flame, Star, Sparkles, RotateCcw } from "lucide-react";
+import { Calculator, FlaskConical, Gamepad2, ArrowRight, Trophy, Flame, Star, Sparkles, RotateCcw, Brain } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
 import { useRecommendations } from "@/hooks/useRecommendations";
+import { useMastery } from "@/hooks/useMastery";
 
 const WELCOME_DISMISSED_KEY = "posologia_welcome_dismissed";
 
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const [profileName, setProfileName] = useState("");
   const { totalPoints, streak, earnedBadges } = useGamification();
   const { data: recommendations } = useRecommendations();
+  const { data: mastery } = useMastery();
   const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
@@ -160,6 +162,33 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Teaser do Mapa de Competências — só com dado confiável (2+ tentativas na categoria) */}
+      {(() => {
+        const reliable = (mastery || []).filter((m) => m.reliable);
+        if (reliable.length === 0) return null;
+        const strongest = reliable[0];
+        const weakest = reliable[reliable.length - 1];
+        return (
+          <Link
+            to="/gamificacao"
+            className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 hover:bg-muted/40 transition-colors group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+                <Brain className="h-4 w-4 text-primary" />
+              </div>
+              <p className="text-sm min-w-0 truncate">
+                Você domina bem <span className="font-semibold text-foreground">{strongest.category}</span> ({strongest.masteryPct}%)
+                {reliable.length > 1 && strongest.category !== weakest.category && (
+                  <> — vale reforçar <span className="font-semibold text-foreground">{weakest.category}</span> ({weakest.masteryPct}%)</>
+                )}
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-primary shrink-0 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        );
+      })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((card) => (

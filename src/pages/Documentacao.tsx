@@ -295,12 +295,14 @@ const sections = [
   {
     title: "Gamificação",
     icon: Trophy,
-    description: "Sistema de pontos, badges, streaks e leaderboard para motivar o uso contínuo.",
+    description: "Sistema de pontos, badges, streaks, leaderboard e mapa de competências para motivar o uso contínuo.",
     items: [
-      { name: "Pontuação por simuladores, jogos e calculadoras" },
+      { name: "Pontuação por simuladores, jogos e calculadoras — inclui simuladores resolvidos individualmente (fora de Sala Virtual), proporcional ao score obtido" },
       { name: "Badges de conquistas (Explorer, Maratonista, etc.)" },
       { name: "Streak diário de uso" },
       { name: "Leaderboard global" },
+      { name: "Mapa de Competências (aba \"Competências\" em /gamificacao): score de maestria por categoria de simulador, calculado como média dos scores reais de cada tentativa ponderada por recência (meia-vida de 30 dias) — não é Bayesian Knowledge Tracing. Categorias com menos de 2 tentativas aparecem como \"poucos dados ainda\" em vez de entrar no radar" },
+      { name: "Teaser de maestria no Dashboard, destacando categoria mais forte e mais fraca (só quando há dado confiável)" },
     ],
   },
   {
@@ -393,6 +395,7 @@ const techSections = [
       { label: "calculation_history", value: "Histórico de cálculos por usuário (calculator_slug, details JSONB, patient_name)" },
       { label: "student_points", value: "Pontuação gamificada (source, points, simulator_slug)" },
       { label: "user_badges", value: "Badges conquistadas (badge_id, earned_at)" },
+      { label: "simulator_attempts", value: "Log append-only de tentativas de simulador (simulator_slug, score 0-100, actions JSONB) — base do Mapa de Competências (useMastery)" },
       { label: "marketplace_purchases", value: "Compras do marketplace (tool_id, buyer_id, seller_id, price_brl)" },
       { label: "shared_tools", value: "Links compartilhados (share_token, tool_id, expires_at)" },
       { label: "tool_reviews", value: "Avaliações de ferramentas (rating, comment)" },
@@ -501,6 +504,7 @@ const techSections = [
       { label: "Autenticação", value: "AuthContext com useAuth() — session, user, isAdmin, isProfessor, signIn, signUp, signOut" },
       { label: "Feature Gating", value: "useFeatureGating() — controle de acesso a funcionalidades por plano/role" },
       { label: "Gamificação", value: "useGamification() — pontos, badges, streaks (student_points + user_badges)" },
+      { label: "Mapa de Competências", value: "useMastery() — score de maestria por categoria de simulador a partir de simulator_attempts, ponderado por recência (src/data/simulatorCategories.ts mapeia slug → categoria)" },
       { label: "Histórico", value: "useCalculationHistory() — CRUD de cálculos salvos por paciente" },
       { label: "Assinatura", value: "useSubscription() — verifica plano ativo via Edge Function" },
       { label: "Componentes de gating", value: "PremiumGate (bloqueio de rota inteira) e PdfExportButton (bloqueio da exportação PDF) centralizam a checagem de plano, evitando repetir isPremium em cada página" },
