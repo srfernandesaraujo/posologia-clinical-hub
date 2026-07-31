@@ -25,7 +25,7 @@ const sections: DocSection[] = [
       { q: "Como fazer login?", a: "Acesse a página de Login e utilize seu e-mail e senha cadastrados, ou faça login com sua conta Google." },
       { q: "O que acontece após o cadastro?", a: "Novos cadastros ficam com status 'Pendente' até a aprovação de um administrador. Após aprovação, você terá acesso ao plano Gratuito com limite diário de uso." },
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
-      { q: "A plataforma tem um assistente para tirar dúvidas?", a: "Sim! O Oráculo é um chat de IA disponível para usuários logados que orienta sobre qual ferramenta usar e como aproveitar cada funcionalidade." },
+      { q: "A plataforma tem um assistente para tirar dúvidas?", a: "Sim! O Oráculo é um chat de IA disponível para usuários logados que orienta sobre qual ferramenta usar e como aproveitar cada funcionalidade. Dentro de um simulador, ele também pode agir como um preceptor — veja a pergunta sobre isso na seção de Simuladores." },
       { q: "Recebo algum e-mail de revisão ou lembrete de uso?", a: "Sim, toda segunda-feira enviamos um resumo semanal com sugestões de até 5 ferramentas: calculadoras/simuladores que você usou mas não toca há 14+ dias, e calculadoras de categorias que você frequenta mas ainda não abriu. Essa recomendação também aparece em tempo real no Dashboard, no bloco 'Recomendado para você'. Você pode ativar ou desativar o recebimento do e-mail em Minha Conta → Preferências." },
     ],
   },
@@ -46,6 +46,7 @@ const sections: DocSection[] = [
       { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (16), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Genética (8), Farmacoterapia Laboratorial (8) e Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
       { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium, incluindo os simuladores dinâmicos criados por IA. Usuários gratuitos podem visualizar a lista, mas abrir qualquer simulador (mesmo por link direto) exige assinatura ativa." },
+      { q: "Por que às vezes o Oráculo me faz uma pergunta em vez de responder direto?", a: "Quando você está na página de um simulador e teve alguma decisão errada na sua última tentativa individual, o Oráculo assume o papel de preceptor: em vez de entregar a resposta certa de imediato, ele pergunta por que você escolheu aquela opção — o mesmo método do 'preceptor de um minuto' ensinado no simulador de Preceptoria Clínica (Formação Docente). Ele só revela a resposta ideal se você pedir diretamente ou já tiver respondido à pergunta. Fora dessa situação (ou sem erros na última tentativa), o Oráculo continua respondendo normalmente, como um guia de navegação." },
     ],
   },
   {

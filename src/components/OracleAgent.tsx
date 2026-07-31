@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageSquare, X, Send, Loader2, Sparkles, ArrowUpRight } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { MessageSquare, X, Send, Loader2, Sparkles, ArrowUpRight, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,8 @@ const QUICK_ACTIONS = [
 
 export function OracleAgent() {
   const { user } = useAuth();
+  const location = useLocation();
+  const simulatorSlug = location.pathname.match(/^\/simuladores\/([^/]+)/)?.[1];
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -51,6 +54,7 @@ export function OracleAgent() {
         body: {
           messages: newMessages.slice(-10), // keep context manageable
           userId: user?.id,
+          context: { pathname: location.pathname, simulatorSlug },
         },
       });
 
@@ -63,7 +67,7 @@ export function OracleAgent() {
     } finally {
       setLoading(false);
     }
-  }, [messages, loading, user?.id]);
+  }, [messages, loading, user?.id, location.pathname, simulatorSlug]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -115,6 +119,15 @@ export function OracleAgent() {
                 <p className="text-sm text-muted-foreground mt-1">Como posso te ajudar hoje?</p>
               </div>
               <div className="flex flex-col gap-2 w-full mt-4">
+                {simulatorSlug && (
+                  <button
+                    onClick={() => sendMessage("Quero refletir sobre minha última tentativa neste simulador.")}
+                    className="flex items-center gap-2 text-left px-3 py-2.5 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 transition-colors text-sm text-foreground"
+                  >
+                    <Lightbulb className="h-4 w-4 text-accent shrink-0" />
+                    <span>Refletir sobre este caso</span>
+                  </button>
+                )}
                 {QUICK_ACTIONS.map((action) => (
                   <button
                     key={action.label}

@@ -9,6 +9,69 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+const MAX_REFLECTION_ITEMS = 3;
+
+interface SimDecision {
+  label: string;
+  userChoice: string;
+  idealChoice: string;
+  correct: boolean;
+  category: string;
+  explanation?: string;
+}
+
+// Verifica o usuário chamador a partir do JWT no header (mesmo padrão de
+// award-points/index.ts) — não confia no `userId` solto do body para decidir
+// de quem ler simulator_attempts, que é dado privado por usuário.
+async function verifyUser(req: Request): Promise<string | null> {
+  try {
+    const auth = req.headers.get("Authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const userClient = createClient(SUPABASE_URL, ANON, {
+      global: { headers: { Authorization: auth } },
+    });
+    const token = auth.replace("Bearer ", "");
+    const { data: claims, error } = await userClient.auth.getClaims(token);
+    if (error || !claims?.claims?.sub) return null;
+    return claims.claims.sub as string;
+  } catch {
+    return null;
+  }
+}
+
+// Lê a tentativa mais recente do usuário no simulador em que ele está agora
+// (simulator_attempts, alimentada desde o motor de maestria adaptativa) e
+// monta um bloco de reflexão socrática sobre os desvios dessa tentativa.
+async function getReflectionBlock(verifiedUserId: string, simulatorSlug: string): Promise<string> {
+  try {
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const { data, error } = await admin
+      .from("simulator_attempts")
+      .select("actions")
+      .eq("user_id", verifiedUserId)
+      .eq("simulator_slug", simulatorSlug)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data?.actions) return "";
+
+    const decisions: SimDecision[] = (data.actions as any)?.decisions || [];
+    const wrong = decisions.filter((d) => d && d.correct === false).slice(0, MAX_REFLECTION_ITEMS);
+    if (wrong.length === 0) return "";
+
+    const lines = wrong.map((d) =>
+      `- **${d.label}** (categoria: ${d.category}) — o usuário escolheu "${d.userChoice}"; a escolha ideal seria "${d.idealChoice}"${d.explanation ? ` (${d.explanation})` : ""}.`
+    );
+
+    return `\n\n## CONTEXTO DE REFLEXÃO (tentativa mais recente do usuário em "${simulatorSlug}")\nO usuário está agora na página deste simulador e teve os desvios abaixo na última tentativa individual. Adote o método do preceptor de um minuto (Socrático): escolha UMA dessas decisões e pergunte por que o usuário fez essa escolha, antes de confirmar ou revelar a ideal. Só revele a resposta certa se o usuário pedir explicitamente ou já tiver respondido à pergunta.\n${lines.join("\n")}`;
+  } catch (err) {
+    console.error("[ORACLE-AGENT] Falha ao buscar contexto de reflexão:", err);
+    return "";
+  }
+}
 
 // Pulls the most recent shipped features from the admin Pipeline (system_updates,
 // status='done') so the Oráculo learns about new functionality as soon as it's
@@ -45,6 +108,7 @@ const SYSTEM_PROMPT = `Você é o **Oráculo do Posologia Clinical Hub**, um ass
 - Você é um guia inteligente integrado à plataforma
 - Nunca invente funcionalidades que não existem
 - Sempre indique o caminho de navegação (ex: "Vá em Simuladores > Fisiologia > SNA")
+- Quando a seção "CONTEXTO DE REFLEXÃO" estiver presente (usuário na página de um simulador com desvios na tentativa mais recente), você vira um preceptor socrático nessa resposta: pergunta antes de responder, no método do preceptor de um minuto — não age como concierge de navegação nesse momento
 
 ## ESTRUTURA DO SISTEMA
 O Posologia Clinical Hub possui 7 pilares:
@@ -211,7 +275,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userId } = await req.json();
+    const { messages, userId, context } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
@@ -222,8 +286,16 @@ serve(async (req) => {
 
     const recentUpdatesBlock = await getRecentUpdatesBlock();
 
+    let reflectionBlock = "";
+    if (context?.simulatorSlug) {
+      const verifiedUserId = await verifyUser(req);
+      if (verifiedUserId) {
+        reflectionBlock = await getReflectionBlock(verifiedUserId, context.simulatorSlug);
+      }
+    }
+
     const aiMessages = [
-      { role: "system", content: SYSTEM_PROMPT + recentUpdatesBlock },
+      { role: "system", content: SYSTEM_PROMPT + recentUpdatesBlock + reflectionBlock },
       ...messages,
     ];
 
