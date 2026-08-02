@@ -1,14 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-interface AiProvider {
-  id: string;
-  provider: string;
-  api_key: string;
-  base_url: string | null;
-  model: string | null;
-  display_name: string;
-  priority: number;
-}
+import { getActiveProviders, type AiProvider } from "./ai-providers-db.ts";
 
 interface AiRequestOptions {
   messages: Array<{ role: string; content: string }>;
@@ -25,25 +16,6 @@ const PROVIDER_CONFIGS: Record<string, { baseUrl: string; defaultModel: string; 
   anthropic: { baseUrl: "https://api.anthropic.com/v1/messages", defaultModel: "claude-sonnet-4-20250514", format: "anthropic" },
   google: { baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", defaultModel: "gemini-2.5-flash", format: "openai" },
 };
-
-async function getActiveProviders(): Promise<AiProvider[]> {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
-
-  const { data, error } = await supabase
-    .from("ai_api_keys")
-    .select("*")
-    .eq("is_active", true)
-    .order("priority", { ascending: true });
-
-  if (error) {
-    console.error("[AI-PROVIDER] Error fetching providers:", error.message);
-    return [];
-  }
-  return data || [];
-}
 
 function buildAnthropicRequest(options: AiRequestOptions, apiKey: string, model: string) {
   const systemMsg = options.messages.find(m => m.role === "system");

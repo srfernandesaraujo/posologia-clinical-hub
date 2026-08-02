@@ -86,3 +86,12 @@ verify_jwt = false
 
 [functions.oembed]
 verify_jwt = false
+
+[functions.voice-transcribe]
+verify_jwt = false
+
+[functions.voice-patient-turn]
+verify_jwt = false
+
+[functions.voice-patient-eval]
+verify_jwt = false

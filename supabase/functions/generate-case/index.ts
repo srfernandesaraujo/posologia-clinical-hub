@@ -646,6 +646,22 @@ O caso deve conter:
 
 Inclua pelo menos 2 PRMs identificáveis. Use cenários realistas de farmácia clínica.`,
 
+  "paciente-ia-voz": `Gere uma persona de paciente para o Simulador de Paciente-IA por Voz (treino de anamnese e comunicação clínica).
+O caso deve conter:
+- title: título descritivo do caso (ex: "Dor abdominal com histórico minimizado")
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: objeto único contendo TODOS os campos abaixo (não crie campos irmãos fora de "patient"):
+  - name, age (number), sex ("Masculino"|"Feminino"), occupation
+  - diagnosis: resumo curtíssimo da queixa (ex: "Dor de garganta há 2 dias") — usado só para exibir o card do caso, nunca falado literalmente pelo paciente
+  - chiefComplaint: igual a "diagnosis", repetido aqui (mesmo valor) para uso interno
+  - spontaneousInfo: array de 2-4 strings — frases que o paciente conta espontaneamente assim que perguntado "o que trouxe você aqui?"
+  - hiddenInfo: array de 2-4 objetos { fact, revealTrigger } — fatos clínicos relevantes que o paciente só revela se perguntado direta e especificamente; revealTrigger descreve textualmente que tipo de pergunta libera o fato (ex: "perguntado sobre uso de álcool ou hábitos de consumo")
+  - personality: { traits (string), speechStyle (string), mood (string) }
+  - redFlags: array de 1-3 strings — sinais de alarme que só aparecem se o aluno perguntar sobre eles especificamente
+  - rubricFocus: array de 3-5 strings — competências de entrevista que este caso testa (ex: "perguntar sobre uso de substâncias", "investigar irradiação da dor", "abrir com pergunta aberta")
+
+Varie entre queixas comuns de atenção primária (dor, sintomas gastrointestinais, respiratórios, emocionais). Pelo menos um "hiddenInfo" deve exigir uma pergunta específica e não genérica para ser revelado — o objetivo é testar se o aluno aprofunda a entrevista, não apenas segue um roteiro superficial. NUNCA inclua diagnóstico ou conduta terapêutica no caso — o exercício é sobre condução da entrevista, não sobre decisão clínica.`,
+
   mai: `Gere um caso clínico COMPLETO para o Simulador MAI (Medication Appropriateness Index).
 O caso deve conter:
 - scenario: breve descrição do cenário clínico (1-2 frases)

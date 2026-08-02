@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import {
   FlaskConical, Search, Pill, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2,
   HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna,
-  BookOpen, Scan, Accessibility, ChevronRight, LayoutGrid, List,
+  BookOpen, Scan, Accessibility, ChevronRight, LayoutGrid, List, Mic,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const NATIVE_SIMULATORS = [
   { slug: "metodo-soap", name: "Simulador do Método SOAP", description: "Treine a documentação clínica estruturada: Subjetivo, Objetivo, Avaliação e Plano.", icon: ClipboardList, category: "Farmácia Clínica" },
+  { slug: "paciente-ia-voz", name: "Paciente-IA por Voz", description: "Treine anamnese e comunicação: converse por voz com um paciente simulado por IA que revela a história clínica conforme perguntado. Exclusivo Premium.", icon: Mic, category: "Farmácia Clínica" },
   { slug: "mai", name: "Simulador MAI", description: "Medication Appropriateness Index – Avalie a adequação de cada medicamento em 10 critérios.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "cascata-prescricao", name: "Simulador de Cascata de Prescrição", description: "Identifique medicamentos prescritos para tratar efeitos adversos de outros.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "prm", name: "Simulador de PRM", description: "Problemas Relacionados a Medicamentos – Avalie prescrições e identifique erros.", icon: Pill, category: "Farmácia Clínica" },

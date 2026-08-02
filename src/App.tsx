@@ -149,6 +149,7 @@ import SimuladorEpigenetica from "./pages/simuladores/genetica/SimuladorEpigenet
 import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutacoesReparo";
 import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
+import SimuladorPacienteVoz from "./pages/simuladores/SimuladorPacienteVoz";
 import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
 import SimuladorInflamacaoAINEs from "./pages/simuladores/SimuladorInflamacaoAINEs";
 import SimuladorInfeccoesAntibioticos from "./pages/simuladores/SimuladorInfeccoesAntibioticos";
@@ -377,6 +378,7 @@ const App = () => (
               <Route path="/simuladores" element={<Simuladores />} />
               <Route path="/simuladores/prm" element={<SimuladorPRM />} />
               <Route path="/simuladores/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/simuladores/paciente-ia-voz" element={<SimuladorPacienteVoz />} />
               <Route path="/simuladores/mai" element={<SimuladorMAI />} />
               <Route path="/simuladores/cascata-prescricao" element={<SimuladorCascataPrescricao />} />
               <Route path="/simuladores/antimicrobianos" element={<SimuladorAntimicrobianos />} />
