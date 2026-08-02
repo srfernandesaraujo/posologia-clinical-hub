@@ -18,6 +18,9 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEquilibrioAcidoBaseChallenges } from "@/data/simulatorChallenges";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
+import { usePatientState } from "@/contexts/PatientContext";
+import { deriveAcidBaseRenalCapacity, deriveAcidBaseBaselineFromGlycemic, publishAcidBaseVitals } from "@/lib/patientEngine";
+import { DigitalPatientPanel } from "@/components/simulators/DigitalPatientPanel";
 
 const SLUG = "equilibrio-acido-base";
 
@@ -65,9 +68,9 @@ const BUILT_IN_CASES: ABCase[] = [
   },
 ];
 
-function computeAB(basePCO2: number, baseHCO3: number, rrMod: number, renalMod: number) {
+function computeAB(basePCO2: number, baseHCO3: number, rrMod: number, renalMod: number, renalCapacity = 1) {
   const rrEffect = (rrMod - 50) / 50;
-  const renalEffect = (renalMod - 50) / 50;
+  const renalEffect = ((renalMod - 50) / 50) * renalCapacity;
   const pCO2 = Math.max(10, Math.min(100, basePCO2 - rrEffect * 25));
   const hco3 = Math.max(5, Math.min(50, baseHCO3 + renalEffect * 15));
   const ph = +(6.1 + Math.log10(hco3 / (0.03 * pCO2))).toFixed(2);
@@ -106,10 +109,13 @@ export default function SimuladorEquilibrioAcidoBase() {
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
+  const { patient, ensurePatient, updateFromModule } = usePatientState();
 
   const [activeCase, setActiveCase] = useState<ABCase | null>(null);
   const [rrModifier, setRrModifier] = useState(50);
   const [renalModifier, setRenalModifier] = useState(50);
+  const [pco2Baseline, setPco2Baseline] = useState(40);
+  const [hco3Baseline, setHco3Baseline] = useState(24);
   const [history, setHistory] = useState<any[]>([]);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [lastScore, setLastScore] = useState(0);
@@ -128,17 +134,30 @@ export default function SimuladorEquilibrioAcidoBase() {
   }, [virtualRoomCase]);
 
   useEffect(() => {
-    if (activeCase) { setRrModifier(50); setRenalModifier(50); setHistory([]); }
+    if (!activeCase) return;
+    setRrModifier(50); setRenalModifier(50); setHistory([]);
+    if (!isVirtualRoom) ensurePatient();
+    const base = !isVirtualRoom && patient
+      ? deriveAcidBaseBaselineFromGlycemic(patient.vitals, { pco2: activeCase.initialPCO2, hco3: activeCase.initialHCO3 })
+      : { pco2: activeCase.initialPCO2, hco3: activeCase.initialHCO3 };
+    setPco2Baseline(base.pco2); setHco3Baseline(base.hco3);
   }, [activeCase]);
+
+  const renalCapacity = !isVirtualRoom ? deriveAcidBaseRenalCapacity(patient?.vitals ?? {}) : 1;
 
   const ab = useMemo(() => {
     if (!activeCase) return computeAB(40, 24, 50, 50);
-    return computeAB(activeCase.initialPCO2, activeCase.initialHCO3, rrModifier, renalModifier);
-  }, [activeCase, rrModifier, renalModifier]);
+    return computeAB(pco2Baseline, hco3Baseline, rrModifier, renalModifier, renalCapacity);
+  }, [pco2Baseline, hco3Baseline, rrModifier, renalModifier, renalCapacity, activeCase]);
 
   useEffect(() => {
     if (activeCase) setHistory((prev) => [...prev.slice(-19), { step: prev.length + 1, pH: ab.ph, pCO2: ab.pCO2, HCO3: ab.hco3 }]);
   }, [ab.ph, ab.pCO2, ab.hco3]);
+
+  useEffect(() => {
+    if (!activeCase || isVirtualRoom) return;
+    updateFromModule(SLUG, publishAcidBaseVitals(rrModifier, renalModifier, ab), activeCase.title);
+  }, [rrModifier, renalModifier, ab.ph, ab.pCO2, ab.hco3, activeCase, isVirtualRoom]);
 
   const injectDisturbance = (type: string) => {
     if (!activeCase) return;
@@ -243,6 +262,8 @@ export default function SimuladorEquilibrioAcidoBase() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[

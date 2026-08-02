@@ -19,6 +19,9 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getEletrofisiologiaCardiacaChallenges } from "@/data/simulatorChallenges";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
+import { usePatientState } from "@/contexts/PatientContext";
+import { deriveElectroBaselineFromRenal, publishElectroVitals } from "@/lib/patientEngine";
+import { DigitalPatientPanel } from "@/components/simulators/DigitalPatientPanel";
 
 const SLUG = "eletrofisiologia-cardiaca";
 
@@ -115,6 +118,7 @@ export default function SimuladorEletrofisiologiaCardiaca() {
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
+  const { patient, ensurePatient, updateFromModule } = usePatientState();
 
   const [activeCase, setActiveCase] = useState<EletroCase | null>(null);
   const [na, setNa] = useState(100);
@@ -138,10 +142,21 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   }, [virtualRoomCase]);
 
   useEffect(() => {
-    if (activeCase) { setNa(activeCase.initialNa); setK(activeCase.initialK); setCa(activeCase.initialCa); setCellType(activeCase.cellType); }
+    if (!activeCase) return;
+    setNa(activeCase.initialNa); setCa(activeCase.initialCa); setCellType(activeCase.cellType);
+    if (!isVirtualRoom) ensurePatient();
+    const base = !isVirtualRoom && patient
+      ? deriveElectroBaselineFromRenal(patient.vitals, { k: activeCase.initialK })
+      : { k: activeCase.initialK };
+    setK(base.k);
   }, [activeCase]);
 
   const apData = useMemo(() => generateActionPotential(na, k, ca, cellType), [na, k, ca, cellType]);
+
+  useEffect(() => {
+    if (!activeCase || isVirtualRoom) return;
+    updateFromModule(SLUG, publishElectroVitals(na, k, ca, cellType), activeCase.title);
+  }, [na, k, ca, cellType, activeCase, isVirtualRoom]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
@@ -228,6 +243,8 @@ export default function SimuladorEletrofisiologiaCardiaca() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-1">

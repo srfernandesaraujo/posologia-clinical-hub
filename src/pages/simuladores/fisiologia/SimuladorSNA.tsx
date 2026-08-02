@@ -18,6 +18,9 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getSNAChallenges } from "@/data/simulatorChallenges";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
+import { usePatientState } from "@/contexts/PatientContext";
+import { publishSNAVitals } from "@/lib/patientEngine";
+import { DigitalPatientPanel } from "@/components/simulators/DigitalPatientPanel";
 
 const SLUG = "sna";
 
@@ -84,6 +87,7 @@ export default function SimuladorSNA() {
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
+  const { ensurePatient, updateFromModule } = usePatientState();
 
   const [activeCase, setActiveCase] = useState<SNACase | null>(null);
   const [sympathetic, setSympathetic] = useState(40);
@@ -112,6 +116,7 @@ export default function SimuladorSNA() {
       setSympathetic(activeCase.initialSympathetic);
       setParasympathetic(activeCase.initialParasympathetic);
       setHistory([]); setTime(0); setRunning(false);
+      if (!isVirtualRoom) ensurePatient();
     }
   }, [activeCase]);
 
@@ -129,6 +134,11 @@ export default function SimuladorSNA() {
   }, [running, sympathetic, parasympathetic]);
 
   const outputs = computeOutputs(sympathetic, parasympathetic);
+
+  useEffect(() => {
+    if (!activeCase || isVirtualRoom) return;
+    updateFromModule(SLUG, publishSNAVitals(sympathetic, parasympathetic, outputs), activeCase.title);
+  }, [sympathetic, parasympathetic, activeCase, isVirtualRoom]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase) return 0;
@@ -229,6 +239,8 @@ export default function SimuladorSNA() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>

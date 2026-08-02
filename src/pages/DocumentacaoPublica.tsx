@@ -42,11 +42,12 @@ const sections: DocSection[] = [
   {
     id: "simuladores", title: "Simuladores Interativos", icon: FlaskConical, color: "text-cyan-400 bg-cyan-500/10",
     items: [
-      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 107 simuladores." },
-      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (16), Fisiologia Humana (10), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Genética (8), Farmacoterapia Laboratorial (8) e Formação Docente (7), além de simuladores criados pelo usuário." },
+      { q: "O que são os simuladores?", a: "São ambientes interativos que reproduzem cenários clínicos, fisiológicos e bioquímicos, permitindo prática segura de raciocínio. A plataforma conta com mais de 108 simuladores." },
+      { q: "Quantas categorias de simuladores existem?", a: "Os simuladores estão organizados em 12 categorias: Farmácia Clínica (16), Fisiologia Humana (11), Bioquímica (10), Farmacologia Básica (8), Farmacotécnica (8), Química Farmacêutica (8), Odontologia (8), Fisioterapia (8), Nutrição (8), Genética (8), Farmacoterapia Laboratorial (8) e Formação Docente (7), além de simuladores criados pelo usuário." },
       { q: "Os casos são gerados por IA?", a: "Sim! A plataforma utiliza inteligência artificial para gerar casos clínicos únicos com diferentes níveis de dificuldade." },
       { q: "Simuladores são gratuitos?", a: "Simuladores são funcionalidades do plano Premium, incluindo os simuladores dinâmicos criados por IA. Usuários gratuitos podem visualizar a lista, mas abrir qualquer simulador (mesmo por link direto) exige assinatura ativa." },
       { q: "Por que às vezes o Oráculo me faz uma pergunta em vez de responder direto?", a: "Quando você está na página de um simulador e teve alguma decisão errada na sua última tentativa individual, o Oráculo assume o papel de preceptor: em vez de entregar a resposta certa de imediato, ele pergunta por que você escolheu aquela opção — o mesmo método do 'preceptor de um minuto' ensinado no simulador de Preceptoria Clínica (Formação Docente). Ele só revela a resposta ideal se você pedir diretamente ou já tiver respondido à pergunta. Fora dessa situação (ou sem erros na última tentativa), o Oráculo continua respondendo normalmente, como um guia de navegação." },
+      { q: "O que é o Paciente Digital Contínuo?", a: "É um paciente único que atravessa os 5 simuladores de Fisiologia Humana com caso clínico (Sistema Nervoso Autônomo, Depuração Renal, Equilíbrio Ácido-Base, Regulação Glicêmica e Eletrofisiologia Cardíaca): ao trocar de simulador na mesma sessão, cada um herda baselines influenciados pelo que você fez nos outros — por exemplo, um tônus simpático elevado no SNA reduz a perfusão renal herdada na Depuração Renal. Um painel dentro de cada simulador mostra o que foi herdado, e a página 'Painel do Paciente Contínuo' (dentro de Fisiologia Humana) mostra o snapshot completo. É exclusivo do uso individual fora de Sala Virtual, e o estado fica salvo apenas na sua sessão do navegador (sessionStorage) — não é sincronizado entre dispositivos e você pode zerá-lo a qualquer momento com o botão 'Novo Paciente'." },
     ],
   },
   {
@@ -174,7 +175,7 @@ export default function DocumentacaoPublica() {
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Central de Ajuda</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Documentação do Posologia Clinical Hub</h1>
-          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 107+ simuladores, 11 bancadas de laboratório, MedView 3D, jogos, formação docente, salas virtuais e mais.</p>
+          <p className="text-white/50 mb-8">Encontre respostas sobre todas as funcionalidades da plataforma — calculadoras, 108+ simuladores, 11 bancadas de laboratório, MedView 3D, jogos, formação docente, salas virtuais e mais.</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input

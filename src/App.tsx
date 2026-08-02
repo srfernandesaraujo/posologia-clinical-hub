@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import { PatientProvider } from "@/contexts/PatientContext";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
@@ -67,6 +68,7 @@ import SimuladorEletrofisiologiaCardiaca from "./pages/simuladores/fisiologia/Si
 import SimuladorDepuracaoRenal from "./pages/simuladores/fisiologia/SimuladorDepuracaoRenal";
 import SimuladorEquilibrioAcidoBase from "./pages/simuladores/fisiologia/SimuladorEquilibrioAcidoBase";
 import SimuladorRegulacaoGlicemica from "./pages/simuladores/fisiologia/SimuladorRegulacaoGlicemica";
+import PainelPacienteContinuo from "./pages/simuladores/fisiologia/PainelPacienteContinuo";
 import SimuladorEixoHPA from "./pages/simuladores/fisiologia/SimuladorEixoHPA";
 import SimuladorCineticaEnzimatica from "./pages/simuladores/fisiologia/SimuladorCineticaEnzimatica";
 import SimuladorSecrecaoGastrica from "./pages/simuladores/fisiologia/SimuladorSecrecaoGastrica";
@@ -230,6 +232,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <CookieConsentProvider>
+      <PatientProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -392,6 +395,7 @@ const App = () => (
               <Route path="/simuladores/depuracao-renal" element={<SimuladorDepuracaoRenal />} />
               <Route path="/simuladores/equilibrio-acido-base" element={<SimuladorEquilibrioAcidoBase />} />
               <Route path="/simuladores/regulacao-glicemica" element={<SimuladorRegulacaoGlicemica />} />
+              <Route path="/simuladores/paciente-continuo" element={<PainelPacienteContinuo />} />
               <Route path="/simuladores/eixo-hpa" element={<SimuladorEixoHPA />} />
               <Route path="/simuladores/cinetica-enzimatica" element={<SimuladorCineticaEnzimatica />} />
               <Route path="/simuladores/secrecao-gastrica" element={<SimuladorSecrecaoGastrica />} />
@@ -572,6 +576,7 @@ const App = () => (
           <OfflineBanner />
         </BrowserRouter>
       </TooltipProvider>
+      </PatientProvider>
       </CookieConsentProvider>
     </AuthProvider>
   </QueryClientProvider>

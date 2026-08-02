@@ -19,6 +19,9 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getRegulacaoGlicemicaChallenges } from "@/data/simulatorChallenges";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
+import { usePatientState } from "@/contexts/PatientContext";
+import { deriveGlycemicBaselineFromSNA, publishGlycemicVitals } from "@/lib/patientEngine";
+import { DigitalPatientPanel } from "@/components/simulators/DigitalPatientPanel";
 
 const SLUG = "regulacao-glicemica";
 
@@ -101,6 +104,7 @@ export default function SimuladorRegulacaoGlicemica() {
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
+  const { patient, ensurePatient, updateFromModule } = usePatientState();
 
   const [activeCase, setActiveCase] = useState<GlycemicCase | null>(null);
   const [carbIntake, setCarbIntake] = useState(50);
@@ -127,12 +131,15 @@ export default function SimuladorRegulacaoGlicemica() {
   }, [virtualRoomCase]);
 
   useEffect(() => {
-    if (activeCase) {
-      setCarbIntake(activeCase.initialCarbIntake);
-      setInsulinSensitivity(activeCase.initialInsulinSensitivity);
-      setPancreaticFunction(activeCase.initialPancreaticFunction);
-      setHistory([]); setTime(0); setRunning(false);
-    }
+    if (!activeCase) return;
+    setCarbIntake(activeCase.initialCarbIntake);
+    setInsulinSensitivity(activeCase.initialInsulinSensitivity);
+    setHistory([]); setTime(0); setRunning(false);
+    if (!isVirtualRoom) ensurePatient();
+    const base = !isVirtualRoom && patient
+      ? deriveGlycemicBaselineFromSNA(patient.vitals, { pancreaticFunction: activeCase.initialPancreaticFunction })
+      : { pancreaticFunction: activeCase.initialPancreaticFunction };
+    setPancreaticFunction(base.pancreaticFunction);
   }, [activeCase]);
 
   useEffect(() => {
@@ -149,6 +156,11 @@ export default function SimuladorRegulacaoGlicemica() {
   }, [running, carbIntake, insulinSensitivity, pancreaticFunction]);
 
   const outputs = computeGlycemic(carbIntake, insulinSensitivity, pancreaticFunction);
+
+  useEffect(() => {
+    if (!activeCase || isVirtualRoom) return;
+    updateFromModule(SLUG, publishGlycemicVitals(carbIntake, insulinSensitivity, pancreaticFunction, outputs), activeCase.title);
+  }, [carbIntake, insulinSensitivity, pancreaticFunction, activeCase, isVirtualRoom]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase) return 0;
@@ -240,6 +252,8 @@ export default function SimuladorRegulacaoGlicemica() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>

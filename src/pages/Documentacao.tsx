@@ -47,7 +47,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 107+ simuladores em 12 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 108+ simuladores em 12 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "MAI (Medication Appropriateness Index)", desc: "Avaliação de adequação em 10 critérios", link: "/simuladores/mai" },
@@ -70,13 +70,14 @@ const sections = [
   {
     title: "Simuladores — Fisiologia Humana",
     icon: HeartPulse,
-    description: "Modelos fisiológicos interativos com gráficos em tempo real, 10 simuladores cobrindo sistemas cardiovascular, renal, endócrino e mais.",
+    description: "Modelos fisiológicos interativos com gráficos em tempo real, 11 simuladores cobrindo sistemas cardiovascular, renal, endócrino e mais. Os 5 simuladores com caso clínico (SNA, Eletrofisiologia Cardíaca, Depuração Renal, Equilíbrio Ácido-Base e Regulação Glicêmica) compartilham um \"Paciente Digital Contínuo\": ao trocar de simulador na mesma sessão, cada um herda baselines influenciados pelo que foi feito nos outros (persistido em sessionStorage). Exclusivo do uso individual — desativado dentro de Sala Virtual.",
     items: [
       { name: "Sistema Nervoso Autônomo (SNA)", desc: "Tônus simpático/parassimpático e efeitos em FC, PA, pupila e TGI", link: "/simuladores/sna" },
       { name: "Eletrofisiologia Cardíaca", desc: "Potencial de ação com canais de Na⁺, K⁺ e Ca²⁺", link: "/simuladores/eletrofisiologia-cardiaca" },
-      { name: "Depuração Renal e TFG", desc: "Pressões arteriolares, hidratação e permeabilidade tubular", link: "/simuladores/depuracao-renal" },
+      { name: "Depuração Renal e TFG", desc: "Pressões arteriolares, hidratação, permeabilidade tubular e glicosúria pelo limiar renal real (~180mg/dL)", link: "/simuladores/depuracao-renal" },
       { name: "Equilíbrio Ácido-Base", desc: "Distúrbios metabólicos/respiratórios e correção de pH", link: "/simuladores/equilibrio-acido-base" },
       { name: "Regulação Glicêmica", desc: "Insulina, glucagon, DM1, DM2 e resistência insulínica", link: "/simuladores/regulacao-glicemica" },
+      { name: "Painel do Paciente Contínuo", desc: "Snapshot consolidado dos vitais herdados entre os 5 simuladores acima, com proveniência por módulo", link: "/simuladores/paciente-continuo" },
       { name: "Eixo HPA", desc: "Feedback hipotálamo-hipófise-adrenal", link: "/simuladores/eixo-hpa" },
       { name: "Cinética Enzimática", desc: "Michaelis-Menten e Lineweaver-Burk", link: "/simuladores/cinetica-enzimatica" },
       { name: "Secreção Ácida Gástrica", desc: "Receptores H2, M3 e CCK-B da célula parietal", link: "/simuladores/secrecao-gastrica" },
@@ -510,6 +511,7 @@ const techSections = [
       { label: "Feature Gating", value: "useFeatureGating() — controle de acesso a funcionalidades por plano/role" },
       { label: "Gamificação", value: "useGamification() — pontos, badges, streaks (student_points + user_badges)" },
       { label: "Mapa de Competências", value: "useMastery() — score de maestria por categoria de simulador a partir de simulator_attempts, ponderado por recência (src/data/simulatorCategories.ts mapeia slug → categoria)" },
+      { label: "Paciente Digital Contínuo", value: "PatientProvider (src/contexts/PatientContext.tsx) + motor puro src/lib/patientEngine.ts — estado fisiológico único entre os 5 simuladores de Fisiologia Humana com caso clínico (SNA, Depuração Renal, Ácido-Base, Glicemia, Eletrofisiologia), persistido em sessionStorage; desativado dentro de Sala Virtual (useVirtualRoomCase)" },
       { label: "Histórico", value: "useCalculationHistory() — CRUD de cálculos salvos por paciente" },
       { label: "Assinatura", value: "useSubscription() — verifica plano ativo via Edge Function" },
       { label: "Componentes de gating", value: "PremiumGate (bloqueio de rota inteira) e PdfExportButton (bloqueio da exportação PDF) centralizam a checagem de plano, evitando repetir isPremium em cada página" },

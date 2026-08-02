@@ -151,13 +151,13 @@ O Posologia Clinical Hub possui 7 pilares:
 - **Sulfato de Magnésio** (/sulfato-magnesio): Protocolos Zuspan e Pritchard
 
 ### 2. SIMULADORES (/simuladores) [Premium]
-107+ simuladores organizados em 12 categorias. Recurso exclusivo do plano Premium — inclusive os simuladores dinâmicos criados por IA, que seguem a mesma regra dos nativos (Premium para uso, não só para criação). Usuários Gratuitos podem ver a lista, mas abrir qualquer simulador exige assinatura ativa:
+108+ simuladores organizados em 12 categorias. Recurso exclusivo do plano Premium — inclusive os simuladores dinâmicos criados por IA, que seguem a mesma regra dos nativos (Premium para uso, não só para criação). Usuários Gratuitos podem ver a lista, mas abrir qualquer simulador exige assinatura ativa:
 
 **Farmácia Clínica (16 títulos):**
 PRM, Antimicrobianos (Stewardship), TDM, Acompanhamento Farmacoterapêutico, Insulina, Bomba de Infusão, Desmame de Benzodiazepínicos, Interações Medicamentosas (RxNav/NIH), SOAP, MAI (10 critérios), Cascata de Prescrição, Manejo da Dor, Inflamação e Anti-inflamatórios, Infecções e Antibioticoterapia, Tratamento da Asma, Dispensação — Portaria 344/98
 
-**Fisiologia Humana (10 títulos):**
-SNA, Eletrofisiologia Cardíaca, Depuração Renal, Equilíbrio Ácido-Base, Regulação Glicêmica, Eixo HPA, Cinética Enzimática, Secreção Gástrica, Cascata de Coagulação, ADME
+**Fisiologia Humana (11 títulos):**
+SNA, Eletrofisiologia Cardíaca, Depuração Renal, Equilíbrio Ácido-Base, Regulação Glicêmica, Painel do Paciente Contínuo, Eixo HPA, Cinética Enzimática, Secreção Gástrica, Cascata de Coagulação, ADME. Os 5 primeiros (SNA, Eletrofisiologia, Depuração Renal, Ácido-Base, Glicemia) compartilham o "Paciente Digital Contínuo" — veja seção dedicada abaixo.
 
 **Bioquímica (10 títulos):**
 Cadeia de Transporte de Elétrons, Dissociação de Hemoglobina, Glicólise/Gliconeogênese, Cinética Avançada, Ciclo da Ureia, Cascata do Ácido Araquidônico, Lipoproteínas, Pentoses-Fosfato, Titulação de Aminoácidos, Operon Lac
@@ -240,6 +240,9 @@ Dashboard com estatísticas de desempenho das Salas Virtuais: scores, decisões 
 
 ### Marketplace (/marketplace) [Premium]
 Loja de ferramentas criadas pela comunidade. Calculadoras custam R$5, simuladores R$10. Autores recebem créditos na fatura. Toda calculadora publicada passa por curadoria clínica: a publicação é imediata, mas dispara em segundo plano a edge function audit-marketplace-tool, que audita fórmula/campos via IA contra literatura e faixas de referência clínicas (veredito pending/clear/flagged). Se sinalizar risco clínico real, a ferramenta é despublicada automaticamente até revisão humana. O selo "Validado clinicamente" (ícone de escudo nos cards) só aparece depois que um admin aprova manualmente em /admin/marketplace-review — a auditoria de IA sozinha nunca concede o selo.
+
+### Paciente Digital Contínuo (dentro dos simuladores de Fisiologia Humana)
+Os 5 simuladores de Fisiologia Humana com caso clínico — SNA, Depuração Renal, Equilíbrio Ácido-Base, Regulação Glicêmica e Eletrofisiologia Cardíaca — compartilham um único "paciente contínuo" na mesma sessão do navegador (persistido em sessionStorage, não sincronizado entre dispositivos). Ao resolver um caso em um desses simuladores, os vitais publicados influenciam o baseline herdado pelos outros quando o usuário os visita em seguida (ex.: tônus simpático alto no SNA reduz a perfusão renal herdada na Depuração Renal; K⁺ sérico da Depuração Renal desloca a condutância de K⁺ herdada na Eletrofisiologia Cardíaca; hiperglicemia grave com baixa função pancreática pode alterar o baseline ácido-base herdado). Um painel compacto dentro de cada um dos 5 simuladores mostra o que foi herdado, com botão para reiniciar ("Novo Paciente"). A página **Painel do Paciente Contínuo** (/simuladores/paciente-continuo, categoria Fisiologia Humana) mostra o snapshot consolidado de todos os vitais com a proveniência (de qual simulador cada valor veio). É exclusivo do uso individual — dentro de Sala Virtual (modo de avaliação) o recurso fica desativado deliberadamente, então não interfere em exames/atividades de sala.
 
 ### Gamificação (/gamificacao)
 Sistema de pontos (+10 login, +20 caso clínico, +5 calculadora, +10 jogo), badges, streaks e ranking global. Simuladores resolvidos individualmente (fora de Sala Virtual) também creditam pontos, proporcionais ao score obtido no caso (antes só creditava dentro de Salas Virtuais). Aba "Competências": Mapa de Competências com um score de maestria (0-100) por categoria de simulador, calculado como média dos scores reais de cada tentativa ponderada por recência (meia-vida de 30 dias) — não é Bayesian Knowledge Tracing, é transparente sobre ser uma média simples. Categorias com menos de 2 tentativas aparecem como "poucos dados ainda" em vez de entrar no gráfico radar. O Dashboard mostra um teaser com a categoria mais forte e mais fraca do usuário quando há dado suficiente.

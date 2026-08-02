@@ -18,6 +18,9 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDepuracaoRenalChallenges } from "@/data/simulatorChallenges";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
+import { usePatientState } from "@/contexts/PatientContext";
+import { computeRenal, deriveRenalBaselineFromSNA, publishRenalVitals } from "@/lib/patientEngine";
+import { DigitalPatientPanel } from "@/components/simulators/DigitalPatientPanel";
 
 const SLUG = "depuracao-renal";
 
@@ -66,21 +69,6 @@ const BUILT_IN_CASES: RenalCase[] = [
   },
 ];
 
-function computeRenal(afferent: number, efferent: number, hydration: number, permeability: number) {
-  const af = afferent / 100;
-  const ef = efferent / 100;
-  const hy = hydration / 100;
-  const perm = permeability / 100;
-  const pressureGrad = af * 60 - ef * 15 - 10;
-  const tfg = Math.min(200, Math.max(0, Math.round(pressureGrad * 2.5 * hy * perm)));
-  const filtered = tfg * 1440 / 1000;
-  const reabsorbed = filtered * 0.99 * perm;
-  const urineVolume = Math.min(10, Math.max(0.3, +(filtered - reabsorbed).toFixed(1)));
-  const naSodium = Math.round(140 * (1 - perm * 0.97));
-  const glucose = perm > 0.8 ? 0 : Math.round((1 - perm) * 200);
-  return { tfg, urineVolume, filtered: +filtered.toFixed(1), reabsorbed: +reabsorbed.toFixed(1), naSodium, glucose };
-}
-
 const BAR_COLORS = ["hsl(var(--primary))", "hsl(142 76% 36%)", "hsl(38 92% 50%)"];
 
 export default function SimuladorDepuracaoRenal() {
@@ -90,6 +78,7 @@ export default function SimuladorDepuracaoRenal() {
 
   const { allCases: aiCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, []);
   const { virtualRoomCase, isVirtualRoom, examProgress, examFeedback, proceedToNext, submitResults, submitted } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
+  const { patient, ensurePatient, updateFromModule } = usePatientState();
 
   const [activeCase, setActiveCase] = useState<RenalCase | null>(null);
   const [afferent, setAfferent] = useState(70);
@@ -114,10 +103,25 @@ export default function SimuladorDepuracaoRenal() {
   }, [virtualRoomCase]);
 
   useEffect(() => {
-    if (activeCase) { setAfferent(activeCase.initialAfferent); setEfferent(activeCase.initialEfferent); setHydration(activeCase.initialHydration); setPermeability(activeCase.initialPermeability); }
+    if (!activeCase) return;
+    if (!isVirtualRoom) ensurePatient();
+    const base = !isVirtualRoom && patient
+      ? deriveRenalBaselineFromSNA(patient.vitals, { afferent: activeCase.initialAfferent, efferent: activeCase.initialEfferent })
+      : { afferent: activeCase.initialAfferent, efferent: activeCase.initialEfferent };
+    setAfferent(base.afferent); setEfferent(base.efferent);
+    setHydration(activeCase.initialHydration); setPermeability(activeCase.initialPermeability);
   }, [activeCase]);
 
-  const renal = useMemo(() => computeRenal(afferent, efferent, hydration, permeability), [afferent, efferent, hydration, permeability]);
+  const serumGlycemia = !isVirtualRoom ? patient?.vitals.glycemia : undefined;
+  const renal = useMemo(
+    () => computeRenal(afferent, efferent, hydration, permeability, serumGlycemia),
+    [afferent, efferent, hydration, permeability, serumGlycemia]
+  );
+
+  useEffect(() => {
+    if (!activeCase || isVirtualRoom) return;
+    updateFromModule(SLUG, publishRenalVitals(afferent, efferent, hydration, permeability, renal), activeCase.title);
+  }, [afferent, efferent, hydration, permeability, serumGlycemia, activeCase, isVirtualRoom]);
 
   const barData = [
     { name: "Filtrado", value: renal.filtered },
@@ -212,6 +216,8 @@ export default function SimuladorDepuracaoRenal() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
