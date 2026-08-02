@@ -16,6 +16,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import { GAME_LABELS } from "@/data/virtualRoomGames";
+import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
 
 export const SIMULATOR_LABELS: Record<string, string> = {
   ...GAME_LABELS,
@@ -645,6 +646,31 @@ export default function Analytics() {
     };
   }, [allRoomIds.join(","), queryClient]);
 
+  // ── Risco por aluno (item 05 do roadmap): heurística client-side sobre dados já buscados,
+  // agrupando por e-mail quando disponível (participante pode ter entrado em mais de uma sala) ──
+  const riskGroups = new Map<string, { name: string; participantIds: string[]; roomIds: Set<string> }>();
+  (allParticipants as any[]).forEach((p: any) => {
+    const key = (p.participant_email || "").toLowerCase() || `id:${p.id}`;
+    const g = riskGroups.get(key) || { name: p.participant_name, participantIds: [] as string[], roomIds: new Set<string>() };
+    g.participantIds.push(p.id);
+    g.roomIds.add(p.room_id);
+    riskGroups.set(key, g);
+  });
+  const atRiskStudents = Array.from(riskGroups.values())
+    .map((g) => ({
+      name: g.name,
+      roomsCount: g.roomIds.size,
+      risk: computeStudentRisk({
+        participantIds: g.participantIds,
+        roomIds: Array.from(g.roomIds),
+        allSubmissions: allSubmissions as any[],
+        allActivities: allActivities as any[],
+      }),
+    }))
+    .filter((s) => s.risk.tier !== "none")
+    .sort((a, b) => b.risk.flags.length - a.risk.flags.length)
+    .slice(0, 8);
+
   const totalStudents = allParticipants.length;
   const totalSubmissions = allSubmissions.length;
   const avgScore = totalSubmissions > 0
@@ -797,6 +823,30 @@ export default function Analytics() {
           <div className="relative">
             {!isPremium && <PremiumOverlay onUpgrade={handleUpgrade} />}
             <div className={!isPremium ? "pointer-events-none select-none filter blur-sm" : ""}>
+              {atRiskStudents.length > 0 && (
+                <Card className="mb-6 border-amber-300/60 dark:border-amber-800/60">
+                  <CardHeader>
+                    <CardTitle className="text-base">Alunos que precisam de atenção</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      Sinal derivado de queda de desempenho, atividades não concluídas e tempo de resposta atípico — não é uma nota, é um alerta para revisar antes da prova.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {atRiskStudents.map((s, i) => {
+                      const badge = riskBadgeProps(s.risk.tier);
+                      return (
+                        <div key={i} className="flex items-center justify-between gap-3 p-2 rounded-md border border-border text-sm">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{s.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{s.risk.flags.join(" · ")}</p>
+                          </div>
+                          {badge && <Badge className={badge.className}>{badge.label}</Badge>}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader><CardTitle className="text-base">Média por Simulador</CardTitle></CardHeader>

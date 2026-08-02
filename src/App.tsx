@@ -169,11 +169,13 @@ import Planos from "./pages/Planos";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import SalasVirtuais from "./pages/SalasVirtuais";
+import SalaAoVivo from "./pages/SalaAoVivo";
 import Turmas from "./pages/Turmas";
 import TurmaDetalhe from "./pages/TurmaDetalhe";
 import SalaDetalhe from "./pages/SalaDetalhe";
 import SalaVirtualAluno from "./pages/SalaVirtualAluno";
 import SalaJogoRunner from "./pages/SalaJogoRunner";
+import LiveTeamCase from "./pages/simuladores/LiveTeamCase";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Marketplace from "./pages/Marketplace";
 import Gamificacao from "./pages/Gamificacao";
@@ -255,6 +257,7 @@ const App = () => (
               {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/jogo/:gameSlug" element={<SalaJogoRunner />} />
+              <Route path="/sala/equipe/:activityId" element={<LiveTeamCase />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/metodo-soap" element={<SimuladorSOAP />} />
               <Route path="/sala/simulador/mai" element={<SimuladorMAI />} />
@@ -525,6 +528,7 @@ const App = () => (
               <Route path="/suporte" element={<Suporte />} />
               {/* /planos is handled as a standalone route below */}
               <Route path="/salas-virtuais" element={<SalasVirtuais />} />
+              <Route path="/salas-virtuais/:roomId/ao-vivo/:activityId" element={<SalaAoVivo />} />
               <Route path="/turmas" element={<Turmas />} />
               <Route path="/turmas/:id" element={<TurmaDetalhe />} />
               <Route path="/turmas/:classId/salas/:roomId" element={<SalaDetalhe />} />

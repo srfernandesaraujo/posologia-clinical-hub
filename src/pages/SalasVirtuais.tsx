@@ -21,6 +21,7 @@ import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/C
 import { getNativeCases } from "@/data/nativeCaseCatalog";
 import { VIRTUAL_ROOM_GAMES, VIRTUAL_ROOM_GAME_CATEGORIES, isGameSlug } from "@/data/virtualRoomGames";
 import { useClasses } from "@/hooks/useClasses";
+import { LIVE_TEAM_CASES, getLiveTeamCase } from "@/data/liveTeamCases/sepseGrave";
 
 interface ToolOption {
   slug: string;
@@ -513,9 +514,10 @@ export default function SalasVirtuais() {
       const pin = generatePin();
       const isLegacy = validActivities.length === 1;
 
-      // For native cases, don't store in case_id (UUID FK). Store in description or custom field.
-      const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") ? caseId : null;
+      // For native cases and live-team-case pilots, don't store in case_id (UUID FK). Store in custom field.
+      const getDbCaseId = (caseId: string) => caseId && !caseId.startsWith("native:") && !caseId.startsWith("live:") ? caseId : null;
       const getNativeCaseIndex = (caseId: string) => caseId?.startsWith("native:") ? parseInt(caseId.replace("native:", "")) : null;
+      const getLiveTeamCaseKey = (caseId: string) => caseId?.startsWith("live:") ? caseId.replace("live:", "") : null;
 
       if (restrictedAccess && authorizedStudents.length === 0) {
         throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
@@ -538,17 +540,28 @@ export default function SalasVirtuais() {
         .single();
       if (roomError) throw roomError;
 
-      const activityRows = validActivities.map((a, i) => ({
-        room_id: roomData.id,
-        simulator_slug: a.simulatorSlug,
-        case_id: getDbCaseId(a.caseId),
-        position: i,
-        custom_challenges: a.customChallenges
-          ? { ...a.customChallenges, nativeCaseIndex: getNativeCaseIndex(a.caseId) }
-          : getNativeCaseIndex(a.caseId) !== null
-            ? { nativeCaseIndex: getNativeCaseIndex(a.caseId) }
-            : null,
-      }));
+      const activityRows = validActivities.map((a, i) => {
+        if (a.simulatorSlug === "live-team-case") {
+          return {
+            room_id: roomData.id,
+            simulator_slug: a.simulatorSlug,
+            case_id: null,
+            position: i,
+            custom_challenges: { liveTeamCaseKey: getLiveTeamCaseKey(a.caseId) },
+          };
+        }
+        return {
+          room_id: roomData.id,
+          simulator_slug: a.simulatorSlug,
+          case_id: getDbCaseId(a.caseId),
+          position: i,
+          custom_challenges: a.customChallenges
+            ? { ...a.customChallenges, nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+            : getNativeCaseIndex(a.caseId) !== null
+              ? { nativeCaseIndex: getNativeCaseIndex(a.caseId) }
+              : null,
+        };
+      });
 
       const { error: actError } = await supabase
         .from("room_activities")
@@ -777,6 +790,13 @@ export default function SalasVirtuais() {
   };
 
   const addActivity = () => setActivities([...activities, { category: "", simulatorSlug: "", caseId: "", instruction: "", customChallenges: null }]);
+  const addLiveTeamCaseActivity = () => setActivities([...activities, {
+    category: "Caso em Equipe",
+    simulatorSlug: "live-team-case",
+    caseId: `live:${Object.keys(LIVE_TEAM_CASES)[0]}`,
+    instruction: "",
+    customChallenges: null,
+  }]);
   const removeActivity = (i: number) => {
     if (activities.length <= 1) return;
     setActivities(activities.filter((_, idx) => idx !== i));
@@ -1051,9 +1071,14 @@ export default function SalasVirtuais() {
                   {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador")}
                 </Label>
                 {isExamMode && (
-                  <Button variant="outline" size="sm" onClick={addActivity}>
-                    <Plus className="h-4 w-4 mr-1" />Adicionar Atividade
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={addActivity}>
+                      <Plus className="h-4 w-4 mr-1" />Adicionar Atividade
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={addLiveTeamCaseActivity}>
+                      <Users className="h-4 w-4 mr-1" />Caso em Equipe (ao vivo)
+                    </Button>
+                  </div>
                 )}
               </div>
               <div className="space-y-3">
@@ -1083,6 +1108,17 @@ export default function SalasVirtuais() {
                         )}
 
                         <div className="space-y-3">
+                          {act.simulatorSlug === "live-team-case" ? (
+                            <div className="rounded-md border border-dashed p-3 bg-muted/30 space-y-1">
+                              <p className="text-sm font-medium flex items-center gap-1.5">
+                                🧑‍⚕️ Caso em Equipe (ao vivo) — {getLiveTeamCase(act.caseId.replace("live:", ""))?.title || act.caseId}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Papéis: {getLiveTeamCase(act.caseId.replace("live:", ""))?.roles.map(r => r.label).join(", ")}. Você conduz a sessão ao vivo depois de criar a sala, em "Abrir sessão ao vivo" nos detalhes da sala.
+                              </p>
+                            </div>
+                          ) : (
+                          <>
                           {/* Step 1: Category */}
                           <div>
                             <Label className="text-xs">Categoria</Label>
@@ -1193,6 +1229,8 @@ export default function SalasVirtuais() {
                               )}
                             </div>
                           )}
+                          </>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -1245,7 +1283,16 @@ export default function SalasVirtuais() {
                 {roomActivities.map((act: any, i: number) => (
                   <div key={act.id} className="flex items-center gap-2 text-sm">
                     <Badge variant="outline" className="text-xs">{i + 1}</Badge>
-                    <span>{getToolLabel(act.simulator_slug)}</span>
+                    {act.simulator_slug === "live-team-case" ? (
+                      <>
+                        <span>🧑‍⚕️ {getLiveTeamCase(act.custom_challenges?.liveTeamCaseKey)?.title || "Caso em Equipe"}</span>
+                        <Button size="sm" variant="secondary" className="h-6 text-xs ml-auto" asChild>
+                          <Link to={`/salas-virtuais/${detailRoom.id}/ao-vivo/${act.id}`}>Abrir sessão ao vivo</Link>
+                        </Button>
+                      </>
+                    ) : (
+                      <span>{getToolLabel(act.simulator_slug)}</span>
+                    )}
                   </div>
                 ))}
               </div>

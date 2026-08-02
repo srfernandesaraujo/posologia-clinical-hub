@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
 
 export default function TurmaDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -65,6 +66,19 @@ export default function TurmaDetalhe() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("room_participants")
+        .select("*")
+        .in("room_id", roomIds);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: classActivities = [] } = useQuery({
+    queryKey: ["class-activities", id, roomIds],
+    enabled: roomIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("room_activities")
         .select("*")
         .in("room_id", roomIds);
       if (error) throw error;
@@ -230,6 +244,7 @@ export default function TurmaDetalhe() {
             rooms={rooms as any[]}
             participants={classParticipants as any[]}
             submissions={classSubmissions as any[]}
+            activities={classActivities as any[]}
             students={studentsQ.data || []}
           />
         </TabsContent>
@@ -267,7 +282,7 @@ function ConfigPanel({ turma, onSave, onDelete }: { turma: any; onSave: (p: any)
   );
 }
 
-function ClassAnalyticsPanel({ rooms, participants, submissions, students }: { rooms: any[]; participants: any[]; submissions: any[]; students: any[] }) {
+function ClassAnalyticsPanel({ rooms, participants, submissions, activities, students }: { rooms: any[]; participants: any[]; submissions: any[]; activities: any[]; students: any[] }) {
   const totalSubs = submissions.length;
   const avgScore = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.score || 0), 0) / totalSubs) : 0;
   const avgTime = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.time_spent_seconds || 0), 0) / totalSubs) : 0;
@@ -296,7 +311,13 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, students }: { r
     const subs = submissions.filter((sub: any) => pIds.has(sub.participant_id));
     const score = subs.length ? Math.round(subs.reduce((a: number, x: any) => a + (x.score || 0), 0) / subs.length) : 0;
     const roomsAttended = new Set(ps.map((p: any) => p.room_id)).size;
-    return { name: s.full_name, email: s.email, score, submissoes: subs.length, salas: roomsAttended };
+    const risk = computeStudentRisk({
+      participantIds: Array.from(pIds) as string[],
+      roomIds: ps.map((p: any) => p.room_id),
+      allSubmissions: submissions,
+      allActivities: activities,
+    });
+    return { name: s.full_name, email: s.email, score, submissoes: subs.length, salas: roomsAttended, risk };
   }).sort((a, b) => b.score - a.score);
 
   return (
@@ -335,26 +356,37 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, students }: { r
           ) : (
             <div className="border rounded-md divide-y divide-border">
               <div className="grid grid-cols-12 gap-2 p-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/30">
-                <div className="col-span-5">Aluno</div>
+                <div className="col-span-4">Aluno</div>
                 <div className="col-span-2 text-center">Salas</div>
                 <div className="col-span-2 text-center">Submissões</div>
-                <div className="col-span-3 text-right">Nota média</div>
+                <div className="col-span-2 text-right">Nota média</div>
+                <div className="col-span-2 text-right">Risco</div>
               </div>
-              {studentRows.map((r, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 p-2 text-sm items-center">
-                  <div className="col-span-5 min-w-0">
-                    <p className="font-medium truncate">{r.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+              {studentRows.map((r, i) => {
+                const badge = riskBadgeProps(r.risk.tier);
+                return (
+                  <div key={i} className="grid grid-cols-12 gap-2 p-2 text-sm items-center">
+                    <div className="col-span-4 min-w-0">
+                      <p className="font-medium truncate">{r.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                    </div>
+                    <div className="col-span-2 text-center">{r.salas}</div>
+                    <div className="col-span-2 text-center">{r.submissoes}</div>
+                    <div className="col-span-2 text-right">
+                      <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
+                        {r.submissoes > 0 ? r.score : "—"}
+                      </Badge>
+                    </div>
+                    <div className="col-span-2 text-right">
+                      {badge ? (
+                        <Badge className={badge.className} title={r.risk.flags.join(" · ")}>{badge.label}</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="col-span-2 text-center">{r.salas}</div>
-                  <div className="col-span-2 text-center">{r.submissoes}</div>
-                  <div className="col-span-3 text-right">
-                    <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
-                      {r.submissoes > 0 ? r.score : "—"}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

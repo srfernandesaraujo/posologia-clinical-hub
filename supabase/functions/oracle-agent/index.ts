@@ -223,9 +223,9 @@ Ambiente para professores criarem atividades para alunos:
 - Dois modos: Simulação Unitária ou Atividade Simulada (múltiplos simuladores)
 - Aluno acessa via /sala com o PIN (não precisa de conta)
 - Professor acompanha resultados em tempo real
-- Suporta Simuladores e Laboratórios Virtuais
+- Suporta Simuladores, Laboratórios Virtuais e a atividade "Caso em Equipe (ao vivo)" — veja seção dedicada abaixo
 - Enunciados pedagógicos por etapa
-- **Turmas** (/turmas) [Premium/Professor]: organiza alunos em turmas e vincula salas virtuais a cada turma
+- **Turmas** (/turmas) [Premium/Professor]: organiza alunos em turmas e vincula salas virtuais a cada turma; a tabela de desempenho por aluno também mostra o sinal de risco (veja seção dedicada abaixo)
 
 ### 7. FORMAÇÃO DOCENTE
 7 simuladores especializados para professores (Feedback Formativo, Elaboração de Questões, etc.)
@@ -236,7 +236,24 @@ Ambiente para professores criarem atividades para alunos:
 Agente de IA que analisa desempenho dos alunos em Salas Virtuais usando modelos pedagógicos (Pendleton, R2C2, ALOBA, Mini-CEX). Fluxo: selecionar sala → panorama automático → escolher instrumento → calibrar → gerar relatório.
 
 ### Analytics (/analytics) [Premium/Professor]
-Dashboard com estatísticas de desempenho das Salas Virtuais: scores, decisões corretas vs ideais, radar de competências, relatórios de laboratório.
+Dashboard com estatísticas de desempenho das Salas Virtuais: scores, decisões corretas vs ideais, radar de competências, relatórios de laboratório. Na aba Salas Virtuais, o card "Alunos que precisam de atenção" lista os participantes com mais sinais de risco entre todas as salas do professor — veja a seção dedicada "Sinal de risco por aluno" abaixo.
+
+### Caso em Equipe (ao vivo) — dentro de Salas Virtuais [Premium/Professor]
+Atividade multi-participante sincronizada ao vivo, disponível ao montar uma Atividade Simulada (roteiro multi-etapas) em Salas Virtuais — não é um simulador do catálogo dos 109+, é uma modalidade própria de Salas Virtuais para trabalho em equipe simultâneo.
+- Vários alunos assumem papéis diferentes (médico, farmacêutico, enfermagem) no mesmo caso clínico, na mesma sessão, e veem uma linha do tempo compartilhada evoluir em tempo real (Postgres Changes na tabela live_session_events) além de presença online de cada papel (Supabase Presence).
+- O professor injeta "intercorrências" do roteiro do caso ao vivo e conduz a sessão em "Abrir sessão ao vivo" (/salas-virtuais/:roomId/ao-vivo/:activityId, página SalaAoVivo.tsx): inicia a sessão, acompanha quem escolheu qual papel e quem está online, injeta intercorrências e encerra a sessão.
+- O aluno entra pela Sala Virtual normalmente (PIN) e, quando a atividade é do tipo Caso em Equipe, é levado a /sala/equipe/:activityId (LiveTeamCase.tsx) para escolher um papel livre e agir a partir do menu de ações daquele papel.
+- Ao encerrar a sessão, o professor gera automaticamente uma submissão (room_submissions, formato simulator_decisions) por participante, então o caso em equipe aparece nos gráficos/relatórios/ranking do Analytics normalmente — não há tela de relatório nova.
+- Participantes são anônimos (sem conta), como em qualquer Sala Virtual: toda escrita de aluno (entrar em papel, registrar ação) passa pela edge function live-session-access com service role, mesmo padrão de room-access.
+- Por enquanto há 1 caso-piloto hardcoded: "Sepse grave — admissão na UTI" (3 papéis) — ainda não existe editor de casos em equipe para o professor.
+- Reaproveita o gating Premium já existente de Salas Virtuais (useFeatureGating().canUseVirtualRooms) — não é um nível novo de assinatura.
+
+### Sinal de risco por aluno (Analytics e Turmas) [Premium/Professor]
+Badge "Observar" (1 sinal) ou "Atenção" (2+ sinais) que aparece na tabela "Desempenho por aluno", tanto na aba Salas Virtuais do Analytics (card "Alunos que precisam de atenção") quanto na aba Analytics de cada Turma (/turmas/:id). É calculado 100% no navegador a partir de dados que a plataforma já coleta em room_submissions/room_participants/room_activities — sem tabela nova e sem IA/ML (src/lib/studentRisk.ts). Três heurísticas:
+- **Tendência de nota**: queda de 15+ pontos entre a média da primeira e da segunda metade das submissões da pessoa (só calculado com 4+ submissões).
+- **Abandono**: entrou na sala e nunca enviou uma submissão, ou não concluiu todas as etapas de uma sequência de atividades multi-etapas.
+- **Anomalia de tempo por etapa**: tempo de resposta muito acima ou abaixo da mediana da turma na mesma atividade — só é calculado quando há 3+ colegas com tempo real (time_spent_seconds > 0) registrado nessa atividade, já que a maioria dos simuladores clínicos não grava tempo real.
+Nunca trate esse sinal como uma nota ou como diagnóstico — é um alerta para o professor revisar, não uma previsão de reprovação.
 
 ### Marketplace (/marketplace) [Premium]
 Loja de ferramentas criadas pela comunidade. Calculadoras custam R$5, simuladores R$10. Autores recebem créditos na fatura. Toda calculadora publicada passa por curadoria clínica: a publicação é imediata, mas dispara em segundo plano a edge function audit-marketplace-tool, que audita fórmula/campos via IA contra literatura e faixas de referência clínicas (veredito pending/clear/flagged). Se sinalizar risco clínico real, a ferramenta é despublicada automaticamente até revisão humana. O selo "Validado clinicamente" (ícone de escudo nos cards) só aparece depois que um admin aprova manualmente em /admin/marketplace-review — a auditoria de IA sozinha nunca concede o selo.

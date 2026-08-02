@@ -49,10 +49,15 @@ const TOOL_LABELS: Record<string, string> = {
   "lab-simulacao-realistica": "Lab: Simulação Realística",
   "lab-pericia-forense": "Lab: Perícia Forense",
   "lab-modelagem-molecular": "Lab: Modelagem Molecular",
+  "live-team-case": "🧑‍⚕️ Caso em Equipe (ao vivo)",
   ...GAME_LABELS,
 };
 
-function getRouteForActivity(slug: string, caseId?: string | null): string {
+function getRouteForActivity(slug: string, caseId?: string | null, activityId?: string | null): string {
+  if (slug === "live-team-case") {
+    return `/sala/equipe/${activityId}`;
+  }
+
   if (isGameSlug(slug)) {
     return `/sala/jogo/${slug}`;
   }
@@ -270,7 +275,7 @@ export default function SalaVirtualAluno() {
         nativeCaseIndex,
         viewOnly: viewOnlyFlag,
       }));
-      navigate(getRouteForActivity(room.simulator_slug, room.case_id));
+      navigate(getRouteForActivity(room.simulator_slug, room.case_id, legacyAct?.id));
     } else {
       if (resumeFromIndex >= activities.length) {
         toast.success("Você já completou todas as atividades desta sala.");
@@ -307,7 +312,7 @@ export default function SalaVirtualAluno() {
       })),
       viewOnly: viewOnlyFlag,
     }));
-    navigate(getRouteForActivity(act.simulator_slug, act.case_id));
+    navigate(getRouteForActivity(act.simulator_slug, act.case_id, act.id));
   };
 
   if (step === "pin") {
