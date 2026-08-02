@@ -1,14 +1,19 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { computeCompetencyBreakdown, generateCertificateCode } from "@/lib/osceCertificate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, Users, BarChart3, Settings as SettingsIcon, Info, Copy, Mail,
-  UserCheck, UserPlus, ClipboardList, Trash2,
+  UserCheck, UserPlus, ClipboardList, Trash2, Award, ShieldOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useClassStudents } from "@/hooks/useClasses";
@@ -16,6 +21,57 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import { ParticipantDetail, SIMULATOR_LABELS } from "./Analytics";
+
+function gerarCertificadoPDF(cert: {
+  student_name: string;
+  exam_title: string;
+  final_score: number;
+  competency_breakdown: { category: string; score: number; activityCount: number }[];
+  integrity_flags: { tabSwitchCount?: number };
+  verification_code: string;
+  issued_at: string;
+}) {
+  const doc = new jsPDF();
+  const w = doc.internal.pageSize.getWidth();
+  let y = 22;
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("Certificado OSCE — Posologia", w / 2, y, { align: "center" });
+  y += 14;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Aluno(a): ${cert.student_name}`, 14, y); y += 7;
+  doc.text(`Prova: ${cert.exam_title}`, 14, y); y += 7;
+  doc.text(`Data: ${new Date(cert.issued_at).toLocaleDateString("pt-BR")}`, 14, y); y += 10;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Nota final: ${cert.final_score}%`, 14, y); y += 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Desempenho por competência:", 14, y); y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  cert.competency_breakdown.forEach((c) => {
+    doc.text(`- ${c.category}: ${c.score}% (${c.activityCount} estação${c.activityCount > 1 ? "s" : ""})`, 18, y);
+    y += 6;
+  });
+  y += 4;
+  const tabSwitches = cert.integrity_flags?.tabSwitchCount ?? 0;
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text(
+    tabSwitches > 0
+      ? `Sinal de integridade: ${tabSwitches} evento(s) de perda de foco/tela-cheia registrados durante a prova.`
+      : "Sinal de integridade: nenhum evento de perda de foco registrado durante a prova.",
+    14, y,
+  );
+  y += 10;
+  doc.setTextColor(0);
+  doc.setFontSize(9);
+  doc.text(`Código de verificação: ${cert.verification_code}`, 14, y); y += 5;
+  doc.text(`Verifique em: simulador.posologia.app/verificar-certificado/${cert.verification_code}`, 14, y);
+  doc.save(`certificado-osce-${cert.student_name.trim().replace(/\s+/g, "-").toLowerCase()}.pdf`);
+}
 
 export default function SalaDetalhe() {
   const { classId, roomId } = useParams<{ classId: string; roomId: string }>();
@@ -65,7 +121,75 @@ export default function SalaDetalhe() {
     },
   });
 
+  const { data: certificates = [] } = useQuery({
+    queryKey: ["osce-certificates", roomId],
+    enabled: !!roomId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("osce_certificates").select("*").eq("room_id", roomId!);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const { list: studentsQ } = useClassStudents(classId);
+  const { user } = useAuth();
+  const { isPremium, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
+
+  const certificateByParticipant = useMemo(() => {
+    const map = new Map<string, any>();
+    (certificates as any[]).forEach((c) => map.set(c.participant_id, c));
+    return map;
+  }, [certificates]);
+
+  const issueCertificate = useMutation({
+    mutationFn: async (participant: any) => {
+      if (!isPremium) {
+        showUpgrade("Certificados OSCE");
+        throw new Error("__upgrade_required__");
+      }
+      const pSubs = (submissions as any[]).filter((s) => s.participant_id === participant.id);
+      const finalScore = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + (s.score || 0), 0) / pSubs.length) : 0;
+      const breakdown = computeCompetencyBreakdown(activities as any, pSubs);
+      const tabSwitchCount = pSubs.reduce((a, s) => a + (s.tab_switch_count || 0), 0);
+      const { data, error } = await (supabase as any)
+        .from("osce_certificates")
+        .insert({
+          room_id: roomId,
+          participant_id: participant.id,
+          verification_code: generateCertificateCode(),
+          student_name: participant.participant_name,
+          exam_title: room?.title || "Prova",
+          final_score: finalScore,
+          competency_breakdown: breakdown as any,
+          integrity_flags: { tabSwitchCount } as any,
+          issued_by: user!.id,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (cert) => {
+      qc.invalidateQueries({ queryKey: ["osce-certificates", roomId] });
+      gerarCertificadoPDF(cert as any);
+      toast.success("Certificado emitido");
+    },
+    onError: (e: any) => {
+      if (e.message !== "__upgrade_required__") toast.error(e.message);
+    },
+  });
+
+  const revokeCertificate = useMutation({
+    mutationFn: async (certId: string) => {
+      const { error } = await (supabase as any).from("osce_certificates").update({ revoked_at: new Date().toISOString() }).eq("id", certId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["osce-certificates", roomId] });
+      toast.success("Certificado revogado");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const deleteParticipant = useMutation({
     mutationFn: async (pid: string) => {
@@ -131,6 +255,7 @@ export default function SalaDetalhe() {
 
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-6xl">
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
       <div className="space-y-2">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link to={classId ? `/turmas/${classId}` : "/salas-virtuais"}>
@@ -302,6 +427,45 @@ export default function SalaDetalhe() {
                           })}
                         </div>
                       )}
+                      {/* Certificado OSCE — só quando a prova está completa para este aluno */}
+                      {isExam && activities.length > 0 && pSubs.length >= activities.length && (() => {
+                        const cert = certificateByParticipant.get(p.id);
+                        return (
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            {cert && !cert.revoked_at ? (
+                              <>
+                                <Badge variant="outline" className="text-xs">
+                                  <Award className="h-3 w-3 mr-1" /> Certificado emitido
+                                </Badge>
+                                <Button
+                                  variant="ghost" size="sm" className="h-7 text-xs"
+                                  onClick={() => gerarCertificadoPDF(cert)}
+                                >
+                                  Baixar PDF
+                                </Button>
+                                <Button
+                                  variant="ghost" size="sm" className="h-7 text-xs text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Revogar o certificado de "${p.participant_name}"?`)) {
+                                      revokeCertificate.mutate(cert.id);
+                                    }
+                                  }}
+                                >
+                                  <ShieldOff className="h-3 w-3 mr-1" /> Revogar
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="outline" size="sm" className="h-7 text-xs"
+                                disabled={issueCertificate.isPending}
+                                onClick={() => issueCertificate.mutate(p)}
+                              >
+                                <Award className="h-3 w-3 mr-1" /> Emitir certificado
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {pSubs.map((sub: any) => (
                         <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} />
                       ))}

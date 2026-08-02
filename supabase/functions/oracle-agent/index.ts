@@ -224,6 +224,7 @@ Ambiente para professores criarem atividades para alunos:
 - Aluno acessa via /sala com o PIN (não precisa de conta)
 - Professor acompanha resultados em tempo real
 - Suporta Simuladores, Laboratórios Virtuais e a atividade "Caso em Equipe (ao vivo)" — veja seção dedicada abaixo
+- Ao final de uma Atividade Simulada (prova com várias estações) o professor pode emitir um certificado OSCE por aluno — veja seção dedicada abaixo
 - Enunciados pedagógicos por etapa
 - **Turmas** (/turmas) [Premium/Professor]: organiza alunos em turmas e vincula salas virtuais a cada turma; a tabela de desempenho por aluno também mostra o sinal de risco (veja seção dedicada abaixo)
 
@@ -254,6 +255,15 @@ Badge "Observar" (1 sinal) ou "Atenção" (2+ sinais) que aparece na tabela "Des
 - **Abandono**: entrou na sala e nunca enviou uma submissão, ou não concluiu todas as etapas de uma sequência de atividades multi-etapas.
 - **Anomalia de tempo por etapa**: tempo de resposta muito acima ou abaixo da mediana da turma na mesma atividade — só é calculado quando há 3+ colegas com tempo real (time_spent_seconds > 0) registrado nessa atividade, já que a maioria dos simuladores clínicos não grava tempo real.
 Nunca trate esse sinal como uma nota ou como diagnóstico — é um alerta para o professor revisar, não uma previsão de reprovação.
+
+### Certificado OSCE (dentro de Salas Virtuais) [Premium/Professor]
+Não é um modo novo — é o desfecho final do formato "Atividade Simulada" (roteiro multi-etapas com estações avaliadas) que já existia em Salas Virtuais. Quando um aluno completa todas as estações do roteiro (uma submissão por atividade), o botão "Emitir certificado" aparece na aba de submissões da sala (SalaDetalhe.tsx).
+- **Nota final**: média das notas de todas as estações do aluno.
+- **Desempenho por competência**: as estações são agrupadas pela mesma categoria de simulador usada no Mapa de Competências (src/lib/osceCertificate.ts, computeCompetencyBreakdown), não por uma taxonomia separada.
+- **Sinal de integridade**: contagem de trocas de aba/perda de foco e saídas de tela-cheia durante as estações (tab_switch_count em room_submissions, capturado por useVirtualRoomCase via visibilitychange/fullscreenchange) — é um sinal leve e não-bloqueante, sem webcam nem verificação de identidade.
+- **Emissão**: PDF gerado no navegador (jsPDF) com um código de verificação único; o professor pode revogar o certificado a qualquer momento.
+- **Verificação pública**: em /verificar-certificado/:codigo, sem necessidade de login, via edge function certificate-verify (service role) — a tabela osce_certificates não tem nenhuma policy de leitura pública (evitaria vazar nome de aluno certificado), então essa edge function é o único caminho de consulta por código.
+Reaproveita o gating Premium já existente de Salas Virtuais — não é um plano ou nível de assinatura novo. Nunca confunda com proctoring pesado: não há verificação de identidade nem webcam, apenas o sinal leve de troca de aba/tela-cheia descrito acima.
 
 ### Marketplace (/marketplace) [Premium]
 Loja de ferramentas criadas pela comunidade. Calculadoras custam R$5, simuladores R$10. Autores recebem créditos na fatura. Toda calculadora publicada passa por curadoria clínica: a publicação é imediata, mas dispara em segundo plano a edge function audit-marketplace-tool, que audita fórmula/campos via IA contra literatura e faixas de referência clínicas (veredito pending/clear/flagged). Se sinalizar risco clínico real, a ferramenta é despublicada automaticamente até revisão humana. O selo "Validado clinicamente" (ícone de escudo nos cards) só aparece depois que um admin aprova manualmente em /admin/marketplace-review — a auditoria de IA sozinha nunca concede o selo.

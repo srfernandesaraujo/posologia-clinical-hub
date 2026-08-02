@@ -78,8 +78,9 @@ export function ExamFeedbackOverlay({
             <div className="bg-muted/50 rounded-lg p-4 text-left text-sm space-y-1">
               <p className="font-medium">📋 Próximos passos:</p>
               <p className="text-muted-foreground">
-                Seus resultados foram registrados. O professor poderá analisar seu desempenho 
-                em cada atividade e fornecer um feedback mais estruturado.
+                Seus resultados foram registrados. O professor poderá analisar seu desempenho
+                em cada atividade e, se a prova atender aos critérios, emitir um certificado
+                com o detalhamento por competência.
               </p>
             </div>
           )}

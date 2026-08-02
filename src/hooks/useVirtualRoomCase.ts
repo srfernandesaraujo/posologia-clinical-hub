@@ -20,6 +20,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
   const [submitted, setSubmitted] = useState(false);
   const [examFeedback, setExamFeedback] = useState<ExamFeedback | null>(null);
   const roomCtxRef = useRef<any>(null);
+  const tabSwitchCountRef = useRef(0);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("virtualRoom");
@@ -63,6 +64,26 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
       }
     } catch {}
   }, [simulatorSlug, builtInCases]);
+
+  // Sinal leve de integridade de prova (item 10, OSCE): registra troca de aba/perda de
+  // foco e saída de tela-cheia durante a estação, sem bloquear o aluno nem usar webcam.
+  // Centralizado aqui (em vez de em cada página de simulador) para não precisar tocar
+  // os ~100 arquivos de simulador individualmente.
+  useEffect(() => {
+    if (!isVirtualRoom) return;
+    const onVisibilityChange = () => {
+      if (document.hidden) tabSwitchCountRef.current += 1;
+    };
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) tabSwitchCountRef.current += 1;
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, [isVirtualRoom]);
 
   const submitResults = async (opts: {
     stepIndex?: number;
@@ -145,7 +166,8 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
         actions: opts.actions as any,
         time_spent_seconds: opts.timeSpentSeconds ?? 0,
         activity_id: ctx.activityId || null,
-      });
+        tab_switch_count: tabSwitchCountRef.current,
+      } as any);
       if (!error) {
         setSubmitted(true);
 
@@ -200,6 +222,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     sessionStorage.removeItem("hasChallenges");
     sessionStorage.removeItem("challengeSubmitted");
     sessionStorage.removeItem("challengeScore");
+    tabSwitchCountRef.current = 0;
 
     const nextIndex = ctx.activityIndex + 1;
     if (nextIndex < ctx.totalActivities) {
