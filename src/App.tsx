@@ -206,6 +206,7 @@ import PoliticaCookies from "./pages/PoliticaCookies";
 import Vitrine from "./pages/Vitrine";
 import DocumentacaoPublica from "./pages/DocumentacaoPublica";
 import VerificarCertificado from "./pages/VerificarCertificado";
+import VerificarCredito from "./pages/VerificarCredito";
 import ContatoPublico from "./pages/ContatoPublico";
 import MedView3D from "./pages/MedView3D";
 import OrtopediaProteses from "./pages/medview3d/OrtopediaProteses";
@@ -256,6 +257,7 @@ const App = () => (
               <Route path="/vitrine" element={<Vitrine />} />
               <Route path="/docs" element={<DocumentacaoPublica />} />
               <Route path="/verificar-certificado/:codigo" element={<VerificarCertificado />} />
+              <Route path="/verificar-credito/:codigo" element={<VerificarCredito />} />
               {/* /planos is handled as a standalone route below */}
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/jogo/:gameSlug" element={<SalaJogoRunner />} />

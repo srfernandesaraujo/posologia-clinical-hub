@@ -14,6 +14,7 @@ export interface CategoryMastery {
   category: string;
   masteryPct: number;
   attemptCount: number;
+  distinctSimulators: number;
   lastAttemptAt: string;
   reliable: boolean;
 }
@@ -30,16 +31,17 @@ async function fetchMastery(userId: string): Promise<CategoryMastery[]> {
     .order("created_at", { ascending: false })
     .limit(500);
 
-  const byCategory: Record<string, { weightedSum: number; weightTotal: number; count: number; lastAttemptAt: string }> = {};
+  const byCategory: Record<string, { weightedSum: number; weightTotal: number; count: number; slugs: Set<string>; lastAttemptAt: string }> = {};
 
   for (const a of attempts || []) {
     const category = getSimulatorCategory(a.simulator_slug);
     if (!category) continue;
     const weight = Math.pow(0.5, daysBetween(a.created_at) / HALF_LIFE_DAYS);
-    const bucket = byCategory[category] || { weightedSum: 0, weightTotal: 0, count: 0, lastAttemptAt: a.created_at };
+    const bucket = byCategory[category] || { weightedSum: 0, weightTotal: 0, count: 0, slugs: new Set<string>(), lastAttemptAt: a.created_at };
     bucket.weightedSum += a.score * weight;
     bucket.weightTotal += weight;
     bucket.count += 1;
+    bucket.slugs.add(a.simulator_slug);
     if (a.created_at > bucket.lastAttemptAt) bucket.lastAttemptAt = a.created_at;
     byCategory[category] = bucket;
   }
@@ -49,6 +51,7 @@ async function fetchMastery(userId: string): Promise<CategoryMastery[]> {
       category,
       masteryPct: b.weightTotal > 0 ? Math.round(b.weightedSum / b.weightTotal) : 0,
       attemptCount: b.count,
+      distinctSimulators: b.slugs.size,
       lastAttemptAt: b.lastAttemptAt,
       reliable: b.count >= MIN_ATTEMPTS_RELIABLE,
     }))

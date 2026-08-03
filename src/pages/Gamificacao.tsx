@@ -1,14 +1,78 @@
-import { Trophy, Flame, Target, Medal, Star, Award, TrendingUp, Brain } from "lucide-react";
+import { Trophy, Flame, Target, Medal, Star, Award, TrendingUp, Brain, GraduationCap, Download, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { useGamification, BADGE_DEFINITIONS, POINTS } from "@/hooks/useGamification";
 import { useMastery } from "@/hooks/useMastery";
+import { useEducationCredits, useIssueEducationCredit } from "@/hooks/useEducationCredits";
+import { generateEducationCreditPDF } from "@/lib/educationCredit";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+const MIN_MASTERY_FOR_CREDIT = 70;
+const MIN_SIMULATORS_FOR_CREDIT = 3;
+
+function EducationCreditAction({ category, masteryPct, distinctSimulators }: { category: string; masteryPct: number; distinctSimulators: number }) {
+  const { data: credits = [] } = useEducationCredits();
+  const issueCredit = useIssueEducationCredit();
+  const { isPremium, showUpgrade, upgradeOpen, setUpgradeOpen, upgradeFeature } = useFeatureGating();
+
+  const existing = credits.find((c) => c.track_category === category);
+  const eligible = masteryPct >= MIN_MASTERY_FOR_CREDIT && distinctSimulators >= MIN_SIMULATORS_FOR_CREDIT;
+
+  if (existing) {
+    return (
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+          <GraduationCap className="h-3 w-3 mr-1" /> Crédito emitido
+        </Badge>
+        <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => generateEducationCreditPDF(existing)}>
+          <Download className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  if (!eligible) return null;
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs"
+        disabled={issueCredit.isPending}
+        onClick={() => {
+          if (!isPremium) {
+            showUpgrade("Créditos de educação continuada");
+            return;
+          }
+          issueCredit.mutate(category, {
+            onSuccess: (result) => {
+              if (result.issued) {
+                toast.success("Crédito de educação continuada emitido!");
+              } else {
+                toast.error("Trilha ainda não elegível para crédito.");
+              }
+            },
+            onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao emitir crédito"),
+          });
+        }}
+      >
+        {issueCredit.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <GraduationCap className="h-3.5 w-3.5 mr-1" />}
+        Emitir crédito de educação continuada
+      </Button>
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
+    </>
+  );
+}
 
 function StreakDisplay({ streak }: { streak: number }) {
   return (
@@ -321,6 +385,26 @@ export default function Gamificacao() {
                       ))}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" /> Créditos de Educação Continuada
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Ao atingir {MIN_MASTERY_FOR_CREDIT}% de maestria com pelo menos {MIN_SIMULATORS_FOR_CREDIT} simuladores
+                    distintos concluídos numa categoria, você pode emitir um certificado verificável de trilha concluída.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {reliableMastery.map((m) => (
+                    <div key={m.category} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 text-sm">
+                      <span>{m.category} <span className="text-muted-foreground">({m.masteryPct}%, {m.distinctSimulators} simuladores)</span></span>
+                      <EducationCreditAction category={m.category} masteryPct={m.masteryPct} distinctSimulators={m.distinctSimulators} />
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
