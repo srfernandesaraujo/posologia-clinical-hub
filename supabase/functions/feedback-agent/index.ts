@@ -78,13 +78,60 @@ Com todas as informações (dados da simulação + respostas do professor), gere
 - Ao apresentar scores, use porcentagens quando possível.
 - Identifique padrões nas ações dos alunos (erros recorrentes, acertos consistentes).`;
 
+const FINALIZE_SYSTEM_PROMPT = `Você acabou de conduzir, com um professor, uma conversa de feedback estruturado sobre o desempenho de alunos em uma sala de simulação. Sua tarefa agora é converter essa conversa inteira (e os dados brutos da sala) numa cadeia de raciocínio explícita e auditável — não um novo texto de feedback, mas a EXPLICAÇÃO do critério por trás do feedback já dado.
+
+Gere sempre via tool calling usando "submit_reasoning_chain":
+- "instrument": qual instrumento pedagógico foi de fato aplicado na conversa (Pendleton, R2C2, SBI, etc. — o que foi escolhido/usado, não uma lista de opções).
+- "criteria": um item por critério/dimensão realmente avaliado ao longo da conversa. Para cada um: "criterion" (o nome do critério, ex.: "Ajuste de dose renal"), "observation" (o dado REAL da sala que fundamentou o julgamento — cite scores, ações ou tempos específicos, nunca invente), "reference" (nome do instrumento/etapa ou diretriz citada, ou null se não houver uma referência específica), "verdict" (ex.: "Atingido", "Parcial", "Não atingido", em texto curto).
+- "summary": a síntese final do feedback, no mesmo tom e conteúdo que você já deu na conversa — não repita passo a passo, sintetize.
+
+Seja fiel à conversa: não invente critérios que não foram discutidos, e não invente dados que não estão em roomContext.`;
+
+interface ReasoningCriterion {
+  criterion: string;
+  observation: string;
+  reference: string | null;
+  verdict: string;
+}
+
+const finalizeTools = [
+  {
+    type: "function",
+    function: {
+      name: "submit_reasoning_chain",
+      description: "Submit the structured reasoning chain behind the feedback already given",
+      parameters: {
+        type: "object",
+        properties: {
+          instrument: { type: "string" },
+          criteria: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                criterion: { type: "string" },
+                observation: { type: "string" },
+                reference: { type: ["string", "null"] },
+                verdict: { type: "string" },
+              },
+              required: ["criterion", "observation", "reference", "verdict"],
+            },
+          },
+          summary: { type: "string" },
+        },
+        required: ["instrument", "criteria", "summary"],
+      },
+    },
+  },
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, roomContext } = await req.json();
+    const { messages, roomContext, finalize, room_id: roomId } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -106,6 +153,85 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser();
         userId = user?.id ?? null;
       } catch { /* ignore */ }
+    }
+
+    if (finalize) {
+      // Diferente do resto desta function (auth best-effort): salvar a cadeia de
+      // raciocínio grava em banco, então exige autenticação real e posse da sala.
+      if (!userId) {
+        return new Response(
+          JSON.stringify({ error: "Não autenticado." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!roomId) {
+        return new Response(
+          JSON.stringify({ error: "Campo 'room_id' é obrigatório para finalizar." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      const { data: room, error: roomError } = await adminClient
+        .from("virtual_rooms")
+        .select("id, created_by")
+        .eq("id", roomId)
+        .maybeSingle();
+      if (roomError || !room || room.created_by !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Sala não encontrada ou você não é o(a) responsável por ela." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const finalizeMessages = [
+        { role: "system", content: FINALIZE_SYSTEM_PROMPT },
+        ...(roomContext
+          ? [{ role: "system", content: `## DADOS DA SALA\n\`\`\`json\n${JSON.stringify(roomContext, null, 2)}\n\`\`\`` }]
+          : []),
+        ...messages,
+      ];
+
+      const { data, provider } = await callAI({
+        messages: finalizeMessages,
+        tools: finalizeTools,
+        tool_choice: { type: "function", function: { name: "submit_reasoning_chain" } },
+        temperature: 0.3,
+        userId,
+        promptType: "feedback-agent-finalize",
+      });
+
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) throw new Error("Resposta de finalização inválida (sem tool call)");
+
+      const parsed = JSON.parse(toolCall.function.arguments) as {
+        instrument: string;
+        criteria: ReasoningCriterion[];
+        summary: string;
+      };
+
+      const { data: inserted, error: insertError } = await adminClient
+        .from("ai_reasoning_traces")
+        .insert({
+          room_id: roomId,
+          created_by: userId,
+          instrument: parsed.instrument,
+          criteria: parsed.criteria,
+          summary: parsed.summary,
+          transcript: messages,
+        })
+        .select("*")
+        .single();
+      if (insertError) throw insertError;
+
+      return new Response(
+        JSON.stringify({ trace: inserted, provider }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const systemMessages: { role: string; content: string }[] = [

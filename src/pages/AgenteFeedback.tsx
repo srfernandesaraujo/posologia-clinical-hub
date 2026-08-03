@@ -5,12 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ReasoningTrail, type ReasoningTrailItem } from "@/components/ReasoningTrail";
 import {
   Send, Bot, User, Loader2, RotateCcw, MessageSquare, Copy, Check,
-  DoorOpen, Users, ArrowLeft, Clock, Target,
+  DoorOpen, Users, ArrowLeft, Clock, Target, ClipboardCheck, History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+interface ReasoningTrace {
+  id: string;
+  room_id: string;
+  instrument: string | null;
+  criteria: { criterion: string; observation: string; reference: string | null; verdict: string }[];
+  summary: string;
+  created_at: string;
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -90,6 +100,10 @@ export default function AgenteFeedback() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [traces, setTraces] = useState<ReasoningTrace[]>([]);
+  const [activeTrace, setActiveTrace] = useState<ReasoningTrace | null>(null);
+  const [showSavedList, setShowSavedList] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -165,6 +179,9 @@ export default function AgenteFeedback() {
   function selectRoom(room: RoomData) {
     setSelectedRoom(room);
     setMessages([]);
+    setActiveTrace(null);
+    setShowSavedList(false);
+    fetchTraces(room.id);
     setTimeout(() => startConversation(room), 100);
   }
 
@@ -172,6 +189,56 @@ export default function AgenteFeedback() {
     setSelectedRoom(null);
     setMessages([]);
     setInput("");
+    setTraces([]);
+    setActiveTrace(null);
+  }
+
+  async function fetchTraces(roomId: string) {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("ai_reasoning_traces")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setTraces((data as ReasoningTrace[]) || []);
+    } catch {
+      // silencioso: a lista de avaliações salvas é um complemento, não deve travar o chat
+    }
+  }
+
+  async function handleFinalize() {
+    if (!selectedRoom || isFinalizing || messages.length === 0) return;
+    setIsFinalizing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("feedback-agent", {
+        body: {
+          messages,
+          roomContext: buildRoomContext(selectedRoom),
+          finalize: true,
+          room_id: selectedRoom.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const trace = data.trace as ReasoningTrace;
+      setActiveTrace(trace);
+      setTraces((prev) => [trace, ...prev]);
+      toast.success("Avaliação salva com a cadeia de critérios aplicada.");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao finalizar avaliação");
+    } finally {
+      setIsFinalizing(false);
+    }
+  }
+
+  function traceToItems(trace: ReasoningTrace): ReasoningTrailItem[] {
+    return trace.criteria.map((c) => ({
+      label: c.criterion,
+      observation: c.observation,
+      reference: c.reference,
+      verdict: c.verdict,
+    }));
   }
 
   const scrollToBottom = useCallback(() => {
@@ -367,10 +434,25 @@ export default function AgenteFeedback() {
             <p className="text-xs text-muted-foreground">Sala: {selectedRoom.title}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
-          <RotateCcw className="h-4 w-4 mr-1" />
-          Reiniciar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFinalize}
+            disabled={isLoading || isFinalizing || messages.filter((m) => m.role === "assistant").length === 0}
+          >
+            {isFinalizing ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <ClipboardCheck className="h-4 w-4 mr-1" />
+            )}
+            Finalizar e salvar avaliação
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reiniciar
+          </Button>
+        </div>
       </div>
 
       <Card className="border border-border overflow-hidden">
@@ -444,6 +526,56 @@ export default function AgenteFeedback() {
           </p>
         </div>
       </Card>
+
+      {activeTrace && (
+        <Card className="p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4 text-primary" />
+            Como cheguei a essa avaliação
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Cadeia de critérios auditável, salva em {new Date(activeTrace.created_at).toLocaleString("pt-BR")}.
+          </p>
+          <ReasoningTrail
+            items={traceToItems(activeTrace)}
+            instrument={activeTrace.instrument ?? undefined}
+            summary={activeTrace.summary}
+          />
+        </Card>
+      )}
+
+      {traces.length > 0 && (
+        <Card className="p-4">
+          <button
+            type="button"
+            onClick={() => setShowSavedList((v) => !v)}
+            className="flex w-full items-center justify-between text-sm font-semibold text-foreground"
+          >
+            <span className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Avaliações salvas nesta sala ({traces.length})
+            </span>
+          </button>
+          {showSavedList && (
+            <div className="mt-3 space-y-2">
+              {traces.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTrace(t)}
+                  className={cn(
+                    "block w-full rounded-md border px-3 py-2 text-left text-xs hover:bg-muted/60",
+                    activeTrace?.id === t.id && "border-primary bg-muted/40"
+                  )}
+                >
+                  <span className="font-medium text-foreground">{t.instrument || "Avaliação"}</span>
+                  <span className="text-muted-foreground"> — {new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

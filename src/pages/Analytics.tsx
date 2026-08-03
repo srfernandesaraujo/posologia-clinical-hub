@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { GAME_LABELS } from "@/data/virtualRoomGames";
 import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
+import { ReasoningTrail, type ReasoningTrailItem } from "@/components/ReasoningTrail";
 
 export const SIMULATOR_LABELS: Record<string, string> = {
   ...GAME_LABELS,
@@ -350,32 +351,18 @@ export function ParticipantDetail({ submission, roomSubmissions }: { submission:
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Decisões Clínicas ({simDecisions.filter((d: any) => d.correct).length}/{simDecisions.length} corretas)
               </p>
-              {simDecisions.map((d: any, i: number) => (
-                <div key={i} className={`rounded-lg p-3 text-xs border ${d.correct ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"}`}>
-                  <div className="flex items-start gap-2">
-                    {d.correct
-                      ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />
-                      : <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{d.label}</span>
-                        {d.category && <Badge variant="outline" className="text-[10px] h-4">{d.category}</Badge>}
-                      </div>
-                      <p className="text-muted-foreground">
-                        Resposta: <span className={`font-medium ${d.correct ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{d.userChoice}</span>
-                      </p>
-                      {!d.correct && d.idealChoice && (
-                        <p className="text-muted-foreground">
-                          Ideal: <span className="font-medium text-green-600 dark:text-green-400">{d.idealChoice}</span>
-                        </p>
-                      )}
-                      {!d.correct && d.explanation && (
-                        <p className="text-muted-foreground italic mt-1">💡 {d.explanation}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <ReasoningTrail
+                items={simDecisions.map((d: any): ReasoningTrailItem => ({
+                  label: d.label,
+                  observation: [
+                    `Resposta: ${d.userChoice}`,
+                    !d.correct && d.idealChoice ? `Ideal: ${d.idealChoice}` : null,
+                    d.explanation,
+                  ].filter(Boolean).join(" — "),
+                  verdict: d.correct,
+                  tag: d.category,
+                }))}
+              />
 
               {/* Radar chart for categories */}
               {Object.keys(categoryStats).length >= 3 && (

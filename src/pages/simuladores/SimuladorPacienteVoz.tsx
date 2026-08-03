@@ -15,6 +15,7 @@ import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions } from "@/lib/buildSimulatorDecisions";
 import { useVoiceRecorder, blobToBase64 } from "@/hooks/useVoiceRecorder";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { ReasoningTrail, type ReasoningTrailItem } from "@/components/ReasoningTrail";
 
 const SLUG = "paciente-ia-voz";
 const DAILY_VOICE_TURN_CAP = 15;
@@ -323,16 +324,15 @@ export default function SimuladorPacienteVoz() {
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-base">Competências Avaliadas</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {evaluation.rubricItems.map((r, i) => (
-              <div key={i} className="flex items-start justify-between gap-3 p-2 rounded border">
-                <div>
-                  <p className="text-sm font-medium">{r.competency}</p>
-                  <p className="text-xs text-muted-foreground">{r.note}</p>
-                </div>
-                <Badge variant={r.covered ? "default" : "outline"}>{r.covered ? "Coberto" : "Não coberto"}</Badge>
-              </div>
-            ))}
+          <CardContent>
+            <ReasoningTrail
+              items={evaluation.rubricItems.map((r): ReasoningTrailItem => ({
+                label: r.competency,
+                observation: r.note,
+                verdict: r.covered,
+                tag: r.category,
+              }))}
+            />
           </CardContent>
         </Card>
         <Button className="w-full" onClick={() => setActiveCase(null)}>Voltar aos Casos</Button>
