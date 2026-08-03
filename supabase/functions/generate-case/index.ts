@@ -64,6 +64,28 @@ O caso deve conter:
 
 Use doenças crônicas reais: DM2, HAS, dislipidemia, hipotireoidismo, IC, asma. Exames coerentes.`,
 
+  "prontuario-fhir": `Gere um caso clínico longitudinal COMPLETO para o Simulador de Prontuário Eletrônico (2 a 3 encontros/consultas ao longo do tempo).
+NÃO gere JSON no formato FHIR — gere apenas o formato "amigável" abaixo; a conversão para FHIR é feita depois por código determinístico.
+O caso deve conter:
+- patient: { name, birthDateDescription (ex: "12/05/1958 (67 anos)"), gender ("male"|"female"), diagnosis (resumo curto para o card) }
+- problems: array de { id, display, icd10Code (código CID-10 real), onsetDescription, status ("active"|"resolved"|"inactive") }
+- medications: array de medicamentos JÁ em uso no início (pode ser vazio), cada um { id, drug, atcCode (código ATC real), dose, route, frequency, status: "active" }
+- baselineObservations: array de exames já conhecidos antes do 1º encontro (pode ser vazio), cada um { id, name, loincCode (código LOINC real), value (number), unit, referenceRange, interpretation ("normal"|"high"|"low"|"critical") }
+- encounters: array de 2 a 3 objetos, cada um com:
+  - id, index, label (ex: "Consulta inicial", "Retorno em 14 dias"), dateDescription
+  - narrative: texto clínico do que acontece nesta consulta
+  - vitals: objeto { "PA": "...", "FC": "...", ... }
+  - resultsRevealed: array de LabObservation (resultados que "chegam" nesta consulta, referentes a exames pedidos na consulta anterior)
+  - availableOrders: array de 3-5 opções de exame { id, name, loincCode, category, rationale }
+  - idealOrderIds: array com os ids do availableOrders que são clinicamente indicados agora
+  - availablePrescribingOptions: array de 3-4 opções de conduta { id, label, drug, atcCode (se iniciar/trocar), dose, frequency, action ("manter"|"iniciar"|"aumentar"|"reduzir"|"suspender"|"trocar"), replacesDrug (se trocar), rationale }
+  - idealPrescribingOptionId: id da opção correta
+  - educationalNote: explicação pedagógica do porquê da conduta ideal
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- title: título descritivo
+
+Use códigos ICD-10, ATC e LOINC REAIS e coerentes com o cenário. Crie uma progressão clínica com sentido: resultado que muda a conduta entre consultas (ex: função renal, cultura, INR). Varie entre doenças crônicas (HAS, DM2, hipotireoidismo) e agudas (ITU, pneumonia) tratadas ao longo do tempo.`,
+
   insulina: `Gere um caso clínico COMPLETO para o Simulador de Dose de Insulina (Koda-Kimble).
 O caso deve conter:
 - scenario: uma breve descrição do cenário clínico (1-2 frases resumindo o caso)

@@ -47,7 +47,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 109+ simuladores em 12 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 110+ simuladores em 13 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "Paciente-IA por Voz", desc: "Anamnese e comunicação por voz com paciente simulado por IA, avaliação final da anamnese e leitura em voz alta nativa do navegador. Exclusivo Premium, limite diário de 15 turnos de voz, indisponível em Sala Virtual", link: "/simuladores/paciente-ia-voz" },
@@ -238,6 +238,14 @@ const sections = [
     ],
   },
   {
+    title: "Simuladores — Informática em Saúde",
+    icon: Database,
+    description: "Nova categoria (item 17 do roadmap): interoperabilidade em saúde e o padrão FHIR na prática, sem exigir conhecimento prévio de programação.",
+    items: [
+      { name: "Simulador de Prontuário Eletrônico (FHIR)", desc: "Prontuário clínico longitudinal (2-3 encontros) com abas Demografia/Problemas/Medicações/Exames/Linha do Tempo; cada seção tem um botão \"Ver como FHIR\" que mostra o recurso real (Patient, Condition, MedicationRequest, Observation, ServiceRequest) em JSON anotado, via mapeamento determinístico (src/lib/fhirMappers.ts) — não usa IA nem biblioteca de validação FHIR", link: "/simuladores/prontuario-fhir" },
+    ],
+  },
+  {
     title: "MedView 3D",
     icon: Scan,
     description: "Visualizador de modelos 3D anatômicos e procedimentos clínicos (via Sketchfab/Z-Anatomy) organizado em 6 categorias: Ortopedia, Cardiologia Intervencionista, Odontologia, Farmacologia/Dispositivos, Dermatologia/Cirurgia Plástica e Cirurgia Geral. Recurso exclusivo do plano Premium, bloqueado por rota (/medview-3d/*) via AppLayout.",
@@ -288,7 +296,7 @@ const sections = [
     items: [
       { name: "Criação de salas com PIN de 6 dígitos" },
       { name: "Modo Simulação Unitária ou Atividade Simulada (roteiro multi-etapas)" },
-      { name: "Catálogo com 109+ simuladores e 11 bancadas de pesquisa" },
+      { name: "Catálogo com 110+ simuladores e 11 bancadas de pesquisa" },
       { name: "Caso em Equipe (ao vivo)", desc: "Nova atividade da Atividade Simulada: papéis (médico, farmacêutico, enfermagem) assumidos por participantes diferentes na mesma sessão, com timeline compartilhada em tempo real (Postgres Changes) e presença online (Supabase Presence). O professor injeta intercorrências do roteiro do caso e conduz a sessão em \"Abrir sessão ao vivo\" (/salas-virtuais/:roomId/ao-vivo/:activityId); o aluno participa em /sala/equipe/:activityId. Ao encerrar, cada participante recebe uma submissão automática (formato simulator_decisions) que entra no Analytics normalmente — sem tela de relatório nova. 1 caso-piloto disponível: \"Sepse grave — admissão na UTI\" (3 papéis)" },
       { name: "Dashboard do professor com submissões e analytics em tempo real" },
       { name: "Suporte a grupos e participantes individuais" },

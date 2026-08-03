@@ -10,6 +10,7 @@ const SIMULATOR_LABELS: Record<string, string> = {
   "bomba-infusao": "Bomba de Infusão",
   interacoes: "Interações Medicamentosas",
   "desmame-benzo": "Desmame de Benzodiazepínicos",
+  "prontuario-fhir": "Prontuário Eletrônico (FHIR)",
 };
 
 interface ExamBannerProps {

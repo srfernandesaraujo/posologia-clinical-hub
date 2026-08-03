@@ -148,6 +148,8 @@ const SIMULATOR_OPTIONS: ToolOption[] = [
   { slug: "epigenetica", label: "Epigenética e Regulação Gênica", category: "Genética" },
   { slug: "mutacoes-reparo", label: "Mutações e Reparo de DNA", category: "Genética" },
   { slug: "genetica-populacoes", label: "Genética de Populações (Hardy-Weinberg)", category: "Genética" },
+  // Informática em Saúde
+  { slug: "prontuario-fhir", label: "Prontuário Eletrônico (FHIR)", category: "Informática em Saúde" },
 ];
 
 const LAB_OPTIONS: ToolOption[] = [

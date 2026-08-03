@@ -133,6 +133,9 @@ export const SIMULATOR_CATEGORIES: Record<string, string> = {
   "farmacoterapia-dislipidemia": "Farmacoterapia Laboratorial",
   "farmacoterapia-glicemia": "Farmacoterapia Laboratorial",
   "farmacoterapia-coagulacao": "Farmacoterapia Laboratorial",
+
+  // Informática em Saúde
+  "prontuario-fhir": "Informática em Saúde",
 };
 
 export function getSimulatorCategory(slug: string): string | undefined {

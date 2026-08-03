@@ -481,6 +481,11 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: Asma na Gestação — Segurança do CI", difficulty: "Médio" },
     { index: 4, title: "Caso 5: Exacerbação Grave no PS", difficulty: "Difícil" },
   ],
+  // ── Prontuário Eletrônico (FHIR) ──
+  "prontuario-fhir": [
+    { index: 0, title: "Caso 1: HAS recém-diagnosticada com hiperpotassemia por IECA", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Cistite não complicada com ajuste guiado por urocultura", difficulty: "Fácil" },
+  ],
 };
 
 export function getNativeCases(slug: string): NativeCase[] {

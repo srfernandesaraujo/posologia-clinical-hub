@@ -1594,6 +1594,36 @@ REGRAS:
 - Varie entre pacientes idosos, pediátricos, gestantes e adultos
 - Inclua pelo menos 3 medicamentos na prescrição`,
 
+  "sim-prontuario-fhir": `Você é um especialista em farmácia clínica e informática em saúde. Gere um caso clínico longitudinal (2-3 encontros) para o Simulador de Prontuário Eletrônico.
+
+O caso DEVE seguir exatamente esta estrutura JSON (formato "amigável" — NÃO gere FHIR bruto, a conversão é feita depois por código):
+{
+  "title": "string",
+  "difficulty": "Fácil" | "Médio" | "Difícil",
+  "patient": { "name": "string", "birthDateDescription": "string (ex: '12/05/1958 (67 anos)')", "gender": "male" | "female", "diagnosis": "string curto" },
+  "problems": [{ "id": "string", "display": "string", "icd10Code": "código CID-10 real", "onsetDescription": "string", "status": "active" | "resolved" | "inactive" }],
+  "medications": [{ "id": "string", "drug": "string", "atcCode": "código ATC real", "dose": "string", "route": "string", "frequency": "string", "status": "active" }],
+  "baselineObservations": [{ "id": "string", "name": "string", "loincCode": "código LOINC real", "value": number, "unit": "string", "referenceRange": "string", "interpretation": "normal" | "high" | "low" | "critical" }],
+  "encounters": [
+    {
+      "id": "string", "index": number, "label": "string (ex: 'Consulta inicial', 'Retorno em 14 dias')", "dateDescription": "string",
+      "narrative": "string", "vitals": { "PA": "string", "FC": "string" },
+      "resultsRevealed": [ LabObservation... ],
+      "availableOrders": [{ "id": "string", "name": "string", "loincCode": "string", "category": "string", "rationale": "string" }],
+      "idealOrderIds": ["string"],
+      "availablePrescribingOptions": [{ "id": "string", "label": "string", "drug": "string", "atcCode": "string (se aplicável)", "dose": "string", "frequency": "string", "action": "manter" | "iniciar" | "aumentar" | "reduzir" | "suspender" | "trocar", "replacesDrug": "string (se trocar)", "rationale": "string" }],
+      "idealPrescribingOptionId": "string",
+      "educationalNote": "string"
+    }
+  ]
+}
+
+REGRAS:
+- Use códigos ICD-10, ATC e LOINC reais e coerentes com o cenário
+- Crie uma progressão clínica com sentido: um resultado que muda a conduta entre consultas (ex: função renal, cultura, INR)
+- 2 a 3 encontros; cada um com 3-5 opções de exame e 3-4 opções de conduta, apenas uma ideal em cada
+- Varie entre doenças crônicas (HAS, DM2, hipotireoidismo) e agudas (ITU, pneumonia) tratadas ao longo do tempo`,
+
   "sim-mai": `Você é um especialista em farmácia clínica e avaliação de medicamentos. Gere um caso clínico para o Simulador MAI (Medication Appropriateness Index).
 
 O caso DEVE seguir exatamente esta estrutura JSON:

@@ -151,7 +151,7 @@ O Posologia Clinical Hub possui 7 pilares:
 - **Sulfato de Magnésio** (/sulfato-magnesio): Protocolos Zuspan e Pritchard
 
 ### 2. SIMULADORES (/simuladores) [Premium]
-109+ simuladores organizados em 12 categorias. Recurso exclusivo do plano Premium — inclusive os simuladores dinâmicos criados por IA, que seguem a mesma regra dos nativos (Premium para uso, não só para criação). Usuários Gratuitos podem ver a lista, mas abrir qualquer simulador exige assinatura ativa. Um deles (Paciente-IA por Voz) tem, além do Premium, um limite diário de turnos de voz — veja a seção dedicada abaixo antes de responder qualquer pergunta sobre ele:
+110+ simuladores organizados em 13 categorias. Recurso exclusivo do plano Premium — inclusive os simuladores dinâmicos criados por IA, que seguem a mesma regra dos nativos (Premium para uso, não só para criação). Usuários Gratuitos podem ver a lista, mas abrir qualquer simulador exige assinatura ativa. Um deles (Paciente-IA por Voz) tem, além do Premium, um limite diário de turnos de voz — veja a seção dedicada abaixo antes de responder qualquer pergunta sobre ele:
 
 **Farmácia Clínica (17 títulos):**
 PRM, Antimicrobianos (Stewardship), TDM, Acompanhamento Farmacoterapêutico, Insulina, Bomba de Infusão, Desmame de Benzodiazepínicos, Interações Medicamentosas (RxNav/NIH), SOAP, MAI (10 critérios), Cascata de Prescrição, Manejo da Dor, Inflamação e Anti-inflamatórios, Infecções e Antibioticoterapia, Tratamento da Asma, Dispensação — Portaria 344/98, Paciente-IA por Voz (anamnese por voz — veja seção dedicada abaixo)
@@ -188,6 +188,9 @@ Sequenciamento de DNA (Sanger/NGS), SNPs e Farmacogenética, Cariótipo, Heranç
 
 **Farmacoterapia Laboratorial (8 títulos):**
 Hemograma e Condutas Hematológicas, Distúrbios Ácido-Base e Eletrólitos, Hepatopatias e Ajuste Hepático, Função Renal e Ajuste de Dose, Marcadores de Infecção, Perfil Lipídico, Glicemia/Diabetes/Insulinoterapia, Coagulação e Anticoagulantes
+
+**Informática em Saúde (1 título):**
+Simulador de Prontuário Eletrônico (FHIR) (/simuladores/prontuario-fhir) — prontuário clínico longitudinal (2-3 consultas) com abas Demografia/Problemas/Medicações/Exames/Linha do Tempo; cada seção tem um botão "Ver como FHIR" que mostra o recurso real (Patient, Condition, MedicationRequest, Observation, ServiceRequest) em JSON anotado, construído por mapeamento determinístico (src/lib/fhirMappers.ts) — não usa IA nem biblioteca de validação FHIR. Categoria nova (item 17 do roadmap), selecionável normalmente em Salas Virtuais.
 
 Todos possuem: gráficos interativos Recharts, geração de casos por IA, modo exame, salas virtuais e botão "Como Usar".
 
@@ -241,7 +244,7 @@ Ao final da conversa, o botão "Finalizar e salvar avaliação" pede à IA (via 
 Dashboard com estatísticas de desempenho das Salas Virtuais: scores, decisões corretas vs ideais, radar de competências, relatórios de laboratório. Na aba Salas Virtuais, o card "Alunos que precisam de atenção" lista os participantes com mais sinais de risco entre todas as salas do professor — veja a seção dedicada "Sinal de risco por aluno" abaixo. As decisões no formato simulator_decisions (usado por vários simuladores, incluindo o Paciente-IA por Voz) aparecem num painel expansível por decisão, com o mesmo componente de trilha de raciocínio (ReasoningTrail) usado no Feedback de Simulação.
 
 ### Caso em Equipe (ao vivo) — dentro de Salas Virtuais [Premium/Professor]
-Atividade multi-participante sincronizada ao vivo, disponível ao montar uma Atividade Simulada (roteiro multi-etapas) em Salas Virtuais — não é um simulador do catálogo dos 109+, é uma modalidade própria de Salas Virtuais para trabalho em equipe simultâneo.
+Atividade multi-participante sincronizada ao vivo, disponível ao montar uma Atividade Simulada (roteiro multi-etapas) em Salas Virtuais — não é um simulador do catálogo dos 110+, é uma modalidade própria de Salas Virtuais para trabalho em equipe simultâneo.
 - Vários alunos assumem papéis diferentes (médico, farmacêutico, enfermagem) no mesmo caso clínico, na mesma sessão, e veem uma linha do tempo compartilhada evoluir em tempo real (Postgres Changes na tabela live_session_events) além de presença online de cada papel (Supabase Presence).
 - O professor injeta "intercorrências" do roteiro do caso ao vivo e conduz a sessão em "Abrir sessão ao vivo" (/salas-virtuais/:roomId/ao-vivo/:activityId, página SalaAoVivo.tsx): inicia a sessão, acompanha quem escolheu qual papel e quem está online, injeta intercorrências e encerra a sessão.
 - O aluno entra pela Sala Virtual normalmente (PIN) e, quando a atividade é do tipo Caso em Equipe, é levado a /sala/equipe/:activityId (LiveTeamCase.tsx) para escolher um papel livre e agir a partir do menu de ações daquele papel.

@@ -150,6 +150,7 @@ import SimuladorMutacoesReparo from "./pages/simuladores/genetica/SimuladorMutac
 import SimuladorGeneticaPopulacoes from "./pages/simuladores/genetica/SimuladorGeneticaPopulacoes";
 import SimuladorSOAP from "./pages/simuladores/SimuladorSOAP";
 import SimuladorPacienteVoz from "./pages/simuladores/SimuladorPacienteVoz";
+import SimuladorProntuarioFHIR from "./pages/simuladores/SimuladorProntuarioFHIR";
 import SimuladorManejoDor from "./pages/simuladores/SimuladorManejoDor";
 import SimuladorInflamacaoAINEs from "./pages/simuladores/SimuladorInflamacaoAINEs";
 import SimuladorInfeccoesAntibioticos from "./pages/simuladores/SimuladorInfeccoesAntibioticos";
@@ -264,6 +265,7 @@ const App = () => (
               <Route path="/sala/equipe/:activityId" element={<LiveTeamCase />} />
               <Route path="/sala/simulador/prm" element={<SimuladorPRM />} />
               <Route path="/sala/simulador/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/sala/simulador/prontuario-fhir" element={<SimuladorProntuarioFHIR />} />
               <Route path="/sala/simulador/mai" element={<SimuladorMAI />} />
               <Route path="/sala/simulador/cascata-prescricao" element={<SimuladorCascataPrescricao />} />
               <Route path="/sala/simulador/antimicrobianos" element={<SimuladorAntimicrobianos />} />
@@ -385,6 +387,7 @@ const App = () => (
               <Route path="/simuladores" element={<Simuladores />} />
               <Route path="/simuladores/prm" element={<SimuladorPRM />} />
               <Route path="/simuladores/metodo-soap" element={<SimuladorSOAP />} />
+              <Route path="/simuladores/prontuario-fhir" element={<SimuladorProntuarioFHIR />} />
               <Route path="/simuladores/paciente-ia-voz" element={<SimuladorPacienteVoz />} />
               <Route path="/simuladores/mai" element={<SimuladorMAI />} />
               <Route path="/simuladores/cascata-prescricao" element={<SimuladorCascataPrescricao />} />

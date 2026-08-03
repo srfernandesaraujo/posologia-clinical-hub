@@ -29,6 +29,7 @@ export const SIMULATOR_LABELS: Record<string, string> = {
   "bomba-infusao": "Bomba de Infusão",
   "desmame-benzo": "Desmame Benzo",
   interacoes: "Interações",
+  "prontuario-fhir": "Prontuário FHIR",
   goniometria: "Goniometria",
   "avaliacao-postural": "Avaliação Postural",
   berg: "Escala de Berg",
