@@ -160,7 +160,7 @@ export default function SimuladorRenal() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return;
-    const s = lastScore || 70;
+    const s = lastScore;
     const decisions: SimDecision[] = [{ label: "Fármaco", userChoice: selectedDrug.name, idealChoice: activeCase.expectedDrugs.join(", ") || "—", correct: activeCase.expectedDrugs.includes(selectedDrug.name), category: "Seleção" }];
     submitResults({ score: s, actions: buildSimulatorDecisions(SLUG, decisions) });
   }, [activeCase, selectedDrug, submitted, submitResults, lastScore]);
@@ -242,7 +242,7 @@ export default function SimuladorRenal() {
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>{activeCase.references?.length > 0 && <div className="mt-2">{activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}</div>}</CardContent></Card>
 
-      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getRenalChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated }} onComplete={() => setChallengeCompleted(true)} />; })()}
+      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getRenalChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
 
       {isVirtualRoom && submitted && (!showFeedback ? <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button><p className="text-xs text-center text-muted-foreground">Resultados enviados ✓</p></div> : <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-yellow-600"}`}>{lastScore}%</div></div>)}
     </div>

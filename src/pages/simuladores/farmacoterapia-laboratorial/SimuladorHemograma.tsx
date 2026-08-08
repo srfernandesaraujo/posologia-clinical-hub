@@ -139,7 +139,9 @@ function computeSimulation(drugs: HemoDrug[], doses: number[], baseLab: HemoCase
         hb += d.effects.hb * doseFrac * progress;
         vcm += d.effects.vcm * doseFrac * progress;
         leuc += d.effects.leucocitos * doseFrac * progress * 1000;
-        plaq += d.effects.plaquetas * doseFrac * progress * 1000;
+        // baseLab.plaquetas is already stored in thousands/mm³ (see labGauges below),
+        // so unlike leucocitos this delta must NOT be re-scaled by 1000.
+        plaq += d.effects.plaquetas * doseFrac * progress;
         retic += d.effects.reticulocitos * doseFrac * (w <= d.weekToEffect + 2 ? 1 : 0.3); // reticulocyte burst then declines
       }
     });

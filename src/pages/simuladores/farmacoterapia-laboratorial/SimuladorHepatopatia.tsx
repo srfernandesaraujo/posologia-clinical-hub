@@ -218,7 +218,7 @@ export default function SimuladorHepatopatia() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
-    const s = lastScore || 70;
+    const s = lastScore;
     const decisions: SimDecision[] = [
       { label: "Fármaco", userChoice: selectedDrug.name, idealChoice: activeCase.expectedDrugs.join(", ") || "—", correct: activeCase.expectedDrugs.includes(selectedDrug.name), category: "Seleção" },
     ];
@@ -362,7 +362,7 @@ export default function SimuladorHepatopatia() {
       {/* Challenges */}
       {(() => {
         const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return <SimulatorChallengeMode challengeSet={getHeppatopatiaChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, childPugh, encefalopatia, ascite }} onComplete={() => setChallengeCompleted(true)} />;
+        return <SimulatorChallengeMode challengeSet={getHeppatopatiaChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, childPugh, encefalopatia, ascite }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
       })()}
 
       {isVirtualRoom && submitted && (!showFeedback ? (
