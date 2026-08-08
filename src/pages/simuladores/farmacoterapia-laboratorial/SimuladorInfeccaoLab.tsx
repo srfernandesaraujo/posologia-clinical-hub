@@ -50,13 +50,24 @@ function computeSimulation(drug: InfDrug, dose: number, baseLab: InfCase["baseLa
   const trend: any[] = [];
   for (let h = 0; h <= 48; h += 6) {
     const p = h >= drug.hoursToEffect ? Math.min((h - drug.hoursToEffect + 1) / 24, 1) : 0;
-    trend.push({ hour: h, pcr: +(Math.max(0.5, baseLab.pcr + drug.effects.pcr * intensity * p * (baseLab.pcr / 10))).toFixed(1), pct: +(Math.max(0.01, baseLab.pct + drug.effects.pct * intensity * p * (baseLab.pct / 2))).toFixed(2), lactato: +(Math.max(0.5, baseLab.lactato + drug.effects.lactato * intensity * p)).toFixed(1), temp: +(Math.max(36, baseLab.temp + drug.effects.temp * intensity * p)).toFixed(1) });
+    const leucDelta = drug.effects.leucocitos * intensity * p * (baseLab.leucocitos / 10);
+    // Controlar infecção não empurra um leucograma já baixo (neutropenia) ainda mais para baixo —
+    // a recuperação medular depende de fatores não modelados aqui (ex: G-CSF). O efeito só se aplica
+    // quando reduz uma leucocitose em direção ao normal.
+    const leucFinal = baseLab.leucocitos < 4000 && leucDelta < 0 ? baseLab.leucocitos : baseLab.leucocitos + leucDelta;
+    trend.push({ hour: h, pcr: +(Math.max(0.5, baseLab.pcr + drug.effects.pcr * intensity * p * (baseLab.pcr / 10))).toFixed(1), pct: +(Math.max(0.01, baseLab.pct + drug.effects.pct * intensity * p * (baseLab.pct / 2))).toFixed(2), lactato: +(Math.max(0.5, baseLab.lactato + drug.effects.lactato * intensity * p)).toFixed(1), temp: +(Math.max(36, baseLab.temp + drug.effects.temp * intensity * p)).toFixed(1), leucocitos: Math.max(200, Math.round(leucFinal)) });
   }
   const last = trend[trend.length - 1];
   const sideEffects = Object.entries(drug.sideEffects).map(([k, v]) => ({ name: k === "gi" ? "GI" : k === "alergia" ? "Alergia" : k === "nefrotox" ? "Nefrotoxicidade" : "C. difficile", risco: Math.round(Math.max(0, v * (0.5 + doseFrac * 0.8)) * 100) }));
-  const leucogramData = [{ name: "Neutr", valor: baseLab.neutrofilos }, { name: "Linf", valor: baseLab.linfocitos }, { name: "Bast", valor: baseLab.bastoes }];
+  // Differential escala proporcionalmente ao total de leucócitos tratado, mantendo a mesma composição relativa do caso.
+  const leucRatio = last.leucocitos / Math.max(baseLab.leucocitos, 1);
+  const leucogramData = [
+    { name: "Neutr", valor: Math.round(baseLab.neutrofilos * leucRatio) },
+    { name: "Linf", valor: Math.round(baseLab.linfocitos * leucRatio) },
+    { name: "Bast", valor: Math.round(baseLab.bastoes * leucRatio) },
+  ];
   const labGauges = [
-    { name: "Leucócitos", value: baseLab.leucocitos, unit: "/mm³", status: baseLab.leucocitos < 4000 ? "baixo" : baseLab.leucocitos > 11000 ? "alto" : "normal" },
+    { name: "Leucócitos", value: last.leucocitos, unit: "/mm³", status: last.leucocitos < 4000 ? "baixo" : last.leucocitos > 11000 ? "alto" : "normal" },
     { name: "PCR", value: last.pcr, unit: "mg/L", status: last.pcr > 10 ? "alto" : "normal" },
     { name: "PCT", value: last.pct, unit: "ng/mL", status: last.pct > 0.5 ? "alto" : "normal" },
     { name: "Lactato", value: last.lactato, unit: "mmol/L", status: last.lactato > 2 ? "alto" : "normal" },

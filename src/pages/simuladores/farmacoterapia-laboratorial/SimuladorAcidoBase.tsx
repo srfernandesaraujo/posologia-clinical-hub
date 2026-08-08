@@ -119,7 +119,7 @@ const BUILT_IN_CASES: ABCase[] = [
 function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["baseLab"], hours: number = 24) {
   const timeline = Array.from({ length: hours + 1 }, (_, i) => i);
 
-  const labTrend: { hour: number; pH: number; hco3: number; pCO2: number; na: number; k: number; ca: number; lactato: number }[] = [];
+  const labTrend: { hour: number; pH: number; hco3: number; pCO2: number; na: number; k: number; ca: number; mg: number; cl: number; lactato: number }[] = [];
 
   for (const h of timeline) {
     let pH = baseLab.pH;
@@ -128,6 +128,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     let na = baseLab.na;
     let k = baseLab.k;
     let ca = baseLab.ca;
+    let mg = baseLab.mg;
+    let cl = baseLab.cl;
     let lactato = baseLab.lactato;
 
     drugs.forEach((d, i) => {
@@ -143,6 +145,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
         na += d.effects.na * doseFrac * progress;
         k += d.effects.k * doseFrac * progress;
         ca += d.effects.ca * doseFrac * progress;
+        mg += d.effects.mg * doseFrac * progress;
+        cl += d.effects.cl * doseFrac * progress;
         lactato += d.effects.lactato * doseFrac * progress;
       }
     });
@@ -154,6 +158,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     na = Math.max(100, Math.min(165, na));
     k = Math.max(1.5, Math.min(9, k));
     ca = Math.max(5, Math.min(14, ca));
+    mg = Math.max(0.5, Math.min(5, mg));
+    cl = Math.max(70, Math.min(130, cl));
     lactato = Math.max(0, Math.min(20, lactato));
 
     labTrend.push({
@@ -164,6 +170,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
       na: Math.round(na * 10) / 10,
       k: Math.round(k * 10) / 10,
       ca: Math.round(ca * 10) / 10,
+      mg: Math.round(mg * 10) / 10,
+      cl: Math.round(cl * 10) / 10,
       lactato: Math.round(lactato * 10) / 10,
     });
   }
@@ -186,7 +194,7 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
   ];
 
   const lastLab = labTrend[labTrend.length - 1];
-  const ag = Math.round((lastLab.na - (baseLab.cl + lastLab.hco3)) * 10) / 10;
+  const ag = Math.round((lastLab.na - (lastLab.cl + lastLab.hco3)) * 10) / 10;
 
   // Gasometry gauges
   const gasGauges = [
@@ -200,6 +208,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     { name: "Na⁺", value: lastLab.na, unit: "mEq/L", refLow: 135, refHigh: 145, status: lastLab.na < 135 ? "baixo" : lastLab.na > 145 ? "alto" : "normal" },
     { name: "K⁺", value: lastLab.k, unit: "mEq/L", refLow: 3.5, refHigh: 5.0, status: lastLab.k < 3.5 ? "baixo" : lastLab.k > 5.0 ? "alto" : "normal" },
     { name: "Ca²⁺", value: lastLab.ca, unit: "mg/dL", refLow: 8.5, refHigh: 10.5, status: lastLab.ca < 8.5 ? "baixo" : lastLab.ca > 10.5 ? "alto" : "normal" },
+    { name: "Mg²⁺", value: lastLab.mg, unit: "mg/dL", refLow: 1.7, refHigh: 2.2, status: lastLab.mg < 1.7 ? "baixo" : lastLab.mg > 2.2 ? "alto" : "normal" },
+    { name: "Cl⁻", value: lastLab.cl, unit: "mEq/L", refLow: 98, refHigh: 106, status: lastLab.cl < 98 ? "baixo" : lastLab.cl > 106 ? "alto" : "normal" },
     { name: "Lactato", value: lastLab.lactato, unit: "mmol/L", refLow: 0, refHigh: 2.0, status: lastLab.lactato > 2.0 ? "alto" : "normal" },
   ];
 
@@ -395,7 +405,7 @@ export default function SimuladorAcidoBase() {
             {simulation.gasGauges.map(g => <LabGauge key={g.name} {...g} />)}
           </div>
           <p className="text-sm font-semibold mb-2">Eletrólitos</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {simulation.electrolyteGauges.map(g => <LabGauge key={g.name} {...g} />)}
           </div>
         </CardContent>

@@ -125,6 +125,8 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
       day: d,
       alt: Math.max(5, Math.round(baseLab.alt + drug.effects.alt * intensity * p)),
       ast: Math.max(5, Math.round(baseLab.ast + drug.effects.ast * intensity * p)),
+      fa: Math.max(20, Math.round(baseLab.fa + drug.effects.fa * intensity * p)),
+      ggt: Math.max(5, Math.round(baseLab.ggt + drug.effects.ggt * intensity * p)),
       bilirrubinaT: Math.max(0.2, +(baseLab.bilirrubinaT + drug.effects.bilirrubinaT * intensity * p).toFixed(1)),
       albumina: Math.max(1, +(baseLab.albumina + drug.effects.albumina * intensity * p).toFixed(1)),
       inr: Math.max(0.8, +(baseLab.inr + drug.effects.inr * intensity * p).toFixed(1)),
@@ -138,6 +140,8 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
   const labGauges = [
     { name: "ALT", value: last.alt, unit: "U/L", refLow: 7, refHigh: 56, status: last.alt > 56 ? "alto" : "normal" },
     { name: "AST", value: last.ast, unit: "U/L", refLow: 10, refHigh: 40, status: last.ast > 40 ? "alto" : "normal" },
+    { name: "FA", value: last.fa, unit: "U/L", refLow: 40, refHigh: 129, status: last.fa > 129 ? "alto" : "normal" },
+    { name: "GGT", value: last.ggt, unit: "U/L", refLow: 8, refHigh: 61, status: last.ggt > 61 ? "alto" : "normal" },
     { name: "Bili T", value: last.bilirrubinaT, unit: "mg/dL", refLow: 0.1, refHigh: 1.2, status: last.bilirrubinaT > 1.2 ? "alto" : "normal" },
     { name: "Albumina", value: last.albumina, unit: "g/dL", refLow: 3.5, refHigh: 5.5, status: last.albumina < 3.5 ? "baixo" : "normal" },
     { name: "INR", value: last.inr, unit: "", refLow: 0.8, refHigh: 1.2, status: last.inr > 1.2 ? "alto" : "normal" },
@@ -281,7 +285,7 @@ export default function SimuladorHepatopatia() {
       {/* Lab Gauges */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Hepatograma (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
+        <CardContent><div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -83,6 +83,7 @@ function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["ba
       creatinina: +(Math.max(0.5, baseLab.creatinina + drug.effects.creatinina * intensity * p * accumFactor)).toFixed(2),
       ureia: Math.round(Math.max(10, baseLab.ureia + drug.effects.ureia * intensity * p * accumFactor)),
       k: +(Math.max(2.5, Math.min(7, baseLab.k + drug.effects.k * intensity * p))).toFixed(1),
+      na: Math.round(Math.max(115, Math.min(155, baseLab.na + drug.effects.na * intensity * p))),
     });
   }
   const last = trend[trend.length - 1];
@@ -94,7 +95,7 @@ function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["ba
     { name: "Creatinina", value: last.creatinina, unit: "mg/dL", status: last.creatinina > 1.3 ? "alto" : "normal" },
     { name: "Ureia", value: last.ureia, unit: "mg/dL", status: last.ureia > 45 ? "alto" : "normal" },
     { name: "K⁺", value: last.k, unit: "mEq/L", status: last.k > 5.0 ? "alto" : last.k < 3.5 ? "baixo" : "normal" },
-    { name: "Na⁺", value: baseLab.na, unit: "mEq/L", status: baseLab.na < 135 ? "baixo" : "normal" },
+    { name: "Na⁺", value: last.na, unit: "mEq/L", status: last.na < 135 ? "baixo" : "normal" },
     { name: "Ca²⁺", value: baseLab.ca, unit: "mg/dL", status: baseLab.ca < 8.5 ? "baixo" : "normal" },
     { name: "Hb", value: baseLab.hb, unit: "g/dL", status: baseLab.hb < 12 ? "baixo" : "normal" },
   ];
