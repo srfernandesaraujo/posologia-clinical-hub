@@ -214,7 +214,7 @@ export default function AgenteFeedback() {
       const { data, error } = await supabase.functions.invoke("feedback-agent", {
         body: {
           messages,
-          roomContext: buildRoomContext(selectedRoom),
+          roomContext: buildRoomContext(selectedRoom, { includeActions: false }),
           finalize: true,
           room_id: selectedRoom.id,
         },
@@ -264,7 +264,12 @@ export default function AgenteFeedback() {
     return `${str.slice(0, maxChars)}… [truncado: ${str.length} caracteres no total]`;
   }
 
-  function buildRoomContext(room: RoomData) {
+  // includeActions=false é usado no finalize: a essa altura o log bruto de ações já
+  // foi digerido pela IA na conversa (que também vai no payload), então reenviá-lo
+  // só duplica peso sem ajudar a extrair a cadeia de critérios — que precisa de
+  // scores/tempos pra fundamentar, não do clique-a-clique.
+  function buildRoomContext(room: RoomData, opts: { includeActions?: boolean } = {}) {
+    const includeActions = opts.includeActions ?? true;
     return {
       roomTitle: room.title,
       roomDescription: room.description,
@@ -284,7 +289,7 @@ export default function AgenteFeedback() {
           stepIndex: s.step_index,
           score: s.score,
           timeSpentSeconds: s.time_spent_seconds,
-          actions: summarizeActions(s.actions),
+          ...(includeActions ? { actions: summarizeActions(s.actions) } : {}),
           activityId: s.activity_id,
           submittedAt: s.submitted_at,
         })),
