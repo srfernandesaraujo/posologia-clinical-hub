@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { POINTS } from "@/hooks/useGamification";
@@ -13,6 +14,7 @@ interface ExamFeedback {
 
 export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [virtualRoomCase, setVirtualRoomCase] = useState<any>(null);
   const [isVirtualRoom, setIsVirtualRoom] = useState(false);
@@ -106,6 +108,9 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
           actions: opts.actions,
         }).then(({ error }) => {
           if (error) console.error("Error saving simulator attempt:", error);
+          // useMastery tem staleTime de 30min — sem isso, a aba Competências só
+          // refletiria a nova tentativa depois de expirar o cache ou de um reload.
+          queryClient.invalidateQueries({ queryKey: ["mastery"] });
         });
 
         supabase.functions.invoke("award-points", {
@@ -114,6 +119,10 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
             source: "simulator_case",
             simulator_slug: simulatorSlug,
           },
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["gamification-points"] });
+          queryClient.invalidateQueries({ queryKey: ["gamification-badges"] });
+          queryClient.invalidateQueries({ queryKey: ["gamification-leaderboard"] });
         }).catch((err) => console.error("Error awarding simulator points:", err));
       }
       return;

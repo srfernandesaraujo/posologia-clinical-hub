@@ -20,6 +20,7 @@ export const SIMULATOR_CATEGORIES: Record<string, string> = {
   "infeccoes-antibioticos": "Farmácia Clínica",
   "tratamento-asma": "Farmácia Clínica",
   "dispensacao-344": "Farmácia Clínica",
+  "paciente-ia-voz": "Farmácia Clínica",
 
   // Fisiologia Humana
   "sna": "Fisiologia Humana",
@@ -78,10 +79,10 @@ export const SIMULATOR_CATEGORIES: Record<string, string> = {
   // Formação Docente
   "feedback-formativo": "Formação Docente",
   "elaboracao-questoes": "Formação Docente",
-  "conducao-caso-pbl": "Formação Docente",
+  "conducao-caso": "Formação Docente",
   "planejamento-aula": "Formação Docente",
   "gestao-sala": "Formação Docente",
-  "avaliacao-rubrica-osce": "Formação Docente",
+  "avaliacao-rubrica": "Formação Docente",
   "preceptoria-clinica": "Formação Docente",
 
   // Odontologia
