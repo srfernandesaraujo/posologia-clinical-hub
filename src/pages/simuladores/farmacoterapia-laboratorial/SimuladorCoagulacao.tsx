@@ -119,6 +119,7 @@ function computeSimulation(drug: CoagDrug, dose: number, baseLab: CoagCase["base
       antiXa: Math.max(0, +(baseLab.antiXa + drug.effects.antiXa * intensity * p).toFixed(2)),
       plaquetas: Math.max(10, Math.round(baseLab.plaquetas + drug.effects.plaquetas * intensity * p * 10)),
       fibrinogenio: Math.max(50, Math.round(baseLab.fibrinogenio + drug.effects.fibrinogenio * intensity * p)),
+      dDimero: Math.max(0, +(baseLab.dDimero + drug.effects.dDimero * intensity * p).toFixed(2)),
     });
   }
   const last = trend[trend.length - 1];
@@ -132,6 +133,7 @@ function computeSimulation(drug: CoagDrug, dose: number, baseLab: CoagCase["base
     { name: "Anti-Xa", value: last.antiXa, unit: "UI/mL", refLow: 0, refHigh: 0.1, status: last.antiXa > 1.0 ? "alto" : last.antiXa > 0.5 ? "elevado" : "normal" },
     { name: "Plaquetas", value: last.plaquetas, unit: "×10³/µL", refLow: 150, refHigh: 400, status: last.plaquetas < 100 ? "baixo" : last.plaquetas < 150 ? "elevado" : "normal" },
     { name: "Fibrinogênio", value: last.fibrinogenio, unit: "mg/dL", refLow: 200, refHigh: 400, status: last.fibrinogenio < 150 ? "baixo" : "normal" },
+    { name: "D-dímero", value: last.dDimero, unit: "µg/mL FEU", refLow: 0, refHigh: 0.5, status: last.dDimero > 4.0 ? "alto" : last.dDimero > 0.5 ? "elevado" : "normal" },
     { name: "Hb", value: baseLab.hb, unit: "g/dL", refLow: 12, refHigh: 17, status: baseLab.hb < 10 ? "baixo" : baseLab.hb < 12 ? "elevado" : "normal" },
   ];
   return { trend, sideEffects, labGauges, lastLab: last };

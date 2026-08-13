@@ -57,7 +57,10 @@ function computeSimulation(drug: LipidDrug, dose: number, baseLab: LipidCase["ba
   }
   const last = trend[trend.length - 1];
   const sideEffects = Object.entries(drug.sideEffects).map(([k, v]) => ({ name: k === "mialgia" ? "Mialgia" : k === "hepatotox" ? "Hepatotoxicidade" : k === "gi" ? "GI" : "Rabdomiólise", risco: Math.round(Math.max(0, v * (0.5 + doseFrac * 0.8)) * 100) }));
-  return { trend, sideEffects, lastLab: last };
+  // CPK escala com o risco de rabdomiólise do fármaco/dose atual: normal (~60 U/L) quando o risco é nulo
+  // (ex. ezetimiba, iPCSK9), subindo até a faixa de miopatia grave para fármacos/doses mais miotóxicos.
+  const cpk = Math.round(60 + drug.sideEffects.rabdomiolise * intensity * 65000);
+  return { trend, sideEffects, lastLab: last, cpk };
 }
 
 function LabGauge({ name, value, unit, color }: { name: string; value: number; unit: string; color: string }) {
@@ -138,7 +141,7 @@ export default function SimuladorDislipidemia() {
         <LabGauge name="HDL" value={simulation.lastLab.hdl} unit="mg/dL" color={simulation.lastLab.hdl < 40 ? "text-destructive" : "text-green-500"} />
         <LabGauge name="TG" value={simulation.lastLab.tg} unit="mg/dL" color={simulation.lastLab.tg > 150 ? "text-chart-5" : "text-green-500"} />
         <LabGauge name="Apo-B" value={Math.round(simulation.lastLab.ldl * 0.9)} unit="mg/dL" color={simulation.lastLab.ldl * 0.9 > 100 ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="CPK" value={activeCase.baseLab.cpk} unit="U/L" color={activeCase.baseLab.cpk > 200 ? "text-destructive" : "text-green-500"} />
+        <LabGauge name="CPK" value={simulation.cpk} unit="U/L" color={simulation.cpk > 200 ? "text-destructive" : "text-green-500"} />
       </div></CardContent></Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

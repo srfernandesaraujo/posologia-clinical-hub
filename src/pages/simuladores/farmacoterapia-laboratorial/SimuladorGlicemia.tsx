@@ -118,6 +118,7 @@ function computeSimulation(drug: GlicDrug, dose: number, baseLab: GlicCase["base
       pp: Math.max(60, Math.round(baseLab.pp + drug.effects.pp * intensity * p)),
       hba1c: Math.max(4, +(baseLab.hba1c + drug.effects.hba1c * intensity * p * 0.3).toFixed(1)),
       insulina: Math.max(0, +(baseLab.insulina + drug.effects.insulina * intensity * p).toFixed(1)),
+      peptideoC: Math.max(0, +(baseLab.peptideoC + drug.effects.peptideoC * intensity * p).toFixed(1)),
     });
   }
   const last = trend[trend.length - 1];
@@ -130,6 +131,7 @@ function computeSimulation(drug: GlicDrug, dose: number, baseLab: GlicCase["base
     { name: "Pós-prandial", value: last.pp, unit: "mg/dL", refLow: 70, refHigh: 140, status: last.pp > 140 ? "alto" : "normal" },
     { name: "HbA1c", value: last.hba1c, unit: "%", refLow: 4.0, refHigh: 7.0, status: last.hba1c > 7.0 ? "alto" : "normal" },
     { name: "Insulina", value: last.insulina, unit: "µUI/mL", refLow: 2.6, refHigh: 24.9, status: last.insulina < 2.6 ? "baixo" : last.insulina > 24.9 ? "alto" : "normal" },
+    { name: "Peptídeo-C", value: last.peptideoC, unit: "ng/mL", refLow: 0.5, refHigh: 2.0, status: last.peptideoC < 0.5 ? "baixo" : last.peptideoC > 2.0 ? "alto" : "normal" },
     { name: "K⁺", value: baseLab.potassio, unit: "mEq/L", refLow: 3.5, refHigh: 5.0, status: baseLab.potassio < 3.5 ? "baixo" : baseLab.potassio > 5.0 ? "alto" : "normal" },
     { name: "TFG", value: baseLab.tfg, unit: "mL/min", refLow: 60, refHigh: 120, status: baseLab.tfg < 60 ? "baixo" : "normal" },
   ];
