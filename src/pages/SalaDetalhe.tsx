@@ -253,17 +253,22 @@ export default function SalaDetalhe() {
       const tabSwitchCount = pSubs.reduce((a, s) => a + (s.tab_switch_count || 0), 0);
       const { data, error } = await (supabase as any)
         .from("osce_certificates")
-        .insert({
-          room_id: roomId,
-          participant_id: participant.id,
-          verification_code: generateCertificateCode(),
-          student_name: participant.participant_name,
-          exam_title: room?.title || "Prova",
-          final_score: finalScore,
-          competency_breakdown: breakdown as any,
-          integrity_flags: { tabSwitchCount } as any,
-          issued_by: user!.id,
-        })
+        .upsert(
+          {
+            room_id: roomId,
+            participant_id: participant.id,
+            verification_code: generateCertificateCode(),
+            student_name: participant.participant_name,
+            exam_title: room?.title || "Prova",
+            final_score: finalScore,
+            competency_breakdown: breakdown as any,
+            integrity_flags: { tabSwitchCount } as any,
+            issued_by: user!.id,
+            issued_at: new Date().toISOString(),
+            revoked_at: null,
+          },
+          { onConflict: "room_id,participant_id" }
+        )
         .select()
         .single();
       if (error) throw error;
