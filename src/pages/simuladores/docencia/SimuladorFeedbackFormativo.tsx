@@ -214,7 +214,7 @@ export default function SimuladorFeedbackFormativo() {
 
   // Auto-submit when result is shown
   useEffect(() => {
-    if (isVR && showResult && !submitted) {
+    if (showResult && !submitted) {
       submitResults({ score: percentage, actions: { model, answers }, timeSpentSeconds: 0 });
     }
   }, [showResult]);

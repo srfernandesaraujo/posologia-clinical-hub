@@ -182,7 +182,7 @@ export default function SimuladorDermatomos() {
   if (isVR && !vrAutoStarted && !activeCase) { setVrAutoStarted(true); setActiveCase(virtualRoomCase?.id || "vr"); }
   const handleVRSubmit = (reportData: { hypothesis: string; results: string; conclusion: string }) => { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions, report: reportData }, timeSpentSeconds: 0 }); };
 
-  useEffect(() => { if (isVR && showFeedback && !submitted) { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions }, timeSpentSeconds: 0 }); } }, [showFeedback]);
+  useEffect(() => { if (showFeedback && !submitted) { submitVRResults({ score: feedback.score, actions: { decisions: feedback.decisions }, timeSpentSeconds: 0 }); } }, [showFeedback]);
   useEffect(() => { if (isVR && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVR, submitted, navigate]);
 
   if (!activeCase) {

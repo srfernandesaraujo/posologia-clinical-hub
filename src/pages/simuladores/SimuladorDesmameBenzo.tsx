@@ -158,7 +158,7 @@ export default function SimuladorDesmameBenzo() {
 
   // Auto-submit when plan is generated in VR
   useEffect(() => {
-    if (isVR && plan.length > 0 && !vrSubmitted) {
+    if (plan.length > 0 && !vrSubmitted) {
       const score = sensitivity === "high" ? 90 : 80;
       setVrScore(score);
       setVrSubmitted(true);

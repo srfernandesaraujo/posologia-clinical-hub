@@ -130,7 +130,7 @@ export default function SimuladorAvaliacaoRubrica() {
 
   // Auto-submit when result is shown
   useEffect(() => {
-    if (isVR && showResult && !submitted) {
+    if (showResult && !submitted) {
       submitResults({ score: Math.round(kappa * 100), actions: { scores, agreements }, timeSpentSeconds: 0 });
     }
   }, [showResult]);

@@ -87,7 +87,7 @@ export default function SimuladorElaboracaoQuestoes() {
 
   // Auto-submit when elevate result is shown
   useEffect(() => {
-    if (isVR && showElevateResult && !submitted) {
+    if (showElevateResult && !submitted) {
       const score = Math.round(((classifyScore + (elevateChoice === challenge.targetLevel ? 1 : 0)) / (challenge.questions.length + 1)) * 100);
       submitResults({ score, actions: { classifyScore, elevateCorrect: elevateChoice === challenge.targetLevel }, timeSpentSeconds: 0 });
     }

@@ -154,30 +154,26 @@ export function LabReportPanel({ benchTitle, isUnlocked, experimentSummary, isVi
           />
         </div>
 
-        {isVirtualRoom ? (
-          alreadySent ? (
-            <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">Resultados enviados ao professor!</span>
-            </div>
-          ) : (
-            <>
-              <Button onClick={handleVRSubmit} disabled={!canExport} className="w-full bg-primary hover:bg-primary/90">
-                <Send className="h-4 w-4 mr-2" />
-                Enviar Resultados
-              </Button>
-              {!canExport && (
-                <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para enviar</p>
-              )}
-            </>
-          )
+        {alreadySent ? (
+          <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+              {isVirtualRoom ? "Resultados enviados ao professor!" : "Tentativa registrada!"}
+            </span>
+          </div>
         ) : (
           <>
-            <PdfExportButton onExport={() => canExport && exportPDF()} label="Exportar Relatório em PDF" />
+            <Button onClick={handleVRSubmit} disabled={!canExport} className="w-full bg-primary hover:bg-primary/90">
+              <Send className="h-4 w-4 mr-2" />
+              {isVirtualRoom ? "Enviar Resultados" : "Registrar Tentativa"}
+            </Button>
             {!canExport && (
-              <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para exportar</p>
+              <p className="text-xs text-muted-foreground text-center">Preencha todos os campos com pelo menos 10 caracteres para enviar</p>
             )}
           </>
+        )}
+        {!isVirtualRoom && (
+          <PdfExportButton onExport={() => canExport && exportPDF()} label="Exportar Relatório em PDF" />
         )}
       </CardContent>
     </Card>

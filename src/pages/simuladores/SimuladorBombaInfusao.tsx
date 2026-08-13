@@ -163,7 +163,7 @@ export default function SimuladorBombaInfusao() {
 
   // Auto-submit when infusion completes in VR
   useEffect(() => {
-    if (isVR && !vrSubmitted && pumpState === "alarm" && alarmType === null && remainingVolume === 0) {
+    if (!vrSubmitted && pumpState === "alarm" && alarmType === null && remainingVolume === 0) {
       const score = 85;
       setVrScore(score);
       setVrSubmitted(true);
