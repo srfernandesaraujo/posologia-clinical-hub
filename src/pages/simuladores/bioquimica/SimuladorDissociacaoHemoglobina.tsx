@@ -107,7 +107,7 @@ export default function SimuladorDissociacaoHemoglobina() {
   const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

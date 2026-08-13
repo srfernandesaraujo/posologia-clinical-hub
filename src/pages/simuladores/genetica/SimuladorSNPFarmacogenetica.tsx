@@ -133,7 +133,7 @@ export default function SimuladorSNPFarmacogenetica() {
   const [lastScore, setLastScore] = useState(0);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); }
+    if (challengeCompleted && !submitted && activeCase) { handleFinish(); }
   }, [challengeCompleted]);
 
   useEffect(() => {

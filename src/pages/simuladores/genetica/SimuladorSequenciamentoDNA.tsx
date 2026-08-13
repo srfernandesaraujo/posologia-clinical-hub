@@ -134,7 +134,7 @@ export default function SimuladorSequenciamentoDNA() {
   const animRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
     }
   }, [challengeCompleted]);

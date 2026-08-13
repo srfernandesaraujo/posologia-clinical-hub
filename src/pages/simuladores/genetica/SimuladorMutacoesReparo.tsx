@@ -78,7 +78,7 @@ export default function SimuladorMutacoesReparo() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastScore, setLastScore] = useState(0);
 
-  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
+  useEffect(() => { if (challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
   useEffect(() => {

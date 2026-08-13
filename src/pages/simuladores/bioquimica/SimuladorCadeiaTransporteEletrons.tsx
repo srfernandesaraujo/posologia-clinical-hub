@@ -132,7 +132,7 @@ export default function SimuladorCadeiaTransporteEletrons() {
 
   // Auto-submit when challenge completed in VR
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

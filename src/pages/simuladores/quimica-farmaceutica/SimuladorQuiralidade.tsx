@@ -109,7 +109,7 @@ export default function SimuladorQuiralidade() {
     return s;
   }, [activeCase, drugId, ee, eutomerFraction, submitted, submitResults]);
 
-  useEffect(() => { if (isVirtualRoom && challengeCompleted && !submitted && activeCase) { handleFinish(); const cs = sessionStorage.getItem("challengeScore"); if (cs) setLastScore(Number(cs)); } }, [challengeCompleted]);
+  useEffect(() => { if (challengeCompleted && !submitted && activeCase) { handleFinish(); const cs = sessionStorage.getItem("challengeScore"); if (cs) setLastScore(Number(cs)); } }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
   const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient, scenario: c.scenario, initialDrug: c.initialDrug ?? "omeprazol", initialEnantiomericExcess: c.initialEnantiomericExcess ?? 100, expectedAnswer: c.expectedAnswer ?? "eutomer", clinicalTip: c.clinicalTip ?? "" });

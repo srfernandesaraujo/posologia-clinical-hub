@@ -424,7 +424,7 @@ export default function SimuladorManejoDor() {
   }, [activeCase, drug, dose, interval, adjuvant, adjuvantIdx, simulation.finalEVA, submitted, submitResults]);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

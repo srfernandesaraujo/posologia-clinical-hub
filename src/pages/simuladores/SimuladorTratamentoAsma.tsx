@@ -399,7 +399,7 @@ export default function SimuladorTratamentoAsma() {
   }, [activeCase, selectedDrugs, drugDoses, ginaStep, device, simulation, submitted, submitResults]);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

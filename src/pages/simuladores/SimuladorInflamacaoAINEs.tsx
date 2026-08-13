@@ -419,7 +419,7 @@ export default function SimuladorInflamacaoAINEs() {
   }, [activeCase, drug, dose, interval, gastroprotection, simulation.finalEVA, submitted, submitResults]);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

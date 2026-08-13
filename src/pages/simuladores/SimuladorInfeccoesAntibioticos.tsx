@@ -418,7 +418,7 @@ export default function SimuladorInfeccoesAntibioticos() {
   }, [activeCase, drug, dose, interval, hydration, simulation.finalBacterialLoad, simulation.warnings, submitted, submitResults]);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

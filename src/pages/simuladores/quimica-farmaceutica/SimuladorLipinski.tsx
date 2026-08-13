@@ -119,7 +119,7 @@ export default function SimuladorLipinski() {
   }, [activeCase, result, mw, logP, hbd, hba, submitted, submitResults]);
 
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));

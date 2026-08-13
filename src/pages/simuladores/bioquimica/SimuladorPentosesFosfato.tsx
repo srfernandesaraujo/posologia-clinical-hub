@@ -176,7 +176,7 @@ export default function SimuladorPentosesFosfato() {
 
   // Auto-submit when challenge completed in virtual room
   useEffect(() => {
-    if (isVirtualRoom && challengeCompleted && !submitted && activeCase) {
+    if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
       const cs = sessionStorage.getItem("challengeScore");
       if (cs) setLastScore(Number(cs));
