@@ -249,6 +249,21 @@ export default function AgenteFeedback() {
 
   useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
+  // "actions" varia por simulador e pode carregar transcrições/logs extensos — sem
+  // limite, uma sala com muitos alunos/estações facilmente estoura o teto de tokens
+  // por requisição dos provedores de IA (ex.: Groq TPD). Trunca preservando o início
+  // (onde normalmente estão as respostas/decisões mais relevantes do aluno).
+  function summarizeActions(actions: unknown, maxChars = 1500): unknown {
+    let str: string;
+    try {
+      str = JSON.stringify(actions) ?? "";
+    } catch {
+      return actions;
+    }
+    if (str.length <= maxChars) return actions;
+    return `${str.slice(0, maxChars)}… [truncado: ${str.length} caracteres no total]`;
+  }
+
   function buildRoomContext(room: RoomData) {
     return {
       roomTitle: room.title,
@@ -269,7 +284,7 @@ export default function AgenteFeedback() {
           stepIndex: s.step_index,
           score: s.score,
           timeSpentSeconds: s.time_spent_seconds,
-          actions: s.actions,
+          actions: summarizeActions(s.actions),
           activityId: s.activity_id,
           submittedAt: s.submitted_at,
         })),
