@@ -340,7 +340,7 @@ export default function Simuladores() {
     return (
       <Link
         to={`/simuladores/${sim.slug}`}
-        className="group relative rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
+        className="group relative block rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
       >
         <div className="flex items-start gap-3">
           <div
