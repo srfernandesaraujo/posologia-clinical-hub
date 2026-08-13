@@ -109,7 +109,7 @@ export default function SimuladorGestaoSala() {
   const pct = Math.round((totalScore / (shuffledIncidents.length * 3)) * 100);
 
   useEffect(() => {
-    if (isVirtualRoom && showResult && !submitted) {
+    if (showResult && !submitted) {
       submitResults({ score: pct, actions: { answers, dims } });
     }
   }, [showResult]);

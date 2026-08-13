@@ -343,7 +343,7 @@ export default function SimuladorCascataPrescricao() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allAnswered} onClick={() => {
-          if (isVirtualRoom && currentCase) {
+          if (currentCase) {
             const { correct, total, details } = getScore();
             const score = total > 0 ? Math.round((correct / total) * 100) : 0;
             const decs: SimDecision[] = details.map((d: any) => ({

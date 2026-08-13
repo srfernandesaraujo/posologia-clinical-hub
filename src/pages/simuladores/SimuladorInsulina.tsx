@@ -92,7 +92,7 @@ export default function SimuladorInsulina() {
 
   // Auto-submit when reaching panel screen in VR
   useEffect(() => {
-    if (isVirtualRoom && screen === "painel" && !vrSubmitted) {
+    if (screen === "painel" && !vrSubmitted) {
       const score = hba1c <= 7 ? 100 : hba1c <= 8 ? 70 : 40;
       setVrScore(score);
       setVrSubmitted(true);

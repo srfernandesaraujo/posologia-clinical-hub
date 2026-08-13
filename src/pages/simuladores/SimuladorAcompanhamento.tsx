@@ -156,6 +156,13 @@ export default function SimuladorAcompanhamento() {
       setConsultIdx(consultIdx + 1);
     } else {
       setScreen("report");
+      // Fora de Sala Virtual não havia nenhum registro de tentativa (o insert acima só roda com roomCtx) —
+      // persiste aqui com a média das consultas para alimentar Casos Resolvidos/Competências em /gamificacao.
+      if (!roomCtx?.roomId) {
+        const allScores = { ...scores, [consultIdx]: score };
+        const avg = Math.round(Object.values(allScores).reduce((a, b) => a + b, 0) / Object.values(allScores).length);
+        submitResults({ score: avg, actions: { monthlyScores: allScores } });
+      }
     }
   };
 

@@ -231,7 +231,7 @@ export default function SimuladorTDM() {
             </div>
             <Button onClick={() => {
               setSubmitted(true);
-              if (isVirtualRoom && c) {
+              if (c) {
                 const correct = Math.abs(Number(newDose) - c.expected.newDose) < 50 && Math.abs(Number(newInterval) - c.expected.newInterval) <= 6;
                 const doseOk = Math.abs(Number(newDose) - c.expected.newDose) < 50;
                 const intervalOk = Math.abs(Number(newInterval) - c.expected.newInterval) <= 6;

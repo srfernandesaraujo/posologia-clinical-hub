@@ -280,9 +280,7 @@ export default function SimuladorProntuarioFHIR() {
     const allDecisions = currentCase.encounters.flatMap((_, i) => buildEncounterDecisions(i));
     const payload = buildSimulatorDecisions(SLUG, allDecisions);
     setFinalDecisions(allDecisions);
-    if (isVirtualRoom) {
-      submitResults({ score: payload.summary.score, actions: payload });
-    }
+    submitResults({ score: payload.summary.score, actions: payload });
     setScreen("report");
   };
 

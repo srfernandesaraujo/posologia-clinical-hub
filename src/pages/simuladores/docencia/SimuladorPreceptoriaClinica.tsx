@@ -120,7 +120,7 @@ export default function SimuladorPreceptoriaClinica() {
   const pct = Math.round((totalScore / maxScore) * 100);
 
   useEffect(() => {
-    if (isVirtualRoom && showResult && !submitted) {
+    if (showResult && !submitted) {
       submitResults({ score: pct, actions: { answers } });
     }
   }, [showResult]);

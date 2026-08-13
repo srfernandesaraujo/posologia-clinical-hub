@@ -382,7 +382,7 @@ export default function SimuladorSOAP() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allFilled} onClick={() => {
-          if (isVirtualRoom) {
+          {
             const { sections, totalScore } = getScores();
             const decisions: SimDecision[] = sections.map(s => ({
               label: SECTION_LABELS[s.key as keyof SOAPKeywords].label,

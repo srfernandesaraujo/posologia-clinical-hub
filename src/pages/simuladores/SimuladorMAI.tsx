@@ -412,20 +412,18 @@ export default function SimuladorMAI() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allRated} onClick={() => {
-          if (isVirtualRoom) {
-            const { drugScores, totalScore } = getScore();
-            const decisions: SimDecision[] = drugScores.flatMap(ds =>
-              ds.criteriaResults.map(cr => ({
-                label: `${ds.drug} — ${cr.criterion}`,
-                userChoice: RATING_LABELS[cr.userRating || ""]?.label || "Não respondido",
-                idealChoice: RATING_LABELS[cr.correctRating || ""]?.label || "—",
-                correct: cr.isCorrect,
-                category: cr.criterion,
-                explanation: cr.justification || undefined,
-              }))
-            );
-            submitResults({ score: totalScore, actions: buildSimulatorDecisions("mai", decisions) });
-          }
+          const { drugScores, totalScore } = getScore();
+          const decisions: SimDecision[] = drugScores.flatMap(ds =>
+            ds.criteriaResults.map(cr => ({
+              label: `${ds.drug} — ${cr.criterion}`,
+              userChoice: RATING_LABELS[cr.userRating || ""]?.label || "Não respondido",
+              idealChoice: RATING_LABELS[cr.correctRating || ""]?.label || "—",
+              correct: cr.isCorrect,
+              category: cr.criterion,
+              explanation: cr.justification || undefined,
+            }))
+          );
+          submitResults({ score: totalScore, actions: buildSimulatorDecisions("mai", decisions) });
           setScreen("report");
         }}>
           <ClipboardCheck className="h-4 w-4 mr-2" />Finalizar Avaliação MAI

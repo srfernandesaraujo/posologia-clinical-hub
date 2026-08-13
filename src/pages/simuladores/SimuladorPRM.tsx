@@ -377,7 +377,7 @@ export default function SimuladorPRM() {
       </div>
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allReviewed} onClick={() => {
-          if (isVirtualRoom) {
+          {
             const { correctCount, totalCount, details } = getScore();
             const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
             const decisions: SimDecision[] = details.map(d => ({

@@ -107,7 +107,7 @@ export default function SimuladorPlanejamentoAula() {
 
   // VR auto-submit
   useEffect(() => {
-    if (isVirtualRoom && step === "result" && !submitted) {
+    if (step === "result" && !submitted) {
       submitResults({ score: totalAlignment, actions: { selectedCompetence, objectiveLevel, selectedMethods, selectedAssessments } });
     }
   }, [step]);

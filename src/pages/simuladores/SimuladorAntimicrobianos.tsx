@@ -279,19 +279,17 @@ export default function SimuladorAntimicrobianos() {
                 </div>
               )}
               <Button onClick={() => {
-                if (isVirtualRoom) {
-                  const s1 = scoreDay1();
-                  const s3 = scoreDay3();
-                  submitResults({
-                    score: Math.round((s1 + s3) / 2),
-                    actions: buildSimulatorDecisions("antimicrobianos", [
-                      { label: "Antibióticos D1", userChoice: day1Antibiotics.join(", ") || "Nenhum", idealChoice: "Conforme caso", correct: s1 >= 70, category: "Seleção D1", explanation: "" },
-                      { label: "Culturas D1", userChoice: day1Cultures.join(", ") || "Nenhuma", idealChoice: "Conforme protocolo", correct: s1 >= 70, category: "Diagnóstico", explanation: "" },
-                      { label: "Condutas D3", userChoice: Object.entries(day3Actions).map(([k,v]) => `${k}: ${v}`).join(", ") || "Nenhuma", idealChoice: "Conforme antibiograma", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
-                      { label: "Troca antibiótico D3", userChoice: day3NewAntibiotic || "Nenhuma", idealChoice: "Conforme cultura", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
-                    ]),
-                  });
-                }
+                const s1 = scoreDay1();
+                const s3 = scoreDay3();
+                submitResults({
+                  score: Math.round((s1 + s3) / 2),
+                  actions: buildSimulatorDecisions("antimicrobianos", [
+                    { label: "Antibióticos D1", userChoice: day1Antibiotics.join(", ") || "Nenhum", idealChoice: "Conforme caso", correct: s1 >= 70, category: "Seleção D1", explanation: "" },
+                    { label: "Culturas D1", userChoice: day1Cultures.join(", ") || "Nenhuma", idealChoice: "Conforme protocolo", correct: s1 >= 70, category: "Diagnóstico", explanation: "" },
+                    { label: "Condutas D3", userChoice: Object.entries(day3Actions).map(([k,v]) => `${k}: ${v}`).join(", ") || "Nenhuma", idealChoice: "Conforme antibiograma", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
+                    { label: "Troca antibiótico D3", userChoice: day3NewAntibiotic || "Nenhuma", idealChoice: "Conforme cultura", correct: s3 >= 70, category: "Reavaliação D3", explanation: "" },
+                  ]),
+                });
                 setScreen("report");
               }} className="w-full mt-4">Finalizar Conduta</Button>
             </CardContent>

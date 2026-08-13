@@ -136,7 +136,7 @@ export default function SimuladorConducaoCaso() {
   const omissoCount = answers.filter((optIdx, i) => pblCase.moments[i].options[optIdx].type === "omisso").length;
 
   useEffect(() => {
-    if (isVirtualRoom && showResult && !submitted) {
+    if (showResult && !submitted) {
       submitResults({ score: pct, actions: { answers, facilitadorCount, palestranteCount, omissoCount } });
     }
   }, [showResult]);
