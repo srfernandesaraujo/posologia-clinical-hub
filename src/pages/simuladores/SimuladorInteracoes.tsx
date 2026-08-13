@@ -202,9 +202,9 @@ export default function SimuladorInteracoes() {
     }
   }, [isVR, virtualRoomCase, vrAutoStarted]);
 
-  // Auto-submit when interactions are loaded in VR
+  // Auto-submit when interactions are loaded (registra tentativa/pontos também fora de Sala Virtual)
   useEffect(() => {
-    if (isVR && !vrSubmitted && interactions.length > 0 && selectedDrugs.length >= 2) {
+    if (!vrSubmitted && interactions.length > 0 && selectedDrugs.length >= 2) {
       const highCount = interactions.filter(i => i.severity === "high").length;
       const score = highCount === 0 ? 90 : 70;
       setVrScore(score);
