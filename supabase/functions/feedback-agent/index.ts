@@ -188,12 +188,17 @@ serve(async (req) => {
         );
       }
 
+      // A conversa termina com a última resposta da IA (role assistant, o feedback já
+      // dado). A API do Google rejeita tool calling forçado quando a última mensagem
+      // não é do usuário ("single turn requests end with a user role"), então fechamos
+      // com um pedido explícito de extração — vale para qualquer provedor, não só Google.
       const finalizeMessages = [
         { role: "system", content: FINALIZE_SYSTEM_PROMPT },
         ...(roomContext
           ? [{ role: "system", content: `## DADOS DA SALA\n\`\`\`json\n${JSON.stringify(roomContext, null, 2)}\n\`\`\`` }]
           : []),
         ...messages,
+        { role: "user", content: "Gere agora, via tool call submit_reasoning_chain, a cadeia de raciocínio estruturada por trás do feedback já dado nesta conversa." },
       ];
 
       const { data, provider } = await callAI({
