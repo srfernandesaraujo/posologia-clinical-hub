@@ -40,9 +40,10 @@ export default function LiveTeamCase() {
     } catch { /* ignora contexto inválido */ }
   }, [activityId]);
 
-  const { data: activity } = useQuery({
+  const { data: activity, error: activityError } = useQuery({
     queryKey: ["live-activity-student", activityId],
     enabled: !!activityId,
+    retry: 1,
     queryFn: async () => {
       const { data, error } = await supabase.from("room_activities").select("*").eq("id", activityId!).single();
       if (error) throw error;
@@ -53,9 +54,10 @@ export default function LiveTeamCase() {
   const caseKey = activity?.custom_challenges?.liveTeamCaseKey;
   const teamCase = caseKey ? getLiveTeamCase(caseKey) : undefined;
 
-  const { data: session } = useQuery({
+  const { data: session, error: sessionError } = useQuery({
     queryKey: ["live-session-student", ctx?.roomId, activityId],
     enabled: !!ctx && !!activityId && !!caseKey,
+    retry: 1,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("live-session-access", {
         body: { action: "get-or-create-session", room_id: ctx!.roomId, activity_id: activityId, case_key: caseKey },
@@ -157,6 +159,18 @@ export default function LiveTeamCase() {
       <div className="container mx-auto py-12 text-center space-y-3">
         <p className="text-sm text-muted-foreground">Esta página só pode ser acessada a partir de uma Sala Virtual.</p>
         <Button variant="outline" onClick={() => navigate("/sala")}><ArrowLeft className="h-4 w-4 mr-1" /> Entrar em uma sala</Button>
+      </div>
+    );
+  }
+
+  if (activityError || sessionError) {
+    return (
+      <div className="container mx-auto py-12 text-center space-y-3 max-w-md">
+        <h2 className="text-xl font-bold">Não foi possível carregar o caso em equipe</h2>
+        <p className="text-sm text-muted-foreground">
+          {(activityError as any)?.message || (sessionError as any)?.message || "Erro desconhecido"}
+        </p>
+        <Button variant="outline" onClick={() => navigate("/sala")}><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Button>
       </div>
     );
   }

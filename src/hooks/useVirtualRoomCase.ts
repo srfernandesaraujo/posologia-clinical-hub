@@ -151,12 +151,15 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
         }
         return;
       }
-      // Challenge mode hasn't submitted yet — skip, it will submit with correct score
+      // Challenge mode hasn't submitted yet — skip, it will submit with correct score.
+      // Usa opts.score (recém-calculado por esta atividade) em vez de challengeScore:
+      // esse último pode ser um valor de sessionStorage sobrado de uma atividade anterior
+      // que nunca passou pela limpeza em proceedToNext (ex.: a navegação quebrou no meio).
       setSubmitted(true);
       if (ctx.allActivities && ctx.activityIndex !== undefined) {
         const isFinal = ctx.activityIndex + 1 >= ctx.totalActivities;
         setExamFeedback({
-          score: challengeScore,
+          score: opts.score,
           simulatorSlug: ctx.simulatorSlug,
           caseTitle: virtualRoomCase?.title,
           isFinalActivity: isFinal,

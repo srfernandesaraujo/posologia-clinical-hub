@@ -483,6 +483,10 @@ export default function SalasVirtuais() {
   const { data: submissions = [] } = useQuery({
     queryKey: ["room-submissions", detailRoom?.id],
     enabled: !!detailRoom,
+    // Alunos submetem em segundo plano enquanto o professor está com o diálogo de
+    // Participantes aberto; sem polling, o professor só veria novas submissões
+    // fechando e reabrindo o diálogo.
+    refetchInterval: !!detailRoom ? 5000 : false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_submissions")
