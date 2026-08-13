@@ -22,6 +22,35 @@ import {
 } from "recharts";
 import { ParticipantDetail, SIMULATOR_LABELS } from "./Analytics";
 
+// Paleta espelha a cor primária da marca (hsl(168 80% 42%)) convertida para RGB,
+// com uma variante mais escura para texto/título (legível sobre fundo branco).
+const BRAND_TEAL: [number, number, number] = [21, 193, 159];
+const BRAND_TEAL_DARK: [number, number, number] = [14, 129, 106];
+const SLATE_900: [number, number, number] = [15, 23, 42];
+const SLATE_500: [number, number, number] = [100, 116, 139];
+const SLATE_200: [number, number, number] = [226, 232, 240];
+
+function scoreColor(score: number): [number, number, number] {
+  if (score >= 80) return [22, 163, 74]; // green-600
+  if (score >= 50) return [217, 119, 6]; // amber-600
+  return [220, 38, 38]; // red-600
+}
+
+/** Escreve texto centralizado na página, quebrando em várias linhas se necessário; devolve o y após o bloco. */
+function centeredBlock(
+  doc: jsPDF, text: string, y: number, pageW: number,
+  opts: { fontSize: number; font?: string; style?: string; maxWidth?: number; lineHeight?: number; color?: [number, number, number] },
+): number {
+  const { fontSize, font = "helvetica", style = "normal", maxWidth = pageW - 60, color = SLATE_900 } = opts;
+  const lineHeight = opts.lineHeight ?? fontSize * 0.42;
+  doc.setFont(font, style);
+  doc.setFontSize(fontSize);
+  doc.setTextColor(...color);
+  const lines = doc.splitTextToSize(text, maxWidth);
+  lines.forEach((line: string, i: number) => doc.text(line, pageW / 2, y + i * lineHeight, { align: "center" }));
+  return y + lines.length * lineHeight;
+}
+
 function gerarCertificadoPDF(cert: {
   student_name: string;
   exam_title: string;
@@ -31,45 +60,116 @@ function gerarCertificadoPDF(cert: {
   verification_code: string;
   issued_at: string;
 }) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "landscape" });
   const w = doc.internal.pageSize.getWidth();
-  let y = 22;
-  doc.setFontSize(16);
+  const h = doc.internal.pageSize.getHeight();
+  const cx = w / 2;
+
+  // Moldura dupla
+  doc.setDrawColor(...BRAND_TEAL);
+  doc.setLineWidth(1);
+  doc.rect(8, 8, w - 16, h - 16);
+  doc.setLineWidth(0.3);
+  doc.rect(12, 12, w - 24, h - 24);
+
+  // Cabeçalho de marca
   doc.setFont("helvetica", "bold");
-  doc.text("Certificado OSCE — Posologia", w / 2, y, { align: "center" });
-  y += 14;
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Aluno(a): ${cert.student_name}`, 14, y); y += 7;
-  doc.text(`Prova: ${cert.exam_title}`, 14, y); y += 7;
-  doc.text(`Data: ${new Date(cert.issued_at).toLocaleDateString("pt-BR")}`, 14, y); y += 10;
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Nota final: ${cert.final_score}%`, 14, y); y += 10;
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("Desempenho por competência:", 14, y); y += 7;
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  cert.competency_breakdown.forEach((c) => {
-    doc.text(`- ${c.category}: ${c.score}% (${c.activityCount} estação${c.activityCount > 1 ? "s" : ""})`, 18, y);
-    y += 6;
-  });
-  y += 4;
+  doc.setTextColor(...BRAND_TEAL_DARK);
+  doc.text("P O S O L O G I A   C L I N I C A L   H U B", cx, 24, { align: "center" });
+
+  // Título
+  doc.setFont("times", "bold");
+  doc.setFontSize(30);
+  doc.setTextColor(...BRAND_TEAL_DARK);
+  doc.text("Certificado OSCE", cx, 40, { align: "center" });
+
+  doc.setDrawColor(...BRAND_TEAL);
+  doc.setLineWidth(0.6);
+  doc.line(cx - 22, 45, cx + 22, 45);
+
+  doc.setFont("times", "italic");
+  doc.setFontSize(11);
+  doc.setTextColor(...SLATE_500);
+  doc.text("Objective Structured Clinical Examination", cx, 53, { align: "center" });
+
+  // Corpo
+  let y = 68;
+  y = centeredBlock(doc, "Certificamos que", y, w, { fontSize: 11, color: SLATE_500 });
+  y += 6;
+  y = centeredBlock(doc, cert.student_name, y, w, { fontSize: 19, font: "times", style: "bold", lineHeight: 9, maxWidth: w - 70 });
+  y += 7;
+  y = centeredBlock(
+    doc,
+    `concluiu a prova "${cert.exam_title}" com aproveitamento em ${new Date(cert.issued_at).toLocaleDateString("pt-BR")}, obtendo nota final de`,
+    y, w, { fontSize: 11.5, maxWidth: w - 90 },
+  );
+
+  // Nota final em destaque
+  y += 6;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(26);
+  doc.setTextColor(...scoreColor(cert.final_score));
+  doc.text(`${cert.final_score}%`, cx, y + 10, { align: "center" });
+  y += 18;
+
+  // Tabela de desempenho por competência
+  if (cert.competency_breakdown.length > 0) {
+    const tableW = 150;
+    const tx = cx - tableW / 2;
+    const rowH = 7;
+    let ty = y + 4;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...SLATE_500);
+    doc.text("DESEMPENHO POR COMPETÊNCIA", cx, ty, { align: "center" });
+    ty += 5;
+
+    doc.setDrawColor(...SLATE_200);
+    doc.setLineWidth(0.2);
+    doc.setFontSize(9.5);
+    cert.competency_breakdown.forEach((c, i) => {
+      const rowY = ty + i * rowH;
+      if (i % 2 === 1) {
+        doc.setFillColor(248, 250, 252); // slate-50
+        doc.rect(tx, rowY, tableW, rowH, "F");
+      }
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...SLATE_900);
+      doc.text(c.category, tx + 4, rowY + rowH / 2 + 1.5);
+      doc.text(`${c.activityCount} estação${c.activityCount > 1 ? "ões" : ""}`, tx + tableW - 32, rowY + rowH / 2 + 1.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...scoreColor(c.score));
+      doc.text(`${c.score}%`, tx + tableW - 4, rowY + rowH / 2 + 1.5, { align: "right" });
+      doc.line(tx, rowY + rowH, tx + tableW, rowY + rowH);
+    });
+    y = ty + cert.competency_breakdown.length * rowH + 6;
+  }
+
+  // Sinal de integridade
   const tabSwitches = cert.integrity_flags?.tabSwitchCount ?? 0;
-  doc.setFontSize(9);
-  doc.setTextColor(100);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...SLATE_500);
   doc.text(
     tabSwitches > 0
       ? `Sinal de integridade: ${tabSwitches} evento(s) de perda de foco/tela-cheia registrados durante a prova.`
       : "Sinal de integridade: nenhum evento de perda de foco registrado durante a prova.",
-    14, y,
+    cx, y, { align: "center" },
   );
-  y += 10;
-  doc.setTextColor(0);
-  doc.setFontSize(9);
-  doc.text(`Código de verificação: ${cert.verification_code}`, 14, y); y += 5;
-  doc.text(`Verifique em: simulador.posologia.app/verificar-certificado/${cert.verification_code}`, 14, y);
+
+  // Rodapé: verificação
+  const footerY = h - 18;
+  doc.setDrawColor(...SLATE_200);
+  doc.setLineWidth(0.2);
+  doc.line(20, footerY - 6, w - 20, footerY - 6);
+  doc.setFontSize(8.5);
+  doc.setTextColor(...SLATE_500);
+  doc.text(`Código de verificação: ${cert.verification_code}`, 20, footerY);
+  doc.text(`Verifique em simulador.posologia.app/verificar-certificado/${cert.verification_code}`, 20, footerY + 5);
+  doc.text(`Emitido em ${new Date(cert.issued_at).toLocaleDateString("pt-BR")}`, w - 20, footerY, { align: "right" });
+
   doc.save(`certificado-osce-${cert.student_name.trim().replace(/\s+/g, "-").toLowerCase()}.pdf`);
 }
 
