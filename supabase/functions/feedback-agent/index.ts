@@ -259,9 +259,13 @@ IMPORTANTE: Ao analisar as "actions" de cada submission, identifique:
       systemMessages.push({ role: "system", content: contextMsg });
     }
 
+    // Para abrir a conversa, o frontend manda messages=[] e espera que a IA comece
+    // sozinha só com o system prompt. Groq/OpenAI toleram isso, mas a API do Google
+    // exige pelo menos uma mensagem non-system ("contents is not specified" em 400) —
+    // por isso injetamos um kickoff sintético em vez de confiar em array vazio.
     const fullMessages = [
       ...systemMessages,
-      ...messages,
+      ...(messages.length > 0 ? messages : [{ role: "user", content: "Início da conversa. Siga a ETAPA 1 do fluxo." }]),
     ];
 
     const { data, provider } = await callAI({
