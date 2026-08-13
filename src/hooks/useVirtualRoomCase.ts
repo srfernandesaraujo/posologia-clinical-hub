@@ -217,7 +217,8 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
     "modelagem-molecular",
   ]);
 
-  const getRouteForActivity = (slug: string, caseId?: string | null) => {
+  const getRouteForActivity = (slug: string, caseId?: string | null, activityId?: string | null) => {
+    if (slug === "live-team-case") return `/sala/equipe/${activityId}`;
     if (LAB_SLUGS_SET.has(slug)) return `/sala/laboratorio/${slug.replace(LAB_PREFIX, "")}`;
     if (LAB_ONLY_SLUGS_SET.has(slug) && !caseId) return `/sala/laboratorio/${slug}`;
     return `/sala/simulador/${slug}`;
@@ -244,7 +245,7 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
         activityIndex: nextIndex,
         customChallenges: nextAct.customChallenges || null,
       }));
-      const route = getRouteForActivity(nextAct.simulatorSlug, nextAct.caseId);
+      const route = getRouteForActivity(nextAct.simulatorSlug, nextAct.caseId, nextAct.id);
       navigate(route);
     } else {
       sessionStorage.removeItem("virtualRoom");
