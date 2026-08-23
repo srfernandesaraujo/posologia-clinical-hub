@@ -18,11 +18,10 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     // Calculadoras não dependem de rede para calcular — o objetivo aqui é só
     // deixar o app shell (já um bundle único, sem code-splitting por rota)
-    // disponível offline após a primeira visita. Ícone é um placeholder SVG
-    // (public/pwa-icon.svg); trocar por um PNG de marca quando houver um.
+    // disponível offline após a primeira visita.
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-icon.svg"],
+      includeAssets: ["favicon.ico", "favicon-16.png", "favicon-32.png", "pwa-icon.svg", "apple-touch-icon.png"],
       manifest: {
         name: "Posologia Clinical Hub",
         short_name: "Posologia",
@@ -32,12 +31,15 @@ export default defineConfig(({ mode }) => ({
         display: "standalone",
         start_url: "/",
         icons: [
-          { src: "/pwa-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
         navigateFallback: "/index.html",
-        globPatterns: ["**/*.{js,css,html,svg,ico}"],
+        globPatterns: ["**/*.{js,css,html,svg,ico,png}"],
         // Bundle único sem code-splitting por rota (~6 MB) passa do limite
         // padrão do Workbox (2 MiB); sobe a cota em vez de introduzir
         // lazy-loading agora, que é escopo maior e fora desta fase.
