@@ -72,6 +72,15 @@ export function AppLayout() {
     { label: "Suporte", to: "/suporte", icon: LifeBuoy },
   ];
 
+  // Os 4 destinos que os alunos mais acessam pelo celular ganham um espaço fixo
+  // na barra inferior (padrão de app nativo); o resto continua acessível pelo "Mais".
+  const bottomNavItems = [
+    { label: t("nav.dashboard"), to: "/dashboard", icon: LayoutDashboard },
+    { label: t("nav.calculators"), to: "/calculadoras", icon: Calculator },
+    { label: t("nav.simulators"), to: "/simuladores", icon: FlaskConical },
+    { label: t("nav.games"), to: "/jogos-clinicos", icon: Gamepad2 },
+  ];
+
   const premiumItems = [
     { label: "Turmas", to: "/turmas", icon: GraduationCap, premium: true },
     { label: t("nav.virtualRooms"), to: "/salas-virtuais", icon: DoorOpen, premium: true },
@@ -162,26 +171,21 @@ export function AppLayout() {
 
       {/* Mobile header */}
       <div className="flex flex-col flex-1">
-        <header className="md:hidden sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card px-4">
+        <header className="md:hidden sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card px-4 pt-safe">
           <Link to="/dashboard" className="flex items-center gap-2">
             <Pill className="h-6 w-6 text-primary" />
             <span className="font-bold text-foreground">Posologia</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher />
-            <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+          <LanguageSwitcher />
         </header>
 
         {mobileOpen && (
-          <div className="md:hidden fixed inset-0 top-14 z-40 bg-background/95 backdrop-blur-sm p-4">
+          <div className="md:hidden fixed inset-x-0 top-14 z-40 bg-background/98 backdrop-blur-sm p-4 overflow-y-auto" style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
             <nav className="flex flex-col gap-1">
               {allItems.map((item) => renderNavItem(item, () => setMobileOpen(false)))}
               <button
                 onClick={() => { handleSignOut(); setMobileOpen(false); }}
-                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-destructive"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-destructive min-h-[44px]"
               >
                 <LogOut className="h-4 w-4" />
                 {t("nav.logout")}
@@ -190,7 +194,39 @@ export function AppLayout() {
           </div>
         )}
 
-        <main className="flex-1 p-4 md:p-8">
+        {/* Mobile bottom tab bar — navegação primária ao alcance do polegar,
+            padrão de app nativo. "Mais" abre o restante do menu acima dela. */}
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 flex items-stretch border-t border-border bg-card/95 backdrop-blur-xl pb-safe">
+          {bottomNavItems.map((item) => {
+            const active = location.pathname.startsWith(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 text-[10px] font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="truncate max-w-full px-0.5">{item.label}</span>
+              </Link>
+            );
+          })}
+          <button
+            onClick={() => setMobileOpen((open) => !open)}
+            className={cn(
+              "flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 text-[10px] font-medium transition-colors",
+              mobileOpen ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <span>Mais</span>
+          </button>
+        </nav>
+
+        <main className="flex-1 p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:p-8">
           {isPremiumRoute && !isPremium ? (
             <PremiumGate
               title={

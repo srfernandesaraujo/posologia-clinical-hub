@@ -11,7 +11,7 @@ export function PublicLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0F1C]">
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0A0F1C]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0A0F1C]/80 backdrop-blur-xl pt-safe">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="rounded-lg bg-emerald-500/10 p-1.5">

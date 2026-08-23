@@ -18,7 +18,7 @@ export function OfflineBanner() {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[100] p-4 pointer-events-none">
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-0 inset-x-0 z-[100] p-4 pointer-events-none">
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-4 flex items-start gap-3 pointer-events-auto">
         <div className="rounded-lg bg-primary/10 p-2 shrink-0">
           <WifiOff className="h-4 w-4 text-primary" />

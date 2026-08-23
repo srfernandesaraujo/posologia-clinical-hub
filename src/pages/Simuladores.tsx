@@ -389,13 +389,13 @@ export default function Simuladores() {
             <div className="flex items-center border border-border rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode("grid")}
-                className={cn("p-2 transition-colors", viewMode === "grid" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
+                className={cn("p-3 sm:p-2 transition-colors", viewMode === "grid" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={cn("p-2 transition-colors", viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
+                className={cn("p-3 sm:p-2 transition-colors", viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
               >
                 <List className="h-4 w-4" />
               </button>
@@ -472,11 +472,11 @@ export default function Simuladores() {
               />
             </div>
             {/* Mobile category chips */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2 sm:gap-1.5">
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={cn(
-                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+                  "px-3 py-2 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium transition-colors",
                   !selectedCategory
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -489,7 +489,7 @@ export default function Simuladores() {
                   key={name}
                   onClick={() => setSelectedCategory(selectedCategory === name ? null : name)}
                   className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+                    "px-3 py-2 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium transition-colors",
                     selectedCategory === name
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -519,12 +519,12 @@ export default function Simuladores() {
                     <button
                       onClick={() => toggleMarketplace(tool.id, tool.is_marketplace)}
                       className={cn(
-                        "absolute top-3 right-3 p-1.5 rounded-lg transition-colors z-10",
+                        "absolute top-2 right-2 p-2.5 rounded-lg transition-colors z-10",
                         tool.is_marketplace ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                       title={tool.is_marketplace ? "Remover do Marketplace" : "Publicar no Marketplace"}
                     >
-                      <Share2 className="h-3 w-3" />
+                      <Share2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}

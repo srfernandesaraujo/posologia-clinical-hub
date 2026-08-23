@@ -78,24 +78,31 @@ export function OracleAgent() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button — sobe acima da barra de abas inferior no mobile e
+          vira um botão circular (sem o rótulo) para não competir por espaço
+          com o polegar do usuário. */}
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300",
+          "fixed z-50 flex items-center gap-2 rounded-full p-3.5 shadow-lg transition-all duration-300",
+          "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 md:bottom-6 md:right-6 md:px-5 md:py-3",
           "bg-accent text-accent-foreground hover:opacity-90",
           open && "scale-0 opacity-0 pointer-events-none"
         )}
       >
         <Sparkles className="h-5 w-5" />
-        <span className="text-sm font-semibold">Fale com o Oráculo</span>
+        <span className="hidden md:inline text-sm font-semibold">Fale com o Oráculo</span>
       </button>
 
-      {/* Chat Panel */}
+      {/* Chat Panel — ocupa quase a tela toda no mobile (em vez da largura
+          fixa de 380px, que estourava viewports de celular) e volta a ser
+          um painel flutuante ancorado no canto a partir do breakpoint md. */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex flex-col rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 origin-bottom-right",
-          open ? "w-[380px] h-[560px] scale-100 opacity-100" : "w-0 h-0 scale-0 opacity-0 pointer-events-none"
+          "fixed z-50 flex flex-col rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 origin-bottom-right",
+          "inset-x-3 top-16 bottom-[calc(4.5rem+env(safe-area-inset-bottom))]",
+          "md:inset-x-auto md:top-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[560px]",
+          open ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
         {/* Header */}

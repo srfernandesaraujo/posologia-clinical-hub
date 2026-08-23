@@ -10,6 +10,7 @@ import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ProtectedRoute, AdminRoute, ProfessorRoute } from "@/components/ProtectedRoute";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
+import { SalaLayout } from "@/components/layouts/SalaLayout";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { RouteTracker } from "@/components/RouteTracker";
 
@@ -260,6 +261,11 @@ const App = () => (
               <Route path="/verificar-certificado/:codigo" element={<VerificarCertificado />} />
               <Route path="/verificar-credito/:codigo" element={<VerificarCredito />} />
               {/* /planos is handled as a standalone route below */}
+            </Route>
+
+            {/* Fluxo de sala virtual — alunos entram via PIN, sem login. Layout
+                próprio (sem chrome de marketing) em vez do PublicLayout. */}
+            <Route element={<SalaLayout />}>
               <Route path="/sala" element={<SalaVirtualAluno />} />
               <Route path="/sala/jogo/:gameSlug" element={<SalaJogoRunner />} />
               <Route path="/sala/equipe/:activityId" element={<LiveTeamCase />} />

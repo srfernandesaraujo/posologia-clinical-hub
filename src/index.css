@@ -61,13 +61,25 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    overscroll-behavior-y: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  /* Toque em botões/links não deve disparar o delay de 300ms nem o double-tap
+     zoom do navegador mobile — essencial para sliders e controles dos
+     simuladores parecerem responsivos como um app nativo. */
+  button, a, [role="button"], [role="tab"], [role="slider"] {
+    touch-action: manipulation;
   }
 }
 
@@ -87,5 +99,13 @@
 
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
