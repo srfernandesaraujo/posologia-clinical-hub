@@ -17,6 +17,7 @@ import { CreateToolDialog } from "@/components/CreateToolDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const NATIVE_SIMULATORS = [
@@ -471,34 +472,22 @@ export default function Simuladores() {
                 className="pl-10"
               />
             </div>
-            {/* Mobile category chips */}
-            <div className="flex flex-wrap gap-2 sm:gap-1.5">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={cn(
-                  "px-3 py-2 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium transition-colors",
-                  !selectedCategory
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                Todas
-              </button>
-              {categoriesWithCounts.map(({ name, count }) => (
-                <button
-                  key={name}
-                  onClick={() => setSelectedCategory(selectedCategory === name ? null : name)}
-                  className={cn(
-                    "px-3 py-2 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium transition-colors",
-                    selectedCategory === name
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {name} ({count})
-                </button>
-              ))}
-            </div>
+            {/* Mobile category filter — dropdown em vez de chips que quebravam
+                em várias linhas e empurravam o conteúdo para baixo. */}
+            <Select
+              value={selectedCategory ?? "all"}
+              onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias ({totalCount})</SelectItem>
+                {categoriesWithCounts.map(({ name, count }) => (
+                  <SelectItem key={name} value={name}>{name} ({count})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* User's simulators */}
