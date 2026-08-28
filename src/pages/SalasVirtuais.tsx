@@ -9,12 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3, Check, ChevronsUpDown } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
@@ -38,7 +41,8 @@ type ToolType = "simulator" | "laboratory" | "game";
 // ROOM_EXCLUDED_SIMULATOR_SLUGS em vez de removê-lo daqui.
 const SIMULATOR_OPTIONS: ToolOption[] = NATIVE_SIMULATORS
   .filter(s => !ROOM_EXCLUDED_SIMULATOR_SLUGS.has(s.slug))
-  .map(s => ({ slug: s.slug, label: s.name, category: s.category }));
+  .map(s => ({ slug: s.slug, label: s.name, category: s.category }))
+  .sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
 
 const LAB_OPTIONS: ToolOption[] = [
   { slug: "lab-farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
@@ -61,9 +65,47 @@ const GAME_OPTIONS: ToolOption[] = VIRTUAL_ROOM_GAMES.map(g => ({
 }));
 
 const ALL_OPTIONS = [...SIMULATOR_OPTIONS, ...LAB_OPTIONS, ...GAME_OPTIONS];
-const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))];
+const SIMULATOR_CATEGORIES = [...new Set(SIMULATOR_OPTIONS.map(s => s.category))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 const LAB_CATEGORIES = [...new Set(LAB_OPTIONS.map(s => s.category))];
 const GAME_CATEGORIES = VIRTUAL_ROOM_GAME_CATEGORIES as string[];
+
+// Select com busca por nome — usado para escolher o simulador/laboratório/jogo
+// dentro de uma categoria, já que algumas categorias têm dezenas de opções.
+function ToolCombobox({ options, value, onValueChange, placeholder }: { options: ToolOption[]; value: string; onValueChange: (v: string) => void; placeholder: string }) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.slug === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+          <span className="truncate">{selected ? selected.label : placeholder}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command filter={(value, search) => {
+          const diacritics = new RegExp(`[${String.fromCodePoint(0x0300)}-${String.fromCodePoint(0x036f)}]`, "g");
+          const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(diacritics, "");
+          const label = options.find(o => o.slug === value)?.label || "";
+          return normalize(label).includes(normalize(search)) ? 1 : 0;
+        }}>
+          <CommandInput placeholder="Buscar por nome..." />
+          <CommandList>
+            <CommandEmpty>Nenhum simulador encontrado.</CommandEmpty>
+            <CommandGroup>
+              {options.map(o => (
+                <CommandItem key={o.slug} value={o.slug} onSelect={() => { onValueChange(o.slug); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4 shrink-0", value === o.slug ? "opacity-100" : "opacity-0")} />
+                  <span className="truncate">{o.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface ActivityItem {
   category: string;
@@ -1030,14 +1072,12 @@ export default function SalasVirtuais() {
                           {act.category && (
                             <div>
                               <Label className="text-xs">{toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador"}</Label>
-                              <Select value={act.simulatorSlug} onValueChange={v => updateActivity(i, "simulatorSlug", v)}>
-                                <SelectTrigger><SelectValue placeholder={toolType === "laboratory" ? "Selecione o laboratório" : toolType === "game" ? "Selecione o jogo" : "Selecione o simulador"} /></SelectTrigger>
-                                <SelectContent>
-                                  {toolsInCategory.map(s => (
-                                    <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <ToolCombobox
+                                options={toolsInCategory}
+                                value={act.simulatorSlug}
+                                onValueChange={v => updateActivity(i, "simulatorSlug", v)}
+                                placeholder={toolType === "laboratory" ? "Selecione o laboratório" : toolType === "game" ? "Selecione o jogo" : "Selecione o simulador"}
+                              />
                             </div>
                           )}
 
@@ -1403,14 +1443,12 @@ export default function SalasVirtuais() {
                     {editCategory && (
                       <div>
                         <Label className="text-xs">{editToolType === "laboratory" ? "Laboratório" : editToolType === "game" ? "Jogo" : "Simulador"}</Label>
-                        <Select value={editSimulatorSlug} onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}>
-                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                          <SelectContent>
-                            {editToolsInCategory.map(s => (
-                              <SelectItem key={s.slug} value={s.slug}>{s.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <ToolCombobox
+                          options={editToolsInCategory}
+                          value={editSimulatorSlug}
+                          onValueChange={v => { setEditSimulatorSlug(v); setEditCaseId(""); }}
+                          placeholder="Selecione"
+                        />
                       </div>
                     )}
 
