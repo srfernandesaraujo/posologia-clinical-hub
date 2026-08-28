@@ -31,9 +31,9 @@ interface BNMCase {
 }
 
 const BUILT_IN_CASES: BNMCase[] = [
-  { title: "Intubação de Sequência Rápida – Succinilcolina", difficulty: "Médio", patient: { name: "Rafael Lima", age: 42, weight: 85, diagnosis: "Estômago cheio – ISR para cirurgia de emergência" }, scenario: "A succinilcolina (despolarizante) tem onset ultracurto (~60s) e duração breve (~6 min). Observe fasciculações iniciais seguidas de bloqueio flácido.", expectedAgent: "despolarizante", expectedReversal: "nenhum", clinicalTip: "Succinilcolina: único despolarizante em uso clínico. CI: hipercalemia, queimaduras extensas, miopatias, déficit de pseudocolinesterase. Causa fasciculações → bloqueio fase I." },
+  { title: "Intubação de Sequência Rápida – Succinilcolina", difficulty: "Médio", patient: { name: "Rafael Lima", age: 42, weight: 85, diagnosis: "Estômago cheio – ISR para cirurgia de emergência" }, scenario: "A succinilcolina (despolarizante) tem onset ultracurto (~60s) e duração breve (~8-10 min). Observe fasciculações iniciais seguidas de bloqueio flácido.", expectedAgent: "despolarizante", expectedReversal: "nenhum", clinicalTip: "Succinilcolina: único despolarizante em uso clínico. CI: hipercalemia, queimaduras extensas, miopatias, déficit de pseudocolinesterase. Causa fasciculações → bloqueio fase I." },
   { title: "Rocurônio + Sugammadex", difficulty: "Médio", patient: { name: "Ana Beatriz", age: 35, weight: 62, diagnosis: "Cirurgia laparoscópica – relaxamento prolongado" }, scenario: "O rocurônio (não-despolarizante) bloqueia competitivamente os receptores nicotínicos na placa motora. O sugammadex o encapsula para reversão imediata.", expectedAgent: "nao-despolarizante", expectedReversal: "sugammadex", clinicalTip: "Sugammadex encapsula rocurônio/vecurônio em proporção 1:1, revertendo bloqueio profundo em <3 min. Alternativa: neostigmina (apenas bloqueio superficial, TOF ≥2)." },
-  { title: "Bloqueio Residual Pós-operatório", difficulty: "Difícil", patient: { name: "José Antônio", age: 70, weight: 72, diagnosis: "Curarização residual na sala de recuperação" }, scenario: "TOF ratio <0.9 indica bloqueio residual. Reverta com neostigmina + atropina ou sugammadex conforme a profundidade do bloqueio.", expectedAgent: "nao-despolarizante", expectedReversal: "neostigmina", clinicalTip: "Bloqueio residual (TOF <0.9) aumenta risco de aspiração e hipóxia. Neostigmina só é eficaz com TOF ≥2 contagens. Para bloqueio profundo, usar sugammadex." },
+  { title: "Bloqueio Residual Pós-operatório", difficulty: "Difícil", patient: { name: "José Antônio", age: 70, weight: 72, diagnosis: "Curarização residual na sala de recuperação" }, scenario: "TOF ratio <0.9, mas com pelo menos 2 contagens visíveis no monitor (bloqueio superficial, não profundo). Nessa profundidade, a neostigmina é eficaz para reverter o bloqueio residual.", expectedAgent: "nao-despolarizante", expectedReversal: "neostigmina", clinicalTip: "Bloqueio residual (TOF <0.9) aumenta risco de aspiração e hipóxia. Neostigmina só é eficaz com TOF ≥2 contagens — nesse caso, adequada. Para bloqueio profundo (sem contagens), a neostigmina não funciona e deve-se usar sugammadex." },
 ];
 
 function generateNMBCurve(agent: string, agentDose: number, reversal: string, reversalDose: number) {
@@ -195,8 +195,9 @@ export default function SimuladorBloqueioNeuromuscular() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Monitorização TOF (Train-of-Four)</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Recuperação da Placa Motora (Twitch Único)</CardTitle></CardHeader>
           <CardContent>
+            <p className="text-xs text-muted-foreground mb-2">Amplitude de um twitch isolado ao longo do tempo — não representa o fade entre os 4 estímulos do TOF ratio real (T4/T1).</p>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -204,7 +205,7 @@ export default function SimuladorBloqueioNeuromuscular() {
                 <YAxis domain={[0, 110]} label={{ value: "Twitch (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <ReferenceLine y={90} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "TOF≥0.9", fill: "hsl(var(--chart-3))" }} />
+                <ReferenceLine y={90} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Recuperação ≥90%", fill: "hsl(var(--chart-3))" }} />
                 <Line type="monotone" dataKey="twitch" name="Twitch (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                 {agent === "despolarizante" && <Line type="monotone" dataKey="fasciculation" name="Fasciculação" stroke="hsl(var(--destructive))" dot={false} strokeWidth={1} strokeDasharray="3 3" />}
               </LineChart>

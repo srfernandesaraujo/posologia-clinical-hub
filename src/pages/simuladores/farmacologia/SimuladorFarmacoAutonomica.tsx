@@ -27,6 +27,7 @@ const DRUGS = [
   { key: "pilocarpina", label: "Pilocarpina (M-agonista)", alpha: 0, beta: 0, muscarinic: 70 },
   { key: "noradrenalina", label: "Noradrenalina (α1+β1)", alpha: 90, beta: 40, muscarinic: 0 },
   { key: "isoproterenol", label: "Isoproterenol (β1+β2)", alpha: 0, beta: 90, muscarinic: 0 },
+  { key: "fentolamina", label: "Fentolamina (α-bloqueador)", alpha: -80, beta: 0, muscarinic: 0 },
 ];
 
 interface FACase {
@@ -39,7 +40,7 @@ interface FACase {
 
 const BUILT_IN_CASES: FACase[] = [
   { title: "Bradicardia Sinusal – Atropina", difficulty: "Fácil", patient: { name: "Jorge Nunes", age: 75, weight: 68, diagnosis: "Bradicardia sintomática pós-infarto inferior" }, scenario: "Paciente com FC 38 bpm, PAM 55 mmHg. A atropina bloqueia receptores M2 cardíacos, removendo o tônus vagal. Selecione o fármaco correto.", expectedDrug: "atropina", clinicalTip: "Atropina 0.5-1 mg IV na bradicardia sintomática. Age bloqueando M2 no nó SA/AV. Ineficaz em transplantados (coração desnervado)." },
-  { title: "Crise Hipertensiva – Fentolamina", difficulty: "Médio", patient: { name: "Marcos Almeida", age: 50, weight: 88, diagnosis: "Feocromocitoma com PA 240/140 mmHg" }, scenario: "Catecolaminas em excesso ativam α1 causando vasoconstrição severa. A fenilefrina simularia pior cenário; propranolol pode ser útil após α-bloqueio.", expectedDrug: "propranolol", clinicalTip: "No feocromocitoma: SEMPRE α-bloqueio primeiro (fenoxibenzamina/fentolamina), depois β-bloqueio. β-bloqueio isolado causa crise hipertensiva paradoxal." },
+  { title: "Crise Hipertensiva – Fentolamina", difficulty: "Médio", patient: { name: "Marcos Almeida", age: 50, weight: 88, diagnosis: "Feocromocitoma com PA 240/140 mmHg" }, scenario: "Catecolaminas em excesso ativam α1 causando vasoconstrição severa. Selecione o antagonista α-adrenérgico indicado para o preparo pré-operatório/crise. NUNCA inicie β-bloqueio isolado nesse cenário: sem α-bloqueio prévio, a vasodilatação β2 é removida e a vasoconstrição α1 fica sem oposição, agravando a crise hipertensiva.", expectedDrug: "fentolamina", clinicalTip: "No feocromocitoma: SEMPRE α-bloqueio primeiro (fenoxibenzamina/fentolamina), depois β-bloqueio se necessário para taquicardia reflexa. β-bloqueio isolado causa crise hipertensiva paradoxal." },
   { title: "Glaucoma de Ângulo Aberto – Pilocarpina", difficulty: "Médio", patient: { name: "Dona Tereza", age: 62, weight: 55, diagnosis: "Glaucoma de ângulo aberto – PIO elevada" }, scenario: "A pilocarpina é um agonista muscarínico que contrai o músculo ciliar, abrindo a malha trabecular e facilitando a drenagem do humor aquoso.", expectedDrug: "pilocarpina", clinicalTip: "Pilocarpina (M-agonista): miose + contração do músculo ciliar → ↑drenagem do humor aquoso → ↓PIO. EA: visão turva, espasmo de acomodação." },
 ];
 
@@ -51,8 +52,8 @@ function computeOrganEffects(selectedDrug: string, drugDose: number) {
   const beta = drug.beta * factor;
   const musc = drug.muscarinic * factor;
 
-  const fc = 72 + beta * 0.5 - musc * 0.4;
-  const pas = 120 + alpha * 0.8 - beta * 0.3;
+  const fc = 72 + beta * 0.5 - musc * 0.4 - alpha * 0.05;
+  const pas = 120 + alpha * 0.8;
   const pupila = 4 + alpha * 0.03 - musc * 0.02;
   const motilidade = 50 - alpha * 0.2 + musc * 0.5;
   const bronquios = 50 - beta * 0.3 + musc * 0.3;
@@ -81,18 +82,19 @@ export default function SimuladorFarmacoAutonomica() {
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedDrug: cd.expectedDrug ?? "atropina", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
-  useEffect(() => { if (activeCase) { setSelectedDrug("atropina"); setDrugDose(80); } }, [activeCase]);
+  useEffect(() => { if (activeCase) { setSelectedDrug("isoproterenol"); setDrugDose(30); } }, [activeCase]);
 
   const organEffects = useMemo(() => computeOrganEffects(selectedDrug, drugDose), [selectedDrug, drugDose]);
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
     const drugCorrect = selectedDrug === activeCase.expectedDrug;
-    const s = drugCorrect ? 100 : 20;
+    const doseOk = drugDose >= 60;
+    const s = drugCorrect ? (doseOk ? 100 : 70) : 20;
     setLastScore(s);
     const decisions: SimDecision[] = [
       { label: "Fármaco selecionado", userChoice: DRUGS.find(d => d.key === selectedDrug)?.label || selectedDrug, idealChoice: DRUGS.find(d => d.key === activeCase.expectedDrug)?.label || activeCase.expectedDrug, correct: drugCorrect, category: "Seleção farmacológica", explanation: !drugCorrect ? activeCase.clinicalTip : undefined },
-      { label: "Dose aplicada", userChoice: `${drugDose}%`, idealChoice: "80-100%", correct: drugDose >= 60, category: "Posologia" },
+      { label: "Dose aplicada", userChoice: `${drugDose}%`, idealChoice: "80-100%", correct: doseOk, category: "Posologia" },
     ];
     submitResults({ score: s, actions: buildSimulatorDecisions("farmaco-autonomica", decisions) });
     return s;

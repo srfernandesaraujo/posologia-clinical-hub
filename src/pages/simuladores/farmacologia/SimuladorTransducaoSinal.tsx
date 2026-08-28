@@ -27,7 +27,7 @@ const RECEPTOR_INFO: Record<ReceptorType, { name: string; cascade: string[]; eff
   "gpcr-gs": { name: "GPCR – Gs", cascade: ["Ligante → Receptor", "Gs → Adenilato Ciclase ↑", "↑ AMPc", "PKA ativa", "Fosforilação de alvos"], effector: "↑ AMPc → PKA" },
   "gpcr-gi": { name: "GPCR – Gi", cascade: ["Ligante → Receptor", "Gi → Adenilato Ciclase ↓", "↓ AMPc", "PKA inibida", "↓ Fosforilação"], effector: "↓ AMPc → ↓ PKA" },
   "gpcr-gq": { name: "GPCR – Gq", cascade: ["Ligante → Receptor", "Gq → Fosfolipase C", "PIP₂ → IP₃ + DAG", "IP₃ → ↑ Ca²⁺ intracelular", "DAG → PKC ativa"], effector: "IP₃/DAG → Ca²⁺ + PKC" },
-  "tirosina-quinase": { name: "Receptor Tirosina Quinase", cascade: ["Ligante → Dimerização", "Autofosforilação (Tyr)", "Ras → Raf → MEK → ERK", "JAK → STAT (paralelo)", "Transcrição gênica"], effector: "MAPK / JAK-STAT" },
+  "tirosina-quinase": { name: "Receptor Tirosina Quinase", cascade: ["Ligante → Dimerização", "Autofosforilação (Tyr)", "IRS-1 → PI3K → Akt → GLUT4 (via metabólica)", "Ras → Raf → MEK → ERK (via mitogênica)", "Transcrição gênica / crescimento celular"], effector: "PI3K/Akt (metabólico) + MAPK (mitogênico)" },
   "ionotropico": { name: "Receptor Ionotrópico", cascade: ["Ligante → Canal abre", "Fluxo iônico (Na⁺/Ca²⁺/Cl⁻)", "Despolarização ou Hiperpolarização", "Efeito celular rápido", "ms de latência"], effector: "Fluxo iônico direto" },
   "nuclear": { name: "Receptor Nuclear", cascade: ["Ligante lipossolúvel → Citoplasma", "Liga ao receptor nuclear", "Complexo → Núcleo", "Liga ao elemento responsivo (HRE)", "Transcrição gênica (horas)"], effector: "Transcrição gênica" },
 };
@@ -43,8 +43,8 @@ interface TSCase {
 
 const BUILT_IN_CASES: TSCase[] = [
   { title: "Salbutamol e β2-adrenérgicos (Gs)", difficulty: "Fácil", patient: { name: "Maria Souza", age: 35, weight: 62, diagnosis: "Asma aguda em uso de salbutamol" }, scenario: "O salbutamol ativa receptores β2 (GPCR-Gs) no músculo liso brônquico. Selecione o receptor correto e observe a cascata AMPc → PKA → relaxamento.", targetReceptor: "gpcr-gs", expectedBlockStep: -1, clinicalTip: "β2-agonistas ativam Gs → ↑AMPc → PKA → relaxamento do músculo liso brônquico. Uso crônico pode causar dessensibilização por fosforilação do receptor (GRK/β-arrestina)." },
-  { title: "Atropina e receptores M3 (Gq)", difficulty: "Médio", patient: { name: "João Almeida", age: 68, weight: 75, diagnosis: "Bradicardia sinusal em bloqueio pré-operatório" }, scenario: "A atropina bloqueia receptores muscarínicos M3 (GPCR-Gq). Selecione o receptor correto e aplique um bloqueio na etapa da Fosfolipase C.", targetReceptor: "gpcr-gq", expectedBlockStep: 1, clinicalTip: "A atropina bloqueia M3 (Gq-acoplado), impedindo a ativação de PLC → IP₃/DAG. No coração, bloqueia M2 (Gi) → desinibição → taquicardia." },
-  { title: "Insulina e Receptor Tirosina Quinase", difficulty: "Médio", patient: { name: "Fernando Costa", age: 55, weight: 95, diagnosis: "Diabetes tipo 2 – resistência à insulina" }, scenario: "A insulina ativa receptores tirosina quinase. Na resistência insulínica, a via IRS/PI3K/Akt está prejudicada. Selecione o receptor correto.", targetReceptor: "tirosina-quinase", expectedBlockStep: 2, clinicalTip: "Na resistência insulínica, a fosforilação em serina (em vez de tirosina) no IRS-1 bloqueia a via PI3K/Akt, reduzindo a translocação de GLUT4." },
+  { title: "Atropina e receptores M3 (Gq)", difficulty: "Médio", patient: { name: "João Almeida", age: 68, weight: 75, diagnosis: "Bradicardia sinusal em bloqueio pré-operatório" }, scenario: "A atropina é um antagonista competitivo do receptor muscarínico M3 (GPCR-Gq): ela compete pelo próprio receptor, impedindo a ligação do agonista. Selecione o receptor correto e aplique o bloqueio na etapa 1 (Ligante → Receptor).", targetReceptor: "gpcr-gq", expectedBlockStep: 0, clinicalTip: "A atropina bloqueia diretamente o receptor M3 (Gq-acoplado), impedindo que a acetilcolina o ative — e, por consequência, toda a cascata a jusante (PLC → IP₃/DAG) fica inativa. No coração, bloqueia M2 (Gi) → desinibição → taquicardia." },
+  { title: "Insulina e Receptor Tirosina Quinase", difficulty: "Médio", patient: { name: "Fernando Costa", age: 55, weight: 95, diagnosis: "Diabetes tipo 2 – resistência à insulina" }, scenario: "A insulina ativa receptores tirosina quinase. Na resistência insulínica, a via metabólica IRS-1 → PI3K → Akt → GLUT4 está prejudicada (a via mitogênica Ras/MAPK costuma ficar preservada). Selecione o receptor correto e aplique o bloqueio na etapa 3 (via metabólica).", targetReceptor: "tirosina-quinase", expectedBlockStep: 2, clinicalTip: "Na resistência insulínica, a fosforilação em serina (em vez de tirosina) no IRS-1 bloqueia a via PI3K/Akt, reduzindo a translocação de GLUT4 — enquanto a via mitogênica (Ras/MAPK) permanece relativamente preservada." },
 ];
 
 export default function SimuladorTransducaoSinal() {
@@ -64,7 +64,7 @@ export default function SimuladorTransducaoSinal() {
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, targetReceptor: cd.targetReceptor ?? "gpcr-gs", expectedBlockStep: cd.expectedBlockStep ?? -1, clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
-  useEffect(() => { if (activeCase) { setSelectedReceptor(activeCase.targetReceptor); setAgonistConc(80); setBlockStep(-1); setBlockIntensity(80); } }, [activeCase]);
+  useEffect(() => { if (activeCase) { setSelectedReceptor("ionotropico"); setAgonistConc(80); setBlockStep(-1); setBlockIntensity(80); } }, [activeCase]);
 
   const cascadeData = useMemo(() => {
     const info = RECEPTOR_INFO[selectedReceptor];
@@ -78,7 +78,7 @@ export default function SimuladorTransducaoSinal() {
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
     const receptorOk = selectedReceptor === activeCase.targetReceptor;
-    const blockOk = activeCase.expectedBlockStep < 0 ? blockStep < 0 : blockStep === activeCase.expectedBlockStep;
+    const blockOk = activeCase.expectedBlockStep < 0 ? blockStep < 0 : blockStep === activeCase.expectedBlockStep && blockIntensity >= 50;
     const s = (receptorOk ? 60 : 0) + (blockOk ? 40 : 0);
     setLastScore(s);
     submitResults({ score: s, actions: { selectedReceptor, agonistConc, blockStep, blockIntensity } });

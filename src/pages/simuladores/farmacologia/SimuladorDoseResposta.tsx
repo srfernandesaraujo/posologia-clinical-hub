@@ -46,7 +46,7 @@ const BUILT_IN_CASES: DRCase[] = [
     patient: { name: "Lúcia Ferreira", age: 28, weight: 60, diagnosis: "Reversão de overdose de opioides com naloxona" },
     scenario: "Ative o antagonista competitivo e observe o deslocamento da curva para a direita (↑EC50) sem alterar o Emax. A naloxona compete pelo receptor µ-opioide.",
     initialEC50: 50, initialEmax: 100,
-    expectedEC50: [100, 200], expectedEmax: [90, 110],
+    expectedEC50: [75, 300], expectedEmax: [90, 110],
     clinicalTip: "O antagonismo competitivo pode ser superado aumentando a concentração do agonista. Por isso doses repetidas de naloxona podem ser necessárias em overdoses com fentanil.",
   },
   {
@@ -55,7 +55,7 @@ const BUILT_IN_CASES: DRCase[] = [
     patient: { name: "Roberto Santos", age: 48, weight: 90, diagnosis: "Feocromocitoma – preparo pré-operatório com fenoxibenzamina" },
     scenario: "A fenoxibenzamina é um antagonista α-adrenérgico irreversível. Ative o antagonista não-competitivo e observe a redução do Emax.",
     initialEC50: 50, initialEmax: 100,
-    expectedEC50: [45, 60], expectedEmax: [30, 60],
+    expectedEC50: [45, 60], expectedEmax: [25, 70],
     clinicalTip: "No antagonismo não-competitivo (irreversível), receptores são permanentemente inativados. Aumentar [agonista] NÃO restaura a resposta máxima. Novos receptores precisam ser sintetizados.",
   },
 ];
@@ -224,7 +224,7 @@ export default function SimuladorDoseResposta() {
       </Card>
 
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getDoseRespostaChallenges()} simulatorState={{ ec50, emax }} onComplete={() => setChallengeCompleted(true)} />
+      <SimulatorChallengeMode challengeSet={getDoseRespostaChallenges()} simulatorState={{ ec50, emax, effEC50, effEmax, partialAgonist, competitiveAntag, nonCompAntag }} onComplete={() => setChallengeCompleted(true)} />
       {isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">

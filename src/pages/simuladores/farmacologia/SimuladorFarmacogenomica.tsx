@@ -38,7 +38,7 @@ interface FGCase {
 }
 
 const BUILT_IN_CASES: FGCase[] = [
-  { title: "Codeína → Morfina (CYP2D6)", difficulty: "Médio", patient: { name: "Isabela Neves", age: 30, weight: 55, diagnosis: "Dor pós-operatória em metabolizadora ultrarrápida CYP2D6" }, scenario: "A codeína é um pró-fármaco convertido em morfina pelo CYP2D6. Metabolizadores ultrarrápidos produzem excesso de morfina, com risco de depressão respiratória.", drugType: "pro-farmaco", enzyme: "CYP2D6", expectedPhenotype: "ultrarapido", expectedDoseAdjust: [20, 50], clinicalTip: "Metabolizadores ultrarrápidos CYP2D6: EVITAR codeína e tramadol. Risco fatal de depressão respiratória, especialmente em lactantes (morfina passa ao leite)." },
+  { title: "Codeína → Morfina (CYP2D6)", difficulty: "Médio", patient: { name: "Isabela Neves", age: 30, weight: 55, diagnosis: "Dor pós-operatória em metabolizadora ultrarrápida CYP2D6" }, scenario: "A codeína é um pró-fármaco convertido em morfina pelo CYP2D6. Metabolizadores ultrarrápidos produzem excesso de morfina, com risco de depressão respiratória. Identifique o fenótipo correto — a conduta clínica correta não é reduzir a dose, e sim EVITAR a codeína nesse paciente.", drugType: "pro-farmaco", enzyme: "CYP2D6", expectedPhenotype: "ultrarapido", expectedDoseAdjust: [90, 110], clinicalTip: "Metabolizadores ultrarrápidos CYP2D6: EVITAR codeína e tramadol. Risco fatal de depressão respiratória, especialmente em lactantes (morfina passa ao leite). Ajustar a dose não resolve — a conduta é trocar de fármaco." },
   { title: "Varfarina e CYP2C9/VKORC1", difficulty: "Difícil", patient: { name: "Otávio Gomes", age: 65, weight: 78, diagnosis: "TEP em anticoagulação – metabolizador lento CYP2C9" }, scenario: "Metabolizadores lentos de CYP2C9 têm clearance reduzido de varfarina. Combinado com VKORC1 sensível, a dose necessária pode ser 50-75% menor.", drugType: "farmaco-ativo", enzyme: "CYP2C9", expectedPhenotype: "lento", expectedDoseAdjust: [25, 50], clinicalTip: "Varfarina: genótipos CYP2C9 *2/*3 e VKORC1 -1639G>A explicam ~40% da variabilidade de dose. Algoritmos farmacogenômicos (warfarindosing.org) são mais precisos que dosagem empírica." },
   { title: "Clopidogrel e CYP2C19", difficulty: "Médio", patient: { name: "Renata Torres", age: 58, weight: 70, diagnosis: "Pós-stent coronariano – metabolizador lento CYP2C19" }, scenario: "Clopidogrel é pró-fármaco ativado pelo CYP2C19. Metabolizadores lentos têm menor conversão ao metabólito ativo, com maior risco de trombose de stent.", drugType: "pro-farmaco", enzyme: "CYP2C19", expectedPhenotype: "lento", expectedDoseAdjust: [80, 120], clinicalTip: "CYP2C19 PM: trocar clopidogrel por prasugrel ou ticagrelor (não dependem de ativação CYP). Genotipagem pré-stent é recomendada pelo CPIC." },
 ];
@@ -94,7 +94,12 @@ export default function SimuladorFarmacogenomica() {
     if (!activeCase || submitted) return 0;
     const phenOk = phenotype === activeCase.expectedPhenotype;
     const doseOk = dose >= activeCase.expectedDoseAdjust[0] && dose <= activeCase.expectedDoseAdjust[1];
-    const s = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    const caseScore = (phenOk ? 60 : 0) + (doseOk ? 40 : 0);
+    // O quiz genérico (perguntas "adjust") reconfigura fenótipo/dose/tipo de fármaco para valores
+    // fixos não relacionados ao caso carregado — em modo solo, combina com o score real do quiz
+    // para não persistir um score de caso "contaminado" pelo estado residual do quiz.
+    const storedChallengeScore = sessionStorage.getItem("challengeScore");
+    const s = storedChallengeScore ? Math.round((caseScore + Number(storedChallengeScore)) / 2) : caseScore;
     setLastScore(s);
     submitResults({ score: s, actions: { phenotype, dose, drugType } });
     return s;

@@ -45,7 +45,9 @@ function generatePKProfiles(dose: number, enabledRoutes: string[], bioFactor: nu
     const point: any = { time: t };
     ROUTES.forEach(r => {
       if (!enabledRoutes.includes(r.key)) return;
-      const F = (r.bioavail / 100) * (bioFactor / 100);
+      // Vias IV têm F=100% por definição (sem absorção, sem 1ª passagem) — não escaladas pela biodisponibilidade global.
+      const isIV = r.key === "iv-bolus" || r.key === "iv-infusao";
+      const F = isIV ? (r.bioavail / 100) : (r.bioavail / 100) * (bioFactor / 100);
       let cp = 0;
       if (r.key === "iv-bolus") {
         // Instant peak, monoexponential decay
@@ -96,7 +98,15 @@ export default function SimuladorViasAdministracao() {
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient, scenario: cd.scenario, expectedRoute: cd.expectedRoute ?? "oral", clinicalTip: cd.clinicalTip ?? "" }); } }, [virtualRoomCase]);
-  useEffect(() => { if (activeCase) { setDose(100); setBioFactor(100); setElimRate(5); setEnabledRoutes(["iv-bolus", "oral"]); } }, [activeCase]);
+  useEffect(() => {
+    if (activeCase) {
+      setDose(100); setBioFactor(100); setElimRate(5);
+      // Pré-habilita apenas a via de comparação (errada) citada no cenário — a via correta
+      // fica de fora por padrão, para que o aluno precise identificá-la e ativá-la.
+      const COMPARATOR: Record<string, string> = { im: "iv-bolus", sublingual: "oral", "iv-infusao": "iv-bolus", oral: "iv-bolus", sc: "iv-bolus", "iv-bolus": "oral" };
+      setEnabledRoutes([COMPARATOR[activeCase.expectedRoute] ?? "oral"]);
+    }
+  }, [activeCase]);
 
   const points = useMemo(() => generatePKProfiles(dose, enabledRoutes, bioFactor, elimRate), [dose, enabledRoutes, bioFactor, elimRate]);
 
@@ -104,8 +114,13 @@ export default function SimuladorViasAdministracao() {
 
   const handleFinish = useCallback(() => {
     if (!activeCase || submitted) return 0;
-    const ok = enabledRoutes.includes(activeCase.expectedRoute);
-    const s = ok ? 100 : 30;
+    const includesExpected = enabledRoutes.includes(activeCase.expectedRoute);
+    const focused = enabledRoutes.length <= 2;
+    const caseScore = includesExpected && focused ? 100 : includesExpected ? 60 : 20;
+    // Modo solo: combina o score do caso com o score real do quiz de desafios (se já respondido),
+    // em vez de persistir só o match binário de via — evita divergência entre nota exibida e gravada.
+    const storedChallengeScore = sessionStorage.getItem("challengeScore");
+    const s = storedChallengeScore ? Math.round((caseScore + Number(storedChallengeScore)) / 2) : caseScore;
     setLastScore(s);
     submitResults({ score: s, actions: { dose, bioFactor, elimRate, enabledRoutes } });
     return s;
