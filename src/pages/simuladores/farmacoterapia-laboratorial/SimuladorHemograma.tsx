@@ -313,17 +313,15 @@ export default function SimuladorHemograma() {
     if (!activeCase || submitted) return 0;
     const drugNames = selectedDrugs.map(d => d.name);
     const expectedFound = activeCase.expectedDrugs.filter(e => drugNames.includes(e)).length;
-    const drugScore = (expectedFound / Math.max(activeCase.expectedDrugs.length, 1)) * 50;
     const hbImproved = simulation.lastLab.hb > (activeCase.baseLab?.hb ?? 10);
-    const s = Math.round(drugScore + (hbImproved ? 30 : 0) + 20);
-    setLastScore(s);
+    const s = lastScore;
     const decisions: SimDecision[] = [
       { label: "Fármacos selecionados", userChoice: drugNames.join(", ") || "Nenhum", idealChoice: activeCase.expectedDrugs.join(", "), correct: expectedFound === activeCase.expectedDrugs.length, category: "Seleção farmacológica" },
       { label: "Melhora laboratorial", userChoice: `Hb: ${simulation.lastLab.hb}`, idealChoice: "Hb melhorou", correct: hbImproved, category: "Desfecho" },
     ];
     submitResults({ score: s, actions: buildSimulatorDecisions("farmacoterapia-hemograma", decisions) });
     return s;
-  }, [activeCase, selectedDrugs, simulation, submitted, submitResults]);
+  }, [activeCase, selectedDrugs, simulation, submitted, submitResults, lastScore]);
 
   useEffect(() => {
     if (challengeCompleted && !submitted && activeCase) {
@@ -586,7 +584,7 @@ export default function SimuladorHemograma() {
               lastLab: simulation.lastLab,
               baseLab: activeCase.baseLab,
             }}
-            onComplete={() => setChallengeCompleted(true)}
+            onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }}
           />
         );
       })()}

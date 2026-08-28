@@ -13,8 +13,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight, Eye } from "lucide-react";
+import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight, Eye, AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,8 @@ export default function SimulatorChallengeMode({
   const vrContextRef = useRef<any>(null);
   const [isVR, setIsVR] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
+  const [vrSubmitStatus, setVrSubmitStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const lastSubmitArgsRef = useRef<{ finalScore: number; total: number } | null>(null);
 
   // Confirmation dialog before locking an answer (touch-screen safety)
   const [pendingConfirm, setPendingConfirm] = useState<
@@ -234,11 +237,14 @@ export default function SimulatorChallengeMode({
     const ctx = vrContextRef.current;
     if (!ctx) return;
 
+    lastSubmitArgsRef.current = { finalScore, total };
+    setVrSubmitStatus("pending");
+
     const pctScore = Math.round((finalScore / total) * 100);
     const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
 
     try {
-      await supabase.from("room_submissions").insert({
+      const { error } = await supabase.from("room_submissions").insert({
         room_id: ctx.roomId,
         participant_id: ctx.participantId,
         step_index: ctx.activityIndex ?? 0,
@@ -251,12 +257,16 @@ export default function SimulatorChallengeMode({
         time_spent_seconds: timeSpent,
         activity_id: ctx.activityId || null,
       });
+      if (error) throw error;
 
       // Signal that VR submission was done by challenge mode
       sessionStorage.setItem("challengeSubmitted", "true");
       sessionStorage.setItem("challengeScore", String(pctScore));
+      setVrSubmitStatus("success");
     } catch (err) {
       console.error("Error submitting challenge results:", err);
+      setVrSubmitStatus("error");
+      toast.error("Falha ao enviar seu resultado para o professor. Tente novamente antes de sair desta página.");
     }
   }, []);
 
@@ -356,8 +366,31 @@ export default function SimulatorChallengeMode({
               <span key={s} className={`text-2xl ${s <= stars ? "text-yellow-400" : "text-muted-foreground/30"}`}>★</span>
             ))}
           </div>
-          {isVR && (
+          {isVR && vrSubmitStatus === "pending" && (
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando resultado para o professor...
+            </p>
+          )}
+          {isVR && vrSubmitStatus === "success" && (
             <p className="text-xs text-muted-foreground">✅ Resultado enviado para o professor</p>
+          )}
+          {isVR && vrSubmitStatus === "error" && (
+            <div className="space-y-2">
+              <p className="text-xs text-destructive flex items-center justify-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" /> Falha ao enviar o resultado. Não feche esta página.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  const args = lastSubmitArgsRef.current;
+                  if (args) submitToVirtualRoom(args.finalScore, args.total);
+                }}
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Tentar reenviar
+              </Button>
+            </div>
           )}
           {!isVR && (
             <Button onClick={handleRestart} variant="outline" className="gap-2">
