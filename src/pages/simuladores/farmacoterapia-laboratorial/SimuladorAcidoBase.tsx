@@ -312,17 +312,15 @@ export default function SimuladorAcidoBase() {
     if (!activeCase || submitted) return 0;
     const drugNames = selectedDrugs.map(d => d.name);
     const expectedFound = activeCase.expectedDrugs.filter(e => drugNames.includes(e)).length;
-    const drugScore = (expectedFound / Math.max(activeCase.expectedDrugs.length, 1)) * 50;
     const phNorm = simulation.lastLab.pH >= 7.35 && simulation.lastLab.pH <= 7.45;
-    const s = Math.round(drugScore + (phNorm ? 30 : 0) + 20);
-    setLastScore(s);
+    const s = lastScore;
     const decisions: SimDecision[] = [
       { label: "Fármacos selecionados", userChoice: drugNames.join(", ") || "Nenhum", idealChoice: activeCase.expectedDrugs.join(", "), correct: expectedFound === activeCase.expectedDrugs.length, category: "Seleção farmacológica" },
       { label: "pH normalizado", userChoice: `pH: ${simulation.lastLab.pH}`, idealChoice: "7.35-7.45", correct: phNorm, category: "Desfecho" },
     ];
     submitResults({ score: s, actions: buildSimulatorDecisions("farmacoterapia-acido-base", decisions) });
     return s;
-  }, [activeCase, selectedDrugs, simulation, submitted, submitResults]);
+  }, [activeCase, selectedDrugs, simulation, submitted, submitResults, lastScore]);
 
   useEffect(() => {
     if (challengeCompleted && !submitted && activeCase) {
@@ -569,7 +567,7 @@ export default function SimuladorAcidoBase() {
               baseLab: activeCase.baseLab,
               ag: simulation.ag,
             }}
-            onComplete={() => setChallengeCompleted(true)}
+            onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }}
           />
         );
       })()}
