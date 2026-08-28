@@ -1,5 +1,5 @@
 import {
-  Pill, Bug, Activity, ClipboardList, Syringe,
+  Pill, Bug, Activity, ClipboardList, Syringe, FlaskConical,
   HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna,
   BookOpen, Scan, Accessibility, Mic, Database, type LucideIcon,
 } from "lucide-react";
