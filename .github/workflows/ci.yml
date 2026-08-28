@@ -1,0 +1,33 @@
+name: CI
+
+# Verificação visível (type-check + testes) a cada push/PR no main. Não
+# bloqueia o deploy do frontend — esse vai direto pelo build do Cloudflare
+# Pages — mas dá um sinal vermelho/verde claro no commit/PR antes que alguém
+# precise descobrir o problema em produção. Ver AGENTS.md/CLAUDE.md e
+# .claude/agents/doc-sync.md para o contexto de por que isso importa: o
+# catálogo de simuladores e o de casos nativos são mantidos à mão e já
+# quebraram silenciosamente mais de uma vez.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check (tsconfig.app.json — the root tsconfig.json is solution-style and checks nothing)
+        run: npx tsc --noEmit -p tsconfig.app.json
+
+      - name: Tests
+        run: npx vitest run
