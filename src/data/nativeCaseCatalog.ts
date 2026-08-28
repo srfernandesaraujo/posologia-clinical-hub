@@ -481,6 +481,63 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: Asma na Gestação — Segurança do CI", difficulty: "Médio" },
     { index: 4, title: "Caso 5: Exacerbação Grave no PS", difficulty: "Difícil" },
   ],
+  // ── Farmacoterapia Laboratorial ──
+  "farmacoterapia-hemograma": [
+    { index: 0, title: "Caso 1: Anemia Microcítica Ferropriva", difficulty: "Fácil" },
+    { index: 1, title: "Caso 2: Anemia Megaloblástica por Deficiência de B12", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: Neutropenia Febril Pós-Quimioterapia", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Plaquetopenia com Sangramento", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Leucocitose — Reacional vs Leucemia", difficulty: "Difícil" },
+  ],
+  "farmacoterapia-acido-base": [
+    { index: 0, title: "Caso 1: Cetoacidose Diabética (Acidose Metabólica AG Elevado)", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Alcalose Metabólica Hipoclorêmica (Vômitos)", difficulty: "Fácil" },
+    { index: 2, title: "Caso 3: Hipocalemia e Toxicidade Digitálica", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Hipercalemia com Risco de Arritmia", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: Hiponatremia Dilucional (SIADH)", difficulty: "Médio" },
+  ],
+  "farmacoterapia-hepatopatia": [
+    { index: 0, title: "Caso 1: Hepatotoxicidade por Paracetamol", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Hepatite por Isoniazida", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: Cirrose Child-Pugh C", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Interação Fluconazol + Estatina", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Encefalopatia Hepática", difficulty: "Difícil" },
+  ],
+  "farmacoterapia-renal": [
+    { index: 0, title: "Caso 1: Vancomicina em DRC G3", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Metformina em DRC G4", difficulty: "Fácil" },
+    { index: 2, title: "Caso 3: Nefrotoxicidade por Gentamicina", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: AINE em Idoso — DRC G2→G4", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Toxicidade Digitálica por DRC", difficulty: "Difícil" },
+  ],
+  "farmacoterapia-infeccao-lab": [
+    { index: 0, title: "Caso 1: PAC — Leucocitose + PCR Alta", difficulty: "Fácil" },
+    { index: 1, title: "Caso 2: Sepse — PCT >10 + Lactato >4", difficulty: "Difícil" },
+    { index: 2, title: "Caso 3: Viral vs Bacteriana", difficulty: "Fácil" },
+    { index: 3, title: "Caso 4: Neutropenia Febril", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: Desescalonamento por Cultura", difficulty: "Médio" },
+  ],
+  "farmacoterapia-dislipidemia": [
+    { index: 0, title: "Caso 1: Risco Alto — LDL 180", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Intolerância à Estatina", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: TG >500 — Risco de Pancreatite", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Pós-IAM — Meta <50", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: HF — LDL Refratário", difficulty: "Difícil" },
+  ],
+  "farmacoterapia-glicemia": [
+    { index: 0, title: "Caso 1: DM2 Recém-diagnosticado", difficulty: "Fácil" },
+    { index: 1, title: "Caso 2: DM2 com Doença CV", difficulty: "Médio" },
+    { index: 2, title: "Caso 3: DM2 com DRC G3b", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Cetoacidose Diabética", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: DM2 Idoso Frágil", difficulty: "Médio" },
+  ],
+  "farmacoterapia-coagulacao": [
+    { index: 0, title: "Caso 1: Início de Varfarina (FA)", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: INR Supraterapêutico", difficulty: "Difícil" },
+    { index: 2, title: "Caso 3: TVP Aguda", difficulty: "Médio" },
+    { index: 3, title: "Caso 4: Sangramento por HNF", difficulty: "Difícil" },
+    { index: 4, title: "Caso 5: Preparo Pré-operatório", difficulty: "Médio" },
+  ],
   // ── Prontuário Eletrônico (FHIR) ──
   "prontuario-fhir": [
     { index: 0, title: "Caso 1: HAS recém-diagnosticada com hiperpotassemia por IECA", difficulty: "Médio" },
