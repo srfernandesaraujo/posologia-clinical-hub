@@ -22,6 +22,7 @@ import { getNativeCases } from "@/data/nativeCaseCatalog";
 import { VIRTUAL_ROOM_GAMES, VIRTUAL_ROOM_GAME_CATEGORIES, isGameSlug } from "@/data/virtualRoomGames";
 import { useClasses } from "@/hooks/useClasses";
 import { LIVE_TEAM_CASES, getLiveTeamCase } from "@/data/liveTeamCases/sepseGrave";
+import { NATIVE_SIMULATORS, ROOM_EXCLUDED_SIMULATOR_SLUGS } from "@/data/simulatorCatalog";
 
 interface ToolOption {
   slug: string;
@@ -31,126 +32,13 @@ interface ToolOption {
 
 type ToolType = "simulator" | "laboratory" | "game";
 
-const SIMULATOR_OPTIONS: ToolOption[] = [
-  // Farmácia Clínica
-  { slug: "prm", label: "PRM – Problemas Relacionados a Medicamentos", category: "Farmácia Clínica" },
-  { slug: "metodo-soap", label: "Simulador do Método SOAP", category: "Farmácia Clínica" },
-  { slug: "mai", label: "Simulador MAI", category: "Farmácia Clínica" },
-  { slug: "cascata-prescricao", label: "Cascata de Prescrição", category: "Farmácia Clínica" },
-  { slug: "acompanhamento", label: "Acompanhamento Farmacoterapêutico", category: "Farmácia Clínica" },
-  { slug: "dispensacao-344", label: "Dispensação — Portaria 344/98", category: "Farmácia Clínica" },
-  // Infectologia
-  { slug: "antimicrobianos", label: "Antimicrobianos / Stewardship", category: "Infectologia" },
-  // Farmacocinética
-  { slug: "tdm", label: "TDM – Monitoramento Terapêutico", category: "Farmacocinética" },
-  // Endocrinologia
-  { slug: "insulina", label: "Dose de Insulina", category: "Endocrinologia" },
-  // Enfermagem / UTI
-  { slug: "bomba-infusao", label: "Bomba de Infusão", category: "Enfermagem / UTI" },
-  // Psiquiatria
-  { slug: "desmame-benzo", label: "Desmame de Benzodiazepínicos", category: "Psiquiatria" },
-  // Farmacologia Clínica
-  { slug: "interacoes", label: "Interações Medicamentosas", category: "Farmacologia Clínica" },
-  { slug: "manejo-dor", label: "Manejo da Dor e Analgesia", category: "Farmacologia Clínica" },
-  { slug: "inflamacao-aines", label: "Inflamação e Anti-inflamatórios", category: "Farmacologia Clínica" },
-  { slug: "infeccoes-antibioticos", label: "Infecções e Antibioticoterapia", category: "Farmacologia Clínica" },
-  { slug: "tratamento-asma", label: "Tratamento da Asma", category: "Farmacologia Clínica" },
-  // Fisiologia Humana
-  { slug: "sna", label: "Sistema Nervoso Autônomo", category: "Fisiologia Humana" },
-  { slug: "eletrofisiologia-cardiaca", label: "Eletrofisiologia Cardíaca", category: "Fisiologia Humana" },
-  { slug: "depuracao-renal", label: "Depuração Renal e TFG", category: "Fisiologia Humana" },
-  { slug: "equilibrio-acido-base", label: "Equilíbrio Ácido-Base", category: "Fisiologia Humana" },
-  { slug: "regulacao-glicemica", label: "Regulação Glicêmica", category: "Fisiologia Humana" },
-  { slug: "eixo-hpa", label: "Eixo HPA", category: "Fisiologia Humana" },
-  { slug: "cinetica-enzimatica", label: "Cinética Enzimática", category: "Fisiologia Humana" },
-  { slug: "secrecao-gastrica", label: "Secreção Ácida Gástrica", category: "Fisiologia Humana" },
-  { slug: "cascata-coagulacao", label: "Cascata de Coagulação", category: "Fisiologia Humana" },
-  { slug: "compartimentos-adme", label: "Compartimentos ADME", category: "Fisiologia Humana" },
-  // Bioquímica
-  { slug: "cadeia-eletrons", label: "Cadeia de Transporte de Eletrões", category: "Bioquímica" },
-  { slug: "dissociacao-hemoglobina", label: "Dissociação da Hemoglobina", category: "Bioquímica" },
-  { slug: "glicolise-gliconeogenese", label: "Glicólise vs. Gliconeogénese", category: "Bioquímica" },
-  { slug: "cinetica-avancada", label: "Cinética Enzimática Avançada", category: "Bioquímica" },
-  { slug: "ciclo-ureia", label: "Ciclo da Ureia", category: "Bioquímica" },
-  { slug: "acido-araquidonico", label: "Cascata do Ácido Araquidónico", category: "Bioquímica" },
-  { slug: "lipoproteinas", label: "Metabolismo das Lipoproteínas", category: "Bioquímica" },
-  { slug: "pentoses-fosfato", label: "Via das Pentoses Fosfato e G6PD", category: "Bioquímica" },
-  { slug: "titulacao-aminoacidos", label: "Titulação de Aminoácidos", category: "Bioquímica" },
-  { slug: "operon-lac", label: "Operão Lac", category: "Bioquímica" },
-  // Farmacologia Básica
-  { slug: "dose-resposta", label: "Curva Dose-Resposta", category: "Farmacologia Básica" },
-  { slug: "transducao-sinal", label: "Transdução de Sinal", category: "Farmacologia Básica" },
-  { slug: "janela-terapeutica-farma", label: "Janela Terapêutica", category: "Farmacologia Básica" },
-  { slug: "vias-administracao", label: "Vias de Administração", category: "Farmacologia Básica" },
-  { slug: "bloqueio-neuromuscular", label: "Bloqueio Neuromuscular", category: "Farmacologia Básica" },
-  { slug: "farmaco-autonomica", label: "Farmacologia Autonômica", category: "Farmacologia Básica" },
-  { slug: "tolerancia-dependencia", label: "Tolerância e Dependência", category: "Farmacologia Básica" },
-  { slug: "farmacogenomica", label: "Farmacogenômica CYP", category: "Farmacologia Básica" },
-  // Farmacotécnica
-  { slug: "estabilidade", label: "Estabilidade e Prazo de Validade", category: "Farmacotécnica" },
-  { slug: "liberacao-farmacos", label: "Sistemas de Liberação", category: "Farmacotécnica" },
-  { slug: "diluicao", label: "Diluição e Concentração", category: "Farmacotécnica" },
-  { slug: "reologia", label: "Reologia e Viscosidade", category: "Farmacotécnica" },
-  { slug: "hlb-emulsoes", label: "Equilíbrio HLB e Emulsões", category: "Farmacotécnica" },
-  { slug: "granulometria", label: "Granulometria", category: "Farmacotécnica" },
-  { slug: "compressao", label: "Compressão de Comprimidos", category: "Farmacotécnica" },
-  { slug: "tampao-farmaceutico", label: "Tampão Farmacêutico", category: "Farmacotécnica" },
-  // Química Farmacêutica
-  { slug: "sar-explorer", label: "Relação Estrutura-Atividade (SAR)", category: "Química Farmacêutica" },
-  { slug: "lipinski", label: "Regra de Lipinski", category: "Química Farmacêutica" },
-  { slug: "bioisosterismo", label: "Bioisosterismo", category: "Química Farmacêutica" },
-  { slug: "metabolismo-farmacos", label: "Metabolismo de Fármacos", category: "Química Farmacêutica" },
-  { slug: "docking-simplificado", label: "Docking Fármaco-Receptor", category: "Química Farmacêutica" },
-  { slug: "quiralidade", label: "Quiralidade e Estereoquímica", category: "Química Farmacêutica" },
-  { slug: "pka-absorcao", label: "pKa, Ionização e Absorção", category: "Química Farmacêutica" },
-  { slug: "qsar-simplificado", label: "QSAR (Hansch)", category: "Química Farmacêutica" },
-  // Formação Docente
-  { slug: "feedback-formativo", label: "Feedback Formativo", category: "Formação Docente" },
-  { slug: "elaboracao-questoes", label: "Elaboração de Questões (Bloom)", category: "Formação Docente" },
-  { slug: "conducao-caso-pbl", label: "Condução de Caso (PBL/TBL)", category: "Formação Docente" },
-  { slug: "planejamento-aula", label: "Planejamento de Aula", category: "Formação Docente" },
-  { slug: "gestao-sala", label: "Gestão de Sala", category: "Formação Docente" },
-  { slug: "avaliacao-rubrica-osce", label: "Avaliação por Rubrica (OSCE)", category: "Formação Docente" },
-  { slug: "preceptoria-clinica", label: "Preceptoria Clínica", category: "Formação Docente" },
-  // Odontologia
-  { slug: "odontograma", label: "Odontograma Interativo", category: "Odontologia" },
-  { slug: "anatomia-endodontia", label: "Anatomia Dental (Endodontia)", category: "Odontologia" },
-  { slug: "periodontograma", label: "Periodontograma", category: "Odontologia" },
-  { slug: "anestesiologia-odonto", label: "Anestesiologia Odontológica", category: "Odontologia" },
-  { slug: "cefalometria", label: "Cefalometria", category: "Odontologia" },
-  { slug: "radiografia-odonto", label: "Radiografia Odontológica", category: "Odontologia" },
-  { slug: "farmacologia-odonto", label: "Farmacologia Odontológica", category: "Odontologia" },
-  { slug: "cirurgia-exodontia", label: "Cirurgia e Exodontia", category: "Odontologia" },
-  // Fisioterapia
-  { slug: "goniometria", label: "Goniometria Articular", category: "Fisioterapia" },
-  { slug: "avaliacao-postural", label: "Avaliação Postural", category: "Fisioterapia" },
-  { slug: "forca-muscular", label: "Força Muscular (Oxford/MRC)", category: "Fisioterapia" },
-  { slug: "dermatomos", label: "Dermátomos e Avaliação Sensitiva", category: "Fisioterapia" },
-  { slug: "respiratorio", label: "Fisioterapia Respiratória", category: "Fisioterapia" },
-  { slug: "eletroterapia", label: "Eletroterapia", category: "Fisioterapia" },
-  { slug: "testes-ortopedicos", label: "Testes Ortopédicos Especiais", category: "Fisioterapia" },
-  { slug: "berg", label: "Escala de Equilíbrio de Berg", category: "Fisioterapia" },
-  // Nutrição
-  { slug: "avaliacao-nutricional", label: "Avaliação Nutricional Antropométrica", category: "Nutrição" },
-  { slug: "triagem-nutricional", label: "Triagem Nutricional (NRS-2002)", category: "Nutrição" },
-  { slug: "necessidades-energeticas", label: "Necessidades Energéticas", category: "Nutrição" },
-  { slug: "tne", label: "Terapia Nutricional Enteral (TNE)", category: "Nutrição" },
-  { slug: "tnp", label: "Terapia Nutricional Parenteral (TNP)", category: "Nutrição" },
-  { slug: "disfagia", label: "Avaliação de Disfagia", category: "Nutrição" },
-  { slug: "nutricao-renal", label: "Nutrição Renal Crônica", category: "Nutrição" },
-  { slug: "nutricao-materno-infantil", label: "Nutrição Materno-Infantil", category: "Nutrição" },
-  // Genética
-  { slug: "sequenciamento-dna", label: "Sequenciamento de DNA (Sanger e NGS)", category: "Genética" },
-  { slug: "snp-farmacogenetica", label: "SNPs e Farmacogenética", category: "Genética" },
-  { slug: "cariotipo", label: "Cariótipo e Anomalias Cromossômicas", category: "Genética" },
-  { slug: "heranca-mendeliana", label: "Herança Mendeliana e Heredogramas", category: "Genética" },
-  { slug: "pcr-eletroforese", label: "PCR e Eletroforese em Gel", category: "Genética" },
-  { slug: "epigenetica", label: "Epigenética e Regulação Gênica", category: "Genética" },
-  { slug: "mutacoes-reparo", label: "Mutações e Reparo de DNA", category: "Genética" },
-  { slug: "genetica-populacoes", label: "Genética de Populações (Hardy-Weinberg)", category: "Genética" },
-  // Informática em Saúde
-  { slug: "prontuario-fhir", label: "Prontuário Eletrônico (FHIR)", category: "Informática em Saúde" },
-];
+// Derivado do catálogo canônico em src/data/simulatorCatalog.ts — um simulador
+// novo aparece aqui automaticamente, sem precisar editar esta lista. Para
+// excluir um simulador de Salas Virtuais, adicione o slug a
+// ROOM_EXCLUDED_SIMULATOR_SLUGS em vez de removê-lo daqui.
+const SIMULATOR_OPTIONS: ToolOption[] = NATIVE_SIMULATORS
+  .filter(s => !ROOM_EXCLUDED_SIMULATOR_SLUGS.has(s.slug))
+  .map(s => ({ slug: s.slug, label: s.name, category: s.category }));
 
 const LAB_OPTIONS: ToolOption[] = [
   { slug: "lab-farmacos", label: "Desenvolvimento de Fármacos", category: "Laboratório Virtual" },
