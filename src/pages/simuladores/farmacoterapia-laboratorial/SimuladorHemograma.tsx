@@ -64,50 +64,50 @@ interface HemoCase {
 
 const BUILT_IN_CASES: HemoCase[] = [
   {
-    title: "Caso 1: Anemia Microcítica Ferropriva",
+    title: "Caso 1: Carla Souza",
     difficulty: "Fácil",
     patient: { name: "Carla Souza", age: 28, weight: 58, sex: "F", specialGroup: [] },
-    scenario: "Mulher 28 anos com fadiga progressiva há 3 meses, palidez cutânea e unhas quebradiças. Dieta pobre em carne vermelha, ciclo menstrual abundante. O hemograma revela anemia microcítica hipocrômica com ferritina baixa e ferro sérico reduzido.",
+    scenario: "Mulher 28 anos com fadiga progressiva há 3 meses, palidez cutânea e unhas quebradiças. Dieta pobre em carne vermelha, ciclo menstrual abundante. O hemograma revela os seguintes resultados: Hb 8,5 g/dL, VCM 68 fL, HCM 24 pg, RDW 18%, ferritina 5 ng/mL, ferro sérico 25 µg/dL, TIBC 450 µg/dL.",
     baseLab: { hb: 8.5, ht: 28, vcm: 68, hcm: 24, chcm: 30, rdw: 18, leucocitos: 6500, neutrofilos: 3900, linfocitos: 1950, monocitos: 390, eosinofilos: 195, basofilos: 65, plaquetas: 380, reticulocitos: 0.8, ferritina: 5, ferro: 25, tibc: 450, b12: 450, folato: 12 },
     expectedDrugs: ["Sulfato Ferroso"],
     clinicalTip: "Anemia ferropriva: VCM <80, HCM <27, RDW >14%, ferritina <30 ng/mL. O sulfato ferroso (120-200mg Fe elementar/dia em 2-3 doses, jejum) é 1ª linha. Espera-se pico de reticulócitos em 5-10 dias e aumento de Hb de ~1 g/dL/semana. Manter por 3-6 meses após normalização da Hb para repor estoques.",
     references: ["Hoffbrand, Cap. 3", "WHO Guidelines on Iron Supplementation 2020"],
   },
   {
-    title: "Caso 2: Anemia Megaloblástica por Deficiência de B12",
+    title: "Caso 2: Antônio Pereira",
     difficulty: "Médio",
     patient: { name: "Antônio Pereira", age: 62, weight: 75, sex: "M", specialGroup: [] },
-    scenario: "Homem 62 anos, vegetariano estrito há 15 anos, queixa de formigamento em pés e mãos, dificuldade de marcha e glossite. Hemograma mostra anemia macrocítica com neutrófilos hipersegmentados no esfregaço. B12 muito baixa, folato normal.",
+    scenario: "Homem 62 anos, vegetariano estrito há 15 anos, queixa de formigamento em pés e mãos, dificuldade de marcha e glossite. O hemograma revela os seguintes resultados: Hb 7,8 g/dL, VCM 115 fL, neutrófilos hipersegmentados no esfregaço, B12 80 pg/mL, folato 15 ng/mL.",
     baseLab: { hb: 7.8, ht: 25, vcm: 115, hcm: 38, chcm: 33, rdw: 16, leucocitos: 3800, neutrofilos: 1900, linfocitos: 1330, monocitos: 342, eosinofilos: 152, basofilos: 76, plaquetas: 120, reticulocitos: 0.5, ferritina: 180, ferro: 90, tibc: 300, b12: 80, folato: 15 },
     expectedDrugs: ["Vitamina B12 (Cianocobalamina)"],
     clinicalTip: "Anemia megaloblástica por B12: VCM >100, neutrófilos hipersegmentados, B12 <200 pg/mL. Causa: absorção (anemia perniciosa, gastrectomia) ou dieta (veganos). Tratar com B12 IM 1000 mcg/dia × 7 dias, depois semanal × 4, depois mensal vitalício. Pico reticulocitário em 5-7 dias. ATENÇÃO: Ácido fólico isolado mascara deficiência de B12 e piora neuropatia!",
     references: ["Hoffbrand, Cap. 5", "Stabler SP. NEJM 2013"],
   },
   {
-    title: "Caso 3: Neutropenia Febril Pós-Quimioterapia",
+    title: "Caso 3: Fernanda Lima",
     difficulty: "Difícil",
     patient: { name: "Fernanda Lima", age: 45, weight: 68, sex: "F", specialGroup: ["Pós-QT (mama)"] },
-    scenario: "Mulher 45 anos, 10 dias após 3º ciclo de quimioterapia (AC-T) para câncer de mama. Chega ao PS com febre 38.8°C, calafrios e mal-estar. Hemograma mostra pancitopenia grave com neutropenia severa (neutrófilos <500). Urgência: iniciar antibiótico empírico imediato + considerar G-CSF.",
+    scenario: "Mulher 45 anos, 10 dias após 3º ciclo de quimioterapia (AC-T) para câncer de mama. Chega ao PS com febre 38.8°C, calafrios e mal-estar. O hemograma revela os seguintes resultados: leucócitos 800/mm³, neutrófilos 200/mm³, Hb 9,2 g/dL, plaquetas 65.000/mm³.",
     baseLab: { hb: 9.2, ht: 29, vcm: 88, hcm: 29, chcm: 33, rdw: 14, leucocitos: 800, neutrofilos: 200, linfocitos: 400, monocitos: 100, eosinofilos: 60, basofilos: 40, plaquetas: 65, reticulocitos: 0.3, ferritina: 250, ferro: 80, tibc: 280, b12: 400, folato: 10 },
     expectedDrugs: ["Filgrastim (G-CSF)"],
     clinicalTip: "Neutropenia febril: neutrófilos <500/mm³ + temp ≥38.3°C (ou ≥38°C por >1h). É emergência oncológica: antibiótico empírico em <1h (cefepime ou pipe-tazo). Filgrastim (G-CSF) 5-10 mcg/kg/dia SC se expectativa de neutropenia prolongada (>7 dias) ou infecção documentada. Espera-se aumento de neutrófilos em 24-72h. Não atrasar ATB para colher culturas!",
     references: ["NCCN Neutropenia Febril 2023", "Freifeld AG et al. CID 2011"],
   },
   {
-    title: "Caso 4: Plaquetopenia com Sangramento",
+    title: "Caso 4: Rafael Mendes",
     difficulty: "Médio",
     patient: { name: "Rafael Mendes", age: 35, weight: 80, sex: "M", specialGroup: [] },
-    scenario: "Homem 35 anos com petéquias difusas, gengivorragia espontânea e epistaxe recorrente há 5 dias. Sem uso de fármacos mielotóxicos. Hemograma: plaquetas 18.000/mm³, Hb e leucócitos normais. Suspeita de PTI (Púrpura Trombocitopênica Imune). O aluno deve avaliar necessidade de transfusão de plaquetas e agentes hemostáticos.",
+    scenario: "Homem 35 anos com petéquias difusas, gengivorragia espontânea e epistaxe recorrente há 5 dias. Sem uso de fármacos mielotóxicos. O hemograma revela os seguintes resultados: plaquetas 18.000/mm³, Hb 13,5 g/dL, leucócitos 7.200/mm³.",
     baseLab: { hb: 13.5, ht: 41, vcm: 88, hcm: 30, chcm: 34, rdw: 13, leucocitos: 7200, neutrofilos: 4300, linfocitos: 2160, monocitos: 432, eosinofilos: 216, basofilos: 72, plaquetas: 18, reticulocitos: 1.2, ferritina: 120, ferro: 85, tibc: 310, b12: 500, folato: 14 },
     expectedDrugs: ["Ácido Tranexâmico"],
     clinicalTip: "Plaquetopenia isolada (<20.000) com sangramento ativo: avaliar causa (PTI, heparina, aplasia). Transfusão de plaquetas se <10.000 (profilática) ou <20.000 com sangramento ativo ou <50.000 pré-procedimento. Ácido tranexâmico auxilia no controle de sangramento mucoso. Na PTI: 1ª linha = corticoide (prednisona 1 mg/kg), 2ª linha = imunoglobulina EV.",
     references: ["Hoffbrand, Cap. 26", "ASH PTI Guidelines 2019"],
   },
   {
-    title: "Caso 5: Leucocitose — Reacional vs Leucemia",
+    title: "Caso 5: Marcos Oliveira",
     difficulty: "Difícil",
     patient: { name: "Marcos Oliveira", age: 55, weight: 85, sex: "M", specialGroup: [] },
-    scenario: "Homem 55 anos com fadiga, sudorese noturna, perda de peso (8 kg em 2 meses) e esplenomegalia ao exame físico. Hemograma: leucocitose intensa (85.000/mm³) com predomínio de granulócitos em diferentes estágios de maturação (desvio à esquerda escalonado), basofilia e eosinofilia. Anemia leve e plaquetopenia. O aluno deve diferenciar leucocitose reacional (infecção) de neoplásica (LMC).",
+    scenario: "Homem 55 anos com fadiga, sudorese noturna, perda de peso (8 kg em 2 meses) e esplenomegalia ao exame físico. O hemograma revela os seguintes resultados: leucócitos 85.000/mm³, com granulócitos em diferentes estágios de maturação, basófilos e eosinófilos aumentados, Hb 10,5 g/dL, plaquetas 95.000/mm³.",
     baseLab: { hb: 10.5, ht: 33, vcm: 90, hcm: 30, chcm: 33, rdw: 15, leucocitos: 85000, neutrofilos: 55000, linfocitos: 8500, monocitos: 5100, eosinofilos: 8500, basofilos: 8500, plaquetas: 95, reticulocitos: 1.8, ferritina: 350, ferro: 110, tibc: 250, b12: 1200, folato: 18 },
     expectedDrugs: [],
     clinicalTip: "Leucocitose reacional: neutrofilia madura + desvio à esquerda não escalonado + fosfatase alcalina leucocitária (FAL) alta + PCR/VHS elevados. LMC: leucocitose extrema (>50.000) + desvio escalonado (mielócitos, metamielócitos, bastonetes) + basofilia + eosinofilia + FAL baixa + esplenomegalia + cromossomo Philadelphia (t(9;22)). B12 elevada na LMC (produzida por granulócitos). Encaminhar para mielograma + cariótipo + FISH/PCR para BCR-ABL.",
@@ -548,20 +548,6 @@ export default function SimuladorHemograma() {
             <div><strong>B12:</strong> {activeCase.baseLab.b12} pg/mL</div>
             <div><strong>Folato:</strong> {activeCase.baseLab.folato} ng/mL</div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-muted-foreground">Referências:</p>
-              {activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}
-            </div>
-          )}
         </CardContent>
       </Card>
 

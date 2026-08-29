@@ -1821,11 +1821,11 @@ export function getHemogramaChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined && caseIndex >= 0 && caseIndex < caseSets.length ? caseIndex : undefined;
   const challenges = idx !== undefined ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "Carla (Anemia Microcítica Ferropriva)",
-    "Antônio (Anemia Megaloblástica B12)",
-    "Fernanda (Neutropenia Febril Pós-QT)",
-    "Rafael (Plaquetopenia + Sangramento)",
-    "Marcos (Leucocitose — Reacional vs Leucemia)",
+    "Carla Souza",
+    "Antônio Pereira",
+    "Fernanda Lima",
+    "Rafael Mendes",
+    "Marcos Oliveira",
   ];
 
   return {
@@ -1899,11 +1899,11 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined && caseIndex >= 0 && caseIndex < caseSets.length ? caseIndex : undefined;
   const challenges = idx !== undefined ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "João (Cetoacidose Diabética)",
-    "Maria Luiza (Alcalose Hipoclorêmica)",
-    "Sebastião (Hipocalemia + Digoxina)",
-    "Paulo Roberto (Hipercalemia + Arritmia)",
-    "Teresa (Hiponatremia — SIADH)",
+    "João Santos",
+    "Maria Luiza",
+    "Sebastião Gomes",
+    "Paulo Roberto",
+    "Teresa Alves",
   ];
 
   return {
@@ -1966,11 +1966,11 @@ export function getHeppatopatiaChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "Hepatotoxicidade por Paracetamol",
-    "Hepatite por Isoniazida",
-    "Cirrose Child-Pugh C",
-    "Interação Fluconazol + Estatina",
-    "Encefalopatia Hepática",
+    "Lucas Martins",
+    "Roberto Silva",
+    "Dona Aparecida",
+    "Marcos Oliveira",
+    "Seu Joaquim",
   ];
 
   return {
@@ -2033,11 +2033,11 @@ export function getRenalChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "Vancomicina em DRC G3",
-    "Metformina em DRC G4",
-    "Nefrotoxicidade por Gentamicina",
-    "AINE em Idoso — DRC G2→G4",
-    "Toxicidade Digitálica por DRC",
+    "Carlos Eduardo",
+    "Dona Maria",
+    "José Antônio",
+    "Dona Francisca",
+    "Seu Benedito",
   ];
 
   return {
@@ -2100,11 +2100,11 @@ export function getInfeccaoLabChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "PAC — Leucocitose + PCR Alta",
-    "Sepse — PCT>10 + Lactato>4",
-    "Viral vs Bacteriana",
-    "Neutropenia Febril",
-    "Desescalonamento por Cultura",
+    "Pedro Almeida",
+    "Ana Clara",
+    "Juliana Fernandes",
+    "Ricardo Campos",
+    "Fátima Souza",
   ];
 
   return {
@@ -2167,11 +2167,11 @@ export function getDislipidemiaLabChallenges(caseIndex?: number): ChallengeSet {
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
   const caseNames = [
-    "Risco Alto — LDL 180",
-    "Intolerância à Estatina",
-    "TG>500 — Risco de Pancreatite",
-    "Pós-IAM — Meta<50",
-    "HF — LDL Refratário",
+    "Carlos Mendes",
+    "Maria Teresa",
+    "Roberto Alves",
+    "Antônio Ferreira",
+    "Patrícia Lima",
   ];
 
   return {
@@ -2236,7 +2236,7 @@ export function getGlicemiaLabChallenges(caseIndex?: number): ChallengeSet {
 
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
-  const caseNames = ["DM2 Recém-diagnosticado", "DM2 com DCV", "DM2 com DRC G3b", "Cetoacidose Diabética", "DM2 Idoso Frágil"];
+  const caseNames = ["Maria Santos", "José Oliveira", "Dona Fátima", "Pedro Lima", "Seu Antônio"];
 
   return {
     title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Glicemia e Insulinoterapia",
@@ -2299,7 +2299,7 @@ export function getCoagulacaoLabChallenges(caseIndex?: number): ChallengeSet {
 
   const idx = caseIndex !== undefined ? caseIndex : undefined;
   const challenges = idx !== undefined && caseSets[idx] ? caseSets[idx] : caseSets[0];
-  const caseNames = ["Início de Varfarina (FA)", "INR Supraterapêutico", "TVP Aguda", "Sangramento por HNF", "Preparo Pré-operatório"];
+  const caseNames = ["Carlos Mendes", "Dona Helena", "Amanda Rocha", "Roberto Alves", "Sônia Ferreira"];
 
   return {
     title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Coagulação e Anticoagulantes",

@@ -55,7 +55,7 @@ interface CoagCase {
 
 const BUILT_IN_CASES: CoagCase[] = [
   {
-    title: "Caso 1: Início de Varfarina (FA)",
+    title: "Caso 1: Carlos Mendes",
     difficulty: "Médio",
     patient: { name: "Carlos Mendes", age: 72, weight: 78, sex: "M", specialGroup: ["FA", "HAS"], diagnosis: "FA não valvar CHA₂DS₂-VASc 4" },
     scenario: "Homem 72a, FA crônica, HAS, DM2. CHA₂DS₂-VASc 4. INR basal 1.0. Iniciando anticoagulação.",
@@ -65,7 +65,7 @@ const BUILT_IN_CASES: CoagCase[] = [
     references: ["ESC AF Guidelines 2020", "AHA/ACC 2023"],
   },
   {
-    title: "Caso 2: INR Supraterapêutico",
+    title: "Caso 2: Dona Helena",
     difficulty: "Difícil",
     patient: { name: "Dona Helena", age: 78, weight: 55, sex: "F", specialGroup: ["Prótese Valvar"], diagnosis: "INR 8.2 — sem sangramento ativo" },
     scenario: "Mulher 78a, prótese mecânica mitral, em varfarina 5mg. INR controle: 8.2. Sem sangramento. Hb estável.",
@@ -75,7 +75,7 @@ const BUILT_IN_CASES: CoagCase[] = [
     references: ["ACCP 2012", "ISTH 2021"],
   },
   {
-    title: "Caso 3: TVP Aguda",
+    title: "Caso 3: Amanda Rocha",
     difficulty: "Médio",
     patient: { name: "Amanda Rocha", age: 35, weight: 68, sex: "F", specialGroup: ["ACO"], diagnosis: "TVP proximal femoropoplítea" },
     scenario: "Mulher 35a, em ACO, edema e dor em MIE há 3 dias. USG Doppler: TVP femoropoplítea. D-dímero 4.5.",
@@ -85,7 +85,7 @@ const BUILT_IN_CASES: CoagCase[] = [
     references: ["CHEST 2016", "EINSTEIN-DVT 2010"],
   },
   {
-    title: "Caso 4: Sangramento por HNF",
+    title: "Caso 4: Roberto Alves",
     difficulty: "Difícil",
     patient: { name: "Roberto Alves", age: 60, weight: 85, sex: "M", specialGroup: ["SCA"], diagnosis: "Sangramento GI em uso de HNF pós-SCA" },
     scenario: "Homem 60a, SCA há 48h, em HNF EV. TTPa 95s (alvo 60-80). Melena + Hb caiu 3g/dL em 6h.",
@@ -95,7 +95,7 @@ const BUILT_IN_CASES: CoagCase[] = [
     references: ["ACCP 2012", "Harrison's 21e"],
   },
   {
-    title: "Caso 5: Preparo Pré-operatório",
+    title: "Caso 5: Sônia Ferreira",
     difficulty: "Médio",
     patient: { name: "Sônia Ferreira", age: 65, weight: 70, sex: "F", specialGroup: ["FA", "DRC"], diagnosis: "Cirurgia de quadril — suspensão de DOAC" },
     scenario: "Mulher 65a, FA em rivaroxabana 20mg. TFG 55 mL/min. Artroplastia de quadril em 5 dias. Quando suspender?",
@@ -337,15 +337,6 @@ export default function SimuladorCoagulacao() {
               <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && <div className="mt-2"><p className="text-xs font-semibold text-muted-foreground">Referências:</p>{activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}</div>}
         </CardContent>
       </Card>
 

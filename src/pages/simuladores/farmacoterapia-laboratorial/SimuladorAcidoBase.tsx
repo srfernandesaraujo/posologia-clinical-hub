@@ -64,50 +64,50 @@ interface ABCase {
 
 const BUILT_IN_CASES: ABCase[] = [
   {
-    title: "Caso 1: Cetoacidose Diabética (Acidose Metabólica AG Elevado)",
+    title: "Caso 1: João Santos",
     difficulty: "Médio",
     patient: { name: "João Santos", age: 28, weight: 72, sex: "M", specialGroup: ["DM1"] },
-    scenario: "Homem 28 anos, DM1, admitido com poliúria, polidipsia, náuseas e respiração de Kussmaul. Glicemia 420 mg/dL. Gasometria arterial mostra acidose metabólica grave com ânion gap elevado (AG=28). Cetonúria 3+. O aluno deve corrigir com hidratação (NaCl 0.9%), insulina EV e repor potássio quando K<5.5.",
+    scenario: "Homem 28 anos, DM1, admitido com poliúria, polidipsia, náuseas e respiração de Kussmaul. Cetonúria 3+. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,12, pCO2 20 mmHg, HCO3 6 mEq/L, BE -20, glicemia 420 mg/dL, Na 132 mEq/L, K 5,8 mEq/L, Cl 98 mEq/L.",
     baseLab: { pH: 7.12, pCO2: 20, pO2: 98, hco3: 6, be: -20, lactato: 2.5, na: 132, k: 5.8, ca: 9.0, mg: 1.8, cl: 98, glicemia: 420 },
     expectedDrugs: ["NaCl 0.9%", "Insulina Regular + Glicose"],
     clinicalTip: "Cetoacidose diabética: pH <7.30, HCO3 <15, AG >12, cetonemia. Pilares: (1) NaCl 0.9% 1-2L na 1ª hora, (2) Insulina regular 0.1 UI/kg/h EV (NÃO dar bolus), (3) Reposição de K+ quando K<5.5 mEq/L (ANTES de iniciar insulina se K<3.3). AG = Na - (Cl + HCO3). A respiração de Kussmaul é compensação respiratória para eliminar CO2. Fórmula de Winter: pCO2 esperada = 1.5 × HCO3 + 8 (±2).",
     references: ["ADA 2023 DKA Guidelines", "Kitabchi AE et al. Diabetes Care 2009"],
   },
   {
-    title: "Caso 2: Alcalose Metabólica Hipoclorêmica (Vômitos)",
+    title: "Caso 2: Maria Luiza",
     difficulty: "Fácil",
     patient: { name: "Maria Luiza", age: 45, weight: 60, sex: "F", specialGroup: [] },
-    scenario: "Mulher 45 anos com vômitos incoercíveis há 4 dias por obstrução pilórica. Desidratada, hipotensa. Gasometria: alcalose metabólica com hipocloremia e hipocalemia. O aluno deve repor volume com NaCl 0.9% (solução rica em Cl⁻) e repor potássio.",
+    scenario: "Mulher 45 anos com vômitos incoercíveis há 4 dias por obstrução pilórica. Desidratada, hipotensa. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,55, pCO2 48 mmHg, HCO3 42 mEq/L, Na 136 mEq/L, K 2,8 mEq/L, Cl 82 mEq/L.",
     baseLab: { pH: 7.55, pCO2: 48, pO2: 90, hco3: 42, be: 18, lactato: 1.5, na: 136, k: 2.8, ca: 8.5, mg: 1.6, cl: 82, glicemia: 95 },
     expectedDrugs: ["NaCl 0.9%", "KCl 19.1%"],
     clinicalTip: "Alcalose metabólica por vômitos: perda de H⁺ e Cl⁻ gástrico. Classificação: (1) Cloro-responsiva (Cl urinário <20): vômitos, SNG — tratar com NaCl 0.9%; (2) Cloro-resistente (Cl urinário >20): hiperaldosteronismo, Cushing. A hipocalemia é causa E consequência da alcalose (shift transcelular de H⁺/K⁺). Repor K⁺ é essencial para corrigir a alcalose.",
     references: ["Harrison's Cap. 51", "Luke RG, Galla JH. NEJM 2012"],
   },
   {
-    title: "Caso 3: Hipocalemia e Toxicidade Digitálica",
+    title: "Caso 3: Sebastião Gomes",
     difficulty: "Difícil",
     patient: { name: "Sebastião Gomes", age: 78, weight: 65, sex: "M", specialGroup: ["IC", "FA"] },
-    scenario: "Idoso 78 anos, ICC e FA crônica, em uso de digoxina 0.25 mg/dia e furosemida 40 mg/dia. Chega com náuseas, visão amarelada e bigeminismo no ECG. K⁺ = 2.6 mEq/L. A hipocalemia potencializa a toxicidade digitálica. O aluno deve suspender digoxina, repor K⁺ e Mg²⁺, e monitorar ECG.",
+    scenario: "Idoso 78 anos, ICC e FA crônica, em uso de digoxina 0.25 mg/dia e furosemida 40 mg/dia. Chega com náuseas, visão amarelada e bigeminismo no ECG. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,48, pCO2 44 mmHg, HCO3 32 mEq/L, K 2,6 mEq/L, Mg 1,2 mEq/L, Ca 8,8 mg/dL.",
     baseLab: { pH: 7.48, pCO2: 44, pO2: 88, hco3: 32, be: 8, lactato: 1.2, na: 138, k: 2.6, ca: 8.8, mg: 1.2, cl: 94, glicemia: 105 },
     expectedDrugs: ["KCl 19.1%", "MgSO4 50%"],
     clinicalTip: "Hipocalemia (K<3.5) + digoxina = emergência. A digoxina inibe a Na⁺/K⁺-ATPase; a hipocalemia POTENCIALIZA esse efeito (mais sítios de ligação livres), causando intoxicação mesmo com nível sérico 'normal' de digoxina. Repor K⁺ (alvo >4.0) e Mg²⁺ (a hipomagnesemia refratariza a hipocalemia). A furosemida causa perda urinária de K⁺, Mg²⁺ e Ca²⁺.",
     references: ["Rang & Dale Cap. 21", "Eichhorn EJ, Gheorghiade M. JACC 2002"],
   },
   {
-    title: "Caso 4: Hipercalemia com Risco de Arritmia",
+    title: "Caso 4: Paulo Roberto",
     difficulty: "Difícil",
     patient: { name: "Paulo Roberto", age: 62, weight: 90, sex: "M", specialGroup: ["DRC G4", "HAS"] },
-    scenario: "Homem 62 anos, DRC estágio 4 (TFG 22), HAS, em uso de enalapril + espironolactona. ECG com ondas T apiculadas e alargamento do QRS. K⁺ = 7.2 mEq/L. Emergência: estabilizar membrana cardíaca com gluconato de cálcio, shift de K⁺ com insulina+glicose, e remoção com Sorcal ou diálise.",
+    scenario: "Homem 62 anos, DRC estágio 4 (TFG 22), HAS, em uso de enalapril + espironolactona. ECG com ondas T apiculadas e alargamento do QRS. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,28, pCO2 32 mmHg, HCO3 15 mEq/L, K 7,2 mEq/L, Na 134 mEq/L, Cl 108 mEq/L.",
     baseLab: { pH: 7.28, pCO2: 32, pO2: 92, hco3: 15, be: -10, lactato: 1.8, na: 134, k: 7.2, ca: 8.2, mg: 2.5, cl: 108, glicemia: 130 },
     expectedDrugs: ["Gluconato de Cálcio 10%", "Insulina Regular + Glicose"],
     clinicalTip: "Hipercalemia >6.5 com alterações ECG = emergência. Protocolo: (1) Gluconato de cálcio 10% 10-20 mL EV em 2-5 min — ESTABILIZA a membrana cardíaca (efeito em 1-3 min, duração 30-60 min); (2) Insulina regular 10 UI + Glicose 25g EV — SHIFT transcelular de K⁺ (efeito em 15-30 min); (3) NaHCO3 se acidose; (4) Poliestirenossulfonato ou diálise para REMOÇÃO definitiva. O gluconato de cálcio NÃO reduz o K⁺ — apenas protege o coração.",
     references: ["AHA ACLS Guidelines", "Palmer BF. NEJM 2004"],
   },
   {
-    title: "Caso 5: Hiponatremia Dilucional (SIADH)",
+    title: "Caso 5: Teresa Alves",
     difficulty: "Médio",
     patient: { name: "Teresa Alves", age: 68, weight: 55, sex: "F", specialGroup: ["Pós-op neuro"] },
-    scenario: "Mulher 68 anos, 3º dia pós-operatório de ressecção de meningioma. Sonolenta, confusa, convulsão tônico-clônica. Na⁺ = 118 mEq/L. Osmolaridade sérica baixa (255 mOsm/kg), urina concentrada (>300 mOsm/kg). Diagnóstico: SIADH pós-cirúrgica. Correção com NaCl 3% lento (limite: ↑Na máx 8-10 mEq/24h para evitar mielinólise).",
+    scenario: "Mulher 68 anos, 3º dia pós-operatório de ressecção de meningioma. Sonolenta, confusa, convulsão tônico-clônica. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,38, pCO2 38 mmHg, HCO3 23 mEq/L, Na 118 mEq/L, osmolaridade sérica 255 mOsm/kg, osmolaridade urinária >300 mOsm/kg.",
     baseLab: { pH: 7.38, pCO2: 38, pO2: 94, hco3: 23, be: -1, lactato: 0.8, na: 118, k: 3.8, ca: 9.0, mg: 1.9, cl: 85, glicemia: 100 },
     expectedDrugs: ["NaCl 3% (hipertônico)"],
     clinicalTip: "Hiponatremia grave (<120 + sintomas neurológicos) = emergência. Na SIADH: euvolêmica, osmolaridade urinária >100, Na urinário >40. Tratamento: NaCl 3% — bolus 100 mL em 10 min (pode repetir 2x se convulsão). REGRA DE OURO: não corrigir >8-10 mEq/L em 24h (risco de mielinólise pontina osmótica). Fórmula de Adrogue-Madias: ΔNa = (Na infusão - Na paciente) / (ACT + 1).",
@@ -533,19 +533,6 @@ export default function SimuladorAcidoBase() {
         </CardContent>
       </Card>
 
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-muted-foreground">Referências:</p>
-              {activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Challenge Mode */}
       {(() => {

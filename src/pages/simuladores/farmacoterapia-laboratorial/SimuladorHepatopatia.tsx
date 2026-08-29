@@ -55,50 +55,50 @@ interface HepatoCase {
 
 const BUILT_IN_CASES: HepatoCase[] = [
   {
-    title: "Caso 1: Hepatotoxicidade por Paracetamol",
+    title: "Caso 1: Lucas Martins",
     difficulty: "Médio",
     patient: { name: "Lucas Martins", age: 22, weight: 70, sex: "M", specialGroup: [], diagnosis: "Intoxicação por paracetamol — ALT/AST >3000, INR 2.1" },
-    scenario: "Homem 22a, ingestão de 15g de paracetamol há 10h. Náuseas e dor em HCD. ALT/AST extremamente elevadas, INR alargado.",
+    scenario: "Homem 22 anos, ingestão de 15g de paracetamol há 10h. Náuseas e dor em hipocôndrio direito. Os exames revelam os seguintes resultados: ALT 3500 U/L, AST 3200 U/L, bilirrubina total 4,0 mg/dL, albumina 3,5 g/dL, INR 2,1.",
     baseLab: { alt: 3500, ast: 3200, fa: 120, ggt: 85, bilirrubinaD: 2.5, bilirrubinaI: 1.5, bilirrubinaT: 4.0, albumina: 3.5, tp: 45, inr: 2.1 },
     expectedDrugs: ["N-Acetilcisteína (NAC)"],
     clinicalTip: "Hepatotoxicidade por paracetamol: NAC repõe glutationa. Máxima eficácia <8h. Dose Prescott: 150→50→100 mg/kg. ALT/AST podem ultrapassar 10.000.",
     references: ["Rumack BH et al. Pediatrics 1975", "Bernal W et al. Lancet 2010"],
   },
   {
-    title: "Caso 2: Hepatite por Isoniazida",
+    title: "Caso 2: Roberto Silva",
     difficulty: "Médio",
     patient: { name: "Roberto Silva", age: 55, weight: 68, sex: "M", specialGroup: ["Etilista"], diagnosis: "Hepatite medicamentosa — ALT >5×LSN + icterícia" },
-    scenario: "Homem 55a, TB latente com INH há 8 semanas. Etilista. Icterícia, fadiga. ALT >5× LSN.",
+    scenario: "Homem 55 anos, em tratamento de TB latente com isoniazida há 8 semanas. Etilista. Icterícia, fadiga. Os exames revelam os seguintes resultados: ALT 520 U/L, AST 480 U/L, GGT 220 U/L, bilirrubina total 5,0 mg/dL, INR 1,5.",
     baseLab: { alt: 520, ast: 480, fa: 140, ggt: 220, bilirrubinaD: 3.0, bilirrubinaI: 2.0, bilirrubinaT: 5.0, albumina: 3.2, tp: 55, inr: 1.5 },
     expectedDrugs: [],
     clinicalTip: "Hepatotoxicidade por INH: suspender se ALT >5× assintomático ou >3× com sintomas. Etilismo = fator de risco (CYP2E1).",
     references: ["ATS/IDSA 2006"],
   },
   {
-    title: "Caso 3: Cirrose Child-Pugh C",
+    title: "Caso 3: Dona Aparecida",
     difficulty: "Difícil",
     patient: { name: "Dona Aparecida", age: 62, weight: 55, sex: "F", specialGroup: ["Cirrose", "Ascite"], diagnosis: "Cirrose avançada Child C — encefalopatia grau II" },
-    scenario: "Mulher 62a, cirrose alcoólica. Ascite volumosa, icterícia, encefalopatia grau II. Child-Pugh C (12 pts). Albumina baixa, INR alto.",
+    scenario: "Mulher 62 anos, com cirrose alcoólica, admitida com ascite volumosa, icterícia e confusão mental leve (flapping presente ao exame). Os exames revelam os seguintes resultados: bilirrubina total 8,0 mg/dL, albumina 2,0 g/dL, INR 2,5, ALT 85 U/L, AST 120 U/L.",
     baseLab: { alt: 85, ast: 120, fa: 180, ggt: 95, bilirrubinaD: 5.0, bilirrubinaI: 3.0, bilirrubinaT: 8.0, albumina: 2.0, tp: 35, inr: 2.5 },
     expectedDrugs: ["Lactulose", "Rifaximina", "Albumina 20%"],
     clinicalTip: "Child C: evitar hepatotóxicos, paracetamol ≤2g/dia. Encefalopatia: lactulose 15-30mL 8/8h + rifaximina 550mg 12/12h.",
     references: ["AASLD 2021"],
   },
   {
-    title: "Caso 4: Interação Fluconazol + Estatina",
+    title: "Caso 4: Marcos Oliveira",
     difficulty: "Médio",
     patient: { name: "Marcos Oliveira", age: 48, weight: 82, sex: "M", specialGroup: ["DM2"], diagnosis: "Mialgia + elevação ALT/AST/CPK por interação CYP3A4" },
-    scenario: "Homem 48a em atorvastatina 40mg. Inicia fluconazol 200mg para onicomicose. Após 2 semanas: mialgia intensa, ALT/AST/CPK elevados.",
+    scenario: "Homem 48 anos, em uso de atorvastatina 40mg/dia, inicia fluconazol 200mg/dia para onicomicose. Após 2 semanas, relata mialgia intensa. Os exames revelam os seguintes resultados: ALT 180 U/L, AST 210 U/L, CPK elevada.",
     baseLab: { alt: 180, ast: 210, fa: 95, ggt: 65, bilirrubinaD: 0.3, bilirrubinaI: 0.5, bilirrubinaT: 0.8, albumina: 4.2, tp: 85, inr: 1.0 },
     expectedDrugs: [],
     clinicalTip: "Fluconazol inibe CYP3A4 → aumenta atorvastatina → risco rabdomiólise. Suspender estatina ou trocar para pravastatina/rosuvastatina.",
     references: ["Neuvonen PJ et al. 2006"],
   },
   {
-    title: "Caso 5: Encefalopatia Hepática",
+    title: "Caso 5: Seu Joaquim",
     difficulty: "Difícil",
     patient: { name: "Seu Joaquim", age: 68, weight: 60, sex: "M", specialGroup: ["Cirrose"], diagnosis: "Encefalopatia hepática — confusão + flapping + amônia↑" },
-    scenario: "Homem 68a, cirrose HCV. Confusão mental, flapping. Precipitante: constipação 3 dias + ITU.",
+    scenario: "Homem 68 anos, com cirrose por hepatite C, apresenta confusão mental e flapping, com constipação há 3 dias e sinais de infecção urinária associados. Os exames revelam os seguintes resultados: bilirrubina total 6,0 mg/dL, albumina 2,3 g/dL, INR 2,2, ALT 60 U/L, AST 95 U/L.",
     baseLab: { alt: 60, ast: 95, fa: 160, ggt: 70, bilirrubinaD: 3.5, bilirrubinaI: 2.5, bilirrubinaT: 6.0, albumina: 2.3, tp: 40, inr: 2.2 },
     expectedDrugs: ["Lactulose", "Rifaximina"],
     clinicalTip: "Lactulose 1ª linha (alvo 2-3 evacuações/dia) + rifaximina reduz recorrência 50%. Tratar precipitante. NÃO restringir proteínas.",
@@ -351,15 +351,6 @@ export default function SimuladorHepatopatia() {
               <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && <div className="mt-2"><p className="text-xs font-semibold text-muted-foreground">Referências:</p>{activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}</div>}
         </CardContent>
       </Card>
 

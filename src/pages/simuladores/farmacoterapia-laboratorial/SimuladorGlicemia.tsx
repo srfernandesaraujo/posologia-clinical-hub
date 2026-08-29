@@ -55,7 +55,7 @@ interface GlicCase {
 
 const BUILT_IN_CASES: GlicCase[] = [
   {
-    title: "Caso 1: DM2 Recém-diagnosticado",
+    title: "Caso 1: Maria Santos",
     difficulty: "Fácil",
     patient: { name: "Maria Santos", age: 52, weight: 85, sex: "F", specialGroup: ["Obesa"], diagnosis: "DM2 HbA1c 8.2% — 1ª linha" },
     scenario: "Mulher 52a, obesa (IMC 32), glicemia de jejum 185 mg/dL, HbA1c 8.2%. Sem complicações. TFG 95. Primeira consulta.",
@@ -65,7 +65,7 @@ const BUILT_IN_CASES: GlicCase[] = [
     references: ["SBD 2024", "ADA Standards of Care 2024"],
   },
   {
-    title: "Caso 2: DM2 com Doença CV",
+    title: "Caso 2: José Oliveira",
     difficulty: "Médio",
     patient: { name: "José Oliveira", age: 63, weight: 92, sex: "M", specialGroup: ["DCV", "IC"], diagnosis: "DM2 + IC com FE reduzida" },
     scenario: "Homem 63a, DM2 há 8 anos, IAM prévio, IC FE 35%. HbA1c 8.5% em uso de metformina 2g/dia. TFG 72.",
@@ -75,7 +75,7 @@ const BUILT_IN_CASES: GlicCase[] = [
     references: ["EMPA-REG OUTCOME 2015", "ADA/EASD Consensus 2022"],
   },
   {
-    title: "Caso 3: DM2 com DRC G3b",
+    title: "Caso 3: Dona Fátima",
     difficulty: "Difícil",
     patient: { name: "Dona Fátima", age: 68, weight: 65, sex: "F", specialGroup: ["DRC G3b"], diagnosis: "DM2 + DRC G3b TFG 38" },
     scenario: "Mulher 68a, DM2 há 15 anos. TFG 38 mL/min (G3b). HbA1c 8.0% em metformina 1g + glibenclamida 10mg. Hipoglicemias frequentes.",
@@ -85,7 +85,7 @@ const BUILT_IN_CASES: GlicCase[] = [
     references: ["KDIGO 2022", "SBD 2024"],
   },
   {
-    title: "Caso 4: Cetoacidose Diabética",
+    title: "Caso 4: Pedro Lima",
     difficulty: "Difícil",
     patient: { name: "Pedro Lima", age: 28, weight: 70, sex: "M", specialGroup: ["DM1"], diagnosis: "CAD — pH 7.18, glicemia 450" },
     scenario: "Homem 28a, DM1 diagnosticado há 5 meses. Parou insulina há 3 dias. Náusea, dor abdominal, Kussmaul. pH 7.18, glicemia 450.",
@@ -95,7 +95,7 @@ const BUILT_IN_CASES: GlicCase[] = [
     references: ["ADA 2024", "Kitabchi AE, Diabetes Care 2009"],
   },
   {
-    title: "Caso 5: DM2 Idoso Frágil",
+    title: "Caso 5: Seu Antônio",
     difficulty: "Médio",
     patient: { name: "Seu Antônio", age: 82, weight: 58, sex: "M", specialGroup: ["Idoso frágil", "Polifarmácia"], diagnosis: "DM2 + fragilidade — meta HbA1c <8.5%" },
     scenario: "Homem 82a, frágil, DM2 há 20 anos. HbA1c 7.0% com glibenclamida 15mg + metformina 1.5g. Hipoglicemias noturnas recorrentes.",
@@ -339,15 +339,6 @@ export default function SimuladorGlicemia() {
               <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && <div className="mt-2"><p className="text-xs font-semibold text-muted-foreground">Referências:</p>{activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}</div>}
         </CardContent>
       </Card>
 
