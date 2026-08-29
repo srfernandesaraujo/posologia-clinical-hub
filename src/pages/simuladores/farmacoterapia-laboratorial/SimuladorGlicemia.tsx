@@ -26,21 +26,22 @@ const SLUG = "farmacoterapia-glicemia";
 interface GlicDrug {
   name: string; class: string;
   doseMin: number; doseMax: number; doseUnit: string; doseStep: number;
-  effects: { jejum: number; pp: number; hba1c: number; insulina: number; peptideoC: number };
+  // `k` = shift transcelular de potássio (só a insulina exógena tem esse efeito relevante aqui).
+  effects: { jejum: number; pp: number; hba1c: number; insulina: number; peptideoC: number; k: number };
   sideEffects: { hipo: number; gi: number; peso: number; cetoacidose: number; lacticoacidose: number };
   daysToEffect: number;
 }
 
 const DRUGS: GlicDrug[] = [
-  { name: "Metformina", class: "Biguanida", doseMin: 500, doseMax: 2550, doseUnit: "mg/dia", doseStep: 250, effects: { jejum: -40, pp: -50, hba1c: -1.5, insulina: 0, peptideoC: 0 }, sideEffects: { hipo: 0.02, gi: 0.35, peso: -0.1, cetoacidose: 0, lacticoacidose: 0.05 }, daysToEffect: 7 },
-  { name: "Glibenclamida", class: "Sulfonilureia", doseMin: 2.5, doseMax: 20, doseUnit: "mg/dia", doseStep: 2.5, effects: { jejum: -55, pp: -70, hba1c: -1.5, insulina: 15, peptideoC: 0.5 }, sideEffects: { hipo: 0.4, gi: 0.1, peso: 0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 3 },
-  { name: "Empagliflozina", class: "iSGLT2", doseMin: 10, doseMax: 25, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -25, pp: -35, hba1c: -0.8, insulina: -5, peptideoC: 0 }, sideEffects: { hipo: 0.01, gi: 0.05, peso: -0.2, cetoacidose: 0.08, lacticoacidose: 0 }, daysToEffect: 5 },
-  { name: "Sitagliptina", class: "iDPP-4", doseMin: 25, doseMax: 100, doseUnit: "mg/dia", doseStep: 25, effects: { jejum: -15, pp: -40, hba1c: -0.7, insulina: 8, peptideoC: 0.3 }, sideEffects: { hipo: 0.02, gi: 0.08, peso: 0.05, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 5 },
-  { name: "Liraglutida", class: "GLP-1 RA", doseMin: 0.6, doseMax: 1.8, doseUnit: "mg/dia SC", doseStep: 0.6, effects: { jejum: -30, pp: -55, hba1c: -1.2, insulina: 10, peptideoC: 0.4 }, sideEffects: { hipo: 0.02, gi: 0.3, peso: -0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 7 },
-  { name: "Insulina NPH", class: "Insulina Basal", doseMin: 10, doseMax: 60, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -60, pp: -30, hba1c: -1.5, insulina: 30, peptideoC: 0 }, sideEffects: { hipo: 0.35, gi: 0, peso: 0.4, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 2 },
-  { name: "Insulina Glargina", class: "Insulina Basal", doseMin: 10, doseMax: 80, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -65, pp: -25, hba1c: -1.5, insulina: 25, peptideoC: 0 }, sideEffects: { hipo: 0.2, gi: 0, peso: 0.35, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 3 },
-  { name: "Insulina Lispro", class: "Insulina Rápida", doseMin: 4, doseMax: 30, doseUnit: "UI/refeição", doseStep: 2, effects: { jejum: -10, pp: -80, hba1c: -1.0, insulina: 40, peptideoC: 0 }, sideEffects: { hipo: 0.45, gi: 0, peso: 0.4, cetoacidose: -0.3, lacticoacidose: 0 }, daysToEffect: 0.5 },
-  { name: "Pioglitazona", class: "Tiazolidinediona", doseMin: 15, doseMax: 45, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -35, pp: -40, hba1c: -1.0, insulina: -8, peptideoC: 0 }, sideEffects: { hipo: 0.02, gi: 0.05, peso: 0.35, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 14 },
+  { name: "Metformina", class: "Biguanida", doseMin: 500, doseMax: 2550, doseUnit: "mg/dia", doseStep: 250, effects: { jejum: -40, pp: -50, hba1c: -1.5, insulina: 0, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.35, peso: -0.1, cetoacidose: 0, lacticoacidose: 0.05 }, daysToEffect: 7 },
+  { name: "Glibenclamida", class: "Sulfonilureia", doseMin: 2.5, doseMax: 20, doseUnit: "mg/dia", doseStep: 2.5, effects: { jejum: -55, pp: -70, hba1c: -1.5, insulina: 15, peptideoC: 0.5, k: 0 }, sideEffects: { hipo: 0.4, gi: 0.1, peso: 0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 3 },
+  { name: "Empagliflozina", class: "iSGLT2", doseMin: 10, doseMax: 25, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -25, pp: -35, hba1c: -0.8, insulina: -5, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.01, gi: 0.05, peso: -0.2, cetoacidose: 0.08, lacticoacidose: 0 }, daysToEffect: 5 },
+  { name: "Sitagliptina", class: "iDPP-4", doseMin: 25, doseMax: 100, doseUnit: "mg/dia", doseStep: 25, effects: { jejum: -15, pp: -40, hba1c: -0.7, insulina: 8, peptideoC: 0.3, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.08, peso: 0.05, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 5 },
+  { name: "Liraglutida", class: "GLP-1 RA", doseMin: 0.6, doseMax: 1.8, doseUnit: "mg/dia SC", doseStep: 0.6, effects: { jejum: -30, pp: -55, hba1c: -1.2, insulina: 10, peptideoC: 0.4, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.3, peso: -0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 7 },
+  { name: "Insulina NPH", class: "Insulina Basal", doseMin: 10, doseMax: 60, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -60, pp: -30, hba1c: -1.5, insulina: 30, peptideoC: 0, k: -0.4 }, sideEffects: { hipo: 0.35, gi: 0, peso: 0.4, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 2 },
+  { name: "Insulina Glargina", class: "Insulina Basal", doseMin: 10, doseMax: 80, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -65, pp: -25, hba1c: -1.5, insulina: 25, peptideoC: 0, k: -0.4 }, sideEffects: { hipo: 0.2, gi: 0, peso: 0.35, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 3 },
+  { name: "Insulina Lispro", class: "Insulina Rápida", doseMin: 4, doseMax: 30, doseUnit: "UI/refeição", doseStep: 2, effects: { jejum: -10, pp: -80, hba1c: -1.0, insulina: 40, peptideoC: 0, k: -0.5 }, sideEffects: { hipo: 0.45, gi: 0, peso: 0.4, cetoacidose: -0.3, lacticoacidose: 0 }, daysToEffect: 0.5 },
+  { name: "Pioglitazona", class: "Tiazolidinediona", doseMin: 15, doseMax: 45, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -35, pp: -40, hba1c: -1.0, insulina: -8, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.05, peso: 0.35, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 14 },
 ];
 
 interface GlicCase {
@@ -119,6 +120,7 @@ function computeSimulation(drug: GlicDrug, dose: number, baseLab: GlicCase["base
       hba1c: Math.max(4, +(baseLab.hba1c + drug.effects.hba1c * intensity * p * 0.3).toFixed(1)),
       insulina: Math.max(0, +(baseLab.insulina + drug.effects.insulina * intensity * p).toFixed(1)),
       peptideoC: Math.max(0, +(baseLab.peptideoC + drug.effects.peptideoC * intensity * p).toFixed(1)),
+      k: Math.max(2.5, +(baseLab.potassio + drug.effects.k * intensity * p).toFixed(1)),
     });
   }
   const last = trend[trend.length - 1];
@@ -132,7 +134,7 @@ function computeSimulation(drug: GlicDrug, dose: number, baseLab: GlicCase["base
     { name: "HbA1c", value: last.hba1c, unit: "%", refLow: 4.0, refHigh: 7.0, status: last.hba1c > 7.0 ? "alto" : "normal" },
     { name: "Insulina", value: last.insulina, unit: "µUI/mL", refLow: 2.6, refHigh: 24.9, status: last.insulina < 2.6 ? "baixo" : last.insulina > 24.9 ? "alto" : "normal" },
     { name: "Peptídeo-C", value: last.peptideoC, unit: "ng/mL", refLow: 0.5, refHigh: 2.0, status: last.peptideoC < 0.5 ? "baixo" : last.peptideoC > 2.0 ? "alto" : "normal" },
-    { name: "K⁺", value: baseLab.potassio, unit: "mEq/L", refLow: 3.5, refHigh: 5.0, status: baseLab.potassio < 3.5 ? "baixo" : baseLab.potassio > 5.0 ? "alto" : "normal" },
+    { name: "K⁺", value: last.k, unit: "mEq/L", refLow: 3.5, refHigh: 5.0, status: last.k < 3.5 ? "baixo" : last.k > 5.0 ? "alto" : "normal" },
     { name: "TFG", value: baseLab.tfg, unit: "mL/min", refLow: 60, refHigh: 120, status: baseLab.tfg < 60 ? "baixo" : "normal" },
   ];
   return { trend, sideEffects, labGauges, lastLab: last };

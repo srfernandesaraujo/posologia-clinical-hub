@@ -29,10 +29,17 @@ interface HepatoDrug {
   effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number };
   sideEffects: { hepatotox: number; gi: number; nefrotox: number; neurotox: number };
   daysToEffect: number;
+  /**
+   * Fração do efeito hepático que de fato se aplica, dado o perfil do caso —
+   * sem isso, NAC "curava" qualquer hepatopatia igualmente bem, não só a
+   * intoxicação por paracetamol em que ela realmente atua (repondo glutationa
+   * e neutralizando o NAPQI).
+   */
+  indicationCheck?: (baseLab: HepatoCase["baseLab"]) => number;
 }
 
 const DRUGS: HepatoDrug[] = [
-  { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -200, ast: -180, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.3 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1 },
+  { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -200, ast: -180, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.3 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.1 },
   { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1 },
   { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 7 },
   { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 14 },
@@ -118,18 +125,19 @@ function calcChildPugh(lab: HepatoCase["baseLab"], encefalopatia: number, ascite
 function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["baseLab"]) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
   const intensity = 0.65 + doseFrac * 0.35;
+  const indicationFrac = drug.indicationCheck ? drug.indicationCheck(baseLab) : 1;
   const trend: any[] = [];
   for (let d = 0; d <= 7; d++) {
     const p = d >= drug.daysToEffect ? Math.min((d - drug.daysToEffect + 1) / 5, 1) : 0;
     trend.push({
       day: d,
-      alt: Math.max(5, Math.round(baseLab.alt + drug.effects.alt * intensity * p)),
-      ast: Math.max(5, Math.round(baseLab.ast + drug.effects.ast * intensity * p)),
-      fa: Math.max(20, Math.round(baseLab.fa + drug.effects.fa * intensity * p)),
-      ggt: Math.max(5, Math.round(baseLab.ggt + drug.effects.ggt * intensity * p)),
-      bilirrubinaT: Math.max(0.2, +(baseLab.bilirrubinaT + drug.effects.bilirrubinaT * intensity * p).toFixed(1)),
-      albumina: Math.max(1, +(baseLab.albumina + drug.effects.albumina * intensity * p).toFixed(1)),
-      inr: Math.max(0.8, +(baseLab.inr + drug.effects.inr * intensity * p).toFixed(1)),
+      alt: Math.max(5, Math.round(baseLab.alt + drug.effects.alt * intensity * p * indicationFrac)),
+      ast: Math.max(5, Math.round(baseLab.ast + drug.effects.ast * intensity * p * indicationFrac)),
+      fa: Math.max(20, Math.round(baseLab.fa + drug.effects.fa * intensity * p * indicationFrac)),
+      ggt: Math.max(5, Math.round(baseLab.ggt + drug.effects.ggt * intensity * p * indicationFrac)),
+      bilirrubinaT: Math.max(0.2, +(baseLab.bilirrubinaT + drug.effects.bilirrubinaT * intensity * p * indicationFrac).toFixed(1)),
+      albumina: Math.max(1, +(baseLab.albumina + drug.effects.albumina * intensity * p * indicationFrac).toFixed(1)),
+      inr: Math.max(0.8, +(baseLab.inr + drug.effects.inr * intensity * p * indicationFrac).toFixed(1)),
     });
   }
   const last = trend[trend.length - 1];

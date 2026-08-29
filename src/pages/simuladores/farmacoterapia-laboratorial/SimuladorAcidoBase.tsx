@@ -38,7 +38,11 @@ interface ABDrug {
 const DRUGS: ABDrug[] = [
   { name: "NaHCO3 8.4%", class: "Alcalinizante", doseMin: 50, doseMax: 300, doseUnit: "mL EV", doseStep: 25, effects: { pH: 0.05, hco3: 3, pCO2: -1, na: 4, k: -0.3, ca: -0.2, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.1, sobrecarga: 0.2, hipocalcemia: 0.15, hipernatremia: 0.2 }, hoursToEffect: 0.5 },
   { name: "KCl 19.1%", class: "Reposição de potássio", doseMin: 10, doseMax: 60, doseUnit: "mEq EV", doseStep: 5, effects: { pH: 0.01, hco3: 0, pCO2: 0, na: 0, k: 1.0, ca: 0, mg: 0, cl: 1, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.25, sobrecarga: 0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 1 },
-  { name: "NaCl 0.9%", class: "Cristaloide", doseMin: 250, doseMax: 2000, doseUnit: "mL EV", doseStep: 250, effects: { pH: -0.01, hco3: -1, pCO2: 0, na: 2, k: 0, ca: 0, mg: 0, cl: 3, lactato: 0 }, sideEffects: { hipotensao: -0.1, arritmia: 0.02, sobrecarga: 0.2, hipocalcemia: 0, hipernatremia: 0.1 }, hoursToEffect: 0.5 },
+  // pH/HCO3 neutros de propósito: a hidratação isolada não corrige a acidose da
+  // CAD (isso é papel da insulina) — um efeito negativo aqui cancelava
+  // exatamente a correção da Insulina + Glicose quando as duas eram usadas
+  // juntas (a combinação correta do Caso 1), fazendo os gauges nunca melhorarem.
+  { name: "NaCl 0.9%", class: "Cristaloide", doseMin: 250, doseMax: 2000, doseUnit: "mL EV", doseStep: 250, effects: { pH: 0, hco3: 0, pCO2: 0, na: 2, k: 0, ca: 0, mg: 0, cl: 3, lactato: 0 }, sideEffects: { hipotensao: -0.1, arritmia: 0.02, sobrecarga: 0.2, hipocalcemia: 0, hipernatremia: 0.1 }, hoursToEffect: 0.5 },
   { name: "NaCl 3% (hipertônico)", class: "Solução hipertônica", doseMin: 50, doseMax: 300, doseUnit: "mL EV", doseStep: 25, effects: { pH: 0, hco3: 0, pCO2: 0, na: 6, k: -0.2, ca: 0, mg: 0, cl: 5, lactato: 0 }, sideEffects: { hipotensao: -0.05, arritmia: 0.05, sobrecarga: 0.3, hipocalcemia: 0, hipernatremia: 0.35 }, hoursToEffect: 0.5 },
   { name: "Gluconato de Cálcio 10%", class: "Reposição de cálcio", doseMin: 10, doseMax: 40, doseUnit: "mL EV", doseStep: 5, effects: { pH: 0, hco3: 0, pCO2: 0, na: 0, k: 0, ca: 1.5, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.1, sobrecarga: 0.05, hipocalcemia: -0.3, hipernatremia: 0 }, hoursToEffect: 0.25 },
   { name: "MgSO4 50%", class: "Reposição de magnésio", doseMin: 1, doseMax: 4, doseUnit: "g EV", doseStep: 0.5, effects: { pH: 0, hco3: 0, pCO2: 0, na: 0, k: 0.1, ca: -0.2, mg: 1.0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.15, arritmia: 0.05, sobrecarga: 0.05, hipocalcemia: 0.1, hipernatremia: 0 }, hoursToEffect: 0.5 },
@@ -466,8 +470,19 @@ export default function SimuladorAcidoBase() {
               <LineChart data={displayTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="hour" label={{ value: "Hora", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="ph" domain={[6.8, 7.8]} label={{ value: "pH", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="hco3" orientation="right" domain={[0, 50]} label={{ value: "HCO₃⁻", angle: 90, position: "insideRight" }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis
+                  yAxisId="ph"
+                  domain={[(dataMin: number) => Math.max(6.8, dataMin - 0.05), (dataMax: number) => Math.min(7.8, dataMax + 0.05)]}
+                  label={{ value: "pH", angle: -90, position: "insideLeft" }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <YAxis
+                  yAxisId="hco3"
+                  orientation="right"
+                  domain={[(dataMin: number) => Math.max(0, Math.floor(dataMin - 2)), (dataMax: number) => Math.ceil(dataMax + 2)]}
+                  label={{ value: "HCO₃⁻", angle: 90, position: "insideRight" }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <ReferenceLine yAxisId="ph" y={7.35} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" />
@@ -482,8 +497,19 @@ export default function SimuladorAcidoBase() {
               <LineChart data={displayTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="hour" label={{ value: "Hora", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="na" domain={[100, 165]} label={{ value: "Na⁺", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="k" orientation="right" domain={[1.5, 9]} label={{ value: "K⁺", angle: 90, position: "insideRight" }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis
+                  yAxisId="na"
+                  domain={[(dataMin: number) => Math.max(100, Math.floor(dataMin - 3)), (dataMax: number) => Math.min(165, Math.ceil(dataMax + 3))]}
+                  label={{ value: "Na⁺", angle: -90, position: "insideLeft" }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <YAxis
+                  yAxisId="k"
+                  orientation="right"
+                  domain={[(dataMin: number) => Math.max(1.5, dataMin - 0.5), (dataMax: number) => Math.min(9, dataMax + 0.5)]}
+                  label={{ value: "K⁺", angle: 90, position: "insideRight" }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <ReferenceLine yAxisId="k" y={3.5} stroke="hsl(var(--destructive))" strokeDasharray="5 5" />

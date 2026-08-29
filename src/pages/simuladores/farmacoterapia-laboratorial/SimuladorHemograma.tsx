@@ -34,13 +34,21 @@ interface HemoDrug {
   };
   sideEffects: { gi: number; alergia: number; sobrecargaFerro: number; febre: number; hipotensao: number };
   weekToEffect: number;
+  /**
+   * Fração do efeito hematológico (hb/vcm/leuc/plaq/retic) que de fato se aplica,
+   * dado o perfil laboratorial do caso — sem isso, o motor aplicava o efeito
+   * completo de qualquer fármaco em qualquer paciente (ex: ácido fólico baixando
+   * o VCM mesmo numa anemia ferropriva pura, sem deficiência de folato real).
+   * Efeitos colaterais continuam valendo sempre, independente da indicação.
+   */
+  indicationCheck?: (baseLab: HemoCase["baseLab"]) => number;
 }
 
 const DRUGS: HemoDrug[] = [
-  { name: "Sulfato Ferroso", class: "Ferro oral", doseMin: 40, doseMax: 200, doseUnit: "mg Fe elem/dia", doseStep: 20, effects: { hb: 1.0, vcm: 5, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 3 }, sideEffects: { gi: 0.4, alergia: 0.05, sobrecargaFerro: 0.1, febre: 0, hipotensao: 0 }, weekToEffect: 2 },
-  { name: "Ferro IV (Sacarato)", class: "Ferro parenteral", doseMin: 100, doseMax: 500, doseUnit: "mg/dose", doseStep: 50, effects: { hb: 1.5, vcm: 7, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 5 }, sideEffects: { gi: 0.05, alergia: 0.15, sobrecargaFerro: 0.2, febre: 0.1, hipotensao: 0.1 }, weekToEffect: 1 },
-  { name: "Ácido Fólico", class: "Vitamina B9", doseMin: 1, doseMax: 5, doseUnit: "mg/dia", doseStep: 1, effects: { hb: 0.5, vcm: -8, leucocitos: 0, neutrofilos: 0, plaquetas: 5, reticulocitos: 2 }, sideEffects: { gi: 0.05, alergia: 0.02, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 2 },
-  { name: "Vitamina B12 (Cianocobalamina)", class: "Vitamina B12", doseMin: 1000, doseMax: 5000, doseUnit: "mcg IM", doseStep: 500, effects: { hb: 0.8, vcm: -12, leucocitos: 0.5, neutrofilos: 0.5, plaquetas: 8, reticulocitos: 4 }, sideEffects: { gi: 0.02, alergia: 0.05, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 1 },
+  { name: "Sulfato Ferroso", class: "Ferro oral", doseMin: 40, doseMax: 200, doseUnit: "mg Fe elem/dia", doseStep: 20, effects: { hb: 1.0, vcm: 5, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 3 }, sideEffects: { gi: 0.4, alergia: 0.05, sobrecargaFerro: 0.1, febre: 0, hipotensao: 0 }, weekToEffect: 2, indicationCheck: (lab) => lab.ferritina < 30 ? 1 : 0.1 },
+  { name: "Ferro IV (Sacarato)", class: "Ferro parenteral", doseMin: 100, doseMax: 500, doseUnit: "mg/dose", doseStep: 50, effects: { hb: 1.5, vcm: 7, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 5 }, sideEffects: { gi: 0.05, alergia: 0.15, sobrecargaFerro: 0.2, febre: 0.1, hipotensao: 0.1 }, weekToEffect: 1, indicationCheck: (lab) => lab.ferritina < 30 ? 1 : 0.1 },
+  { name: "Ácido Fólico", class: "Vitamina B9", doseMin: 1, doseMax: 5, doseUnit: "mg/dia", doseStep: 1, effects: { hb: 0.5, vcm: -8, leucocitos: 0, neutrofilos: 0, plaquetas: 5, reticulocitos: 2 }, sideEffects: { gi: 0.05, alergia: 0.02, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 2, indicationCheck: (lab) => lab.folato < 4 ? 1 : 0.05 },
+  { name: "Vitamina B12 (Cianocobalamina)", class: "Vitamina B12", doseMin: 1000, doseMax: 5000, doseUnit: "mcg IM", doseStep: 500, effects: { hb: 0.8, vcm: -12, leucocitos: 0.5, neutrofilos: 0.5, plaquetas: 8, reticulocitos: 4 }, sideEffects: { gi: 0.02, alergia: 0.05, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 1, indicationCheck: (lab) => lab.b12 < 200 ? 1 : 0.05 },
   { name: "Eritropoetina (EPO)", class: "Estimulante eritropoiese", doseMin: 2000, doseMax: 10000, doseUnit: "UI SC 3x/sem", doseStep: 1000, effects: { hb: 1.2, vcm: 2, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 6 }, sideEffects: { gi: 0.02, alergia: 0.05, sobrecargaFerro: 0, febre: 0.05, hipotensao: 0.15 }, weekToEffect: 4 },
   { name: "Filgrastim (G-CSF)", class: "Fator estimulante colônias", doseMin: 5, doseMax: 20, doseUnit: "mcg/kg/dia SC", doseStep: 1, effects: { hb: 0, vcm: 0, leucocitos: 8, neutrofilos: 6, plaquetas: 0, reticulocitos: 0 }, sideEffects: { gi: 0.05, alergia: 0.05, sobrecargaFerro: 0, febre: 0.2, hipotensao: 0 }, weekToEffect: 0.5 },
   { name: "Ácido Tranexâmico", class: "Antifibrinolítico", doseMin: 250, doseMax: 1500, doseUnit: "mg 8/8h", doseStep: 250, effects: { hb: 0.3, vcm: 0, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 0 }, sideEffects: { gi: 0.15, alergia: 0.05, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 0.5 },
@@ -135,14 +143,17 @@ function computeSimulation(drugs: HemoDrug[], doses: number[], baseLab: HemoCase
       const range = Math.max(d.doseMax - d.doseMin, 1);
       const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
       const progress = Math.min(1, Math.max(0, (w - d.weekToEffect) / Math.max(1, 4 - d.weekToEffect)));
+      // Sem a deficiência correspondente (ex: ácido fólico sem folato baixo), o
+      // fármaco não corrige nada — só o efeito colateral continua valendo.
+      const indicationFrac = d.indicationCheck ? d.indicationCheck(baseLab) : 1;
       if (w >= d.weekToEffect) {
-        hb += d.effects.hb * doseFrac * progress;
-        vcm += d.effects.vcm * doseFrac * progress;
-        leuc += d.effects.leucocitos * doseFrac * progress * 1000;
+        hb += d.effects.hb * doseFrac * progress * indicationFrac;
+        vcm += d.effects.vcm * doseFrac * progress * indicationFrac;
+        leuc += d.effects.leucocitos * doseFrac * progress * indicationFrac * 1000;
         // baseLab.plaquetas is already stored in thousands/mm³ (see labGauges below),
         // so unlike leucocitos this delta must NOT be re-scaled by 1000.
-        plaq += d.effects.plaquetas * doseFrac * progress;
-        retic += d.effects.reticulocitos * doseFrac * (w <= d.weekToEffect + 2 ? 1 : 0.3); // reticulocyte burst then declines
+        plaq += d.effects.plaquetas * doseFrac * progress * indicationFrac;
+        retic += d.effects.reticulocitos * doseFrac * indicationFrac * (w <= d.weekToEffect + 2 ? 1 : 0.3); // reticulocyte burst then declines
       }
     });
 
@@ -467,7 +478,11 @@ export default function SimuladorHemograma() {
               <LineChart data={displayTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[3, 18]} label={{ value: "Hb (g/dL)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis
+                  domain={[(dataMin: number) => Math.max(0, Math.floor(dataMin - 1)), (dataMax: number) => Math.ceil(dataMax + 1)]}
+                  label={{ value: "Hb (g/dL)", angle: -90, position: "insideLeft" }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <ReferenceLine y={12} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Ref ≥12", fill: "hsl(var(--chart-3))", fontSize: 10 }} />
                 <Line type="monotone" dataKey="hb" name="Hb" stroke="hsl(var(--destructive))" dot strokeWidth={2.5} />
