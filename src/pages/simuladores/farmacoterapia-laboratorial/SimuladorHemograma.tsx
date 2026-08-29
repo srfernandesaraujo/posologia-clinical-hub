@@ -35,6 +35,14 @@ interface HemoDrug {
   sideEffects: { gi: number; alergia: number; sobrecargaFerro: number; febre: number; hipotensao: number };
   weekToEffect: number;
   /**
+   * Semana em que o efeito atinge o platô (progress=1). Sem isso, o motor usava
+   * uma janela genérica de 4 semanas para TODOS os fármacos — o que fazia o
+   * G-CSF (cinética de dias, não semanas) só platear no gráfico na semana 4,
+   * contradizendo o gabarito "pico em 3-5 dias". Default 4 preserva o
+   * comportamento anterior para os fármacos de ação lenta (ferro, EPO etc).
+   */
+  plateauWeeks?: number;
+  /**
    * Fração do efeito hematológico (hb/vcm/leuc/plaq/retic) que de fato se aplica,
    * dado o perfil laboratorial do caso — sem isso, o motor aplicava o efeito
    * completo de qualquer fármaco em qualquer paciente (ex: ácido fólico baixando
@@ -50,7 +58,7 @@ const DRUGS: HemoDrug[] = [
   { name: "Ácido Fólico", class: "Vitamina B9", doseMin: 1, doseMax: 5, doseUnit: "mg/dia", doseStep: 1, effects: { hb: 0.5, vcm: -8, leucocitos: 0, neutrofilos: 0, plaquetas: 5, reticulocitos: 2 }, sideEffects: { gi: 0.05, alergia: 0.02, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 2, indicationCheck: (lab) => lab.folato < 4 ? 1 : 0.05 },
   { name: "Vitamina B12 (Cianocobalamina)", class: "Vitamina B12", doseMin: 1000, doseMax: 5000, doseUnit: "mcg IM", doseStep: 500, effects: { hb: 0.8, vcm: -12, leucocitos: 0.5, neutrofilos: 0.5, plaquetas: 8, reticulocitos: 4 }, sideEffects: { gi: 0.02, alergia: 0.05, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 1, indicationCheck: (lab) => lab.b12 < 200 ? 1 : 0.05 },
   { name: "Eritropoetina (EPO)", class: "Estimulante eritropoiese", doseMin: 2000, doseMax: 10000, doseUnit: "UI SC 3x/sem", doseStep: 1000, effects: { hb: 1.2, vcm: 2, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 6 }, sideEffects: { gi: 0.02, alergia: 0.05, sobrecargaFerro: 0, febre: 0.05, hipotensao: 0.15 }, weekToEffect: 4 },
-  { name: "Filgrastim (G-CSF)", class: "Fator estimulante colônias", doseMin: 5, doseMax: 20, doseUnit: "mcg/kg/dia SC", doseStep: 1, effects: { hb: 0, vcm: 0, leucocitos: 8, neutrofilos: 6, plaquetas: 0, reticulocitos: 0 }, sideEffects: { gi: 0.05, alergia: 0.05, sobrecargaFerro: 0, febre: 0.2, hipotensao: 0 }, weekToEffect: 0.5 },
+  { name: "Filgrastim (G-CSF)", class: "Fator estimulante colônias", doseMin: 5, doseMax: 20, doseUnit: "mcg/kg/dia SC", doseStep: 1, effects: { hb: 0, vcm: 0, leucocitos: 8, neutrofilos: 6, plaquetas: 0, reticulocitos: 0 }, sideEffects: { gi: 0.05, alergia: 0.05, sobrecargaFerro: 0, febre: 0.2, hipotensao: 0 }, weekToEffect: 0.5, plateauWeeks: 1 },
   { name: "Ácido Tranexâmico", class: "Antifibrinolítico", doseMin: 250, doseMax: 1500, doseUnit: "mg 8/8h", doseStep: 250, effects: { hb: 0.3, vcm: 0, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: 0 }, sideEffects: { gi: 0.15, alergia: 0.05, sobrecargaFerro: 0, febre: 0, hipotensao: 0 }, weekToEffect: 0.5 },
   { name: "Transfusão CH", class: "Concentrado hemácias", doseMin: 1, doseMax: 4, doseUnit: "unidades", doseStep: 1, effects: { hb: 1.0, vcm: 0, leucocitos: 0, neutrofilos: 0, plaquetas: 0, reticulocitos: -2 }, sideEffects: { gi: 0, alergia: 0.15, sobrecargaFerro: 0.25, febre: 0.2, hipotensao: 0.05 }, weekToEffect: 0 },
   { name: "Transfusão Plaquetas", class: "Concentrado plaquetas", doseMin: 1, doseMax: 10, doseUnit: "unidades", doseStep: 1, effects: { hb: 0, vcm: 0, leucocitos: 0, neutrofilos: 0, plaquetas: 10, reticulocitos: 0 }, sideEffects: { gi: 0, alergia: 0.1, sobrecargaFerro: 0.05, febre: 0.15, hipotensao: 0 }, weekToEffect: 0 },
@@ -142,7 +150,7 @@ function computeSimulation(drugs: HemoDrug[], doses: number[], baseLab: HemoCase
       // between drugs at default dose already produces visible curve changes.
       const range = Math.max(d.doseMax - d.doseMin, 1);
       const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
-      const progress = Math.min(1, Math.max(0, (w - d.weekToEffect) / Math.max(1, 4 - d.weekToEffect)));
+      const progress = Math.min(1, Math.max(0, (w - d.weekToEffect) / Math.max(0.5, (d.plateauWeeks ?? 4) - d.weekToEffect)));
       // Sem a deficiência correspondente (ex: ácido fólico sem folato baixo), o
       // fármaco não corrige nada — só o efeito colateral continua valendo.
       const indicationFrac = d.indicationCheck ? d.indicationCheck(baseLab) : 1;
