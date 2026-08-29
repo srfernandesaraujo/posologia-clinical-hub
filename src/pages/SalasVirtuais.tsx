@@ -1236,20 +1236,45 @@ export default function SalasVirtuais() {
 
           {(() => {
             const isRestricted = !!detailRoom?.restricted_access;
-            // Build set of joined emails (lowercased) — both leader and group members emails
+            const normName = (s: string) => (s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            // Identidades (e-mail OU nome normalizado) de quem já ingressou — líderes,
+            // participantes individuais e cada componente declarado num grupo. Casar por
+            // nome também (não só e-mail) porque o líder pode digitar o e-mail do
+            // componente com um typo, ou a sala não exigir e-mail por componente.
             const joinedEmails = new Set<string>();
+            const joinedNames = new Set<string>();
             participants.forEach((p: any) => {
               if (p.participant_email) joinedEmails.add(String(p.participant_email).toLowerCase());
+              if (!p.is_group) joinedNames.add(normName(p.participant_name));
               if (Array.isArray(p.group_members)) {
                 p.group_members.forEach((m: any) => {
-                  const e = typeof m === "string" ? null : m?.email;
-                  if (e) joinedEmails.add(String(e).toLowerCase());
+                  const name = typeof m === "string" ? m : m?.name;
+                  const email = typeof m === "string" ? null : m?.email;
+                  if (email) joinedEmails.add(String(email).toLowerCase());
+                  if (name) joinedNames.add(normName(name));
                 });
               }
             });
+            const isJoined = (a: { email?: string; student_name?: string }) =>
+              (!!a.email && joinedEmails.has(a.email)) || (!!a.student_name && joinedNames.has(normName(a.student_name)));
+
             const pendingAuthorized = isRestricted
-              ? authorizedStudentsForDetail.filter((a: any) => !joinedEmails.has(a.email))
+              ? authorizedStudentsForDetail.filter((a: any) => !isJoined(a))
               : [];
+
+            const findAuthorized = (name?: string, email?: string) => {
+              if (!isRestricted) return null;
+              const e = (email || "").toLowerCase();
+              if (e) {
+                const byEmail = authorizedStudentsForDetail.find((a: any) => a.email === e);
+                if (byEmail) return byEmail;
+              }
+              if (name) {
+                return authorizedStudentsForDetail.find((a: any) => normName(a.student_name) === normName(name)) || null;
+              }
+              return null;
+            };
 
             return (
               <>
@@ -1273,29 +1298,27 @@ export default function SalasVirtuais() {
                       const pSubmissions = submissions.filter((s: any) => s.participant_id === p.id);
                       const avgScore = pSubmissions.length > 0 ? Math.round(pSubmissions.reduce((a: number, s: any) => a + s.score, 0) / pSubmissions.length) : null;
                       const totalTime = pSubmissions.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0);
-                      const pEmail = (p.participant_email || "").toLowerCase();
-                      const isAuthorized = isRestricted && pEmail && authorizedStudentsForDetail.some((a: any) => a.email === pEmail);
+                      const leaderAuthorized = findAuthorized(p.participant_name, p.participant_email);
+                      const members: any[] = p.is_group ? (p.group_members as any[] || []) : [];
+
                       return (
                         <Card key={p.id}>
                           <CardContent className="pt-4">
                             <div className="flex items-start justify-between mb-2 gap-2">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
+                                  {p.is_group && <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                                   <p className="font-medium">{p.participant_name}</p>
                                   <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
-                                  {isAuthorized && (
+                                  {leaderAuthorized && (
                                     <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                       <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
                                     </Badge>
                                   )}
+                                  {p.is_group && <span className="text-[10px] text-muted-foreground uppercase tracking-wide">líder</span>}
                                 </div>
                                 {p.participant_email && (
                                   <p className="text-xs text-muted-foreground truncate">{p.participant_email}</p>
-                                )}
-                                {p.is_group && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Grupo: {(p.group_members as any[] || []).map((m: any) => typeof m === "string" ? m : (m?.name || m?.email)).join(", ")}
-                                  </p>
                                 )}
                                 <p className="text-xs text-muted-foreground">Entrou: {new Date(p.joined_at).toLocaleString("pt-BR")}</p>
                               </div>
@@ -1309,6 +1332,29 @@ export default function SalasVirtuais() {
                                 )}
                               </div>
                             </div>
+
+                            {members.length > 0 && (
+                              <div className="mt-2 space-y-1.5 border-l-2 border-border/60 pl-3">
+                                {members.map((m: any, i: number) => {
+                                  const name = typeof m === "string" ? m : (m?.name || "");
+                                  const email = typeof m === "string" ? undefined : m?.email;
+                                  const memberAuthorized = findAuthorized(name, email);
+                                  return (
+                                    <div key={i} className="flex items-center gap-1.5 flex-wrap">
+                                      <p className="text-sm">{name}</p>
+                                      <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                      {memberAuthorized && (
+                                        <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
+                                          <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
+                                        </Badge>
+                                      )}
+                                      {email && <span className="text-xs text-muted-foreground truncate">{email}</span>}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
                             {pSubmissions.length > 0 && (
                               <>
                                 <Separator className="my-2" />
