@@ -326,8 +326,6 @@ export default function SimuladorHemograma() {
   useEffect(() => {
     if (challengeCompleted && !submitted && activeCase) {
       handleFinish();
-      const cs = sessionStorage.getItem("challengeScore");
-      if (cs) setLastScore(Number(cs));
     }
   }, [challengeCompleted]);
 
