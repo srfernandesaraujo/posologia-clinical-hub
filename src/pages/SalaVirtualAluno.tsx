@@ -83,6 +83,7 @@ export default function SalaVirtualAluno() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"pin" | "identify" | "ready">("pin");
   const [activities, setActivities] = useState<any[]>([]);
+  const [hasGroupAssignments, setHasGroupAssignments] = useState(false);
 
   // Identification
   const [participantName, setParticipantName] = useState("");
@@ -127,6 +128,7 @@ export default function SalaVirtualAluno() {
     }
     setRoom(resp.room);
     setActivities(resp.activities || []);
+    setHasGroupAssignments(!!resp.hasGroupAssignments);
     setLoading(false);
     setStep("identify");
   };
@@ -206,9 +208,9 @@ export default function SalaVirtualAluno() {
           : memberNames)
       : [];
 
-    // View-only detection (via edge function)
+    // View-only detection (via edge function) — not applicable to professor-assigned groups
     let viewOnly = false;
-    if (!isGroup && isRestricted && primaryEmail) {
+    if (!hasGroupAssignments && !isGroup && isRestricted && primaryEmail) {
       const { data: gresp } = await supabase.functions.invoke("room-access", {
         body: { action: "check-group-membership", room_id: room.id, email: primaryEmail },
       });
@@ -233,13 +235,26 @@ export default function SalaVirtualAluno() {
       toast.error("Erro ao entrar na sala");
       return;
     }
+
+    if (hasGroupAssignments && !presp.assignedActivityId) {
+      setLoading(false);
+      toast.error("Seu e-mail não foi atribuído a nenhum grupo nesta sala. Fale com o professor.");
+      return;
+    }
+
+    let effectiveActivities = activities;
+    if (presp.assignedActivityId) {
+      effectiveActivities = activities.filter((a) => a.id === presp.assignedActivityId);
+      setActivities(effectiveActivities);
+    }
+
     const pid: string = presp.participantId;
     const submittedActivityIds = new Set<string>(presp.submittedActivityIds || []);
     let resumeIdx = 0;
     let completed = submittedActivityIds.size;
-    if (activities.length > 0) {
-      const firstUnsubmitted = activities.findIndex((a) => !submittedActivityIds.has(a.id));
-      resumeIdx = firstUnsubmitted === -1 ? activities.length : firstUnsubmitted;
+    if (effectiveActivities.length > 0) {
+      const firstUnsubmitted = effectiveActivities.findIndex((a) => !submittedActivityIds.has(a.id));
+      resumeIdx = firstUnsubmitted === -1 ? effectiveActivities.length : firstUnsubmitted;
     }
 
     setLoading(false);
@@ -248,7 +263,7 @@ export default function SalaVirtualAluno() {
     setCompletedCount(completed);
     sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
     if (presp.resumed && completed > 0) {
-      toast.success(`Retomando atividade — ${completed} de ${activities.length} já enviada(s).`);
+      toast.success(`Retomando atividade — ${completed} de ${effectiveActivities.length} já enviada(s).`);
     }
     if (viewOnly) {
       toast.info("Seu e-mail já está em um grupo nesta sala. Você entrará em modo somente-leitura: poderá explorar o simulador, mas não poderá responder os desafios.");
@@ -362,14 +377,18 @@ export default function SalaVirtualAluno() {
           <CardContent className="space-y-4">
             {room?.restricted_access && (
               <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-xs text-primary">
-                🔒 Esta sala tem acesso restrito. Apenas alunos previamente cadastrados pelo professor podem entrar.
+                {hasGroupAssignments
+                  ? "🔒 O professor já dividiu a turma em grupos, cada um com seu caso. Identifique-se com seu e-mail e você entrará automaticamente no grupo/caso designado."
+                  : "🔒 Esta sala tem acesso restrito. Apenas alunos previamente cadastrados pelo professor podem entrar."}
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <Label>Modo Grupo</Label>
-              <Switch checked={isGroup} onCheckedChange={setIsGroup} />
-            </div>
+            {!hasGroupAssignments && (
+              <div className="flex items-center justify-between">
+                <Label>Modo Grupo</Label>
+                <Switch checked={isGroup} onCheckedChange={setIsGroup} />
+              </div>
+            )}
 
             <div>
               <Label>{isGroup ? "Nome do Grupo" : "Seu Nome Completo"}</Label>
@@ -388,7 +407,7 @@ export default function SalaVirtualAluno() {
               </div>
             )}
 
-            {isGroup && (
+            {!hasGroupAssignments && isGroup && (
               <div className="space-y-2">
                 <Label>Componentes do Grupo {room?.restricted_access && "(nome + e-mail)"}</Label>
                 {groupMembers.map((m, i) => (

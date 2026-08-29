@@ -56,9 +56,14 @@ Deno.serve(async (req) => {
       }
       const { data: acts } = await supabase
         .from("room_activities").select("*").eq("room_id", room.id).order("position");
+      const { count: assignedCount } = await supabase
+        .from("room_authorized_emails")
+        .select("id", { count: "exact", head: true })
+        .eq("room_id", room.id)
+        .not("assigned_activity_id", "is", null);
       // Strip pin from response (room.pin is what the user already typed, but no need to return).
       const { pin: _omit, ...safeRoom } = room as any;
-      return ok({ room: safeRoom, activities: acts || [] });
+      return ok({ room: safeRoom, activities: acts || [], hasGroupAssignments: (assignedCount || 0) > 0 });
     }
 
     if (body.action === "validate-emails") {
@@ -95,15 +100,43 @@ Deno.serve(async (req) => {
     if (body.action === "find-or-create-participant") {
       const room = await getActiveRoom({ id: body.room_id });
       if (!room) return bad("Room not found", 404);
-      const name = String(body.name || "").trim();
-      if (!name) return bad("Name required");
+      let name = String(body.name || "").trim();
       const email = body.email ? String(body.email).toLowerCase().trim() : null;
-      const isGroup = !!body.is_group;
+      let isGroup = !!body.is_group;
+      let groupMembers: any[] = body.group_members || [];
+      let assignedActivityId: string | null = null;
+
+      // Professor-assigned group: the authorized email carries an assigned_activity_id,
+      // which overrides whatever the client sent (name/is_group/group_members) so every
+      // member of the group converges on the same room_participants row and case.
+      if (email) {
+        const { data: authRow } = await supabase
+          .from("room_authorized_emails")
+          .select("assigned_activity_id")
+          .eq("room_id", room.id).eq("email", email).maybeSingle();
+        if (authRow?.assigned_activity_id) {
+          assignedActivityId = authRow.assigned_activity_id;
+          const { data: activity } = await supabase
+            .from("room_activities").select("id, position, group_label")
+            .eq("id", assignedActivityId).maybeSingle();
+          const { data: groupmates } = await supabase
+            .from("room_authorized_emails")
+            .select("student_name, email")
+            .eq("room_id", room.id).eq("assigned_activity_id", assignedActivityId);
+
+          name = activity?.group_label || `Grupo ${(activity?.position ?? 0) + 1}`;
+          isGroup = true;
+          groupMembers = ((groupmates as any[]) || []).map((m) => ({ name: m.student_name, email: m.email }));
+        }
+      }
+
+      if (!name) return bad("Name required");
 
       // Try to resume existing participant
       let q = supabase.from("room_participants").select("id")
         .eq("room_id", room.id).eq("is_group", isGroup);
-      if (email) q = q.eq("participant_email", email);
+      if (assignedActivityId) q = q.ilike("participant_name", name);
+      else if (email) q = q.eq("participant_email", email);
       else q = q.ilike("participant_name", name);
       const { data: existing } = await q.order("joined_at", { ascending: true }).limit(1).maybeSingle();
 
@@ -113,11 +146,14 @@ Deno.serve(async (req) => {
           room_id: room.id,
           participant_name: name,
           is_group: isGroup,
-          group_members: body.group_members || [],
-          participant_email: email,
+          group_members: groupMembers,
+          participant_email: assignedActivityId ? null : email,
+          assigned_activity_id: assignedActivityId,
         } as any).select("id").single();
         if (error || !data) throw error || new Error("insert failed");
         participantId = data.id;
+      } else if (assignedActivityId) {
+        await supabase.from("room_participants").update({ assigned_activity_id: assignedActivityId } as any).eq("id", participantId);
       }
 
       // Compute resume index
@@ -130,6 +166,7 @@ Deno.serve(async (req) => {
         participantId,
         resumed: !!existing,
         submittedActivityIds: [...submittedIds],
+        assignedActivityId,
       });
     }
 

@@ -584,7 +584,7 @@ export default function SalaDetalhe() {
 
         {/* PARTICIPANTS */}
         <TabsContent value="participants">
-          <ParticipantsList students={studentsQ.data || []} participants={participants} restricted={!!room.restricted_access} />
+          <ParticipantsList students={studentsQ.data || []} participants={participants} restricted={!!room.restricted_access} activities={activities as any[]} />
         </TabsContent>
 
         {/* OVERVIEW */}
@@ -632,7 +632,18 @@ function normalizeStudentName(s: string) {
   return (s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function ParticipantsList({ students, participants, restricted }: { students: any[]; participants: any[]; restricted: boolean }) {
+function ParticipantsList({ students, participants, restricted, activities = [] }: { students: any[]; participants: any[]; restricted: boolean; activities?: any[] }) {
+  const activitiesById = new Map((activities || []).map((a, i) => [a.id, { ...a, index: i }]));
+  const activityCaseLabel = (activityId?: string | null) => {
+    if (!activityId) return null;
+    const act = activitiesById.get(activityId);
+    if (!act) return null;
+    const groupLabel = act.group_label?.trim() || `Grupo ${act.index + 1}`;
+    const caseTitle = act.simulator_cases?.title;
+    const toolLabel = SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug;
+    return `${groupLabel} · ${toolLabel}${caseTitle ? ` (${caseTitle})` : ""}`;
+  };
+
   // Casa por e-mail OU nome normalizado (sem acento/caixa) — o líder pode errar o
   // e-mail de um componente ao digitar, mas o nome quase sempre bate com o cadastro.
   const findStudent = (name?: string | null, email?: string | null) => {
@@ -682,9 +693,14 @@ function ParticipantsList({ students, participants, restricted }: { students: an
               const members = (p.group_members as any[] || []);
               return (
                 <div key={p.id} className="border rounded-md overflow-hidden">
-                  <div className="flex items-center justify-between gap-2 bg-muted/40 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 bg-muted/40 px-3 py-2 flex-wrap">
                     <p className="font-semibold text-sm flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {p.participant_name}</p>
-                    <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Grupo ingressou</Badge>
+                    <div className="flex items-center gap-1.5">
+                      {activityCaseLabel(p.assigned_activity_id) && (
+                        <Badge variant="outline" className="text-[10px]">{activityCaseLabel(p.assigned_activity_id)}</Badge>
+                      )}
+                      <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Grupo ingressou</Badge>
+                    </div>
                   </div>
                   <div className="divide-y divide-border">
                     <div className="flex items-center justify-between gap-3 p-3 text-sm">

@@ -113,11 +113,21 @@ interface ActivityItem {
   caseId: string;
   instruction: string;
   customChallenges?: any;
+  groupLabel?: string;
 }
 
 interface AuthorizedStudent {
   student_name: string;
   email: string;
+  assigned_activity_ref?: string | null;
+}
+
+// Uma opção de atividade para o seletor de "grupo" na lista de alunos autorizados.
+// `ref` é a posição (string) na criação — as atividades ainda não têm id — ou o
+// id real de room_activities na edição, onde as atividades já existem.
+interface GroupActivityOption {
+  ref: string;
+  label: string;
 }
 
 function generatePin(): string {
@@ -175,12 +185,14 @@ interface RestrictedAccessSectionProps {
   bulkText: string;
   onBulkTextChange: (v: string) => void;
   classId?: string;
+  /** Quando a sala tem 2+ atividades, permite atribuir um "grupo" (uma atividade/caso) por aluno. */
+  activityOptions?: GroupActivityOption[];
 }
 
 function RestrictedAccessSection({
   enabled, onEnabledChange, students, onStudentsChange,
   newName, onNewNameChange, newEmail, onNewEmailChange,
-  bulkText, onBulkTextChange, classId,
+  bulkText, onBulkTextChange, classId, activityOptions = [],
 }: RestrictedAccessSectionProps) {
   const { data: classRoster = [] } = useQuery({
     queryKey: ["class-roster-picker", classId],
@@ -240,6 +252,18 @@ function RestrictedAccessSection({
     onStudentsChange(students.filter(s => s.email !== email));
   };
 
+  const showGroups = activityOptions.length > 1;
+
+  const setAssignment = (email: string, ref: string | null) => {
+    onStudentsChange(students.map(s => s.email === email ? { ...s, assigned_activity_ref: ref } : s));
+  };
+
+  const distributeAutomatically = () => {
+    if (!activityOptions.length) return;
+    onStudentsChange(students.map((s, i) => ({ ...s, assigned_activity_ref: activityOptions[i % activityOptions.length].ref })));
+    toast.success(`Alunos distribuídos em ${activityOptions.length} grupo(s)`);
+  };
+
   return (
     <div className="space-y-3 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between">
@@ -282,18 +306,41 @@ function RestrictedAccessSection({
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs font-medium">Alunos autorizados ({students.length})</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium">Alunos autorizados ({students.length})</p>
+              {showGroups && students.length > 0 && (
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={distributeAutomatically}>
+                  Distribuir automaticamente
+                </Button>
+              )}
+            </div>
+            {showGroups && students.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Esta sala tem {activityOptions.length} atividades/casos. Atribua um grupo a cada aluno para que, ao entrar com o PIN, ele receba automaticamente só o caso do seu grupo.
+              </p>
+            )}
             {students.length === 0 ? (
               <p className="text-xs text-muted-foreground italic">Nenhum aluno cadastrado ainda.</p>
             ) : (
-              <div className="max-h-40 overflow-y-auto space-y-1 rounded border border-border p-2 bg-muted/30">
+              <div className="max-h-52 overflow-y-auto space-y-1 rounded border border-border p-2 bg-muted/30">
                 {students.map(s => (
                   <div key={s.email} className="flex items-center justify-between gap-2 text-xs py-1">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{s.student_name}</p>
                       <p className="text-muted-foreground truncate">{s.email}</p>
                     </div>
-                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStudent(s.email)}>
+                    {showGroups && (
+                      <Select value={s.assigned_activity_ref || "__none__"} onValueChange={v => setAssignment(s.email, v === "__none__" ? null : v)}>
+                        <SelectTrigger className="h-7 w-[150px] text-xs shrink-0"><SelectValue placeholder="Sem grupo" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Sem grupo</SelectItem>
+                          {activityOptions.map(o => (
+                            <SelectItem key={o.ref} value={o.ref}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeStudent(s.email)}>
                       <X className="h-3 w-3 text-destructive" />
                     </Button>
                   </div>
@@ -350,6 +397,8 @@ export default function SalasVirtuais() {
   const [editBulkStudentText, setEditBulkStudentText] = useState("");
   const [editNewStudentName, setEditNewStudentName] = useState("");
   const [editNewStudentEmail, setEditNewStudentEmail] = useState("");
+  // Atividades da sala em edição (modo prova) — usadas para nomear/atribuir grupos.
+  const [editActivitiesForGroups, setEditActivitiesForGroups] = useState<{ id: string; position: number; simulator_slug: string; group_label: string | null }[]>([]);
 
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
@@ -459,6 +508,13 @@ export default function SalasVirtuais() {
         throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
       }
 
+      if (restrictedAccess && validActivities.length > 1) {
+        const assignedCount = authorizedStudents.filter(s => s.assigned_activity_ref).length;
+        if (assignedCount > 0 && assignedCount < authorizedStudents.length) {
+          throw new Error("Se for usar grupos, atribua um grupo a TODOS os alunos autorizados (ou a nenhum).");
+        }
+      }
+
       const { data: roomData, error: roomError } = await supabase
         .from("virtual_rooms")
         .insert({
@@ -491,6 +547,7 @@ export default function SalasVirtuais() {
           simulator_slug: a.simulatorSlug,
           case_id: getDbCaseId(a.caseId),
           position: i,
+          group_label: a.groupLabel?.trim() || null,
           custom_challenges: a.customChallenges
             ? { ...a.customChallenges, nativeCaseIndex: getNativeCaseIndex(a.caseId) }
             : getNativeCaseIndex(a.caseId) !== null
@@ -499,16 +556,19 @@ export default function SalasVirtuais() {
         };
       });
 
-      const { error: actError } = await supabase
+      const { data: insertedActs, error: actError } = await supabase
         .from("room_activities")
-        .insert(activityRows);
+        .insert(activityRows)
+        .select("id, position");
       if (actError) throw actError;
 
       if (restrictedAccess && authorizedStudents.length > 0) {
+        const posToId = new Map(((insertedActs as any[]) || []).map(a => [a.position, a.id]));
         const rows = authorizedStudents.map(s => ({
           room_id: roomData.id,
           student_name: s.student_name,
           email: s.email.toLowerCase(),
+          assigned_activity_id: s.assigned_activity_ref != null ? posToId.get(Number(s.assigned_activity_ref)) ?? null : null,
         }));
         const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
         if (emailErr) throw emailErr;
@@ -595,6 +655,13 @@ export default function SalasVirtuais() {
         throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
       }
 
+      if (editRestrictedAccess && editActivitiesForGroups.length > 1) {
+        const assignedCount = editAuthorizedStudents.filter(s => s.assigned_activity_ref).length;
+        if (assignedCount > 0 && assignedCount < editAuthorizedStudents.length) {
+          throw new Error("Se for usar grupos, atribua um grupo a TODOS os alunos autorizados (ou a nenhum).");
+        }
+      }
+
       // Only allow simulator/case change for non-exam (single-activity) rooms
       if (!isExam) {
         if (!editSimulatorSlug) throw new Error("Selecione um simulador");
@@ -630,6 +697,11 @@ export default function SalasVirtuais() {
         } else {
           await supabase.from("room_activities").insert({ ...payload, room_id: editRoom.id, position: 0 });
         }
+      } else {
+        // Modo prova: persistir os nomes de grupo editados por atividade
+        for (const a of editActivitiesForGroups) {
+          await supabase.from("room_activities").update({ group_label: a.group_label?.trim() || null } as any).eq("id", a.id);
+        }
       }
 
       // Sync authorized emails: delete all and re-insert (simple approach)
@@ -639,6 +711,7 @@ export default function SalasVirtuais() {
           room_id: editRoom.id,
           student_name: s.student_name,
           email: s.email.toLowerCase(),
+          assigned_activity_id: s.assigned_activity_ref || null,
         }));
         const { error: emailErr } = await supabase.from("room_authorized_emails" as any).insert(rows);
         if (emailErr) throw emailErr;
@@ -695,13 +768,26 @@ export default function SalasVirtuais() {
     setEditBulkStudentText("");
     setEditNewStudentName("");
     setEditNewStudentEmail("");
+
+    // Modo prova: carregar as atividades para permitir nomear/atribuir grupos
+    if (!room.simulator_slug) {
+      const { data: acts } = await supabase
+        .from("room_activities")
+        .select("id, position, simulator_slug, group_label")
+        .eq("room_id", room.id)
+        .order("position");
+      setEditActivitiesForGroups(((acts as any[]) || []).map(a => ({ id: a.id, position: a.position, simulator_slug: a.simulator_slug, group_label: a.group_label })));
+    } else {
+      setEditActivitiesForGroups([]);
+    }
+
     // Load authorized students
     const { data: emails } = await supabase
       .from("room_authorized_emails" as any)
-      .select("student_name, email")
+      .select("student_name, email, assigned_activity_id")
       .eq("room_id", room.id)
       .order("student_name");
-    setEditAuthorizedStudents(((emails as any[]) || []).map(e => ({ student_name: e.student_name, email: e.email })));
+    setEditAuthorizedStudents(((emails as any[]) || []).map(e => ({ student_name: e.student_name, email: e.email, assigned_activity_ref: e.assigned_activity_id || null })));
   };
 
   const resetForm = () => {
@@ -766,6 +852,32 @@ export default function SalasVirtuais() {
 
   const getToolLabel = (slug: string) =>
     ALL_OPTIONS.find(s => s.slug === slug)?.label || slug;
+
+  // Opções de "grupo" para o diálogo de criação: uma por atividade válida, referenciada
+  // pela posição (as atividades ainda não têm id — só ganham um ao serem inseridas).
+  const groupActivityOptions: GroupActivityOption[] = useMemo(() => {
+    if (!isExamMode) return [];
+    const valid = activities.filter(a => a.simulatorSlug);
+    if (valid.length < 2) return [];
+    return valid.map((a, i) => ({
+      ref: String(i),
+      label: `${a.groupLabel?.trim() || `Grupo ${i + 1}`} — ${getToolLabel(a.simulatorSlug)}`,
+    }));
+  }, [activities, isExamMode]);
+
+  // Mesma ideia, mas para o diálogo de edição: as atividades já existem, então a
+  // referência do grupo é o id real de room_activities.
+  const editGroupActivityOptions: GroupActivityOption[] = useMemo(() => {
+    if (editActivitiesForGroups.length < 2) return [];
+    return editActivitiesForGroups.map(a => ({
+      ref: a.id,
+      label: `${a.group_label?.trim() || `Grupo ${a.position + 1}`} — ${getToolLabel(a.simulator_slug)}`,
+    }));
+  }, [editActivitiesForGroups]);
+
+  const updateEditActivityGroupLabel = (id: string, value: string) => {
+    setEditActivitiesForGroups(prev => prev.map(a => a.id === id ? { ...a, group_label: value } : a));
+  };
 
   const isRoomExam = (room: any) => !room.simulator_slug;
 
@@ -1132,6 +1244,19 @@ export default function SalasVirtuais() {
                             </div>
                           )}
 
+                          {/* Group label — só relevante quando há mais de uma atividade, para
+                              usar cada uma como o "caso" de um grupo diferente da turma. */}
+                          {isExamMode && act.simulatorSlug && activities.length > 1 && (
+                            <div>
+                              <Label className="text-xs">Nome do Grupo (opcional)</Label>
+                              <Input
+                                value={act.groupLabel || ""}
+                                onChange={e => { const copy = [...activities]; copy[i] = { ...copy[i], groupLabel: e.target.value }; setActivities(copy); }}
+                                placeholder={`Grupo ${i + 1}`}
+                              />
+                            </div>
+                          )}
+
                           {/* Challenge customization - for simulators only */}
                           {act.simulatorSlug && toolType === "simulator" && (
                             <div className="flex items-center gap-2 pt-1">
@@ -1192,6 +1317,7 @@ export default function SalasVirtuais() {
               bulkText={bulkStudentText}
               onBulkTextChange={setBulkStudentText}
               classId={classId}
+              activityOptions={groupActivityOptions}
             />
           </div>
           <DialogFooter>
@@ -1528,8 +1654,25 @@ export default function SalasVirtuais() {
                     )}
                   </>
                 ) : (
-                  <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
-                    Esta é uma sala de <strong>Atividade Simulada</strong> com múltiplas atividades. Para alterar simuladores e casos, edite as atividades individualmente (em breve) ou recrie a sala.
+                  <div className="space-y-3">
+                    <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
+                      Esta é uma sala de <strong>Atividade Simulada</strong> com múltiplas atividades. Para alterar simuladores e casos, recrie a sala — mas você pode nomear os grupos abaixo e atribuir alunos a cada um na seção de acesso restrito.
+                    </div>
+                    {editActivitiesForGroups.length > 1 && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Nomes dos Grupos</Label>
+                        {editActivitiesForGroups.map((a, i) => (
+                          <div key={a.id} className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-40 truncate shrink-0">{getToolLabel(a.simulator_slug)}</span>
+                            <Input
+                              value={a.group_label || ""}
+                              onChange={e => updateEditActivityGroupLabel(a.id, e.target.value)}
+                              placeholder={`Grupo ${i + 1}`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1551,6 +1694,7 @@ export default function SalasVirtuais() {
                   bulkText={editBulkStudentText}
                   onBulkTextChange={setEditBulkStudentText}
                   classId={editRoom?.class_id || undefined}
+                  activityOptions={editGroupActivityOptions}
                 />
               </div>
             );
