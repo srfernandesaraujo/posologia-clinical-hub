@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { computeCompetencyBreakdown, generateCertificateCode } from "@/lib/osceCertificate";
+import { computeItemStats, computeWeightedGrade, computeGroupMedianResponseTimes, computeSpeedProfile } from "@/lib/examPsychometrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ function gerarCertificadoPDF(cert: {
   student_name: string;
   exam_title: string;
   final_score: number;
+  final_score_10?: number | null;
   competency_breakdown: { category: string; score: number; activityCount: number }[];
   integrity_flags: { tabSwitchCount?: number };
   verification_code: string;
@@ -105,13 +107,26 @@ function gerarCertificadoPDF(cert: {
     y, w, { fontSize: 11.5, maxWidth: w - 90 },
   );
 
-  // Nota final em destaque
+  // Nota final em destaque — nota ponderada (0-10) quando disponível, com o % bruto como linha secundária
   y += 6;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(26);
-  doc.setTextColor(...scoreColor(cert.final_score));
-  doc.text(`${cert.final_score}%`, cx, y + 10, { align: "center" });
-  y += 18;
+  if (typeof cert.final_score_10 === "number") {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(26);
+    doc.setTextColor(...scoreColor(cert.final_score));
+    doc.text(`${cert.final_score_10.toFixed(1).replace(".", ",")} / 10`, cx, y + 10, { align: "center" });
+    y += 15;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...SLATE_500);
+    doc.text(`(${cert.final_score}% de aproveitamento bruto)`, cx, y, { align: "center" });
+    y += 9;
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(26);
+    doc.setTextColor(...scoreColor(cert.final_score));
+    doc.text(`${cert.final_score}%`, cx, y + 10, { align: "center" });
+    y += 18;
+  }
 
   // Tabela de desempenho por competência
   if (cert.competency_breakdown.length > 0) {
@@ -251,6 +266,30 @@ export default function SalaDetalhe() {
       const finalScore = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + (s.score || 0), 0) / pSubs.length) : 0;
       const breakdown = computeCompetencyBreakdown(activities as any, pSubs);
       const tabSwitchCount = pSubs.reduce((a, s) => a + (s.tab_switch_count || 0), 0);
+
+      // Dossiê psicométrico: nota ponderada (0-10) por dificuldade/discriminação recalculadas
+      // nesta sala, uma vez por atividade de desafio que o participante completou.
+      const itemAnalysis: Record<string, any> = {};
+      let grade10Sum = 0;
+      let grade10Count = 0;
+      for (const sub of pSubs) {
+        if (sub.actions?.type !== "challenge_results") continue;
+        const subQuestions = sub.actions.questions || [];
+        if (subQuestions.length === 0) continue;
+        const itemStats = computeItemStats(submissions as any[], sub.activity_id ?? null);
+        const weightedGrade = computeWeightedGrade(subQuestions, itemStats);
+        const groupMedians = computeGroupMedianResponseTimes(submissions as any[], sub.activity_id ?? null);
+        const speedProfile = computeSpeedProfile(subQuestions, groupMedians);
+        itemAnalysis[sub.activity_id || "default"] = {
+          itemStats: Object.fromEntries(itemStats),
+          weightedGrade,
+          speedProfile,
+        };
+        grade10Sum += weightedGrade.grade10;
+        grade10Count += 1;
+      }
+      const finalScore10 = grade10Count > 0 ? Math.round((grade10Sum / grade10Count) * 10) / 10 : null;
+
       const { data, error } = await (supabase as any)
         .from("osce_certificates")
         .upsert(
@@ -261,6 +300,8 @@ export default function SalaDetalhe() {
             student_name: participant.participant_name,
             exam_title: room?.title || "Prova",
             final_score: finalScore,
+            final_score_10: finalScore10,
+            item_analysis: itemAnalysis as any,
             competency_breakdown: breakdown as any,
             integrity_flags: { tabSwitchCount } as any,
             issued_by: user!.id,
@@ -572,7 +613,7 @@ export default function SalaDetalhe() {
                         );
                       })()}
                       {pSubs.map((sub: any) => (
-                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} />
+                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} isPremium={isPremium} onShowUpgrade={showUpgrade} />
                       ))}
                     </div>
                   );

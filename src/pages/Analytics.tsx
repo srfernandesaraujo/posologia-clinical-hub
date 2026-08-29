@@ -18,6 +18,17 @@ import {
 import { GAME_LABELS } from "@/data/virtualRoomGames";
 import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
 import { ReasoningTrail, type ReasoningTrailItem } from "@/components/ReasoningTrail";
+import {
+  computeItemStats, computeWeightedGrade, computeGroupMedianResponseTimes, computeSpeedProfile,
+  type RoomSubmissionRow, type SpeedLabel,
+} from "@/lib/examPsychometrics";
+
+const SPEED_LABEL_BADGE: Record<Exclude<SpeedLabel, null>, string> = {
+  dominio: "⚡ Domínio",
+  reflexivo: "🐢 Reflexivo",
+  chute: "❓ Possível chute",
+  dificuldade: "⚠️ Dificuldade",
+};
 
 export const SIMULATOR_LABELS: Record<string, string> = {
   ...GAME_LABELS,
@@ -103,7 +114,9 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 /** Expandable participant detail showing decisions + report */
-export function ParticipantDetail({ submission, roomSubmissions }: { submission: any; roomSubmissions: any[] }) {
+export function ParticipantDetail({ submission, roomSubmissions, isPremium = false, onShowUpgrade }: {
+  submission: any; roomSubmissions: any[]; isPremium?: boolean; onShowUpgrade?: (feature?: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const actions = submission.actions;
 
@@ -144,6 +157,21 @@ export function ParticipantDetail({ submission, roomSubmissions }: { submission:
       });
     }
   });
+
+  // Recalibrated item weights, weighted grade (0-10) and speed profile — Premium dossiê.
+  const activityIdForStats: string | null = submission.activity_id ?? null;
+  const itemStatsMap = isChallengeFormat
+    ? computeItemStats(roomSubmissions as RoomSubmissionRow[], activityIdForStats)
+    : new Map();
+  const weightedGrade = isChallengeFormat ? computeWeightedGrade(questions, itemStatsMap) : null;
+  const groupMedians = isChallengeFormat
+    ? computeGroupMedianResponseTimes(roomSubmissions as RoomSubmissionRow[], activityIdForStats)
+    : new Map();
+  const speedProfile = isChallengeFormat ? computeSpeedProfile(questions, groupMedians) : null;
+  const activitySampleSize = isChallengeFormat
+    ? roomSubmissions.filter((s: any) => s.activity_id === activityIdForStats && s.actions?.type === "challenge_results").length
+    : 0;
+  const hasReliableDiscrimination = activitySampleSize >= 5;
 
   // Topic analysis from questions
   const topicStats: Record<string, { correct: number; total: number }> = {};
@@ -211,6 +239,34 @@ export function ParticipantDetail({ submission, roomSubmissions }: { submission:
             </div>
           )}
 
+          {/* ── Nota da Prova (ponderada por dificuldade/discriminação) — Premium ── */}
+          {isChallengeFormat && weightedGrade && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Nota da Prova (ponderada)</p>
+                {isPremium ? (
+                  <p className="text-2xl font-bold text-primary">
+                    {weightedGrade.grade10.toFixed(1).replace(".", ",")}
+                    <span className="text-sm text-muted-foreground font-normal"> / 10</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">🔒 Disponível no Premium</p>
+                )}
+              </div>
+              {isPremium ? (
+                !hasReliableDiscrimination && (
+                  <p className="text-[11px] text-muted-foreground italic max-w-[220px] text-right">
+                    Amostra insuficiente ({activitySampleSize} envio{activitySampleSize === 1 ? "" : "s"}) para recalibrar dificuldade/discriminação — pesos neutros (1×) aplicados.
+                  </p>
+                )
+              ) : (
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onShowUpgrade?.("Nota ponderada e dossiê da prova")}>
+                  Assinar Premium
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* ── Per-Question Breakdown (challenge format) ── */}
           {questions.length > 0 && (
             <div className="space-y-2">
@@ -240,6 +296,16 @@ export function ParticipantDetail({ submission, roomSubmissions }: { submission:
                           {diffLabel && (
                             <Badge variant="outline" className={`text-[10px] h-4 ${diffColor}`}>
                               {diffLabel} {diffPct !== null && `(${diffPct}% acertaram)`}
+                            </Badge>
+                          )}
+                          {isPremium && weightedGrade && (
+                            <Badge variant="outline" className="text-[10px] h-4">
+                              Peso {weightedGrade.perQuestion[i]?.weight.toFixed(1)}×
+                            </Badge>
+                          )}
+                          {isPremium && speedProfile?.entries[i]?.label && (
+                            <Badge variant="outline" className="text-[10px] h-4">
+                              {SPEED_LABEL_BADGE[speedProfile.entries[i].label!]}
                             </Badge>
                           )}
                         </div>
@@ -282,6 +348,10 @@ export function ParticipantDetail({ submission, roomSubmissions }: { submission:
                     })}
                   </div>
                 </div>
+              )}
+
+              {isPremium && speedProfile?.summary && (
+                <p className="text-[11px] text-muted-foreground italic">🕒 {speedProfile.summary}</p>
               )}
 
               {/* Radar for question performance */}
@@ -1129,7 +1199,7 @@ export default function Analytics() {
                                       )}
                                       {/* Detailed submission view */}
                                       {pSubs.map((sub: any) => (
-                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} />
+                                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={rSubmissions} isPremium={isPremium} onShowUpgrade={showUpgrade} />
                                       ))}
                                     </div>
                                   );

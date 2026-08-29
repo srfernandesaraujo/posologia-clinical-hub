@@ -11,6 +11,7 @@ interface CertificateResult {
   student_name?: string;
   exam_title?: string;
   final_score?: number;
+  final_score_10?: number | null;
   competency_breakdown?: { category: string; score: number; activityCount: number }[];
   integrity_flags?: { tabSwitchCount?: number };
   issued_at?: string;
@@ -73,7 +74,12 @@ export default function VerificarCertificado() {
               <div className="rounded-lg border border-border p-4 space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Aluno(a):</span> {result.student_name}</p>
                 <p><span className="text-muted-foreground">Prova:</span> {result.exam_title}</p>
-                <p><span className="text-muted-foreground">Nota final:</span> {result.final_score}%</p>
+                <p>
+                  <span className="text-muted-foreground">Nota final:</span>{" "}
+                  {typeof result.final_score_10 === "number"
+                    ? `${result.final_score_10.toFixed(1).replace(".", ",")} / 10 (${result.final_score}% de aproveitamento bruto)`
+                    : `${result.final_score}%`}
+                </p>
                 {result.issued_at && (
                   <p><span className="text-muted-foreground">Emitido em:</span> {new Date(result.issued_at).toLocaleDateString("pt-BR")}</p>
                 )}

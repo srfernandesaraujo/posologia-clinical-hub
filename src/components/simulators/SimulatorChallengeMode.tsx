@@ -60,6 +60,11 @@ export interface QuestionResult {
   correct: boolean;
   explanation: string;
   reference?: string;
+  /** Time from when this question first appeared to when the answer was confirmed. */
+  responseTimeMs?: number;
+  /** Raw option indices (when the question has multiple-choice options), for future analysis. */
+  selectedOptionIndex?: number;
+  correctOptionIndex?: number;
 }
 
 interface SimulatorChallengeModeProps {
@@ -93,6 +98,7 @@ export default function SimulatorChallengeMode({
   const [adjustValidated, setAdjustValidated] = useState(false);
   const questionResultsRef = useRef<QuestionResult[]>([]);
   const startTimeRef = useRef<number>(Date.now());
+  const questionShownAtRef = useRef<number>(Date.now());
 
   // Virtual room detection
   const vrContextRef = useRef<any>(null);
@@ -137,6 +143,11 @@ export default function SimulatorChallengeMode({
   const current = challenges[currentIndex];
   const progress = ((currentIndex) / challenges.length) * 100;
 
+  // Marks when the current question first became visible, to measure response time.
+  useEffect(() => {
+    if (started && !finished) questionShownAtRef.current = Date.now();
+  }, [currentIndex, started, finished]);
+
   const handleStart = useCallback(() => {
     setStarted(true);
     setCurrentIndex(0);
@@ -166,6 +177,9 @@ export default function SimulatorChallengeMode({
       correct,
       explanation: challenge.explanation,
       reference: challenge.reference,
+      responseTimeMs: Date.now() - questionShownAtRef.current,
+      selectedOptionIndex: optionIndex,
+      correctOptionIndex: challenge.correctIndex,
     });
   }, [answered, current, currentIndex]);
 
@@ -230,6 +244,9 @@ export default function SimulatorChallengeMode({
       correct: finalCorrect,
       explanation: challenge.explanation,
       reference: challenge.reference,
+      responseTimeMs: Date.now() - questionShownAtRef.current,
+      selectedOptionIndex: hasOptions ? chosenOption : undefined,
+      correctOptionIndex: hasOptions ? challenge.correctIndex : undefined,
     });
   }, [answered, current, simulatorState, currentIndex]);
 

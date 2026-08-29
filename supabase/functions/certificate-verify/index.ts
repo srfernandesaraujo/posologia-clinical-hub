@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   try {
     const { data, error } = await supabase
       .from("osce_certificates")
-      .select("student_name, exam_title, final_score, competency_breakdown, integrity_flags, issued_at, revoked_at")
+      .select("student_name, exam_title, final_score, final_score_10, competency_breakdown, integrity_flags, issued_at, revoked_at")
       .eq("verification_code", code)
       .maybeSingle();
     if (error) throw error;
@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       student_name: data.student_name,
       exam_title: data.exam_title,
       final_score: data.final_score,
+      final_score_10: data.final_score_10,
       competency_breakdown: data.competency_breakdown,
       integrity_flags: data.integrity_flags,
       issued_at: data.issued_at,
