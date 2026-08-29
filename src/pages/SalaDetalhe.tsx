@@ -498,7 +498,7 @@ export default function SalaDetalhe() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium">{p.participant_name}</p>
                           {p.participant_email && <p className="text-xs text-muted-foreground">{p.participant_email}</p>}
-                          {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).join(", ")}</p>}
+                          {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).map((m: any) => typeof m === "string" ? m : (m?.name || m?.email)).join(", ")}</p>}
                           <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -628,58 +628,147 @@ function StatCard({ label, value }: { label: string; value: any }) {
   );
 }
 
-function ParticipantsList({ students, participants, restricted }: { students: any[]; participants: any[]; restricted: boolean }) {
-  const ingressByEmail = new Map<string, any>();
-  participants.forEach(p => {
-    if (p.participant_email) ingressByEmail.set(p.participant_email.toLowerCase(), p);
-  });
+function normalizeStudentName(s: string) {
+  return (s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
-  const rows: { name: string; email: string | null; registered: boolean; joined: boolean; isGroup?: boolean }[] = [];
-  if (restricted) {
-    students.forEach(s => {
-      const email = s.email.toLowerCase();
-      const p = ingressByEmail.get(email);
-      rows.push({ name: s.full_name, email: s.email, registered: true, joined: !!p });
+function ParticipantsList({ students, participants, restricted }: { students: any[]; participants: any[]; restricted: boolean }) {
+  // Casa por e-mail OU nome normalizado (sem acento/caixa) — o líder pode errar o
+  // e-mail de um componente ao digitar, mas o nome quase sempre bate com o cadastro.
+  const findStudent = (name?: string | null, email?: string | null) => {
+    if (!restricted) return null;
+    const e = (email || "").toLowerCase();
+    if (e) {
+      const byEmail = students.find((s) => (s.email || "").toLowerCase() === e);
+      if (byEmail) return byEmail;
+    }
+    if (name) {
+      return students.find((s) => normalizeStudentName(s.full_name) === normalizeStudentName(name)) || null;
+    }
+    return null;
+  };
+
+  const groups = participants.filter((p) => p.is_group);
+  const solos = participants.filter((p) => !p.is_group);
+
+  const matchedEmails = new Set<string>();
+  const markMatched = (name?: string | null, email?: string | null) => {
+    const match = findStudent(name, email);
+    if (match?.email) matchedEmails.add(match.email.toLowerCase());
+  };
+  groups.forEach((p) => {
+    markMatched(null, p.participant_email);
+    (p.group_members as any[] || []).forEach((m: any) => {
+      const name = typeof m === "string" ? m : m?.name;
+      const email = typeof m === "string" ? null : m?.email;
+      markMatched(name, email);
     });
-    participants.forEach(p => {
-      const em = (p.participant_email || "").toLowerCase();
-      if (!em || !students.find(s => s.email.toLowerCase() === em)) {
-        rows.push({ name: p.participant_name, email: p.participant_email, registered: false, joined: true, isGroup: p.is_group });
-      }
-    });
-  } else {
-    participants.forEach(p => rows.push({ name: p.participant_name, email: p.participant_email, registered: false, joined: true, isGroup: p.is_group }));
-  }
+  });
+  solos.forEach((p) => markMatched(p.participant_name, p.participant_email));
+
+  const pendingStudents = restricted ? students.filter((s) => !matchedEmails.has((s.email || "").toLowerCase())) : [];
+  const hasAny = groups.length > 0 || solos.length > 0 || pendingStudents.length > 0;
 
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Participantes</CardTitle></CardHeader>
-      <CardContent>
-        {rows.length === 0 ? (
+      <CardContent className="space-y-4">
+        {!hasAny ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Nenhum participante ainda.</p>
         ) : (
-          <div className="border rounded-md divide-y divide-border">
-            {rows.map((r, i) => (
-              <div key={i} className="flex items-center justify-between gap-3 p-3 text-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate">{r.name}</p>
-                  {r.email && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {r.email}</p>}
+          <>
+            {groups.map((p) => {
+              const leaderMatch = findStudent(null, p.participant_email);
+              const members = (p.group_members as any[] || []);
+              return (
+                <div key={p.id} className="border rounded-md overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 bg-muted/40 px-3 py-2">
+                    <p className="font-semibold text-sm flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {p.participant_name}</p>
+                    <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Grupo ingressou</Badge>
+                  </div>
+                  <div className="divide-y divide-border">
+                    <div className="flex items-center justify-between gap-3 p-3 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{leaderMatch?.full_name || p.participant_email || "Líder"}</p>
+                        {p.participant_email && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {p.participant_email}</p>}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">líder</span>
+                        {leaderMatch && (
+                          <Badge variant="outline" className="text-[10px]">
+                            <UserPlus className="h-3 w-3 mr-1" /> Cadastrado
+                          </Badge>
+                        )}
+                        <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Ingressou</Badge>
+                      </div>
+                    </div>
+                    {members.map((m: any, i: number) => {
+                      const name = typeof m === "string" ? m : (m?.name || "");
+                      const email = typeof m === "string" ? null : m?.email;
+                      const memberMatch = findStudent(name, email);
+                      return (
+                        <div key={i} className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{name}</p>
+                            {email && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {email}</p>}
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {memberMatch && (
+                              <Badge variant="outline" className="text-[10px]">
+                                <UserPlus className="h-3 w-3 mr-1" /> Cadastrado
+                              </Badge>
+                            )}
+                            <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Ingressou</Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {r.registered && (
-                    <Badge variant="outline" className="text-[10px]">
-                      <UserPlus className="h-3 w-3 mr-1" /> Cadastrado
-                    </Badge>
-                  )}
-                  {r.joined && (
-                    <Badge className="text-[10px]">
-                      <UserCheck className="h-3 w-3 mr-1" /> {r.isGroup ? "Grupo ingressou" : "Ingressou"}
-                    </Badge>
-                  )}
+              );
+            })}
+
+            {solos.map((p) => {
+              const match = findStudent(p.participant_name, p.participant_email);
+              return (
+                <div key={p.id} className="border rounded-md divide-y divide-border">
+                  <div className="flex items-center justify-between gap-3 p-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{p.participant_name}</p>
+                      {p.participant_email && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {p.participant_email}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {match && (
+                        <Badge variant="outline" className="text-[10px]">
+                          <UserPlus className="h-3 w-3 mr-1" /> Cadastrado
+                        </Badge>
+                      )}
+                      <Badge className="text-[10px]"><UserCheck className="h-3 w-3 mr-1" /> Ingressou</Badge>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {pendingStudents.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Cadastrados aguardando ingresso ({pendingStudents.length})</p>
+                <div className="border rounded-md divide-y divide-border">
+                  {pendingStudents.map((s) => (
+                    <div key={s.email} className="flex items-center justify-between gap-3 p-3 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{s.full_name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {s.email}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">
+                        <UserPlus className="h-3 w-3 mr-1" /> Cadastrado
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
