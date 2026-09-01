@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -81,9 +81,10 @@ export default function SalaVirtualAluno() {
   const [pin, setPin] = useState(pinFromUrl);
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"pin" | "identify" | "ready">("pin");
+  const [step, setStep] = useState<"pin" | "identify" | "waiting-group" | "ready">("pin");
   const [activities, setActivities] = useState<any[]>([]);
   const [hasGroupAssignments, setHasGroupAssignments] = useState(false);
+  const pendingJoinRef = useRef<{ name: string; email: string | null; isGroup: boolean; members: any[] } | null>(null);
 
   // Identification
   const [participantName, setParticipantName] = useState("");
@@ -238,10 +239,16 @@ export default function SalaVirtualAluno() {
 
     if (hasGroupAssignments && !presp.assignedActivityId) {
       setLoading(false);
-      toast.error("Seu e-mail não foi atribuído a nenhum grupo nesta sala. Fale com o professor.");
+      pendingJoinRef.current = { name, email: isRestricted ? primaryEmail : null, isGroup, members };
+      setStep("waiting-group");
       return;
     }
 
+    setLoading(false);
+    finalizeJoin(presp, viewOnly);
+  };
+
+  const finalizeJoin = (presp: any, viewOnly: boolean) => {
     let effectiveActivities = activities;
     if (presp.assignedActivityId) {
       effectiveActivities = activities.filter((a) => a.id === presp.assignedActivityId);
@@ -257,7 +264,6 @@ export default function SalaVirtualAluno() {
       resumeIdx = firstUnsubmitted === -1 ? effectiveActivities.length : firstUnsubmitted;
     }
 
-    setLoading(false);
     setParticipantId(pid);
     setResumeFromIndex(resumeIdx);
     setCompletedCount(completed);
@@ -270,6 +276,31 @@ export default function SalaVirtualAluno() {
     }
     setStep("ready");
   };
+
+  const checkGroupAssignment = async () => {
+    const params = pendingJoinRef.current;
+    if (!params || !room) return;
+    const { data: presp, error: pErr } = await supabase.functions.invoke("room-access", {
+      body: {
+        action: "find-or-create-participant",
+        room_id: room.id,
+        name: params.name,
+        email: params.email,
+        is_group: params.isGroup,
+        group_members: params.members,
+      },
+    });
+    if (pErr || !presp?.participantId) return;
+    if (presp.assignedActivityId) {
+      finalizeJoin(presp, false);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== "waiting-group") return;
+    const interval = setInterval(checkGroupAssignment, 7000);
+    return () => clearInterval(interval);
+  }, [step, room]);
 
   const isExam = activities.length > 1;
   const isLegacy = !isExam && room?.simulator_slug;
@@ -439,6 +470,34 @@ export default function SalaVirtualAluno() {
             <Button onClick={submitIdentification} disabled={!participantName.trim() || loading} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Users className="h-4 w-4 mr-2" />}
               Confirmar e Entrar
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (step === "waiting-group") {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <Button variant="ghost" size="sm" onClick={() => { setStep("pin"); setRoom(null); setActivities([]); pendingJoinRef.current = null; }} className="w-fit mb-2">
+              <ArrowLeft className="h-4 w-4 mr-1" />Voltar
+            </Button>
+            <CardTitle className="text-xl">{room?.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-center">
+            <div className="mx-auto inline-flex rounded-2xl bg-amber-500/10 p-4">
+              <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+            </div>
+            <p className="text-sm">
+              Seu e-mail ainda não foi atribuído a nenhum grupo nesta sala. Assim que o
+              professor formar seu grupo, você entrará automaticamente.
+            </p>
+            <p className="text-xs text-muted-foreground">Verificando periodicamente…</p>
+            <Button variant="outline" size="sm" onClick={checkGroupAssignment} disabled={loading}>
+              Verificar agora
             </Button>
           </CardContent>
         </Card>

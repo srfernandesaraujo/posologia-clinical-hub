@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -400,6 +401,16 @@ export default function SalasVirtuais() {
   // Atividades da sala em edição (modo prova) — usadas para nomear/atribuir grupos.
   const [editActivitiesForGroups, setEditActivitiesForGroups] = useState<{ id: string; position: number; simulator_slug: string; group_label: string | null }[]>([]);
 
+  // Formar grupo de retardatários (alunos sem grupo) no diálogo de detalhes da sala.
+  const [strayGroupSelection, setStrayGroupSelection] = useState<string[]>([]);
+  const [strayGroupActivityRef, setStrayGroupActivityRef] = useState<string>("");
+  const [strayGroupLabel, setStrayGroupLabel] = useState("");
+  useEffect(() => {
+    setStrayGroupSelection([]);
+    setStrayGroupActivityRef("");
+    setStrayGroupLabel("");
+  }, [detailRoom?.id]);
+
   const { canUseVirtualRooms, upgradeOpen, setUpgradeOpen, upgradeFeature, showUpgrade } = useFeatureGating();
 
   const { data: rooms = [], isLoading } = useQuery({
@@ -483,12 +494,69 @@ export default function SalasVirtuais() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_authorized_emails" as any)
-        .select("student_name, email")
+        .select("student_name, email, assigned_activity_id")
         .eq("room_id", detailRoom.id)
         .order("student_name");
       if (error) throw error;
-      return ((data as any[]) || []).map(d => ({ student_name: d.student_name, email: (d.email || "").toLowerCase() }));
+      return ((data as any[]) || []).map(d => ({
+        student_name: d.student_name,
+        email: (d.email || "").toLowerCase(),
+        assigned_activity_id: d.assigned_activity_id as string | null,
+      }));
     },
+  });
+
+  const formGroup = useMutation({
+    mutationFn: async () => {
+      if (!detailRoom) throw new Error("Sem sala");
+      if (strayGroupSelection.length === 0) throw new Error("Selecione ao menos um aluno");
+      if (!strayGroupActivityRef) throw new Error("Escolha o caso deste grupo");
+
+      const baseActivity = roomActivities.find((a: any) => a.id === strayGroupActivityRef);
+      if (!baseActivity) throw new Error("Caso não encontrado");
+
+      const maxPosition = roomActivities.reduce((max: number, a: any) => Math.max(max, a.position), -1);
+      const { id: _id, created_at: _createdAt, ...clonable } = baseActivity as any;
+      const { data: inserted, error: insertErr } = await supabase
+        .from("room_activities")
+        .insert({
+          ...clonable,
+          room_id: detailRoom.id,
+          position: maxPosition + 1,
+          group_label: strayGroupLabel.trim() || "Retardatários",
+        })
+        .select("id")
+        .single();
+      if (insertErr) throw insertErr;
+      const newActivityId = inserted.id;
+
+      const { error: updErr } = await supabase
+        .from("room_authorized_emails" as any)
+        .update({ assigned_activity_id: newActivityId })
+        .eq("room_id", detailRoom.id)
+        .in("email", strayGroupSelection);
+      if (updErr) throw updErr;
+
+      // Remove entradas órfãs criadas por alunos que tentaram entrar antes de terem grupo.
+      const { error: delErr } = await supabase
+        .from("room_participants")
+        .delete()
+        .eq("room_id", detailRoom.id)
+        .eq("is_group", false)
+        .is("assigned_activity_id", null)
+        .in("participant_email", strayGroupSelection);
+      if (delErr) throw delErr;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["room-activities", detailRoom?.id] });
+      queryClient.invalidateQueries({ queryKey: ["room-authorized-emails", detailRoom?.id] });
+      queryClient.invalidateQueries({ queryKey: ["room-participants", detailRoom?.id] });
+      setStrayGroupSelection([]);
+      setStrayGroupActivityRef("");
+      setStrayGroupLabel("");
+      toast.success("Grupo formado com sucesso!");
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao formar grupo"),
   });
 
   const createRoom = useMutation({
@@ -506,13 +574,6 @@ export default function SalasVirtuais() {
 
       if (restrictedAccess && authorizedStudents.length === 0) {
         throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
-      }
-
-      if (restrictedAccess && validActivities.length > 1) {
-        const assignedCount = authorizedStudents.filter(s => s.assigned_activity_ref).length;
-        if (assignedCount > 0 && assignedCount < authorizedStudents.length) {
-          throw new Error("Se for usar grupos, atribua um grupo a TODOS os alunos autorizados (ou a nenhum).");
-        }
       }
 
       const { data: roomData, error: roomError } = await supabase
@@ -653,13 +714,6 @@ export default function SalasVirtuais() {
 
       if (editRestrictedAccess && editAuthorizedStudents.length === 0) {
         throw new Error("Acesso restrito ativado: cadastre ao menos um aluno autorizado.");
-      }
-
-      if (editRestrictedAccess && editActivitiesForGroups.length > 1) {
-        const assignedCount = editAuthorizedStudents.filter(s => s.assigned_activity_ref).length;
-        if (assignedCount > 0 && assignedCount < editAuthorizedStudents.length) {
-          throw new Error("Se for usar grupos, atribua um grupo a TODOS os alunos autorizados (ou a nenhum).");
-        }
       }
 
       // Only allow simulator/case change for non-exam (single-activity) rooms
@@ -1359,6 +1413,64 @@ export default function SalasVirtuais() {
               <Separator className="mt-3" />
             </div>
           )}
+
+          {(() => {
+            const isRestricted = !!detailRoom?.restricted_access;
+            const ungroupedAuthorized = isRestricted && roomActivities.length > 1
+              ? authorizedStudentsForDetail.filter((a: any) => !a.assigned_activity_id)
+              : [];
+
+            if (ungroupedAuthorized.length === 0) return null;
+
+            const toggleStray = (email: string) => {
+              setStrayGroupSelection(prev => prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]);
+            };
+
+            return (
+              <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 space-y-2">
+                <p className="text-sm font-semibold">Alunos sem grupo ({ungroupedAuthorized.length})</p>
+                <p className="text-xs text-muted-foreground">
+                  Esses alunos ainda não têm um grupo/caso atribuído e não conseguirão concluir a atividade
+                  até que você forme um grupo para eles.
+                </p>
+                <div className="max-h-32 overflow-y-auto space-y-1 rounded border border-border p-2 bg-background/60">
+                  {ungroupedAuthorized.map((a: any) => (
+                    <label key={a.email} className="flex items-center gap-2 text-xs py-0.5 cursor-pointer">
+                      <Checkbox checked={strayGroupSelection.includes(a.email)} onCheckedChange={() => toggleStray(a.email)} />
+                      <span className="font-medium">{a.student_name}</span>
+                      <span className="text-muted-foreground truncate">{a.email}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Select value={strayGroupActivityRef} onValueChange={setStrayGroupActivityRef}>
+                    <SelectTrigger className="h-8 text-xs flex-1"><SelectValue placeholder="Caso deste grupo" /></SelectTrigger>
+                    <SelectContent>
+                      {roomActivities.map((act: any) => (
+                        <SelectItem key={act.id} value={act.id}>
+                          {act.group_label?.trim() || `Ativ. ${act.position + 1}`} — {getToolLabel(act.simulator_slug)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="h-8 text-xs flex-1"
+                    placeholder="Nome do novo grupo (opcional)"
+                    value={strayGroupLabel}
+                    onChange={e => setStrayGroupLabel(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={strayGroupSelection.length === 0 || !strayGroupActivityRef || formGroup.isPending}
+                    onClick={() => formGroup.mutate()}
+                  >
+                    Formar grupo com selecionados
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
 
           {(() => {
             const isRestricted = !!detailRoom?.restricted_access;
