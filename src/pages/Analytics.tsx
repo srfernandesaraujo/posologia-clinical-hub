@@ -114,10 +114,13 @@ function PremiumOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 /** Expandable participant detail showing decisions + report */
-export function ParticipantDetail({ submission, roomSubmissions, isPremium = false, onShowUpgrade }: {
-  submission: any; roomSubmissions: any[]; isPremium?: boolean; onShowUpgrade?: (feature?: string) => void;
+export function ParticipantDetail({ submission, roomSubmissions, isPremium = false, onShowUpgrade, forceOpen = false }: {
+  submission: any; roomSubmissions: any[]; isPremium?: boolean; onShowUpgrade?: (feature?: string) => void; forceOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(forceOpen);
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
   const actions = submission.actions;
 
   // Detect format types

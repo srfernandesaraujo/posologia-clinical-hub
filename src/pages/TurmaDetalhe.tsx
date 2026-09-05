@@ -11,12 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, Users, DoorOpen, BarChart3, Settings as SettingsIcon, Mail, Link2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, DoorOpen, BarChart3, Settings as SettingsIcon, Mail, Link2, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
+import { matchStudentsToParticipants } from "@/lib/participantMatching";
+import { SIMULATOR_LABELS } from "./Analytics";
 
 export default function TurmaDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +81,7 @@ export default function TurmaDetalhe() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("room_activities")
-        .select("*")
+        .select("*, simulator_cases(title)")
         .in("room_id", roomIds);
       if (error) throw error;
       return data || [];
@@ -287,6 +289,19 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
   const avgScore = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.score || 0), 0) / totalSubs) : 0;
   const avgTime = totalSubs ? Math.round(submissions.reduce((a, s) => a + (s.time_spent_seconds || 0), 0) / totalSubs) : 0;
 
+  const roomsById = useMemo(() => new Map(rooms.map((r: any) => [r.id, r])), [rooms]);
+  const activitiesById = useMemo(() => new Map(activities.map((a: any) => [a.id, a])), [activities]);
+
+  const activityLabel = (activityId?: string | null) => {
+    if (!activityId) return null;
+    const act = activitiesById.get(activityId);
+    if (!act) return null;
+    const toolLabel = SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug;
+    const caseTitle = act.simulator_cases?.title;
+    const groupLabel = act.group_label?.trim();
+    return `${groupLabel ? `${groupLabel} · ` : ""}${toolLabel}${caseTitle ? ` (${caseTitle})` : ""}`;
+  };
+
   // Per-room aggregation
   const roomStats = rooms.map(r => {
     const subs = submissions.filter((s: any) => s.room_id === r.id);
@@ -295,30 +310,56 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
     return { id: r.id, name: (r.title || "—").slice(0, 22), title: r.title, ingressos: ps.length, submissoes: subs.length, score };
   });
 
-  // Per-student (by email) aggregation across rooms
-  const partByEmail = new Map<string, any[]>();
-  participants.forEach((p: any) => {
-    const em = (p.participant_email || "").toLowerCase();
-    if (!em) return;
-    const arr = partByEmail.get(em) || [];
-    arr.push(p);
-    partByEmail.set(em, arr);
-  });
+  // Per-student aggregation across rooms — cobre tanto ingresso solo quanto ingresso
+  // como membro de um grupo (a nota do grupo conta para cada aluno que dele participou).
+  const matchByEmail = useMemo(() => matchStudentsToParticipants(students, participants), [students, participants]);
+
   const studentRows = students.map(s => {
     const em = s.email.toLowerCase();
-    const ps = partByEmail.get(em) || [];
-    const pIds = new Set(ps.map((p: any) => p.id));
+    const matches = matchByEmail.get(em) || [];
+    const pIds = new Set(matches.map(m => m.participantId));
     const subs = submissions.filter((sub: any) => pIds.has(sub.participant_id));
     const score = subs.length ? Math.round(subs.reduce((a: number, x: any) => a + (x.score || 0), 0) / subs.length) : 0;
-    const roomsAttended = new Set(ps.map((p: any) => p.room_id)).size;
+    const roomsAttended = new Set(matches.map(m => m.roomId)).size;
     const risk = computeStudentRisk({
       participantIds: Array.from(pIds) as string[],
-      roomIds: ps.map((p: any) => p.room_id),
+      roomIds: matches.map(m => m.roomId),
       allSubmissions: submissions,
       allActivities: activities,
     });
-    return { name: s.full_name, email: s.email, score, submissoes: subs.length, salas: roomsAttended, risk };
+
+    // Uma entrada por submissão — cada nota individual, com link para a análise granular.
+    const matchByParticipantId = new Map(matches.map(m => [m.participantId, m]));
+    const entries = subs
+      .map((sub: any) => {
+        const match = matchByParticipantId.get(sub.participant_id);
+        const room = roomsById.get(sub.room_id);
+        return {
+          submissionId: sub.id,
+          participantId: sub.participant_id,
+          roomId: sub.room_id,
+          roomTitle: room?.title || "Sala",
+          classId: room?.class_id,
+          isGroup: match?.isGroup || false,
+          groupLabel: match?.groupLabel || null,
+          activity: activityLabel(sub.activity_id),
+          score: sub.score || 0,
+          submittedAt: sub.submitted_at,
+        };
+      })
+      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
+    return { name: s.full_name, email: s.email, score, submissoes: subs.length, salas: roomsAttended, risk, entries };
   }).sort((a, b) => b.score - a.score);
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpanded = (email: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email); else next.add(email);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -364,26 +405,70 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
               </div>
               {studentRows.map((r, i) => {
                 const badge = riskBadgeProps(r.risk.tier);
+                const isOpen = expanded.has(r.email);
                 return (
-                  <div key={i} className="grid grid-cols-12 gap-2 p-2 text-sm items-center">
-                    <div className="col-span-4 min-w-0">
-                      <p className="font-medium truncate">{r.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{r.email}</p>
-                    </div>
-                    <div className="col-span-2 text-center">{r.salas}</div>
-                    <div className="col-span-2 text-center">{r.submissoes}</div>
-                    <div className="col-span-2 text-right">
-                      <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
-                        {r.submissoes > 0 ? r.score : "—"}
-                      </Badge>
-                    </div>
-                    <div className="col-span-2 text-right">
-                      {badge ? (
-                        <Badge className={badge.className} title={r.risk.flags.join(" · ")}>{badge.label}</Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </div>
+                  <div key={i}>
+                    <button
+                      type="button"
+                      onClick={() => r.entries.length > 0 && toggleExpanded(r.email)}
+                      className={`w-full grid grid-cols-12 gap-2 p-2 text-sm items-center text-left ${r.entries.length > 0 ? "hover:bg-muted/30 cursor-pointer" : "cursor-default"}`}
+                    >
+                      <div className="col-span-4 min-w-0 flex items-center gap-1.5">
+                        {r.entries.length > 0 ? (
+                          isOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        ) : (
+                          <span className="w-3.5 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{r.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-2 text-center">{r.salas}</div>
+                      <div className="col-span-2 text-center">{r.submissoes}</div>
+                      <div className="col-span-2 text-right">
+                        <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
+                          {r.submissoes > 0 ? r.score : "—"}
+                        </Badge>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        {badge ? (
+                          <Badge className={badge.className} title={r.risk.flags.join(" · ")}>{badge.label}</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </div>
+                    </button>
+                    {isOpen && r.entries.length > 0 && (
+                      <div className="bg-muted/10 border-t border-border px-2 pb-2 pt-1 pl-8 space-y-1">
+                        {r.entries.map((entry, j) => (
+                          <div key={j} className="flex items-center justify-between gap-2 text-xs py-1 flex-wrap">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate">
+                                <span className="font-medium">{entry.roomTitle}</span>
+                                {entry.activity && <span className="text-muted-foreground"> — {entry.activity}</span>}
+                              </p>
+                              <p className="text-muted-foreground truncate">
+                                {entry.isGroup ? `Grupo: ${entry.groupLabel}` : "Ingresso individual"}
+                                {" · "}
+                                {new Date(entry.submittedAt).toLocaleDateString("pt-BR")}
+                              </p>
+                            </div>
+                            <Link
+                              to={`/turmas/${entry.classId}/salas/${entry.roomId}?focus=${entry.participantId}`}
+                              className="flex-shrink-0"
+                            >
+                              <Badge
+                                variant={entry.score >= 70 ? "default" : "secondary"}
+                                className="cursor-pointer hover:opacity-80 flex items-center gap-1"
+                              >
+                                {entry.score} <ExternalLink className="h-2.5 w-2.5" />
+                              </Badge>
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,6 +190,8 @@ function gerarCertificadoPDF(cert: {
 
 export default function SalaDetalhe() {
   const { classId, roomId } = useParams<{ classId: string; roomId: string }>();
+  const [searchParams] = useSearchParams();
+  const focusParticipantId = searchParams.get("focus");
   const qc = useQueryClient();
 
   const { data: room } = useQuery({
@@ -389,6 +391,12 @@ export default function SalaDetalhe() {
     }).filter(d => d.subs > 0).sort((a, b) => b.score - a.score);
   }, [participants, submissions]);
 
+  useEffect(() => {
+    if (!focusParticipantId || (participants as any[]).length === 0) return;
+    const el = document.getElementById(`participant-${focusParticipantId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusParticipantId, participants]);
+
   const copyPin = () => {
     if (!room) return;
     navigator.clipboard.writeText(room.pin);
@@ -533,8 +541,9 @@ export default function SalaDetalhe() {
                   const pSubs = (submissions as any[]).filter((s: any) => s.participant_id === p.id);
                   const pAvg = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + s.score, 0) / pSubs.length) : 0;
                   const pTime = pSubs.reduce((a, s) => a + (s.time_spent_seconds || 0), 0);
+                  const isFocused = p.id === focusParticipantId;
                   return (
-                    <div key={p.id} className="rounded-lg border border-border p-3">
+                    <div key={p.id} id={`participant-${p.id}`} className={`rounded-lg border p-3 ${isFocused ? "border-primary ring-2 ring-primary/40" : "border-border"}`}>
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="min-w-0">
                           <p className="text-sm font-medium">{p.participant_name}</p>
@@ -613,7 +622,7 @@ export default function SalaDetalhe() {
                         );
                       })()}
                       {pSubs.map((sub: any) => (
-                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} isPremium={isPremium} onShowUpgrade={showUpgrade} />
+                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} isPremium={isPremium} onShowUpgrade={showUpgrade} forceOpen={isFocused} />
                       ))}
                     </div>
                   );
