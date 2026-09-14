@@ -1861,13 +1861,13 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
           return (s.ag ?? 28) < 28 ? { correct: true, feedback: "AG caindo em direção ao normal." } : { correct: false, feedback: "O AG ainda não caiu — confira as doses." };
         },
         options: [
-          "O AG cai porque a queda do K⁺ reduz diretamente o valor calculado, já que o potássio é um dos ânions considerados na fórmula do AG ao lado do cloreto e do bicarbonato.",
-          "O AG cai porque o HCO3⁻ sobe conforme a insulina interrompe a cetogênese e os cetoácidos são metabolizados de volta a bicarbonato — o K⁺ não entra na fórmula do AG, e a leve subida do Na⁺ é acompanhada por subida semelhante do Cl⁻.",
-          "O AG cai porque o aumento do Na⁺ eleva o termo positivo da equação mais rapidamente do que o Cl⁻ consegue acompanhar, sendo esse o principal motivo da queda observada no gráfico.",
-          "O AG cai porque a insulina promove diurese osmótica que elimina diretamente os ânions não mensurados pela urina, sem depender de qualquer variação do HCO3⁻ no sangue.",
+          "O AG cai porque o shift de K⁺ para dentro das células, induzido pela insulina, arrasta consigo os cetoácidos para o meio intracelular, retirando-os do espaço extracelular medido pela gasometria.",
+          "O AG cai porque a insulina reduz a glicemia e, com isso, a diurese osmótica, permitindo que o rim reabsorva ativamente os cetoácidos filtrados de volta à circulação antes de serem contabilizados na gasometria.",
+          "O AG cai porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados sejam metabolizados de volta a bicarbonato — é a subida do HCO3⁻ que fecha o AG, não as variações de Na⁺ ou K⁺.",
+          "O AG cai porque a expansão volêmica pelo NaCl 0.9% dilui os cetoácidos circulantes no plasma, reduzindo sua concentração absoluta e, com isso, o valor calculado do AG, independentemente de qualquer mudança no HCO3⁻.",
         ],
-        correctIndex: 1,
-        explanation: "AG = Na⁺ - (Cl⁻ + HCO3⁻). Normal: 8-12. Na CAD, o AG fecha porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados (β-hidroxibutirato, acetoacetato) sejam metabolizados de volta a bicarbonato — é isso que eleva o HCO3⁻ e reduz o AG. O K⁺ sérico cai por SHIFT transcelular (a insulina ativa a Na⁺/K⁺-ATPase), mas o potássio não faz parte da fórmula do AG. O Na⁺ e o Cl⁻ sobem juntos com o NaCl 0.9% e, como entram na equação em sinais opostos, o efeito líquido sobre o AG é pequeno — o verdadeiro motor da queda é a recuperação do HCO3⁻.",
+        correctIndex: 2,
+        explanation: "AG = Na⁺ - (Cl⁻ + HCO3⁻). Normal: 8-12. Na CAD, o AG fecha porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados (β-hidroxibutirato, acetoacetato) sejam metabolizados de volta a bicarbonato — é isso que eleva o HCO3⁻ e reduz o AG. O shift transcelular de K⁺ (insulina ativa a Na⁺/K⁺-ATPase) NÃO retira cetoácidos da circulação — o potássio simplesmente não faz parte da fórmula do AG. O Na⁺ e o Cl⁻ sobem juntos com o NaCl 0.9% e, como entram na equação em sinais opostos, o efeito líquido sobre o AG é pequeno — o verdadeiro motor da queda é a recuperação do HCO3⁻ pela via metabólica, não a diluição volêmica nem a reabsorção renal de cetoácidos (o rim os excreta, não os reabsorve).",
         reference: "Harrison's Cap. 51",
       },
       {
@@ -1893,13 +1893,13 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
         question: "A pCO2 basal está 20 mmHg. Use a fórmula de Winter para verificar se a compensação respiratória é adequada:\n\npCO2 esperada = 1.5 × HCO3 + 8 (±2)\n\nCalcule a pCO2 esperada com o HCO3 basal (6 mEq/L) e compare com a pCO2 medida (20 mmHg, veja também o gráfico de pH e HCO3). O que o resultado indica?",
         context: "HCO3 basal: 6 mEq/L. pCO2 medida: 20 mmHg.",
         options: [
-          "A pCO2 esperada é 17 mmHg (±2, faixa 15–19); como a pCO2 medida (20) ultrapassa essa faixa, há uma ACIDOSE RESPIRATÓRIA concomitante somando-se à acidose metabólica de base.",
-          "A pCO2 esperada é 17 mmHg (±2, faixa 15–19); como a pCO2 medida (20) está dentro dessa faixa, a compensação respiratória está ADEQUADA para o grau de acidose metabólica, sem distúrbio respiratório associado.",
-          "Aplicando a fórmula de forma inversa, a HCO3 esperada seria cerca de 8 mEq/L; como a HCO3 medida (6) está abaixo do esperado, há um componente de ALCALOSE METABÓLICA sobreposto ao quadro.",
-          "A pCO2 esperada é 26 mmHg (±2, faixa 24–28); como a pCO2 medida (20) está abaixo dessa faixa, há uma ALCALOSE RESPIRATÓRIA concomitante reduzindo ainda mais o CO2 circulante.",
+          "A pCO2 medida está DENTRO da faixa esperada pela fórmula de Winter; a compensação respiratória está plenamente adequada para o grau de acidose metabólica, sem qualquer componente respiratório adicional a considerar.",
+          "A pCO2 medida está ACIMA da faixa esperada pela fórmula de Winter; esse pequeno desvio sugere uma compensação respiratória discretamente incompleta, sem caracterizar por si só uma acidose respiratória primária grave.",
+          "A pCO2 medida está ABAIXO da faixa esperada pela fórmula de Winter; esse desvio indica uma alcalose respiratória concomitante, com hiperventilação além do necessário para compensar a acidose metabólica de base.",
+          "A pCO2 medida está ACIMA da faixa esperada pela fórmula de Winter; esse desvio indica uma acidose respiratória primária grave e independente, exigindo suporte ventilatório imediato além do tratamento da causa metabólica.",
         ],
         correctIndex: 1,
-        explanation: "Fórmula de Winter: pCO2 esperada = 1.5 × HCO3 + 8 (±2). Com HCO3 = 6: esperada = 1.5×6+8 = 17 (faixa 15-19). A pCO2 medida (20) está dentro da faixa — compensação respiratória adequada, ainda que próxima do limite superior. Se a pCO2 medida ficasse ACIMA da faixa esperada: acidose respiratória concomitante. Se ficasse ABAIXO: alcalose respiratória concomitante.",
+        explanation: "Fórmula de Winter: pCO2 esperada = 1.5 × HCO3 + 8 (±2). Com HCO3 = 6: esperada = 1.5×6+8 = 17, faixa 15–19. A pCO2 medida é 20 — portanto ACIMA do limite superior da faixa (19), não dentro dela. Um desvio pequeno como esse (1 mmHg) já indica uma compensação respiratória discretamente incompleta, mas NÃO caracteriza uma acidose respiratória primária grave (que exigiria um desvio bem maior e achados clínicos compatíveis, como rebaixamento do nível de consciência ou doença pulmonar de base). Se a pCO2 medida estivesse abaixo da faixa esperada: alcalose respiratória concomitante.",
         reference: "Harrison's Cap. 51",
       },
       {

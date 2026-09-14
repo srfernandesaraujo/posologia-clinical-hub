@@ -36,7 +36,7 @@ interface ABDrug {
 }
 
 const DRUGS: ABDrug[] = [
-  { name: "NaHCO3 8.4%", class: "Alcalinizante", doseMin: 50, doseMax: 300, doseUnit: "mL EV", doseStep: 25, effects: { pH: 0.05, hco3: 3, pCO2: -1, na: 4, k: -0.3, ca: -0.2, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.1, sobrecarga: 0.2, hipocalcemia: 0.15, hipernatremia: 0.2 }, hoursToEffect: 0.5 },
+  { name: "NaHCO3 8.4%", class: "Alcalinizante", doseMin: 50, doseMax: 300, doseUnit: "mL EV", doseStep: 25, effects: { pH: 0.15, hco3: 8, pCO2: -1, na: 4, k: -0.3, ca: -0.2, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.1, sobrecarga: 0.2, hipocalcemia: 0.15, hipernatremia: 0.2 }, hoursToEffect: 0.5 },
   { name: "KCl 19.1%", class: "Reposição de potássio", doseMin: 10, doseMax: 60, doseUnit: "mEq EV", doseStep: 5, effects: { pH: 0.01, hco3: 0, pCO2: 0, na: 0, k: 1.0, ca: 0, mg: 0, cl: 1, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.25, sobrecarga: 0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 1 },
   // pH/HCO3 neutros de propósito: a hidratação isolada não corrige a acidose da
   // CAD (isso é papel da insulina) — um efeito negativo aqui cancelava
@@ -47,7 +47,7 @@ const DRUGS: ABDrug[] = [
   { name: "Gluconato de Cálcio 10%", class: "Reposição de cálcio", doseMin: 10, doseMax: 40, doseUnit: "mL EV", doseStep: 5, effects: { pH: 0, hco3: 0, pCO2: 0, na: 0, k: 0, ca: 1.5, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.1, sobrecarga: 0.05, hipocalcemia: -0.3, hipernatremia: 0 }, hoursToEffect: 0.25 },
   { name: "MgSO4 50%", class: "Reposição de magnésio", doseMin: 1, doseMax: 4, doseUnit: "g EV", doseStep: 0.5, effects: { pH: 0, hco3: 0, pCO2: 0, na: 0, k: 0.1, ca: -0.2, mg: 1.0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.15, arritmia: 0.05, sobrecarga: 0.05, hipocalcemia: 0.1, hipernatremia: 0 }, hoursToEffect: 0.5 },
   { name: "Furosemida", class: "Diurético de alça", doseMin: 20, doseMax: 200, doseUnit: "mg EV", doseStep: 10, effects: { pH: 0.02, hco3: 2, pCO2: 0, na: -3, k: -0.8, ca: -0.3, mg: -0.3, cl: -4, lactato: 0 }, sideEffects: { hipotensao: 0.25, arritmia: 0.15, sobrecarga: -0.2, hipocalcemia: 0.1, hipernatremia: 0.1 }, hoursToEffect: 0.5 },
-  { name: "Insulina Regular + Glicose", class: "Shift de potássio", doseMin: 5, doseMax: 20, doseUnit: "UI + 25g glicose", doseStep: 5, effects: { pH: 0.01, hco3: 1, pCO2: 0, na: 0, k: -1.0, ca: 0, mg: 0, cl: 0, lactato: -0.5 }, sideEffects: { hipotensao: 0.05, arritmia: 0.05, sobrecarga: 0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 0.5 },
+  { name: "Insulina Regular + Glicose", class: "Shift de potássio", doseMin: 5, doseMax: 20, doseUnit: "UI + 25g glicose", doseStep: 5, effects: { pH: 0.20, hco3: 14, pCO2: 0, na: 0, k: -1.0, ca: 0, mg: 0, cl: 0, lactato: -0.5 }, sideEffects: { hipotensao: 0.05, arritmia: 0.05, sobrecarga: 0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 0.5 },
   { name: "Poliestirenossulfonato (Sorcal)", class: "Quelante de K+", doseMin: 15, doseMax: 60, doseUnit: "g VO/retal", doseStep: 15, effects: { pH: 0, hco3: 0, pCO2: 0, na: 2, k: -0.8, ca: -0.1, mg: -0.1, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.02, arritmia: 0.02, sobrecarga: 0.1, hipocalcemia: 0.05, hipernatremia: 0.15 }, hoursToEffect: 2 },
 ];
 
