@@ -2003,17 +2003,25 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
         reference: "Harrison's Cap. 51",
       },
       {
-        type: "mcq",
-        question: "Qual a velocidade máxima segura de reposição de KCl por via EV periférica?\n\nConsidere que o paciente tem acesso venoso periférico.",
+        type: "adjust",
+        question: "Selecione NaCl 0.9% e KCl 19.1% juntos e observe o painel de eletrólitos: o Cl⁻ sobe (basal 82 mEq/L) e o K⁺ sobe (basal 2.8 mEq/L).\n\nSe você usasse apenas UM dos dois fármacos, por que a correção da alcalose ficaria incompleta?",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          if (!drugs.includes("NaCl 0.9%") || !drugs.includes("KCl 19.1%")) return { correct: false, feedback: "Selecione NaCl 0.9% e KCl 19.1% juntos." };
+          const clUp = (s.lastLab?.cl ?? 0) > (s.baseLab?.cl ?? 0);
+          const kUp = (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0);
+          return (clUp && kUp) ? { correct: true, feedback: "Cl⁻ e K⁺ subindo juntos — as duas peças da correção presentes." } : { correct: false, feedback: "Cl⁻ e/ou K⁺ ainda não subiram — confira as doses." };
+        },
         options: [
-          "Até 40 mEq/h por qualquer tipo de acesso venoso, desde que a infusão seja feita lentamente ao longo de pelo menos 30 minutos, independentemente de o acesso ser periférico ou central.",
-          "Pode ser infundido em bolus rápido sem limite de velocidade, já que o KCl 19.1% diluído em soro fisiológico não tem risco cardíaco relevante quando administrado por via periférica.",
-          "Máximo de 10-20 mEq/h por veia periférica, com concentração ≤40 mEq/L; velocidades maiores (até 40 mEq/h) exigem acesso venoso central e monitorização cardíaca contínua, pelo risco de arritmia fatal.",
-          "Máximo de 5 mEq no total ao longo de 24 horas, independentemente da via de acesso, já que doses maiores sempre causam flebite química grave em veias periféricas.",
+          "Porque sem Cl⁻ o rim não consegue excretar o HCO3⁻ em excesso, e sem K⁺ o ciclo de troca H⁺/K⁺ no ducto coletor continua gerando mais HCO3⁻ — cada fármaco resolve metade do mecanismo, e a alcalose só se resolve com os dois juntos.",
+          "Porque o NaCl 0.9% sozinho já resolveria a alcalose completamente, e o KCl serve apenas para prevenir sintomas de fraqueza muscular da hipocalemia, sem nenhum papel na correção do distúrbio ácido-base em si.",
+          "Porque o KCl sozinho já resolveria a alcalose completamente, elevando diretamente o pH ao normalizar o potássio, e o NaCl serve apenas para repor o volume perdido nos vômitos, sem papel na correção ácido-base.",
+          "Porque nenhum dos dois fármacos tem qualquer papel na correção da alcalose — a resolução depende exclusivamente do tempo e da suspensão dos vômitos, sendo a reposição eletrolítica apenas um suporte sintomático.",
         ],
-        correctIndex: 2,
-        explanation: "Reposição de K⁺ EV: periférica ≤10-20 mEq/h (concentração ≤40 mEq/L); central ≤40 mEq/h com monitorização cardíaca contínua. KCl 19.1%: 1 mL = 2.56 mEq. Concentrações/velocidades altas causam dor e flebite (via periférica) ou arritmia grave (infusão rápida, qualquer via). Bolus rápido de KCl é uma causa reconhecida de parada cardíaca iatrogênica — nunca deve ser feito. SEMPRE monitorar ECG durante reposição rápida.",
-        reference: "UpToDate: Potassium Replacement",
+        correctIndex: 0,
+        explanation: "A correção da alcalose hipoclorêmica exige as duas peças: (1) sem Cl⁻ suficiente, o túbulo proximal continua reabsorvendo Na⁺ junto com HCO3⁻ (em vez de com Cl⁻), e o rim não consegue excretar o excesso de bicarbonato; (2) sem K⁺ suficiente, a hipocalemia mantém o ciclo em que o ducto coletor secreta H⁺ em vez de K⁺, gerando ainda mais HCO3⁻ e perpetuando a alcalose. Nenhum dos dois fármacos corrige o pH diretamente — ambos atuam removendo as condições que impedem o rim de eliminar o excesso de base por conta própria. Por isso a reposição precisa ser combinada, não apenas um dos dois isoladamente.",
+        reference: "Harrison's Cap. 51",
       },
       {
         type: "adjust",
@@ -2024,27 +2032,35 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
           return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo ainda mais — furosemida agrava o quadro." } : { correct: false, feedback: "O K⁺ ainda não caiu — confira a dose." };
         },
         options: [
-          "Porque a furosemida tem estrutura química ácida e, ao ser metabolizada no fígado, libera H⁺ diretamente na circulação, o que paradoxalmente intensifica a perda renal de potássio.",
-          "Porque a furosemida estimula diretamente a secreção de bicarbonato pelas células intercaladas tipo B do ducto coletor, elevando ainda mais o HCO3⁻ plasmático já aumentado pela alcalose de base.",
-          "Porque a furosemida irrita a mucosa gástrica e desencadeia novos episódios de vômito, sendo essa perda adicional de HCl pela via digestiva — não um efeito renal — a causa do agravamento do quadro.",
-          "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle, causando perda urinária adicional de K⁺, Cl⁻, Ca²⁺ e Mg²⁺ — agravando simultaneamente a hipocalemia, a hipocloremia e a própria alcalose.",
+          "Porque a furosemida bloqueia o cotransportador Na⁺/Cl⁻ no túbulo contorcido distal — o mesmo mecanismo dos diuréticos tiazídicos — reduzindo a excreção urinária de cálcio e aumentando a perda de potássio nesse segmento.",
+          "Porque a furosemida inibe a anidrase carbônica no túbulo proximal — o mesmo mecanismo da acetazolamida — reduzindo a reabsorção de bicarbonato e sódio nesse segmento do néfron.",
+          "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle — perdendo K⁺, Cl⁻, Ca²⁺ e Mg²⁺ na urina — agravando ao mesmo tempo a hipocalemia, a hipocloremia e a alcalose já presentes.",
+          "Porque a furosemida bloqueia os canais epiteliais de sódio (ENaC) no ducto coletor — o mesmo mecanismo da amilorida — reduzindo a secreção tubular de potássio e hidrogênio nesse segmento do néfron.",
         ],
-        correctIndex: 3,
-        explanation: "Furosemida inibe o cotransportador NKCC2 (Na⁺/K⁺/2Cl⁻) na alça de Henle, causando perda urinária de Na⁺, K⁺, Cl⁻, Ca²⁺ e Mg²⁺. Também causa 'contraction alkalosis': a perda de um volume rico em Cl⁻ concentra ainda mais o HCO3⁻ plasmático remanescente. Não há liberação hepática de H⁺ pela furosemida, ela não estimula diretamente a secreção de HCO3⁻, e o vômito induzido por irritação gástrica não é um efeito farmacológico conhecido do fármaco. É contraindicada na alcalose hipoclorêmica — usar apenas se houver sobrecarga volêmica ou ICC associada.",
+        correctIndex: 2,
+        explanation: "Furosemida inibe o cotransportador NKCC2 (Na⁺/K⁺/2Cl⁻) especificamente na alça de Henle — não o NCC (túbulo distal, alvo dos tiazídicos), não a anidrase carbônica (túbulo proximal, alvo da acetazolamida) e não o ENaC (ducto coletor, alvo da amilorida). Essa inibição causa perda urinária de Na⁺, K⁺, Cl⁻, Ca²⁺ e Mg²⁺, e ainda gera 'contraction alkalosis': a perda de um volume rico em Cl⁻ concentra ainda mais o HCO3⁻ plasmático remanescente. Os tiazídicos também perdem K⁺, mas retêm cálcio (efeito oposto ao da furosemida); a acetazolamida reduziria o HCO3⁻ (ajudaria a alcalose, ao contrário do observado); e a amilorida é POUPADORA de K⁺ (o oposto do que se observa no painel). É contraindicada na alcalose hipoclorêmica — usar apenas se houver sobrecarga volêmica ou ICC associada.",
         reference: "Rang & Dale, Cap. 28",
       },
       {
-        type: "mcq",
-        question: "Considere que a alcalose persiste apesar de NaCl 0.9% + KCl (Cl urinário >40 mEq/L — não modelado neste simulador).\n\nIsso classifica como alcalose cloro-RESISTENTE. Qual a causa mais provável?",
+        type: "adjust",
+        question: "Teste duas prescrições no simulador — (1) NaCl 0.9% + KCl 19.1% juntos, e (2) apenas Furosemida — comparando o painel de eletrólitos e o gráfico de Risco de Efeitos Adversos em cada uma.\n\nQual das duas tem a melhor relação risco-benefício para este paciente, e por quê?",
+        context: "Paciente com alcalose metabólica hipoclorêmica por vômitos (Cl 82, K 2.8) — hipovolêmico, não hipervolêmico.",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          if (drugs.includes("Furosemida")) return { correct: false, feedback: "Remova a Furosemida — compare o risco dela com o da combinação NaCl 0.9% + KCl 19.1% e deixe a melhor opção selecionada." };
+          const hasCore = drugs.includes("NaCl 0.9%") && drugs.includes("KCl 19.1%");
+          return hasCore ? { correct: true, feedback: "Combinação correta: NaCl 0.9% + KCl 19.1%, sem Furosemida." } : { correct: false, feedback: "Deixe NaCl 0.9% + KCl 19.1% selecionados após comparar com a Furosemida." };
+        },
         options: [
-          "Vômitos persistentes não diagnosticados, que continuam repondo o estímulo perdido de Cl⁻ gástrico mesmo após o início do NaCl, mascarando a resposta esperada à reposição volêmica.",
-          "Hiperaldosteronismo (primário ou secundário): o excesso de aldosterona aumenta a reabsorção de Na⁺ e a secreção de K⁺ e H⁺ no ducto coletor, gerando uma alcalose que não responde a NaCl porque a causa é hormonal, não volêmica.",
-          "Ingestão excessiva e não relatada de bicarbonato de sódio por via oral, que sobrecarrega continuamente o sistema tampão plasmático independentemente do estado volêmico do paciente.",
-          "Erro sistemático na dosagem do KCl prescrito, fazendo com que a reposição de potássio seja insuficiente para interromper o ciclo vicioso entre hipocalemia e alcalose descrito nos desafios anteriores.",
+          "NaCl 0.9% + KCl 19.1% têm a melhor relação risco-benefício: repõem exatamente o que falta (Cl⁻ e K⁺) para o rim corrigir a alcalose, com risco de hipotensão bem menor do que a Furosemida traz para este paciente já hipovolêmico.",
+          "A Furosemida isolada tem a melhor relação risco-benefício: reduz rapidamente a sobrecarga volêmica do paciente, e seus efeitos sobre K⁺ e Cl⁻ são clinicamente irrelevantes diante desse benefício hemodinâmico imediato.",
+          "As duas prescrições têm relação risco-benefício equivalente: tanto a reposição de Cl⁻/K⁺ quanto a Furosemida corrigem a alcalose pelo mesmo mecanismo renal, mudando apenas a velocidade com que o efeito aparece no painel.",
+          "NaCl 0.9% isolado, sem o KCl, já teria a melhor relação risco-benefício: evita o risco de arritmia por infusão de potássio, e a reposição de cloreto sozinha já é suficiente para corrigir toda a alcalose apresentada.",
         ],
-        correctIndex: 1,
-        explanation: "Alcalose cloro-resistente (Cl urinário >20-40 mEq/L) tem causas renais/hormonais: hiperaldosteronismo (primário/Conn, secundário), síndrome de Cushing, síndromes de Bartter/Gitelman, uso abusivo de diuréticos. Vômitos persistentes e má aderência à reposição de KCl tipicamente cursam com Cl urinário BAIXO (<20), sendo cloro-responsivos, não resistentes — por isso não explicam o achado deste caso. Ingestão de bicarbonato também não altera o Cl urinário dessa forma. Tratamento: tratar a causa hormonal de base (ex.: espironolactona no hiperaldosteronismo).",
-        reference: "Harrison's Cap. 51",
+        correctIndex: 0,
+        explanation: "NaCl 0.9% + KCl 19.1% repõem especificamente o Cl⁻ e o K⁺ que faltam para o rim excretar o excesso de HCO3⁻ e reverter o ciclo H⁺/K⁺ que perpetua a alcalose — e, no gráfico de risco, têm hipotensão bem menor do que a Furosemida, que além de não repor nada ainda causa mais perda de K⁺, Cl⁻, Ca²⁺ e Mg²⁺ e maior risco de hipotensão e hipocalcemia. A Furosemida reduz a 'sobrecarga' no gráfico de risco, mas isso não é um benefício aqui: este paciente está hipovolêmico pelos vômitos, não hipervolêmico — reduzir ainda mais o volume é prejudicial, não terapêutico. As duas prescrições NÃO agem pelo mesmo mecanismo: a reposição de Cl⁻/K⁺ permite a correção renal fisiológica, enquanto a Furosemida ativamente piora a hipocalemia e a hipocloremia. E o KCl é indispensável — sem ele, o ciclo H⁺/K⁺ continua perpetuando a alcalose mesmo com o Cl⁻ já corrigido.",
+        reference: "Luke RG, Galla JH. NEJM 2012",
       },
     ],
     // Caso 3: Hipocalemia + Toxicidade Digitálica
