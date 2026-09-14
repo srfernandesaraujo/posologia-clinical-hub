@@ -1861,13 +1861,13 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
           return (s.ag ?? 28) < 28 ? { correct: true, feedback: "AG caindo em direção ao normal." } : { correct: false, feedback: "O AG ainda não caiu — confira as doses." };
         },
         options: [
-          "O AG cai porque o shift de K⁺ para dentro das células, induzido pela insulina, arrasta consigo os cetoácidos para o meio intracelular, retirando-os do espaço extracelular medido pela gasometria.",
-          "O AG cai porque a insulina reduz a glicemia e, com isso, a diurese osmótica, permitindo que o rim reabsorva ativamente os cetoácidos filtrados de volta à circulação antes de serem contabilizados na gasometria.",
-          "O AG cai porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados sejam metabolizados de volta a bicarbonato — é a subida do HCO3⁻ que fecha o AG, não as variações de Na⁺ ou K⁺.",
-          "O AG cai porque a expansão volêmica pelo NaCl 0.9% dilui os cetoácidos circulantes no plasma, reduzindo sua concentração absoluta e, com isso, o valor calculado do AG, independentemente de qualquer mudança no HCO3⁻.",
+          "O AG cai porque a hidratação com NaCl 0.9% restaura a perfusão renal e permite que os rins excretem ativamente os cetoácidos acumulados na urina — é essa excreção renal direta, e não a subida do HCO3⁻, que fecha o AG.",
+          "O AG cai porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados sejam metabolizados de volta a bicarbonato — é a subida do HCO3⁻, e não as variações de Na⁺ ou K⁺, que fecha o AG.",
+          "O AG cai porque a insulina ativa o mesmo transportador que capta glicose e fósforo para dentro da célula, arrastando junto os cetoácidos circulantes para o meio intracelular — é essa captação celular direta, e não a subida do HCO3⁻, que fecha o AG.",
+          "O AG cai porque a insulina suprime a gliconeogênese hepática e reduz a produção de lactato, consumindo diretamente os ânions não mensurados responsáveis pelo AG elevado — é esse consumo direto, e não a subida do HCO3⁻, que fecha o AG.",
         ],
-        correctIndex: 2,
-        explanation: "AG = Na⁺ - (Cl⁻ + HCO3⁻). Normal: 8-12. Na CAD, o AG fecha porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados (β-hidroxibutirato, acetoacetato) sejam metabolizados de volta a bicarbonato — é isso que eleva o HCO3⁻ e reduz o AG. O shift transcelular de K⁺ (insulina ativa a Na⁺/K⁺-ATPase) NÃO retira cetoácidos da circulação — o potássio simplesmente não faz parte da fórmula do AG. O Na⁺ e o Cl⁻ sobem juntos com o NaCl 0.9% e, como entram na equação em sinais opostos, o efeito líquido sobre o AG é pequeno — o verdadeiro motor da queda é a recuperação do HCO3⁻ pela via metabólica, não a diluição volêmica nem a reabsorção renal de cetoácidos (o rim os excreta, não os reabsorve).",
+        correctIndex: 1,
+        explanation: "AG = Na⁺ - (Cl⁻ + HCO3⁻). Normal: 8-12. Na CAD, o AG fecha porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados (β-hidroxibutirato, acetoacetato) sejam metabolizados de volta a bicarbonato — é essa subida do HCO3⁻ que reduz o AG. A excreção renal de cetoácidos existe, mas é uma via secundária e lenta diante da via metabólica; a insulina não tem um transportador que 'capte' cetoácidos junto com glicose/fósforo para dentro da célula; e a gliconeogênese/lactato não são os determinantes do AG elevado na CAD (o driver são os cetoácidos). O K⁺ cai por shift transcelular, mas não faz parte da fórmula do AG — sua queda é consequência do tratamento, não causa da normalização do AG.",
         reference: "Harrison's Cap. 51",
       },
       {
