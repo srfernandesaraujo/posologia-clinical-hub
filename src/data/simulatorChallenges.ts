@@ -2032,10 +2032,10 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
           return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo ainda mais — furosemida agrava o quadro." } : { correct: false, feedback: "O K⁺ ainda não caiu — confira a dose." };
         },
         options: [
-          "Porque a furosemida bloqueia o cotransportador Na⁺/Cl⁻ no túbulo contorcido distal — o mesmo mecanismo dos diuréticos tiazídicos — reduzindo a excreção urinária de cálcio e aumentando a perda de potássio nesse segmento.",
-          "Porque a furosemida inibe a anidrase carbônica no túbulo proximal — o mesmo mecanismo da acetazolamida — reduzindo a reabsorção de bicarbonato e sódio nesse segmento do néfron.",
-          "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle — perdendo K⁺, Cl⁻, Ca²⁺ e Mg²⁺ na urina — agravando ao mesmo tempo a hipocalemia, a hipocloremia e a alcalose já presentes.",
-          "Porque a furosemida bloqueia os canais epiteliais de sódio (ENaC) no ducto coletor — o mesmo mecanismo da amilorida — reduzindo a secreção tubular de potássio e hidrogênio nesse segmento do néfron.",
+          "Porque a furosemida bloqueia o cotransportador Na⁺/Cl⁻ no túbulo contorcido distal, reduzindo a excreção urinária de cálcio e aumentando a perda de potássio nesse segmento do néfron.",
+          "Porque a furosemida inibe a anidrase carbônica no túbulo proximal, reduzindo a reabsorção de bicarbonato e sódio filtrados logo no início do néfron, antes da alça de Henle.",
+          "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle, causando perda urinária adicional de K⁺, Cl⁻, Ca²⁺ e Mg²⁺ nesse segmento do néfron.",
+          "Porque a furosemida bloqueia os canais epiteliais de sódio (ENaC) no ducto coletor, reduzindo a secreção tubular de potássio e hidrogênio nesse segmento final do néfron.",
         ],
         correctIndex: 2,
         explanation: "Furosemida inibe o cotransportador NKCC2 (Na⁺/K⁺/2Cl⁻) especificamente na alça de Henle — não o NCC (túbulo distal, alvo dos tiazídicos), não a anidrase carbônica (túbulo proximal, alvo da acetazolamida) e não o ENaC (ducto coletor, alvo da amilorida). Essa inibição causa perda urinária de Na⁺, K⁺, Cl⁻, Ca²⁺ e Mg²⁺, e ainda gera 'contraction alkalosis': a perda de um volume rico em Cl⁻ concentra ainda mais o HCO3⁻ plasmático remanescente. Os tiazídicos também perdem K⁺, mas retêm cálcio (efeito oposto ao da furosemida); a acetazolamida reduziria o HCO3⁻ (ajudaria a alcalose, ao contrário do observado); e a amilorida é POUPADORA de K⁺ (o oposto do que se observa no painel). É contraindicada na alcalose hipoclorêmica — usar apenas se houver sobrecarga volêmica ou ICC associada.",
