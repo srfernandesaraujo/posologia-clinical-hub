@@ -49,6 +49,11 @@ const DRUGS: ABDrug[] = [
   { name: "Furosemida", class: "Diurético de alça", doseMin: 20, doseMax: 200, doseUnit: "mg EV", doseStep: 10, effects: { pH: 0.02, hco3: 2, pCO2: 0, na: -3, k: -0.8, ca: -0.3, mg: -0.3, cl: -4, lactato: 0 }, sideEffects: { hipotensao: 0.25, arritmia: 0.15, sobrecarga: -0.2, hipocalcemia: 0.1, hipernatremia: 0.1 }, hoursToEffect: 0.5 },
   { name: "Insulina Regular + Glicose", class: "Shift de potássio", doseMin: 5, doseMax: 20, doseUnit: "UI + 25g glicose", doseStep: 5, effects: { pH: 0.20, hco3: 14, pCO2: 0, na: 0, k: -1.0, ca: 0, mg: 0, cl: 0, lactato: -0.5 }, sideEffects: { hipotensao: 0.05, arritmia: 0.05, sobrecarga: 0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 0.5 },
   { name: "Poliestirenossulfonato (Sorcal)", class: "Quelante de K+", doseMin: 15, doseMax: 60, doseUnit: "g VO/retal", doseStep: 15, effects: { pH: 0, hco3: 0, pCO2: 0, na: 2, k: -0.8, ca: -0.1, mg: -0.1, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0.02, arritmia: 0.02, sobrecarga: 0.1, hipocalcemia: 0.05, hipernatremia: 0.15 }, hoursToEffect: 2 },
+  // Não move eletrólitos diretamente — sua "ação" observável aqui é o risco de
+  // Arritmia no gráfico de efeitos adversos, que computeSimulation ajusta de
+  // acordo com o K⁺ atual (competição digoxina/K⁺ pelo sítio da Na⁺/K⁺-ATPase).
+  { name: "Digoxina", class: "Glicosídeo cardíaco", doseMin: 0.125, doseMax: 0.5, doseUnit: "mg VO/EV", doseStep: 0.125, effects: { pH: 0, hco3: 0, pCO2: 0, na: 0, k: 0, ca: 0, mg: 0, cl: 0, lactato: 0 }, sideEffects: { hipotensao: 0, arritmia: 0.15, sobrecarga: -0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 1 },
+  { name: "Espironolactona", class: "Diurético poupador de potássio", doseMin: 25, doseMax: 100, doseUnit: "mg VO", doseStep: 25, effects: { pH: 0, hco3: 0, pCO2: 0, na: -1, k: 0.4, ca: 0, mg: 0, cl: -1, lactato: 0 }, sideEffects: { hipotensao: 0.05, arritmia: 0.08, sobrecarga: -0.05, hipocalcemia: 0, hipernatremia: 0 }, hoursToEffect: 4 },
 ];
 
 // ─── Case Type ──────────────────────────────────────────────────────
@@ -90,8 +95,8 @@ const BUILT_IN_CASES: ABCase[] = [
   {
     title: "Caso 3: Sebastião Gomes",
     difficulty: "Difícil",
-    patient: { name: "Sebastião Gomes", age: 78, weight: 65, sex: "M", specialGroup: ["IC", "FA"] },
-    scenario: "Idoso 78 anos, ICC e FA crônica, em uso de digoxina 0.25 mg/dia e furosemida 40 mg/dia. Chega com náuseas, visão amarelada e bigeminismo no ECG. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,48, pCO2 44 mmHg, HCO3 32 mEq/L, K 2,6 mEq/L, Mg 1,2 mEq/L, Ca 8,8 mg/dL.",
+    patient: { name: "Sebastião Gomes", age: 78, weight: 65, sex: "M", specialGroup: ["Insuficiência Cardíaca Congestiva", "Fibrilação Atrial"] },
+    scenario: "Idoso 78 anos, com insuficiência cardíaca congestiva e fibrilação atrial crônica, em uso de digoxina 0.25 mg/dia e furosemida 40 mg/dia. Chega com náuseas, visão amarelada e bigeminismo no ECG. A gasometria arterial e os eletrólitos revelam os seguintes resultados: pH 7,48, pCO2 44 mmHg, HCO3 32 mEq/L, K 2,6 mEq/L, Mg 1,2 mEq/L, Ca 8,8 mg/dL.",
     baseLab: { pH: 7.48, pCO2: 44, pO2: 88, hco3: 32, be: 8, lactato: 1.2, na: 138, k: 2.6, ca: 8.8, mg: 1.2, cl: 94, glicemia: 105 },
     expectedDrugs: ["KCl 19.1%", "MgSO4 50%"],
     clinicalTip: "Hipocalemia (K<3.5) + digoxina = emergência. A digoxina inibe a Na⁺/K⁺-ATPase; a hipocalemia POTENCIALIZA esse efeito (mais sítios de ligação livres), causando intoxicação mesmo com nível sérico 'normal' de digoxina. Repor K⁺ (alvo >4.0) e Mg²⁺ (a hipomagnesemia refratariza a hipocalemia). A furosemida causa perda urinária de K⁺, Mg²⁺ e Ca²⁺.",
@@ -136,6 +141,18 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     let cl = baseLab.cl;
     let lactato = baseLab.lactato;
 
+    // First pass: apply only the Mg²⁺ contribution this hour, so the KCl
+    // pass below can react to the CURRENT Mg²⁺ level — hipomagnesemia
+    // mantém o canal ROMK renal hiperativo e torna a reposição de K⁺
+    // refratária até o magnésio ser corrigido.
+    drugs.forEach((d, i) => {
+      const range = Math.max(d.doseMax - d.doseMin, 1);
+      const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
+      const progress = Math.min(1, Math.max(0, (h - d.hoursToEffect) / Math.max(1, 4)));
+      if (h >= d.hoursToEffect) mg += d.effects.mg * doseFrac * progress;
+    });
+    const mgLow = mg < 1.5;
+
     drugs.forEach((d, i) => {
       // Therapeutic intensity: 65% at doseMin → 100% at doseMax, so switching
       // between drugs at default dose already produces visible curve changes.
@@ -147,9 +164,9 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
         hco3 += d.effects.hco3 * doseFrac * progress;
         pCO2 += d.effects.pCO2 * doseFrac * progress;
         na += d.effects.na * doseFrac * progress;
-        k += d.effects.k * doseFrac * progress;
+        const kEffect = (d.name === "KCl 19.1%" && mgLow) ? d.effects.k * 0.35 : d.effects.k;
+        k += kEffect * doseFrac * progress;
         ca += d.effects.ca * doseFrac * progress;
-        mg += d.effects.mg * doseFrac * progress;
         cl += d.effects.cl * doseFrac * progress;
         lactato += d.effects.lactato * doseFrac * progress;
       }
@@ -180,14 +197,28 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     });
   }
 
+  const lastLab = labTrend[labTrend.length - 1];
+
   // Side effects
   const combinedSE = { hipotensao: 0, arritmia: 0, sobrecarga: 0, hipocalcemia: 0, hipernatremia: 0 };
   drugs.forEach((d, i) => {
     const range = Math.max(d.doseMax - d.doseMin, 1);
     const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
-    (Object.keys(combinedSE) as (keyof typeof combinedSE)[]).forEach(key => {
-      combinedSE[key] += d.sideEffects[key] * doseFrac;
-    });
+    if (d.name === "Digoxina") {
+      // Digoxina compete com o K⁺ pelo mesmo sítio da Na⁺/K⁺-ATPase cardíaca:
+      // quanto menor o K⁺ sérico, mais sítios livres para ela se ligar, e
+      // maior o risco de arritmia — independente da dose de digoxina em si.
+      const kFactor = Math.max(0.2, Math.min(3.0, 8.5 - lastLab.k * 2.3));
+      combinedSE.arritmia += d.sideEffects.arritmia * doseFrac * kFactor;
+      combinedSE.hipotensao += d.sideEffects.hipotensao * doseFrac;
+      combinedSE.sobrecarga += d.sideEffects.sobrecarga * doseFrac;
+      combinedSE.hipocalcemia += d.sideEffects.hipocalcemia * doseFrac;
+      combinedSE.hipernatremia += d.sideEffects.hipernatremia * doseFrac;
+    } else {
+      (Object.keys(combinedSE) as (keyof typeof combinedSE)[]).forEach(key => {
+        combinedSE[key] += d.sideEffects[key] * doseFrac;
+      });
+    }
   });
   const sideEffectData = [
     { name: "Hipotensão", risco: Math.round(Math.min(Math.max(combinedSE.hipotensao, 0) * 100, 100)) },
@@ -197,7 +228,6 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
     { name: "Hipernatremia", risco: Math.round(Math.min(combinedSE.hipernatremia * 100, 100)) },
   ];
 
-  const lastLab = labTrend[labTrend.length - 1];
   const ag = Math.round((lastLab.na - (lastLab.cl + lastLab.hco3)) * 10) / 10;
 
   // Gasometry gauges

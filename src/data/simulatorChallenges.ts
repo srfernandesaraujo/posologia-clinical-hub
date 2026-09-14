@@ -2067,7 +2067,7 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
     [
       {
         type: "mcq",
-        question: "Painel: K⁺ 2.6, Mg²⁺ 1.2, pH 7.48, HCO3 32. O paciente usa digoxina + furosemida (digoxina não está disponível neste simulador — a conduta é suspendê-la, não prescrevê-la).\n\nPor que a hipocalemia POTENCIALIZA a toxicidade da digoxina mesmo com nível sérico 'normal'?",
+        question: "Painel: K⁺ 2.6, Mg²⁺ 1.2, pH 7.48, HCO3 32. O paciente já está em uso de digoxina (0.25 mg/dia) e furosemida — a Digoxina está disponível no simulador apenas para você testar seu comportamento nos próximos desafios; a conduta real aqui é SUSPENDÊ-la, não represcrevê-la.\n\nPor que a hipocalemia POTENCIALIZA a toxicidade da digoxina mesmo com nível sérico 'normal'?",
         options: [
           "Porque a hipocalemia aumenta a absorção intestinal da digoxina, elevando sua biodisponibilidade oral e fazendo com que uma dose habitual produza concentrações plasmáticas efetivamente mais altas do que o esperado.",
           "Porque a hipocalemia altera a estrutura molecular da digoxina circulante, convertendo-a em um metabólito mais tóxico que se acumula preferencialmente no tecido cardíaco em vez de ser eliminado pelos rins.",
@@ -2080,37 +2080,47 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
       },
       {
         type: "adjust",
-        question: "Selecione MgSO4 50% e KCl 19.1% juntos e observe Mg²⁺ (basal 1.2 mg/dL) e K⁺ (basal 2.6 mEq/L) subirem no painel.\n\nPor que repor magnésio é ESSENCIAL antes de corrigir a hipocalemia?",
+        question: "Primeiro, deixe apenas KCl 19.1% selecionado (K⁺ basal 2.6 mEq/L, Mg²⁺ basal 1.2 mg/dL) e anote o quanto o K⁺ sobe no painel após a simulação rodar. Depois, adicione também o MgSO4 50% e compare o novo valor de K⁺.\n\nQual alternativa descreve corretamente o que você observou no simulador, e por que isso acontece?",
         targetParams: {},
         validator: (s) => {
           const drugs: string[] = s.drugs || [];
-          if (!drugs.includes("MgSO4 50%") || !drugs.includes("KCl 19.1%")) return { correct: false, feedback: "Selecione MgSO4 50% e KCl 19.1% juntos." };
-          const mg = s.lastLab?.mg ?? 0, baseMg = s.baseLab?.mg ?? 0;
-          const k = s.lastLab?.k ?? 0, baseK = s.baseLab?.k ?? 0;
-          return (mg > baseMg && k > baseK) ? { correct: true, feedback: "Mg²⁺ e K⁺ subindo juntos." } : { correct: false, feedback: "Mg²⁺ e/ou K⁺ ainda não subiram — confira as doses." };
+          const hasKCl = drugs.includes("KCl 19.1%");
+          const hasMg = drugs.includes("MgSO4 50%");
+          if (!hasKCl || !hasMg) return { correct: false, feedback: "Depois de testar o KCl sozinho, deixe KCl 19.1% + MgSO4 50% juntos selecionados." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo de forma mais consistente com o Mg²⁺ já reposto." } : { correct: false, feedback: "Confira as doses — o K⁺ ainda não subiu." };
         },
         options: [
-          "Porque a hipomagnesemia inibe o canal ROMK no ducto coletor, causando perda renal contínua de K⁺; enquanto o Mg²⁺ não for corrigido, a hipocalemia permanece refratária à reposição isolada de potássio.",
-          "Porque o magnésio se combina quimicamente com o KCl infundido, formando um composto de absorção mais lenta que reduz o risco de hipercalemia iatrogênica durante a reposição rápida.",
-          "Porque o magnésio converte o potássio extracelular em sua forma iônica ativa, já que na hipomagnesemia o K⁺ circulante permaneceria numa forma biologicamente inerte e não utilizável pelas células.",
-          "Porque o MgSO4 antagoniza diretamente a digoxina no mesmo sítio de ligação da Na⁺/K⁺-ATPase, sendo essa proteção cardíaca — e não um efeito sobre o potássio — o motivo de sua prioridade.",
+          "Com KCl isolado, o K⁺ já sobe de forma satisfatória e praticamente idêntica à combinação com MgSO4, porque o potássio infundido é captado diretamente pelas células independentemente do nível de magnésio circulante no plasma.",
+          "Com KCl isolado, o K⁺ sobe bem menos do que com o MgSO4 associado — mas isso ocorre porque o magnésio, e não o potássio infundido, é o principal responsável por elevar o K⁺ sérico, sendo o KCl pouco relevante neste quadro.",
+          "Com KCl isolado, o K⁺ mal sai do basal mesmo em 24h, porque a hipomagnesemia mantém o canal ROMK hiperativo e o rim continua eliminando o potássio reposto; ao adicionar o MgSO4, o K⁺ sobe de forma bem mais consistente, pois o Mg²⁺ é cofator necessário para conter essa perda renal.",
+          "Com KCl isolado, o K⁺ sobe bem menos do que com o MgSO4 associado — mas isso ocorre porque a dose de KCl foi insuficiente, e qualquer aumento da dose de KCl isolado, sem magnésio, alcançaria o mesmo resultado da combinação.",
         ],
-        correctIndex: 0,
-        explanation: "Mg²⁺ é cofator essencial do canal ROMK (responsável pela reabsorção de K⁺) no ducto coletor. Sem Mg²⁺ suficiente, o ROMK fica hiperativo e o rim continua perdendo K⁺ pela urina — por isso a hipocalemia não responde à reposição isolada de potássio enquanto o magnésio não for corrigido primeiro. Não existe composto químico Mg-KCl de absorção lenta, o potássio circulante já está em forma iônica ativa independentemente do Mg²⁺, e embora o magnésio tenha algum efeito antiarrítmico geral, ele não compete com a digoxina pelo sítio de ligação da bomba (esse é o mecanismo do K⁺, não do Mg²⁺). A furosemida causa perda renal de ambos os íons.",
+        correctIndex: 2,
+        explanation: "Mg²⁺ é cofator do canal ROMK no ducto coletor. Sem Mg²⁺ suficiente, o ROMK fica hiperativo e o rim continua perdendo K⁺ pela urina — por isso, no simulador, o KCl isolado (mesmo em dose máxima) eleva pouco o K⁺ sérico enquanto o Mg²⁺ continua baixo. Ao repor o MgSO4 junto, o ROMK volta a se comportar normalmente e o mesmo KCl passa a corrigir o K⁺ de forma muito mais eficaz. Não é que o magnésio 'suba o K⁺ diretamente' (ele não tem efeito direto sobre o K⁺ sérico) nem que 'bastaria aumentar a dose de KCl' (a perda renal contínua compensaria qualquer dose adicional enquanto o Mg²⁺ não for corrigido) — o mecanismo é especificamente a dependência do ROMK pelo magnésio. Regra clínica: se a hipocalemia não responde à reposição de K⁺, dosar e repor Mg²⁺ primeiro.",
         reference: "Huang CL, Kuo E. JASN 2007",
       },
       {
-        type: "mcq",
-        question: "O ECG mostra bigeminismo (extrassístoles ventriculares alternadas).\n\nQual o primeiro passo no manejo da intoxicação digitálica?",
+        type: "adjust",
+        question: "Selecione Digoxina isoladamente e observe o risco de Arritmia no gráfico de Risco de Efeitos Adversos (K⁺ basal 2.6 mEq/L). Depois, mantenha a Digoxina e adicione KCl 19.1%, deixando o K⁺ subir no painel.\n\nO que acontece com o risco de Arritmia da Digoxina à medida que o K⁺ sobe, e por quê?",
+        context: "A digoxina compete com o K⁺ pelo mesmo sítio de ligação na Na⁺/K⁺-ATPase cardíaca.",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          const hasDig = drugs.includes("Digoxina");
+          const hasKCl = drugs.includes("KCl 19.1%");
+          if (!hasDig) return { correct: false, feedback: "Deixe a Digoxina selecionada." };
+          if (!hasKCl) return { correct: false, feedback: "Depois de observar a Digoxina isolada, adicione também o KCl 19.1% e deixe os dois selecionados." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo com a Digoxina ainda na prescrição — compare o risco de Arritmia com o observado antes." } : { correct: false, feedback: "O K⁺ ainda não subiu — confira a dose do KCl." };
+        },
         options: [
-          "Aumentar a dose de furosemida para acelerar a eliminação renal da digoxina, reduzindo mais rapidamente sua concentração plasmática e revertendo o bigeminismo observado no ECG.",
-          "Administrar cálcio endovenoso imediatamente para estabilizar a membrana miocárdica e reverter a arritmia, da mesma forma que se faz na hipercalemia com alterações eletrocardiográficas.",
-          "Iniciar amiodarona em dose de ataque para suprimir a ectopia ventricular, já que é o antiarrítmico de escolha para qualquer arritmia ventricular independente da causa de base.",
-          "Suspender a digoxina e corrigir K⁺ e Mg²⁺; se a arritmia for grave (TV, FV, BAV completo), administrar anticorpo antidigoxina (Fab antidigoxina) além dessas medidas iniciais.",
+          "O risco de Arritmia sobe à medida que o K⁺ sobe, porque a digoxina se liga preferencialmente ao potássio circulante recém-infundido, e quanto mais K⁺ disponível no plasma, mais complexos digoxina-potássio tóxicos se formam e circulam pelo coração.",
+          "O risco de Arritmia permanece praticamente igual, independentemente do nível de K⁺, porque a toxicidade da digoxina depende exclusivamente da dose administrada e do tempo de uso acumulado, sem qualquer relação real com os eletrólitos do paciente.",
+          "O risco de Arritmia cai à medida que o K⁺ sobe, mas isso ocorre porque o KCl acelera a eliminação renal da digoxina pelos túbulos proximais, reduzindo sua concentração plasmática e, com isso, sua ação tóxica sobre o músculo cardíaco.",
+          "O risco de Arritmia cai à medida que o K⁺ sobe, porque a digoxina e o K⁺ competem pelo mesmo sítio de ligação na Na⁺/K⁺-ATPase cardíaca — com mais K⁺ disponível, sobram menos sítios livres para a digoxina se ligar, reduzindo sua ação tóxica sobre o coração.",
         ],
         correctIndex: 3,
-        explanation: "Manejo da intoxicação digitálica: (1) suspender a digoxina; (2) repor K⁺ (alvo >4.0) e Mg²⁺; (3) se arritmia grave/instável (TV, FV, BAV completo): Fab antidigoxina (liga-se à digoxina livre e a inativa). Furosemida não acelera a eliminação da digoxina de forma clinicamente relevante e ainda agrava a hipocalemia de base. CONTRAINDICAÇÃO IMPORTANTE: NÃO administrar cálcio EV na intoxicação digitálica — piora a sobrecarga intracelular de Ca²⁺ ('coração de pedra'), ao contrário do que se faz na hipercalemia. Amiodarona não é a primeira escolha e pode ser usada apenas em casos refratários, com cautela.",
-        reference: "Eichhorn EJ, Gheorghiade M. JACC 2002",
+        explanation: "Digoxina inibe a Na⁺/K⁺-ATPase cardíaca → ↑Na⁺ intracelular → o trocador Na⁺/Ca²⁺ exporta Na⁺ e importa Ca²⁺ → ↑contratilidade (e, em excesso, arritmia). O K⁺ e a digoxina competem pelo MESMO sítio de ligação na bomba: quanto menos K⁺ disponível, mais sítios livres restam para a digoxina se ligar — por isso a hipocalemia POTENCIALIZA a toxicidade digitálica mesmo com nível sérico de digoxina 'normal'. Repor K⁺ (como fizemos aqui com o KCl) reduz essa ligação e, portanto, o risco de arritmia — não porque o K⁺ elimine a digoxina do corpo (a eliminação é renal, e não é acelerada pelo K⁺) nem porque formem complexos tóxicos entre os dois íons. No manejo real da intoxicação digitálica: suspender a digoxina, corrigir K⁺ (alvo >4.0) e Mg²⁺, e se a arritmia for grave (TV, FV, BAV completo) considerar Fab antidigoxina. CONTRAINDICAÇÃO: não administrar cálcio EV na intoxicação digitálica (piora a sobrecarga intracelular de Ca²⁺), ao contrário do que se faz na hipercalemia.",
+        reference: "Rang & Dale, Cap. 21",
       },
       {
         type: "mcq",
@@ -2126,29 +2136,36 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
         reference: "Guyton & Hall, Cap. 30",
       },
       {
-        type: "mcq",
-        question: "A espironolactona não está disponível neste simulador, mas é a alternativa real à furosemida no paciente com IC e hipocalemia.\n\nQual a vantagem da espironolactona sobre a furosemida nesse contexto?",
+        type: "adjust",
+        question: "Teste Furosemida isoladamente no simulador (o fármaco que o paciente já usa) e observe o K⁺ cair ainda mais no painel. Depois, troque por Espironolactona isoladamente e observe o K⁺.\n\nO que essa comparação mostra sobre trocar a furosemida pela espironolactona neste paciente com insuficiência cardíaca e hipocalemia recorrente?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "Espironolactona")) return { correct: false, feedback: "Depois de testar a Furosemida, deixe apenas Espironolactona selecionada." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo com a Espironolactona — ao contrário do que acontece com a Furosemida." } : { correct: false, feedback: "Confira a dose — o K⁺ ainda não subiu." };
+        },
         options: [
-          "A espironolactona é um diurético poupador de potássio (antagonista da aldosterona): bloqueia a reabsorção de Na⁺ e a secreção de K⁺ e H⁺ no ducto coletor, prevenindo a hipocalemia que a furosemida costuma causar.",
-          "A espironolactona tem um efeito diurético consideravelmente mais potente que a furosemida, promovendo uma natriurese mais rápida e eficaz no controle da sobrecarga volêmica da insuficiência cardíaca.",
-          "A espironolactona não interage farmacologicamente com a digoxina, o que evita o risco de toxicidade digitálica que a combinação furosemida-digoxina apresentaria neste paciente.",
-          "A espironolactona corrige a alcalose metabólica de forma direta e rápida, atuando como um ácido fraco que neutraliza o excesso de bicarbonato plasmático em poucas horas de uso.",
+          "Enquanto a Furosemida faz o K⁺ cair ainda mais, a Espironolactona faz o K⁺ subir discretamente — porque ela bloqueia a aldosterona e poupa potássio no ducto coletor, em vez de causar perda urinária adicional como a Furosemida.",
+          "As duas drogas reduzem o K⁺ de forma parecida no painel, porque ambas são diuréticos e todo diurético aumenta a perda urinária de potássio, independentemente do mecanismo específico de cada classe farmacológica.",
+          "A Espironolactona eleva o K⁺ tanto quanto uma dose plena de KCl elevaria, porque ela repõe potássio ativamente no plasma, sendo uma alternativa equivalente e mais segura à reposição direta neste paciente.",
+          "A Furosemida eleva discretamente o K⁺ e a Espironolactona o reduz, porque a Espironolactona, por ser um diurético mais fraco, obriga o rim a compensar eliminando ainda mais potássio pela urina.",
         ],
         correctIndex: 0,
-        explanation: "Espironolactona: antagonista competitivo da aldosterona no ducto coletor → ↓reabsorção de Na⁺ e ↓secreção de K⁺ e H⁺. Vantagens no contexto de IC + hipocalemia: previne a perda de K⁺ (ao contrário da furosemida) e reduz mortalidade na IC (estudo RALES). Ela é, na verdade, MENOS potente como diurético que a furosemida (é um diurético fraco, geralmente associado a outro); tanto ela quanto a furosemida podem, em teoria, interagir com a digoxina por via da hipocalemia/hipercalemia que causam; e ela não tem efeito relevante e direto sobre o pH — seu benefício aqui é prevenir a hipocalemia, não corrigir a alcalose. Risco: hipercalemia, sobretudo com IECA/BRA ou DRC associados.",
+        explanation: "A furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle, causando perda urinária contínua de K⁺ — por isso, mantê-la só aprofunda a hipocalemia (no simulador, o K⁺ cai ainda mais). A espironolactona é um diurético POUPADOR de potássio: antagoniza a aldosterona no ducto coletor, reduzindo a secreção de K⁺ e H⁺, o que eleva discretamente o K⁺ sérico em vez de piorá-lo. Ela não repõe K⁺ ativamente como o KCl (por isso o efeito é mais lento e modesto do que uma reposição direta), mas no contexto de insuficiência cardíaca com hipocalemia recorrente por diurético de alça, trocar (ou associar) a espironolactona é uma estratégia de manutenção valiosa — reduz mortalidade na IC (estudo RALES) — que não substitui a reposição rápida de K⁺ (KCl) numa hipocalemia aguda e sintomática como a deste caso.",
         reference: "Pitt B et al. NEJM 1999 (RALES)",
       },
       {
-        type: "mcq",
-        question: "O paciente tem visão amarelada (xantopsia).\n\nQuais são os sinais clássicos de intoxicação digitálica?",
+        type: "adjust",
+        question: "Selecione Digoxina + MgSO4 50% juntos (sem KCl) e observe o risco de Arritmia no gráfico de Risco de Efeitos Adversos. Compare com o que você observou no desafio anterior com Digoxina + KCl 19.1% (sem Mg).\n\nCorrigir apenas o Mg²⁺, sem repor o K⁺, reduz o risco de Arritmia da digoxina da mesma forma que o KCl reduziu?",
+        targetParams: {},
+        validator: (s) => only(s, "Digoxina", "MgSO4 50%") ? { correct: true, feedback: "Configuração testada: Digoxina + MgSO4, sem KCl — compare o risco de Arritmia com o que o KCl isolado trouxe no desafio anterior." } : { correct: false, feedback: "Deixe apenas Digoxina + MgSO4 50% selecionados (sem KCl)." },
         options: [
-          "Uma tríade: sintomas gastrointestinais (náuseas, vômitos, anorexia), visuais (xantopsia, escotomas) e cardíacos (praticamente qualquer arritmia, especialmente bigeminismo, taquicardia atrial com bloqueio e TV bidirecional).",
-          "Apenas manifestações cardíacas, como arritmias ventriculares e bloqueios de condução; os sintomas gastrointestinais e visuais descritos na literatura clássica são raros e pouco específicos na prática atual.",
-          "Predominantemente sintomas neurológicos, como confusão mental, cefaleia e convulsões, sendo os distúrbios visuais e cardíacos achados secundários e tardios na evolução da intoxicação.",
-          "Principalmente sintomas dermatológicos e respiratórios, como rash cutâneo difuso e broncoespasmo, refletindo uma reação de hipersensibilidade ao fármaco mais do que toxicidade direta.",
+          "Sim, exatamente da mesma forma: o risco de Arritmia cai na mesma magnitude com o Mg²⁺ isolado que cairia com o KCl, porque o magnésio e o potássio atuam de forma intercambiável no mesmo sítio de ligação da Na⁺/K⁺-ATPase cardíaca.",
+          "Não da mesma forma: o risco de Arritmia muda pouco com o Mg²⁺ isolado, porque a digoxina compete especificamente pelo sítio do K⁺ na Na⁺/K⁺-ATPase — o magnésio age por outra via (o canal ROMK renal) e não ocupa esse mesmo sítio de ligação.",
+          "Sim, e até de forma mais intensa: o Mg²⁺ isolado reduz o risco de Arritmia mais do que o KCl reduziu, porque o magnésio tem ação antiarrítmica direta sobre o miocárdio que se soma ao efeito de deslocar a digoxina do sítio de ligação.",
+          "Não apenas não reduz como o Mg²⁺ isolado aumenta o risco de Arritmia da digoxina, porque corrigir a hipomagnesemia sem repor o K⁺ associado intensifica ainda mais a competição da digoxina pelo sítio livre na bomba Na⁺/K⁺-ATPase.",
         ],
-        correctIndex: 0,
-        explanation: "Intoxicação digitálica clássica: tríade GI (náuseas, vômitos, anorexia — geralmente os primeiros sintomas), visual (xantopsia por efeito nos cones retinianos, escotomas) e cardíaca (a mais perigosa — praticamente qualquer arritmia, com taquicardia atrial com bloqueio AV e TV bidirecional sendo achados especialmente sugestivos, esta última quase patognomônica). Não é uma reação de hipersensibilidade cutânea/respiratória, e os sintomas neurológicos maiores (confusão, convulsão) não são o padrão típico — quando presentes, sugerem toxicidade grave ou outra causa associada. Nível terapêutico: 0.5-2.0 ng/mL; tóxico: >2.0.",
+        correctIndex: 1,
+        explanation: "A digoxina inibe a Na⁺/K⁺-ATPase cardíaca competindo especificamente pelo sítio de ligação do K⁺ — por isso apenas a reposição de K⁺ reduz diretamente essa competição e o risco de arritmia associado (no simulador: Digoxina isolada tem um certo risco de Arritmia; Digoxina + MgSO4 isolado, sem KCl, mantém esse risco praticamente igual, pois o K⁺ não se move; Digoxina + KCl já reduz esse risco, mesmo com o K⁺ subindo pouco por causa da hipomagnesemia ainda não corrigida). O Mg²⁺ tem um papel real na hipocalemia — é cofator do canal ROMK renal, necessário para a reposição de K⁺ 'pegar', como vimos no desafio do KCl — mas ele não ocupa o sítio de ligação da digoxina na bomba, então corrigi-lo isoladamente não desloca a digoxina do mesmo jeito. Na prática clínica, a hipomagnesemia TAMBÉM é fator de risco independente para toxicidade digitálica (por outros mecanismos, incluindo prolongamento do QT) — por isso repor os dois eletrólitos juntos é a conduta recomendada, como fizemos no desafio 2.",
         reference: "Rang & Dale, Cap. 21",
       },
     ],
