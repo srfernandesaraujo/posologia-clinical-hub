@@ -1851,12 +1851,105 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
   const caseSets: Challenge[][] = [
     // Caso 1: Cetoacidose Diabética
     [
-      { type: "adjust", question: "Selecione NaCl 0.9% e Insulina Regular + Glicose juntos (gasometria basal: pH 7.12, pCO2 20, HCO3 6, AG 28).\n\nO AG deve começar a se aproximar do normal. Qual a fórmula do AG e o que seu aumento indica?", context: "AG basal = Na 132 - (Cl 98 + HCO3 6) = 28.", targetParams: {}, validator: (s) => { if (!(s.drugs || []).includes("NaCl 0.9%") || !(s.drugs || []).includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Selecione NaCl 0.9% e Insulina Regular + Glicose juntos." }; return (s.ag ?? 28) < 28 ? { correct: true, feedback: "AG caindo em direção ao normal." } : { correct: false, feedback: "O AG ainda não caiu — confira as doses." }; }, options: ["AG = Na - K + Cl. Aumento indica perda renal de bicarbonato.", "AG = Na - (Cl + HCO3). Aumento indica acúmulo de ânions não mensurados (cetoácidos, lactato, uremia, toxinas — MUDPILES), consumindo HCO3 como tampão.", "AG = HCO3 + pCO2. Aumento indica alcalose metabólica.", "AG = Na + K - Cl. Aumento indica hipernatremia."], correctIndex: 1, explanation: "AG = Na⁺ - (Cl⁻ + HCO₃⁻). Normal: 8-12 (ou 10-14 sem correção por albumina). AG elevado = ácidos orgânicos acumulados: MUDPILES (Metanol, Uremia, DKA, Propilenoglicol, Isoniazida/Ferro, Lactato, Etilenoglicol, Salicilatos). Na CAD: cetoácidos (β-hidroxibutirato, acetoacetato).", reference: "Harrison's Cap. 51" },
-      { type: "adjust", question: "Com Insulina Regular + Glicose na prescrição, observe o K⁺ cair no painel (basal 5.8 mEq/L, alto).\n\nPor que o K⁺ sérico está elevado na CAD apesar do potássio corporal TOTAL estar depletado?", targetParams: {}, validator: (s) => { if (!(s.drugs || []).includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Adicione Insulina Regular + Glicose à prescrição." }; return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo — shift transcelular em ação." } : { correct: false, feedback: "O K⁺ ainda não caiu no painel." }; }, options: ["Porque a insulina causa retenção renal de potássio", "Porque a acidose e a deficiência de insulina causam SHIFT transcelular de K⁺: H⁺ entra nas células (tamponamento) e K⁺ sai para manter eletroneutralidade. A insulina reverte isso, empurrando K⁺ de volta para dentro da célula — podendo causar hipocalemia grave", "Porque a hiperglicemia concentra o potássio por desidratação", "Porque os cetoácidos se ligam ao potássio extracelular"], correctIndex: 1, explanation: "Na CAD: (1) acidose → H⁺ entra na célula, K⁺ sai; (2) deficiência de insulina → Na⁺/K⁺-ATPase inativa → K⁺ não entra na célula; (3) diurese osmótica → perda renal de K⁺. Resultado: K⁺ sérico normal-alto, mas reservas corporais depletadas. REGRA: repor K⁺ quando <5.5; NÃO iniciar insulina se K⁺ <3.3.", reference: "Kitabchi AE et al. Diabetes Care 2009" },
-      { type: "mcq", question: "A pCO2 basal está 20 mmHg (baixa). Use a fórmula de Winter para verificar se a compensação é adequada.\n\npCO2 esperada = 1.5 × HCO3 + 8 (±2). Com HCO3 = 6: esperada = 17 (15-19). A pCO2 medida é 20. O que isso indica?", options: ["Acidose metabólica pura com compensação respiratória ADEQUADA — a pCO2 medida está dentro da faixa esperada pela fórmula de Winter", "Distúrbio misto: acidose metabólica + alcalose respiratória", "Acidose respiratória concomitante", "Compensação excessiva indicando alcalose respiratória primária"], correctIndex: 0, explanation: "Winter: pCO2 esperada = 1.5 × 6 + 8 = 17 (±2 → 15-19). pCO2 medida = 20 (levemente acima, mas próxima). Compensação adequada. Se pCO2 >> esperada: acidose respiratória concomitante. Se pCO2 << esperada: alcalose respiratória concomitante.", reference: "Harrison's Cap. 51" },
-      { type: "mcq", question: "Em qual situação o bicarbonato de sódio é indicado na CAD?", options: ["Sempre que pH <7.35", "Apenas quando pH <6.9-7.0 (acidose SEVERA com risco de parada cardíaca) — caso contrário, a insulina + hidratação corrigem a acidose ao metabolizar os cetoácidos de volta a bicarbonato", "Quando glicemia >500 mg/dL", "Quando K⁺ >5.5 mEq/L"], correctIndex: 1, explanation: "NaHCO3 na CAD: CONTROVERSO. Indicado apenas se pH <6.9-7.0 (risco de depressão miocárdica). Riscos do bicarbonato: (1) acidose paradoxal do SNC (CO2 cruza barreira hematoencefálica), (2) hipocalemia (shift de K⁺), (3) sobrecarga de Na⁺, (4) alcalose de rebote. A insulina é o tratamento definitivo — metaboliza cetoácidos em HCO3.", reference: "ADA 2023 DKA Guidelines" },
-      { type: "mcq", question: "O cenário descreve respiração de Kussmaul (FR profunda e rápida).\n\nQual o mecanismo compensatório que explica a taquipneia?", options: ["É um reflexo doloroso causado pela cetoacidose abdominal", "Os quimiorreceptores centrais e periféricos detectam o pH baixo e estimulam o centro respiratório a aumentar a ventilação alveolar, eliminando CO2 e tentando normalizar o pH — compensação respiratória da acidose metabólica", "A hiperglicemia estimula diretamente os pulmões", "A desidratação causa edema pulmonar reflexo"], correctIndex: 1, explanation: "Compensação respiratória da acidose metabólica: pH↓ → quimiorreceptores (corpo carotídeo) → centro respiratório bulbar → ↑ventilação → ↓pCO2. A respiração de Kussmaul (profunda, regular, rápida) é patognomônica de acidose metabólica grave. Tempo: inicia em minutos-horas. Limite: pCO2 pode baixar até ~10-15 mmHg.", reference: "Guyton & Hall, Cap. 30" },
-      { type: "mcq", question: "Após 6h de tratamento com insulina + NaCl 0.9%, a glicemia caiu para 250 mg/dL.\n\nDeve-se suspender a insulina quando a glicemia normalizar?", options: ["Sim, suspender insulina imediatamente quando glicemia <250", "NÃO — manter insulina EV e ADICIONAR glicose 5-10% ao soro para prevenir hipoglicemia. A insulina deve continuar até AG normalizar e pH >7.30, pois os cetoácidos ainda podem estar presentes mesmo com glicemia normal", "Sim, trocar para insulina SC imediatamente", "Suspender tudo e observar"], correctIndex: 1, explanation: "Na CAD, a glicemia normaliza ANTES da cetoacidose resolver. Critérios de resolução: pH >7.30, HCO3 >18, AG <12, paciente alimentando-se. Manter insulina EV + glicose 5% (para evitar hipoglicemia) até resolução. Transição para SC: overlap de 2h (SC primeiro, suspender EV 2h depois).", reference: "ADA 2023 DKA Guidelines" },
+      {
+        type: "adjust",
+        question: "Selecione NaCl 0.9% e Insulina Regular + Glicose juntos (gasometria basal: pH 7.12, pCO2 20, HCO3 6, AG 28).\n\nApós a simulação rodar, observe no gráfico de Na⁺ e K⁺ que o Na⁺ sobe discretamente e o K⁺ cai. O AG também começa a se aproximar do normal. O que EXPLICA essa queda do AG?",
+        context: "AG basal = Na 132 - (Cl 98 + HCO3 6) = 28.",
+        targetParams: {},
+        validator: (s) => {
+          if (!(s.drugs || []).includes("NaCl 0.9%") || !(s.drugs || []).includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Selecione NaCl 0.9% e Insulina Regular + Glicose juntos." };
+          return (s.ag ?? 28) < 28 ? { correct: true, feedback: "AG caindo em direção ao normal." } : { correct: false, feedback: "O AG ainda não caiu — confira as doses." };
+        },
+        options: [
+          "O AG cai porque a queda do K⁺ reduz diretamente o valor calculado, já que o potássio é um dos ânions considerados na fórmula do AG ao lado do cloreto e do bicarbonato.",
+          "O AG cai porque o HCO3⁻ sobe conforme a insulina interrompe a cetogênese e os cetoácidos são metabolizados de volta a bicarbonato — o K⁺ não entra na fórmula do AG, e a leve subida do Na⁺ é acompanhada por subida semelhante do Cl⁻.",
+          "O AG cai porque o aumento do Na⁺ eleva o termo positivo da equação mais rapidamente do que o Cl⁻ consegue acompanhar, sendo esse o principal motivo da queda observada no gráfico.",
+          "O AG cai porque a insulina promove diurese osmótica que elimina diretamente os ânions não mensurados pela urina, sem depender de qualquer variação do HCO3⁻ no sangue.",
+        ],
+        correctIndex: 1,
+        explanation: "AG = Na⁺ - (Cl⁻ + HCO3⁻). Normal: 8-12. Na CAD, o AG fecha porque a insulina interrompe a lipólise e a cetogênese hepática, permitindo que os cetoácidos acumulados (β-hidroxibutirato, acetoacetato) sejam metabolizados de volta a bicarbonato — é isso que eleva o HCO3⁻ e reduz o AG. O K⁺ sérico cai por SHIFT transcelular (a insulina ativa a Na⁺/K⁺-ATPase), mas o potássio não faz parte da fórmula do AG. O Na⁺ e o Cl⁻ sobem juntos com o NaCl 0.9% e, como entram na equação em sinais opostos, o efeito líquido sobre o AG é pequeno — o verdadeiro motor da queda é a recuperação do HCO3⁻.",
+        reference: "Harrison's Cap. 51",
+      },
+      {
+        type: "adjust",
+        question: "Com Insulina Regular + Glicose na prescrição, observe o K⁺ cair no gráfico de Na⁺ e K⁺ (basal 5.8 mEq/L, alto).\n\nPor que o K⁺ sérico está elevado na CAD apesar do potássio corporal TOTAL estar depletado?",
+        targetParams: {},
+        validator: (s) => {
+          if (!(s.drugs || []).includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Adicione Insulina Regular + Glicose à prescrição." };
+          return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo — shift transcelular em ação." } : { correct: false, feedback: "O K⁺ ainda não caiu no painel." };
+        },
+        options: [
+          "Porque a acidose e a falta de insulina retêm K⁺ dentro da célula por bloqueio da bomba Na⁺/K⁺-ATPase; a insulina libera esse K⁺ retido para o plasma, elevando ainda mais o potássio sérico durante o tratamento.",
+          "Porque a acidose e a falta de insulina promovem shift transcelular de K⁺: H⁺ entra na célula e K⁺ sai para manter a eletroneutralidade; a insulina reverte esse shift, empurrando K⁺ de volta para dentro da célula e podendo causar hipocalemia grave.",
+          "Porque a hiperglicemia arrasta água para fora das células por efeito osmótico, e o K⁺ acompanha esse fluxo de saída; a insulina apenas normaliza a osmolaridade, sem promover shift ativo de potássio entre os compartimentos.",
+          "Porque os cetoácidos circulantes se ligam ao K⁺ extracelular formando complexos inertes; a insulina interrompe a cetogênese, liberando de volta ao plasma o K⁺ que estava ligado antes de ser eliminado pelo rim.",
+        ],
+        correctIndex: 1,
+        explanation: "Na CAD: (1) acidose → H⁺ entra na célula, K⁺ sai; (2) deficiência de insulina → Na⁺/K⁺-ATPase inativa → K⁺ não entra na célula; (3) diurese osmótica → perda renal de K⁺. Resultado: K⁺ sérico normal-alto, mas reservas corporais depletadas. REGRA: repor K⁺ quando <5.5; NÃO iniciar insulina se K⁺ <3.3.",
+        reference: "Kitabchi AE et al. Diabetes Care 2009",
+      },
+      {
+        type: "mcq",
+        question: "A pCO2 basal está 20 mmHg. Use a fórmula de Winter para verificar se a compensação respiratória é adequada:\n\npCO2 esperada = 1.5 × HCO3 + 8 (±2)\n\nCalcule a pCO2 esperada com o HCO3 basal (6 mEq/L) e compare com a pCO2 medida (20 mmHg, veja também o gráfico de pH e HCO3). O que o resultado indica?",
+        context: "HCO3 basal: 6 mEq/L. pCO2 medida: 20 mmHg.",
+        options: [
+          "A pCO2 esperada é 17 mmHg (±2, faixa 15–19); como a pCO2 medida (20) ultrapassa essa faixa, há uma ACIDOSE RESPIRATÓRIA concomitante somando-se à acidose metabólica de base.",
+          "A pCO2 esperada é 17 mmHg (±2, faixa 15–19); como a pCO2 medida (20) está dentro dessa faixa, a compensação respiratória está ADEQUADA para o grau de acidose metabólica, sem distúrbio respiratório associado.",
+          "Aplicando a fórmula de forma inversa, a HCO3 esperada seria cerca de 8 mEq/L; como a HCO3 medida (6) está abaixo do esperado, há um componente de ALCALOSE METABÓLICA sobreposto ao quadro.",
+          "A pCO2 esperada é 26 mmHg (±2, faixa 24–28); como a pCO2 medida (20) está abaixo dessa faixa, há uma ALCALOSE RESPIRATÓRIA concomitante reduzindo ainda mais o CO2 circulante.",
+        ],
+        correctIndex: 1,
+        explanation: "Fórmula de Winter: pCO2 esperada = 1.5 × HCO3 + 8 (±2). Com HCO3 = 6: esperada = 1.5×6+8 = 17 (faixa 15-19). A pCO2 medida (20) está dentro da faixa — compensação respiratória adequada, ainda que próxima do limite superior. Se a pCO2 medida ficasse ACIMA da faixa esperada: acidose respiratória concomitante. Se ficasse ABAIXO: alcalose respiratória concomitante.",
+        reference: "Harrison's Cap. 51",
+      },
+      {
+        type: "adjust",
+        question: "Teste combinações no simulador — por exemplo, (1) apenas NaCl 0.9% + Insulina Regular + Glicose, e (2) as mesmas duas mais NaHCO3 8.4%. Compare o efeito sobre o pH com o gráfico de Risco de Efeitos Adversos.\n\nQual combinação corrige a acidose com o menor risco neste paciente (pH basal 7.12), e por quê?",
+        context: "pH basal 7.12 — acima do limiar de 6.9-7.0 geralmente usado para indicar NaHCO3 na CAD.",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          const hasCore = drugs.includes("NaCl 0.9%") && drugs.includes("Insulina Regular + Glicose");
+          if (!hasCore) return { correct: false, feedback: "Selecione ao menos NaCl 0.9% e Insulina Regular + Glicose." };
+          if (drugs.includes("NaHCO3 8.4%")) return { correct: false, feedback: "Remova o NaHCO3 — neste paciente (pH 7.12) ele não é indicado e só eleva o risco de efeitos adversos." };
+          return { correct: true, feedback: "Combinação correta: NaCl 0.9% + Insulina Regular + Glicose, sem NaHCO3." };
+        },
+        options: [
+          "NaCl 0.9% + Insulina Regular + Glicose corrigem a acidose com o menor risco, pois o pH de 7.12 está acima do limiar de 6.9-7.0 que justificaria o NaHCO3 — adicioná-lo aumentaria o risco de hipocalemia e sobrecarga sem acelerar a correção.",
+          "NaCl 0.9% + Insulina Regular + Glicose + NaHCO3 corrigem a acidose com o menor risco, pois o bicarbonato acelera a normalização do pH em qualquer grau de acidose metabólica, reduzindo o tempo de internação sem aumentar riscos relevantes.",
+          "Apenas NaHCO3 corrige a acidose com o menor risco, pois repõe diretamente o HCO3 consumido pelos cetoácidos, dispensando a necessidade de insulina para normalizar o quadro metabólico neste paciente.",
+          "NaCl 0.9% isolado corrige a acidose com o menor risco, pois a expansão volêmica já dilui os cetoácidos circulantes o suficiente, tornando a insulina dispensável para a correção do pH neste paciente.",
+        ],
+        correctIndex: 0,
+        explanation: "NaHCO3 na CAD é controverso e reservado para pH <6.9-7.0 (risco de depressão miocárdica). Neste caso, pH 7.12 já responde à combinação-padrão (NaCl 0.9% + Insulina Regular + Glicose), que corrige a acidose pela via fisiológica — a insulina metaboliza os cetoácidos de volta a HCO3. Adicionar NaHCO3 eleva o risco de acidose paradoxal do SNC, hipocalemia (shift adicional de K⁺) e sobrecarga de Na⁺ — visível no gráfico de Risco de Efeitos Adversos — sem benefício comprovado neste grau de acidose.",
+        reference: "ADA 2023 DKA Guidelines",
+      },
+      {
+        type: "mcq",
+        question: "O cenário descreve respiração de Kussmaul (FR profunda e rápida).\n\nQual o mecanismo compensatório que explica a taquipneia?",
+        options: [
+          "Os quimiorreceptores centrais e periféricos detectam o acúmulo de corpos cetônicos no sangue e estimulam diretamente os músculos abdominais a se contraírem, aumentando a frequência respiratória por reflexo doloroso da cetoacidose.",
+          "Os barorreceptores da aorta e do seio carotídeo detectam a desidratação e desencadeiam um reflexo de hiperventilação para compensar a queda da pressão arterial, sem relação direta com o pH sanguíneo.",
+          "Os quimiorreceptores centrais e periféricos detectam a queda do pH e estimulam o centro respiratório bulbar a aumentar a ventilação alveolar, eliminando CO2 e reduzindo o ácido carbônico — mecanismo compensatório da acidose metabólica.",
+          "Os quimiorreceptores centrais e periféricos detectam a hiperglicemia e reduzem a sensibilidade do centro respiratório ao CO2, fazendo os pulmões reterem ar e aumentarem o volume corrente sem elevar a frequência respiratória.",
+        ],
+        correctIndex: 2,
+        explanation: "Compensação respiratória da acidose metabólica: pH↓ → quimiorreceptores (corpo carotídeo) → centro respiratório bulbar → ↑ventilação → ↓pCO2. A respiração de Kussmaul (profunda, regular, rápida) é patognomônica de acidose metabólica grave. Tempo: inicia em minutos-horas. Limite: pCO2 pode baixar até ~10-15 mmHg.",
+        reference: "Guyton & Hall, Cap. 30",
+      },
+      {
+        type: "mcq",
+        question: "Após 6h de tratamento com insulina + NaCl 0.9%, a glicemia caiu para 250 mg/dL.\n\nDeve-se suspender a insulina quando a glicemia normalizar?",
+        options: [
+          "Sim — deve-se suspender a insulina EV assim que a glicemia cair abaixo de 250 mg/dL, pois esse valor já indica que os cetoácidos foram totalmente metabolizados e o risco de cetoacidose recorrente deixou de existir.",
+          "Não — deve-se manter a insulina EV e adicionar glicose 5-10% ao soro para prevenir hipoglicemia, pois os cetoácidos ainda podem estar presentes mesmo com glicemia normal; a insulina só é suspensa quando o AG normalizar e o pH ultrapassar 7.30.",
+          "Sim — deve-se trocar a insulina EV pela via subcutânea assim que a glicemia normalizar, pois a via SC mantém o mesmo efeito de shift de potássio sem o risco de hipoglicemia associado à infusão contínua.",
+          "Não — deve-se suspender toda a insulina e apenas observar a glicemia a cada hora, pois reiniciar a infusão apenas quando houver nova elevação da glicemia evita hipoglicemia sem prejudicar a resolução da cetoacidose.",
+        ],
+        correctIndex: 1,
+        explanation: "Na CAD, a glicemia normaliza ANTES da cetoacidose resolver. Critérios de resolução: pH >7.30, HCO3 >18, AG <12, paciente alimentando-se. Manter insulina EV + glicose 5% (para evitar hipoglicemia) até resolução. Transição para SC: overlap de 2h (SC primeiro, suspender EV 2h depois).",
+        reference: "ADA 2023 DKA Guidelines",
+      },
     ],
     // Caso 2: Alcalose Metabólica Hipoclorêmica
     [
