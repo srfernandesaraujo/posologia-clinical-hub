@@ -2273,21 +2273,24 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
     [
       {
         type: "adjust",
-        question: "Selecione NaCl 3% (hipertônico) como único fármaco (Na⁺ basal 118, paciente com convulsão) e observe o Na⁺ subir no painel.\n\nQual o protocolo EMERGENCIAL para hiponatremia sintomática?",
+        question: "Selecione NaCl 3% (hipertônico) como único fármaco (Na⁺ basal 118, Cl⁻ basal 85, pH basal 7.38 — normal) e observe o painel de eletrólitos: o Na⁺ sobe, mas o Cl⁻ sobe praticamente junto com ele.\n\nQual alternativa explica corretamente por que os dois íons sobem juntos, e qual o risco dessa combinação para o equilíbrio ácido-base do paciente, mesmo o pH partindo normal?",
+        context: "NaCl 3% contém Na⁺ e Cl⁻ em proporção quase 1:1 (cerca de 513 mEq/L de cada).",
         targetParams: {},
         validator: (s) => {
           if (!only(s, "NaCl 3% (hipertônico)")) return { correct: false, feedback: "Deixe apenas NaCl 3% (hipertônico) na prescrição." };
-          return (s.lastLab?.na ?? 0) > (s.baseLab?.na ?? 0) ? { correct: true, feedback: "Na⁺ subindo com NaCl 3%." } : { correct: false, feedback: "O Na⁺ ainda não subiu — confira a dose." };
+          const naUp = (s.lastLab?.na ?? 0) > (s.baseLab?.na ?? 0);
+          const clUp = (s.lastLab?.cl ?? 0) > (s.baseLab?.cl ?? 0);
+          return (naUp && clUp) ? { correct: true, feedback: "Na⁺ e Cl⁻ subindo juntos no painel." } : { correct: false, feedback: "Confira a dose — Na⁺ e/ou Cl⁻ ainda não subiram." };
         },
         options: [
-          "NaCl 3% em bolus de 100-150 mL em 10-20 minutos, podendo repetir até 3 vezes se a convulsão persistir, visando elevar o Na⁺ em 4-6 mEq/L nas primeiras horas para cessar os sintomas neurológicos agudos.",
-          "Infusão de NaCl 0.9% em volume alto (2-3 litros na primeira hora), priorizando a expansão volêmica rápida sobre a concentração de sódio da solução para reverter os sintomas neurológicos.",
-          "Restrição hídrica isolada, sem reposição ativa de sódio, aguardando 48 horas para reavaliação laboratorial antes de qualquer intervenção farmacológica adicional neste paciente sintomático.",
-          "Furosemida em dose alta associada a hidratação oral livre, promovendo a eliminação de água livre pela diurese forçada como estratégia inicial para corrigir a hiponatremia sintomática.",
+          "O Na⁺ e o Cl⁻ sobem juntos porque a solução se dissocia em partes iguais desses dois íons ao ser infundida — mas, por serem eletricamente neutros entre si, essa dissociação não tem repercussão sobre o equilíbrio ácido-base, afetando apenas a osmolaridade plasmática.",
+          "O Na⁺ e o Cl⁻ sobem juntos porque a solução se dissocia em partes iguais desses dois íons ao ser infundida; o excesso de Cl⁻ compete com o HCO3⁻ pela reabsorção no túbulo renal, elevando secundariamente o HCO3⁻ plasmático e produzindo uma alcalose metabólica leve.",
+          "O Na⁺ e o Cl⁻ sobem juntos porque a solução se dissocia em partes iguais desses dois íons ao ser infundida; como esse Cl⁻ chega em quantidade desproporcional ao HCO3⁻ plasmático, repetir a infusão pode reduzir a diferença Na⁺-Cl⁻ (strong ion difference) e favorecer uma acidose metabólica hiperclorêmica, mesmo com o AG permanecendo normal.",
+          "O Na⁺ sobe pela infusão direta, mas o Cl⁻ sobe por um mecanismo renal independente — a hipernatremia transitória estimula a reabsorção tubular proximal de cloreto — via secundária que não guarda relação com qualquer risco de acidose metabólica associado ao soro hipertônico.",
         ],
-        correctIndex: 0,
-        explanation: "Hiponatremia sintomática (convulsão, coma): NaCl 3% em bolus de 100-150 mL em 10-20 min, repetindo se os sintomas persistirem (até 3 bolus). Alvo imediato: elevar o Na⁺ em 4-6 mEq/L; depois, correção mais lenta. NaCl 3% tem 513 mEq/L de Na⁺ (vs. 154 mEq/L do NaCl 0.9%) — é a única solução capaz de gerar perda líquida de água livre nesse contexto. NaCl 0.9% em grande volume não corrige a hiponatremia sintomática com a mesma eficácia e pode até piorá-la na SIADH; restrição hídrica isolada é lenta demais para um quadro convulsivo agudo; furosemida isolada não substitui a reposição ativa de sódio nessa emergência.",
-        reference: "Sterns RH. NEJM 2015",
+        correctIndex: 2,
+        explanation: "NaCl 3% contém Na⁺ e Cl⁻ em proporção quase 1:1 (cerca de 513 mEq/L de cada) — por isso, ao infundir a solução, os dois íons sobem juntos no painel pela própria dissociação do sal, não por vias renais independentes. O ponto clinicamente relevante é que o plasma normal tem um Na⁺ bem maior que o Cl⁻ (a diferença de ânions fortes, ou strong ion difference); repor um Cl⁻ em quantidade proporcionalmente maior do que o HCO3⁻ disponível reduz essa diferença, e o resultado é uma acidose metabólica hiperclorêmica com AG normal — não uma alcalose (o Cl⁻ não compete com o HCO3⁻ para elevá-lo, faz o oposto) nem um efeito eletroneutro e irrelevante para o pH. O K⁺ também cai discretamente no painel deste simulador — um efeito dilucional pequeno, sem o mesmo peso clínico do par Na⁺/Cl⁻. Por isso a reposição de sódio na hiponatremia não é só uma questão da quantidade de Na⁺ infundida, mas também da carga de cloreto que vem junto.",
+        reference: "Kellum JA. Crit Care Med 2002",
       },
       {
         type: "adjust",
