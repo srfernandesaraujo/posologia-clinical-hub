@@ -2101,24 +2101,24 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
       },
       {
         type: "adjust",
-        question: "Teste três configurações separadamente e anote o risco de Arritmia no gráfico após cada uma: (1) apenas Digoxina, (2) apenas KCl 19.1%, (3) Digoxina + KCl 19.1% juntos. Deixe a configuração (3) selecionada ao final.\n\nO risco de Arritmia da combinação (3) é MENOR do que a simples soma dos riscos de (1) e (2) isolados — mas ainda assim mais alto do que o da Digoxina sozinha. O que isso revela sobre a relação entre o K⁺ e a digoxina?",
+        question: "Selecione Digoxina isoladamente e observe DUAS barras no gráfico de Risco de Efeitos Adversos: 'Toxicidade Digitálica' e 'Arritmia'. Depois, mantenha a Digoxina e adicione KCl 19.1%, deixando o K⁺ subir no painel.\n\nO que acontece com CADA uma dessas duas barras à medida que o K⁺ sobe, e por quê?",
         context: "A digoxina compete com o K⁺ pelo mesmo sítio de ligação na Na⁺/K⁺-ATPase cardíaca.",
         targetParams: {},
         validator: (s) => {
           const drugs: string[] = s.drugs || [];
           const hasDig = drugs.includes("Digoxina");
           const hasKCl = drugs.includes("KCl 19.1%");
-          if (!hasDig || !hasKCl) return { correct: false, feedback: "Depois de testar as três configurações, deixe Digoxina + KCl 19.1% juntos selecionados." };
-          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo com a Digoxina ainda na prescrição — compare o risco combinado com a soma dos riscos isolados." } : { correct: false, feedback: "O K⁺ ainda não subiu — confira a dose do KCl." };
+          if (!hasDig || !hasKCl) return { correct: false, feedback: "Depois de observar a Digoxina isolada, adicione também o KCl 19.1% e deixe os dois selecionados." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo — compare as duas barras com o que você viu antes de adicionar o KCl." } : { correct: false, feedback: "O K⁺ ainda não subiu — confira a dose do KCl." };
         },
         options: [
-          "Revela que o KCl ainda traz seu próprio risco de arritmia pela infusão de potássio, mas parte desse risco é compensada pela queda na competição da digoxina pela bomba à medida que o K⁺ sobe — por isso o total fica abaixo da soma simples, mesmo sem cair abaixo do risco da digoxina isolada.",
-          "Revela que o KCl neutraliza completamente o risco da digoxina, e o risco combinado deveria ter caído abaixo do risco da digoxina isolada — a diferença observada indica um erro na dose de KCl administrada, que precisa ser aumentada.",
-          "Revela que os dois riscos (KCl e digoxina) são, na verdade, o mesmo fenômeno medido duas vezes — a diferença entre a soma e o valor combinado é apenas uma margem de arredondamento do gráfico, sem significado fisiológico real.",
-          "Revela que a digoxina reduz o próprio risco de arritmia do KCl (e não o contrário), porque a inibição da Na⁺/K⁺-ATPase pela digoxina torna a infusão de potássio mais lenta e, portanto, mais segura.",
+          "A Toxicidade Digitálica cai, porque a digoxina compete com o K⁺ pelo mesmo sítio da Na⁺/K⁺-ATPase e agora há mais K⁺ disponível; já a Arritmia sobe, porque é um risco à parte, do próprio KCl infundido, sem relação com a digoxina.",
+          "A Toxicidade Digitálica sobe, porque mais K⁺ no plasma forma complexos tóxicos com a digoxina circulante; e a Arritmia cai, porque o KCl estabiliza a membrana cardíaca do mesmo jeito que o cálcio faria na hipercalemia.",
+          "As duas barras sobem juntas, porque qualquer fármaco adicionado à prescrição aumenta proporcionalmente todos os riscos cardíacos exibidos no gráfico, sem relação específica com o mecanismo de cada um.",
+          "As duas barras caem juntas, porque o KCl é um fármaco seguro que reduz globalmente o risco cardiovascular do paciente, incluindo tanto a toxicidade digitálica quanto o risco geral de arritmia.",
         ],
         correctIndex: 0,
-        explanation: "Digoxina inibe a Na⁺/K⁺-ATPase cardíaca → ↑Na⁺ intracelular → o trocador Na⁺/Ca²⁺ exporta Na⁺ e importa Ca²⁺ → ↑contratilidade (e, em excesso, arritmia). O K⁺ e a digoxina competem pelo MESMO sítio de ligação na bomba: quanto menos K⁺ disponível, mais sítios livres restam para a digoxina se ligar — por isso a hipocalemia POTENCIALIZA a toxicidade digitálica mesmo com nível sérico de digoxina 'normal'. No painel, subir o K⁺ com KCl realmente reduz a PARCELA do risco de arritmia atribuível à digoxina — mas o KCl também tem SEU PRÓPRIO risco de arritmia: a infusão de potássio, sobretudo rápida ou em dose alta, pode ela mesma precipitar arritmias, ainda mais num coração já sensibilizado pela digoxina. O risco total exibido é a SOMA dos dois fenômenos, então ele pode continuar subindo mesmo com a parcela da digoxina protegida — por isso a reposição de K⁺ na intoxicação digitálica deve ser cautelosa e monitorada, nunca em bolus rápido. No manejo real: suspender a digoxina, corrigir K⁺ (alvo >4.0) e Mg²⁺ com cuidado, e se a arritmia for grave (TV, FV, BAV completo) considerar Fab antidigoxina. CONTRAINDICAÇÃO: não administrar cálcio EV na intoxicação digitálica.",
+        explanation: "Digoxina inibe a Na⁺/K⁺-ATPase cardíaca competindo com o K⁺ pelo MESMO sítio de ligação: quanto menos K⁺ disponível, mais sítios livres para a digoxina se ligar — por isso a barra de Toxicidade Digitálica cai conforme o K⁺ sobe (é exatamente a hipocalemia POTENCIALIZANDO a toxicidade digitálica, ao contrário). Já a barra de Arritmia é o risco GERAL de arritmia por infusão de potássio (típico de qualquer reposição de KCl, sobretudo rápida ou em dose alta) — um risco à parte, sem relação com a digoxina, que por isso sobe independentemente. São dois fenômenos diferentes acontecendo ao mesmo tempo: o K⁺ está PROTEGENDO contra a digoxina e, simultaneamente, sua própria infusão traz outro risco cardíaco — por isso a reposição de K⁺ na intoxicação digitálica deve ser cautelosa e monitorada, nunca em bolus rápido. No manejo real: suspender a digoxina, corrigir K⁺ (alvo >4.0) e Mg²⁺ com cuidado, e se a arritmia for grave (TV, FV, BAV completo) considerar Fab antidigoxina. CONTRAINDICAÇÃO: não administrar cálcio EV na intoxicação digitálica.",
         reference: "Rang & Dale, Cap. 21",
       },
       {
@@ -2155,17 +2155,17 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
       },
       {
         type: "adjust",
-        question: "Selecione Digoxina + MgSO4 50% juntos (sem KCl) e observe o risco TOTAL de Arritmia no gráfico. Lembre-se do desafio anterior: esse total é a soma do risco próprio de cada fármaco com a parcela específica atribuível à digoxina (que só cai quando o K⁺ sobe).\n\nComo o Mg²⁺ isolado afeta especificamente a PARCELA de risco atribuível à digoxina — não o total —, já que ele não altera o K⁺ sérico?",
+        question: "Selecione Digoxina + MgSO4 50% juntos (sem KCl) e observe a barra de Toxicidade Digitálica no gráfico.\n\nEla cai do mesmo jeito que caiu quando você adicionou o KCl no desafio anterior?",
         targetParams: {},
-        validator: (s) => only(s, "Digoxina", "MgSO4 50%") ? { correct: true, feedback: "Configuração testada: Digoxina + MgSO4, sem KCl." } : { correct: false, feedback: "Deixe apenas Digoxina + MgSO4 50% selecionados (sem KCl)." },
+        validator: (s) => only(s, "Digoxina", "MgSO4 50%") ? { correct: true, feedback: "Configuração testada: Digoxina + MgSO4, sem KCl — compare a barra de Toxicidade Digitálica com a do desafio anterior." } : { correct: false, feedback: "Deixe apenas Digoxina + MgSO4 50% selecionados (sem KCl)." },
         options: [
-          "A parcela atribuível à digoxina permanece igual à observada com a Digoxina isolada, porque o Mg²⁺ não move o K⁺ — é a subida do K⁺, especificamente, que reduz essa competição, não a correção do magnésio. O pequeno aumento do total aqui vem só do risco próprio do MgSO4.",
-          "A parcela atribuível à digoxina cai na mesma proporção que caiu com o KCl no desafio anterior, porque o magnésio também compete diretamente com a digoxina pelo sítio de ligação da Na⁺/K⁺-ATPase, apenas por uma via bioquímica diferente.",
-          "A parcela atribuível à digoxina aumenta com o Mg²⁺ isolado, porque corrigir a hipomagnesemia sem o K⁺ associado torna a bomba Na⁺/K⁺-ATPase ainda mais sensível à ligação da digoxina, potencializando sua ação tóxica.",
-          "A parcela atribuível à digoxina desaparece completamente com o Mg²⁺ isolado, porque o magnésio tem ação antiarrítmica direta sobre o miocárdio que substitui totalmente o papel protetor do K⁺ nesta interação.",
+          "Não — a Toxicidade Digitálica continua praticamente igual à observada com a Digoxina isolada, porque o Mg²⁺ não move o K⁺ (a digoxina compete pelo sítio do K⁺, não pelo do Mg²⁺); só o KCl consegue baixar essa barra.",
+          "Sim — a Toxicidade Digitálica cai na mesma magnitude observada com o KCl, porque o magnésio também compete diretamente pelo sítio de ligação da digoxina na Na⁺/K⁺-ATPase, só que por uma via bioquímica diferente.",
+          "Sim, e ainda mais — a Toxicidade Digitálica cai mais do que caiu com o KCl, porque o magnésio tem ação antiarrítmica direta sobre o coração que se soma ao efeito de deslocar a digoxina do sítio de ligação.",
+          "Não — a Toxicidade Digitálica na verdade sobe com o Mg²⁺ isolado, porque corrigir a hipomagnesemia sem o K⁺ associado torna a bomba Na⁺/K⁺-ATPase ainda mais sensível à ligação da digoxina.",
         ],
         correctIndex: 0,
-        explanation: "Como vimos no desafio anterior, o risco total de Arritmia exibido é a soma do risco PRÓPRIO de cada fármaco com a PARCELA específica atribuível à competição da digoxina pelo K⁺. O MgSO4 isolado não altera o K⁺ sérico (a digoxina compete pelo sítio do K⁺ na bomba, não pelo do Mg²⁺) — então a parcela da digoxina fica exatamente igual à observada com a Digoxina sozinha; o pequeno aumento do total vem apenas do risco próprio (e pequeno) do MgSO4. Já o KCl, mesmo sem o Mg²⁺ corrigido, consegue elevar um pouco o K⁺ e reduzir de fato essa parcela — como vimos no desafio anterior, ainda que o total suba por causa do risco próprio (maior) do KCl. O Mg²⁺ tem um papel real na hipocalemia — é cofator do canal ROMK renal, necessário para a reposição de K⁺ 'pegar', como vimos no desafio 2 — mas ele não ocupa o sítio de ligação da digoxina na bomba. Na prática clínica, a hipomagnesemia TAMBÉM é fator de risco independente para toxicidade digitálica (por outros mecanismos, incluindo prolongamento do QT) — por isso repor os dois eletrólitos juntos, com cuidado, é a conduta recomendada.",
+        explanation: "A barra de Toxicidade Digitálica só cai quando o K⁺ sérico sobe, porque é especificamente por esse íon que a digoxina compete na Na⁺/K⁺-ATPase. O MgSO4 isolado não move o K⁺ (o Mg²⁺ atua em outra via, o canal ROMK renal, como vimos no desafio 2) — então essa barra permanece praticamente igual à observada com a Digoxina sozinha. O KCl, mesmo sem o Mg²⁺ corrigido, já consegue elevar um pouco o K⁺ e baixar essa barra, como vimos no desafio anterior. Na prática clínica, a hipomagnesemia TAMBÉM é fator de risco independente para toxicidade digitálica (por outros mecanismos, incluindo prolongamento do QT) — por isso repor os dois eletrólitos juntos, com cuidado, é a conduta recomendada.",
         reference: "Rang & Dale, Cap. 21",
       },
     ],

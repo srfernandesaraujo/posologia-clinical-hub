@@ -201,15 +201,19 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
 
   // Side effects
   const combinedSE = { hipotensao: 0, arritmia: 0, sobrecarga: 0, hipocalcemia: 0, hipernatremia: 0 };
+  // A toxicidade da digoxina (competição pelo sítio do K⁺ na Na⁺/K⁺-ATPase) fica
+  // numa barra PRÓPRIA, separada da "Arritmia" geral — assim o aluno enxerga os
+  // dois fenômenos (competição da digoxina x risco de infundir K⁺/outros
+  // fármacos) diretamente no gráfico, sem precisar decompor um número somado.
+  let digoxinaRisk = 0;
   drugs.forEach((d, i) => {
     const range = Math.max(d.doseMax - d.doseMin, 1);
     const doseFrac = 0.65 + Math.min(1, Math.max(0, (doses[i] - d.doseMin) / range)) * 0.35;
     if (d.name === "Digoxina") {
-      // Digoxina compete com o K⁺ pelo mesmo sítio da Na⁺/K⁺-ATPase cardíaca:
-      // quanto menor o K⁺ sérico, mais sítios livres para ela se ligar, e
-      // maior o risco de arritmia — independente da dose de digoxina em si.
+      // Quanto menor o K⁺ sérico, mais sítios livres na bomba para a digoxina
+      // se ligar, e maior sua toxicidade — independente da dose de digoxina.
       const kFactor = Math.max(0.2, Math.min(3.0, 8.5 - lastLab.k * 2.3));
-      combinedSE.arritmia += d.sideEffects.arritmia * doseFrac * kFactor;
+      digoxinaRisk += d.sideEffects.arritmia * doseFrac * kFactor;
       combinedSE.hipotensao += d.sideEffects.hipotensao * doseFrac;
       combinedSE.sobrecarga += d.sideEffects.sobrecarga * doseFrac;
       combinedSE.hipocalcemia += d.sideEffects.hipocalcemia * doseFrac;
@@ -222,7 +226,8 @@ function computeSimulation(drugs: ABDrug[], doses: number[], baseLab: ABCase["ba
   });
   const sideEffectData = [
     { name: "Hipotensão", risco: Math.round(Math.min(Math.max(combinedSE.hipotensao, 0) * 100, 100)) },
-    { name: "Arritmia", risco: Math.round(Math.min(combinedSE.arritmia * 100, 100)) },
+    { name: "Arritmia", risco: Math.round(Math.min(Math.max(combinedSE.arritmia, 0) * 100, 100)) },
+    { name: "Toxicidade Digitálica", risco: Math.round(Math.min(Math.max(digoxinaRisk, 0) * 100, 100)) },
     { name: "Sobrecarga volêmica", risco: Math.round(Math.min(combinedSE.sobrecarga * 100, 100)) },
     { name: "Hipocalcemia", risco: Math.round(Math.min(Math.max(combinedSE.hipocalcemia, 0) * 100, 100)) },
     { name: "Hipernatremia", risco: Math.round(Math.min(combinedSE.hipernatremia * 100, 100)) },
