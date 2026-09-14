@@ -2206,17 +2206,23 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
         reference: "AHA ACLS Guidelines",
       },
       {
-        type: "mcq",
-        question: "O paciente usa enalapril (IECA) + espironolactona — nenhum dos dois está disponível neste simulador. Ambos podem causar hipercalemia.\n\nPor qual mecanismo o IECA contribui para hipercalemia?",
+        type: "adjust",
+        question: "Este paciente já toma enalapril (IECA) em casa, associado à espironolactona, para a insuficiência cardíaca — apenas a Espironolactona está disponível neste simulador. Selecione-a isoladamente, teste a dose mínima e depois a máxima, e observe o que acontece com o K⁺ no painel mesmo ele já estando elevado (basal 7.2).\n\nO enalapril reduz a aldosterona pela via da angiotensina II; a espironolactona bloqueia diretamente o receptor de aldosterona nas mesmas células do ducto coletor. Considerando o que você observou no simulador e esse ponto em comum entre os dois fármacos, qual alternativa descreve corretamente as consequências de mantê-los juntos sobre o K⁺ E sobre o pH deste paciente?",
+        context: "A aldosterona normalmente estimula, nas mesmas células do ducto coletor, tanto a secreção de K⁺ quanto a de H⁺.",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "Espironolactona")) return { correct: false, feedback: "Deixe apenas Espironolactona selecionada e teste a dose mínima e depois a máxima." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo ainda mais — mesmo já estando elevado no basal." } : { correct: false, feedback: "Confira a dose — o K⁺ ainda não subiu." };
+        },
         options: [
-          "O IECA causa destruição muscular direta (rabdomiólise medicamentosa), liberando o potássio intracelular armazenado para a circulação de forma independente de qualquer efeito hormonal ou renal.",
-          "O IECA reduz a angiotensina II e, com isso, a secreção de aldosterona — reduzindo a secreção tubular de K⁺ no ducto coletor; associado à espironolactona, que bloqueia a aldosterona por outra via, o efeito hipercalêmico se torna sinérgico e mais perigoso.",
-          "O IECA aumenta a absorção intestinal de potássio ao inibir uma enzima digestiva relacionada à ECA presente na mucosa do intestino delgado, elevando a quantidade de K⁺ absorvida da dieta.",
-          "O IECA converte parte do potássio inativo circulante em sua forma iônica biologicamente ativa, disponibilizando para o organismo um K⁺ que antes não era contabilizado na dosagem sérica.",
+          "A associação piora a hipercalemia de forma somada, já que as duas vias convergem sobre a mesma aldosterona — mas a secreção de H⁺ pelo ducto coletor depende de um transportador independente dela, de modo que o pH sanguíneo deste paciente não é afetado por essa associação.",
+          "A associação piora a hipercalemia de forma somada, pois as duas vias convergem para reduzir a mesma atividade da aldosterona no ducto coletor; essa mesma via também reduz a secreção de H⁺ pelas células intercaladas, favorecendo uma acidose metabólica hipercalêmica — e não apenas um problema isolado de potássio.",
+          "Como as duas vias agem em pontos diferentes da produção e da ação da aldosterona (síntese versus receptor), seus efeitos sobre o K⁺ tendem a se cancelar parcialmente, resultando em pouca alteração líquida; ainda assim, a redução da secreção de H⁺ nas células intercaladas favorece uma acidose metabólica leve.",
+          "A associação piora a hipercalemia de forma somada, e o próprio excesso de K⁺ desencadeia troca transcelular de H⁺ para dentro da célula, produzindo uma alcalose metabólica concomitante — o oposto do padrão ácido-base geralmente associado à hipercalemia por bloqueio da aldosterona.",
         ],
         correctIndex: 1,
-        explanation: "IECA/BRA: ↓angiotensina II → ↓aldosterona → ↓secreção tubular de K⁺ e H⁺ no ducto coletor. Espironolactona: bloqueia diretamente o receptor de aldosterona, mesmo efeito final por outra via. Juntos (tríade perigosa com DRC associada): risco muito alto de hipercalemia. O IECA não causa rabdomiólise, não tem efeito sobre absorção intestinal de potássio, e não 'ativa' potássio inativo — todo o K⁺ circulante já está na forma iônica ativa. Monitorar K⁺ em 1-2 semanas após início de qualquer um desses fármacos.",
-        reference: "Palmer BF. NEJM 2004",
+        explanation: "A aldosterona age sobre as células principais do ducto coletor (reabsorvendo Na⁺ via ENaC, o que gera o potencial luminal negativo que impulsiona a secreção de K⁺) e, pela mesma via elétrica, favorece a secreção de H⁺ pelas células intercaladas adjacentes. O enalapril reduz a síntese de aldosterona (via angiotensina II) e a espironolactona bloqueia seu receptor — dois pontos diferentes da mesma via, cujos efeitos se SOMAM (não se cancelam) tanto sobre o K⁺ quanto sobre o H⁺. O resultado é hipercalemia associada a uma acidose metabólica hiperclorêmica com AG normal: a acidose tubular renal tipo 4 (hipoaldosteronismo/resistência à aldosterona). A secreção de H⁺ não é independente da aldosterona (opção 1 erra por isso), o excesso de K⁺ não desencadeia uma alcalose por troca transcelular — é o hipoaldosteronismo, e não o K⁺ em si, que impede a secreção renal de H⁺ (opção 4 inverte o distúrbio) —, e efeitos que convergem sobre o mesmo ponto final da via não se cancelam por atuarem em etapas diferentes dela (opção 3 erra a lógica da soma). Monitorar K⁺ e gasometria em 1-2 semanas após início de qualquer um desses fármacos, e com mais atenção ainda quando usados juntos.",
+        reference: "DeFronzo RA. Kidney Int 1980",
       },
       {
         type: "mcq",
