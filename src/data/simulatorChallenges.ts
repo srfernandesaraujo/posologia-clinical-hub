@@ -1879,13 +1879,13 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
           return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo — shift transcelular em ação." } : { correct: false, feedback: "O K⁺ ainda não caiu no painel." };
         },
         options: [
-          "Porque a acidose e a falta de insulina retêm K⁺ dentro da célula por bloqueio da bomba Na⁺/K⁺-ATPase; a insulina libera esse K⁺ retido para o plasma, elevando ainda mais o potássio sérico durante o tratamento.",
-          "Porque a acidose e a falta de insulina promovem shift transcelular de K⁺: H⁺ entra na célula e K⁺ sai para manter a eletroneutralidade; a insulina reverte esse shift, empurrando K⁺ de volta para dentro da célula e podendo causar hipocalemia grave.",
-          "Porque a hiperglicemia arrasta água para fora das células por efeito osmótico, e o K⁺ acompanha esse fluxo de saída; a insulina apenas normaliza a osmolaridade, sem promover shift ativo de potássio entre os compartimentos.",
-          "Porque os cetoácidos circulantes se ligam ao K⁺ extracelular formando complexos inertes; a insulina interrompe a cetogênese, liberando de volta ao plasma o K⁺ que estava ligado antes de ser eliminado pelo rim.",
+          "Porque a insulina se liga ao K⁺ circulante formando um complexo filtrável; os rins passam a excretar esse complexo na urina — é essa eliminação renal direta, e não o retorno do K⁺ para dentro da célula, que faz o K⁺ sérico cair.",
+          "Porque a insulina normaliza a glicemia e reduz a osmolaridade plasmática; a queda da osmolaridade arrasta o K⁺ para dentro da célula por gradiente osmótico passivo — é esse efeito osmótico, e não a ativação da Na⁺/K⁺-ATPase, que faz o K⁺ sérico cair.",
+          "Porque a acidose e a falta de insulina promovem shift transcelular de K⁺ (H⁺ entra na célula, K⁺ sai); a insulina reverte esse shift ao ativar a Na⁺/K⁺-ATPase — é esse retorno do K⁺ à célula, e não a excreção renal ou um efeito osmótico passivo, que faz o K⁺ sérico cair.",
+          "Porque os cetoácidos circulantes se ligam ao K⁺ extracelular formando complexos que precipitam nos tecidos periféricos; o K⁺ fica sequestrado fora da circulação — é esse sequestro tecidual, e não o retorno do K⁺ para dentro da célula, que faz o K⁺ sérico cair.",
         ],
-        correctIndex: 1,
-        explanation: "Na CAD: (1) acidose → H⁺ entra na célula, K⁺ sai; (2) deficiência de insulina → Na⁺/K⁺-ATPase inativa → K⁺ não entra na célula; (3) diurese osmótica → perda renal de K⁺. Resultado: K⁺ sérico normal-alto, mas reservas corporais depletadas. REGRA: repor K⁺ quando <5.5; NÃO iniciar insulina se K⁺ <3.3.",
+        correctIndex: 2,
+        explanation: "Na CAD: (1) acidose → H⁺ entra na célula, K⁺ sai; (2) deficiência de insulina → Na⁺/K⁺-ATPase inativa → K⁺ não entra na célula; (3) diurese osmótica → perda renal de K⁺ (via lenta, responsável pela depleção corporal TOTAL, não pela queda AGUDA do K⁺ sérico ao iniciar insulina). A insulina ativa a Na⁺/K⁺-ATPase e devolve o K⁺ para dentro da célula — não existe complexo K⁺-cetoácido que precipite nos tecidos, nem um gradiente osmótico passivo isolado capaz de explicar a velocidade dessa queda. Resultado: K⁺ sérico normal-alto no início, mas reservas corporais depletadas. REGRA: repor K⁺ quando <5.5; NÃO iniciar insulina se K⁺ <3.3.",
         reference: "Kitabchi AE et al. Diabetes Care 2009",
       },
       {
