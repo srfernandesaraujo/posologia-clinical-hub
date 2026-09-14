@@ -1953,39 +1953,376 @@ export function getAcidoBaseChallenges(caseIndex?: number): ChallengeSet {
     ],
     // Caso 2: Alcalose Metabólica Hipoclorêmica
     [
-      { type: "mcq", question: "Gasometria basal: pH 7.55, pCO2 48, HCO3 42, Cl 82, K 2.8.\n\nA pCO2 está 48 (elevada). Isso é uma acidose respiratória concomitante ou compensação?", options: ["É acidose respiratória primária concomitante", "É compensação respiratória esperada — o centro respiratório REDUZ a ventilação para reter CO2 e tentar baixar o pH elevado. A hipoventilação compensatória é limitada pela hipóxia", "É erro de coleta da gasometria", "Indica embolia pulmonar"], correctIndex: 1, explanation: "Compensação da alcalose metabólica: hipoventilação → ↑pCO2. Regra: pCO2 esperada = 0.7 × HCO3 + 21 (±2). Com HCO3=42: esperada = 0.7×42+21 = 50.4 (±2 → 48-52). pCO2 medida = 48 → compensação adequada. A compensação respiratória é limitada: pCO2 raramente >55 (hipóxia limita a hipoventilação).", reference: "Harrison's Cap. 51" },
-      { type: "adjust", question: "Selecione NaCl 0.9% como único fármaco e observe o Cl⁻ subir no painel de eletrólitos (basal 82 mEq/L, baixo).\n\nPor que a reposição de CLORETO é a chave para corrigir a alcalose metabólica por vômitos?", targetParams: {}, validator: (s) => { if (!only(s, "NaCl 0.9%")) return { correct: false, feedback: "Deixe apenas NaCl 0.9% na prescrição." }; return (s.lastLab?.cl ?? 0) > (s.baseLab?.cl ?? 0) ? { correct: true, feedback: "Cl⁻ subindo — condição para o rim excretar o HCO3 em excesso." } : { correct: false, feedback: "O Cl⁻ ainda não subiu — confira a dose." }; }, options: ["Porque o cloro neutraliza diretamente o bicarbonato no sangue", "Porque sem cloro suficiente, o rim NÃO consegue excretar o excesso de bicarbonato — o túbulo proximal reabsorve HCO3 para manter eletroneutralidade na ausência de Cl⁻. Repor Cl⁻ permite que o rim finalmente elimine o HCO3 em excesso", "Porque o cloro estimula a secreção de ácido gástrico", "Porque o NaCl causa acidose dilucional que compensa a alcalose"], correctIndex: 1, explanation: "Na depleção de Cl⁻: o rim reabsorve Na⁺ + HCO3⁻ (em vez de Na⁺ + Cl⁻) no túbulo proximal → mantém a alcalose. Repor Cl⁻ (NaCl 0.9%): permite ao rim excretar NaHCO3 na urina → corrige a alcalose. Classificação: cloro-responsiva (Cl urinário <20) vs cloro-resistente (Cl urinário >20).", reference: "Luke RG, Galla JH. NEJM 2012" },
-      { type: "adjust", question: "Adicione KCl 19.1% à prescrição (K⁺ basal 2.8 mEq/L) e observe o K⁺ subir.\n\nPor que a hipocalemia é causa E consequência da alcalose metabólica?", targetParams: {}, validator: (s) => { if (!(s.drugs || []).includes("KCl 19.1%")) return { correct: false, feedback: "Adicione KCl 19.1% à prescrição." }; return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo." } : { correct: false, feedback: "O K⁺ ainda não subiu." }; }, options: ["Porque o potássio se liga ao bicarbonato formando um complexo insolúvel", "Ciclo vicioso: (1) Alcalose → H⁺ sai da célula, K⁺ entra (shift) → hipocalemia. (2) Hipocalemia → rim secreta H⁺ em vez de K⁺ no ducto coletor → gera mais HCO3 → perpetua a alcalose. Corrigir K⁺ é ESSENCIAL para resolver a alcalose", "Porque a alcalose destrói o potássio sérico quimicamente", "Porque os vômitos perdem potássio diretamente pelo suco gástrico"], correctIndex: 1, explanation: "Interação bidirecional K⁺/pH: (1) Alcalose: troca transcelular H⁺/K⁺ → hipocalemia; (2) Hipocalemia: células intercaladas tipo A secretam mais H⁺ → geram HCO3 → mantêm alcalose; (3) Rim: hipocalemia estimula reabsorção de HCO3 e amoniagênese. Tratar os dois simultaneamente!", reference: "Harrison's Cap. 51" },
-      { type: "mcq", question: "Qual a velocidade máxima segura de reposição de KCl por via EV periférica?\n\nConsidere que o paciente tem acesso venoso periférico.", options: ["Até 40 mEq/h por qualquer via", "Máximo 10-20 mEq/h por veia periférica (concentração ≤40 mEq/L). Velocidades maiores (até 40 mEq/h) apenas por acesso central com monitorização cardíaca contínua — risco de arritmia fatal", "Pode infundir em bolus rápido sem limite", "Máximo 5 mEq/dia independente da via"], correctIndex: 1, explanation: "Reposição de K⁺ EV: periférica ≤10-20 mEq/h (≤40 mEq/L); central ≤40 mEq/h com monitor. KCl 19.1%: 1 mL = 2.56 mEq. Concentrações altas causam dor e flebite (periférica) ou arritmia (rápido demais). SEMPRE monitorar ECG durante reposição rápida.", reference: "UpToDate: Potassium Replacement" },
-      { type: "adjust", question: "Deixe apenas Furosemida na prescrição (em vez de NaCl+KCl) e observe o K⁺ cair ainda mais.\n\nPor que a furosemida PIORA a alcalose metabólica hipoclorêmica?", targetParams: {}, validator: (s) => { if (!only(s, "Furosemida")) return { correct: false, feedback: "Deixe apenas Furosemida na prescrição." }; return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo ainda mais — furosemida agrava o quadro." } : { correct: false, feedback: "O K⁺ ainda não caiu — confira a dose." }; }, options: ["Porque a furosemida é um ácido que neutraliza bases", "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle, causando perda urinária de K⁺, Cl⁻, Ca²⁺ e Mg²⁺ — agravando TODOS os distúrbios presentes (hipocalemia + hipocloremia + alcalose)", "Porque a furosemida estimula a secreção de bicarbonato", "Porque a furosemida causa vômitos que perpetuam a perda de HCl"], correctIndex: 1, explanation: "Furosemida: inibe NKCC2 (Na⁺/K⁺/2Cl⁻) → perda de Na⁺, K⁺, Cl⁻, Ca²⁺, Mg²⁺. Causa 'contraction alkalosis': perda de volume rico em Cl⁻ concentra o HCO3. É contraindicada na alcalose hipoclorêmica — usar apenas se sobrecarga volêmica ou ICC.", reference: "Rang & Dale, Cap. 28" },
-      { type: "mcq", question: "Considere que a alcalose persiste apesar de NaCl 0.9% + KCl (Cl urinário >40 mEq/L — não modelado neste simulador).\n\nIsso classifica como alcalose cloro-RESISTENTE. Qual a causa mais provável?", options: ["Vômitos persistentes não diagnosticados", "Hiperaldosteronismo (primário ou secundário) — o excesso de aldosterona causa reabsorção de Na⁺ e secreção de K⁺ e H⁺ no ducto coletor, gerando alcalose que NÃO responde a NaCl porque o problema é hormonal", "Ingestão excessiva de bicarbonato de sódio", "Erro na dosagem do KCl"], correctIndex: 1, explanation: "Alcalose cloro-resistente (Cl urinário >20-40): causas renais — hiperaldosteronismo (primário/Conn, secundário), síndrome de Cushing, síndrome de Bartter/Gitelman, uso abusivo de diuréticos. Tratamento: tratar a causa (espironolactona no hiperaldosteronismo, suspender diurético).", reference: "Harrison's Cap. 51" },
+      {
+        type: "mcq",
+        question: "Gasometria basal: pH 7.55, pCO2 48, HCO3 42, Cl 82, K 2.8.\n\nA pCO2 está 48 (elevada). Isso é uma acidose respiratória concomitante ou compensação?",
+        options: [
+          "É compensação respiratória esperada: o centro respiratório reduz a ventilação para reter CO2 e atenuar o pH elevado, e essa hipoventilação é autolimitada pela hipóxia que ela mesma provoca.",
+          "É uma acidose respiratória primária concomitante: o paciente está hipoventilando por uma causa pulmonar independente, somando um segundo distúrbio primário ao quadro metabólico de base.",
+          "É um artefato da coleta arterial: a exposição da amostra ao ar ambiente durante a punção eleva artificialmente a pCO2 medida, sem refletir o estado respiratório real do paciente.",
+          "É sinal de tromboembolismo pulmonar agudo: a obstrução vascular pulmonar aumenta o espaço morto alveolar e eleva a pCO2 arterial, independentemente do distúrbio metabólico de base.",
+        ],
+        correctIndex: 0,
+        explanation: "Compensação da alcalose metabólica: hipoventilação → ↑pCO2. Regra: pCO2 esperada = 0.7 × HCO3 + 21 (±2). Com HCO3=42: esperada = 0.7×42+21 = 50.4 (faixa 48-52). pCO2 medida = 48 → dentro da faixa, compensação adequada. A compensação é autolimitada: pCO2 raramente ultrapassa 55 mmHg, porque a própria hipoventilação causa hipóxia, que estimula os quimiorreceptores periféricos a retomar a ventilação. Não há elementos clínicos (dispneia súbita, hipoxemia desproporcional) sugerindo TEP, e artefato de coleta não explica um padrão consistente com o grau de alcalose metabólica medido.",
+        reference: "Harrison's Cap. 51",
+      },
+      {
+        type: "adjust",
+        question: "Selecione NaCl 0.9% como único fármaco e observe o Cl⁻ subir no painel de eletrólitos (basal 82 mEq/L, baixo).\n\nPor que a reposição de CLORETO é a chave para corrigir a alcalose metabólica por vômitos?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "NaCl 0.9%")) return { correct: false, feedback: "Deixe apenas NaCl 0.9% na prescrição." };
+          return (s.lastLab?.cl ?? 0) > (s.baseLab?.cl ?? 0) ? { correct: true, feedback: "Cl⁻ subindo — condição para o rim excretar o HCO3 em excesso." } : { correct: false, feedback: "O Cl⁻ ainda não subiu — confira a dose." };
+        },
+        options: [
+          "Porque o Cl⁻ reage quimicamente com o HCO3⁻ circulante, formando ácido carbônico diretamente no plasma e neutralizando o excesso de base antes mesmo de passar pelo rim.",
+          "Porque o Cl⁻ estimula as células parietais gástricas a aumentar a secreção de ácido clorídrico, repondo pela via digestiva o H⁺ perdido nos vômitos que originou a alcalose.",
+          "Porque sem Cl⁻ suficiente o túbulo proximal reabsorve Na⁺ junto com HCO3⁻ (em vez de Na⁺ com Cl⁻) para manter a eletroneutralidade; repor Cl⁻ permite que o rim finalmente excrete o HCO3⁻ em excesso na urina.",
+          "Porque o volume de NaCl 0.9% infundido causa uma acidose dilucional que se soma matematicamente à alcalose metabólica, neutralizando-a por diluição do bicarbonato plasmático.",
+        ],
+        correctIndex: 2,
+        explanation: "Na depleção de Cl⁻: o rim reabsorve Na⁺ + HCO3⁻ (em vez de Na⁺ + Cl⁻) no túbulo proximal, mantendo a alcalose. Repor Cl⁻ (NaCl 0.9%) permite ao rim voltar a excretar NaHCO3 na urina, corrigindo a alcalose. O Cl⁻ não reage diretamente com HCO3⁻ no plasma, não estimula secreção gástrica de HCl, e o volume de NaCl 0.9% usado clinicamente não causa uma 'acidose dilucional' capaz de neutralizar uma alcalose deste porte — o mecanismo é renal, não químico ou digestivo. Classificação: cloro-responsiva (Cl urinário <20) vs cloro-resistente (Cl urinário >20).",
+        reference: "Luke RG, Galla JH. NEJM 2012",
+      },
+      {
+        type: "adjust",
+        question: "Adicione KCl 19.1% à prescrição (K⁺ basal 2.8 mEq/L) e observe o K⁺ subir.\n\nPor que a hipocalemia é causa E consequência da alcalose metabólica?",
+        targetParams: {},
+        validator: (s) => {
+          if (!(s.drugs || []).includes("KCl 19.1%")) return { correct: false, feedback: "Adicione KCl 19.1% à prescrição." };
+          return (s.lastLab?.k ?? 0) > (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ subindo." } : { correct: false, feedback: "O K⁺ ainda não subiu." };
+        },
+        options: [
+          "O potássio circulante se liga ao bicarbonato em excesso formando um complexo insolúvel que precipita nos túbulos renais, reduzindo simultaneamente os níveis séricos de ambos os íons.",
+          "Ciclo vicioso: a alcalose desloca H⁺ para fora da célula e K⁺ para dentro (shift), causando hipocalemia; a hipocalemia, por sua vez, faz o rim secretar H⁺ em vez de K⁺ no ducto coletor, gerando mais HCO3⁻ e perpetuando a alcalose.",
+          "A alcalose desnatura as proteínas transportadoras de potássio na membrana celular, impedindo sua reabsorção intestinal e causando perda progressiva pelas fezes independentemente da função renal.",
+          "Os vômitos que causaram a alcalose também eliminam potássio diretamente pelo conteúdo gástrico perdido, sendo essa perda digestiva direta — não um mecanismo renal ou celular — a única causa da hipocalemia.",
+        ],
+        correctIndex: 1,
+        explanation: "Interação bidirecional K⁺/pH: (1) Alcalose → troca transcelular H⁺/K⁺ → hipocalemia; (2) Hipocalemia → células intercaladas tipo A do ducto coletor secretam mais H⁺ (e menos K⁺) → geram HCO3⁻ → mantêm a alcalose; (3) hipocalemia também estimula a reabsorção renal de HCO3⁻ e a amoniagênese. Não existe complexo K⁺-HCO3⁻ insolúvel, a alcalose não desnatura transportadores de potássio, e embora os vômitos realmente percam algum K⁺ pelo conteúdo gástrico, essa perda digestiva isolada é pequena diante do mecanismo renal — por isso corrigir o K⁺ é essencial para resolver a alcalose, não apenas uma consequência a ser observada.",
+        reference: "Harrison's Cap. 51",
+      },
+      {
+        type: "mcq",
+        question: "Qual a velocidade máxima segura de reposição de KCl por via EV periférica?\n\nConsidere que o paciente tem acesso venoso periférico.",
+        options: [
+          "Até 40 mEq/h por qualquer tipo de acesso venoso, desde que a infusão seja feita lentamente ao longo de pelo menos 30 minutos, independentemente de o acesso ser periférico ou central.",
+          "Pode ser infundido em bolus rápido sem limite de velocidade, já que o KCl 19.1% diluído em soro fisiológico não tem risco cardíaco relevante quando administrado por via periférica.",
+          "Máximo de 10-20 mEq/h por veia periférica, com concentração ≤40 mEq/L; velocidades maiores (até 40 mEq/h) exigem acesso venoso central e monitorização cardíaca contínua, pelo risco de arritmia fatal.",
+          "Máximo de 5 mEq no total ao longo de 24 horas, independentemente da via de acesso, já que doses maiores sempre causam flebite química grave em veias periféricas.",
+        ],
+        correctIndex: 2,
+        explanation: "Reposição de K⁺ EV: periférica ≤10-20 mEq/h (concentração ≤40 mEq/L); central ≤40 mEq/h com monitorização cardíaca contínua. KCl 19.1%: 1 mL = 2.56 mEq. Concentrações/velocidades altas causam dor e flebite (via periférica) ou arritmia grave (infusão rápida, qualquer via). Bolus rápido de KCl é uma causa reconhecida de parada cardíaca iatrogênica — nunca deve ser feito. SEMPRE monitorar ECG durante reposição rápida.",
+        reference: "UpToDate: Potassium Replacement",
+      },
+      {
+        type: "adjust",
+        question: "Deixe apenas Furosemida na prescrição (em vez de NaCl+KCl) e observe o K⁺ cair ainda mais.\n\nPor que a furosemida PIORA a alcalose metabólica hipoclorêmica?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "Furosemida")) return { correct: false, feedback: "Deixe apenas Furosemida na prescrição." };
+          return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo ainda mais — furosemida agrava o quadro." } : { correct: false, feedback: "O K⁺ ainda não caiu — confira a dose." };
+        },
+        options: [
+          "Porque a furosemida tem estrutura química ácida e, ao ser metabolizada no fígado, libera H⁺ diretamente na circulação, o que paradoxalmente intensifica a perda renal de potássio.",
+          "Porque a furosemida estimula diretamente a secreção de bicarbonato pelas células intercaladas tipo B do ducto coletor, elevando ainda mais o HCO3⁻ plasmático já aumentado pela alcalose de base.",
+          "Porque a furosemida irrita a mucosa gástrica e desencadeia novos episódios de vômito, sendo essa perda adicional de HCl pela via digestiva — não um efeito renal — a causa do agravamento do quadro.",
+          "Porque a furosemida bloqueia o cotransportador Na⁺/K⁺/2Cl⁻ na alça de Henle, causando perda urinária adicional de K⁺, Cl⁻, Ca²⁺ e Mg²⁺ — agravando simultaneamente a hipocalemia, a hipocloremia e a própria alcalose.",
+        ],
+        correctIndex: 3,
+        explanation: "Furosemida inibe o cotransportador NKCC2 (Na⁺/K⁺/2Cl⁻) na alça de Henle, causando perda urinária de Na⁺, K⁺, Cl⁻, Ca²⁺ e Mg²⁺. Também causa 'contraction alkalosis': a perda de um volume rico em Cl⁻ concentra ainda mais o HCO3⁻ plasmático remanescente. Não há liberação hepática de H⁺ pela furosemida, ela não estimula diretamente a secreção de HCO3⁻, e o vômito induzido por irritação gástrica não é um efeito farmacológico conhecido do fármaco. É contraindicada na alcalose hipoclorêmica — usar apenas se houver sobrecarga volêmica ou ICC associada.",
+        reference: "Rang & Dale, Cap. 28",
+      },
+      {
+        type: "mcq",
+        question: "Considere que a alcalose persiste apesar de NaCl 0.9% + KCl (Cl urinário >40 mEq/L — não modelado neste simulador).\n\nIsso classifica como alcalose cloro-RESISTENTE. Qual a causa mais provável?",
+        options: [
+          "Vômitos persistentes não diagnosticados, que continuam repondo o estímulo perdido de Cl⁻ gástrico mesmo após o início do NaCl, mascarando a resposta esperada à reposição volêmica.",
+          "Hiperaldosteronismo (primário ou secundário): o excesso de aldosterona aumenta a reabsorção de Na⁺ e a secreção de K⁺ e H⁺ no ducto coletor, gerando uma alcalose que não responde a NaCl porque a causa é hormonal, não volêmica.",
+          "Ingestão excessiva e não relatada de bicarbonato de sódio por via oral, que sobrecarrega continuamente o sistema tampão plasmático independentemente do estado volêmico do paciente.",
+          "Erro sistemático na dosagem do KCl prescrito, fazendo com que a reposição de potássio seja insuficiente para interromper o ciclo vicioso entre hipocalemia e alcalose descrito nos desafios anteriores.",
+        ],
+        correctIndex: 1,
+        explanation: "Alcalose cloro-resistente (Cl urinário >20-40 mEq/L) tem causas renais/hormonais: hiperaldosteronismo (primário/Conn, secundário), síndrome de Cushing, síndromes de Bartter/Gitelman, uso abusivo de diuréticos. Vômitos persistentes e má aderência à reposição de KCl tipicamente cursam com Cl urinário BAIXO (<20), sendo cloro-responsivos, não resistentes — por isso não explicam o achado deste caso. Ingestão de bicarbonato também não altera o Cl urinário dessa forma. Tratamento: tratar a causa hormonal de base (ex.: espironolactona no hiperaldosteronismo).",
+        reference: "Harrison's Cap. 51",
+      },
     ],
     // Caso 3: Hipocalemia + Toxicidade Digitálica
     [
-      { type: "mcq", question: "Painel: K⁺ 2.6, Mg²⁺ 1.2, pH 7.48, HCO3 32. O paciente usa digoxina + furosemida (digoxina não está disponível neste simulador — a conduta é suspendê-la, não prescrevê-la).\n\nPor que a hipocalemia POTENCIALIZA a toxicidade da digoxina mesmo com nível sérico 'normal'?", options: ["Porque a hipocalemia aumenta a absorção GI da digoxina", "Porque a digoxina e o K⁺ competem pelo MESMO sítio de ligação na Na⁺/K⁺-ATPase cardíaca. Com K⁺ baixo, há MAIS sítios livres para a digoxina se ligar, aumentando sua ação (e toxicidade) mesmo sem nível sérico elevado", "Porque a hipocalemia converte a digoxina em metabólito tóxico", "Porque o K⁺ baixo reduz a eliminação renal da digoxina"], correctIndex: 1, explanation: "Digoxina inibe a Na⁺/K⁺-ATPase → ↑Na⁺ intracelular → trocador Na⁺/Ca²⁺ exporta Na⁺ e importa Ca²⁺ → ↑contratilidade. O K⁺ e a digoxina competem pelo mesmo sítio na bomba. K⁺ baixo = mais digoxina ligada = mais inibição = toxicidade (arritmias, náuseas, visão amarelada).", reference: "Rang & Dale, Cap. 21" },
-      { type: "adjust", question: "Selecione MgSO4 50% e KCl 19.1% juntos e observe Mg²⁺ (basal 1.2 mg/dL) e K⁺ (basal 2.6 mEq/L) subirem no painel.\n\nPor que repor magnésio é ESSENCIAL antes de corrigir a hipocalemia?", targetParams: {}, validator: (s) => { const drugs: string[] = s.drugs || []; if (!drugs.includes("MgSO4 50%") || !drugs.includes("KCl 19.1%")) return { correct: false, feedback: "Selecione MgSO4 50% e KCl 19.1% juntos." }; const mg = s.lastLab?.mg ?? 0, baseMg = s.baseLab?.mg ?? 0; const k = s.lastLab?.k ?? 0, baseK = s.baseLab?.k ?? 0; return (mg > baseMg && k > baseK) ? { correct: true, feedback: "Mg²⁺ e K⁺ subindo juntos." } : { correct: false, feedback: "Mg²⁺ e/ou K⁺ ainda não subiram — confira as doses." }; }, options: ["Porque o magnésio melhora o sabor do KCl intravenoso", "Porque a hipomagnesemia causa PERDA RENAL de K⁺ (inibe o canal ROMK no ducto coletor) — a hipocalemia será REFRATÁRIA à reposição de K⁺ enquanto o Mg²⁺ não for corrigido", "Porque o magnésio converte potássio em forma ativa", "Porque o MgSO4 protege contra arritmias por antagonismo direto da digoxina"], correctIndex: 1, explanation: "Mg²⁺ é cofator do canal ROMK (que reabsorve K⁺) no ducto coletor. Sem Mg²⁺ → ROMK hiperactivo → perda renal de K⁺. Regra: se hipocalemia não responde à reposição de K⁺ → dosar e repor Mg²⁺ primeiro. A furosemida causa perda de AMBOS.", reference: "Huang CL, Kuo E. JASN 2007" },
-      { type: "mcq", question: "O ECG mostra bigeminismo (extrassístoles ventriculares alternadas).\n\nQual o primeiro passo no manejo da intoxicação digitálica?", options: ["Aumentar a dose de furosemida para eliminar a digoxina mais rápido", "SUSPENDER a digoxina + corrigir K⁺ e Mg²⁺. Se arritmia grave (TV, FV, BAV completo): administrar anticorpo antidigoxina (Fab antidigoxina — DigiFab)", "Administrar cálcio EV para estabilizar a membrana", "Iniciar amiodarona para controle da arritmia"], correctIndex: 1, explanation: "Manejo: (1) Suspender digoxina, (2) Repor K⁺ (alvo >4.0) e Mg²⁺, (3) Se arritmia grave/instável: Fab antidigoxina (liga-se à digoxina livre → inativação). CONTRAINDICAÇÃO: NÃO dar cálcio EV na intoxicação digitálica — piora a sobrecarga de Ca²⁺ intracelular ('coração de pedra'). Lidocaína pode ser usada para arritmias ventriculares.", reference: "Eichhorn EJ, Gheorghiade M. JACC 2002" },
-      { type: "mcq", question: "Observe a alcalose metabólica basal (pH 7.48, HCO3 32) causada pela furosemida.\n\nComo a alcalose agrava a hipocalemia?", options: ["A alcalose não tem relação com o potássio", "Na alcalose, o H⁺ SAI da célula para tamponar o pH sanguíneo, e K⁺ ENTRA na célula para manter eletroneutralidade — reduzindo o K⁺ sérico. Para cada 0.1 de aumento no pH, K⁺ cai ~0.3-0.5 mEq/L", "A alcalose aumenta a excreção renal de sódio, não de potássio", "A alcalose destrói o potássio no plasma"], correctIndex: 1, explanation: "Shift transcelular pH/K⁺: a cada ↑0.1 no pH → K⁺ sérico ↓0.3-0.5 mEq/L. Na alcalose: H⁺ sai da célula (tampão) → K⁺ entra (eletroneutralidade). Consequência: o K⁺ sérico subestima a depleção corporal total. Na acidose: efeito inverso (K⁺ sérico superestima).", reference: "Guyton & Hall, Cap. 30" },
-      { type: "mcq", question: "A espironolactona não está disponível neste simulador, mas é a alternativa real à furosemida no paciente com IC e hipocalemia.\n\nQual a vantagem da espironolactona sobre a furosemida nesse contexto?", options: ["A espironolactona tem efeito diurético mais potente", "A espironolactona é um diurético POUPADOR DE POTÁSSIO (antagonista da aldosterona) — bloqueia a reabsorção de Na⁺ e a secreção de K⁺ no ducto coletor, prevenindo hipocalemia", "A espironolactona não interage com a digoxina", "A espironolactona corrige a alcalose metabólica em 1 hora"], correctIndex: 1, explanation: "Espironolactona: antagonista competitivo da aldosterona no ducto coletor → ↓reabsorção de Na⁺ e ↓secreção de K⁺ e H⁺. Vantagens: previne hipocalemia, reduz mortalidade na IC (RALES trial). Risco: hipercalemia (monitorar K⁺, especialmente com IECA/BRA + DRC).", reference: "Pitt B et al. NEJM 1999 (RALES)" },
-      { type: "mcq", question: "O paciente tem visão amarelada (xantopsia).\n\nQuais são os sinais clássicos de intoxicação digitálica?", options: ["Apenas arritmias cardíacas", "Tríade: (1) GI — náuseas, vômitos, anorexia; (2) Visuais — xantopsia (visão amarelada), escotomas; (3) Cardíacos — praticamente QUALQUER arritmia, especialmente bigeminismo, TV bidirecional, BAV, taquicardia atrial com bloqueio", "Apenas diarreia e cefaleia", "Hipertensão arterial severa"], correctIndex: 1, explanation: "Intoxicação digitálica: a arritmia mais característica é a taquicardia atrial com bloqueio AV (aumento de automaticidade + bloqueio de condução). TV bidirecional é PATOGNOMÔNICA. A xantopsia deve-se ao efeito nos cones retinianos. Nível terapêutico: 0.5-2.0 ng/mL; tóxico: >2.0.", reference: "Rang & Dale, Cap. 21" },
+      {
+        type: "mcq",
+        question: "Painel: K⁺ 2.6, Mg²⁺ 1.2, pH 7.48, HCO3 32. O paciente usa digoxina + furosemida (digoxina não está disponível neste simulador — a conduta é suspendê-la, não prescrevê-la).\n\nPor que a hipocalemia POTENCIALIZA a toxicidade da digoxina mesmo com nível sérico 'normal'?",
+        options: [
+          "Porque a hipocalemia aumenta a absorção intestinal da digoxina, elevando sua biodisponibilidade oral e fazendo com que uma dose habitual produza concentrações plasmáticas efetivamente mais altas do que o esperado.",
+          "Porque a hipocalemia altera a estrutura molecular da digoxina circulante, convertendo-a em um metabólito mais tóxico que se acumula preferencialmente no tecido cardíaco em vez de ser eliminado pelos rins.",
+          "Porque a digoxina e o K⁺ competem pelo mesmo sítio de ligação na Na⁺/K⁺-ATPase cardíaca; com K⁺ baixo, sobram mais sítios livres para a digoxina se ligar, aumentando sua ação — e sua toxicidade — mesmo sem elevação do nível sérico do fármaco.",
+          "Porque o K⁺ baixo reduz a filtração glomerular e, com isso, a eliminação renal da digoxina, fazendo o fármaco se acumular progressivamente no plasma ao longo dos dias de tratamento.",
+        ],
+        correctIndex: 2,
+        explanation: "Digoxina inibe a Na⁺/K⁺-ATPase → ↑Na⁺ intracelular → o trocador Na⁺/Ca²⁺ exporta Na⁺ e importa Ca²⁺ → ↑contratilidade. O K⁺ e a digoxina competem pelo MESMO sítio de ligação na bomba: K⁺ baixo = mais sítios livres = mais digoxina ligada = mais inibição = toxicidade (arritmias, náuseas, visão amarelada), mesmo com digoxinemia 'normal'. A hipocalemia não altera a absorção intestinal, não transforma a digoxina em outro metabólito, e não reduz a filtração glomerular (K⁺ baixo não é causa de disfunção renal aguda por si só).",
+        reference: "Rang & Dale, Cap. 21",
+      },
+      {
+        type: "adjust",
+        question: "Selecione MgSO4 50% e KCl 19.1% juntos e observe Mg²⁺ (basal 1.2 mg/dL) e K⁺ (basal 2.6 mEq/L) subirem no painel.\n\nPor que repor magnésio é ESSENCIAL antes de corrigir a hipocalemia?",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          if (!drugs.includes("MgSO4 50%") || !drugs.includes("KCl 19.1%")) return { correct: false, feedback: "Selecione MgSO4 50% e KCl 19.1% juntos." };
+          const mg = s.lastLab?.mg ?? 0, baseMg = s.baseLab?.mg ?? 0;
+          const k = s.lastLab?.k ?? 0, baseK = s.baseLab?.k ?? 0;
+          return (mg > baseMg && k > baseK) ? { correct: true, feedback: "Mg²⁺ e K⁺ subindo juntos." } : { correct: false, feedback: "Mg²⁺ e/ou K⁺ ainda não subiram — confira as doses." };
+        },
+        options: [
+          "Porque a hipomagnesemia inibe o canal ROMK no ducto coletor, causando perda renal contínua de K⁺; enquanto o Mg²⁺ não for corrigido, a hipocalemia permanece refratária à reposição isolada de potássio.",
+          "Porque o magnésio se combina quimicamente com o KCl infundido, formando um composto de absorção mais lenta que reduz o risco de hipercalemia iatrogênica durante a reposição rápida.",
+          "Porque o magnésio converte o potássio extracelular em sua forma iônica ativa, já que na hipomagnesemia o K⁺ circulante permaneceria numa forma biologicamente inerte e não utilizável pelas células.",
+          "Porque o MgSO4 antagoniza diretamente a digoxina no mesmo sítio de ligação da Na⁺/K⁺-ATPase, sendo essa proteção cardíaca — e não um efeito sobre o potássio — o motivo de sua prioridade.",
+        ],
+        correctIndex: 0,
+        explanation: "Mg²⁺ é cofator essencial do canal ROMK (responsável pela reabsorção de K⁺) no ducto coletor. Sem Mg²⁺ suficiente, o ROMK fica hiperativo e o rim continua perdendo K⁺ pela urina — por isso a hipocalemia não responde à reposição isolada de potássio enquanto o magnésio não for corrigido primeiro. Não existe composto químico Mg-KCl de absorção lenta, o potássio circulante já está em forma iônica ativa independentemente do Mg²⁺, e embora o magnésio tenha algum efeito antiarrítmico geral, ele não compete com a digoxina pelo sítio de ligação da bomba (esse é o mecanismo do K⁺, não do Mg²⁺). A furosemida causa perda renal de ambos os íons.",
+        reference: "Huang CL, Kuo E. JASN 2007",
+      },
+      {
+        type: "mcq",
+        question: "O ECG mostra bigeminismo (extrassístoles ventriculares alternadas).\n\nQual o primeiro passo no manejo da intoxicação digitálica?",
+        options: [
+          "Aumentar a dose de furosemida para acelerar a eliminação renal da digoxina, reduzindo mais rapidamente sua concentração plasmática e revertendo o bigeminismo observado no ECG.",
+          "Administrar cálcio endovenoso imediatamente para estabilizar a membrana miocárdica e reverter a arritmia, da mesma forma que se faz na hipercalemia com alterações eletrocardiográficas.",
+          "Iniciar amiodarona em dose de ataque para suprimir a ectopia ventricular, já que é o antiarrítmico de escolha para qualquer arritmia ventricular independente da causa de base.",
+          "Suspender a digoxina e corrigir K⁺ e Mg²⁺; se a arritmia for grave (TV, FV, BAV completo), administrar anticorpo antidigoxina (Fab antidigoxina) além dessas medidas iniciais.",
+        ],
+        correctIndex: 3,
+        explanation: "Manejo da intoxicação digitálica: (1) suspender a digoxina; (2) repor K⁺ (alvo >4.0) e Mg²⁺; (3) se arritmia grave/instável (TV, FV, BAV completo): Fab antidigoxina (liga-se à digoxina livre e a inativa). Furosemida não acelera a eliminação da digoxina de forma clinicamente relevante e ainda agrava a hipocalemia de base. CONTRAINDICAÇÃO IMPORTANTE: NÃO administrar cálcio EV na intoxicação digitálica — piora a sobrecarga intracelular de Ca²⁺ ('coração de pedra'), ao contrário do que se faz na hipercalemia. Amiodarona não é a primeira escolha e pode ser usada apenas em casos refratários, com cautela.",
+        reference: "Eichhorn EJ, Gheorghiade M. JACC 2002",
+      },
+      {
+        type: "mcq",
+        question: "Observe a alcalose metabólica basal (pH 7.48, HCO3 32) causada pela furosemida.\n\nComo a alcalose agrava a hipocalemia?",
+        options: [
+          "A alcalose não tem relação direta com o potássio; a hipocalemia observada neste caso é explicada inteiramente pela perda urinária direta de K⁺ causada pela furosemida, sem qualquer shift transcelular envolvido.",
+          "Na alcalose, o H⁺ sai da célula para tamponar o pH sanguíneo e o K⁺ entra na célula para manter a eletroneutralidade, reduzindo o K⁺ sérico — a cada 0.1 de aumento no pH, o K⁺ cai cerca de 0.3-0.5 mEq/L.",
+          "A alcalose aumenta seletivamente a excreção renal de sódio no túbulo distal, e o potássio é perdido secundariamente apenas como consequência da natriurese aumentada, sem participação de trocas transcelulares.",
+          "A alcalose oxida quimicamente o potássio circulante em uma forma menos ativa biologicamente, fazendo com que o valor sérico medido subestime artificialmente a quantidade real de K⁺ disponível.",
+        ],
+        correctIndex: 1,
+        explanation: "Shift transcelular pH/K⁺: a cada ↑0.1 no pH, o K⁺ sérico cai cerca de 0.3-0.5 mEq/L. Na alcalose, o H⁺ sai da célula para tamponar o pH e o K⁺ entra para manter a eletroneutralidade — reduzindo o valor medido no sangue (consequência: o K⁺ sérico SUBESTIMA a depleção corporal total). A furosemida de fato causa perda renal direta de K⁺, mas isso é adicional ao shift, não substitui-o. A alcalose não é seletiva para natriurese isolada nem 'oxida' o potássio circulante — o K⁺ continua biologicamente ativo, só está redistribuído para dentro da célula. Na acidose ocorre o efeito inverso (K⁺ sérico superestima as reservas).",
+        reference: "Guyton & Hall, Cap. 30",
+      },
+      {
+        type: "mcq",
+        question: "A espironolactona não está disponível neste simulador, mas é a alternativa real à furosemida no paciente com IC e hipocalemia.\n\nQual a vantagem da espironolactona sobre a furosemida nesse contexto?",
+        options: [
+          "A espironolactona é um diurético poupador de potássio (antagonista da aldosterona): bloqueia a reabsorção de Na⁺ e a secreção de K⁺ e H⁺ no ducto coletor, prevenindo a hipocalemia que a furosemida costuma causar.",
+          "A espironolactona tem um efeito diurético consideravelmente mais potente que a furosemida, promovendo uma natriurese mais rápida e eficaz no controle da sobrecarga volêmica da insuficiência cardíaca.",
+          "A espironolactona não interage farmacologicamente com a digoxina, o que evita o risco de toxicidade digitálica que a combinação furosemida-digoxina apresentaria neste paciente.",
+          "A espironolactona corrige a alcalose metabólica de forma direta e rápida, atuando como um ácido fraco que neutraliza o excesso de bicarbonato plasmático em poucas horas de uso.",
+        ],
+        correctIndex: 0,
+        explanation: "Espironolactona: antagonista competitivo da aldosterona no ducto coletor → ↓reabsorção de Na⁺ e ↓secreção de K⁺ e H⁺. Vantagens no contexto de IC + hipocalemia: previne a perda de K⁺ (ao contrário da furosemida) e reduz mortalidade na IC (estudo RALES). Ela é, na verdade, MENOS potente como diurético que a furosemida (é um diurético fraco, geralmente associado a outro); tanto ela quanto a furosemida podem, em teoria, interagir com a digoxina por via da hipocalemia/hipercalemia que causam; e ela não tem efeito relevante e direto sobre o pH — seu benefício aqui é prevenir a hipocalemia, não corrigir a alcalose. Risco: hipercalemia, sobretudo com IECA/BRA ou DRC associados.",
+        reference: "Pitt B et al. NEJM 1999 (RALES)",
+      },
+      {
+        type: "mcq",
+        question: "O paciente tem visão amarelada (xantopsia).\n\nQuais são os sinais clássicos de intoxicação digitálica?",
+        options: [
+          "Uma tríade: sintomas gastrointestinais (náuseas, vômitos, anorexia), visuais (xantopsia, escotomas) e cardíacos (praticamente qualquer arritmia, especialmente bigeminismo, taquicardia atrial com bloqueio e TV bidirecional).",
+          "Apenas manifestações cardíacas, como arritmias ventriculares e bloqueios de condução; os sintomas gastrointestinais e visuais descritos na literatura clássica são raros e pouco específicos na prática atual.",
+          "Predominantemente sintomas neurológicos, como confusão mental, cefaleia e convulsões, sendo os distúrbios visuais e cardíacos achados secundários e tardios na evolução da intoxicação.",
+          "Principalmente sintomas dermatológicos e respiratórios, como rash cutâneo difuso e broncoespasmo, refletindo uma reação de hipersensibilidade ao fármaco mais do que toxicidade direta.",
+        ],
+        correctIndex: 0,
+        explanation: "Intoxicação digitálica clássica: tríade GI (náuseas, vômitos, anorexia — geralmente os primeiros sintomas), visual (xantopsia por efeito nos cones retinianos, escotomas) e cardíaca (a mais perigosa — praticamente qualquer arritmia, com taquicardia atrial com bloqueio AV e TV bidirecional sendo achados especialmente sugestivos, esta última quase patognomônica). Não é uma reação de hipersensibilidade cutânea/respiratória, e os sintomas neurológicos maiores (confusão, convulsão) não são o padrão típico — quando presentes, sugerem toxicidade grave ou outra causa associada. Nível terapêutico: 0.5-2.0 ng/mL; tóxico: >2.0.",
+        reference: "Rang & Dale, Cap. 21",
+      },
     ],
     // Caso 4: Hipercalemia com Arritmia
     [
-      { type: "adjust", question: "Selecione Gluconato de Cálcio 10% como único fármaco (K⁺ basal 7.2, pH 7.28, HCO3 15, ECG com ondas T apiculadas).\n\nO Ca²⁺ vai subir no painel, mas o K⁺ NÃO vai cair. Então, por que é o PRIMEIRO fármaco a ser administrado?", targetParams: {}, validator: (s) => only(s, "Gluconato de Cálcio 10%") ? { correct: true, feedback: "Observe: Ca²⁺ sobe, K⁺ permanece praticamente igual." } : { correct: false, feedback: "Deixe apenas Gluconato de Cálcio 10% na prescrição." }, options: ["Porque quelata o potássio no sangue e o elimina pela urina", "Porque o cálcio ESTABILIZA a membrana cardíaca, elevando o potencial limiar e reduzindo a excitabilidade miocárdica — protege contra arritmia fatal enquanto as outras medidas reduzem o K⁺. Efeito em 1-3 minutos, duração 30-60 minutos", "Porque o cálcio estimula a Na⁺/K⁺-ATPase a bombear K⁺ para dentro da célula", "Porque substitui o potássio nos canais iônicos cardíacos"], correctIndex: 1, explanation: "O Ca²⁺ ANTAGONIZA o efeito do K⁺ na membrana miocárdica: ↑potencial limiar → restaura o gradiente entre potencial de repouso e limiar → reduz excitabilidade. NÃO reduz K⁺. É 'comprar tempo' enquanto insulina+glicose, NaHCO3 e Sorcal agem.", reference: "Palmer BF. NEJM 2004" },
-      { type: "adjust", question: "Mantenha o Gluconato de Cálcio e adicione Insulina Regular + Glicose. Observe o K⁺ cair no painel.\n\nQual o mecanismo pelo qual a insulina reduz o K⁺ sérico?", targetParams: {}, validator: (s) => { const drugs: string[] = s.drugs || []; if (!drugs.includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Adicione Insulina Regular + Glicose à prescrição." }; return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo — shift transcelular." } : { correct: false, feedback: "O K⁺ ainda não caiu." }; }, options: ["A insulina aumenta a excreção renal de potássio", "A insulina ATIVA a Na⁺/K⁺-ATPase nas células musculares e hepáticas, bombeando K⁺ do plasma para o interior da célula (SHIFT transcelular). A glicose é adicionada para prevenir hipoglicemia", "A insulina se liga ao potássio formando um complexo excretável", "A insulina bloqueia os canais de K⁺ cardíacos diretamente"], correctIndex: 1, explanation: "Insulina: ativa Na⁺/K⁺-ATPase → K⁺ entra na célula (shift). Efeito: ↓K⁺ em 0.5-1.2 mEq/L em 15-30 min. Duração: 4-6h. Dose: 10 UI regular + 25g glicose (50 mL G50%). Monitorar glicemia a cada 30 min (risco de hipoglicemia em 10-75% dos pacientes).", reference: "AHA ACLS Guidelines" },
-      { type: "mcq", question: "O paciente usa enalapril (IECA) + espironolactona — nenhum dos dois está disponível neste simulador. Ambos podem causar hipercalemia.\n\nPor qual mecanismo o IECA contribui para hipercalemia?", options: ["O IECA causa destruição maciça de células, liberando K⁺ (rabdomiólise)", "O IECA reduz a angiotensina II → ↓aldosterona → ↓secreção de K⁺ no ducto coletor. Combinado com espironolactona (que também bloqueia aldosterona), o efeito hipercalêmico é SINÉRGICO e potencialmente fatal, especialmente na DRC", "O IECA aumenta a absorção intestinal de potássio", "O IECA converte potássio inativo em forma ativa"], correctIndex: 1, explanation: "IECA/BRA: ↓ATII → ↓aldosterona → ↓secreção de K⁺ e H⁺. Espironolactona: bloqueio direto do receptor de aldosterona. DRC: ↓excreção renal de K⁺. Tríade perigosa: IECA/BRA + espironolactona + DRC = risco muito alto de hipercalemia. Monitorar K⁺ em 1-2 semanas após início.", reference: "Palmer BF. NEJM 2004" },
-      { type: "mcq", question: "Progressão ECG hipotética: ondas T apiculadas → ↓onda P → alargamento QRS → onda sinusoide.\n\nQual é a sequência de alterações ECG na hipercalemia progressiva?", options: ["Primeiro fibrilação atrial, depois bradicardia", "K⁺ 5.5-6.5: ondas T apiculadas (simétricas, em tenda). K⁺ 6.5-7.5: achatamento de onda P + prolongamento PR. K⁺ 7.5-8.0: alargamento QRS. K⁺ >8.0: fusão QRS-T (padrão sinusoidal) → FV/assistolia", "A hipercalemia não causa alterações ECG", "Primeiro taquicardia sinusal, depois bloqueio de ramo"], correctIndex: 1, explanation: "Progressão ECG: T apiculada → P desaparece → QRS alarga → sinusoidal → FV/assistolia. A cada estágio, o risco de morte aumenta. ATENÇÃO: nem sempre a progressão é ordenada — pode haver FV súbita. Indicação absoluta de tratamento: qualquer alteração ECG + K⁺ >6.0.", reference: "Guyton & Hall, Cap. 10" },
-      { type: "adjust", question: "Deixe apenas Poliestirenossulfonato (Sorcal) na prescrição e observe o K⁺ cair.\n\nQual a diferença entre as medidas de SHIFT (insulina, bicarbonato, beta-2 agonista) e REMOÇÃO (Sorcal, diálise)?", targetParams: {}, validator: (s) => { if (!only(s, "Poliestirenossulfonato (Sorcal)")) return { correct: false, feedback: "Deixe apenas Poliestirenossulfonato (Sorcal) na prescrição." }; return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo por remoção corporal, não só shift." } : { correct: false, feedback: "O K⁺ ainda não caiu." }; }, options: ["Não há diferença — ambas eliminam potássio do corpo", "O SHIFT apenas REDISTRIBUI o K⁺ para dentro da célula (efeito temporário de 4-6h, o K⁺ corporal total NÃO muda). A REMOÇÃO efetivamente ELIMINA K⁺ do corpo (Sorcal via TGI, diálise via renal). Ambas são necessárias na emergência", "O Sorcal age mais rápido que a insulina", "A diálise apenas redistribui o potássio"], correctIndex: 1, explanation: "Shift (temporário): insulina+glicose (15-30 min), NaHCO3 (se acidose), salbutamol nebulizado (15 min). Remoção (definitivo): Sorcal (2-6h, troca K⁺ por Na⁺ no TGI), diálise (imediata, mais eficaz). Na emergência: primeiro estabilizar (Ca²⁺) + shift → depois remoção.", reference: "AHA ACLS Guidelines" },
-      { type: "mcq", question: "O paciente tem DRC G4 (TFG 22). Por que pacientes renais crônicos são mais vulneráveis à hipercalemia?\n\nConsidere os mecanismos renais de excreção de K⁺.", options: ["Porque a DRC aumenta a absorção intestinal de potássio", "Porque o rim é o principal órgão de excreção de K⁺ (90% por via renal). Na DRC avançada, a ↓TFG reduz a carga filtrada de K⁺ e a ↓massa de néfrons reduz a secreção tubular. Isso é agravado por IECA/BRA, espironolactona, AINEs e dieta rica em K⁺", "Porque a DRC causa destruição celular contínua", "Porque a DRC bloqueia a Na⁺/K⁺-ATPase em todos os tecidos"], correctIndex: 1, explanation: "Excreção renal de K⁺: 90% no ducto coletor cortical (secreção regulada pela aldosterona e fluxo tubular). Na DRC: (1) ↓néfrons → ↓capacidade secretória; (2) Adaptação: néfrons remanescentes ↑secreção + cólon ↑excreção (até 30%). Medicações (IECA/BRA, espironolactona) e dieta comprometem essa adaptação.", reference: "Palmer BF. NEJM 2004" },
+      {
+        type: "adjust",
+        question: "Selecione Gluconato de Cálcio 10% como único fármaco (K⁺ basal 7.2, pH 7.28, HCO3 15, ECG com ondas T apiculadas).\n\nO Ca²⁺ vai subir no painel, mas o K⁺ NÃO vai cair. Então, por que é o PRIMEIRO fármaco a ser administrado?",
+        targetParams: {},
+        validator: (s) => only(s, "Gluconato de Cálcio 10%") ? { correct: true, feedback: "Observe: Ca²⁺ sobe, K⁺ permanece praticamente igual." } : { correct: false, feedback: "Deixe apenas Gluconato de Cálcio 10% na prescrição." },
+        options: [
+          "Porque o cálcio desloca fisicamente o potássio dos canais iônicos cardíacos, ocupando seu lugar na membrana e impedindo sua ação despolarizante sem alterar a concentração sérica de K⁺.",
+          "Porque o cálcio reduz a permeabilidade da membrana celular ao potássio, retardando temporariamente a saída de K⁺ das células danificadas e limitando novos aumentos do K⁺ sérico, embora não corrija o valor já elevado.",
+          "Porque o cálcio estabiliza a membrana cardíaca, elevando o potencial limiar e reduzindo a excitabilidade miocárdica — protegendo contra arritmia fatal enquanto as outras medidas, que de fato reduzem o K⁺, ainda não fizeram efeito.",
+          "Porque o cálcio compete com o potássio pela ligação a proteínas plasmáticas, deixando temporariamente mais K⁺ na forma ligada e inativa, sem reduzir a concentração total medida na gasometria.",
+        ],
+        correctIndex: 2,
+        explanation: "O Ca²⁺ ANTAGONIZA o efeito do K⁺ elevado na membrana miocárdica: eleva o potencial limiar, restaurando a diferença entre o potencial de repouso e o limiar de disparo, e assim reduz a excitabilidade cardíaca — sem alterar a concentração sérica de K⁺. Efeito em 1-3 minutos, duração 30-60 minutos: 'compra tempo' enquanto insulina+glicose, NaHCO3 e Sorcal efetivamente baixam o K⁺. O cálcio não desloca fisicamente o K⁺ dos canais iônicos, não reduz a permeabilidade da membrana ao K⁺, e não altera a fração ligada a proteínas plasmáticas — seu mecanismo é puramente elétrico, sobre o potencial de membrana.",
+        reference: "Palmer BF. NEJM 2004",
+      },
+      {
+        type: "adjust",
+        question: "Mantenha o Gluconato de Cálcio e adicione Insulina Regular + Glicose. Observe o K⁺ cair no painel.\n\nQual o mecanismo pelo qual a insulina reduz o K⁺ sérico?",
+        targetParams: {},
+        validator: (s) => {
+          const drugs: string[] = s.drugs || [];
+          if (!drugs.includes("Insulina Regular + Glicose")) return { correct: false, feedback: "Adicione Insulina Regular + Glicose à prescrição." };
+          return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo — shift transcelular." } : { correct: false, feedback: "O K⁺ ainda não caiu." };
+        },
+        options: [
+          "A insulina ativa a Na⁺/K⁺-ATPase nas células musculares e hepáticas, bombeando K⁺ do plasma para dentro da célula (shift transcelular); a glicose é administrada junto para prevenir hipoglicemia, não para mover o potássio.",
+          "A insulina aumenta a excreção renal de potássio ao estimular diretamente os canais ROMK no ducto coletor, sendo essa perda urinária acelerada — e não um deslocamento celular — a causa da queda observada.",
+          "A insulina se liga ao potássio circulante formando um complexo hormônio-íon que é rapidamente captado e degradado pelo fígado, retirando o K⁺ da circulação sem envolver transporte de membrana.",
+          "A insulina bloqueia diretamente os canais de potássio da membrana cardíaca, impedindo sua contribuição para o K⁺ sérico total medido na gasometria, sem afetar o potássio de outros tecidos.",
+        ],
+        correctIndex: 0,
+        explanation: "Insulina ativa a Na⁺/K⁺-ATPase, principalmente em músculo esquelético e fígado, bombeando K⁺ do plasma para o interior da célula (shift transcelular verdadeiro). Efeito: ↓K⁺ em 0.5-1.2 mEq/L em 15-30 min, com duração de 4-6h. A glicose (25g) é administrada apenas para prevenir hipoglicemia, não participa do transporte de K⁺. A insulina não age nos canais ROMK renais para aumentar excreção neste intervalo de tempo, não forma complexo com o K⁺ circulante, e não age bloqueando canais cardíacos de potássio — seu alvo é a bomba Na⁺/K⁺-ATPase. Dose usual: 10 UI regular + 25g glicose (50 mL G50%); monitorar glicemia a cada 30 min (risco de hipoglicemia em 10-75% dos pacientes).",
+        reference: "AHA ACLS Guidelines",
+      },
+      {
+        type: "mcq",
+        question: "O paciente usa enalapril (IECA) + espironolactona — nenhum dos dois está disponível neste simulador. Ambos podem causar hipercalemia.\n\nPor qual mecanismo o IECA contribui para hipercalemia?",
+        options: [
+          "O IECA causa destruição muscular direta (rabdomiólise medicamentosa), liberando o potássio intracelular armazenado para a circulação de forma independente de qualquer efeito hormonal ou renal.",
+          "O IECA reduz a angiotensina II e, com isso, a secreção de aldosterona — reduzindo a secreção tubular de K⁺ no ducto coletor; associado à espironolactona, que bloqueia a aldosterona por outra via, o efeito hipercalêmico se torna sinérgico e mais perigoso.",
+          "O IECA aumenta a absorção intestinal de potássio ao inibir uma enzima digestiva relacionada à ECA presente na mucosa do intestino delgado, elevando a quantidade de K⁺ absorvida da dieta.",
+          "O IECA converte parte do potássio inativo circulante em sua forma iônica biologicamente ativa, disponibilizando para o organismo um K⁺ que antes não era contabilizado na dosagem sérica.",
+        ],
+        correctIndex: 1,
+        explanation: "IECA/BRA: ↓angiotensina II → ↓aldosterona → ↓secreção tubular de K⁺ e H⁺ no ducto coletor. Espironolactona: bloqueia diretamente o receptor de aldosterona, mesmo efeito final por outra via. Juntos (tríade perigosa com DRC associada): risco muito alto de hipercalemia. O IECA não causa rabdomiólise, não tem efeito sobre absorção intestinal de potássio, e não 'ativa' potássio inativo — todo o K⁺ circulante já está na forma iônica ativa. Monitorar K⁺ em 1-2 semanas após início de qualquer um desses fármacos.",
+        reference: "Palmer BF. NEJM 2004",
+      },
+      {
+        type: "mcq",
+        question: "O ECG do paciente evolui ao longo da hipercalemia não tratada.\n\nQual é a sequência correta de alterações eletrocardiográficas à medida que o K⁺ sérico sobe progressivamente?",
+        options: [
+          "Primeiro surgem ondas T apiculadas; com a progressão, a onda P se achata e o intervalo PR se alarga; em seguida o QRS se alarga; e por fim o QRS se funde à onda T num padrão sinusoidal, anunciando fibrilação ventricular ou assistolia.",
+          "O QRS se alarga primeiro, seguido do achatamento da onda P, depois surgem as ondas T apiculadas e, por último, o padrão sinusoidal — ou seja, as alterações ventriculares precedem as atriais e as de repolarização.",
+          "A onda P desaparece primeiro, seguida diretamente pelo padrão sinusoidal; as ondas T apiculadas e o alargamento do QRS são achados tardios e raros, aparecendo apenas em hipercalemias extremas.",
+          "As alterações começam pela bradicardia sinusal isolada, evoluem para fibrilação atrial e só depois progridem para as alterações de onda T e QRS descritas na hipercalemia clássica.",
+        ],
+        correctIndex: 0,
+        explanation: "Progressão eletrocardiográfica da hipercalemia: K⁺ 5.5-6.5 → ondas T apiculadas (simétricas, em tenda); K⁺ 6.5-7.5 → achatamento da onda P + prolongamento do PR; K⁺ 7.5-8.0 → alargamento do QRS; K⁺ >8.0 → fusão QRS-T em padrão sinusoidal → fibrilação ventricular/assistolia. A cada estágio o risco de morte súbita aumenta. ATENÇÃO: a progressão nem sempre é ordenada — pode haver FV súbita sem passar por todos os estágios. Indicação absoluta de tratamento: qualquer alteração de ECG associada a K⁺ >6.0.",
+        reference: "Guyton & Hall, Cap. 10",
+      },
+      {
+        type: "adjust",
+        question: "Deixe apenas Poliestirenossulfonato (Sorcal) na prescrição e observe o K⁺ cair.\n\nQual a diferença entre as medidas de SHIFT (insulina, bicarbonato, beta-2 agonista) e REMOÇÃO (Sorcal, diálise)?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "Poliestirenossulfonato (Sorcal)")) return { correct: false, feedback: "Deixe apenas Poliestirenossulfonato (Sorcal) na prescrição." };
+          return (s.lastLab?.k ?? 99) < (s.baseLab?.k ?? 0) ? { correct: true, feedback: "K⁺ caindo por remoção corporal, não só shift." } : { correct: false, feedback: "O K⁺ ainda não caiu." };
+        },
+        options: [
+          "Não há diferença relevante entre as duas categorias: tanto o shift quanto a remoção eliminam potássio do corpo de forma definitiva, apenas com velocidades de ação diferentes entre os fármacos disponíveis.",
+          "O Sorcal age mais rapidamente do que a insulina, tornando desnecessária a combinação das duas estratégias numa emergência hipercalêmica — bastaria administrar o Sorcal isoladamente e aguardar seu efeito.",
+          "O shift apenas redistribui o K⁺ para dentro da célula (efeito temporário, o K⁺ corporal total não muda); a remoção efetivamente elimina K⁺ do organismo — Sorcal pelo trato gastrointestinal, diálise pela via extracorpórea.",
+          "A diálise, assim como a insulina e o bicarbonato, apenas redistribui o potássio entre os compartimentos intra e extracelular, sem removê-lo efetivamente do organismo em nenhuma das três estratégias.",
+        ],
+        correctIndex: 2,
+        explanation: "Shift (temporário, redistribuição): insulina+glicose (15-30 min), NaHCO3 se houver acidose, beta-2 agonista nebulizado (15 min) — nenhum altera o K⁺ corporal total. Remoção (definitiva, eliminação): Sorcal (2-6h, troca K⁺ por Na⁺ no trato GI), diálise (a mais rápida e eficaz). Na emergência: primeiro estabilizar a membrana (Ca²⁺) + shift para ganhar tempo → depois remoção para resolver definitivamente. O Sorcal é mais lento que a insulina, não mais rápido, e a diálise remove K⁺ de fato — não apenas redistribui.",
+        reference: "AHA ACLS Guidelines",
+      },
+      {
+        type: "mcq",
+        question: "O paciente tem DRC G4 (TFG 22). Por que pacientes renais crônicos são mais vulneráveis à hipercalemia?\n\nConsidere os mecanismos renais de excreção de K⁺.",
+        options: [
+          "Porque o rim é o principal órgão de excreção de K⁺ (cerca de 90% pela via renal); na DRC avançada, a TFG reduzida diminui a carga filtrada e a perda de néfrons reduz a secreção tubular de potássio.",
+          "Porque a DRC aumenta a absorção intestinal de potássio ao alterar a permeabilidade da mucosa colônica, fazendo com que uma proporção maior do K⁺ da dieta seja absorvida do que em indivíduos com função renal normal.",
+          "Porque a uremia da DRC causa destruição celular contínua em múltiplos tecidos, liberando progressivamente o potássio intracelular armazenado para a circulação, independentemente da função excretora renal.",
+          "Porque a DRC reduz a atividade da Na⁺/K⁺-ATPase em todos os tecidos do corpo, incluindo músculo e fígado, impedindo que o potássio seja armazenado dentro das células mesmo com função renal preservada.",
+        ],
+        correctIndex: 0,
+        explanation: "Excreção renal de K⁺: cerca de 90% ocorre no ducto coletor cortical, por secreção regulada pela aldosterona e pelo fluxo tubular. Na DRC: (1) menos néfrons funcionantes → menor capacidade secretória; (2) os néfrons remanescentes tentam compensar aumentando a secreção, e o cólon aumenta sua excreção (até 30% do total) — mas essa adaptação é facilmente sobrecarregada por IECA/BRA, espironolactona, AINEs e dieta rica em K⁺. A DRC não aumenta a absorção intestinal de K⁺, não causa destruição celular contínua por si só, e não reduz a Na⁺/K⁺-ATPase em tecidos periféricos — o problema é especificamente a excreção renal.",
+        reference: "Palmer BF. NEJM 2004",
+      },
     ],
     // Caso 5: Hiponatremia Dilucional (SIADH)
     [
-      { type: "adjust", question: "Selecione NaCl 3% (hipertônico) como único fármaco (Na⁺ basal 118, paciente com convulsão) e observe o Na⁺ subir no painel.\n\nQual o protocolo EMERGENCIAL para hiponatremia sintomática?", targetParams: {}, validator: (s) => { if (!only(s, "NaCl 3% (hipertônico)")) return { correct: false, feedback: "Deixe apenas NaCl 3% (hipertônico) na prescrição." }; return (s.lastLab?.na ?? 0) > (s.baseLab?.na ?? 0) ? { correct: true, feedback: "Na⁺ subindo com NaCl 3%." } : { correct: false, feedback: "O Na⁺ ainda não subiu — confira a dose." }; }, options: ["Infundir NaCl 0.9% em volume alto (2-3L em 1h)", "NaCl 3% — bolus 100-150 mL em 10-20 minutos. Pode repetir até 3 vezes se convulsão persistir. Objetivo: elevar Na⁺ em 4-6 mEq/L nas primeiras 6h para cessar sintomas neurológicos", "Restrição hídrica isolada e aguardar 48h", "Furosemida em dose alta para eliminar água livre"], correctIndex: 1, explanation: "Hiponatremia sintomática (convulsão, coma): NaCl 3% bolus 100-150 mL em 10-20 min. Repetir se sintomas persistirem (até 3 bolus). Alvo imediato: ↑Na⁺ 4-6 mEq/L. Depois: correção lenta. NaCl 3%: 513 mEq/L de Na⁺ (vs NaCl 0.9%: 154 mEq/L). O NaCl 0.9% pode PIORAR a hiponatremia na SIADH!", reference: "Sterns RH. NEJM 2015" },
-      { type: "adjust", question: "Com NaCl 3% selecionado, confira que a subida do Na⁺ em 24h não ultrapassa 10 mEq/L neste painel.\n\nQual o limite máximo de correção de Na⁺ em 24h e qual a complicação da correção rápida?", targetParams: {}, validator: (s) => { if (!only(s, "NaCl 3% (hipertônico)")) return { correct: false, feedback: "Deixe apenas NaCl 3% (hipertônico) na prescrição." }; const delta = (s.lastLab?.na ?? 0) - (s.baseLab?.na ?? 0); return (delta > 0 && delta <= 10) ? { correct: true, feedback: `Correção de ${delta.toFixed(1)} mEq/L em 24h — dentro do limite seguro.` } : { correct: false, feedback: "Confira o painel após a simulação rodar." }; }, options: ["Sem limite — corrigir o mais rápido possível", "Máximo 8-10 mEq/L em 24h (6-8 em alto risco). Correção rápida causa MIELINÓLISE PONTINA OSMÓTICA (síndrome de desmielinização osmótica) — desmielinização da ponte cerebral com quadriplegia, disartria e consciência preservada ('locked-in')", "Máximo 30 mEq/L em 24h", "A correção rápida causa apenas cefaleia transitória"], correctIndex: 1, explanation: "Regra de ouro: ≤8-10 mEq/24h (≤6-8 se alto risco: alcoolismo, desnutrição, hipocalemia, Na <105). A mielinólise pontina osmótica (ODS) ocorre por desidratação osmótica dos oligodendrócitos quando Na⁺ sobe muito rápido. Sintomas aparecem 2-6 dias após correção. Fórmula de Adrogue-Madias: ΔNa = (Na infusão - Na paciente)/(ACT+1).", reference: "Sterns RH. NEJM 2015" },
-      { type: "mcq", question: "A paciente tem osmolaridade sérica 255 mOsm/kg (baixa) e urina 650 mOsm/kg (concentrada). Na urinário 85 mEq/L — dados não modelados neste simulador, apenas no enunciado do caso.\n\nPor que na SIADH a urina está inapropriadamente concentrada?", options: ["Porque a SIADH causa desidratação severa que concentra a urina", "Porque o ADH (vasopressina) está sendo secretado INDEPENDENTE da osmolaridade sérica, mantendo os canais de aquaporina-2 abertos no ducto coletor — o rim reabsorve água livre em excesso, diluindo o plasma mas concentrando a urina", "Porque a SIADH bloqueia a filtração glomerular", "Porque o sódio urinário alto indica insuficiência renal"], correctIndex: 1, explanation: "SIADH: ADH elevado → aquaporina-2 inserida na membrana luminal do ducto coletor → reabsorção de água livre → urina concentrada (>100 mOsm/kg, geralmente >300) + plasma diluído. Diagnóstico: (1) hiponatremia hipotônica, (2) euvolemia, (3) osmolaridade urina >100, (4) Na urinário >40, (5) excluir hipotireoidismo e insuficiência adrenal.", reference: "Ellison DH, Berl T. NEJM 2007" },
-      { type: "adjust", question: "Deixe apenas NaCl 0.9% na prescrição (em vez de NaCl 3%). Neste simulador simplificado o Na⁺ ainda sobe um pouco — na fisiologia real, com urina mais concentrada que o soro infundido, o efeito líquido pode ser QUEDA do Na⁺.\n\nPor que o NaCl 0.9% pode PIORAR a hiponatremia na SIADH real?", targetParams: {}, validator: (s) => only(s, "NaCl 0.9%") ? { correct: true, feedback: "NaCl 0.9% isolado selecionado — compare com o NaCl 3% do desafio anterior." } : { correct: false, feedback: "Deixe apenas NaCl 0.9% na prescrição." }, options: ["Porque o NaCl 0.9% é tóxico para o rim na SIADH", "Porque na SIADH com urina muito concentrada (>308 mOsm/kg), o rim excreta o Na⁺ e o Cl⁻ do soro infundido mas retém a água livre (por ação do ADH). O resultado líquido é GANHO de água livre → Na⁺ cai ainda mais. Apenas NaCl 3% (hiperosmolar) ou restrição hídrica funcionam", "Porque o NaCl 0.9% contém muito sódio para o rim processar", "Porque o NaCl 0.9% causa edema pulmonar em todos os pacientes"], correctIndex: 1, explanation: "NaCl 0.9% = 308 mOsm/L. Se osmolaridade urinária >308: o rim concentra a urina mais que o soro → infundir 1L de SF gera ~500 mL de água livre retida → piora hiponatremia. NaCl 3% = 1026 mOsm/L (sempre > osmolaridade urinária) → garante perda de água livre. Alternativa: restrição hídrica (<800 mL/dia) + furosemida (reduz concentração urinária).", reference: "Sterns RH. NEJM 2015" },
-      { type: "mcq", question: "A paciente é pós-operatória neurocirúrgica.\n\nQual o mecanismo mais comum de SIADH no pós-operatório neurocirúrgico?", options: ["Perda de sangue durante a cirurgia", "Lesão ou manipulação do hipotálamo/neuro-hipófise durante a cirurgia libera ADH armazenado (SIADH transitória) OU a inflamação pós-cirúrgica altera o osmostato hipotalâmico. Geralmente transitória (dias a semanas)", "Uso excessivo de manitol no intraoperatório", "Insuficiência adrenal aguda pela anestesia"], correctIndex: 1, explanation: "SIADH pós-neurocirúrgica: liberação de ADH por manipulação do eixo hipotálamo-neuro-hipofisário. Padrão bifásico (em alguns casos): (1) diabetes insipidus transitório (dias 1-3), (2) SIADH (dias 4-10), (3) resolução ou DI permanente. Monitorar Na⁺ sérico a cada 6h no pós-operatório.", reference: "Harrison's Cap. 49" },
-      { type: "mcq", question: "Se a correção ultrapassou o limite (Na⁺ subiu 12 mEq em 18h), o que fazer?\n\nConsidere que a paciente está assintomática após a correção.", options: ["Nada — já corrigiu, não dá para reverter", "RELOWERING (rebaixamento terapêutico): infundir água livre (glicose 5% EV) e/ou dDAVP (desmopressina) 2 mcg EV para DESCER o Na⁺ de volta e respeitar o limite de 8-10 mEq/24h — isso PREVINE a mielinólise pontina osmótica", "Administrar mais NaCl 3% para estabilizar o nível", "Iniciar hemodiálise de urgência"], correctIndex: 1, explanation: "Se correção excessiva detectada: (1) dDAVP 2 mcg EV a cada 8h (mimetiza ADH → retém água), (2) Glicose 5% EV (água livre), (3) Suspender NaCl. Objetivo: trazer Na⁺ de volta para dentro do limite seguro. Essa estratégia proativa reduziu drasticamente a incidência de mielinólise nos últimos anos.", reference: "Sterns RH. NEJM 2015" },
+      {
+        type: "adjust",
+        question: "Selecione NaCl 3% (hipertônico) como único fármaco (Na⁺ basal 118, paciente com convulsão) e observe o Na⁺ subir no painel.\n\nQual o protocolo EMERGENCIAL para hiponatremia sintomática?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "NaCl 3% (hipertônico)")) return { correct: false, feedback: "Deixe apenas NaCl 3% (hipertônico) na prescrição." };
+          return (s.lastLab?.na ?? 0) > (s.baseLab?.na ?? 0) ? { correct: true, feedback: "Na⁺ subindo com NaCl 3%." } : { correct: false, feedback: "O Na⁺ ainda não subiu — confira a dose." };
+        },
+        options: [
+          "NaCl 3% em bolus de 100-150 mL em 10-20 minutos, podendo repetir até 3 vezes se a convulsão persistir, visando elevar o Na⁺ em 4-6 mEq/L nas primeiras horas para cessar os sintomas neurológicos agudos.",
+          "Infusão de NaCl 0.9% em volume alto (2-3 litros na primeira hora), priorizando a expansão volêmica rápida sobre a concentração de sódio da solução para reverter os sintomas neurológicos.",
+          "Restrição hídrica isolada, sem reposição ativa de sódio, aguardando 48 horas para reavaliação laboratorial antes de qualquer intervenção farmacológica adicional neste paciente sintomático.",
+          "Furosemida em dose alta associada a hidratação oral livre, promovendo a eliminação de água livre pela diurese forçada como estratégia inicial para corrigir a hiponatremia sintomática.",
+        ],
+        correctIndex: 0,
+        explanation: "Hiponatremia sintomática (convulsão, coma): NaCl 3% em bolus de 100-150 mL em 10-20 min, repetindo se os sintomas persistirem (até 3 bolus). Alvo imediato: elevar o Na⁺ em 4-6 mEq/L; depois, correção mais lenta. NaCl 3% tem 513 mEq/L de Na⁺ (vs. 154 mEq/L do NaCl 0.9%) — é a única solução capaz de gerar perda líquida de água livre nesse contexto. NaCl 0.9% em grande volume não corrige a hiponatremia sintomática com a mesma eficácia e pode até piorá-la na SIADH; restrição hídrica isolada é lenta demais para um quadro convulsivo agudo; furosemida isolada não substitui a reposição ativa de sódio nessa emergência.",
+        reference: "Sterns RH. NEJM 2015",
+      },
+      {
+        type: "adjust",
+        question: "Com NaCl 3% selecionado, ajuste a dose e confira no painel a magnitude da subida do Na⁺ ao longo de 24h.\n\nQual o limite máximo seguro de correção de Na⁺ em 24h, e qual a complicação da correção excessivamente rápida?",
+        targetParams: {},
+        validator: (s) => {
+          if (!only(s, "NaCl 3% (hipertônico)")) return { correct: false, feedback: "Deixe apenas NaCl 3% (hipertônico) na prescrição." };
+          const delta = (s.lastLab?.na ?? 0) - (s.baseLab?.na ?? 0);
+          return (delta > 0 && delta <= 10) ? { correct: true, feedback: `Correção de ${delta.toFixed(1)} mEq/L em 24h — dentro do limite seguro.` } : { correct: false, feedback: "Confira o painel após a simulação rodar." };
+        },
+        options: [
+          "Não há limite estabelecido — quanto mais rápida a correção do sódio, menor o risco neurológico, já que os sintomas agudos (convulsão, coma) só regridem por completo quando a natremia é normalizada o quanto antes.",
+          "O limite seguro é de aproximadamente 30 mEq/L em 24h, já que o cérebro se adapta rapidamente às mudanças osmóticas quando a hiponatremia é sintomática e de instalação aguda, como neste caso.",
+          "O limite seguro costuma ficar entre 8 e 10 mEq/L em 24h; ultrapassá-lo pode causar mielinólise pontina osmótica — desmielinização da ponte cerebral com quadriplegia e disartria, mas consciência preservada.",
+          "A correção rápida do sódio tem como única consequência relevante uma cefaleia transitória nas primeiras horas, sem risco neurológico permanente associado à velocidade de correção utilizada.",
+        ],
+        correctIndex: 2,
+        explanation: "Regra de ouro: correção ≤8-10 mEq/L em 24h (≤6-8 se alto risco: alcoolismo, desnutrição, hipocalemia, Na <105). A mielinólise pontina osmótica (síndrome de desmielinização osmótica) ocorre por desidratação osmótica dos oligodendrócitos quando o Na⁺ sobe rápido demais; os sintomas costumam aparecer 2-6 dias após a correção, não imediatamente. Corrigir 'o quanto antes' não é mais seguro — mesmo em quadros sintomáticos agudos, o alvo é elevar o Na⁺ o suficiente para cessar os sintomas (4-6 mEq/L) e então desacelerar. Fórmula de Adrogue-Madias: ΔNa = (Na infusão − Na paciente) / (ACT + 1).",
+        reference: "Sterns RH. NEJM 2015",
+      },
+      {
+        type: "mcq",
+        question: "A paciente tem osmolaridade sérica 255 mOsm/kg (baixa) e urina 650 mOsm/kg (concentrada). Na urinário 85 mEq/L — dados não modelados neste simulador, apenas no enunciado do caso.\n\nPor que na SIADH a urina está inapropriadamente concentrada?",
+        options: [
+          "Porque o ADH está sendo secretado de forma independente da osmolaridade sérica, mantendo os canais de aquaporina-2 abertos no ducto coletor; o rim reabsorve água livre em excesso, diluindo o plasma mas concentrando a urina que resta.",
+          "Porque a SIADH causa desidratação severa por perda extrarrenal de volume, e é essa contração do volume circulante — não um efeito hormonal renal — que concentra secundariamente a urina remanescente.",
+          "Porque a SIADH reduz diretamente a taxa de filtração glomerular, diminuindo o volume de urina produzido e, por consequência matemática, aumentando a concentração de solutos na urina remanescente.",
+          "Porque o sódio urinário elevado satura os transportadores tubulares de reabsorção, forçando a água a ser retida passivamente junto ao excesso de sódio filtrado, concentrando a urina resultante.",
+        ],
+        correctIndex: 0,
+        explanation: "SIADH: ADH elevado (secretado sem relação com a osmolaridade sérica) → aquaporina-2 inserida na membrana luminal do ducto coletor → reabsorção de água livre → urina concentrada (>100 mOsm/kg, geralmente >300) e plasma diluído. A SIADH classicamente cursa com EUvolemia (não desidratação) — a paciente não está hipovolêmica. Também não há redução direta da TFG nem um mecanismo de 'saturação' de transportadores pelo sódio urinário — o determinante é a ação do ADH sobre a aquaporina-2. Critérios diagnósticos: (1) hiponatremia hipotônica, (2) euvolemia, (3) osmolaridade urinária >100, (4) Na urinário >40, (5) excluir hipotireoidismo e insuficiência adrenal.",
+        reference: "Ellison DH, Berl T. NEJM 2007",
+      },
+      {
+        type: "adjust",
+        question: "Deixe apenas NaCl 0.9% na prescrição (em vez de NaCl 3%). Neste simulador simplificado o Na⁺ ainda sobe um pouco — na fisiologia real, com urina mais concentrada que o soro infundido, o efeito líquido pode ser QUEDA do Na⁺.\n\nPor que o NaCl 0.9% pode PIORAR a hiponatremia na SIADH real?",
+        targetParams: {},
+        validator: (s) => only(s, "NaCl 0.9%") ? { correct: true, feedback: "NaCl 0.9% isolado selecionado — compare com o NaCl 3% do desafio anterior." } : { correct: false, feedback: "Deixe apenas NaCl 0.9% na prescrição." },
+        options: [
+          "Porque, com a urina mais concentrada que o soro infundido (>308 mOsm/kg), o rim excreta o Na⁺ e o Cl⁻ da solução mas retém a água livre por ação do ADH — o resultado líquido é ganho de água livre, piorando a hiponatremia.",
+          "Porque o NaCl 0.9% é diretamente tóxico para o epitélio tubular renal na SIADH, causando uma lesão renal aguda que reduz ainda mais a capacidade do rim de excretar sódio.",
+          "Porque a quantidade de sódio infundida no NaCl 0.9% excede a capacidade máxima de processamento renal neste contexto, fazendo o excesso de sódio ser eliminado junto com sódio corporal já existente.",
+          "Porque o NaCl 0.9% desencadeia edema pulmonar hidrostático na maioria dos pacientes com SIADH, e é essa sobrecarga pulmonar — não um efeito sobre a natremia — que agrava o quadro clínico.",
+        ],
+        correctIndex: 0,
+        explanation: "NaCl 0.9% tem osmolaridade de 308 mOsm/L. Se a osmolaridade urinária for maior que isso (como costuma ocorrer na SIADH), o rim concentra a urina mais do que o soro infundido: cada litro de NaCl 0.9% gera um ganho líquido de água livre, piorando a hiponatremia. NaCl 3% (1026 mOsm/L) é sempre hiperosmolar em relação à urina, garantindo perda de água livre. O NaCl 0.9% não é tóxico ao túbulo renal, não 'satura' uma capacidade de processamento de sódio, e não causa edema pulmonar na maioria dos pacientes com SIADH nas doses habituais — o problema é especificamente osmótico/hidroeletrolítico, não uma lesão direta. Alternativas reais: restrição hídrica (<800 mL/dia) + eventualmente furosemida (reduz a concentração urinária).",
+        reference: "Sterns RH. NEJM 2015",
+      },
+      {
+        type: "mcq",
+        question: "A paciente é pós-operatória neurocirúrgica.\n\nQual o mecanismo mais comum de SIADH no pós-operatório neurocirúrgico?",
+        options: [
+          "A manipulação cirúrgica do eixo hipotálamo-neuro-hipófise libera ADH armazenado (SIADH transitória) ou a inflamação pós-operatória altera o osmostato hipotalâmico; o quadro costuma ser transitório, durando dias a semanas.",
+          "A perda de sangue intraoperatória estimula diretamente a secreção de ADH como resposta compensatória à hipovolemia, sendo esse aumento hormonal desproporcional a causa da SIADH observada.",
+          "O uso excessivo de manitol no intraoperatório satura os receptores renais de ADH, fazendo com que o rim responda de forma exagerada a níveis hormonais normais de vasopressina.",
+          "A insuficiência adrenal aguda desencadeada pelo estresse anestésico da cirurgia reduz o cortisol circulante, e é essa queda hormonal — não um efeito sobre o ADH — que causa a retenção de água livre observada.",
+        ],
+        correctIndex: 0,
+        explanation: "SIADH pós-neurocirúrgica: a manipulação do eixo hipotálamo-neuro-hipofisário libera ADH pré-formado de forma não regulada, ou a inflamação local altera o osmostato hipotalâmico. Padrão bifásico possível em alguns casos: diabetes insipidus transitório (dias 1-3) seguido de SIADH (dias 4-10), com resolução ou DI permanente. A perda sanguínea intraoperatória, quando causa liberação de ADH, é por hipovolemia verdadeira (mecanismo apropriado, não SIADH); manitol não satura receptores de ADH; e insuficiência adrenal aguda, embora possa causar hiponatremia por outro mecanismo (perda de sal, não retenção pura de água), não é o mecanismo mais comum nesse contexto pós-cirúrgico. Monitorar Na⁺ sérico a cada 6h no pós-operatório.",
+        reference: "Harrison's Cap. 49",
+      },
+      {
+        type: "mcq",
+        question: "Se a correção ultrapassou o limite (Na⁺ subiu 12 mEq em 18h), o que fazer?\n\nConsidere que a paciente está assintomática após a correção.",
+        options: [
+          "Rebaixamento terapêutico (relowering): infundir água livre (glicose 5% EV) e/ou desmopressina (dDAVP) para reduzir o Na⁺ de volta e respeitar o limite de 8-10 mEq/24h — essa estratégia previne a mielinólise pontina osmótica.",
+          "Nada precisa ser feito, já que a correção já ocorreu e não é possível reverter o Na⁺ para um valor mais baixo uma vez que ele já subiu além do limite recomendado nas primeiras horas.",
+          "Administrar mais NaCl 3% para estabilizar definitivamente o novo nível de sódio alcançado, evitando flutuações adicionais que poderiam ser ainda mais prejudiciais ao sistema nervoso central.",
+          "Iniciar hemodiálise de urgência para remover o excesso de sódio da circulação de forma controlada e imediata, normalizando rapidamente a natremia para dentro da faixa de referência.",
+        ],
+        correctIndex: 0,
+        explanation: "Se detectada correção excessiva: (1) dDAVP 2 mcg EV a cada 8h (mimetiza o ADH e retém água), (2) glicose 5% EV (repõe água livre), (3) suspender o NaCl. Objetivo: trazer o Na⁺ de volta para dentro do limite seguro (8-10 mEq/24h), mesmo que a paciente esteja assintomática — a mielinólise pode se manifestar dias depois. Essa estratégia proativa de relowering reduziu bastante a incidência de mielinólise nos últimos anos. Reverter é possível e recomendado; mais NaCl 3% e diálise de urgência não são as condutas indicadas neste cenário.",
+        reference: "Sterns RH. NEJM 2015",
+      },
     ],
   ];
 
