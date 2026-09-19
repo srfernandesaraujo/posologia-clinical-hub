@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.student-performance]
 verify_jwt = false
+
+[functions.fix-legacy-adjust-answers]
+verify_jwt = false
