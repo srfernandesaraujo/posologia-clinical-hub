@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
           typeof q.userAnswer === "string" &&
           typeof q.correctAnswer === "string" &&
           q.userAnswer.trim() !== "" &&
+          q.userAnswer !== PLACEHOLDER &&
           q.userAnswer === q.correctAnswer;
 
         if (!isBugged) return q;
