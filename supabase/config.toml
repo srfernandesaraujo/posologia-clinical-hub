@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.voice-patient-eval]
 verify_jwt = false
+
+[functions.student-performance]
+verify_jwt = false
