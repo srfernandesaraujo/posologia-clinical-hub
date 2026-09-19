@@ -228,12 +228,26 @@ export default function SimulatorChallengeMode({
       const val = simulatorState[key] ?? simulatorState?.outputs?.[key];
       return `${spec.label}: ${val ?? "?"} (faixa: ${spec.min}–${spec.max})`;
     }).join("; ");
+    const rangeSummary = Object.entries(challenge.targetParams || {})
+      .map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ");
+
+    // Many "adjust" challenges validate via a custom validator() (checking
+    // selected drugs, doses, lab deltas, etc.) instead of simple targetParams
+    // min/max ranges — targetParams is {} for those, so paramsSummary/rangeSummary
+    // are both empty. Left as-is, that collapsed userAnswer/correctAnswer to the
+    // *identical* "| Alternativa: X" string whenever the MCQ was answered
+    // correctly but the adjust portion wasn't — hiding the real reason the
+    // question was marked wrong. Fall back to the validator's own feedback
+    // message, which already describes the student's specific situation.
+    const adjustUserPart = paramsSummary || result.feedback;
+    const adjustCorrectPart = rangeSummary || (result.correct ? result.feedback : "Configuração correta conforme o enunciado.");
+
     const userAnswerStr = hasOptions
-      ? `${paramsSummary} | Alternativa: ${String.fromCharCode(65 + (chosenOption ?? 0))}`
-      : paramsSummary;
+      ? `${adjustUserPart} | Alternativa: ${String.fromCharCode(65 + (chosenOption ?? 0))}`
+      : adjustUserPart;
     const correctAnswerStr = hasOptions
-      ? `${Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ")} | Alternativa: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}`
-      : Object.entries(challenge.targetParams || {}).map(([_, spec]) => `${spec.label}: ${spec.min}–${spec.max}`).join("; ");
+      ? `${adjustCorrectPart} | Alternativa: ${String.fromCharCode(65 + (challenge.correctIndex ?? 0))}`
+      : adjustCorrectPart;
 
     questionResultsRef.current.push({
       index: currentIndex,
