@@ -31,7 +31,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-wpagents-key",
 };
 
+// A test/instructor account can rack up many activities over a semester —
+// the sibling TBL repo hit this live (11 rooms in one payload made the
+// caller's own LLM tool-result call time out even at 60s, and would have
+// produced an unreadable wall of text on WhatsApp regardless). Default to
+// just the single most recent activity; a student who wants an older one
+// can name its room via the optional `sala` argument, after being told
+// (via mais_atividades_disponiveis, below) which other rooms exist.
 const MAX_ACTIVITIES = 15;
+const DEFAULT_ACTIVITY_LIMIT = 1;
 // Bounds the group_members scan below to recent joins, so it doesn't grow
 // unbounded as rooms accumulate over semesters/years.
 const GROUP_SCAN_SINCE_DAYS = 365;
@@ -70,7 +78,7 @@ async function sendVerificationEmail(email: string, code: string) {
   if (error) throw new Error(typeof error === "string" ? error : error.message || "Falha ao enviar e-mail");
 }
 
-async function findStudentPerformance(supabase: any, email: string) {
+async function findStudentPerformance(supabase: any, email: string, salaFilter?: string | null) {
   // Direct matches: the participant themselves (solo) or the group leader
   // registered this e-mail directly. ilike is only a DB-side pre-filter —
   // "_"/"%" in the e-mail are LIKE wildcards, so every candidate is
@@ -133,7 +141,29 @@ async function findStudentPerformance(supabase: any, email: string) {
   if (roomsErr) throw roomsErr;
   const roomTitleById = new Map((rooms || []).map((r: any) => [r.id, r.title]));
 
-  const atividades = submissions.map((sub: any) => {
+  let selectedSubmissions = submissions;
+  let maisAtividadesDisponiveis: { sala: string; data: string }[] = [];
+  if (salaFilter) {
+    const matched = submissions.filter((s: any) => (roomTitleById.get(s.room_id) || "").toLowerCase().includes(salaFilter.toLowerCase()));
+    if (matched.length === 0) {
+      return {
+        aluno_email: email,
+        encontrado: true,
+        atividade_nao_encontrada: salaFilter,
+        salas_disponiveis: submissions.map((s: any) => roomTitleById.get(s.room_id) || "Sala"),
+        atividades: [],
+      };
+    }
+    selectedSubmissions = matched;
+  } else if (submissions.length > DEFAULT_ACTIVITY_LIMIT) {
+    maisAtividadesDisponiveis = submissions.slice(DEFAULT_ACTIVITY_LIMIT).map((s: any) => ({
+      sala: roomTitleById.get(s.room_id) || "Sala",
+      data: s.submitted_at,
+    }));
+    selectedSubmissions = submissions.slice(0, DEFAULT_ACTIVITY_LIMIT);
+  }
+
+  const atividades = selectedSubmissions.map((sub: any) => {
     const participant = participantsById.get(sub.participant_id);
     const base = {
       sala: roomTitleById.get(sub.room_id) || "Sala",
@@ -164,7 +194,12 @@ async function findStudentPerformance(supabase: any, email: string) {
     return { ...base, tipo: "atividade" };
   });
 
-  return { aluno_email: email, encontrado: true, atividades };
+  return {
+    aluno_email: email,
+    encontrado: true,
+    atividades,
+    ...(maisAtividadesDisponiveis.length ? { mais_atividades_disponiveis: maisAtividadesDisponiveis } : {}),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -182,17 +217,20 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     let email = url.searchParams.get("email");
     let code = url.searchParams.get("code");
+    let sala = url.searchParams.get("sala");
     if (!email && req.method === "POST") {
       try {
         const body = await req.json();
         email = body?.email ?? null;
         code = body?.code ?? code;
+        sala = body?.sala ?? sala;
       } catch {
         // no/invalid JSON body — email stays null, handled below
       }
     }
     email = (email || "").trim().toLowerCase();
     code = (code || "").trim();
+    sala = (sala || "").trim() || null;
 
     if (!email || !email.includes("@")) {
       return json({ error: "Parâmetro 'email' ausente ou inválido." }, 400);
@@ -244,7 +282,7 @@ Deno.serve(async (req) => {
         .update({ consumed_at: new Date().toISOString() })
         .eq("id", pending.id);
 
-      const result = await findStudentPerformance(supabase, email);
+      const result = await findStudentPerformance(supabase, email, sala);
       return json({ status: "verified", ...result });
     }
 
