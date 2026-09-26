@@ -23,12 +23,21 @@ import { getHeppatopatiaChallenges } from "@/data/simulatorChallenges";
 
 const SLUG = "farmacoterapia-hepatopatia";
 
+// Tooltips do Recharts herdam texto preto por padrão, ilegível no tema escuro.
+const TOOLTIP_STYLE = {
+  contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" },
+  labelStyle: { color: "hsl(var(--foreground))" },
+  itemStyle: { color: "hsl(var(--foreground))" },
+};
+
 interface HepatoDrug {
   name: string; class: string;
   doseMin: number; doseMax: number; doseUnit: string; doseStep: number;
   effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number };
   sideEffects: { hepatotox: number; gi: number; nefrotox: number; neurotox: number };
   daysToEffect: number;
+  /** Conduta sem dose (ex.: suspender o fármaco suspeito): esconde o slider. */
+  noDose?: boolean;
   /**
    * Multiplicador do efeito hepático que de fato se aplica, dado o perfil do
    * caso — sem isso, NAC "curava" qualquer hepatopatia igualmente bem, não só
@@ -51,6 +60,10 @@ const DRUGS: HepatoDrug[] = [
   // Em necrose hepatocelular maciça (ALT/AST >1000) o INR alto vem de falha de síntese dos fatores, não de falta de vitamina K — por isso ela quase não o corrige ("teste de Koller" negativo).
   { name: "Vitamina K", class: "Hemostático", doseMin: 5, doseMax: 20, doseUnit: "mg EV", doseStep: 5, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: -0.5 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 0.05 : 1 },
   { name: "Albumina 20%", class: "Expansor plasmático", doseMin: 50, doseMax: 200, doseUnit: "mL EV", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.5, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.02, nefrotox: 0, neurotox: 0 }, daysToEffect: 0.5 },
+  // Retirada do agente causador (dechallenge) — a conduta correta em lesão hepática por fármaco de uso contínuo.
+  // O efeito é proporcional à gravidade (ALT 520 = 1,0) e só existe em lesão hepatocelular de ALT 150–1000:
+  // em ALT >1000 (ingestão aguda única) não há exposição a suspender, e em ALT baixa (cirrose) não há o que suspender.
+  { name: "Suspender o fármaco suspeito", class: "Conduta", doseMin: 1, doseMax: 1, doseUnit: "", doseStep: 1, noDose: true, effects: { alt: -410, ast: -390, fa: -15, ggt: -60, bilirrubinaT: -0.9, albumina: 0.1, inr: -0.2 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => lab.alt > 1000 ? 0 : lab.alt > 150 ? Math.min(1, lab.alt / 520) : 0.02 },
 ];
 
 interface HepatoCase {
@@ -80,7 +93,7 @@ const BUILT_IN_CASES: HepatoCase[] = [
     patient: { name: "Roberto Silva", age: 55, weight: 68, sex: "M", specialGroup: ["Etilista"], diagnosis: "Hepatite medicamentosa — ALT >5×LSN + icterícia" },
     scenario: "Homem 55 anos, em tratamento de TB latente com isoniazida há 8 semanas. Etilista. Icterícia, fadiga. Os exames revelam os seguintes resultados: ALT 520 U/L, AST 480 U/L, GGT 220 U/L, bilirrubina total 5,0 mg/dL, INR 1,5.",
     baseLab: { alt: 520, ast: 480, fa: 140, ggt: 220, bilirrubinaD: 3.0, bilirrubinaI: 2.0, bilirrubinaT: 5.0, albumina: 3.2, tp: 55, inr: 1.5 },
-    expectedDrugs: [],
+    expectedDrugs: ["Suspender o fármaco suspeito"],
     clinicalTip: "Hepatotoxicidade por INH: suspender se ALT >5× assintomático ou >3× com sintomas. Etilismo = fator de risco (CYP2E1).",
     references: ["ATS/IDSA 2006"],
   },
@@ -309,10 +322,14 @@ export default function SimuladorHepatopatia() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem>)}</SelectContent>
             </Select>
-            <div>
-              <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
-            </div>
+            {selectedDrug.noDose ? (
+              <p className="text-xs text-muted-foreground">Sem dose: simula a retirada do fármaco que causou a lesão hepática. Só tem efeito em lesão hepatocelular por uso contínuo.</p>
+            ) : (
+              <div>
+                <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
+                <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
+              </div>
+            )}
             <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
           </CardContent>
         </Card>
@@ -330,7 +347,7 @@ export default function SimuladorHepatopatia() {
                 <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis yAxisId="enz" domain={[(min: number) => Math.max(0, Math.floor(min * 0.85)), (max: number) => Math.ceil(max * 1.08)]} stroke="hsl(var(--muted-foreground))" />
                 <YAxis yAxisId="fn" orientation="right" domain={[0, "auto"]} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Tooltip {...TOOLTIP_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <ReferenceLine yAxisId="enz" y={activeCase?.baseLab.alt} stroke="hsl(var(--chart-1))" strokeDasharray="2 4" strokeOpacity={0.5} label={{ value: "ALT basal", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
@@ -419,7 +436,7 @@ export default function SimuladorHepatopatia() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis type="number" domain={[0, 100]} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+              <Tooltip {...TOOLTIP_STYLE} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
               <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
