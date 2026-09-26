@@ -43,8 +43,8 @@ interface HepatoDrug {
 const DRUGS: HepatoDrug[] = [
   { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -1000, ast: -900, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.6 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.02 },
   { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 4 : 1 },
-  { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 7 },
-  { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 14 },
+  { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 3 },
+  { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 2 },
   { name: "Fluconazol", class: "Azólico", doseMin: 100, doseMax: 400, doseUnit: "mg/dia", doseStep: 50, effects: { alt: 30, ast: 25, fa: 15, ggt: 20, bilirrubinaT: 0.3, albumina: 0, inr: 0.3 }, sideEffects: { hepatotox: 0.2, gi: 0.15, nefrotox: 0.1, neurotox: 0 }, daysToEffect: 3 },
   { name: "Lactulose", class: "Laxativo osmótico", doseMin: 15, doseMax: 60, doseUnit: "mL 8/8h", doseStep: 15, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.2, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.3, nefrotox: 0, neurotox: -0.3 }, daysToEffect: 1 },
   { name: "Rifaximina", class: "ATB intestinal", doseMin: 400, doseMax: 550, doseUnit: "mg 12/12h", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.1, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.1, nefrotox: 0, neurotox: -0.2 }, daysToEffect: 3 },
@@ -321,17 +321,18 @@ export default function SimuladorHepatopatia() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Tendência Laboratorial (7 dias)</CardTitle>
-            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
+            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L; o eixo não parte do zero, para destacar a variação; a linha pontilhada é o ALT basal). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={displayTrend} margin={{ right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="enz" stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="enz" domain={[(min: number) => Math.max(0, Math.floor(min * 0.85)), (max: number) => Math.ceil(max * 1.08)]} stroke="hsl(var(--muted-foreground))" />
                 <YAxis yAxisId="fn" orientation="right" domain={[0, "auto"]} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
+                <ReferenceLine yAxisId="enz" y={activeCase?.baseLab.alt} stroke="hsl(var(--chart-1))" strokeDasharray="2 4" strokeOpacity={0.5} label={{ value: "ALT basal", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
                 <Line yAxisId="enz" type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
                 <Line yAxisId="fn" type="monotone" dataKey="inr" name="INR (eixo dir.)" stroke="hsl(var(--chart-4))" strokeWidth={3} dot />
