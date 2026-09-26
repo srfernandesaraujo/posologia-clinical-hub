@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
 import { getFullAccess } from "../_shared/subscription.ts";
+import { sanitizeAndLintSteps } from "../_shared/simulator-quality.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -121,6 +122,26 @@ TIPOS DE PANELS DISPONÍVEIS:
    - formula_hint: "Dose = Concentração × Volume"
    USE ESTE TIPO quando o aluno precisa calcular doses, taxas de infusão, clearances, etc.
 
+9. **"explorer"** - Painel de EXPLORAÇÃO (o "ajuste" do simulador): o aluno escolhe uma opção (fármaco, dose, conduta, parâmetro) e VÊ o resultado antes de decidir. A etapa só é liberada depois que ele testa TODAS as opções.
+   Campos: explorerConfig com:
+   - controlLabel: instrução curta (ex: "Teste cada conduta e compare o resultado")
+   - baseline: [{label: "ALT", value: "180", unit: "U/L"}]  (valores ANTES da opção; opcional)
+   - options: 2 a 5 itens {label: "Suspender o fármaco suspeito", outcomes: [{label: "ALT", value: "88", unit: "U/L", trend: "down", effect: "good"}, ...], note: "comentário opcional curto"}
+       trend: "up" | "down" | "same"; effect: "good" | "bad" | "neutral" (bom/ruim PARA O PACIENTE)
+   - requireAll: true
+   REGRAS: use os MESMOS rótulos de outcomes em todas as opções (para permitir comparar); os números devem ser coerentes entre si e com o paciente (calcule antes de escrever); inclua contraste real (uma opção que melhora o marcador certo, uma que melhora só um número bonito sem tratar a causa, uma que piora).
+   No máximo 3 painéis por etapa: combine "info" (caso) + "explorer" (testar) + "radio" (interpretar/decidir).
+
+PADRÃO PEDAGÓGICO OBRIGATÓRIO (vale para TODO simulador criado):
+- O aluno MEXE, LÊ o resultado, INTERPRETA e DECIDE. Nunca faça perguntas de memorização pura ("qual o mecanismo de X?"): a pergunta deve ser respondível apenas a partir do que o aluno viu no explorer/chart/cálculo e do caso.
+- Fluxo típico de uma etapa: "info" (situação e números do caso) -> "explorer" (testar condutas) -> "radio" ou "checklist" (interpretar e decidir). O título do painel radio/checklist é a PERGUNTA: cite números do caso, mande comparar o que o aluno viu e peça a leitura que sustenta a decisão. Pode incluir um colega que propõe uma conduta plausível porém errada.
+- Em pelo menos UMA etapa use "explorer". Encadeie: o resultado de uma etapa vira dado da seguinte.
+- Alternativas (radio): 4 opções. TODAS com comprimento parecido (a correta NÃO pode ser a mais longa nem a mais curta) e mesma estrutura de frase; a correta não deve ser a primeira; todas aceitam o mesmo fato observado e diferem no mecanismo ou na decisão; sem absolutos (sempre, nunca, apenas, em nenhum cenário); cada distrator tem UM erro claro e plausível (leitura parcial dos números, mecanismo errado, limiar errado, conduta que ignora o contexto, "número bonito" que não trata a causa). Nada de "todas as anteriores".
+- Revisão de prescrição (problema quase real): 3-4 itens numa frase de estrutura idêntica em todas as opções; cada distrator erra um item diferente.
+- feedback de cada etapa: cite os números do explorer, explique por que cada erro tentador é errado e termine na conduta. Termine o enunciado sugerindo discussão em grupo quando fizer sentido.
+- O painel "info" descreve achados e valores, sem entregar o diagnóstico nem a resposta.
+- Use limites de referência ao citar exames e informações clinicamente corretas (não invente diretrizes ou referências).
+
 REGRAS IMPORTANTES PARA INTERFACES RICAS:
 - Quando o usuário pedir simulação de equipamentos (bombas, monitores), USE os tipos "numeric_keypad", "indicator" e "chart"
 - Quando o usuário pedir curvas ou gráficos, USE o tipo "chart" com dados realistas
@@ -168,7 +189,7 @@ REGRAS GERAIS:
                     type: "object" as const,
                     properties: {
                       title: { type: "string" as const },
-                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text", "chart", "numeric_keypad", "indicator", "calculation"] },
+                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text", "chart", "numeric_keypad", "indicator", "calculation", "explorer"] },
                       content: { type: "string" as const, description: "Conteúdo textual para type info. Use **negrito** e \\n para quebras de linha." },
                       options: { type: "array" as const, items: { type: "string" as const }, description: "Opções para checklist/radio" },
                       correctAnswers: { type: "array" as const, items: { type: "string" as const }, description: "Respostas corretas para checklist/radio" },
@@ -207,6 +228,28 @@ REGRAS GERAIS:
                           displayValues: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, value: { type: "string" as const }, unit: { type: "string" as const } }, required: ["label", "value"] as const } },
                         },
                         required: ["indicators"] as const,
+                      },
+                      explorerConfig: {
+                        type: "object" as const,
+                        description: "Configuração do painel de exploração (aluno testa opções e vê o resultado) para type explorer",
+                        properties: {
+                          controlLabel: { type: "string" as const },
+                          baseline: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, value: { type: "string" as const }, unit: { type: "string" as const } }, required: ["label", "value"] as const } },
+                          options: {
+                            type: "array" as const,
+                            items: {
+                              type: "object" as const,
+                              properties: {
+                                label: { type: "string" as const },
+                                outcomes: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, value: { type: "string" as const }, unit: { type: "string" as const }, trend: { type: "string" as const, enum: ["up", "down", "same"] }, effect: { type: "string" as const, enum: ["good", "bad", "neutral"] } }, required: ["label", "value"] as const } },
+                                note: { type: "string" as const },
+                              },
+                              required: ["label", "outcomes"] as const,
+                            },
+                          },
+                          requireAll: { type: "boolean" as const },
+                        },
+                        required: ["options"] as const,
                       },
                       calculationConfig: {
                         type: "object" as const,
@@ -376,6 +419,8 @@ REGRAS GERAIS:
     const toolData = JSON.parse(toolCall.function.arguments);
 
     if (isSimulator) {
+      const { steps: cleanSteps, warnings: qualityWarnings } = sanitizeAndLintSteps(toolData.steps);
+      if (qualityWarnings.length) console.warn("generate-tool quality warnings:", qualityWarnings);
       const result = {
         name: toolData.name,
         slug: toolData.slug,
@@ -387,10 +432,10 @@ REGRAS GERAIS:
         formula: {
           type: "simulator",
           patient_summary: toolData.patient_summary,
-          steps: toolData.steps,
+          steps: cleanSteps,
         },
       };
-      return new Response(JSON.stringify({ tool: result }), {
+      return new Response(JSON.stringify({ tool: result, quality_warnings: qualityWarnings }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {

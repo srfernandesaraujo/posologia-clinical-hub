@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
+import { sanitizeAndLintSteps, shuffleIndexedQuestions } from "../_shared/simulator-quality.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -771,6 +772,34 @@ Crie cadeias realistas de 5-8 medicamentos. Pelo menos 2 devem ser cascatas iden
 
   "nutricao-materno-infantil": `Gere um caso clínico para o Simulador de Nutrição Materno-Infantil. O caso deve conter: title, difficulty, patient (name, age, ig, imcPreGest, currentWeight, preWeight, height, labs), idealAtalah (baixo-peso/adequado/sobrepeso/obesidade), idealGainRange, idealSupplements ({acidoFolico, ferro, calcio, vitD, omega3}), complication (texto), idealCompAction (aumentar-ferro/dieta-dmg/restringir-sodio/manter), consequence ({correct, wrong}).`,
 
+  "farmacoterapia-hepatopatia": `Gere um caso clínico COMPLETO para o Simulador de Hepatopatias e Ajuste Terapêutico.
+O simulador mostra o hepatograma após 7 dias de uma conduta escolhida pelo aluno (fármaco + dose, ou uma conduta como "Suspender o fármaco suspeito"), o escore de Child-Pugh e riscos de efeitos adversos. O caso é usado em atividades em grupo com "Modo Desafio": o aluno testa condutas, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array; use apenas: "Cirrose", "Ascite", "Etilista", "DM2", "Idoso", "DRC"), diagnosis (hipótese diagnóstica curta, uso do professor) }
+- scenario: apresentação clínica em 2-4 frases e, ao final, "Os exames revelam os seguintes resultados: ..." com os MESMOS valores de baseLab (bilirrubina total, albumina, INR, ALT, AST e o que for relevante). NUNCA escreva o diagnóstico, a causa provável nem a conduta no scenario: apenas achados e valores (por exemplo, inclua "sem ascite ao exame" quando for o caso).
+- baseLab: { alt, ast, fa, ggt (U/L), bilirrubinaD, bilirrubinaI, bilirrubinaT (mg/dL, bilirrubinaT = D + I), albumina (g/dL), tp (% de atividade), inr, nh3 (µmol/L; OPCIONAL, só se houver encefalopatia), cpk (U/L; OPCIONAL, só no arquétipo de interação estatina + azólico) }
+  Limites superiores do painel: ALT 56, AST 40, FA 129, GGT 61, bilirrubina total 1,2, albumina mínima 3,5, INR 1,2, amônia 35, CPK 200.
+- clinical: { encefalopatia (1 = ausente, 2 = grau I-II, 3 = grau III-IV), ascite (1 = ausente, 2 = leve, 3 = moderada/grave) } coerente com o scenario (é o estado inicial do Child-Pugh no simulador).
+- expectedDrugs: 1 a 2 nomes EXATOS da lista do simulador: "N-Acetilcisteína (NAC)", "Paracetamol", "Atorvastatina", "Isoniazida", "Fluconazol", "Lactulose", "Rifaximina", "Vitamina K", "Albumina 20%", "Suspender o fármaco suspeito". Não invente outros nomes.
+- flags: ["estatina-azolico"] SOMENTE no arquétipo de interação estatina + azólico (e então inclua também baseLab.cpk); caso contrário omita.
+- clinicalTip: 1-2 frases com a conduta e limites de segurança.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- NAC reduz ALT/AST/INR apenas em lesão aguda maciça (ALT ou AST > 1000, intoxicação por paracetamol).
+- Vitamina K reduz o INR, exceto em necrose maciça (ALT/AST > 1000); ela não muda ALT, bilirrubina nem amônia.
+- Paracetamol: até 2 g/dia é neutro na cirrose; em lesão hepatocelular ativa (ALT > 500) piora os exames em qualquer dose.
+- "Suspender o fármaco suspeito" só age em lesão hepatocelular por fármaco de uso contínuo (ALT entre 150 e 1000); é inerte na cirrose e na ingestão aguda única.
+- Lactulose e rifaximina reduzem a amônia (só existe se baseLab.nh3 estiver definido); a lactulose custa mais efeito GI que a rifaximina.
+- Albumina 20% só eleva a albumina sérica. Isoniazida, fluconazol e atorvastatina elevam enzimas.
+
+ARQUÉTIPOS (varie entre eles): (1) intoxicação aguda por paracetamol; (2) hepatite medicamentosa por fármaco de uso contínuo (ex.: isoniazida) em paciente com fator de risco; (3) cirrose descompensada com encefalopatia e/ou ascite (ALT/AST baixas, bilirrubina, INR e albumina alterados); (4) miopatia/interação estatina + azólico (transaminases altas com CPK muito alta e função hepática normal); (5) encefalopatia hepática precipitada por infecção ou constipação.
+
+COERÊNCIA OBRIGATÓRIA: valores plausíveis para o arquétipo (ALT > 1000 só em lesão aguda; cirrose avançada tem ALT baixa); o scenario, baseLab, clinical e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 
@@ -885,6 +914,8 @@ INSTRUÇÕES:
 - Para painéis "numeric_keypad": mantenha keypadConfig mas atualize correctValue para o novo cenário
 - Para painéis "indicator": atualize indicatorConfig.displayValues com novos valores
 - Para painéis "calculation": mantenha calculationConfig.fields mas atualize correctValue
+- Para painéis "explorer": mantenha as mesmas opções (labels) e os mesmos rótulos de outcomes, e atualize baseline e os valores/trend/effect dos outcomes para o novo paciente, com números coerentes entre si (o aluno testa cada opção e compara antes de decidir)
+- Para painéis "radio" com a decisão: 4 alternativas de comprimento parecido, a correta NÃO pode ser a mais longa nem a primeira, sem absolutos (sempre/nunca), todas aceitando o mesmo fato observado
 - Atualize o feedback de cada step para o novo cenário
 - Mantenha patient_summary atualizado
 - O caso deve ter title, difficulty, patient_summary e steps
@@ -905,7 +936,7 @@ Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma
 
     const { data } = await callAI({ userId, promptType: "case-generate",
       messages: [
-        { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
+        { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. REGRAS DE QUALIDADE: (1) o texto do cenário apresenta achados e valores, NUNCA o diagnóstico nem a conduta; (2) todo número do texto deve ser idêntico ao dos campos estruturados; (3) valores laboratoriais plausíveis e coerentes com a fisiopatologia; (4) quando o prompt listar fármacos/condutas do simulador, use SOMENTE esses nomes, exatamente como escritos; (5) referências reais e verificáveis (autor, periódico, ano), nunca inventadas; (6) em perguntas de múltipla escolha, 4 opções de comprimento parecido, sem absolutos (sempre/nunca/apenas) e sem que a correta se destaque pelo tamanho. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
         { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
       ],
       temperature: 1.2,
@@ -921,6 +952,15 @@ Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma
 
     const result = JSON.parse(jsonStr);
     const { title, difficulty, ...caseFields } = result;
+
+    // Qualidade determinística (a IA tende a pôr a correta primeiro/mais longa): embaralha alternativas e valida painéis.
+    const cf = caseFields as Record<string, any>;
+    if (Array.isArray(cf.steps)) {
+      const q = sanitizeAndLintSteps(cf.steps);
+      cf.steps = q.steps;
+      if (q.warnings.length) console.warn("generate-case quality warnings:", q.warnings);
+    }
+    if (Array.isArray(cf.perguntasLegais)) cf.perguntasLegais = shuffleIndexedQuestions(cf.perguntasLegais);
 
     console.log("Generated case fields:", Object.keys(caseFields));
 

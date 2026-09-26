@@ -1,6 +1,16 @@
 /**
  * System prompts nativos de todas as calculadoras, simuladores e jogos.
  * Visível apenas para administradores do sistema.
+ *
+ * PADRÃO DE DESAFIOS (todo simulador novo ou revisado deve seguir; detalhes em
+ * .claude/skills/revisar-desafios-simulador/references/padrao-de-desafios.md):
+ *  - o aluno MEXE no simulador, LÊ o resultado, INTERPRETA e DECIDE em grupo (nunca só memorização);
+ *  - desafios de ajuste (adjust + alternativas) com `context` dizendo onde ficam os controles e `validator` que confere o
+ *    estado final e a premissa numérica;
+ *  - alternativas: 4, de comprimento parecido (a correta nunca é a mais longa/curta), posição variada, mesmo fato observado
+ *    em todas, sem absolutos, cada distrator com um erro definido;
+ *  - todo número citado é calculado no motor; o motor precisa conseguir MOSTRAR o desfecho perguntado.
+ * Ao criar uma entrada `sim-<slug>` inclua a seção "MODO DESAFIO" abaixo (veja `sim-farmacoterapia-hepatopatia`).
  */
 
 export const nativeSystemPrompts: Record<string, string> = {
@@ -2249,6 +2259,31 @@ REFERÊNCIAS BASE:
 - Aulas 17-19 (Entendendo, Tratando e Situações Especiais da Asma)
 - GINA 2023 Report
 - Reddel HK et al. Lancet 2022 (MART)`,
+
+  "sim-farmacoterapia-hepatopatia": `Você é um especialista em hepatologia clínica e farmacoterapia. Crie um simulador de Hepatopatias e Ajuste Terapêutico (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Hepatograma após 7 dias de conduta: ALT, AST, FA, GGT, bilirrubina total, albumina, INR e, quando o caso define, amônia e CPK (medidores com limites de referência)
+- Controles: fármaco e dose (N-Acetilcisteína, Paracetamol, Atorvastatina, Isoniazida, Fluconazol, Lactulose, Rifaximina, Vitamina K, Albumina 20%) e condutas sem dose ("Suspender o fármaco suspeito"; "Manter atorvastatina + fluconazol (esquema atual)" só no caso da interação)
+- Gráfico de tendência de 7 dias com eixo esquerdo para ALT/AST/amônia (sem partir do zero, com linha do ALT basal) e eixo direito para INR, bilirrubina e albumina
+- Card "Escore de Child-Pugh" com seletores de Encefalopatia e Ascite (iniciam com o quadro do caso) e tabela de pontos por variável (valores do hepatograma após o tratamento)
+- Efeitos dependem da gravidade do caso: NAC só em lesão aguda maciça; vitamina K não corrige o INR em necrose maciça; paracetamol até 2 g/dia neutro na cirrose; suspender só age em lesão hepatocelular por fármaco de uso contínuo
+- Riscos de efeitos adversos (hepatotoxicidade, GI, nefrotoxicidade, neurotoxicidade) por dose
+- 5 casos nativos: intoxicação por paracetamol (Lucas), hepatite por isoniazida em etilista (Roberto), cirrose Child C com encefalopatia e ascite (Dona Aparecida), interação estatina + fluconazol com miopatia (Marcos), encefalopatia precipitada por infecção e constipação (Seu Joaquim)
+- Casos gerados por IA seguem o mesmo formato (baseLab, clinical, expectedDrugs, flags opcionais)
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno testa condutas, lê o hepatograma, o gráfico e as barras de risco, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: comparação de condutas; revisão de prescrição multi-item (cada distrator erra um item); contraste entre casos; lesão x função (transaminases x bilirrubina/INR/albumina); cálculo com dados do caso (fator R, AST/ALT, gramas de proteína); seguimento e alta
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+
+REFERÊNCIAS:
+- Vilstrup H et al. Hepatology 2014 (AASLD/EASL, encefalopatia hepática)
+- Chalasani NP et al. Am J Gastroenterol 2021 (lesão hepática por fármacos)
+- Polson J, Lee WM. Hepatology 2005; Bernal W, Wendon J. NEJM 2013 (falência hepática aguda)
+- Biggins SW et al. Hepatology 2021; EASL J Hepatol 2018 (ascite, albumina, síndrome hepatorrenal)
+- Stroes ES et al. Eur Heart J 2015 (miopatia por estatinas)`,
 };
 
 

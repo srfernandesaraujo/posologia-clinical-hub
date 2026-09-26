@@ -79,18 +79,30 @@ interface IndicatorConfig {
   indicators: { label: string; status: "on" | "off" | "blink"; color: "green" | "red" | "yellow" | "blue"; icon?: string }[];
   displayValues?: { label: string; value: string; unit?: string }[];
 }
+/** Painel de exploração ("ajuste"): o aluno testa cada opção e vê o resultado antes de decidir. Não é corrigido; só libera a etapa. */
+interface ExplorerConfig {
+  controlLabel?: string;
+  baseline?: { label: string; value: string; unit?: string }[];
+  options: {
+    label: string;
+    outcomes: { label: string; value: string; unit?: string; trend?: "up" | "down" | "same"; effect?: "good" | "bad" | "neutral" }[];
+    note?: string;
+  }[];
+  requireAll?: boolean;
+}
 interface CalculationFieldConfig {
   fields: { name: string; label: string; unit?: string; correctValue?: number; tolerance?: number }[];
   formula_hint?: string;
 }
 interface SimPanel {
-  title: string; type: "info" | "checklist" | "radio" | "text" | "chart" | "numeric_keypad" | "indicator" | "calculation";
+  title: string; type: "info" | "checklist" | "radio" | "text" | "chart" | "numeric_keypad" | "indicator" | "calculation" | "explorer";
   content?: string; options?: string[];
   correctAnswers?: string[]; correctText?: string;
   chartConfig?: ChartConfig;
   keypadConfig?: NumericKeypadConfig;
   indicatorConfig?: IndicatorConfig;
   calculationConfig?: CalculationFieldConfig;
+  explorerConfig?: ExplorerConfig;
 }
 interface SimStep {
   title: string; feedback: string; panels: SimPanel[];
@@ -348,7 +360,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     if (!s) return { correct: 0, total: 0 };
     let correct = 0, total = 0;
     s.panels.forEach((panel, pi) => {
-      if (panel.type === "info" || panel.type === "chart" || panel.type === "indicator") return;
+      if (panel.type === "info" || panel.type === "chart" || panel.type === "indicator" || panel.type === "explorer") return;
       total++;
       const userAns = answers[stepIdx]?.[pi];
       if (panel.type === "checklist" && panel.correctAnswers) {
@@ -377,9 +389,15 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     return { correct, total };
   };
 
-  const hasInteractivePanels = step?.panels.some(p => !["info", "chart", "indicator"].includes(p.type));
+  const hasInteractivePanels = step?.panels.some(p => !["info", "chart", "indicator", "explorer"].includes(p.type));
+  // Painéis de exploração: a etapa só libera depois de testar todas as opções (salvo requireAll === false).
+  const explorersPending = (step?.panels || []).reduce((sum, p, pi) => {
+    if (p.type !== "explorer" || !p.explorerConfig || p.explorerConfig.requireAll === false) return sum;
+    const visited: number[] = answers[currentStep]?.[pi]?.visited || [];
+    return sum + Math.max(0, p.explorerConfig.options.length - visited.length);
+  }, 0);
   const hasAnswered = step?.panels.some((p, pi) => {
-    if (["info", "chart", "indicator"].includes(p.type)) return false;
+    if (["info", "chart", "indicator", "explorer"].includes(p.type)) return false;
     const ans = answers[currentStep]?.[pi];
     if (p.type === "checklist") return (ans as string[] || []).length > 0;
     if (p.type === "radio") return !!ans;
@@ -420,7 +438,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
               </CardHeader>
               <CardContent className="text-sm">
                 <div className="bg-muted p-3 rounded mb-2"><strong>Feedback:</strong> {s.feedback}</div>
-                {s.panels.filter(p => p.type !== "info").map((panel, pi) => {
+                {s.panels.map((panel, pi) => ({ panel, pi })).filter(({ panel }) => panel.type !== "info" && panel.type !== "explorer").map(({ panel, pi }) => {
                   const userAns = answers[si]?.[pi];
                   return (
                     <div key={pi} className="mt-2 text-muted-foreground">
@@ -641,6 +659,58 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
               })()}
 
               {/* ─── Indicator Panel ─── */}
+              {panel.type === "explorer" && panel.explorerConfig && (() => {
+                const cfg = panel.explorerConfig;
+                const st: { selected: number | null; visited: number[] } = answers[currentStep]?.[pi] || { selected: null, visited: [] };
+                const choose = (oi: number) => setAnswer(pi, { selected: oi, visited: st.visited.includes(oi) ? st.visited : [...st.visited, oi] });
+                const opt = st.selected !== null ? cfg.options[st.selected] : null;
+                const arrow = (t?: string) => t === "up" ? "▲" : t === "down" ? "▼" : t === "same" ? "●" : "";
+                const tone = (e?: string) => e === "good" ? "border-green-500/50 bg-green-500/10" : e === "bad" ? "border-red-500/50 bg-red-500/10" : "border-border bg-muted/40";
+                return (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">{cfg.controlLabel || "Teste cada opção e observe o resultado antes de decidir."}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cfg.options.map((o, oi) => (
+                        <button key={oi} type="button" onClick={() => choose(oi)}
+                          className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${st.selected === oi ? "border-primary bg-primary/10 font-medium" : "hover:border-primary/50"}`}>
+                          {o.label}{st.visited.includes(oi) && st.selected !== oi ? " ✓" : ""}
+                        </button>
+                      ))}
+                    </div>
+                    {cfg.baseline && cfg.baseline.length > 0 && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Antes</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {cfg.baseline.map((b, bi) => (
+                            <div key={bi} className="rounded-lg border p-2 text-center bg-muted/20">
+                              <p className="text-[11px] text-muted-foreground">{b.label}</p>
+                              <p className="font-mono font-semibold text-sm">{b.value}{b.unit ? ` ${b.unit}` : ""}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {opt ? (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Depois: {opt.label}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {opt.outcomes.map((oc, ci) => (
+                            <div key={ci} className={`rounded-lg border p-2 text-center ${tone(oc.effect)}`}>
+                              <p className="text-[11px] text-muted-foreground">{oc.label}</p>
+                              <p className="font-mono font-semibold text-sm">{arrow(oc.trend)} {oc.value}{oc.unit ? ` ${oc.unit}` : ""}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {opt.note && <p className="text-xs text-muted-foreground mt-2">{opt.note}</p>}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Selecione uma opção acima para ver o resultado.</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">Opções testadas: {st.visited.length}/{cfg.options.length}</p>
+                  </div>
+                );
+              })()}
+
               {panel.type === "indicator" && panel.indicatorConfig && (
                 <div className="space-y-4">
                   {/* Status indicators */}
@@ -727,8 +797,8 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
 
       <div className="flex justify-end mt-6 gap-3">
         {!showFeedback ? (
-          <Button size="lg" className="gap-2" disabled={hasInteractivePanels && !hasAnswered} onClick={handleFinishStep}>
-            <ClipboardCheck className="h-4 w-4" />{hasInteractivePanels ? "Finalizar Etapa" : "Ver Feedback"}
+          <Button size="lg" className="gap-2" disabled={(hasInteractivePanels && !hasAnswered) || explorersPending > 0} onClick={handleFinishStep}>
+            <ClipboardCheck className="h-4 w-4" />{explorersPending > 0 ? `Teste ${explorersPending} opç${explorersPending === 1 ? "ão" : "ões"} restante${explorersPending === 1 ? "" : "s"}` : hasInteractivePanels ? "Finalizar Etapa" : "Ver Feedback"}
           </Button>
         ) : (
           <Button size="lg" className="gap-2" onClick={handleNextStep}>
