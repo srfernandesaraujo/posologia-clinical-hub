@@ -13,7 +13,7 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
@@ -30,23 +30,26 @@ interface HepatoDrug {
   sideEffects: { hepatotox: number; gi: number; nefrotox: number; neurotox: number };
   daysToEffect: number;
   /**
-   * Fração do efeito hepático que de fato se aplica, dado o perfil do caso —
-   * sem isso, NAC "curava" qualquer hepatopatia igualmente bem, não só a
-   * intoxicação por paracetamol em que ela realmente atua (repondo glutationa
-   * e neutralizando o NAPQI).
+   * Multiplicador do efeito hepático que de fato se aplica, dado o perfil do
+   * caso — sem isso, NAC "curava" qualquer hepatopatia igualmente bem, não só
+   * a intoxicação por paracetamol em que ela realmente atua (repondo
+   * glutationa e neutralizando o NAPQI). Pode passar de 1 quando o efeito
+   * absoluto do fármaco é pequeno frente à gravidade do caso (ex.: paracetamol
+   * re-exposto sobre ALT de milhares).
    */
   indicationCheck?: (baseLab: HepatoCase["baseLab"]) => number;
 }
 
 const DRUGS: HepatoDrug[] = [
-  { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -200, ast: -180, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.3 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.1 },
-  { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1 },
+  { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -1000, ast: -900, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.6 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.02 },
+  { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 4 : 1 },
   { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 7 },
   { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 14 },
   { name: "Fluconazol", class: "Azólico", doseMin: 100, doseMax: 400, doseUnit: "mg/dia", doseStep: 50, effects: { alt: 30, ast: 25, fa: 15, ggt: 20, bilirrubinaT: 0.3, albumina: 0, inr: 0.3 }, sideEffects: { hepatotox: 0.2, gi: 0.15, nefrotox: 0.1, neurotox: 0 }, daysToEffect: 3 },
   { name: "Lactulose", class: "Laxativo osmótico", doseMin: 15, doseMax: 60, doseUnit: "mL 8/8h", doseStep: 15, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.2, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.3, nefrotox: 0, neurotox: -0.3 }, daysToEffect: 1 },
   { name: "Rifaximina", class: "ATB intestinal", doseMin: 400, doseMax: 550, doseUnit: "mg 12/12h", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.1, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.1, nefrotox: 0, neurotox: -0.2 }, daysToEffect: 3 },
-  { name: "Vitamina K", class: "Hemostático", doseMin: 5, doseMax: 20, doseUnit: "mg EV", doseStep: 5, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: -0.5 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1 },
+  // Em necrose hepatocelular maciça (ALT/AST >1000) o INR alto vem de falha de síntese dos fatores, não de falta de vitamina K — por isso ela quase não o corrige ("teste de Koller" negativo).
+  { name: "Vitamina K", class: "Hemostático", doseMin: 5, doseMax: 20, doseUnit: "mg EV", doseStep: 5, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: -0.5 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 0.05 : 1 },
   { name: "Albumina 20%", class: "Expansor plasmático", doseMin: 50, doseMax: 200, doseUnit: "mL EV", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.5, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.02, nefrotox: 0, neurotox: 0 }, daysToEffect: 0.5 },
 ];
 
@@ -114,12 +117,11 @@ const BUILT_IN_CASES: HepatoCase[] = [
 ];
 
 function calcChildPugh(lab: HepatoCase["baseLab"], encefalopatia: number, ascite: number) {
-  let s = 0;
-  s += lab.bilirrubinaT < 2 ? 1 : lab.bilirrubinaT <= 3 ? 2 : 3;
-  s += lab.albumina > 3.5 ? 1 : lab.albumina >= 2.8 ? 2 : 3;
-  s += lab.inr < 1.7 ? 1 : lab.inr <= 2.3 ? 2 : 3;
-  s += ascite; s += encefalopatia;
-  return { score: s, class: s <= 6 ? "A" : s <= 9 ? "B" : "C" as string };
+  const bili = lab.bilirrubinaT < 2 ? 1 : lab.bilirrubinaT <= 3 ? 2 : 3;
+  const alb = lab.albumina > 3.5 ? 1 : lab.albumina >= 2.8 ? 2 : 3;
+  const inr = lab.inr < 1.7 ? 1 : lab.inr <= 2.3 ? 2 : 3;
+  const s = bili + alb + inr + ascite + encefalopatia;
+  return { score: s, class: s <= 6 ? "A" : s <= 9 ? "B" : "C" as string, parts: { bili, alb, inr, ascite, encefalopatia } };
 }
 
 function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["baseLab"]) {
@@ -279,7 +281,9 @@ export default function SimuladorHepatopatia() {
         {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
         <h2 className="text-xl font-bold">{activeCase.title}</h2>
         <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <Badge className={`ml-auto ${cpColor}`}>Child-Pugh {childPugh.class} ({childPugh.score}pts)</Badge>
+        <button type="button" className="ml-auto" title="Ver como o Child-Pugh é calculado" onClick={() => document.getElementById("card-child-pugh")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+          <Badge className={`cursor-pointer ${cpColor}`}>Child-Pugh {childPugh.class} ({childPugh.score}pts) · ver cálculo</Badge>
+        </button>
         <ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" caseId={activeCase.title} />
 
       </div>
@@ -309,6 +313,47 @@ export default function SimuladorHepatopatia() {
               <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
               <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
             </div>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
+          </CardContent>
+        </Card>
+
+        {/* Trend */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Tendência Laboratorial (7 dias)</CardTitle>
+            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={displayTrend} margin={{ right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="enz" stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="fn" orientation="right" domain={[0, "auto"]} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
+                <Line yAxisId="enz" type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
+                <Line yAxisId="fn" type="monotone" dataKey="inr" name="INR (eixo dir.)" stroke="hsl(var(--chart-4))" strokeWidth={3} dot />
+                <Line yAxisId="fn" type="monotone" dataKey="bilirrubinaT" name="Bili T (eixo dir.)" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
+                <Line yAxisId="fn" type="monotone" dataKey="albumina" name="Albumina (eixo dir.)" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Child-Pugh */}
+      <Card id="card-child-pugh" className="scroll-mt-20">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            Escore de Child-Pugh
+            <Badge className={cpColor}>Classe {childPugh.class} · {childPugh.score} pts</Badge>
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Soma de 5 variáveis (3 laboratoriais + 2 clínicas), cada uma valendo 1, 2 ou 3 pontos. Os valores laboratoriais usados são os do Hepatograma acima (dia 7 do tratamento simulado); Encefalopatia e Ascite você define aqui.</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium">Encefalopatia</label>
               <Select value={String(encefalopatia)} onValueChange={v => setEncefalopatia(Number(v))}>
@@ -323,28 +368,46 @@ export default function SimuladorHepatopatia() {
                 <SelectContent><SelectItem value="1">Ausente</SelectItem><SelectItem value="2">Leve</SelectItem><SelectItem value="3">Mod-Grave</SelectItem></SelectContent>
               </Select>
             </div>
-            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
-          </CardContent>
-        </Card>
-
-        {/* Trend */}
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Tendência Laboratorial (7 dias)</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={displayTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Line type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
-                <Line type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
-                <Line type="monotone" dataKey="inr" name="INR" stroke="hsl(var(--chart-4))" strokeWidth={2} dot />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b">
+                  <th className="py-1.5 pr-2 font-medium">Variável</th>
+                  <th className="py-1.5 pr-2 font-medium">Valor atual</th>
+                  <th className="py-1.5 pr-2 font-medium">1 ponto</th>
+                  <th className="py-1.5 pr-2 font-medium">2 pontos</th>
+                  <th className="py-1.5 pr-2 font-medium">3 pontos</th>
+                  <th className="py-1.5 text-right font-medium">Pontos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "Bilirrubina total", value: `${simulation.lastLab.bilirrubinaT} mg/dL`, bands: ["< 2", "2 a 3", "> 3"], pts: childPugh.parts.bili },
+                  { name: "Albumina", value: `${simulation.lastLab.albumina} g/dL`, bands: ["> 3,5", "2,8 a 3,5", "< 2,8"], pts: childPugh.parts.alb },
+                  { name: "INR", value: `${simulation.lastLab.inr}`, bands: ["< 1,7", "1,7 a 2,3", "> 2,3"], pts: childPugh.parts.inr },
+                  { name: "Ascite", value: ["Ausente", "Leve", "Mod-Grave"][ascite - 1], bands: ["Ausente", "Leve", "Mod-Grave"], pts: childPugh.parts.ascite },
+                  { name: "Encefalopatia", value: ["Ausente", "Grau I-II", "Grau III-IV"][encefalopatia - 1], bands: ["Ausente", "Grau I-II", "Grau III-IV"], pts: childPugh.parts.encefalopatia },
+                ].map(row => (
+                  <tr key={row.name} className="border-b border-border/50">
+                    <td className="py-1.5 pr-2 font-medium">{row.name}</td>
+                    <td className="py-1.5 pr-2 font-mono">{row.value}</td>
+                    {row.bands.map((b, i) => (
+                      <td key={i} className={`py-1.5 pr-2 ${row.pts === i + 1 ? "font-bold text-primary" : "text-muted-foreground"}`}>{b}</td>
+                    ))}
+                    <td className="py-1.5 text-right font-mono font-bold">{row.pts}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={5} className="py-1.5 pr-2 font-semibold">Total</td>
+                  <td className={`py-1.5 text-right font-mono font-bold ${cpColor}`}>{childPugh.score}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground">Classe <strong>A</strong>: 5–6 pontos · <strong>B</strong>: 7–9 pontos · <strong>C</strong>: 10–15 pontos. Criado para pacientes com cirrose crônica.</p>
+        </CardContent>
+      </Card>
 
       {/* Side Effects */}
       <Card>
