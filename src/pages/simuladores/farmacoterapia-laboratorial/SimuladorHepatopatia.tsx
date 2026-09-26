@@ -33,11 +33,13 @@ const TOOLTIP_STYLE = {
 interface HepatoDrug {
   name: string; class: string;
   doseMin: number; doseMax: number; doseUnit: string; doseStep: number;
-  effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number; nh3?: number };
+  effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number; nh3?: number; cpk?: number };
   sideEffects: { hepatotox: number; gi: number; nefrotox: number; neurotox: number };
   daysToEffect: number;
   /** Conduta sem dose (ex.: suspender o fármaco suspeito): esconde o slider. */
   noDose?: boolean;
+  /** Se definido, o fármaco só aparece na lista dos casos com esse marcador em `flags`. */
+  caseFlag?: string;
   /**
    * Multiplicador do efeito hepático que de fato se aplica, dado o perfil do
    * caso — sem isso, NAC "curava" qualquer hepatopatia igualmente bem, não só
@@ -58,25 +60,30 @@ interface HepatoDrug {
 const DRUGS: HepatoDrug[] = [
   { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -1000, ast: -900, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.6 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.02 },
   { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 4 : 1, safeDose: (lab) => lab.alt > 500 ? null : 2000 },
-  { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 3 },
+  { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0, cpk: 600 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 3 },
   { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 2 },
-  { name: "Fluconazol", class: "Azólico", doseMin: 100, doseMax: 400, doseUnit: "mg/dia", doseStep: 50, effects: { alt: 30, ast: 25, fa: 15, ggt: 20, bilirrubinaT: 0.3, albumina: 0, inr: 0.3 }, sideEffects: { hepatotox: 0.2, gi: 0.15, nefrotox: 0.1, neurotox: 0 }, daysToEffect: 3 },
+  { name: "Fluconazol", class: "Azólico", doseMin: 100, doseMax: 400, doseUnit: "mg/dia", doseStep: 50, effects: { alt: 30, ast: 25, fa: 15, ggt: 20, bilirrubinaT: 0.3, albumina: 0, inr: 0.3, cpk: 300 }, sideEffects: { hepatotox: 0.2, gi: 0.15, nefrotox: 0.1, neurotox: 0 }, daysToEffect: 3 },
   { name: "Lactulose", class: "Laxativo osmótico", doseMin: 15, doseMax: 60, doseUnit: "mL 8/8h", doseStep: 15, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.2, albumina: 0, inr: 0, nh3: -45 }, sideEffects: { hepatotox: 0, gi: 0.3, nefrotox: 0, neurotox: -0.3 }, daysToEffect: 1 },
   { name: "Rifaximina", class: "ATB intestinal", doseMin: 400, doseMax: 550, doseUnit: "mg 12/12h", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.1, inr: 0, nh3: -20 }, sideEffects: { hepatotox: 0, gi: 0.1, nefrotox: 0, neurotox: -0.2 }, daysToEffect: 3 },
   // Em necrose hepatocelular maciça (ALT/AST >1000) o INR alto vem de falha de síntese dos fatores, não de falta de vitamina K — por isso ela quase não o corrige ("teste de Koller" negativo).
   { name: "Vitamina K", class: "Hemostático", doseMin: 5, doseMax: 20, doseUnit: "mg EV", doseStep: 5, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: -0.5 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 0.05 : 1 },
   { name: "Albumina 20%", class: "Expansor plasmático", doseMin: 50, doseMax: 200, doseUnit: "mL EV", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.5, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.02, nefrotox: 0, neurotox: 0 }, daysToEffect: 0.5 },
+  // Continuação do esquema atual em que a interação acontece (Caso 4): a soma é bem maior que a dos fármacos isolados.
+  { name: "Manter atorvastatina + fluconazol (esquema atual)", class: "Interação", doseMin: 1, doseMax: 1, doseUnit: "", doseStep: 1, noDose: true, caseFlag: "estatina-azolico", effects: { alt: 140, ast: 185, fa: 0, ggt: 5, bilirrubinaT: 0, albumina: 0, inr: 0, cpk: 5200 }, sideEffects: { hepatotox: 0.2, gi: 0.05, nefrotox: 0.7, neurotox: 0 }, daysToEffect: 1 },
   // Retirada do agente causador (dechallenge) — a conduta correta em lesão hepática por fármaco de uso contínuo.
   // O efeito é proporcional à gravidade (ALT 520 = 1,0) e só existe em lesão hepatocelular de ALT 150–1000:
-  // em ALT >1000 (ingestão aguda única) não há exposição a suspender, e em ALT baixa (cirrose) não há o que suspender.
-  { name: "Suspender o fármaco suspeito", class: "Conduta", doseMin: 1, doseMax: 1, doseUnit: "", doseStep: 1, noDose: true, effects: { alt: -410, ast: -390, fa: -15, ggt: -60, bilirrubinaT: -0.9, albumina: 0.1, inr: -0.2 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => lab.alt > 1000 ? 0 : lab.alt > 150 ? Math.min(1, lab.alt / 520) : 0.02 },
+  // em ALT >1000 (ingestão aguda única) não há exposição a suspender, e em ALT baixa (cirrose) não há o que suspender. O efeito sobre a CPK (quando o caso a tem) é grande porque este fator
+  // proporcional é ~0,35 em ALT 180: -11000 × 0,35 × 0,65 ≈ -2500 U/L em 7 dias.
+  { name: "Suspender o fármaco suspeito", class: "Conduta", doseMin: 1, doseMax: 1, doseUnit: "", doseStep: 1, noDose: true, effects: { alt: -410, ast: -390, fa: -15, ggt: -60, bilirrubinaT: -0.9, albumina: 0.1, inr: -0.2, cpk: -11000 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => lab.alt > 1000 ? 0 : lab.alt > 150 ? Math.min(1, lab.alt / 520) : 0.02 },
 ];
 
 interface HepatoCase {
   id?: string; title: string; difficulty: string; isAI?: boolean;
   patient: { name: string; age: number; weight: number; sex: string; specialGroup: string[]; diagnosis?: string };
   scenario: string;
-  baseLab: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaD: number; bilirrubinaI: number; bilirrubinaT: number; albumina: number; tp: number; inr: number; nh3?: number };
+  baseLab: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaD: number; bilirrubinaI: number; bilirrubinaT: number; albumina: number; tp: number; inr: number; nh3?: number; cpk?: number };
+  /** Marcadores que liberam condutas específicas do caso (ver HepatoDrug.caseFlag). */
+  flags?: string[];
   /** Estado clínico inicial dos seletores do Child-Pugh (1 = ausente). */
   clinical?: { encefalopatia: number; ascite: number };
   expectedDrugs: string[];
@@ -120,10 +127,11 @@ const BUILT_IN_CASES: HepatoCase[] = [
     title: "Caso 4: Marcos Oliveira",
     difficulty: "Médio",
     patient: { name: "Marcos Oliveira", age: 48, weight: 82, sex: "M", specialGroup: ["DM2"], diagnosis: "Mialgia + elevação ALT/AST/CPK por interação CYP3A4" },
-    scenario: "Homem 48 anos, em uso de atorvastatina 40mg/dia, inicia fluconazol 200mg/dia para onicomicose. Após 2 semanas, relata mialgia intensa. Os exames revelam os seguintes resultados: ALT 180 U/L, AST 210 U/L, CPK elevada.",
-    baseLab: { alt: 180, ast: 210, fa: 95, ggt: 65, bilirrubinaD: 0.3, bilirrubinaI: 0.5, bilirrubinaT: 0.8, albumina: 4.2, tp: 85, inr: 1.0 },
-    expectedDrugs: [],
-    clinicalTip: "Fluconazol inibe CYP3A4 → aumenta atorvastatina → risco rabdomiólise. Suspender estatina ou trocar para pravastatina/rosuvastatina.",
+    scenario: "Homem 48 anos, em uso de atorvastatina 40mg/dia, inicia fluconazol 200mg/dia para onicomicose. Após 2 semanas, relata mialgia intensa. Os exames revelam os seguintes resultados: ALT 180 U/L, AST 210 U/L, CPK 3600 U/L (limite superior ≈ 200), bilirrubina total 0,8 mg/dL, INR 1,0.",
+    baseLab: { alt: 180, ast: 210, fa: 95, ggt: 65, bilirrubinaD: 0.3, bilirrubinaI: 0.5, bilirrubinaT: 0.8, albumina: 4.2, tp: 85, inr: 1.0, cpk: 3600 },
+    flags: ["estatina-azolico"],
+    expectedDrugs: ["Suspender o fármaco suspeito"],
+    clinicalTip: "Fluconazol (inibidor moderado da CYP3A4) aumenta a exposição à atorvastatina → miopatia/rabdomiólise. CPK >10× o limite com sintomas: suspender a estatina e o azólico, checar creatinina/urina e só depois retomar estatina de menor interação (pravastatina/rosuvastatina).",
     references: ["Neuvonen PJ et al. 2006"],
   },
   {
@@ -165,6 +173,7 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
       bilirrubinaT: Math.max(0.2, +(baseLab.bilirrubinaT + drug.effects.bilirrubinaT * intensity * p * indicationFrac).toFixed(1)),
       albumina: Math.max(1, +(baseLab.albumina + drug.effects.albumina * intensity * p * indicationFrac).toFixed(1)),
       inr: Math.max(0.8, +(baseLab.inr + drug.effects.inr * intensity * p * indicationFrac).toFixed(1)),
+      ...(baseLab.cpk !== undefined ? { cpk: Math.max(30, Math.round(baseLab.cpk + (drug.effects.cpk ?? 0) * intensity * p * indicationFrac)) } : {}),
       ...(baseLab.nh3 !== undefined ? { nh3: Math.max(10, Math.round(baseLab.nh3 + (drug.effects.nh3 ?? 0) * intensity * p * indicationFrac)) } : {}),
     });
   }
@@ -181,6 +190,7 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
     { name: "Bili T", value: last.bilirrubinaT, unit: "mg/dL", refLow: 0.1, refHigh: 1.2, status: last.bilirrubinaT > 1.2 ? "alto" : "normal" },
     { name: "Albumina", value: last.albumina, unit: "g/dL", refLow: 3.5, refHigh: 5.5, status: last.albumina < 3.5 ? "baixo" : "normal" },
     { name: "INR", value: last.inr, unit: "", refLow: 0.8, refHigh: 1.2, status: last.inr > 1.2 ? "alto" : "normal" },
+    ...(last.cpk !== undefined ? [{ name: "CPK", value: last.cpk, unit: "U/L", refLow: 30, refHigh: 200, status: last.cpk > 200 ? "alto" : "normal" }] : []),
     ...(last.nh3 !== undefined ? [{ name: "Amônia", value: last.nh3, unit: "µmol/L", refLow: 11, refHigh: 35, status: last.nh3 > 35 ? "alto" : "normal" }] : []),
   ];
   return { trend, sideEffects, labGauges, lastLab: last };
@@ -232,6 +242,8 @@ export default function SimuladorHepatopatia() {
   useEffect(() => {
     setEncefalopatia(activeCase?.clinical?.encefalopatia ?? 1);
     setAscite(activeCase?.clinical?.ascite ?? 1);
+    setSelectedDrugIdx(0);
+    setDose(DRUGS[0].doseMin);
   }, [activeCase?.title]);
 
   useEffect(() => {
@@ -241,7 +253,7 @@ export default function SimuladorHepatopatia() {
         id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] },
         scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab,
-        expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [], clinical: cd.clinical,
+        expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [], clinical: cd.clinical, flags: cd.flags,
       });
     }
   }, [virtualRoomCase]);
@@ -340,10 +352,10 @@ export default function SimuladorHepatopatia() {
           <CardContent className="space-y-4">
             <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem>)}</SelectContent>
+              <SelectContent>{DRUGS.map((d, i) => (!d.caseFlag || activeCase?.flags?.includes(d.caseFlag)) ? <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem> : null)}</SelectContent>
             </Select>
             {selectedDrug.noDose ? (
-              <p className="text-xs text-muted-foreground">Sem dose: simula a retirada do fármaco que causou a lesão hepática. Só tem efeito em lesão hepatocelular por uso contínuo.</p>
+              <p className="text-xs text-muted-foreground">Sem dose: representa uma conduta (retirar o agente causador, ou manter o esquema atual). Só tem efeito nos casos de lesão por fármaco de uso contínuo.</p>
             ) : (
               <div>
                 <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
