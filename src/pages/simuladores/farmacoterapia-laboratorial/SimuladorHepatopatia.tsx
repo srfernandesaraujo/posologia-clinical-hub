@@ -33,7 +33,7 @@ const TOOLTIP_STYLE = {
 interface HepatoDrug {
   name: string; class: string;
   doseMin: number; doseMax: number; doseUnit: string; doseStep: number;
-  effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number };
+  effects: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaT: number; albumina: number; inr: number; nh3?: number };
   sideEffects: { hepatotox: number; gi: number; nefrotox: number; neurotox: number };
   daysToEffect: number;
   /** Conduta sem dose (ex.: suspender o fármaco suspeito): esconde o slider. */
@@ -47,16 +47,22 @@ interface HepatoDrug {
    * re-exposto sobre ALT de milhares).
    */
   indicationCheck?: (baseLab: HepatoCase["baseLab"]) => number;
+  /**
+   * Dose (na unidade do fármaco) até a qual o efeito hepático é desprezível neste caso; acima dela o efeito
+   * cresce até a dose máxima. Retorna null quando não há dose segura (o efeito segue a escala normal por dose).
+   * Ex.: paracetamol até 2 g/dia é tolerado na cirrose, mas não em lesão hepatocelular ativa.
+   */
+  safeDose?: (baseLab: HepatoCase["baseLab"]) => number | null;
 }
 
 const DRUGS: HepatoDrug[] = [
   { name: "N-Acetilcisteína (NAC)", class: "Antídoto", doseMin: 70, doseMax: 150, doseUnit: "mg/kg EV", doseStep: 10, effects: { alt: -1000, ast: -900, fa: 0, ggt: 0, bilirrubinaT: -1, albumina: 0, inr: -0.6 }, sideEffects: { hepatotox: -0.3, gi: 0.15, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 1 : 0.02 },
-  { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 4 : 1 },
+  { name: "Paracetamol", class: "Analgésico", doseMin: 500, doseMax: 4000, doseUnit: "mg/dia", doseStep: 500, effects: { alt: 50, ast: 45, fa: 0, ggt: 5, bilirrubinaT: 0.2, albumina: 0, inr: 0.1 }, sideEffects: { hepatotox: 0.4, gi: 0.05, nefrotox: 0.05, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 4 : 1, safeDose: (lab) => lab.alt > 500 ? null : 2000 },
   { name: "Atorvastatina", class: "Estatina", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { alt: 15, ast: 12, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0.1, gi: 0.1, nefrotox: 0, neurotox: 0 }, daysToEffect: 3 },
   { name: "Isoniazida", class: "Tuberculostático", doseMin: 5, doseMax: 10, doseUnit: "mg/kg/dia", doseStep: 1, effects: { alt: 80, ast: 70, fa: 10, ggt: 15, bilirrubinaT: 0.5, albumina: -0.1, inr: 0.15 }, sideEffects: { hepatotox: 0.35, gi: 0.2, nefrotox: 0.05, neurotox: 0.15 }, daysToEffect: 2 },
   { name: "Fluconazol", class: "Azólico", doseMin: 100, doseMax: 400, doseUnit: "mg/dia", doseStep: 50, effects: { alt: 30, ast: 25, fa: 15, ggt: 20, bilirrubinaT: 0.3, albumina: 0, inr: 0.3 }, sideEffects: { hepatotox: 0.2, gi: 0.15, nefrotox: 0.1, neurotox: 0 }, daysToEffect: 3 },
-  { name: "Lactulose", class: "Laxativo osmótico", doseMin: 15, doseMax: 60, doseUnit: "mL 8/8h", doseStep: 15, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.2, albumina: 0, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.3, nefrotox: 0, neurotox: -0.3 }, daysToEffect: 1 },
-  { name: "Rifaximina", class: "ATB intestinal", doseMin: 400, doseMax: 550, doseUnit: "mg 12/12h", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.1, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.1, nefrotox: 0, neurotox: -0.2 }, daysToEffect: 3 },
+  { name: "Lactulose", class: "Laxativo osmótico", doseMin: 15, doseMax: 60, doseUnit: "mL 8/8h", doseStep: 15, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.2, albumina: 0, inr: 0, nh3: -45 }, sideEffects: { hepatotox: 0, gi: 0.3, nefrotox: 0, neurotox: -0.3 }, daysToEffect: 1 },
+  { name: "Rifaximina", class: "ATB intestinal", doseMin: 400, doseMax: 550, doseUnit: "mg 12/12h", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.1, inr: 0, nh3: -20 }, sideEffects: { hepatotox: 0, gi: 0.1, nefrotox: 0, neurotox: -0.2 }, daysToEffect: 3 },
   // Em necrose hepatocelular maciça (ALT/AST >1000) o INR alto vem de falha de síntese dos fatores, não de falta de vitamina K — por isso ela quase não o corrige ("teste de Koller" negativo).
   { name: "Vitamina K", class: "Hemostático", doseMin: 5, doseMax: 20, doseUnit: "mg EV", doseStep: 5, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: 0, albumina: 0, inr: -0.5 }, sideEffects: { hepatotox: 0, gi: 0, nefrotox: 0, neurotox: 0 }, daysToEffect: 1, indicationCheck: (lab) => (lab.alt > 1000 || lab.ast > 1000) ? 0.05 : 1 },
   { name: "Albumina 20%", class: "Expansor plasmático", doseMin: 50, doseMax: 200, doseUnit: "mL EV", doseStep: 50, effects: { alt: 0, ast: 0, fa: 0, ggt: 0, bilirrubinaT: -0.1, albumina: 0.5, inr: 0 }, sideEffects: { hepatotox: 0, gi: 0.02, nefrotox: 0, neurotox: 0 }, daysToEffect: 0.5 },
@@ -70,7 +76,9 @@ interface HepatoCase {
   id?: string; title: string; difficulty: string; isAI?: boolean;
   patient: { name: string; age: number; weight: number; sex: string; specialGroup: string[]; diagnosis?: string };
   scenario: string;
-  baseLab: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaD: number; bilirrubinaI: number; bilirrubinaT: number; albumina: number; tp: number; inr: number };
+  baseLab: { alt: number; ast: number; fa: number; ggt: number; bilirrubinaD: number; bilirrubinaI: number; bilirrubinaT: number; albumina: number; tp: number; inr: number; nh3?: number };
+  /** Estado clínico inicial dos seletores do Child-Pugh (1 = ausente). */
+  clinical?: { encefalopatia: number; ascite: number };
   expectedDrugs: string[];
   clinicalTip: string;
   references: string[];
@@ -102,7 +110,8 @@ const BUILT_IN_CASES: HepatoCase[] = [
     difficulty: "Difícil",
     patient: { name: "Dona Aparecida", age: 62, weight: 55, sex: "F", specialGroup: ["Cirrose", "Ascite"], diagnosis: "Cirrose avançada Child C — encefalopatia grau II" },
     scenario: "Mulher 62 anos, com cirrose alcoólica, admitida com ascite volumosa, icterícia e confusão mental leve (flapping presente ao exame). Os exames revelam os seguintes resultados: bilirrubina total 8,0 mg/dL, albumina 2,0 g/dL, INR 2,5, ALT 85 U/L, AST 120 U/L.",
-    baseLab: { alt: 85, ast: 120, fa: 180, ggt: 95, bilirrubinaD: 5.0, bilirrubinaI: 3.0, bilirrubinaT: 8.0, albumina: 2.0, tp: 35, inr: 2.5 },
+    baseLab: { alt: 85, ast: 120, fa: 180, ggt: 95, bilirrubinaD: 5.0, bilirrubinaI: 3.0, bilirrubinaT: 8.0, albumina: 2.0, tp: 35, inr: 2.5, nh3: 105 },
+    clinical: { encefalopatia: 2, ascite: 3 },
     expectedDrugs: ["Lactulose", "Rifaximina", "Albumina 20%"],
     clinicalTip: "Child C: evitar hepatotóxicos, paracetamol ≤2g/dia. Encefalopatia: lactulose 15-30mL 8/8h + rifaximina 550mg 12/12h.",
     references: ["AASLD 2021"],
@@ -122,7 +131,8 @@ const BUILT_IN_CASES: HepatoCase[] = [
     difficulty: "Difícil",
     patient: { name: "Seu Joaquim", age: 68, weight: 60, sex: "M", specialGroup: ["Cirrose"], diagnosis: "Encefalopatia hepática — confusão + flapping + amônia↑" },
     scenario: "Homem 68 anos, com cirrose por hepatite C, apresenta confusão mental e flapping, com constipação há 3 dias e sinais de infecção urinária associados. Os exames revelam os seguintes resultados: bilirrubina total 6,0 mg/dL, albumina 2,3 g/dL, INR 2,2, ALT 60 U/L, AST 95 U/L.",
-    baseLab: { alt: 60, ast: 95, fa: 160, ggt: 70, bilirrubinaD: 3.5, bilirrubinaI: 2.5, bilirrubinaT: 6.0, albumina: 2.3, tp: 40, inr: 2.2 },
+    baseLab: { alt: 60, ast: 95, fa: 160, ggt: 70, bilirrubinaD: 3.5, bilirrubinaI: 2.5, bilirrubinaT: 6.0, albumina: 2.3, tp: 40, inr: 2.2, nh3: 130 },
+    clinical: { encefalopatia: 2, ascite: 1 },
     expectedDrugs: ["Lactulose", "Rifaximina"],
     clinicalTip: "Lactulose 1ª linha (alvo 2-3 evacuações/dia) + rifaximina reduz recorrência 50%. Tratar precipitante. NÃO restringir proteínas.",
     references: ["Vilstrup H et al. Hepatology 2014"],
@@ -139,7 +149,9 @@ function calcChildPugh(lab: HepatoCase["baseLab"], encefalopatia: number, ascite
 
 function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["baseLab"]) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.65 + doseFrac * 0.35;
+  const safe = drug.safeDose ? drug.safeDose(baseLab) : null;
+  const effFrac = safe !== null ? Math.max(0, (dose - safe) / Math.max(drug.doseMax - safe, 1)) : doseFrac;
+  const intensity = safe !== null ? 0.1 + effFrac * 0.9 : 0.65 + doseFrac * 0.35;
   const indicationFrac = drug.indicationCheck ? drug.indicationCheck(baseLab) : 1;
   const trend: any[] = [];
   for (let d = 0; d <= 7; d++) {
@@ -153,12 +165,13 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
       bilirrubinaT: Math.max(0.2, +(baseLab.bilirrubinaT + drug.effects.bilirrubinaT * intensity * p * indicationFrac).toFixed(1)),
       albumina: Math.max(1, +(baseLab.albumina + drug.effects.albumina * intensity * p * indicationFrac).toFixed(1)),
       inr: Math.max(0.8, +(baseLab.inr + drug.effects.inr * intensity * p * indicationFrac).toFixed(1)),
+      ...(baseLab.nh3 !== undefined ? { nh3: Math.max(10, Math.round(baseLab.nh3 + (drug.effects.nh3 ?? 0) * intensity * p * indicationFrac)) } : {}),
     });
   }
   const last = trend[trend.length - 1];
   const sideEffects = Object.entries(drug.sideEffects).map(([k, v]) => ({
     name: k === "hepatotox" ? "Hepatotoxicidade" : k === "gi" ? "GI" : k === "nefrotox" ? "Nefrotoxicidade" : "Neurotoxicidade",
-    risco: Math.round(Math.max(0, v * (0.5 + doseFrac * 0.8)) * 100),
+    risco: Math.round(Math.max(0, v * (0.5 + (safe !== null ? effFrac : doseFrac) * 0.8)) * 100),
   }));
   const labGauges = [
     { name: "ALT", value: last.alt, unit: "U/L", refLow: 7, refHigh: 56, status: last.alt > 56 ? "alto" : "normal" },
@@ -168,6 +181,7 @@ function computeSimulation(drug: HepatoDrug, dose: number, baseLab: HepatoCase["
     { name: "Bili T", value: last.bilirrubinaT, unit: "mg/dL", refLow: 0.1, refHigh: 1.2, status: last.bilirrubinaT > 1.2 ? "alto" : "normal" },
     { name: "Albumina", value: last.albumina, unit: "g/dL", refLow: 3.5, refHigh: 5.5, status: last.albumina < 3.5 ? "baixo" : "normal" },
     { name: "INR", value: last.inr, unit: "", refLow: 0.8, refHigh: 1.2, status: last.inr > 1.2 ? "alto" : "normal" },
+    ...(last.nh3 !== undefined ? [{ name: "Amônia", value: last.nh3, unit: "µmol/L", refLow: 11, refHigh: 35, status: last.nh3 > 35 ? "alto" : "normal" }] : []),
   ];
   return { trend, sideEffects, labGauges, lastLab: last };
 }
@@ -214,6 +228,12 @@ export default function SimuladorHepatopatia() {
 
   const selectedDrug = DRUGS[selectedDrugIdx];
 
+  // Child-Pugh parte do estado clínico do caso (ex.: ascite volumosa e encefalopatia grau II), não de "Ausente".
+  useEffect(() => {
+    setEncefalopatia(activeCase?.clinical?.encefalopatia ?? 1);
+    setAscite(activeCase?.clinical?.ascite ?? 1);
+  }, [activeCase?.title]);
+
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
@@ -221,7 +241,7 @@ export default function SimuladorHepatopatia() {
         id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI,
         patient: cd.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] },
         scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab,
-        expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [],
+        expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [], clinical: cd.clinical,
       });
     }
   }, [virtualRoomCase]);
@@ -310,7 +330,7 @@ export default function SimuladorHepatopatia() {
       {/* Lab Gauges */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Hepatograma (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
+        <CardContent><div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${simulation.labGauges.length > 7 ? "md:grid-cols-8" : "md:grid-cols-7"}`}>{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -338,7 +358,7 @@ export default function SimuladorHepatopatia() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Tendência Laboratorial (7 dias)</CardTitle>
-            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L; o eixo não parte do zero, para destacar a variação; a linha pontilhada é o ALT basal). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
+            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L) e Amônia (µmol/L), quando o caso a tem; o eixo não parte do zero, para destacar a variação; a linha pontilhada é o ALT basal). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <ResponsiveContainer width="100%" height={240}>
@@ -352,6 +372,7 @@ export default function SimuladorHepatopatia() {
                 <ReferenceLine yAxisId="enz" y={activeCase?.baseLab.alt} stroke="hsl(var(--chart-1))" strokeDasharray="2 4" strokeOpacity={0.5} label={{ value: "ALT basal", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
                 <Line yAxisId="enz" type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
+                {activeCase?.baseLab.nh3 !== undefined && <Line yAxisId="enz" type="monotone" dataKey="nh3" name="Amônia (µmol/L)" stroke="hsl(var(--primary))" strokeWidth={3} dot />}
                 <Line yAxisId="fn" type="monotone" dataKey="inr" name="INR (eixo dir.)" stroke="hsl(var(--chart-4))" strokeWidth={3} dot />
                 <Line yAxisId="fn" type="monotone" dataKey="bilirrubinaT" name="Bili T (eixo dir.)" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
                 <Line yAxisId="fn" type="monotone" dataKey="albumina" name="Albumina (eixo dir.)" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
