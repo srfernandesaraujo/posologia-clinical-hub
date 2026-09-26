@@ -648,6 +648,7 @@ export function getTampaoChallenges(): ChallengeSet {
 
 export function getChallengesBySlug(slug: string): ChallengeSet | null {
   const map: Record<string, () => ChallengeSet> = {
+    "cadeia-suprimentos": () => getCadeiaSuprimentosChallenges(),
     "sna": getSNAChallenges,
     "eletrofisiologia-cardiaca": getEletrofisiologiaCardiacaChallenges,
     "depuracao-renal": getDepuracaoRenalChallenges,
@@ -2801,6 +2802,814 @@ export function getCoagulacaoLabChallenges(caseIndex?: number): ChallengeSet {
   return {
     title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Coagulação e Anticoagulantes",
     description: "Interprete coagulograma (INR, TTPa, anti-Xa) e faça ajustes na anticoagulação.",
+    challenges,
+  };
+}
+
+// ===================== GESTÃO DA CADEIA DE SUPRIMENTOS FARMACÊUTICOS =====================
+// Um caso por etapa do ciclo da Assistência Farmacêutica (ordem = BUILT_IN_CASES em src/lib/cadeiaSuprimentos/casos.ts).
+// Números conferidos contra o motor (src/lib/cadeiaSuprimentos/*.ts) e cobertos por cadeiaSuprimentos.test.ts.
+// O `simulatorState` de cada bancada tem `etapa` e: seleção {incluidos, resultado}; programação {itemId, itens[id]{metodo,
+// mesesSeguranca, intervalo, resultado}}; aquisição {cotacoesIncluidas, estatistica, precoRef, classificadas, vencedorId,
+// entregas, parcelamento}; armazenamento {transferenciaH, exposicao, condutas, avaliacoes}; distribuição {criterio, reserva,
+// aloc, fixos, resultado}; dispensação {decisoes, avaliacoes, todosCorretos}.
+export function getCadeiaSuprimentosChallenges(caseIndex?: number): ChallengeSet {
+  const BASE = ["hctz", "enalapril", "losartana", "anlodipino", "atenolol", "metformina", "glibenclamida", "insulina-nph", "sinvastatina"];
+  const inc = (s: Record<string, any>): string[] => (s.incluidos ?? []) as string[];
+  const cfg = (s: Record<string, any>, id: string) => (s.itens ?? {})[id] as { metodo: string; mesesSeguranca: number; intervalo: number; resultado: any } | undefined;
+
+  const caseSets: Challenge[][] = [
+    // Caso 1: Seleção — REMUME de hipertensão/diabetes/dislipidemia (orçamento R$ 240.000; elenco atual R$ 224.760 = 93,7%)
+    // Números do motor: + espironolactona R$ 231.240 (96,4%, saldo 8.760, 0 necessidades sem item) | + olmesartana R$ 355.800 (148,3%),
+    //   impacto líquido 131.040, duplicidade BRA | + rosuvastatina 263.640 (109,9%), impacto 38.880 | + sitagliptina 360.408 (150,2%),
+    //   impacto 135.648 (R$ 96,00 × R$ 1,80/mês) | espironolactona sem atenolol 227.640 (94,8%) | olmesartana p/ 100 pacientes: 100×12×(36,00−4,80)=37.440
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Elenco em revisão (REMUME)' cada linha tem uma caixa de seleção (elenco atual em cima, solicitações embaixo) e mostra classe, situação na RENAME, custo por paciente ao mês, usuários, custo anual (ou impacto líquido por ano nas solicitações) e a evidência. O cartão 'Indicadores do elenco' mostra o custo anual, o uso do orçamento e o saldo, os itens fora da RENAME, a duplicidade terapêutica e as necessidades sem item, e lista a cobertura da linha de cuidado.",
+        question: "O elenco atual da linha de cuidado (9 medicamentos) usa R$ 224.760 dos R$ 240.000 do orçamento, mas o painel aponta uma necessidade sem nenhum item: a hipertensão resistente e a insuficiência cardíaca com fração de ejeção reduzida (180 pacientes). A cardiologia pede a espironolactona 25 mg.\n\nNo cartão 'Elenco em revisão (REMUME)', marque só a espironolactona e deixe as demais linhas como estão. Compare, em 'Indicadores do elenco', o custo anual, o saldo do orçamento, as 'Necessidades sem item' e os 'Itens fora da RENAME' com os valores de antes. Discutam em grupo e deixem a espironolactona marcada ao responder. Qual leitura dos indicadores sustenta melhor o parecer da CFT?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "selecao") return { correct: false, feedback: "Abra o Caso 1 (Seleção) para responder a este desafio." };
+          if (!inc(s).includes("espironolactona")) return { correct: false, feedback: "Marque a espironolactona no cartão 'Elenco em revisão (REMUME)' para ler o efeito dela nos indicadores." };
+          if (inc(s).some((id) => ["olmesartana", "rosuvastatina", "sitagliptina"].includes(id))) return { correct: false, feedback: "Desmarque as outras solicitações (olmesartana, rosuvastatina e sitagliptina): aqui o teste é só da espironolactona." };
+          if (!BASE.every((id) => inc(s).includes(id))) return { correct: false, feedback: "Mantenha marcado o elenco atual (os 9 primeiros itens) e acrescente só a espironolactona." };
+          return { correct: true, feedback: "Elenco atual mais espironolactona: o custo sobe para R$ 231.240 (96,4% do orçamento) e a necessidade sem item some." };
+        },
+        options: [
+          "A espironolactona cobre a necessidade sem item e cabe no orçamento (96,4%, saldo de R$ 8.760), mas por estar fora da RENAME o custo dela seria integralmente municipal, o que pede aprovação prévia da Secretaria.",
+          "A espironolactona cobre a necessidade sem item, está na RENAME e cabe no orçamento (96,4%, saldo de R$ 8.760), sem gerar duplicidade nem item fora da RENAME; o parecer é incluí-la, com monitorização de K⁺ e creatinina.",
+          "A espironolactona cobre a necessidade sem item e está na RENAME, mas ultrapassa o orçamento em 96,4%, o que pede suplementação orçamentária antes da inclusão e, enquanto isso, mantém os 180 pacientes sem o item.",
+          "A espironolactona está na RENAME e cabe no orçamento (96,4%, saldo de R$ 8.760), mas duplica a classe de um item do elenco atual, então o parecer é incluí-la apenas no lugar do item que ela duplica.",
+        ],
+        correctIndex: 1,
+        explanation: "Antes, o painel mostrava 1 necessidade sem item (180 pacientes) e R$ 224.760 (93,7%). Com a espironolactona: R$ 231.240 (96,4%), saldo de R$ 8.760, nenhuma necessidade descoberta, nenhum item fora da RENAME e nenhuma duplicidade (a classe é a única de antagonista mineralocorticoide). O custo é baixo (R$ 3,00 por paciente ao mês). Cada distrator erra um ponto: ela está na RENAME; 96,4% é abaixo de 100%, não acima; e a duplicidade é zero. Conduta: incluir, com monitorização de potássio e creatinina, porque ela fecha uma lacuna real com pouco custo.",
+        reference: "Barroso WKS et al. Diretrizes Brasileiras de Hipertensão Arterial – 2020. Arq Bras Cardiol 2021;116(3):516-658",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Elenco em revisão (REMUME)', a olmesartana está na tabela 'Solicitações de inclusão' (coluna 'Impacto líquido/ano'). O cartão 'Indicadores do elenco' traz o custo anual, o uso do orçamento, os 'Itens fora da RENAME' e a 'Duplicidade terapêutica' (com o nome da classe repetida).",
+        question: "A cardiologia também pede a olmesartana 20 mg para 350 hipertensos que hoje usam losartana 50 mg (as duas são bloqueadores do receptor da angiotensina, os BRA).\n\nDeixe o elenco atual mais a olmesartana (desmarque as outras solicitações). Leia, em 'Indicadores do elenco', o custo anual, o uso do orçamento, os 'Itens fora da RENAME' e a 'Duplicidade terapêutica' e, na linha da olmesartana, o 'Impacto líquido/ano'. Discutam em grupo e deixem a olmesartana marcada ao responder. Qual leitura sustenta melhor o parecer da CFT?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "selecao") return { correct: false, feedback: "Abra o Caso 1 (Seleção) para responder a este desafio." };
+          if (!inc(s).includes("olmesartana")) return { correct: false, feedback: "Marque a olmesartana para ler o efeito dela nos indicadores." };
+          if (inc(s).some((id) => ["espironolactona", "rosuvastatina", "sitagliptina"].includes(id))) return { correct: false, feedback: "Desmarque as outras solicitações: aqui o teste é só da olmesartana sobre o elenco atual." };
+          if (!BASE.every((id) => inc(s).includes(id))) return { correct: false, feedback: "Mantenha marcado o elenco atual (os 9 primeiros itens) e acrescente só a olmesartana." };
+          return { correct: true, feedback: "Elenco atual mais olmesartana: R$ 355.800 (148,3% do orçamento), 1 item fora da RENAME e duplicidade da classe BRA." };
+        },
+        options: [
+          "O custo passa a R$ 355.800 (148,3% do orçamento), mas o impacto líquido de R$ 131.040 se paga com menos consultas de ajuste de dose; o parecer é incluir a olmesartana e retirar a hidroclorotiazida para abrir espaço.",
+          "O custo passa a R$ 355.800 (148,3% do orçamento) porque a olmesartana está fora da RENAME; o parecer é aceitar a inclusão se o Ministério da Saúde cofinanciar o item pelo Componente Básico da Assistência Farmacêutica.",
+          "O custo passa a R$ 355.800 (148,3% do orçamento) por causa dos 350 usuários; o parecer é incluir a olmesartana só para os hipertensos indicados pela cardiologia, o que dispensaria a revisão do elenco.",
+          "O custo passa a R$ 355.800 (148,3% do orçamento) porque cada usuário sai de R$ 4,80 para R$ 36,00 por mês; a olmesartana duplica a classe da losartana e está fora da RENAME, sem vantagem em desfecho: o parecer é recusar.",
+        ],
+        correctIndex: 3,
+        explanation: "O painel mostra 3 sinais de alerta ao mesmo tempo: custo de R$ 355.800 (148,3%, R$ 115.800 acima do orçamento), 1 item fora da RENAME e 'Duplicidade terapêutica: BRA'. O impacto líquido (R$ 131.040 por ano) é a soma de 350 usuários × 12 meses × (R$ 36,00 − R$ 4,80). Os 350 usuários já estão no cálculo, então restringir a indicação não muda a leitura; itens fora da RENAME não têm cofinanciamento no Componente Básico; e não há redução de custo em consultas modelada nem citada na evidência. Conduta: recusar a inclusão e manter a losartana.",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Elenco em revisão (REMUME)', a sitagliptina está em 'Solicitações de inclusão'; compare a coluna 'Custo/paciente/mês' dela com a da glibenclamida no elenco atual e leia a coluna 'Evidência e observações'. O uso do orçamento está em 'Indicadores do elenco'.",
+        question: "A endocrinologia pede a sitagliptina 100 mg para 120 pacientes que hoje usam glibenclamida 5 mg, com o argumento de menos hipoglicemia.\n\nDeixe o elenco atual mais a sitagliptina (desmarque as outras solicitações). Leia o custo mensal por paciente das duas, o 'Impacto líquido/ano' da sitagliptina, o uso do orçamento e a coluna de evidência. Discutam em grupo e deixem a sitagliptina marcada ao responder. Considerando que alguns pacientes têm risco real com a glibenclamida, qual conduta a CFT deve adotar?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "selecao") return { correct: false, feedback: "Abra o Caso 1 (Seleção) para responder a este desafio." };
+          if (!inc(s).includes("sitagliptina")) return { correct: false, feedback: "Marque a sitagliptina para ler o efeito dela no orçamento." };
+          if (inc(s).some((id) => ["espironolactona", "olmesartana", "rosuvastatina"].includes(id))) return { correct: false, feedback: "Desmarque as outras solicitações: aqui o teste é só da sitagliptina sobre o elenco atual." };
+          if (!BASE.every((id) => inc(s).includes(id))) return { correct: false, feedback: "Mantenha marcado o elenco atual (os 9 primeiros itens) e acrescente só a sitagliptina." };
+          return { correct: true, feedback: "Elenco atual mais sitagliptina: R$ 360.408 (150,2% do orçamento) e impacto líquido de R$ 135.648 ao ano." };
+        },
+        options: [
+          "Recusar a inclusão geral (R$ 96,00 contra R$ 1,80 por paciente ao mês, impacto de R$ 135.648 ao ano) e criar um fluxo de exceção para quem tem hipoglicemia grave ou contraindicação à sulfonilureia.",
+          "Incluir a sitagliptina para todos (R$ 96,00 contra R$ 1,80 por paciente ao mês, impacto de R$ 135.648 ao ano), porque a menor taxa de hipoglicemia reduz internações e compensa o custo adicional.",
+          "Recusar a inclusão geral (R$ 96,00 contra R$ 1,80 por paciente ao mês, impacto de R$ 135.648 ao ano) e manter a glibenclamida para todos os usuários, inclusive os que já tiveram hipoglicemia grave.",
+          "Incluir a sitagliptina só para pacientes com HbA1c acima de 9% (R$ 96,00 contra R$ 1,80 por paciente ao mês, impacto de R$ 135.648 ao ano), critério que reduz o custo sem depender do risco com a sulfonilureia.",
+        ],
+        correctIndex: 0,
+        explanation: "A sitagliptina custa R$ 96,00 por paciente ao mês contra R$ 1,80 da glibenclamida (53 vezes mais); o impacto líquido é de R$ 135.648 por ano e o custo total vai a R$ 360.408 (150,2%). Ela está fora da RENAME e a evidência do próprio painel diz que reduz a HbA1c de modo semelhante à sulfonilureia, sem benefício cardiovascular demonstrado. Recusar para todos deixa sem alternativa quem tem risco real (hipoglicemia grave, doença renal); incluir para todos é insustentável; e a HbA1c alta não é critério de segurança nem de custo-efetividade. A saída é um fluxo de exceção com critérios clínicos claros, avaliado caso a caso.",
+        reference: "Brasil. Decreto nº 7.508/2011 e Relação Nacional de Medicamentos Essenciais (RENAME) vigente",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: os custos mensais por paciente estão na coluna 'Custo/paciente/mês' do cartão 'Elenco em revisão (REMUME)' e o saldo do elenco atual é o de 'Indicadores do elenco' com só o elenco atual marcado (R$ 240.000 − R$ 224.760).",
+        question: "A cardiologia aceita reduzir o pedido da olmesartana 20 mg de 350 para 100 pacientes, todos hoje em losartana 50 mg. Usando os custos mensais por paciente do cartão 'Elenco em revisão (REMUME)' (losartana R$ 4,80; olmesartana R$ 36,00) e o saldo de R$ 15.240 do elenco atual, qual é o impacto líquido anual dessa troca e ele cabe no saldo?",
+        options: [
+          "R$ 43.200 por ano: não cabe no saldo de R$ 15.240",
+          "R$ 5.760 por ano: cabe no saldo de R$ 15.240",
+          "R$ 37.440 por ano: não cabe no saldo de R$ 15.240",
+          "R$ 3.120 por ano: cabe no saldo de R$ 15.240",
+        ],
+        correctIndex: 2,
+        explanation: "Impacto líquido = usuários × 12 × (custo mensal do novo − custo mensal do substituído) = 100 × 12 × (36,00 − 4,80) = R$ 37.440 por ano, mais que o dobro do saldo de R$ 15.240: não cabe, mesmo com o pedido reduzido a menos de um terço. R$ 43.200 ignora que os 100 pacientes deixam de usar a losartana; R$ 5.760 usa o custo da losartana no lugar da diferença; R$ 3.120 é o impacto de um mês, não de um ano.",
+        reference: "Marin N et al. Assistência Farmacêutica para Gerentes Municipais. Rio de Janeiro: OPAS/OMS, 2003",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o atenolol está no 'Elenco atual' do cartão 'Elenco em revisão (REMUME)', com a evidência na última coluna. Em 'Indicadores do elenco', compare 'Custo anual do elenco' e 'Uso do orçamento' e veja se algum outro indicador muda.",
+        question: "Um membro da CFT propõe retirar o atenolol 50 mg (250 usuários) para 'sobrar mais orçamento', já que ele não é de 1ª linha na hipertensão.\n\nDeixe o elenco atual mais a espironolactona e depois desmarque o atenolol. Leia a variação de 'Custo anual do elenco' e de 'Uso do orçamento' e confira se algum outro indicador do painel muda. Discutam em grupo e deixem o atenolol desmarcado ao responder. Qual leitura sustenta melhor a decisão da CFT?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "selecao") return { correct: false, feedback: "Abra o Caso 1 (Seleção) para responder a este desafio." };
+          if (!inc(s).includes("espironolactona")) return { correct: false, feedback: "Mantenha a espironolactona marcada: a comparação é entre o elenco com e sem o atenolol." };
+          if (inc(s).includes("atenolol")) return { correct: false, feedback: "Desmarque o atenolol para ver o que muda nos indicadores." };
+          if (inc(s).some((id) => ["olmesartana", "rosuvastatina", "sitagliptina"].includes(id))) return { correct: false, feedback: "Desmarque as outras solicitações (olmesartana, rosuvastatina e sitagliptina)." };
+          return { correct: true, feedback: "Sem o atenolol: R$ 227.640 (94,8% do orçamento), R$ 3.600 a menos por ano." };
+        },
+        options: [
+          "A retirada poupa R$ 3.600 por ano e o painel confirma que nenhuma necessidade ficou sem item, o que mostra que a retirada é segura para todos os usuários e pode ser feita já.",
+          "A retirada poupa só R$ 3.600 por ano (1,5% do orçamento) e nenhum outro indicador muda; o painel não mede quem depende do betabloqueador, então a CFT revisa as indicações dos 250 usuários antes de retirar.",
+          "A retirada poupa R$ 3.600 por ano, uma economia relevante que abre espaço para incluir a rosuvastatina no elenco sem estourar o orçamento e sem revisar as indicações dos usuários do atenolol.",
+          "A retirada poupa R$ 3.600 por ano, mas o atenolol deve ser mantido porque os betabloqueadores são de 1ª linha na hipertensão e sua retirada deixaria a necessidade de hipertensão sem item.",
+        ],
+        correctIndex: 1,
+        explanation: "Sem o atenolol o elenco vai de R$ 231.240 (96,4%) para R$ 227.640 (94,8%): R$ 3.600, ou 1,5% do orçamento, e nenhum outro indicador se mexe. É o 'número bonito': o painel melhora sem que isso diga algo sobre o cuidado, porque a linha de hipertensão continua coberta por outros itens e o painel não enxerga quem tem indicação específica de betabloqueador (infarto prévio, insuficiência cardíaca, arritmia). A rosuvastatina custaria R$ 38.880 líquidos, bem acima da economia; e o betabloqueador não é de 1ª linha isolado, como a própria coluna de evidência informa. Conduta: revisar as indicações dos 250 usuários antes de retirar.",
+        reference: "Barroso WKS et al. Diretrizes Brasileiras de Hipertensão Arterial – 2020. Arq Bras Cardiol 2021;116(3):516-658",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Elenco em revisão (REMUME)', a coluna 'Impacto líquido/ano' das solicitações; em 'Indicadores do elenco', o 'Uso do orçamento', o saldo e os quatro sinais de alerta (itens fora da RENAME, duplicidade, necessidades sem item e itens no elenco).",
+        question: "Feche o parecer da CFT sobre as quatro solicitações. Deixe na bancada o elenco atual mais a espironolactona (com o atenolol de volta, se você o desmarcou), com as outras três solicitações desmarcadas, e confira os sinais de alerta e o uso do orçamento. Discutam em grupo e escolham a versão do parecer, lendo cada solicitação com a mesma régua: necessidade sem item, RENAME, duplicidade e custo contra o saldo de R$ 8.760 que sobra depois da espironolactona.",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "selecao") return { correct: false, feedback: "Abra o Caso 1 (Seleção) para responder a este desafio." };
+          const ids = inc(s);
+          if (!ids.includes("espironolactona")) return { correct: false, feedback: "Deixe a espironolactona marcada: ela é a única solicitação que entra." };
+          if (ids.some((id) => ["olmesartana", "rosuvastatina", "sitagliptina"].includes(id))) return { correct: false, feedback: "Deixe desmarcadas a olmesartana, a rosuvastatina e a sitagliptina." };
+          if (!BASE.every((id) => ids.includes(id))) return { correct: false, feedback: "Volte a marcar o item do elenco atual que você desmarcou (por exemplo, o atenolol): a revisão dele ainda não foi feita." };
+          return { correct: true, feedback: "Elenco final: R$ 231.240 (96,4%), sem duplicidade, sem item fora da RENAME e sem necessidade descoberta." };
+        },
+        options: [
+          "Espironolactona: recusar. Olmesartana: recusar. Rosuvastatina: recusar. Sitagliptina: recusar.",
+          "Espironolactona: incluir. Olmesartana: recusar. Rosuvastatina: incluir. Sitagliptina: recusar.",
+          "Espironolactona: incluir. Olmesartana: incluir. Rosuvastatina: recusar. Sitagliptina: recusar.",
+          "Espironolactona: incluir. Olmesartana: recusar. Rosuvastatina: recusar. Sitagliptina: recusar.",
+        ],
+        correctIndex: 3,
+        explanation: "Espironolactona: fecha uma necessidade sem item (180 pacientes), está na RENAME e cabe no orçamento (R$ 231.240, 96,4%): incluir. Olmesartana: duplica o BRA, fora da RENAME, impacto de R$ 131.040: recusar. Rosuvastatina: duplica a classe das estatinas, fora da RENAME e impacto líquido de R$ 38.880 contra um saldo de R$ 8.760: recusar (reservar para quem não atinge a meta ou tem intolerância, por fluxo de exceção). Sitagliptina: R$ 135.648 de impacto e fora da RENAME: recusar, com fluxo de exceção para hipoglicemia grave ou contraindicação à sulfonilureia. Cada distrator inverte um item.",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+    ],
+
+    // Caso 2: Programação — losartana, amoxicilina (sazonal, com faltas no histórico) e insulina (validade curta, câmara de 10.000)
+    // Números do motor (12 meses seguintes, máx. 4 pedidos/ano):
+    //   Losartana: média12 seg 0 iv 3 → 13 d (3 m), estoque médio 89.535 | seg 0,5 iv 3 → 0 d, estoque médio 109.888 (cob. 1,72) | média6 seg 0 iv 3 → 9 d | CMM 60.033
+    //   Amoxicilina: CMM média12 16.542, média6 16.500, corrigida 22.754 | média12 seg 1 iv 3 → 34 d (2 m) | média12 seg 2 iv 3 → 17 d | corrigida seg 1 iv 3 → 0 d, estoque médio 56.248 (cob. 2,76), 4 pedidos
+    //     corrigida seg 0 iv 6 → 0 d, 75.795 (cob. 3,72) | seg 0,5 iv 3 → 7 d, 48.620 | seg 1,5 iv 3 → 0 d, 65.728 (cob. 3,23)
+    //   Insulina: média12 seg 1 iv 12 → perdas 8.988 frascos (R$ 197.736), 60 d de ruptura (2 m), pico 31.428 | iv 6 → 0 d, sem perdas, pico 16.733 (> 10.000) | iv 3 → 0 d, pico 9.385, estoque médio 4.885
+    //   Mesma política (média12, seg 1, iv 3): losartana 0 d (137.403), amoxicilina 34 d (34.948), insulina 0 d (4.885)
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Item e histórico de consumo' escolha o item; no cartão 'Parâmetros da programação' ficam o cálculo do CMM, o 'Estoque de segurança' (controle deslizante) e o 'Intervalo entre pedidos'; o cartão 'Os 12 meses seguintes' traz 'Ruptura', 'Perdas por vencimento', 'Estoque médio', 'Pedidos no ano' e 'Pico de estoque', além do gráfico e da tabela mês a mês. Cada item guarda os próprios parâmetros.",
+        question: "A losartana 50 mg tem consumo estável, crescendo cerca de 0,4% ao mês. Selecione a losartana e configure 'Média bruta dos últimos 12 meses', 'Estoque de segurança' em 0 e 'A cada 3 meses'; leia 'Ruptura' e a linha 'Dias de ruptura' da tabela. Depois suba só o estoque de segurança para 0,5 mês e compare 'Ruptura' e 'Estoque médio'. Discutam em grupo e deixem 0,5 mês selecionado ao responder. O que explica a ruptura com segurança zero, num item de consumo estável?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "programacao") return { correct: false, feedback: "Abra o Caso 2 (Programação) para responder a este desafio." };
+          const c = cfg(s, "losartana");
+          if (!c) return { correct: false, feedback: "Configure a losartana no cartão 'Parâmetros da programação'." };
+          if (c.metodo !== "media12") return { correct: false, feedback: "Use 'Média bruta dos últimos 12 meses' na losartana, para comparar só o efeito do estoque de segurança." };
+          if (c.intervalo !== 3) return { correct: false, feedback: "Deixe a losartana com pedidos 'A cada 3 meses'." };
+          if (c.mesesSeguranca !== 0.5) return { correct: false, feedback: "Deixe o estoque de segurança da losartana em 0,5 mês ao responder (antes, teste 0 para ver a ruptura)." };
+          return { correct: true, feedback: "Com 0,5 mês de segurança a losartana fica sem ruptura (0 dia); com 0, tinha 13 dias em 3 meses." };
+        },
+        options: [
+          "O tempo de reposição de 1 mês causa a ruptura mesmo com segurança; só a compra todo mês eliminaria os 13 dias sem estoque, ao custo de 12 pedidos por ano e de mais trabalho para a CAF.",
+          "O CMM é a média do passado e o consumo cresce todo mês; sem segurança a demanda passa do programado (13 dias de ruptura), e 0,5 mês cobre a diferença com estoque médio de 109.888.",
+          "A média dos últimos 6 meses (CMM de 61.033) já eliminaria os 13 dias de ruptura sem estoque de segurança, porque acompanha melhor o crescimento do consumo recente e reduz o estoque médio.",
+          "O vencimento de lotes explica a ruptura; o estoque de segurança de 0,5 mês reduz o vencimento e por isso a falta desaparece, com a cobertura média passando de 1,4 para 1,7 mês.",
+        ],
+        correctIndex: 1,
+        explanation: "Com média bruta de 12 meses (CMM 60.033), segurança 0 e pedidos a cada 3 meses, o motor mostra 13 dias de ruptura em 3 meses e estoque médio de 89.535 (cobertura de 1,40 mês). Com 0,5 mês de segurança: 0 dia de ruptura e 109.888 de estoque médio (1,72 mês). A causa é o crescimento do consumo: o CMM olha o passado, e a demanda de cada mês supera um pouco a média. A média de 6 meses (CMM 61.033) ainda deixa 9 dias sem estoque na mesma configuração; a compra mensal não é necessária (com segurança, a cada 3 meses zera a ruptura); e as perdas por vencimento são zero nas duas configurações (validade de 24 meses). Conduta: uma segurança curta cobre o erro de previsão de um item estável.",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Item e histórico de consumo' a tabela mostra o consumo registrado e os 'Dias sem estoque' de cada mês; no cartão 'Parâmetros da programação', o seletor de CMM mostra a fórmula e, embaixo, o CMM dos três métodos para comparar; em 'Os 12 meses seguintes' leia 'Ruptura' e a linha 'Dias de ruptura'.",
+        question: "A amoxicilina 500 mg faltou em maio, junho, julho e agosto do ano passado (4, 16, 20 e 12 dias sem estoque). Selecione a amoxicilina, deixe 'Estoque de segurança' em 1 mês e 'A cada 3 meses' e compare 'Média bruta dos últimos 12 meses' com 'Média de 12 meses corrigida pelos dias sem estoque'. Leia o CMM resultante, 'Ruptura' e 'Estoque médio'. Discutam em grupo e deixem a média corrigida selecionada ao responder. Por que a média bruta deixa faltar e o que a correção muda?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "programacao") return { correct: false, feedback: "Abra o Caso 2 (Programação) para responder a este desafio." };
+          const c = cfg(s, "amoxicilina");
+          if (!c) return { correct: false, feedback: "Configure a amoxicilina no cartão 'Parâmetros da programação'." };
+          if (c.metodo !== "corrigida12") return { correct: false, feedback: "Deixe selecionada a 'Média de 12 meses corrigida pelos dias sem estoque' na amoxicilina." };
+          if (c.mesesSeguranca !== 1 || c.intervalo !== 3) return { correct: false, feedback: "Mantenha a amoxicilina com 1 mês de segurança e pedidos a cada 3 meses, para comparar só o método de CMM." };
+          return { correct: true, feedback: "Com a média corrigida (CMM 22.754) a amoxicilina fica sem ruptura; com a bruta (16.542) faltavam 34 dias em 2 meses." };
+        },
+        options: [
+          "Nos meses de falta o consumo registrado é menor que a demanda real; a média bruta (CMM 16.542) subestima e deixa 34 dias sem estoque, e a correção leva o CMM a 22.754 e zera a ruptura.",
+          "A média bruta (CMM 16.542) subestima a demanda de inverno; usar a média dos últimos 6 meses (CMM 16.500) resolveria, porque ela já inclui os meses de pico e daria 0 dia de ruptura sem mudar o resto.",
+          "A média bruta (CMM 16.542) subestima a demanda; elevar o estoque de segurança a 2 meses com ela já elimina a ruptura, sem precisar corrigir o CMM, e a cobertura média fica em 2,1 meses.",
+          "A média bruta (CMM 16.542) é a correta e a ruptura de 34 dias vem do tempo de reposição de 2 meses; a média corrigida só infla o estoque, sem reduzir a falta nem o risco de ruptura no inverno.",
+        ],
+        correctIndex: 0,
+        explanation: "Nos meses em que faltou (maio a agosto), o consumo registrado é o que a CAF conseguiu entregar, não o que os pacientes precisavam. A média bruta de 12 meses dá CMM 16.542 e, com 1 mês de segurança e pedidos a cada 3 meses, 34 dias de ruptura em 2 meses; corrigindo cada mês por 30 ÷ (30 − dias sem estoque), o CMM vai a 22.754 e a ruptura cai a 0, com estoque médio de 56.248. A média de 6 meses (16.500) não muda nada (34 dias); com a média bruta e 2 meses de segurança ainda restam 17 dias; e a média corrigida reduz a falta, como o motor mostra. Conduta: corrigir o CMM pelos dias de desabastecimento antes de programar.",
+        reference: "Marin N et al. Assistência Farmacêutica para Gerentes Municipais. Rio de Janeiro: OPAS/OMS, 2003",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: em 'Os 12 meses seguintes', 'Pedidos no ano' mostra o limite de 4 pedidos por item e 'Estoque médio' traz a cobertura em meses; o controle 'Estoque de segurança' e o 'Intervalo entre pedidos' ficam em 'Parâmetros da programação'.",
+        question: "A CAF só consegue fazer 4 pedidos por item ao ano. Com a amoxicilina em 'Média de 12 meses corrigida pelos dias sem estoque', procure a combinação de 'Estoque de segurança' e 'Intervalo entre pedidos' que zera a ruptura com o menor 'Estoque médio', respeitando o limite de pedidos. Teste: segurança 0 com pedidos a cada 6 meses; segurança 0,5, 1 e 1,5 com pedidos a cada 3 meses. Discutam em grupo e deixem selecionada a combinação que vocês defendem. Qual delas sustenta a decisão?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "programacao") return { correct: false, feedback: "Abra o Caso 2 (Programação) para responder a este desafio." };
+          const c = cfg(s, "amoxicilina");
+          if (!c) return { correct: false, feedback: "Configure a amoxicilina no cartão 'Parâmetros da programação'." };
+          if (c.metodo !== "corrigida12") return { correct: false, feedback: "Use a 'Média de 12 meses corrigida pelos dias sem estoque' na amoxicilina." };
+          if (c.resultado.rupturaDias > 0) return { correct: false, feedback: `A combinação deixada ainda tem ${c.resultado.rupturaDias} dias de ruptura.` };
+          if (c.resultado.nPedidos > 4) return { correct: false, feedback: "A combinação deixada passa de 4 pedidos por ano." };
+          if (!(c.mesesSeguranca === 1 && c.intervalo === 3)) return { correct: false, feedback: "Zera a ruptura, mas existe combinação com menos estoque médio: teste 1 mês de segurança com pedidos a cada 3 meses." };
+          return { correct: true, feedback: "Segurança de 1 mês e pedidos a cada 3 meses: 0 dia de ruptura, 4 pedidos e estoque médio de 56.248 cápsulas." };
+        },
+        options: [
+          "Segurança de 0 mês e pedidos a cada 6 meses: 0 dia de ruptura, 2 pedidos e estoque médio de 75.795 cápsulas (3,7 meses de cobertura).",
+          "Segurança de 0,5 mês e pedidos a cada 3 meses: 7 dias de ruptura, 4 pedidos e estoque médio de 48.620 cápsulas (2,4 meses de cobertura).",
+          "Segurança de 1,5 mês e pedidos a cada 3 meses: 0 dia de ruptura, 4 pedidos e estoque médio de 65.728 cápsulas (3,2 meses de cobertura).",
+          "Segurança de 1 mês e pedidos a cada 3 meses: 0 dia de ruptura, 4 pedidos e estoque médio de 56.248 cápsulas (2,8 meses de cobertura).",
+        ],
+        correctIndex: 3,
+        explanation: "Com a média corrigida, três combinações zeram a ruptura dentro do limite de 4 pedidos: segurança 0 com pedidos semestrais (estoque médio de 75.795), segurança 1 com pedidos trimestrais (56.248) e segurança 1,5 com pedidos trimestrais (65.728). A de menor estoque é a de 1 mês a cada 3 meses. Com 0,5 mês o estoque médio é menor (48.620), mas sobram 7 dias de ruptura: é o 'número bonito' que não trata o problema. Conduta: escolher a menor cobertura que ainda zera a falta e cabe no número de pedidos que a CAF consegue processar.",
+        reference: "Management Sciences for Health. MDS-3: Managing Access to Medicines and Health Technologies. Arlington: MSH, 2012",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: em 'Item e histórico de consumo' aparecem a validade do lote na entrega (8 meses), o tempo de reposição (2 meses) e a capacidade da CAF (10.000 frascos). Em 'Os 12 meses seguintes' leia 'Perdas por vencimento', 'Ruptura' e 'Pico de estoque' e a tabela mês a mês (linha 'Vencido').",
+        question: "A insulina NPH tem reposição de 2 meses, lotes que chegam com 8 meses de validade e câmara fria de 10.000 frascos. Selecione a insulina, use 'Média bruta dos últimos 12 meses' e segurança de 1 mês e teste primeiro 'A cada 12 meses' (compra anual) e depois 'A cada 3 meses'. Leia 'Perdas por vencimento', 'Ruptura', 'Pico de estoque' e a linha 'Vencido' da tabela. Discutam em grupo e deixem 'A cada 3 meses' selecionado ao responder. O que a compra anual revela?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "programacao") return { correct: false, feedback: "Abra o Caso 2 (Programação) para responder a este desafio." };
+          const c = cfg(s, "insulina");
+          if (!c) return { correct: false, feedback: "Configure a insulina no cartão 'Parâmetros da programação'." };
+          if (c.intervalo !== 3) return { correct: false, feedback: "Deixe a insulina com pedidos 'A cada 3 meses' ao responder (antes, teste a compra anual)." };
+          if (c.mesesSeguranca !== 1) return { correct: false, feedback: "Use 1 mês de estoque de segurança na insulina." };
+          if (c.resultado.rupturaDias > 0 || c.resultado.perdasUnid > 0 || c.resultado.excedeCapacidade) return { correct: false, feedback: "A configuração deixada ainda tem ruptura, perdas ou pico acima da câmara." };
+          return { correct: true, feedback: "A cada 3 meses: 0 dia de ruptura, sem perdas e pico de 9.385 frascos (dentro dos 10.000)." };
+        },
+        options: [
+          "A compra anual gera 8.988 frascos vencidos (R$ 197.736) e 60 dias de falta por causa do estoque de segurança; com segurança zero, a compra anual não teria perda nem falta, e o pico caberia na câmara.",
+          "A compra anual gera 8.988 frascos vencidos (R$ 197.736) e 60 dias de falta porque o CMM está subestimado; a média corrigida pelos dias sem estoque evitaria as duas coisas e reduziria o pico na câmara.",
+          "O lote dura 8 meses e a compra anual cobre 14: 8.988 frascos vencem (R$ 197.736), o estoque acaba e faltam 60 dias, e o pico de 31.428 frascos passa da câmara; a cada 3 meses resolve os três.",
+          "A compra anual gera 8.988 frascos vencidos (R$ 197.736) e 60 dias de falta pelo tempo de reposição de 2 meses; a compra semestral resolveria sem problema de armazenamento na câmara de 10.000 frascos.",
+        ],
+        correctIndex: 2,
+        explanation: "Com média bruta, segurança de 1 mês e compra a cada 12 meses, o motor mostra 8.988 frascos vencidos (R$ 197.736), 60 dias de ruptura em 2 meses e pico de 31.428 frascos, três vezes a câmara de 10.000. O lote dura 8 meses e o pedido cobre 14: o excedente vence, e depois não há mais estoque. Com segurança 0 a compra anual ainda perde 6.539 frascos (R$ 143.858) e falta 60 dias; a média corrigida é igual à bruta aqui, porque a insulina não teve falta no histórico; e a compra semestral não vence, mas chega a 16.733 frascos de pico, acima da câmara. Só pedidos a cada 3 meses zeram a ruptura, as perdas e o excesso (pico de 9.385). Conduta: o intervalo de compra de itens de validade curta e câmara limitada segue a validade e a capacidade, não o prazo do processo de compra.",
+        reference: "Brasil. Anvisa. RDC nº 430/2020 (Boas Práticas de Distribuição, Armazenagem e de Transporte de Medicamentos)",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: o CMM e o nível máximo S aparecem no cartão 'Parâmetros da programação'; as fórmulas usadas estão descritas embaixo do seletor de método e do intervalo. Para este cálculo use o estoque atual da losartana (66.000 comprimidos) do cartão 'Item e histórico de consumo'.",
+        question: "Para a losartana, o CMM é 60.033 comprimidos, o tempo de reposição é de 1 mês, o estoque atual é de 66.000 comprimidos e não há pedido em trânsito. Com 0,5 mês de segurança e pedidos a cada 3 meses, qual é a quantidade do primeiro pedido (nível máximo S menos a posição de estoque, que é o estoque mais o que está em trânsito)?",
+        options: [
+          "Cerca de 174.000 comprimidos",
+          "Cerca de 204.000 comprimidos",
+          "Cerca de 270.000 comprimidos",
+          "Cerca de 144.000 comprimidos",
+        ],
+        correctIndex: 1,
+        explanation: "S = CMM × (intervalo + tempo de reposição) + segurança = 60.033 × (3 + 1) + 0,5 × 60.033 = 60.033 × 4,5 ≈ 270.150. A posição de estoque é 66.000 + 0 em trânsito, então o pedido é 270.150 − 66.000 ≈ 204.150 comprimidos. Cerca de 174.000 esquece a segurança (60.033 × 4 − 66.000); cerca de 270.000 esquece de descontar o estoque atual; cerca de 144.000 esquece o tempo de reposição (60.033 × 3,5 − 66.000).",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o seletor de item fica em 'Item e histórico de consumo'; cada item guarda os próprios parâmetros em 'Parâmetros da programação'. Em 'Os 12 meses seguintes' leia 'Ruptura' e 'Estoque médio' de cada item depois de configurar.",
+        question: "Um colega propõe a mesma política para os três itens: 'Média bruta dos últimos 12 meses', segurança de 1 mês e pedidos a cada 3 meses. Configure exatamente isso na losartana, na amoxicilina e na insulina (um item de cada vez) e compare 'Ruptura' e 'Estoque médio' dos três. Discutam em grupo e deixem essa configuração nos três itens ao responder. A política zera a ruptura na losartana e na insulina e deixa 34 dias sem estoque na amoxicilina: o que isso mostra?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "programacao") return { correct: false, feedback: "Abra o Caso 2 (Programação) para responder a este desafio." };
+          for (const id of ["losartana", "amoxicilina", "insulina"]) {
+            const c = cfg(s, id);
+            if (!c || c.metodo !== "media12" || c.mesesSeguranca !== 1 || c.intervalo !== 3) return { correct: false, feedback: `Configure ${id === "losartana" ? "a losartana" : id === "amoxicilina" ? "a amoxicilina" : "a insulina"} com 'Média bruta dos últimos 12 meses', segurança de 1 mês e 'A cada 3 meses'.` };
+          }
+          return { correct: true, feedback: "Mesma política: losartana 0 dia, insulina 0 dia e amoxicilina 34 dias de ruptura." };
+        },
+        options: [
+          "A amoxicilina falha porque tem o maior tempo de reposição do grupo; a solução é encurtar o intervalo dos três itens para 1 mês, o que aumenta o número de pedidos de todos.",
+          "A amoxicilina falha porque custa mais por unidade que a losartana; itens mais caros exigem mais meses de segurança que os baratos, então a solução é subir a segurança de todos.",
+          "A amoxicilina falha porque as faltas do ano anterior reduziram o consumo registrado dela; ela precisa do CMM corrigido, e a política única deve dar lugar a parâmetros por item.",
+          "A amoxicilina falha porque vence antes dos outros itens; a solução é reduzir o estoque dela e o intervalo de 3 meses para evitar perdas, deixando a política dos três itens como está.",
+        ],
+        correctIndex: 2,
+        explanation: "Com a mesma política: losartana 0 dia de ruptura (estoque médio 137.403), insulina 0 dia (4.885) e amoxicilina 34 dias em 2 meses (34.948). A insulina tem o mesmo tempo de reposição de 2 meses e não falha, o que descarta o prazo como causa; o preço unitário não entra na fórmula de programação; e não há perda por vencimento na amoxicilina (validade de 24 meses). A causa é o histórico: as faltas de maio a agosto reduziram o consumo registrado, e o CMM bruto de 16.542 subestima a demanda real (a corrigida é 22.754). Conduta: parâmetros por item, com o CMM corrigido onde houve desabastecimento.",
+        reference: "Marin N et al. Assistência Farmacêutica para Gerentes Municipais. Rio de Janeiro: OPAS/OMS, 2003",
+      },
+    ],
+
+    // Caso 3: Aquisição — pregão de insulina NPH (33.600 frascos/ano; câmara fria de 10.000; edital: validade ≥ 12 m, prazo ≤ 30 d)
+    // Números do motor: cotações c1–c8 | todas: média 24,35, mediana 22,50, menor 12,60 | c1–c5: média 21,94, mediana 21,10, menor 19,80 | c1–c7 (sem a ata vencida): mediana 23,90
+    //   Propostas: Alfa 17,90 (AFE vencida), Beta 19,40 (validade 6 m), Ômega 19,95 (prazo 45 d), Gama 20,20 e Delta 20,90 (aptas) → vencedora Gama
+    //   Economia sobre a referência 21,10: (21,10−20,20)×33.600 = 30.240 | Alfa 107.520 | referência 24,35: 139.440 | economia com quantidade mensal 2.520
+    //   Custo adicional (frete 3.600/entrega + manutenção 1%/mês): 1 → 47.717 (pico 35.000) | 2 → 30.955 (18.200) | 3 → 27.768 (12.600, acima de 10.000) | 4 → 27.974 (9.800) | 6 → 31.781 (7.000) | 12 → 49.987 (4.200)
+    //   Validade mínima 18 m: só a Delta (20,90) → +0,70 × 33.600 = 23.520 sobre a Gama
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão '1. Pesquisa de preços' há uma tabela de cotações com caixa de seleção (coluna 'Situação' explica cada fonte), o seletor 'Estatística' e os indicadores 'Preço de referência' e 'Valor estimado da compra'.",
+        question: "O preço de referência do pregão sai de oito cotações de insulina NPH. Comece com todas marcadas e 'Média' (R$ 24,35) e leia a coluna 'Situação' de cada uma. Depois desmarque as cotações que não representam preço praticado no mercado para esta compra e teste 'Média', 'Mediana' e 'Menor valor'. Discutam em grupo e deixem selecionado o conjunto de cotações e a estatística que vocês defenderiam. Qual leitura sustenta melhor o preço de referência?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "aquisicao") return { correct: false, feedback: "Abra o Caso 3 (Aquisição) para responder a este desafio." };
+          const ids = ((s.cotacoesIncluidas ?? []) as string[]).slice().sort().join(",");
+          if (ids !== "c1,c2,c3,c4,c5") return { correct: false, feedback: "Deixe marcadas só as cinco primeiras linhas (Banco de Preços em Saúde, ata vigente do Estado, Painel de Preços e as duas cotações diretas). O teto da tabela CMED, a compra emergencial e a ata vencida há 2 anos não representam preço praticado." };
+          if (s.estatistica !== "mediana" && s.estatistica !== "media") return { correct: false, feedback: "Com as cinco cotações certas, use 'Mediana' (R$ 21,10) ou 'Média' (R$ 21,94): o 'Menor valor' expõe a referência a uma única fonte." };
+          return { correct: true, feedback: `Cinco cotações recentes e comparáveis com ${s.estatistica === "mediana" ? "a mediana (R$ 21,10)" : "a média (R$ 21,94)"}.` };
+        },
+        options: [
+          "Usar as oito cotações e a mediana (R$ 22,50): quanto mais fontes entram, mais confiável fica a referência, mesmo as que não representam preço praticado.",
+          "Usar as oito cotações e o menor valor (R$ 12,60): a referência mais baixa garante a proposta mais econômica e pressiona os fornecedores a baixar o preço.",
+          "Usar as sete cotações sem a ata vencida e a mediana (R$ 23,90): a compra emergencial e o teto da tabela CMED mostram até onde o mercado pode chegar a cobrar.",
+          "Usar só as cinco cotações recentes e formais, com a mediana (R$ 21,10) ou a média (R$ 21,94): teto CMED, compra emergencial e ata vencida não são preço praticado.",
+        ],
+        correctIndex: 3,
+        explanation: "Com as oito cotações, a média é R$ 24,35 e a mediana R$ 22,50; o menor valor, R$ 12,60, vem de uma ata de 2 anos atrás. Três fontes distorcem: a tabela CMED é o preço máximo legal (R$ 41,00), não o praticado; a compra emergencial (R$ 31,50) foi feita sem competição; a ata vencida (R$ 12,60) é de outro momento do mercado. Sem elas, restam cinco fontes comparáveis e recentes: mediana R$ 21,10, média R$ 21,94. Mais fontes só ajuda se forem comparáveis; o menor valor de uma única fonte antiga leva a um pregão deserto. Conduta: qualidade e comparabilidade das cotações antes da estatística.",
+        reference: "Brasil. Instrução Normativa SEGES/ME nº 65/2021 (pesquisa de preços) e Lei nº 14.133/2021, art. 23",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão '2. Julgamento das propostas' a tabela mostra preço, validade na entrega, prazo e documentação sanitária; a caixa de seleção deixa a proposta classificada ou não. Os indicadores 'Vencedora' e 'Economia sobre o preço de referência' se atualizam. As exigências do edital estão no subtítulo do cartão.",
+        question: "Chegaram cinco propostas. O edital exige validade mínima de 12 meses na entrega e prazo máximo de 30 dias, além de documentação sanitária em dia. Com todas classificadas, a 'Vencedora' aparece como a de menor preço. Desmarque as propostas que não podem ser mantidas e veja a 'Vencedora' e a 'Economia sobre o preço de referência' mudarem. Discutam em grupo e deixem classificadas só as propostas que vocês manteriam. Qual leitura sustenta melhor o resultado?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "aquisicao") return { correct: false, feedback: "Abra o Caso 3 (Aquisição) para responder a este desafio." };
+          const cl = ((s.classificadas ?? []) as string[]).slice().sort().join(",");
+          if (cl !== "p4,p5") return { correct: false, feedback: "Compare cada proposta com as exigências do edital (validade mínima, prazo máximo e documentação): só a Gama e a Delta cumprem todas. Deixe classificadas apenas essas duas." };
+          return { correct: true, feedback: "Só a Gama (R$ 20,20) e a Delta (R$ 20,90) cumprem o edital: a Gama vence." };
+        },
+        options: [
+          "A Alfa (R$ 17,90) vence: o menor preço prevalece e a AFE vencida pode ser regularizada depois da adjudicação, antes da primeira entrega, sem prejuízo à habilitação.",
+          "A Gama (R$ 20,20) vence: as três mais baratas descumprem exigências objetivas do edital (AFE vencida, validade de 6 meses e prazo de 45 dias) e não podem ser mantidas.",
+          "A Beta (R$ 19,40) vence: a validade de 6 meses é aceitável porque as entregas parceladas trocam o lote antes do vencimento, e o preço é o segundo menor do pregão.",
+          "A Ômega (R$ 19,95) vence: o prazo de 45 dias pode ser ajustado em contrato, já que a exigência do edital é um objetivo desejável e não um requisito da proposta.",
+        ],
+        correctIndex: 1,
+        explanation: "Tabela contra o edital: Alfa (R$ 17,90) tem a AFE vencida, e sem autorização sanitária a empresa não está habilitada; Beta (R$ 19,40) entrega com 6 meses de validade, abaixo dos 12 exigidos; Ômega (R$ 19,95) promete 45 dias contra o máximo de 30. Restam Gama (R$ 20,20) e Delta (R$ 20,90): vence a Gama, com economia de R$ 30.240 sobre a referência de R$ 21,10, calculada na quantidade anual. As exigências do edital são requisitos objetivos, iguais para todos os licitantes, e não se ajustam depois. Conduta: o menor preço vale entre as propostas habilitadas e conformes.",
+        reference: "Brasil. Lei nº 14.133/2021 (Nova Lei de Licitações e Contratos Administrativos)",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão '3. Parcelamento das entregas' o seletor 'Número de entregas no ano' recalcula o transporte, a manutenção de estoque, as perdas por vencimento, o 'Custo adicional total' e o 'Pico na câmara' (capacidade de 10.000 frascos). As barras vermelhas do gráfico são as opções cujo pico não cabe na câmara.",
+        question: "Com a vencedora definida, falta dividir os 33.600 frascos em entregas. No cartão '3. Parcelamento das entregas', teste 3 e 4 entregas e compare 'Custo adicional total', 'Pico na câmara' e as barras do gráfico. Discutam em grupo e deixem selecionada a opção que vocês defenderiam. Qual leitura sustenta melhor a escolha?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "aquisicao") return { correct: false, feedback: "Abra o Caso 3 (Aquisição) para responder a este desafio." };
+          if (s.entregas !== 4) return { correct: false, feedback: s.entregas === 3 ? "Com 3 entregas o pico de 12.600 frascos passa da câmara de 10.000: a opção não é viável." : "Compare o custo adicional das opções que cabem na câmara: a de menor custo viável não é a que você deixou selecionada." };
+          return { correct: true, feedback: "4 entregas: custo adicional de R$ 27.974 e pico de 9.800 frascos, dentro da câmara." };
+        },
+        options: [
+          "3 entregas têm o menor custo adicional (R$ 27.768) e cabem na câmara, porque o estoque médio de 7.000 frascos é menor que a capacidade de 10.000; devem ser adotadas.",
+          "6 entregas têm o menor estoque médio (4.200 frascos) e por isso o menor custo adicional, além de caberem na câmara, com um transporte a cada 2 meses; devem ser adotadas.",
+          "3 entregas têm o menor custo adicional (R$ 27.768), mas o pico de 12.600 frascos não cabe na câmara de 10.000; a menor opção viável é 4 entregas (R$ 27.974, pico de 9.800).",
+          "12 entregas mantêm o menor estoque (média de 2.800 frascos) e o menor risco de vencimento, o que compensa o transporte de R$ 43.200 e simplifica o controle do estoque; devem ser adotadas.",
+        ],
+        correctIndex: 2,
+        explanation: "Custo adicional (transporte + manutenção): 1 entrega R$ 47.717; 2, R$ 30.955; 3, R$ 27.768; 4, R$ 27.974; 6, R$ 31.781; 12, R$ 49.987. O mínimo teórico é com 3 entregas, mas o pico de 12.600 frascos passa da câmara de 10.000 (o pico é a parcela mais a segurança, não o estoque médio). Com 4 entregas o pico é 9.800 e o custo, só R$ 206 maior. Seis entregas têm menos estoque, mas o transporte (R$ 21.600) pesa mais que a economia de manutenção; doze custam R$ 49.987, e o risco de vencimento já é zero (validade de 15 meses). Conduta: o menor custo entre as opções que cabem na câmara.",
+        reference: "Brasil. Anvisa. RDC nº 430/2020 (Boas Práticas de Distribuição, Armazenagem e de Transporte de Medicamentos)",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: o preço da vencedora e a economia sobre o preço de referência aparecem no cartão '2. Julgamento das propostas'; a quantidade anual (33.600 frascos) está no subtítulo do cartão '3. Parcelamento das entregas'.",
+        question: "O preço de referência do pregão é R$ 21,10 (mediana das cinco cotações recentes) e a proposta vencedora é a da Gama, a R$ 20,20 por frasco. Qual é a economia sobre a quantidade anual de 33.600 frascos?",
+        options: [
+          "R$ 107.520 por ano",
+          "R$ 2.520 por ano",
+          "R$ 30.240 por ano",
+          "R$ 139.440 por ano",
+        ],
+        correctIndex: 2,
+        explanation: "Economia = (preço de referência − preço da vencedora) × quantidade anual = (21,10 − 20,20) × 33.600 = R$ 30.240 por ano. R$ 107.520 usa o preço da Alfa (R$ 17,90), proposta que não pode ser mantida; R$ 2.520 usa a quantidade de um mês (2.800 frascos) em vez da anual; R$ 139.440 parte de uma referência de R$ 24,35 (a média das oito cotações, inflada por fontes que não representam o mercado).",
+        reference: "Brasil. Instrução Normativa SEGES/ME nº 65/2021 (pesquisa de preços)",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: as propostas e as exigências do edital (validade mínima e prazo máximo) estão no cartão '2. Julgamento das propostas'; a quantidade anual, no cartão '3. Parcelamento das entregas'.",
+        question: "Um membro da equipe sugere endurecer o edital: exigir validade mínima de 18 meses na entrega, 'para nunca mais receber lote curto como no Caso 2', mantendo prazo de 30 dias e documentação em dia. Com as propostas da tabela, quem venceria e o que isso custaria, considerando entregas a cada 3 meses?",
+        options: [
+          "A Delta (R$ 20,90) seria a única apta e o Município pagaria R$ 23.520 a mais que com a Gama por uma folga de validade que entregas a cada 3 meses não aproveitam.",
+          "A Delta (R$ 20,90) seria a única apta e o Município pagaria R$ 2.352 a mais que com a Gama, um custo pequeno diante da segurança de lotes com 18 meses de validade.",
+          "A Gama (R$ 20,20) continuaria vencendo, porque a validade de 15 meses é considerada equivalente a 18 quando as entregas são parceladas em partes menores.",
+          "A Delta (R$ 20,90) seria a única apta e ainda economizaria R$ 6.720 sobre o preço de referência, então exigir mais validade não sai mais caro que a Gama.",
+        ],
+        correctIndex: 0,
+        explanation: "Com validade mínima de 18 meses, só a Delta (18 meses) fica apta e vence a R$ 20,90. A diferença para a Gama é R$ 0,70 por frasco × 33.600 = R$ 23.520 por ano. Com entregas a cada 3 meses, cada lote é consumido em cerca de 3 meses, então 12 meses de validade (o mínimo atual) já deixam 9 meses de folga: os 6 meses extras não são usados. R$ 2.352 usa um décimo da quantidade; a validade não é 'equivalente' por parcelamento; e a economia de R$ 6.720 é sobre a referência, não sobre a Gama. Conduta: a exigência do edital acompanha o consumo e a entrega parcelada, não o pior caso de outro item.",
+        reference: "Brasil. Lei nº 14.133/2021 (Nova Lei de Licitações e Contratos Administrativos)",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: os três cartões da bancada ('1. Pesquisa de preços', '2. Julgamento das propostas' e '3. Parcelamento das entregas') guardam suas escolhas; confira 'Preço de referência', 'Vencedora' e o 'Custo adicional total' com o pico na câmara.",
+        question: "Feche o plano do pregão na bancada: preço de referência, propostas classificadas e número de entregas. Deixe marcadas as cinco cotações recentes com a mediana, classificadas só as duas propostas que cumprem o edital e a quantidade de entregas que cabe na câmara. Discutam em grupo e escolham a versão do plano, lendo cada item com a mesma régua.",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "aquisicao") return { correct: false, feedback: "Abra o Caso 3 (Aquisição) para responder a este desafio." };
+          const ids = ((s.cotacoesIncluidas ?? []) as string[]).slice().sort().join(",");
+          if (ids !== "c1,c2,c3,c4,c5" || s.estatistica !== "mediana") return { correct: false, feedback: "Deixe marcadas as cotações c1 a c5 (as cinco recentes) com 'Mediana': preço de referência de R$ 21,10." };
+          if (s.vencedorId !== "p4") return { correct: false, feedback: "Deixe classificadas só a Gama e a Delta, para que a vencedora seja a Gama." };
+          if (s.entregas !== 4) return { correct: false, feedback: "Selecione 4 entregas, a menor opção viável na câmara de 10.000 frascos." };
+          return { correct: true, feedback: "Plano fechado: referência R$ 21,10, vencedora Gama (R$ 20,20) e 4 entregas." };
+        },
+        options: [
+          "Preço de referência: R$ 22,50. Vencedora: Gama (R$ 20,20). Entregas: 4.",
+          "Preço de referência: R$ 21,10. Vencedora: Gama (R$ 20,20). Entregas: 4.",
+          "Preço de referência: R$ 21,10. Vencedora: Alfa (R$ 17,90). Entregas: 4.",
+          "Preço de referência: R$ 21,10. Vencedora: Gama (R$ 20,20). Entregas: 3.",
+        ],
+        correctIndex: 1,
+        explanation: "Referência: mediana das cinco cotações recentes e comparáveis, R$ 21,10 (R$ 22,50 é a mediana das oito, com o teto CMED, a compra emergencial e a ata vencida). Vencedora: a Gama, R$ 20,20, primeira entre as propostas que cumprem o edital (a Alfa a R$ 17,90 tem a AFE vencida). Entregas: 4, porque com 3 o pico de 12.600 frascos passa da câmara de 10.000. Cada distrator troca um item e os outros dois ficam iguais.",
+        reference: "Brasil. Lei nº 14.133/2021 e Instrução Normativa SEGES/ME nº 65/2021",
+      },
+    ],
+
+    // Caso 4: Armazenamento — falha de energia na câmara fria (5 °C → +1 °C/h; alarme 8 °C na hora 3; 25 °C na hora 20; energia volta na hora 28)
+    // Números do motor: transferência h7 → pico 12 °C, 4 h > 8 | h12 → 17 °C, 9 h > 8, 0 h > 25 | h20 → 25 °C, 17 h > 8 | h21 → 26 °C, 18 h > 8, 1 h > 25
+    //   Condutas esperadas: insulina (limite 25 °C) liberar até h20 e quarentena a partir de h21; vacina (PNI) e ocitocina (sem dado): quarentena sempre.
+    //   Valores: insulina R$ 46.200 (2.100 frascos × 22), vacina R$ 8.640, ocitocina R$ 1.840
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Registro do data logger da câmara fria' estão o gráfico (faixa verde de 2 a 8 °C, marca do alarme, linha de 25 °C e marca da transferência), o controle 'Hora da transferência para o refrigerador reserva' e os indicadores 'Temperatura máxima do produto', 'Tempo acima de 8 °C' e 'Tempo acima de 25 °C'. No cartão 'Conduta por lote', cada lote mostra o dado de estabilidade e um seletor de conduta.",
+        question: "A concessionária prometeu o retorno da energia e a equipe decidiu esperar. Ajuste 'Hora da transferência para o refrigerador reserva' para a hora 21 e leia 'Temperatura máxima do produto', 'Tempo acima de 8 °C' e 'Tempo acima de 25 °C'. Compare com o dado de estabilidade da insulina (documento do fabricante do lote: até 25 °C por até 28 dias) e escolha a conduta para esse lote. Discutam em grupo e deixem a transferência na hora 21 e a conduta escolhida para a insulina ao responder. Qual leitura sustenta melhor a conduta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "armazenamento") return { correct: false, feedback: "Abra o Caso 4 (Armazenamento) para responder a este desafio." };
+          if (s.transferenciaH !== 21) return { correct: false, feedback: "Ajuste a hora da transferência para 21 para ler a exposição da insulina." };
+          if (!s.condutas?.insulina) return { correct: false, feedback: "Escolha a conduta para o lote de insulina no cartão 'Conduta por lote'." };
+          if (s.condutas.insulina !== "quarentena") return { correct: false, feedback: "Na hora 21 o pico passa dos 25 °C do documento do fabricante: releia a comparação entre o pico e o limite do lote antes de escolher a conduta." };
+          return { correct: true, feedback: "Hora 21: pico de 26 °C, acima do limite de 25 °C do documento: quarentena e consulta ao fabricante." };
+        },
+        options: [
+          "O pico é 26 °C, acima dos 25 °C do documento, mas o tempo total fora da faixa (18 h) é bem menor que os 28 dias permitidos; liberar o lote e apenas registrar a excursão no histórico.",
+          "O pico é 26 °C, acima dos 25 °C do documento, e 18 h fora de 2–8 °C inutilizam a insulina; descartar de imediato os 2.100 frascos, num prejuízo de R$ 46.200, para evitar risco.",
+          "O pico é 26 °C, acima dos 25 °C do documento, mas a insulina só perde a potência se congelar; liberar o lote, pois a temperatura da câmara já voltou ao normal.",
+          "O pico é 26 °C, acima dos 25 °C do documento do fabricante: quarentena a 2–8 °C e consulta ao fabricante, sem descartar, porque só ele diz se o lote suporta essa exposição.",
+        ],
+        correctIndex: 3,
+        explanation: "Na hora 21 o produto chegou a 26 °C, com 18 h acima de 8 °C e 1 h acima de 25 °C. O documento do fabricante autoriza até 25 °C: o limite foi ultrapassado por 1 h, e o dado para além dele só o fabricante tem. As 18 h acima de 8 °C entram no cálculo dos 28 dias permitidos, mas não substituem o limite de temperatura; descartar joga fora R$ 46.200 sem consultar quem sabe; e a insulina também perde qualidade com calor, não só com congelamento. Conduta: quarentena a 2–8 °C, registro da excursão (pico, duração, lote) e consulta ao fabricante, com decisão após o parecer.",
+        reference: "Brasil. Anvisa. RDC nº 430/2020 (Boas Práticas de Distribuição, Armazenagem e de Transporte de Medicamentos)",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o controle 'Hora da transferência para o refrigerador reserva' e os indicadores de exposição ficam no cartão 'Registro do data logger da câmara fria'; os três lotes (insulina, vacina, ocitocina) e os seletores de conduta ficam no cartão 'Conduta por lote'.",
+        question: "Agora suponha que a equipe tenha transferido os produtos mais cedo. Ajuste a transferência para a hora 12 e confira 'Temperatura máxima do produto' e 'Tempo acima de 8 °C'. Leia o dado de estabilidade dos três lotes e escolha uma conduta para cada um. Discutam em grupo e deixem a transferência na hora 12 e as três condutas escolhidas ao responder. Qual conjunto de condutas sustenta a decisão?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "armazenamento") return { correct: false, feedback: "Abra o Caso 4 (Armazenamento) para responder a este desafio." };
+          if (s.transferenciaH !== 12) return { correct: false, feedback: "Ajuste a hora da transferência para 12." };
+          const c = s.condutas ?? {};
+          if (!c.insulina || !c.vacina || !c.ocitocina) return { correct: false, feedback: "Escolha uma conduta para cada um dos três lotes." };
+          if (c.insulina !== "liberar") return { correct: false, feedback: "Na hora 12 o pico é 17 °C, abaixo dos 25 °C do documento da insulina: releia a comparação antes de decidir." };
+          if (c.vacina !== "quarentena") return { correct: false, feedback: "Imunobiológico do PNI com excursão acima de 8 °C: releia a regra do dado de estabilidade da vacina." };
+          if (c.ocitocina !== "quarentena") return { correct: false, feedback: "A ocitocina não tem dado de estabilidade do fabricante: releia o que o cartão informa sobre o lote." };
+          return { correct: true, feedback: "Hora 12: insulina liberada (17 °C ≤ 25 °C); vacina e ocitocina em quarentena." };
+        },
+        options: [
+          "Insulina: quarentena. Vacina: quarentena. Ocitocina: quarentena.",
+          "Insulina: liberar. Vacina: quarentena. Ocitocina: quarentena.",
+          "Insulina: liberar. Vacina: liberar. Ocitocina: quarentena.",
+          "Insulina: liberar. Vacina: quarentena. Ocitocina: descartar.",
+        ],
+        correctIndex: 1,
+        explanation: "Com a transferência na hora 12, o pico é 17 °C e o tempo acima de 8 °C é 9 h. Insulina: o documento do fabricante autoriza até 25 °C, e 17 °C está dentro: liberar com registro (R$ 46.200 parados por excesso de cautela seriam desabastecimento à toa). Vacina do PNI: qualquer excursão acima de 8 °C exige avaliação da instância estadual antes do uso: quarentena. Ocitocina: sem dado de estabilidade do fabricante não há como afirmar nada, mas descartar sem consulta joga fora R$ 1.840 sem base: quarentena e pedido formal de dados. Cada distrator troca uma conduta e mantém as outras duas.",
+        reference: "Brasil. Ministério da Saúde. Manual de Rede de Frio do Programa Nacional de Imunizações. 5ª ed. Brasília, 2017",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o controle da hora da transferência e os indicadores de exposição ficam no cartão 'Registro do data logger da câmara fria'; o dado de estabilidade e o seletor de conduta da vacina contra hepatite B ficam no cartão 'Conduta por lote'.",
+        question: "Leve a transferência para a hora 7, a mais cedo possível (a equipe acabou de chegar). Leia 'Temperatura máxima do produto' e 'Tempo acima de 8 °C' e o dado de estabilidade da vacina contra hepatite B (imunobiológico do PNI, 180 frascos). Discutam em grupo e deixem a transferência na hora 7 e a conduta escolhida para a vacina ao responder. Qual leitura sustenta melhor a conduta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "armazenamento") return { correct: false, feedback: "Abra o Caso 4 (Armazenamento) para responder a este desafio." };
+          if (s.transferenciaH !== 7) return { correct: false, feedback: "Ajuste a hora da transferência para 7." };
+          if (!s.condutas?.vacina) return { correct: false, feedback: "Escolha a conduta para o lote de vacina no cartão 'Conduta por lote'." };
+          if (s.condutas.vacina !== "quarentena") return { correct: false, feedback: "Mesmo com a exposição mínima, o dado de estabilidade da vacina exige avaliação da instância estadual antes de qualquer uso: releia o cartão do lote." };
+          return { correct: true, feedback: "Hora 7: pico de 12 °C por 4 h, e ainda assim a vacina do PNI vai para quarentena com notificação." };
+        },
+        options: [
+          "A exposição foi de 12 °C por 4 h, a menor possível neste caso, e uma excursão tão curta não compromete vacinas; liberar os 180 frascos e apenas registrar a ocorrência no histórico do lote.",
+          "A exposição foi de 12 °C por 4 h, a menor possível neste caso, mas sem dado do fabricante o correto é descartar os 180 frascos (R$ 8.640) para evitar risco à população.",
+          "A exposição foi de 12 °C por 4 h, a menor possível neste caso, mas excursão acima de 8 °C em imunobiológico do PNI exige avaliação estadual: quarentena a 2–8 °C, sem uso, e notificação.",
+          "A exposição foi de 12 °C por 4 h, a menor possível neste caso, e a vacina pode ser usada nos pacientes já agendados enquanto a notificação à instância estadual é encaminhada.",
+        ],
+        correctIndex: 2,
+        explanation: "Na hora 7 o produto chegou a 12 °C e ficou 4 h acima de 8 °C, a menor exposição possível neste caso. Para imunobiológicos do PNI a regra não depende da duração: qualquer exposição fora de 2 a 8 °C exige que a instância estadual avalie os dados de estabilidade antes do uso. Liberar ou usar 'enquanto notifica' coloca em risco quem recebe a vacina; descartar os 180 frascos (R$ 8.640) antecipa uma decisão que cabe a quem tem o dado, e a vacina pode ser aproveitada. Conduta: quarentena a 2–8 °C, identificação, notificação e uso somente após o parecer.",
+        reference: "Brasil. Ministério da Saúde. Manual de Rede de Frio do Programa Nacional de Imunizações. 5ª ed. Brasília, 2017",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: as taxas do registro estão no subtítulo do cartão 'Registro do data logger da câmara fria' (5 °C na hora 0, +1 °C por hora até o retorno da energia); a linha de 25 °C e a marca do alarme de 8 °C aparecem no gráfico.",
+        question: "O data logger registra 5 °C na hora 0 e subida de 1 °C por hora até o retorno da energia. Qual é a última hora de transferência que mantém a insulina dentro do limite de 25 °C do documento do fabricante e quantas horas ela terá passado acima de 8 °C nesse caso?",
+        options: [
+          "Hora 20; 17 h acima de 8 °C",
+          "Hora 17; 14 h acima de 8 °C",
+          "Hora 28; 25 h acima de 8 °C",
+          "Hora 3; 0 h acima de 8 °C",
+        ],
+        correctIndex: 0,
+        explanation: "A temperatura é 5 + 1 × h. Chega a 8 °C na hora 3 (alarme) e a 25 °C na hora 20: transferir até a hora 20 mantém o produto em no máximo 25 °C. O tempo acima de 8 °C é 20 − 3 = 17 h. Hora 17 vem de 25 − 8 (confunde a diferença de temperatura com a hora de cruzamento); hora 28 é o retorno da energia, quando o pico chega a 30 °C; hora 3 é o alarme, quando a equipe ainda nem tinha chegado (chegada na hora 7).",
+        reference: "Brasil. Anvisa. RDC nº 430/2020 (Boas Práticas de Distribuição, Armazenagem e de Transporte de Medicamentos)",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: o gráfico do cartão 'Registro do data logger da câmara fria' mostra a câmara voltando à faixa verde depois da hora 28; o dado de estabilidade de cada lote está no cartão 'Conduta por lote'.",
+        question: "Depois do retorno da energia (hora 28), o logger mostra a câmara de novo entre 2 e 8 °C. Um colega propõe liberar todos os lotes que estavam nela, porque 'a câmara já está normal'. Qual é a leitura correta da situação?",
+        options: [
+          "A câmara normalizada mostra que os produtos voltaram ao estado original, e a excursão só precisa ser registrada no livro de ocorrências da CAF, sem nenhuma outra providência.",
+          "A câmara normalizada permite liberar os lotes que têm dado de estabilidade e manter em quarentena só os sem dado, mesmo os imunobiológicos do PNI, que teriam critério próprio de avaliação.",
+          "A câmara normalizada não desfaz a excursão sofrida pelos produtos: a decisão segue dependendo do dado de estabilidade de cada lote, e vacina e ocitocina ficam em quarentena até o parecer.",
+          "A câmara normalizada deve ser considerada só depois de 48 h estáveis, e então todos os lotes podem ser liberados sem consultar o fabricante ou a instância estadual.",
+        ],
+        correctIndex: 2,
+        explanation: "O registro da câmara mostra o ambiente, não o histórico de cada produto: a exposição já aconteceu e não se desfaz quando a temperatura volta. É a armadilha do 'número bonito': a curva volta à faixa verde, mas a decisão depende do dado de estabilidade (insulina dentro do limite do fabricante pode ser liberada; vacina do PNI e ocitocina sem dado ficam em quarentena até o parecer). Nem o prazo de 48 h estáveis nem o 'registro no livro' substituem a avaliação de quem tem o dado. Conduta: manter as quarentenas, registrar e consultar.",
+        reference: "Brasil. Ministério da Saúde. Manual de Rede de Frio do Programa Nacional de Imunizações. 5ª ed. Brasília, 2017",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: o dado de estabilidade da insulina (até 25 °C por até 28 dias) está no cartão 'Conduta por lote'; a exposição da transferência na hora 12 (17 °C, 9 h acima de 8 °C) está no cartão 'Registro do data logger da câmara fria'.",
+        question: "A insulina foi liberada depois da excursão da hora 12 (pico de 17 °C, 9 h acima de 8 °C), dentro do documento do fabricante (até 25 °C por até 28 dias). Que providência mantém o lote sob controle daqui em diante?",
+        options: [
+          "Registrar a ocorrência no histórico do lote e, como a excursão já foi aceita, encerrar o controle de temperatura desse lote e tratá-lo como os demais, sem novas anotações.",
+          "Registrar a ocorrência no histórico do lote (data, duração e pico), manter o lote a 2–8 °C e somar o tempo fora da faixa, que não pode passar dos 28 dias do documento.",
+          "Manter o lote a 2–8 °C e descontar as 9 h de excursão do controle, porque o limite de 28 dias só vale para o frasco que já foi aberto pelo paciente ou pela equipe.",
+          "Registrar a ocorrência e transferir todo o lote para a temperatura ambiente, onde o documento do fabricante permite ficar por até 28 dias, sem precisar de nova consulta ao fabricante.",
+        ],
+        correctIndex: 1,
+        explanation: "O documento do fabricante permite até 28 dias fora da refrigeração a no máximo 25 °C; as 9 h da excursão consomem parte dessa tolerância, que é cumulativa. Por isso o lote volta a 2–8 °C com a ocorrência registrada (data, duração, pico), e o tempo fora da faixa continua sendo contado. Encerrar o controle apaga o histórico; a tolerância vale para o lote fechado, não só para o frasco aberto; e passar tudo para a temperatura ambiente gasta os 28 dias sem necessidade. Conduta: rastreabilidade da exposição e manutenção da cadeia de frio.",
+        reference: "Brasil. Anvisa. RDC nº 430/2020 (Boas Práticas de Distribuição, Armazenagem e de Transporte de Medicamentos)",
+      },
+    ],
+
+    // Caso 5: Distribuição — 40.000 cápsulas de amoxicilina, 6 UBS (déficit total até 45 d = 49.800; limite de risco 30 d)
+    // Números do motor: igualitário 6.600 cada → Central 24,0 d e Vila Nova 27,0 d (risco), Rural Norte 71,0 d com saldo final 7.100 > 6.000, razão 2,96
+    //   proporcional ao consumo → mín. 30,0 (Bairro Alto), máx. 54,0 (Santa Rita), Jardim 49,5, razão 1,80, ninguém abaixo de 30
+    //   proporcional ao déficit → mín. 36,4 (Bairro Alto), máx. 41,4 (Santa Rita), razão 1,14, total 39.800
+    //   déficit + Rural fixada em 5.500 → Rural 60,0 d, mín. 34,3 (Bairro Alto), nenhuma em risco | reserva 4.000 → mín. 33,0, sobra 4.400; reserva 8.000 → Bairro Alto 29,6 (risco)
+    //   plano (déficit + reserva 4.000 + Rural 5.500) → mín. 30,9 (Bairro Alto), Vila Nova 31,3, Central 32,3, Rural 60,0, nenhuma em risco
+    //   consumo + reserva 4.000 + Rural 5.500 → Central 29,8, Vila Nova 27,0, Bairro Alto 25,3 (risco) | déficit + reserva 8.000 + Rural 5.500 → 29,0 / 28,0 / 27,0 (risco) | Rural 6.000 → saldo final 6.500 > 6.000
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Rateio de Amoxicilina 500 mg (cápsula)' ficam o seletor 'Critério de rateio', o controle 'Reserva técnica na CAF' e a tabela por UBS (CMM, saldo, déficit até a meta, capacidade, controle 'Quantidade recebida', saldo final e cobertura em dias). O cartão 'Cobertura resultante' traz os indicadores e o gráfico de barras com as linhas de 30 dias e da meta.",
+        question: "A CAF tem 40.000 cápsulas para seis UBS. A primeira ideia da equipe é dividir igualmente. Em 'Critério de rateio', escolha 'Igualitário (a mesma quantidade para cada unidade)' e leia, em 'Cobertura resultante', 'UBS abaixo de 30 dias', 'UBS acima da capacidade' e 'Menor e maior cobertura'. Discutam em grupo e deixem o critério igualitário aplicado ao responder. Qual leitura sustenta melhor a avaliação desse rateio?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "distribuicao") return { correct: false, feedback: "Abra o Caso 5 (Distribuição) para responder a este desafio." };
+          if (s.criterio !== "igualitario") return { correct: false, feedback: "Escolha 'Igualitário (a mesma quantidade para cada unidade)' em 'Critério de rateio'." };
+          if ((s.fixos ?? []).length > 0 || (s.reserva ?? 0) !== 0) return { correct: false, feedback: "Solte todas as unidades e deixe a reserva técnica em 0 para avaliar o critério igualitário puro." };
+          return { correct: true, feedback: "Igualitário: 6.600 para cada UBS; Central (24,0 d) e Vila Nova (27,0 d) ficam abaixo de 30 dias, e a Rural Norte passa da capacidade." };
+        },
+        options: [
+          "Igual não é justo: Central (24,0 dias) e Vila Nova (27,0) ficam abaixo de 30 dias, e a Rural Norte recebe mais do que o armário comporta (7.100 contra 6.000), chegando a 71,0 dias.",
+          "O rateio falha porque distribui mais do que a CAF tem: a soma passa de 40.000 cápsulas, e por isso a Central e a Vila Nova ficam abaixo de 30 dias de cobertura, sem folga alguma.",
+          "O rateio falha porque a Rural Norte e a Santa Rita recebem menos que o necessário: as duas ficam abaixo de 30 dias, enquanto a Central chega a 71,0 dias de cobertura no mesmo rateio.",
+          "O rateio falha só na capacidade da Rural Norte (7.100 contra 6.000); as demais unidades ficam todas acima de 30 dias e a razão de 2,96 entre maior e menor cobertura é aceitável.",
+        ],
+        correctIndex: 0,
+        explanation: "Com 6.600 cápsulas para cada UBS (39.600 no total, 400 sobram), a Central chega a 24,0 dias e a Vila Nova a 27,0, abaixo do limite de 30 dias. A Rural Norte vai a 71,0 dias e o saldo final de 7.100 passa da capacidade de 6.000. A soma não passa de 40.000; a Rural Norte e a Santa Rita são as que mais ganham, não as que menos recebem; e a razão de 2,96 (71,0 ÷ 24,0) mostra uma desigualdade grande, não um detalhe. Igual é o oposto de justo quando as unidades consomem e estocam coisas diferentes. Conduta: descartar o rateio igualitário.",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o seletor 'Critério de rateio' e a coluna 'Cobertura' da UBS Bairro Alto ficam no cartão 'Rateio de Amoxicilina 500 mg (cápsula)'; os indicadores 'Menor e maior cobertura' e 'Maior ÷ menor cobertura' e as barras ficam em 'Cobertura resultante'.",
+        question: "Troque para 'Proporcional ao consumo médio mensal (CMM)' e leia os mesmos indicadores, mais a cobertura da UBS Bairro Alto e as barras do gráfico. Discutam em grupo e deixem esse critério aplicado ao responder. Qual leitura sustenta melhor a avaliação do critério?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "distribuicao") return { correct: false, feedback: "Abra o Caso 5 (Distribuição) para responder a este desafio." };
+          if (s.criterio !== "proporcional-consumo") return { correct: false, feedback: "Escolha 'Proporcional ao consumo médio mensal (CMM)' em 'Critério de rateio'." };
+          if ((s.fixos ?? []).length > 0 || (s.reserva ?? 0) !== 0) return { correct: false, feedback: "Solte todas as unidades e deixe a reserva técnica em 0 para avaliar o critério puro." };
+          return { correct: true, feedback: "Proporcional ao consumo: ninguém abaixo de 30 dias, mas de 30,0 (Bairro Alto) a 54,0 dias (Santa Rita)." };
+        },
+        options: [
+          "Ninguém fica abaixo de 30 dias e a razão de 1,80 é o melhor equilíbrio possível com 40.000 cápsulas, porque a distribuição acompanha o consumo de cada unidade e não deixa ninguém sem estoque.",
+          "Ninguém fica abaixo de 30 dias, mas a Bairro Alto no limite de 30,0 dias mostra que o critério esquece o consumo das unidades pequenas, como a Rural Norte, e precisa de correção.",
+          "Ninguém fica abaixo de 30 dias, mas a cobertura vai de 30,0 (Bairro Alto) a 54,0 dias (Santa Rita): o critério ignora o saldo de cada unidade e dá mais a quem já estava abastecida.",
+          "Ninguém fica abaixo de 30 dias porque o critério cobre o déficit de cada unidade até a meta de 45 dias, e a diferença entre 30,0 e 54,0 dias vem só de arredondamento.",
+        ],
+        correctIndex: 2,
+        explanation: "Distribuindo pelo CMM, cada UBS recebe uma fatia do que a CAF tem proporcional ao quanto consome, sem olhar o que já tem no armário. Resultado: a Bairro Alto (saldo baixo) termina em 30,0 dias, exatamente no limite, e a Santa Rita (saldo alto) em 54,0; a Jardim vai a 49,5. A razão de 1,80 é bem pior que a do critério do déficit (1,14). O critério não trata déficit, e a diferença de 24 dias entre a menor e a maior cobertura é grande demais para ser arredondamento. Conduta: usar o consumo como ponto de partida, mas corrigir pelo saldo de cada unidade.",
+        reference: "Marin N et al. Assistência Farmacêutica para Gerentes Municipais. Rio de Janeiro: OPAS/OMS, 2003",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: em 'Rateio de Amoxicilina 500 mg (cápsula)', o controle 'Quantidade recebida' de cada UBS tem um cadeado ao lado: ao editar uma UBS à mão ela fica fixada e o critério reparte de novo só o que sobrar entre as demais. A nota da UBS Rural Norte (armário pequeno, 60 km de estrada) está sob o nome dela.",
+        question: "Escolha 'Proporcional ao déficit (CMM × cobertura alvo − saldo)'. Depois considere que a estrada da Rural Norte só permite entrega a cada 2 meses: ela precisa terminar com 60 dias de cobertura. Edite 'Quantidade recebida' da Rural Norte para 5.500 (o cadeado indica que ela ficou fixada) e deixe o critério repartir o restante entre as demais. Leia 'UBS abaixo de 30 dias', 'Menor e maior cobertura' e o saldo final da Rural Norte. Discutam em grupo e deixem esse rateio aplicado ao responder. Qual leitura sustenta melhor a decisão de priorizar a unidade de acesso difícil?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "distribuicao") return { correct: false, feedback: "Abra o Caso 5 (Distribuição) para responder a este desafio." };
+          if (s.criterio !== "proporcional-deficit") return { correct: false, feedback: "Escolha 'Proporcional ao déficit' em 'Critério de rateio'." };
+          if ((s.aloc ?? {}).rural !== 5500 || !(s.fixos ?? []).includes("rural")) return { correct: false, feedback: "Edite a quantidade recebida da Rural Norte para 5.500 (o cadeado deve aparecer fechado)." };
+          if ((s.fixos ?? []).length !== 1 || (s.reserva ?? 0) !== 0) return { correct: false, feedback: "Deixe só a Rural Norte fixada e a reserva técnica em 0." };
+          return { correct: true, feedback: "Rural Norte com 5.500 (60,0 dias, no limite do armário); as demais ficam com no mínimo 34,3 dias." };
+        },
+        options: [
+          "A Rural Norte chega a 60,0 dias e a menor cobertura das demais é 34,3 dias, o que prova que a prioridade não tem custo para ninguém e que o rateio continua equitativo, com razão próxima de 1.",
+          "A Rural Norte chega a 60,0 dias (6.000, no limite do armário) e nenhuma outra cai abaixo de 34,3 dias: priorizar quem recebe a cada 2 meses tira cobertura das demais, mas segue segura.",
+          "A Rural Norte chega a 60,0 dias e a Bairro Alto fica com 34,3 dias porque o critério do déficit passou a considerar a distância de cada unidade até a CAF e a estrada.",
+          "A Rural Norte chega a 60,0 dias, mas para isso a Central e a Vila Nova ficam abaixo de 30 dias, então a prioridade só é viável se a CAF receber mais cápsulas de outra compra emergencial.",
+        ],
+        correctIndex: 1,
+        explanation: "Fixando a Rural Norte em 5.500, o saldo final dela é 6.000 (60,0 dias), o limite exato do armário. Os 34.500 restantes são repartidos pelo déficit das outras cinco: a menor cobertura passa a 34,3 dias (Bairro Alto), contra 36,4 antes, e a maior das demais é 40,2 (Santa Rita). Ninguém cai abaixo de 30 dias. A razão maior ÷ menor sobe para 1,75 porque a Rural Norte foi propositalmente colocada acima; o critério do déficit continua sem considerar a distância (foi a decisão manual que fez isso); e a Central e a Vila Nova ficam em 35,5 e 35,0 dias. Conduta: priorizar quem só recebe a cada 2 meses custa às demais uma cobertura menor, mas segura, e deve ser uma decisão consciente e registrada.",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: o CMM e o saldo da UBS Santa Rita estão na tabela do cartão 'Rateio de Amoxicilina 500 mg (cápsula)' (CMM 5.000 e saldo 4.500); a meta de 45 dias é 1,5 mês de CMM.",
+        question: "Qual quantidade a UBS Santa Rita (CMM 5.000 cápsulas por mês, saldo de 4.500) precisaria receber para chegar exatamente à meta de 1,5 mês (45 dias), e qual quantidade bastaria só para chegar ao limite de risco de 30 dias?",
+        options: [
+          "7.500 para a meta e 5.000 para 30 dias",
+          "500 para a meta e 3.000 para 30 dias",
+          "3.000 para a meta e 5.000 para 30 dias",
+          "3.000 para a meta e 500 para 30 dias",
+        ],
+        correctIndex: 3,
+        explanation: "Necessidade = CMM × meses de cobertura − saldo. Para 45 dias: 5.000 × 1,5 − 4.500 = 3.000. Para 30 dias (1 mês): 5.000 × 1 − 4.500 = 500. A primeira opção esquece de descontar o saldo nos dois cálculos; a segunda inverte as duas quantidades; a terceira desconta o saldo só na meta. É por isso que o déficit (e não o consumo) é o que orienta o rateio de estoque escasso.",
+        reference: "Marin N et al. Assistência Farmacêutica para Gerentes Municipais. Rio de Janeiro: OPAS/OMS, 2003",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o controle 'Reserva técnica na CAF' fica no cartão 'Rateio de Amoxicilina 500 mg (cápsula)'; os indicadores 'Sobra na CAF', 'UBS abaixo de 30 dias' e 'Menor e maior cobertura' ficam em 'Cobertura resultante'. O botão 'Soltar todas as unidades e reaplicar o critério' desfaz as unidades fixadas.",
+        question: "A gerente da CAF pede para manter 4.000 cápsulas (10%) como reserva técnica, para um surto ou uma UBS nova. Com 'Proporcional ao déficit' aplicado e nenhuma unidade fixada (use 'Soltar todas as unidades e reaplicar o critério'), ajuste 'Reserva técnica na CAF' para 4.000 e leia 'UBS abaixo de 30 dias', 'Menor e maior cobertura' e 'Sobra na CAF'. Depois teste 8.000 e compare. Discutam em grupo e deixem 4.000 ao responder. O que os números dizem sobre manter a reserva?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "distribuicao") return { correct: false, feedback: "Abra o Caso 5 (Distribuição) para responder a este desafio." };
+          if (s.criterio !== "proporcional-deficit") return { correct: false, feedback: "Escolha 'Proporcional ao déficit' em 'Critério de rateio'." };
+          if ((s.fixos ?? []).length > 0) return { correct: false, feedback: "Solte as unidades fixadas ('Soltar todas as unidades e reaplicar o critério') para avaliar só o efeito da reserva." };
+          if (s.reserva !== 4000) return { correct: false, feedback: "Deixe a reserva técnica em 4.000 ao responder (teste 8.000 antes, para comparar)." };
+          return { correct: true, feedback: "Reserva de 4.000: ninguém abaixo de 30 dias (mínimo de 33,0); com 8.000 a Bairro Alto cai para 29,6." };
+        },
+        options: [
+          "Com 4.000 de reserva ninguém fica abaixo de 30 dias (mínimo de 33,0); com 8.000 a Bairro Alto cai para 29,6 dias: a reserva de 10% é sustentável, a de 20% já cobra cobertura das unidades.",
+          "Com 4.000 de reserva a Bairro Alto e a Rural Norte já ficam abaixo de 30 dias (mínimo de 33,0); a reserva só é sustentável se a CAF receber mais cápsulas de outra compra.",
+          "Com 4.000 ou com 8.000 de reserva ninguém fica abaixo de 30 dias, porque o critério do déficit protege as unidades pequenas; a reserva pode ser tão grande quanto a gerente quiser.",
+          "Com 4.000 de reserva ninguém fica abaixo de 30 dias (mínimo de 33,0), mas isso só acontece porque a sobra de 4.400 é distribuída depois; a reserva real acaba sendo zero.",
+        ],
+        correctIndex: 0,
+        explanation: "Com reserva de 4.000, o critério do déficit reparte 35.600 e a menor cobertura é 33,0 dias (Rural Norte e Bairro Alto), sem nenhuma unidade em risco; a sobra na CAF é 4.400 (a reserva mais o arredondamento dos lotes de 100). Com 8.000, a Bairro Alto cai para 29,6 dias, abaixo do limite. A leitura 'mínimo de 33,0 é abaixo de 30' está errada; a reserva não é distribuída depois (ela fica na CAF); e o critério do déficit reparte menos, não protege sem limite. Conduta: reserva de 10% é sustentável neste caso; a de 20% já tira cobertura de unidade.",
+        reference: "Management Sciences for Health. MDS-3: Managing Access to Medicines and Health Technologies. Arlington: MSH, 2012",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão 'Rateio de Amoxicilina 500 mg (cápsula)' combine 'Critério de rateio', 'Reserva técnica na CAF' e a edição da Rural Norte (cadeado); em 'Cobertura resultante' leia 'UBS abaixo de 30 dias', 'UBS acima da capacidade' e 'Menor e maior cobertura'.",
+        question: "Feche o plano de distribuição do mês: 'Proporcional ao déficit', reserva de 4.000 cápsulas e a Rural Norte fixada em 5.500. Monte isso na bancada (solte todas as unidades e reaplique, ajuste a reserva e depois edite a Rural Norte) e leia os indicadores de risco e de capacidade. Discutam em grupo e escolham a versão do plano, lendo cada item com a mesma régua.",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "distribuicao") return { correct: false, feedback: "Abra o Caso 5 (Distribuição) para responder a este desafio." };
+          if (s.criterio !== "proporcional-deficit") return { correct: false, feedback: "Use 'Proporcional ao déficit' em 'Critério de rateio'." };
+          if (s.reserva !== 4000) return { correct: false, feedback: "Deixe a reserva técnica em 4.000." };
+          if ((s.aloc ?? {}).rural !== 5500) return { correct: false, feedback: "Edite a Rural Norte para 5.500." };
+          const r = s.resultado;
+          if (!r || r.ubsEmRisco.length > 0 || r.ubsAcimaCapacidade.length > 0 || r.excedeDisponivel) return { correct: false, feedback: "O plano montado ainda tem unidade abaixo de 30 dias, acima da capacidade ou distribuição maior que o disponível." };
+          return { correct: true, feedback: "Plano fechado: nenhuma unidade em risco, nenhuma acima da capacidade, menor cobertura de 30,9 dias (Bairro Alto)." };
+        },
+        options: [
+          "Critério: consumo. Reserva: 4.000. Rural Norte: 5.500. Resultado: Central, Vila Nova e Bairro Alto ficam abaixo de 30 dias de cobertura (29,8, 27,0 e 25,3).",
+          "Critério: déficit. Reserva: 4.000. Rural Norte: 6.000. Resultado: a Rural Norte termina com 6.500 cápsulas, acima da capacidade de 6.000 do armário dela.",
+          "Critério: déficit. Reserva: 4.000. Rural Norte: 5.500. Resultado: nenhuma unidade em risco nem acima da capacidade; menor cobertura de 30,9 dias (Bairro Alto).",
+          "Critério: déficit. Reserva: 8.000. Rural Norte: 5.500. Resultado: Central, Vila Nova e Bairro Alto ficam abaixo de 30 dias de cobertura (29,0, 28,0 e 27,0).",
+        ],
+        correctIndex: 2,
+        explanation: "Com critério do déficit, reserva de 4.000 e Rural Norte em 5.500 (60,0 dias, no limite do armário), sobram 30.500 para as outras cinco unidades: Central 32,3, Vila Nova 31,3, Bairro Alto 30,9, Jardim 37,1 e Santa Rita 38,4 dias; nenhuma abaixo de 30, nenhuma acima da capacidade. Trocar o critério por consumo, dobrar a reserva para 8.000 ou fixar a Rural Norte em 6.000 quebra uma das duas restrições (risco de ruptura em três unidades nos dois primeiros, capacidade do armário no terceiro). Conduta: o plano só é viável com as três decisões juntas, e a folga é pequena (0,9 dia acima do limite na Bairro Alto).",
+        reference: "Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. Brasília, 2006",
+      },
+    ],
+
+    // Caso 6: Dispensação — receita de 30/07/2026, hoje 14/08/2026 (15 dias); amoxicilina (antimicrobiano), enalapril (3 lotes), paracetamol (sem estoque)
+    // Números do motor: quantidade amoxicilina 1×3×7 = 21; enalapril 1×2×30 = 60 | lotes de enalapril: ENL-0912 vence em 17 dias (31/08), ENL-1045 em 78 dias (31/10), ENL-1188 em 259 dias (30/04/2027)
+    //   tratamento de 30 dias acaba em 13/09/2026: ENL-0912 não cobre; ENL-1045 é o FEFO que cobre | paracetamol: estoque zero, reposição prevista para 18/08
+    [
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: o cartão 'Receita apresentada' traz a data de emissão (com quantos dias) e os três itens; cada medicamento tem seu cartão com a tabela de lotes, o seletor 'Ação' e, ao escolher 'Dispensar', o lote e a quantidade. O cartão 'Normas de consulta' resume o que consultar.",
+        question: "O Sr. Antônio (58 anos, com faringoamigdalite) apresenta a receita emitida em 30/07/2026 pela Dra. Helena. Hoje é 14/08/2026 e há 1.200 cápsulas de amoxicilina no lote AMX-2318 (validade 31/01/2027). No cartão da amoxicilina, escolha a 'Ação' que vocês adotariam (se escolherem dispensar, escolham lote e quantidade). Confira a data de emissão da receita e o cartão 'Normas de consulta'. Discutam em grupo e deixem a ação escolhida ao responder. Qual leitura sustenta melhor a conduta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "dispensacao") return { correct: false, feedback: "Abra o Caso 6 (Dispensação) para responder a este desafio." };
+          const a = (s.decisoes ?? {}).amoxicilina?.acao;
+          if (!a) return { correct: false, feedback: "Escolha a 'Ação' no cartão da amoxicilina." };
+          if (a !== "nova-receita") return { correct: false, feedback: "Confira a data da receita: para antimicrobianos a validade da receita é curta e a emissão já passou dela." };
+          return { correct: true, feedback: "Receita de 15 dias, acima dos 10 dias de validade para antimicrobianos: não dispensar e orientar nova receita." };
+        },
+        options: [
+          "A receita vale 30 dias como as demais e ainda está no prazo: dispensar 21 cápsulas do lote AMX-2318 e orientar o paciente a completar os 7 dias de tratamento.",
+          "A receita tem 15 dias, mas o paciente está doente e o tratamento não pode esperar: dispensar 21 cápsulas do lote AMX-2318 e avisar a Dra. Helena depois.",
+          "A receita de antimicrobiano vale 10 dias e já tem 15: não dispensar a amoxicilina e orientar o retorno à Dra. Helena para nova receita, mesmo com o lote disponível.",
+          "A receita tem 15 dias e não vale para antimicrobiano: substituir por outro antibiótico do estoque, que pode ser dispensado com receita de data anterior.",
+        ],
+        correctIndex: 2,
+        explanation: "A receita foi emitida há 15 dias; para antimicrobianos a validade é de 10 dias a contar da emissão (RDC 471/2021). Ter o lote em estoque não muda isso, e a urgência clínica se resolve com nova receita, não com dispensar uma receita vencida (a farmácia pode acionar a UBS para agilizar a nova prescrição). Substituir por outro antibiótico seria trocar o princípio ativo, decisão do prescritor, e a receita vencida também não vale para ele. Conduta: não dispensar a amoxicilina, orientar o paciente e, se possível, contatar a Dra. Helena.",
+        reference: "Brasil. Anvisa. RDC nº 471/2021 (antimicrobianos: prescrição e dispensação)",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão do enalapril a tabela de lotes mostra 'Validade', 'Vence em' (dias a partir de hoje) e 'Saldo'; o subtítulo do cartão diz o período de tratamento a cobrir (30 dias, até 13/09/2026). Depois de escolher 'Dispensar', use 'Lote a dispensar' e 'Quantidade'.",
+        question: "Para o enalapril 10 mg (1 comprimido de 12/12 h, uso contínuo; protocolo municipal: 30 dias por vez) há três lotes. No cartão do enalapril, escolha 'Dispensar', o lote e a quantidade. Compare a coluna 'Vence em' de cada lote com o período de tratamento indicado no subtítulo do cartão. Discutam em grupo e deixem o lote e a quantidade escolhidos ao responder. Qual leitura sustenta melhor a escolha?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "dispensacao") return { correct: false, feedback: "Abra o Caso 6 (Dispensação) para responder a este desafio." };
+          const d = (s.decisoes ?? {}).enalapril;
+          if (d?.acao !== "dispensar") return { correct: false, feedback: "Escolha a ação 'Dispensar' no cartão do enalapril e depois o lote e a quantidade." };
+          if (!d.loteId) return { correct: false, feedback: "Escolha o lote a dispensar." };
+          if (d.loteId === "en-0") return { correct: false, feedback: "O lote ENL-0912 vence em 31/08, antes do fim dos 30 dias de tratamento (13/09): o paciente ficaria com comprimido vencido." };
+          if (d.loteId === "en-2") return { correct: false, feedback: "O lote ENL-1188 cobre o tratamento, mas o ENL-1045 vence primeiro e também cobre: o PVPS manda sair o que vence antes." };
+          if (d.quantidade !== 60) return { correct: false, feedback: "Calcule a quantidade: 1 comprimido × 2 vezes ao dia × 30 dias." };
+          return { correct: true, feedback: "ENL-1045 (vence em 31/10/2026), 60 comprimidos: FEFO com validade que cobre os 30 dias." };
+        },
+        options: [
+          "ENL-0912 (vence em 31/08/2026), 60 comprimidos: é o que vence primeiro e o paciente é orientado a usar até o vencimento e voltar para receber o restante.",
+          "ENL-1188 (vence em 30/04/2027), 60 comprimidos: o lote de validade mais longa evita que o paciente fique com produto próximo do vencimento e sem uso, e o lote mais curto sai depois.",
+          "ENL-1045 (vence em 31/10/2026), 30 comprimidos: metade do período, para o paciente voltar em 15 dias e o lote circular mais rápido no balcão.",
+          "ENL-1045 (vence em 31/10/2026), 60 comprimidos: vence primeiro entre os lotes que ainda cobrem os 30 dias de tratamento; o ENL-0912 vence antes do fim do uso.",
+        ],
+        correctIndex: 3,
+        explanation: "O tratamento de 30 dias vai de 14/08 a 13/09. O ENL-0912 vence em 31/08 (17 dias) e não cobre; o ENL-1045 vence em 31/10 (78 dias) e cobre; o ENL-1188 vence em 30/04/2027 (259 dias) e também cobre, mas deixaria o lote de 31/10 parado, com risco de perda. PVPS/FEFO: sai primeiro o lote que vence primeiro entre os que cobrem o uso do paciente: ENL-1045. Quantidade: 1 × 2 × 30 = 60 comprimidos, conforme o protocolo municipal; 30 comprimidos obrigaria retorno sem necessidade, e orientar o paciente a usar produto vencido não é opção. Conduta: ENL-1045, 60 comprimidos.",
+        reference: "Brasil. Anvisa. RDC nº 44/2009 (Boas Práticas Farmacêuticas para farmácias e drogarias)",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: no cartão do paracetamol o quadro 'Estoque na farmácia' informa a falta e a previsão de reposição; o seletor 'Ação' traz as quatro condutas possíveis. O cartão 'Normas de consulta' lembra o que a lei permite trocar.",
+        question: "O paracetamol 500 mg (1 comprimido de 6/6 h se dor ou febre, por 3 dias) está sem estoque desde 10/08 e a reposição chega em 18/08. A farmácia tem dipirona em estoque. No cartão do paracetamol, escolha a 'Ação' que vocês adotariam. Discutam em grupo e deixem a ação escolhida ao responder. Qual leitura sustenta melhor a conduta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "dispensacao") return { correct: false, feedback: "Abra o Caso 6 (Dispensação) para responder a este desafio." };
+          const a = (s.decisoes ?? {}).paracetamol?.acao;
+          if (!a) return { correct: false, feedback: "Escolha a 'Ação' no cartão do paracetamol." };
+          if (a === "substituir") return { correct: false, feedback: "Trocar o princípio ativo é decisão do prescritor: reveja o cartão 'Normas de consulta'." };
+          if (a !== "contatar-prescritor") return { correct: false, feedback: "O item não está com receita vencida: o problema é a falta do estoque. Releia as ações e escolha a que trata a falta." };
+          return { correct: true, feedback: "Sem estoque: registrar a falta e contatar a prescritora para definir a alternativa." };
+        },
+        options: [
+          "Registrar a falta e contatar a Dra. Helena para definir a alternativa: trocar o princípio ativo cabe ao prescritor, e a falta registrada entra no cálculo da demanda.",
+          "Substituir por dipirona do estoque, que tem o mesmo efeito analgésico e antitérmico: o farmacêutico pode trocar entre medicamentos do mesmo grupo terapêutico.",
+          "Orientar o paciente a esperar a chegada de 18/08 e não registrar a falta, porque o pedido já está em trânsito e o estoque será reposto em poucos dias, sem prejuízo ao paciente.",
+          "Orientar o paciente a comprar o paracetamol em drogaria e encerrar o atendimento, porque a farmácia da UBS não é obrigada a atender item em falta e o paciente pode se abastecer sozinho.",
+        ],
+        correctIndex: 0,
+        explanation: "Sem estoque, o farmacêutico não troca o princípio ativo por conta própria: só o genérico ou o intercambiável do mesmo princípio ativo pode ser trocado sem o prescritor (Lei 9.787/1999); dipirona é outro fármaco. Registrar a falta é o que faz a demanda não atendida entrar no CMM da programação (é o que a amoxicilina do Caso 2 mostrou: consumo registrado menor que a demanda real leva a mais faltas). Esperar sem registro perde esse dado, e mandar o paciente à drogaria sem contatar o prescritor abandona o cuidado. Conduta: registrar a falta, contatar a prescritora e informar ao paciente a previsão de 18/08.",
+        reference: "Brasil. Lei nº 9.787/1999 (medicamentos genéricos e intercambialidade) e Anvisa RDC nº 44/2009",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: a posologia de cada item está no cartão 'Receita apresentada' e o quadro 'Posologia × dias' de cada medicamento mostra os três fatores da conta.",
+        question: "Se a receita da amoxicilina 500 mg estivesse dentro da validade, quantas cápsulas o paciente precisaria receber para o esquema de 1 cápsula de 8/8 h por 7 dias?",
+        options: [
+          "7 cápsulas",
+          "21 cápsulas",
+          "14 cápsulas",
+          "30 cápsulas",
+        ],
+        correctIndex: 1,
+        explanation: "Quantidade = dose por tomada × vezes ao dia × dias = 1 × 3 × 7 = 21 cápsulas (de 8/8 h são 3 tomadas por dia). 7 conta só os dias; 14 usa 2 tomadas por dia (12/12 h); 30 aplica o período de uso contínuo do protocolo municipal, que não vale para o esquema curto de antimicrobiano, cuja dispensação cobre só o tratamento prescrito.",
+        reference: "Brasil. Anvisa. RDC nº 44/2009 (Boas Práticas Farmacêuticas para farmácias e drogarias)",
+      },
+      {
+        type: "mcq",
+        context: "Onde fica cada coisa: no cartão do enalapril, a coluna 'Vence em' do lote ENL-0912 (17 dias) e o período de tratamento de 30 dias.",
+        question: "O lote ENL-0912 de enalapril (400 comprimidos, validade 31/08/2026) vence em 17 dias e não cobre um tratamento de 30 dias. O que fazer com ele?",
+        options: [
+          "Dispensar o lote primeiro para todos os pacientes, porque o PVPS manda sair o que vence antes, e orientar o retorno quando os comprimidos acabarem.",
+          "Segregar e identificar o lote e comunicar à CAF para remanejar a unidades de maior giro ou a tratamentos que terminem até o vencimento; não misturar com os demais.",
+          "Descartar já os 400 comprimidos, porque lote que não cobre 30 dias de tratamento não pode mais ser dispensado a ninguém e ocupa espaço no armário.",
+          "Manter o lote misturado na prateleira e dispensar só quando o paciente aceitar o vencimento antecipado, registrando o aceite do paciente na ficha.",
+        ],
+        correctIndex: 1,
+        explanation: "O lote ainda é válido por 17 dias: serve a tratamentos que terminem até 31/08 e a unidades que giram rápido, por isso o caminho é segregar, identificar e avisar a CAF para remanejar, evitando a perda. O PVPS não manda dispensar lote que não cobre o uso; descartar produto válido é perda evitável; e misturar com o estoque regular e transferir a decisão ao paciente cria risco de erro. Conduta: segregar, identificar e remanejar, ligando a dispensação à programação e à distribuição (Casos 2 e 5).",
+        reference: "Brasil. Anvisa. RDC nº 44/2009 e RDC nº 430/2020",
+      },
+      {
+        type: "adjust",
+        context: "Onde fica cada coisa: os três cartões de medicamento (amoxicilina, enalapril e paracetamol) guardam a ação, o lote e a quantidade escolhidos; o cartão 'Receita apresentada' resume os itens e a data.",
+        question: "Feche o atendimento do Sr. Antônio com os três itens na bancada. Escolha ação, lote e quantidade conforme o que vocês defendem para cada um. Discutam em grupo e escolham a versão do atendimento, lendo cada item com a mesma régua: validade da receita, disponibilidade, lote que cobre o tratamento e quantidade.",
+        targetParams: {},
+        validator: (s) => {
+          if (s.etapa !== "dispensacao") return { correct: false, feedback: "Abra o Caso 6 (Dispensação) para responder a este desafio." };
+          const av = s.avaliacoes ?? {};
+          const falhas = ["amoxicilina", "enalapril", "paracetamol"].filter((id) => !av[id]?.correto);
+          if (falhas.length) return { correct: false, feedback: `Ainda há item incorreto ou sem decisão na bancada: ${falhas.map((id) => id === "amoxicilina" ? "amoxicilina" : id === "enalapril" ? "enalapril" : "paracetamol").join(", ")}.` };
+          return { correct: true, feedback: "Atendimento correto nos três itens." };
+        },
+        options: [
+          "Amoxicilina: dispensar AMX-2318, 21 cápsulas. Enalapril: ENL-1045, 60 comprimidos. Paracetamol: registrar a falta e contatar a prescritora.",
+          "Amoxicilina: nova receita. Enalapril: ENL-0912, 60 comprimidos. Paracetamol: registrar a falta e contatar a prescritora.",
+          "Amoxicilina: nova receita. Enalapril: ENL-1045, 60 comprimidos. Paracetamol: registrar a falta e contatar a prescritora.",
+          "Amoxicilina: nova receita. Enalapril: ENL-1045, 60 comprimidos. Paracetamol: substituir por dipirona do estoque da farmácia.",
+        ],
+        correctIndex: 2,
+        explanation: "Amoxicilina: receita de 15 dias, acima dos 10 dias de validade para antimicrobianos: nova receita. Enalapril: ENL-1045, o que vence primeiro entre os que cobrem os 30 dias, 60 comprimidos. Paracetamol: sem estoque; registrar a falta e contatar a prescritora, sem trocar o princípio ativo. Cada distrator troca um item: dispensar a amoxicilina com receita vencida, usar o lote ENL-0912 (que vence antes do fim do uso) ou substituir o paracetamol por dipirona.",
+        reference: "Brasil. Anvisa. RDC nº 471/2021 e RDC nº 44/2009",
+      },
+    ],
+  ];
+
+  const idx = caseIndex !== undefined && caseIndex >= 0 && caseIndex < caseSets.length ? caseIndex : undefined;
+  const challenges = idx !== undefined ? caseSets[idx] : caseSets[0];
+  const caseNames = [
+    "Revisão da REMUME",
+    "Programação anual da CAF",
+    "Pregão de insulina NPH",
+    "Falha de energia na câmara fria",
+    "Rateio de amoxicilina",
+    "Balcão da UBS",
+  ];
+
+  return {
+    title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Gestão da Cadeia de Suprimentos Farmacêuticos",
+    description: "Mexa na bancada da etapa do ciclo, leia os indicadores gerados, interprete e decida em grupo.",
     challenges,
   };
 }

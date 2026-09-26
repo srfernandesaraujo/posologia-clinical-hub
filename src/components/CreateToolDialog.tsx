@@ -64,6 +64,8 @@ export function CreateToolDialog({ open, onOpenChange, type }: CreateToolDialogP
       if (data?.error) throw new Error(data.error);
 
       const tool = data.tool;
+      if (Array.isArray(data.skills_used) && data.skills_used.length) toast.info(`Criado com as skills: ${data.skills_used.map((s: any) => s.nome).join(", ")}`);
+      if (Array.isArray(data.quality_warnings) && data.quality_warnings.length) toast.warning(`${data.quality_warnings.length} ponto(s) de qualidade para revisar: ${data.quality_warnings.slice(0, 2).join(" | ")}`, { duration: 12000 });
 
       // Find or skip category
       let categoryId: string | null = null;

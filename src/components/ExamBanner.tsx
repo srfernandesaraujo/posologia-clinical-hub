@@ -11,6 +11,7 @@ const SIMULATOR_LABELS: Record<string, string> = {
   interacoes: "Interações Medicamentosas",
   "desmame-benzo": "Desmame de Benzodiazepínicos",
   "prontuario-fhir": "Prontuário Eletrônico (FHIR)",
+  "cadeia-suprimentos": "Gestão da Cadeia de Suprimentos Farmacêuticos",
 };
 
 interface ExamBannerProps {

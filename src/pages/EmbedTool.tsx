@@ -37,6 +37,8 @@ const NATIVE_CALCULATORS: Record<string, React.LazyExoticComponent<React.Compone
   "farmacoterapia-dislipidemia": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorDislipidemia")),
   "farmacoterapia-glicemia": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorGlicemia")),
   "farmacoterapia-coagulacao": lazy(() => import("./simuladores/farmacoterapia-laboratorial/SimuladorCoagulacao")),
+  // Assistência Farmacêutica
+  "cadeia-suprimentos": lazy(() => import("./simuladores/assistencia-farmaceutica/SimuladorCadeiaSuprimentos")),
 };
 
 

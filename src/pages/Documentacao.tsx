@@ -1,4 +1,4 @@
-import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility, Server, Database, Code, Cloud, Lock, Layers, Cpu, Network, Key, GitBranch, LifeBuoy } from "lucide-react";
+import { ArrowLeft, Calculator, FlaskConical, Gamepad2, DoorOpen, BarChart3, Store, Trophy, Shield, FileText, Globe, Brain, Pill, Heart, Activity, Droplets, HeartPulse, Beaker, Microscope, GraduationCap, BookOpen, Dna, Flame, TestTube, Zap, Syringe, ClipboardList, PillBottle, Scan, Accessibility, Server, Database, Boxes, Code, Cloud, Lock, Layers, Cpu, Network, Key, GitBranch, LifeBuoy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -47,7 +47,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 110+ simuladores em 13 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 111 simuladores em 14 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "Paciente-IA por Voz", desc: "Anamnese e comunicação por voz com paciente simulado por IA, avaliação final da anamnese e leitura em voz alta nativa do navegador. Exclusivo Premium, limite diário de 15 turnos de voz, indisponível em Sala Virtual", link: "/simuladores/paciente-ia-voz" },
@@ -238,6 +238,14 @@ const sections = [
     ],
   },
   {
+    title: "Simuladores — Assistência Farmacêutica",
+    icon: Boxes,
+    description: "Categoria nova: gestão do ciclo da Assistência Farmacêutica no SUS, com indicadores que reagem às decisões do aluno. Cada caso tem uma bancada interativa própria e 6 desafios no Modo Desafio; suporta Salas Virtuais, casos gerados por IA (apenas dados de entrada, validados como resolvíveis, com desafio automático) e embed.",
+    items: [
+      { name: "Gestão da Cadeia de Suprimentos Farmacêuticos", desc: "6 casos nativos, um por etapa do ciclo: (1) Revisão da REMUME (seleção), (2) Programação anual da CAF (CMM, estoque de segurança, intervalo de compra), (3) Pregão de insulina NPH (pesquisa de preços, julgamento de propostas, parcelamento de entregas), (4) Falha de energia na câmara fria (armazenamento/cadeia de frio), (5) Rateio de amoxicilina entre UBS (distribuição), (6) Balcão da UBS (dispensação)", link: "/simuladores/cadeia-suprimentos" },
+    ],
+  },
+  {
     title: "Simuladores — Informática em Saúde",
     icon: Database,
     description: "Nova categoria (item 17 do roadmap): interoperabilidade em saúde e o padrão FHIR na prática, sem exigir conhecimento prévio de programação.",
@@ -296,7 +304,7 @@ const sections = [
     items: [
       { name: "Criação de salas com PIN de 6 dígitos" },
       { name: "Modo Simulação Unitária ou Atividade Simulada (roteiro multi-etapas)" },
-      { name: "Catálogo com 110+ simuladores e 11 bancadas de pesquisa" },
+      { name: "Catálogo com 111 simuladores e 11 bancadas de pesquisa" },
       { name: "Caso em Equipe (ao vivo)", desc: "Nova atividade da Atividade Simulada: papéis (médico, farmacêutico, enfermagem) assumidos por participantes diferentes na mesma sessão, com timeline compartilhada em tempo real (Postgres Changes) e presença online (Supabase Presence). O professor injeta intercorrências do roteiro do caso e conduz a sessão em \"Abrir sessão ao vivo\" (/salas-virtuais/:roomId/ao-vivo/:activityId); o aluno participa em /sala/equipe/:activityId. Ao encerrar, cada participante recebe uma submissão automática (formato simulator_decisions) que entra no Analytics normalmente — sem tela de relatório nova. 1 caso-piloto disponível: \"Sepse grave — admissão na UTI\" (3 papéis)" },
       { name: "Dashboard do professor com submissões e analytics em tempo real" },
       { name: "Suporte a grupos e participantes individuais" },
@@ -324,7 +332,7 @@ const sections = [
     icon: Store,
     description: "Publique e compartilhe ferramentas criadas por IA. Compre e venda calculadoras personalizadas. Toda publicação passa por curadoria clínica: uma auditoria de IA analisa a fórmula e os campos, e um admin pode conceder o selo \"Validado clinicamente\".",
     items: [
-      { name: "Criação de calculadoras com IA generativa" },
+      { name: "Criação de calculadoras e simuladores com IA generativa", desc: "Botão \"Criar com IA\" em /calculadoras e /simuladores. O criador de simuladores (Premium) escolhe automaticamente \"skills\" (playbooks por tipo de simulador: revisão de prescrição/PRM, stewardship, TDM, acompanhamento longitudinal, bomba de infusão, interpretação laboratorial, Assistência Farmacêutica/cadeia de suprimentos, dispensação no balcão, cálculos farmacêuticos, farmacologia básica, comunicação/anamnese, farmacovigilância e oncologia — 13 no total), suporta até 7 etapas e o painel \"modelo\" (parâmetros com controles deslizantes + fórmulas + gráfico que reagem, sem eval) e passa por revisão automática de qualidade; a interface mostra as skills usadas e os pontos de qualidade a revisar" },
       { name: "Publicação no marketplace", desc: "Continua imediata — a curadoria roda em segundo plano e não bloqueia a publicação" },
       { name: "Auditoria clínica automática", desc: "Edge function audit-marketplace-tool (disparada ao publicar) audita fórmula/campos contra literatura e faixas de referência clínicas, gravando um veredito pending/clear/flagged com notas. Se sinalizar risco clínico real (\"flagged\"), a ferramenta é despublicada automaticamente até revisão humana" },
       { name: "Selo \"Validado clinicamente\"", desc: "Ícone ShieldCheck exibido nos cards de /marketplace — só aparece depois que um admin aprova manualmente em /admin/marketplace-review; a auditoria de IA sozinha não concede o selo, só sinaliza" },
@@ -466,7 +474,9 @@ const techSections = [
     content: [
       { label: "generate-case", value: "Gera casos clínicos via IA (OpenAI/compatível) para simuladores" },
       { label: "generate-game", value: "Gera conteúdo de jogos clínicos via IA" },
-      { label: "generate-tool", value: "Cria calculadoras personalizadas via IA generativa" },
+      { label: "generate-tool", value: "Cria calculadoras e simuladores personalizados via IA generativa (Premium). Para simuladores usa \"skills\" (13 playbooks por tipo de simulador em _shared/simulator-skills/: revisão de prescrição/PRM, stewardship, TDM/farmacocinética, acompanhamento longitudinal, equipamento/bomba de infusão, interpretação laboratorial, ciclo da Assistência Farmacêutica/cadeia de suprimentos, dispensação no balcão, cálculos farmacêuticos, farmacologia básica, comunicação/anamnese, farmacovigilância e oncologia) escolhidas por um roteador de IA, seguido de revisão automática de qualidade (_shared/simulator-quality.ts: embaralha alternativas, valida painéis e devolve à IA uma vez se houver problemas). Suporta até 7 etapas e o painel \"modelo\"; a resposta traz skills_used e quality_warnings, exibidos na interface" },
+      { label: "student-performance", value: "Consultor de desempenho para um agente externo de WhatsApp (wp.agents): em 2 passos, envia um código de 6 dígitos por e-mail (Resend, tabela wpagents_verification_codes, expira em 10 min, com limite de tentativas) e só então devolve os resultados do aluno em salas virtuais. Autenticada por chave compartilhada (header x-wpagents-key / WPAGENTS_API_KEY), não por JWT" },
+      { label: "fix-legacy-adjust-answers", value: "Limpeza pontual (dry run por padrão, ?apply=true para aplicar) de respostas antigas de desafios híbridos ajuste+alternativa registradas com a resposta do aluno idêntica ao gabarito; autenticada pelo mesmo x-wpagents-key" },
       { label: "generate-lab-context", value: "Gera contexto científico para bancadas do Laboratório Virtual" },
       { label: "generate-simulation-scenario", value: "Gera cenários de simulação realística via IA" },
       { label: "feedback-agent", value: "Agente de feedback educacional com IA sobre o desempenho de uma sala virtual (Pendleton, R2C2, ALOBA, SBI etc.); modo finalize (tool calling forçado, submit_reasoning_chain) converte a conversa numa cadeia de critérios auditável e grava em ai_reasoning_traces" },
@@ -531,6 +541,7 @@ const techSections = [
       { label: "SKETCHFAB_API_KEY", value: "Chave da API Sketchfab (Edge Functions)" },
       { label: "HUB_SERVICE_KEY / HUB_SERVICE_ID", value: "Credenciais do hub de métricas externo" },
       { label: "HUB_METRICS_KEY", value: "Chave de métricas do hub" },
+      { label: "WPAGENTS_API_KEY", value: "Chave compartilhada do agente externo de WhatsApp (wp.agents), validada via header x-wpagents-key em student-performance e fix-legacy-adjust-answers" },
     ],
   },
   {
@@ -553,6 +564,7 @@ const techSections = [
       { label: "Caso em Equipe (ao vivo)", value: "SalaAoVivo.tsx (professor) e simuladores/LiveTeamCase.tsx (aluno) — canal Supabase Presence (quem está conectado) + Postgres Changes na tabela live_session_events (timeline), mesmo padrão de CDC do canal realtime de Analytics.tsx, sem introduzir Broadcast. Caso-piloto hardcoded em src/data/liveTeamCases/sepseGrave.ts (sem editor de casos ainda)" },
       { label: "Risco por aluno", value: "src/lib/studentRisk.ts (computeStudentRisk/riskBadgeProps) — heurística client-side sobre room_submissions/room_participants/room_activities já carregados (tendência de nota, abandono de atividades, anomalia de tempo por etapa), sem tabela nova nem IA; usada em Analytics (aba Salas Virtuais) e em TurmaDetalhe" },
       { label: "Trilha de raciocínio explicável", value: "src/components/ReasoningTrail.tsx — painel expansível item a item (critério/decisão) com observação, referência e veredito; reutilizado em AgenteFeedback.tsx (cadeia de critérios salva do Feedback de Simulação), SimuladorPacienteVoz.tsx (rubrica final de anamnese) e Analytics.tsx (decisões no formato simulator_decisions)" },
+      { label: "Criador de simuladores por IA", value: "CreateToolDialog (type=\"simulador\") chama generate-tool, que roteia para skills (supabase/functions/_shared/simulator-skills/) e revisa a qualidade; o painel \"modelo\" é renderizado por src/components/simulators/ModeloPanel.tsx e suas fórmulas rodam em src/lib/safeExpr.ts (sem eval; _shared/safe-expr.ts é cópia idêntica para a edge function, e safeExpr.test.ts falha se divergirem)" },
       { label: "Design System", value: "Tokens semânticos em index.css (--primary, --background, etc.) + tailwind.config.ts" },
       { label: "Componentes UI", value: "shadcn/ui (40+ componentes) com variantes customizadas" },
     ],

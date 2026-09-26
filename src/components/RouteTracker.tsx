@@ -47,6 +47,7 @@ const ROUTE_MAP: Record<string, { slug: string; name: string; category: string }
   "/simuladores/mai": { slug: "mai", name: "MAI", category: "simulador" },
   "/simuladores/cascata-prescricao": { slug: "cascata-prescricao", name: "Cascata de Prescrição", category: "simulador" },
   "/simuladores/prontuario-fhir": { slug: "prontuario-fhir", name: "Prontuário FHIR", category: "simulador" },
+  "/simuladores/cadeia-suprimentos": { slug: "cadeia-suprimentos", name: "Cadeia de Suprimentos", category: "simulador" },
 
   // ── Simuladores Fisiologia ──
   "/simuladores/sna": { slug: "sna", name: "SNA", category: "simulador" },

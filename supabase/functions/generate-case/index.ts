@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
 import { sanitizeAndLintSteps, shuffleIndexedQuestions } from "../_shared/simulator-quality.ts";
+import { ETAPAS_CADEIA, validateCadeiaCase } from "../_shared/cadeia-suprimentos-quality.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -826,6 +827,55 @@ REGRAS FARMACÊUTICAS (Portaria 344/98):
 
 Varie entre diferentes medicamentos controlados reais: morfina, codeína, metilfenidato, clonazepam, diazepam, zolpidem, pregabalina, tramadol, etc.
 Varie os tipos de erro: data vencida, campo incompleto, quantidade excessiva, UF diferente, prescritor não habilitado, falta de via, associação proibida.`,
+
+  "cadeia-suprimentos": `Gere um caso COMPLETO para o Simulador de Gestão da Cadeia de Suprimentos Farmacêuticos (Assistência Farmacêutica no SUS: seleção, programação, aquisição, armazenamento, distribuição e dispensação).
+O aluno mexe numa bancada (marca itens, ajusta parâmetros, escolhe condutas), lê indicadores que o MOTOR calcula, interpreta e decide em grupo. Você fornece só os DADOS de entrada da etapa indicada em "ETAPA OBRIGATÓRIA" (no fim deste prompt): o motor calcula ruptura, custos, coberturas etc., então NÃO escreva resultados calculados nem o gabarito.
+
+Contexto fixo: município fictício de Vale do Sol (60 mil habitantes, 8 UBS, uma Central de Abastecimento Farmacêutico, CAF). Varie o medicamento e a situação. Preços e quantidades são ilustrativos, mas plausíveis. Use medicamentos reais do SUS. Normas só se você tiver certeza que existem (RENAME, Lei 14.133/2021, IN SEGES/ME 65/2021, RDC 430/2020, RDC 471/2021, RDC 44/2009, Lei 9.787/1999, Portaria 344/98, Manual de Rede de Frio do PNI).
+
+O JSON deve conter EXATAMENTE:
+- title: "Caso IA: ..." (título descritivo)
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- etapa: "selecao"|"programacao"|"aquisicao"|"armazenamento"|"distribuicao"|"dispensacao" (a etapa obrigatória)
+- patient: { name: (o setor/comissão/unidade em foco), diagnosis: "<Etapa> · <resumo em uma frase>" }
+- scenario: 3 a 6 frases com o papel do aluno, o contexto e a TAREFA, com os números do caso. Sem entregar a conduta correta.
+- clinicalTip: 1-2 frases (a lição da etapa, para o professor)
+- references: 1 a 3 referências REAIS (norma ou publicação). Não invente.
+- expectedDrugs: array com o(s) item(ns) em foco (texto livre)
+- e o objeto da etapa, com o nome da etapa como chave:
+
+ETAPA "selecao" → "selecao": {
+  orcamentoAnual (number, R$),
+  necessidades: [{ id, label, pacientes }] (3 a 6; ids curtos e únicos),
+  itens: [{ id, nome, classe, necessidade (id de uma necessidade), rename (boolean), emUso (boolean), precoUnit (R$ por unidade), unidMes (unidades por paciente por mês), usuarios (number), migraDe (id do item substituído; OPCIONAL, só em solicitações), evidencia (1 frase real), alerta (OPCIONAL) }] (7 a 14 itens)
+}
+Regras: itens emUso=true formam o elenco atual, com custo dentro do orçamento; inclua 3 a 4 solicitações (emUso=false), com pelo menos UMA legítima (na RENAME, cobre uma necessidade que o elenco atual não cobre e cabe no saldo) e as outras recusáveis (fora da RENAME, duplicam a classe de um item do elenco, custam muito mais). O elenco atual NÃO pode cobrir todas as necessidades (deve haver uma lacuna). Duas solicitações NÃO podem ser legítimas ao mesmo tempo dentro do saldo.
+
+ETAPA "programacao" → "programacao": { itens: [{ id, nome, apresentacao, unidade, precoUnit, trMeses (1, 2 ou 3), validadeMeses (validade do lote na entrega, ≥ 4), estoqueInicial, validadeEstoqueInicial (meses, ≥ 1), consumoHist (12 números, jan→dez do ano anterior), diasFalta (12 inteiros de 0 a 20), demanda (12 números: a demanda real dos 12 meses seguintes), capacidade (unidades), nota (OPCIONAL) }] } (2 a 4 itens)
+Regras: um item estável (baseline), um sazonal cujo histórico teve meses de falta (diasFalta > 0 nos meses de pico, com consumoHist menor que a demanda real desses meses, para que a média bruta subestime), e, se possível, um de validade curta ou capacidade limitada. estoqueInicial ≥ trMeses × demanda do primeiro mês. O caso PRECISA ser resolvível: deve existir configuração (CMM bruto/6 meses/corrigido, segurança 0 a 2 meses, intervalo 3, 4, 6 ou 12 meses, no máximo 4 pedidos por ano) sem ruptura, sem vencimento e sem passar da capacidade.
+
+ETAPA "aquisicao" → "aquisicao": {
+  itemNome,
+  cotacoes: [{ id, fonte, valor, detalhe }] (6 a 8; inclua cotações comparáveis e recentes e 2 a 3 que NÃO representam preço praticado: teto CMED, compra emergencial, ata vencida),
+  propostas: [{ id, fornecedor, precoUnit, validadeMeses, prazoEntregaDias, documentacaoOk (boolean), pendencia (texto, OPCIONAL) }] (4 a 6; as mais baratas devem descumprir o edital por motivos diferentes: documentação sanitária, validade, prazo; pelo menos uma proposta apta),
+  edital: { validadeMinimaMeses, prazoMaximoEntregaDias },
+  parcelamento: { quantidadeAnual, precoUnit (preço da proposta apta vencedora), freteEntrega (R$ por entrega), taxaManutencaoMes (fração, ex.: 0.01), validadeMeses, mesesSeguranca, capacidade (unidades que a câmara comporta) }
+}
+Regras: escolha frete, taxa e capacidade para que o menor custo total NÃO caiba na capacidade (o aluno precisa escolher a menor opção viável entre 1, 2, 3, 4, 6 e 12 entregas).
+
+ETAPA "armazenamento" → "armazenamento": {
+  tempInicialC (ex.: 5), taxaSubidaCporH (0.6 a 1.6), ambienteC (28 a 34), retornoEnergiaH (hora em que a energia volta, 20 a 32), taxaResfriamentoCporH, limiteSuperiorC (8), limiteInferiorC (2), chegadaEquipeH (hora em que a equipe chega; maior que a hora em que a câmara cruza o limite superior),
+  itens: [{ id, nome, quantidade, unidade, valorUnit, dado: { tipo: "limite"|"pni"|"semDado", tempMaxC (só em "limite"), descricao } }] (2 a 4)
+}
+Regras: pelo menos um item com dado.tipo "limite" cuja tempMaxC seja cruzada dentro da janela de transferência (a conduta muda conforme a hora da transferência), um imunobiológico do PNI ("pni") e/ou um item "semDado". A descricao do "limite" é dado do fabricante DO LOTE DO CENÁRIO; não invente estabilidade de fármacos reais que você não conhece: prefira dados sobre insulina (fora da refrigeração a até 25 °C por até 28 dias) ou declare como dado do cenário.
+
+ETAPA "distribuicao" → "distribuicao": { itemNome, unidade, disponivelCAF, coberturaAlvoMeses (1.5), limiteRiscoDias (30), passo (100), ubs: [{ id, nome, cmm, saldo, capacidade, nota (OPCIONAL) }] } (4 a 8 unidades)
+Regras: disponivelCAF MENOR que o déficit total (soma de max(0, cmm × coberturaAlvoMeses − saldo)); o rateio proporcional ao déficit precisa deixar todas as unidades com pelo menos 30 dias e com cobertura próxima (maior ÷ menor ≤ 1,25), sem passar da capacidade de nenhuma; uma unidade pequena com capacidade baixa, e unidades com saldos bem diferentes.
+
+ETAPA "dispensacao" → "dispensacao": { hoje (AAAA-MM-DD), paciente (texto), receitaEmitidaEm (AAAA-MM-DD), prescritor, regraLocal (texto do protocolo municipal), itens: [{ id, nome, posologia (texto), dosePorTomada, vezesDia, dias, antimicrobiano (boolean, OPCIONAL), usoContinuo (boolean, OPCIONAL), lotes: [{ id, lote, validade (AAAA-MM-DD), saldo }], observacaoEstoque (OPCIONAL) }] } (2 a 4 itens)
+Regras: receita de antimicrobiano vale 10 dias (RDC 471/2021): inclua um caso com receita vencida OU um item sem estoque, e pelo menos um item a dispensar cujo lote correto seja o que vence primeiro ENTRE OS QUE COBREM o tratamento (um lote mais antigo vence antes do fim do tratamento). Para item sem estoque use lotes: [] e observacaoEstoque com a previsão.
+
+QUALIDADE: valores plausíveis e coerentes entre si; nomes de itens e unidades reais; não repita o mesmo item de um caso para outro; nenhum gabarito no scenario.`,
 };
 
 serve(async (req) => {
@@ -915,6 +965,7 @@ INSTRUÇÕES:
 - Para painéis "indicator": atualize indicatorConfig.displayValues com novos valores
 - Para painéis "calculation": mantenha calculationConfig.fields mas atualize correctValue
 - Para painéis "explorer": mantenha as mesmas opções (labels) e os mesmos rótulos de outcomes, e atualize baseline e os valores/trend/effect dos outcomes para o novo paciente, com números coerentes entre si (o aluno testa cada opção e compara antes de decidir)
+- Para painéis "modelo": mantenha os inputs (name, label, unidade, min, max) e a estrutura, mas reescreva as constantes dentro das fórmulas (expr, bom, ruim, series.lines), os valores default e as refLines para o novo cenário, conferindo que as fórmulas continuam válidas (só aritmética, comparações, ternário e as funções min, max, round, ceil, floor, abs, sqrt, pow, log, log10, exp, clamp) e que os resultados contam a história do novo caso
 - Para painéis "radio" com a decisão: 4 alternativas de comprimento parecido, a correta NÃO pode ser a mais longa nem a primeira, sem absolutos (sempre/nunca), todas aceitando o mesmo fato observado
 - Atualize o feedback de cada step para o novo cenário
 - Mantenha patient_summary atualizado
@@ -934,23 +985,44 @@ Retorne APENAS o JSON puro com: title, difficulty, patient_summary, steps (mesma
     const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
     const randomSeed = Math.floor(Math.random() * 100000);
 
-    const { data } = await callAI({ userId, promptType: "case-generate",
-      messages: [
-        { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. REGRAS DE QUALIDADE: (1) o texto do cenário apresenta achados e valores, NUNCA o diagnóstico nem a conduta; (2) todo número do texto deve ser idêntico ao dos campos estruturados; (3) valores laboratoriais plausíveis e coerentes com a fisiopatologia; (4) quando o prompt listar fármacos/condutas do simulador, use SOMENTE esses nomes, exatamente como escritos; (5) referências reais e verificáveis (autor, periódico, ano), nunca inventadas; (6) em perguntas de múltipla escolha, 4 opções de comprimento parecido, sem absolutos (sempre/nunca/apenas) e sem que a correta se destaque pelo tamanho. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
-        { role: "user", content: `${prompt}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
-      ],
-      temperature: 1.2,
-      model: "google/gemini-3-flash-preview",
-    });
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error("IA não retornou conteúdo");
+    // Simuladores de motor com casos resolvíveis: a etapa é sorteada em código e o caso só é aceito se passar na
+    // validação do motor (até 3 tentativas, devolvendo os erros à IA), para o aluno nunca receber um desafio impossível.
+    const etapaSorteada = simulator_slug === "cadeia-suprimentos" ? ETAPAS_CADEIA[Math.floor(Math.random() * ETAPAS_CADEIA.length)] : undefined;
+    const maxTentativas = etapaSorteada ? 3 : 1;
+    let feedbackValidacao = "";
+    let result: any;
 
-    let jsonStr = content.trim();
-    if (jsonStr.startsWith("```")) {
-      jsonStr = jsonStr.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+      const { data } = await callAI({ userId, promptType: "case-generate",
+        messages: [
+          { role: "system", content: "Você é um especialista em farmácia clínica e medicina. Gere casos clínicos realistas e educacionais. CADA caso deve ser ÚNICO e DIFERENTE dos anteriores. Use nomes de pacientes brasileiros variados, idades diferentes, cenários clínicos distintos. REGRAS DE QUALIDADE: (1) o texto do cenário apresenta achados e valores, NUNCA o diagnóstico nem a conduta; (2) todo número do texto deve ser idêntico ao dos campos estruturados; (3) valores laboratoriais plausíveis e coerentes com a fisiopatologia; (4) quando o prompt listar fármacos/condutas do simulador, use SOMENTE esses nomes, exatamente como escritos; (5) referências reais e verificáveis (autor, periódico, ano), nunca inventadas; (6) em perguntas de múltipla escolha, 4 opções de comprimento parecido, sem absolutos (sempre/nunca/apenas) e sem que a correta se destaque pelo tamanho. Retorne APENAS um JSON válido, sem markdown, sem blocos de código." },
+          { role: "user", content: `${prompt}${etapaSorteada ? `\n\nETAPA OBRIGATÓRIA DESTE CASO: "${etapaSorteada}".` : ""}${feedbackValidacao}\n\nIMPORTANTE: A dificuldade deste caso DEVE ser "${randomDifficulty}". Gere um caso COMPLETAMENTE DIFERENTE e ALEATÓRIO. Seed de aleatoriedade: ${randomSeed}.\n\nRETORNE APENAS O JSON PURO, sem \`\`\`json\`\`\` ou qualquer formatação.` },
+        ],
+        temperature: 1.2,
+        model: "google/gemini-3-flash-preview",
+      });
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) throw new Error("IA não retornou conteúdo");
+
+      let jsonStr = content.trim();
+      if (jsonStr.startsWith("```")) {
+        jsonStr = jsonStr.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+
+      try {
+        result = JSON.parse(jsonStr);
+      } catch (parseErr) {
+        if (tentativa === maxTentativas) throw parseErr;
+        feedbackValidacao = "\n\nA resposta anterior não era um JSON válido. Retorne SOMENTE o objeto JSON.";
+        continue;
+      }
+      if (!etapaSorteada) break;
+      const v = validateCadeiaCase(result, etapaSorteada);
+      if (v.ok) break;
+      console.warn("generate-case cadeia-suprimentos: tentativa", tentativa, "reprovada:", v.errors);
+      if (tentativa === maxTentativas) throw new Error("Não foi possível gerar um caso resolvível desta vez. Tente novamente. (" + v.errors.slice(0, 2).join("; ") + ")");
+      feedbackValidacao = "\n\nA versão anterior foi REPROVADA na validação do simulador. Corrija estes problemas e mantenha o restante: " + v.errors.join(" | ");
     }
-
-    const result = JSON.parse(jsonStr);
     const { title, difficulty, ...caseFields } = result;
 
     // Qualidade determinística (a IA tende a pôr a correta primeiro/mais longa): embaralha alternativas e valida painéis.

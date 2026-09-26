@@ -26,6 +26,15 @@
   `supabase/functions/generate-case/index.ts` (`SIMULATOR_PROMPTS[slug]`) define o formato JSON do caso gerado por IA.
   **Todo simulador revisado deve ter os dois.**
 
+## Simuladores com motor em `src/lib` e uma bancada por etapa (padrão da Cadeia de Suprimentos)
+
+Quando o simulador tem várias "mesas" de trabalho (uma por etapa), o motor vira funções puras em `src/lib/<nome>/`, com testes
+que fixam cada número citado nos desafios; a página só escolhe a bancada do caso e repassa o estado dela ao `SimulatorChallengeMode`
+(cada bancada envia `{ etapa, ...estado, resultado }` por `onState`). `simulatorChallenges.ts` não pode importar o motor (o
+`auditar-desafios.cjs` carrega só esse arquivo), então os números ficam nos textos e a regressão fica no teste do motor.
+Casos por IA: só dados de entrada + validação de que o caso é resolvível (edge function) + `desafiosAutomaticos` (desafio único
+verificado pelos critérios do motor), porque o conjunto escrito à mão é por caso nativo.
+
 ## Idiomas de motor que já existem em `SimuladorHepatopatia.tsx` (copie o padrão)
 
 | Necessidade | Solução usada |

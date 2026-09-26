@@ -1,4 +1,4 @@
-// Mapa slug → categoria para os 107 simuladores (/simuladores/*), usado pelo
+// Mapa slug → categoria para os 111 simuladores (/simuladores/*), usado pelo
 // motor de maestria (useMastery.ts). Espelha o agrupamento em Documentacao.tsx
 // — se um simulador novo entrar só lá, esse mapa fica defasado. Vale revisar
 // junto quando o doc-sync rodar por causa de um simulador/categoria novo.
@@ -137,6 +137,9 @@ export const SIMULATOR_CATEGORIES: Record<string, string> = {
 
   // Informática em Saúde
   "prontuario-fhir": "Informática em Saúde",
+
+  // Assistência Farmacêutica
+  "cadeia-suprimentos": "Assistência Farmacêutica",
 };
 
 export function getSimulatorCategory(slug: string): string | undefined {

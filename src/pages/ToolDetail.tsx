@@ -35,6 +35,7 @@ import { ScoreBar as ScoreBarComponent } from "@/components/calculators/ScoreBar
 import { RelatedCalculators as RelatedCalculatorsComponent } from "@/components/calculators/RelatedCalculators";
 import { ClinicalReferences } from "@/components/calculators/ClinicalReferences";
 import type { Reference } from "@/components/calculators/ClinicalReferences";
+import ModeloPanel, { type ModeloConfig } from "@/components/simulators/ModeloPanel";
 
 
 /* ─── Types ─── */
@@ -95,7 +96,7 @@ interface CalculationFieldConfig {
   formula_hint?: string;
 }
 interface SimPanel {
-  title: string; type: "info" | "checklist" | "radio" | "text" | "chart" | "numeric_keypad" | "indicator" | "calculation" | "explorer";
+  title: string; type: "info" | "checklist" | "radio" | "text" | "chart" | "numeric_keypad" | "indicator" | "calculation" | "explorer" | "modelo";
   content?: string; options?: string[];
   correctAnswers?: string[]; correctText?: string;
   chartConfig?: ChartConfig;
@@ -103,6 +104,7 @@ interface SimPanel {
   indicatorConfig?: IndicatorConfig;
   calculationConfig?: CalculationFieldConfig;
   explorerConfig?: ExplorerConfig;
+  modeloConfig?: ModeloConfig;
 }
 interface SimStep {
   title: string; feedback: string; panels: SimPanel[];
@@ -360,7 +362,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     if (!s) return { correct: 0, total: 0 };
     let correct = 0, total = 0;
     s.panels.forEach((panel, pi) => {
-      if (panel.type === "info" || panel.type === "chart" || panel.type === "indicator" || panel.type === "explorer") return;
+      if (panel.type === "info" || panel.type === "chart" || panel.type === "indicator" || panel.type === "explorer" || panel.type === "modelo") return;
       total++;
       const userAns = answers[stepIdx]?.[pi];
       if (panel.type === "checklist" && panel.correctAnswers) {
@@ -389,7 +391,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     return { correct, total };
   };
 
-  const hasInteractivePanels = step?.panels.some(p => !["info", "chart", "indicator", "explorer"].includes(p.type));
+  const hasInteractivePanels = step?.panels.some(p => !["info", "chart", "indicator", "explorer", "modelo"].includes(p.type));
   // Painéis de exploração: a etapa só libera depois de testar todas as opções (salvo requireAll === false).
   const explorersPending = (step?.panels || []).reduce((sum, p, pi) => {
     if (p.type !== "explorer" || !p.explorerConfig || p.explorerConfig.requireAll === false) return sum;
@@ -397,7 +399,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
     return sum + Math.max(0, p.explorerConfig.options.length - visited.length);
   }, 0);
   const hasAnswered = step?.panels.some((p, pi) => {
-    if (["info", "chart", "indicator", "explorer"].includes(p.type)) return false;
+    if (["info", "chart", "indicator", "explorer", "modelo"].includes(p.type)) return false;
     const ans = answers[currentStep]?.[pi];
     if (p.type === "checklist") return (ans as string[] || []).length > 0;
     if (p.type === "radio") return !!ans;
@@ -438,7 +440,7 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
               </CardHeader>
               <CardContent className="text-sm">
                 <div className="bg-muted p-3 rounded mb-2"><strong>Feedback:</strong> {s.feedback}</div>
-                {s.panels.map((panel, pi) => ({ panel, pi })).filter(({ panel }) => panel.type !== "info" && panel.type !== "explorer").map(({ panel, pi }) => {
+                {s.panels.map((panel, pi) => ({ panel, pi })).filter(({ panel }) => panel.type !== "info" && panel.type !== "explorer" && panel.type !== "modelo").map(({ panel, pi }) => {
                   const userAns = answers[si]?.[pi];
                   return (
                     <div key={pi} className="mt-2 text-muted-foreground">
@@ -710,6 +712,8 @@ function SimulatorCaseView({ caseData, authorName, hasCreator, onBack }: {
                   </div>
                 );
               })()}
+
+              {panel.type === "modelo" && panel.modeloConfig && <ModeloPanel config={panel.modeloConfig} />}
 
               {panel.type === "indicator" && panel.indicatorConfig && (
                 <div className="space-y-4">

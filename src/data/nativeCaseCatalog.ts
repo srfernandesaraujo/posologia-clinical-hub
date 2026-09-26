@@ -553,6 +553,15 @@ const catalog: Record<string, NativeCase[]> = {
     { index: 3, title: "Caso 4: Roberto Alves", difficulty: "Difícil" },
     { index: 4, title: "Caso 5: Sônia Ferreira", difficulty: "Médio" },
   ],
+  // ── Gestão da Cadeia de Suprimentos Farmacêuticos ── (títulos = src/lib/cadeiaSuprimentos/casos.ts; guardado por cadeiaSuprimentos.test.ts)
+  "cadeia-suprimentos": [
+    { index: 0, title: "Caso 1: Revisão da REMUME — hipertensão, diabetes e dislipidemia", difficulty: "Médio" },
+    { index: 1, title: "Caso 2: Programação anual da CAF — losartana, amoxicilina e insulina", difficulty: "Difícil" },
+    { index: 2, title: "Caso 3: Pregão de insulina NPH — preços, propostas e entregas", difficulty: "Difícil" },
+    { index: 3, title: "Caso 4: Falha de energia na câmara fria da CAF", difficulty: "Médio" },
+    { index: 4, title: "Caso 5: Amoxicilina em julho — rateio entre as UBS", difficulty: "Médio" },
+    { index: 5, title: "Caso 6: Balcão da UBS — receita, lote e falta de estoque", difficulty: "Fácil" },
+  ],
   // ── Prontuário Eletrônico (FHIR) ──
   "prontuario-fhir": [
     { index: 0, title: "Caso 1: HAS recém-diagnosticada com hiperpotassemia por IECA", difficulty: "Médio" },

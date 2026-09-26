@@ -3,6 +3,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI } from "../_shared/ai-provider.ts";
 import { getFullAccess } from "../_shared/subscription.ts";
 import { sanitizeAndLintSteps } from "../_shared/simulator-quality.ts";
+import {
+  CATEGORIAS_SIMULADOR, LIMITE_ETAPAS, FERRAMENTA_ROTEADOR, PROMPT_ROTEADOR, escolherSkillsPorPalavras, exigenciasNaoCumpridas,
+  montarPedidoDeRevisao, montarPromptDoGerador, normalizarEscolha, type EscolhaDeSkills,
+} from "../_shared/simulator-skills/index.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,126 +48,48 @@ serve(async (req) => {
 
     const isEdit = mode === "edit" && existingTool;
     const isSimulator = type === "simulador";
-    const categories = ["Cardiologia", "Emergência", "Endocrinologia", "Nefrologia", "Neurologia", "Pneumologia", "Infectologia", "Pediatria", "Psiquiatria", "Reumatologia", "Farmacologia Clínica", "Atenção Farmacêutica", "Stewardship de Antimicrobianos", "Farmacocinética Clínica", "Oncologia"];
+    const categories = CATEGORIAS_SIMULADOR;
+    let escolha: EscolhaDeSkills | null = null;
 
     let systemPrompt: string;
     let toolName: string;
     let toolParams: any;
 
     if (isSimulator) {
-      systemPrompt = `Você é um especialista em farmácia clínica e criação de simuladores clínicos interativos de alta fidelidade.
-${isEdit
-  ? `O usuário quer CORRIGIR/EDITAR um simulador existente. Dados atuais:
+      // 1) Roteador de skills: escolhe 1 a 3 playbooks para o tipo de simulador pedido. Na edição, usa só palavras-chave
+      //    (o simulador já existe); se a chamada de IA do roteador falhar, cai nas palavras-chave, sem quebrar a criação.
+      const pedidoCompleto = isEdit ? `${existingTool.name} ${existingTool.description || ""} ${prompt}` : prompt;
+      if (isEdit) {
+        escolha = normalizarEscolha({ skills: escolherSkillsPorPalavras(pedidoCompleto).map((x) => x.id) }, pedidoCompleto);
+      } else {
+        try {
+          const { data: roteamento } = await callAI({ userId, promptType: "tool-route",
+            messages: [{ role: "system", content: PROMPT_ROTEADOR }, { role: "user", content: prompt }],
+            tools: [FERRAMENTA_ROTEADOR],
+            tool_choice: { type: "function", function: { name: FERRAMENTA_ROTEADOR.function.name } },
+            model: "google/gemini-3-flash-preview",
+          });
+          const chamada = roteamento.choices?.[0]?.message?.tool_calls?.[0];
+          escolha = normalizarEscolha(chamada ? JSON.parse(chamada.function.arguments) : null, prompt);
+        } catch (routerErr) {
+          console.warn("generate-tool: roteador de skills falhou, usando palavras-chave:", routerErr);
+          escolha = normalizarEscolha(null, prompt);
+        }
+      }
+      console.log("generate-tool skills:", escolha.skills.map((x) => x.id).join(", "), "| origem:", escolha.origem);
+
+      const contextoEdicao = isEdit
+        ? `O usuário quer CORRIGIR/EDITAR um simulador existente. Dados atuais:
 Nome: ${existingTool.name}
 Descrição: ${existingTool.description || ""}
 Dados: ${JSON.stringify(existingTool.formula)}
 
 PROBLEMA RELATADO: "${prompt}"
 
-Corrija o simulador mantendo a mesma estrutura de steps e panels.
+Corrija o simulador mantendo a mesma estrutura de steps e panels (pode acrescentar ou trocar painéis se o problema exigir).
 Retorne o simulador COMPLETO corrigido.`
-  : `O usuário quer criar um simulador clínico interativo.`}
-
-TIPOS DE SIMULADORES QUE VOCÊ PODE CRIAR (exemplos):
-1. **PRM (Problemas Relacionados a Medicamentos)**: Paciente + prescrição médica → aluno avalia cada medicamento buscando PRMs.
-2. **Stewardship de Antimicrobianos**: Caso infeccioso com timeline. Aluno escolhe antibióticos, solicita culturas, ajusta terapia.
-3. **TDM (Monitorização Terapêutica)**: Paciente com dados farmacocinéticos, curvas de concentração vs tempo.
-4. **Acompanhamento Farmacoterapêutico**: Follow-up longitudinal com exames laboratoriais e tendências.
-5. **Bomba de Infusão**: Interface com LCD, teclado numérico, indicadores visuais, botões de ação.
-6. **Qualquer outro tipo** que faça sentido clínicamente baseado na solicitação do usuário.
-
-Escolha o tipo mais adequado baseado na solicitação do usuário e crie o simulador.
-
-ESTRUTURA OBRIGATÓRIA - STEPS E PANELS:
-O simulador é organizado em STEPS (etapas sequenciais). Cada step tem PANELS (painéis lado a lado, máximo 3).
-
-TIPOS DE PANELS DISPONÍVEIS:
-
-1. **"info"** - Apenas exibição de texto. Use markdown simples: **negrito**, quebras de linha.
-   Campos: content (texto)
-
-2. **"checklist"** - Múltipla seleção com opções.
-   Campos: options (array de strings), correctAnswers (array de strings corretas)
-
-3. **"radio"** - Seleção única.
-   Campos: options, correctAnswers
-
-4. **"text"** - Resposta escrita livre.
-   Campos: correctText (resposta esperada)
-
-5. **"chart"** - Gráfico interativo (curvas farmacocinéticas, tendências laboratoriais, etc.)
-   Campos: chartConfig com:
-   - data: array de pontos {label: "0h", concentracao: 25}
-   - series: [{dataKey: "concentracao", name: "Concentração", color: "#ef4444"}]
-   - xAxisLabel, yAxisLabel, yAxisUnit
-   - referenceLines: [{y: 20, label: "Cmax", color: "#22c55e"}]
-   - referenceAreas: [{y1: 15, y2: 20, label: "Janela Terapêutica", color: "rgba(34,197,94,0.15)"}]
-   USE ESTE TIPO para curvas de concentração vs tempo, tendências de exames, gráficos PK/PD.
-
-6. **"numeric_keypad"** - Teclado numérico com display LCD (estilo bomba de infusão, monitor).
-   Campos: keypadConfig com:
-   - displayLabel: "Taxa de Infusão"
-   - displayUnit: "mL/h"
-   - correctValue: 12.5 (valor correto numérico)
-   - tolerance: 0.5 (tolerância para aceitar como correto)
-   - lcdColor: "green" | "blue" | "amber"
-   - actionButtons: [{label: "Start", color: "green"}, {label: "Stop", color: "red"}]
-   USE ESTE TIPO para simulações de equipamentos (bombas de infusão, monitores, etc.)
-
-7. **"indicator"** - Indicadores visuais de status (luzes, valores de monitorização).
-   Campos: indicatorConfig com:
-   - indicators: [{label: "Infundindo", status: "blink", color: "green"}, {label: "Alarme", status: "off", color: "red"}]
-   - displayValues: [{label: "PAM", value: "72", unit: "mmHg"}, {label: "FC", value: "88", unit: "bpm"}]
-   USE ESTE TIPO para monitorização de sinais vitais, status de equipamentos.
-
-8. **"calculation"** - Campos de cálculo onde o aluno calcula e insere valores.
-   Campos: calculationConfig com:
-   - fields: [{name: "dose", label: "Dose", unit: "mg", correctValue: 500, tolerance: 10}]
-   - formula_hint: "Dose = Concentração × Volume"
-   USE ESTE TIPO quando o aluno precisa calcular doses, taxas de infusão, clearances, etc.
-
-9. **"explorer"** - Painel de EXPLORAÇÃO (o "ajuste" do simulador): o aluno escolhe uma opção (fármaco, dose, conduta, parâmetro) e VÊ o resultado antes de decidir. A etapa só é liberada depois que ele testa TODAS as opções.
-   Campos: explorerConfig com:
-   - controlLabel: instrução curta (ex: "Teste cada conduta e compare o resultado")
-   - baseline: [{label: "ALT", value: "180", unit: "U/L"}]  (valores ANTES da opção; opcional)
-   - options: 2 a 5 itens {label: "Suspender o fármaco suspeito", outcomes: [{label: "ALT", value: "88", unit: "U/L", trend: "down", effect: "good"}, ...], note: "comentário opcional curto"}
-       trend: "up" | "down" | "same"; effect: "good" | "bad" | "neutral" (bom/ruim PARA O PACIENTE)
-   - requireAll: true
-   REGRAS: use os MESMOS rótulos de outcomes em todas as opções (para permitir comparar); os números devem ser coerentes entre si e com o paciente (calcule antes de escrever); inclua contraste real (uma opção que melhora o marcador certo, uma que melhora só um número bonito sem tratar a causa, uma que piora).
-   No máximo 3 painéis por etapa: combine "info" (caso) + "explorer" (testar) + "radio" (interpretar/decidir).
-
-PADRÃO PEDAGÓGICO OBRIGATÓRIO (vale para TODO simulador criado):
-- O aluno MEXE, LÊ o resultado, INTERPRETA e DECIDE. Nunca faça perguntas de memorização pura ("qual o mecanismo de X?"): a pergunta deve ser respondível apenas a partir do que o aluno viu no explorer/chart/cálculo e do caso.
-- Fluxo típico de uma etapa: "info" (situação e números do caso) -> "explorer" (testar condutas) -> "radio" ou "checklist" (interpretar e decidir). O título do painel radio/checklist é a PERGUNTA: cite números do caso, mande comparar o que o aluno viu e peça a leitura que sustenta a decisão. Pode incluir um colega que propõe uma conduta plausível porém errada.
-- Em pelo menos UMA etapa use "explorer". Encadeie: o resultado de uma etapa vira dado da seguinte.
-- Alternativas (radio): 4 opções. TODAS com comprimento parecido (a correta NÃO pode ser a mais longa nem a mais curta) e mesma estrutura de frase; a correta não deve ser a primeira; todas aceitam o mesmo fato observado e diferem no mecanismo ou na decisão; sem absolutos (sempre, nunca, apenas, em nenhum cenário); cada distrator tem UM erro claro e plausível (leitura parcial dos números, mecanismo errado, limiar errado, conduta que ignora o contexto, "número bonito" que não trata a causa). Nada de "todas as anteriores".
-- Revisão de prescrição (problema quase real): 3-4 itens numa frase de estrutura idêntica em todas as opções; cada distrator erra um item diferente.
-- feedback de cada etapa: cite os números do explorer, explique por que cada erro tentador é errado e termine na conduta. Termine o enunciado sugerindo discussão em grupo quando fizer sentido.
-- O painel "info" descreve achados e valores, sem entregar o diagnóstico nem a resposta.
-- Use limites de referência ao citar exames e informações clinicamente corretas (não invente diretrizes ou referências).
-
-REGRAS IMPORTANTES PARA INTERFACES RICAS:
-- Quando o usuário pedir simulação de equipamentos (bombas, monitores), USE os tipos "numeric_keypad", "indicator" e "chart"
-- Quando o usuário pedir curvas ou gráficos, USE o tipo "chart" com dados realistas
-- Combine painéis: ex: um "info" com dados do paciente + um "numeric_keypad" para entrada + um "indicator" para status
-- Os painéis devem criar uma interface visual imersiva e profissional
-- Dados do paciente devem ser realistas (nomes brasileiros, valores laboratoriais plausíveis)
-
-REGRAS CLÍNICAS:
-- Inclua sinais vitais quando relevante (PA, FC, Temp, SpO2)
-- Para PRM: pelo menos 1-2 medicamentos com problemas reais
-- Para Stewardship: inclua diagnóstico infeccioso, antibióticos empíricos E resultados de cultura/antibiograma
-- Para TDM: inclua parâmetros farmacocinéticos com gráfico de curva usando panel type "chart"
-- Para Acompanhamento: inclua exames com valores e tendências usando type "chart"
-- Para Bombas de Infusão: use "numeric_keypad" com LCD, "indicator" para status, "calculation" para dose
-
-REGRAS GERAIS:
-- slug: português sem acentos, separado por hífens
-- short_description: máximo 100 caracteres
-- description: 2 frases
-- category_name: UMA das categorias existentes (${categories.join(", ")}). Se nenhuma se encaixa, escolha a mais próxima.
-- difficulty: Fácil, Médio ou Difícil
-- O simulador DEVE ter no mínimo 2 steps e no máximo 5 steps`;
+        : undefined;
+      systemPrompt = montarPromptDoGerador(escolha, contextoEdicao);
 
       toolName = "create_clinical_simulator";
       toolParams = {
@@ -189,7 +115,7 @@ REGRAS GERAIS:
                     type: "object" as const,
                     properties: {
                       title: { type: "string" as const },
-                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text", "chart", "numeric_keypad", "indicator", "calculation", "explorer"] },
+                      type: { type: "string" as const, enum: ["info", "checklist", "radio", "text", "chart", "numeric_keypad", "indicator", "calculation", "explorer", "modelo"] },
                       content: { type: "string" as const, description: "Conteúdo textual para type info. Use **negrito** e \\n para quebras de linha." },
                       options: { type: "array" as const, items: { type: "string" as const }, description: "Opções para checklist/radio" },
                       correctAnswers: { type: "array" as const, items: { type: "string" as const }, description: "Respostas corretas para checklist/radio" },
@@ -250,6 +176,25 @@ REGRAS GERAIS:
                           requireAll: { type: "boolean" as const },
                         },
                         required: ["options"] as const,
+                      },
+                      modeloConfig: {
+                        type: "object" as const,
+                        description: "Configuração do painel de modelo (parâmetros ajustáveis + fórmulas) para type modelo",
+                        properties: {
+                          inputs: { type: "array" as const, items: { type: "object" as const, properties: { name: { type: "string" as const }, label: { type: "string" as const }, unit: { type: "string" as const }, min: { type: "number" as const }, max: { type: "number" as const }, step: { type: "number" as const }, default: { type: "number" as const } }, required: ["name", "label", "min", "max", "default"] as const } },
+                          outputs: { type: "array" as const, items: { type: "object" as const, properties: { label: { type: "string" as const }, expr: { type: "string" as const }, unit: { type: "string" as const }, decimals: { type: "number" as const }, bom: { type: "string" as const }, ruim: { type: "string" as const } }, required: ["label", "expr"] as const } },
+                          series: {
+                            type: "object" as const,
+                            properties: {
+                              xLabel: { type: "string" as const }, yLabel: { type: "string" as const }, xFrom: { type: "number" as const }, xTo: { type: "number" as const }, xStep: { type: "number" as const },
+                              lines: { type: "array" as const, items: { type: "object" as const, properties: { name: { type: "string" as const }, expr: { type: "string" as const }, color: { type: "string" as const } }, required: ["name", "expr"] as const } },
+                              refLines: { type: "array" as const, items: { type: "object" as const, properties: { y: { type: "number" as const }, label: { type: "string" as const }, color: { type: "string" as const } }, required: ["y"] as const } },
+                            },
+                            required: ["xFrom", "xTo", "lines"] as const,
+                          },
+                          formulaHint: { type: "string" as const },
+                        },
+                        required: ["inputs", "outputs"] as const,
                       },
                       calculationConfig: {
                         type: "object" as const,
@@ -388,39 +333,68 @@ REGRAS GERAIS:
       };
     }
 
-    const { data } = await callAI({ userId, promptType: isEdit ? "tool-edit" : "tool-generate",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: toolName,
-            description: isSimulator
-              ? "Cria ou edita um simulador clínico interativo com steps e panels"
-              : "Cria ou edita uma calculadora clínica completa",
-            parameters: toolParams,
-          },
-        },
-      ],
-      tool_choice: { type: "function", function: { name: toolName } },
-      model: "google/gemini-3-flash-preview",
-    });
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const ferramenta = {
+      type: "function" as const,
+      function: {
+        name: toolName,
+        description: isSimulator
+          ? "Cria ou edita um simulador clínico interativo com steps e panels"
+          : "Cria ou edita uma calculadora clínica completa",
+        parameters: toolParams,
+      },
+    };
+    const gerar = async (messages: any[]) => {
+      const { data } = await callAI({ userId, promptType: isEdit ? "tool-edit" : "tool-generate",
+        messages,
+        tools: [ferramenta],
+        tool_choice: { type: "function", function: { name: toolName } },
+        model: "google/gemini-3-flash-preview",
+      });
+      const chamada = data.choices?.[0]?.message?.tool_calls?.[0];
+      return chamada ? JSON.parse(chamada.function.arguments) : null;
+    };
 
-    if (!toolCall) {
+    const mensagens = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ];
+    let toolData = await gerar(mensagens);
+
+    if (!toolData) {
       return new Response(JSON.stringify({ error: "A IA não retornou dados estruturados" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const toolData = JSON.parse(toolCall.function.arguments);
-
-    if (isSimulator) {
-      const { steps: cleanSteps, warnings: qualityWarnings } = sanitizeAndLintSteps(toolData.steps);
-      if (qualityWarnings.length) console.warn("generate-tool quality warnings:", qualityWarnings);
+    if (isSimulator && escolha) {
+      // 3) Revisão automática: valida painéis, aplica o lint de qualidade e as exigências das skills; se houver problemas,
+      //    devolve o simulador à IA com a lista e fica com a versão que tiver menos problemas.
+      const avaliar = (td: any) => {
+        const q = sanitizeAndLintSteps(td.steps);
+        const faltas = exigenciasNaoCumpridas(escolha!, q.steps);
+        const etapasFora = q.steps.length < LIMITE_ETAPAS.min || q.steps.length > LIMITE_ETAPAS.max ? [`o simulador deve ter de ${LIMITE_ETAPAS.min} a ${LIMITE_ETAPAS.max} etapas (tem ${q.steps.length})`] : [];
+        return { steps: q.steps, warnings: q.warnings, problemas: [...q.warnings, ...faltas, ...etapasFora] };
+      };
+      let melhor = avaliar(toolData);
+      let revisoes = 0;
+      while (melhor.problemas.length > 0 && revisoes < 1) {
+        revisoes++;
+        try {
+          const revisado = await gerar([
+            ...mensagens,
+            { role: "assistant", content: JSON.stringify(toolData) },
+            { role: "user", content: montarPedidoDeRevisao(melhor.problemas) },
+          ]);
+          if (revisado) {
+            const avaliada = avaliar(revisado);
+            if (avaliada.problemas.length <= melhor.problemas.length) { melhor = avaliada; toolData = revisado; }
+          }
+        } catch (revErr) {
+          console.warn("generate-tool: revisão falhou, mantendo a primeira versão:", revErr);
+          break;
+        }
+      }
+      if (melhor.problemas.length) console.warn("generate-tool problemas restantes:", melhor.problemas);
       const result = {
         name: toolData.name,
         slug: toolData.slug,
@@ -432,30 +406,38 @@ REGRAS GERAIS:
         formula: {
           type: "simulator",
           patient_summary: toolData.patient_summary,
-          steps: cleanSteps,
+          steps: melhor.steps,
         },
       };
-      return new Response(JSON.stringify({ tool: result, quality_warnings: qualityWarnings }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } else {
-      const flatFields: any[] = [];
-      if (toolData.sections) {
-        for (const section of toolData.sections) {
-          for (const field of section.fields) {
-            flatFields.push({ ...field, section: section.title });
-          }
-        }
-      }
-      const result = {
-        ...toolData,
-        fields: flatFields,
-        formula: { ...toolData.formula, sections: toolData.sections },
-      };
-      return new Response(JSON.stringify({ tool: result }), {
+      return new Response(JSON.stringify({
+        tool: result,
+        quality_warnings: melhor.problemas,
+        skills_used: escolha.skills.map((x) => ({ id: x.id, nome: x.nome })),
+        skills_source: escolha.origem,
+        revisions: revisoes,
+      }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+
+    // ─── Calculadora: fluxo inalterado ───
+    const flatFields: any[] = [];
+    if (toolData.sections) {
+      for (const section of toolData.sections) {
+        for (const field of section.fields) {
+          flatFields.push({ ...field, section: section.title });
+        }
+      }
+    }
+    const result = {
+      ...toolData,
+      fields: flatFields,
+      formula: { ...toolData.formula, sections: toolData.sections },
+    };
+    return new Response(JSON.stringify({ tool: result }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (e) {
     console.error("generate-tool error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {

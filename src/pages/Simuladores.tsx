@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import {
   FlaskConical, Search, Bug, Activity, ClipboardList, Syringe, Lock, Crown, Plus, Share2,
   HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna,
-  BookOpen, Scan, Accessibility, ChevronRight, LayoutGrid, List, Database,
+  BookOpen, Scan, Accessibility, ChevronRight, LayoutGrid, List, Database, Boxes,
 } from "lucide-react";
 import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Genética": Dna,
   "Farmacoterapia Laboratorial": TestTube,
   "Informática em Saúde": Database,
+  "Assistência Farmacêutica": Boxes,
 };
 
 // Category color accents (HSL-based using design tokens where possible)
@@ -65,6 +66,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Genética": "260 70% 55%",
   "Farmacoterapia Laboratorial": "15 75% 50%",
   "Informática em Saúde": "220 70% 50%",
+  "Assistência Farmacêutica": "170 65% 40%",
 };
 
 export default function Simuladores() {

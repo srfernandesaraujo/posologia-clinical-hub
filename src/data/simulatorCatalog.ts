@@ -1,7 +1,7 @@
 import {
   Pill, Bug, Activity, ClipboardList, Syringe, FlaskConical,
   HeartPulse, PillBottle, Zap, Brain, Heart, Droplets, Beaker, Shield, Flame, TestTube, Dna,
-  BookOpen, Scan, Accessibility, Mic, Database, type LucideIcon,
+  BookOpen, Scan, Accessibility, Mic, Database, Boxes, type LucideIcon,
 } from "lucide-react";
 
 export interface NativeSimulator {
@@ -12,12 +12,13 @@ export interface NativeSimulator {
   category: string;
 }
 
-// Fonte canônica dos 107 simuladores nativos (/simuladores/*). Usada pela
+// Fonte canônica dos 111 simuladores nativos (/simuladores/*). Usada pela
 // página /simuladores e, filtrada, pelo formulário de Salas Virtuais — não
 // duplique esta lista, importe daqui.
 export const NATIVE_SIMULATORS: NativeSimulator[] = [
   { slug: "metodo-soap", name: "Simulador do Método SOAP", description: "Treine a documentação clínica estruturada: Subjetivo, Objetivo, Avaliação e Plano.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "paciente-ia-voz", name: "Paciente-IA por Voz", description: "Treine anamnese e comunicação: converse por voz com um paciente simulado por IA que revela a história clínica conforme perguntado. Exclusivo Premium.", icon: Mic, category: "Farmácia Clínica" },
+  { slug: "cadeia-suprimentos", name: "Gestão da Cadeia de Suprimentos Farmacêuticos", description: "Treine o ciclo da Assistência Farmacêutica: seleção, programação, aquisição, armazenamento, distribuição e dispensação, com indicadores que reagem às suas decisões.", icon: Boxes, category: "Assistência Farmacêutica" },
   { slug: "prontuario-fhir", name: "Simulador de Prontuário Eletrônico (FHIR)", description: "Navegue um prontuário clínico longitudinal e veja, seção a seção, como esses dados trafegam como recursos FHIR (Patient, Condition, MedicationRequest, Observation, ServiceRequest).", icon: Database, category: "Informática em Saúde" },
   { slug: "mai", name: "Simulador MAI", description: "Medication Appropriateness Index – Avalie a adequação de cada medicamento em 10 critérios.", icon: ClipboardList, category: "Farmácia Clínica" },
   { slug: "cascata-prescricao", name: "Simulador de Cascata de Prescrição", description: "Identifique medicamentos prescritos para tratar efeitos adversos de outros.", icon: ClipboardList, category: "Farmácia Clínica" },

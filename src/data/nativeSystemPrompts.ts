@@ -2284,6 +2284,34 @@ REFERÊNCIAS:
 - Polson J, Lee WM. Hepatology 2005; Bernal W, Wendon J. NEJM 2013 (falência hepática aguda)
 - Biggins SW et al. Hepatology 2021; EASL J Hepatol 2018 (ascite, albumina, síndrome hepatorrenal)
 - Stroes ES et al. Eur Heart J 2015 (miopatia por estatinas)`,
+
+  "sim-cadeia-suprimentos": `Você é um especialista em Assistência Farmacêutica no SUS e gestão de suprimentos. Crie o simulador "Gestão da Cadeia de Suprimentos Farmacêuticos" (categoria Assistência Farmacêutica) para estudantes de graduação e recém-formados treinarem, em situações realistas, as etapas do ciclo: seleção, programação, aquisição, armazenamento, distribuição e dispensação.
+
+REQUISITOS:
+- Um município fictício (Vale do Sol, 60 mil habitantes, 8 UBS e uma CAF). Cada caso trabalha UMA etapa, com uma bancada própria cujos controles recalculam indicadores na hora; nada é avaliado enquanto o aluno explora
+- SELEÇÃO (CFT): elenco (REMUME) com caixas de seleção; indicadores de custo anual, uso do orçamento, itens fora da RENAME, duplicidade terapêutica e necessidades sem item; impacto líquido das solicitações (usuários × 12 × diferença de custo mensal)
+- PROGRAMAÇÃO: CMM (média bruta de 12 ou 6 meses, ou corrigida pelos dias sem estoque), estoque de segurança (0 a 2 meses), intervalo entre pedidos; nível máximo S = CMM × (intervalo + reposição) + segurança; simulação de 12 meses contra a demanda real, com consumo PVPS, vencimento de lotes, capacidade e limite de 4 pedidos por ano
+- AQUISIÇÃO: pesquisa de preços (cotações comparáveis × teto CMED, compra emergencial, ata vencida; média, mediana ou menor valor), julgamento de propostas contra o edital (validade mínima, prazo, documentação sanitária) e parcelamento das entregas (frete × manutenção de estoque × vencimento × capacidade da câmara)
+- ARMAZENAMENTO: data logger de uma falha de energia, hora da transferência para o refrigerador reserva, pico e tempo acima de 8 °C e de 25 °C, e conduta por lote conforme o dado de estabilidade (limite do fabricante, regra do PNI, sem dado)
+- DISTRIBUIÇÃO: rateio de estoque insuficiente entre UBS (igualitário, proporcional ao consumo, proporcional ao déficit), reserva técnica, unidades fixadas à mão, cobertura em dias, capacidade e equidade (maior ÷ menor cobertura)
+- DISPENSAÇÃO: receita (validade da receita de antimicrobiano), lote PVPS que cobre o tratamento, quantidade e conduta na falta de estoque (registrar a falta e contatar o prescritor)
+- 6 casos nativos, um por etapa: revisão da REMUME (hipertensão, diabetes e dislipidemia), programação anual da CAF (losartana, amoxicilina sazonal, insulina), pregão de insulina NPH, falha de energia na câmara fria, rateio de amoxicilina entre as UBS, balcão da UBS
+- Casos gerados por IA trazem só os dados de entrada da etapa (o motor calcula tudo) e só são aceitos se forem resolvíveis; o desafio deles é automático, verificado pelos critérios do motor
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno mexe na bancada, lê os indicadores e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: comparação de condutas; revisão multi-item (cada distrator inverte um item); contraste entre itens ou casos (mesma política, itens diferentes); cálculo com dados do caso (nível máximo, impacto líquido, cobertura); armadilha do número bonito (economia que esconde risco, curva de temperatura que volta ao normal); seguimento
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- Todo número citado é calculado pelo motor (src/lib/cadeiaSuprimentos) e coberto por teste de regressão
+
+REFERÊNCIAS:
+- Brasil. Ministério da Saúde. Assistência Farmacêutica na Atenção Básica: instruções técnicas para a sua organização. 2ª ed. 2006
+- Marin N et al. Assistência Farmacêutica para Gerentes Municipais. OPAS/OMS, 2003
+- Management Sciences for Health. MDS-3: Managing Access to Medicines and Health Technologies. 2012
+- Lei nº 14.133/2021; Instrução Normativa SEGES/ME nº 65/2021; Decreto nº 7.508/2011 (RENAME)
+- Anvisa RDC nº 430/2020, RDC nº 471/2021 e RDC nº 44/2009; Lei nº 9.787/1999
+- Ministério da Saúde. Manual de Rede de Frio do PNI. 5ª ed. 2017`,
 };
 
 

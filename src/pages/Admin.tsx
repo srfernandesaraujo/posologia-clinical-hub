@@ -243,6 +243,8 @@ export default function Admin() {
       if (data.error) throw new Error(data.error);
       setAiPreview(data.tool);
       toast.success("Ferramenta gerada pela IA! Revise e confirme.");
+      if (Array.isArray(data.skills_used) && data.skills_used.length) toast.info(`Criado com as skills: ${data.skills_used.map((s: any) => s.nome).join(", ")}`);
+      if (Array.isArray(data.quality_warnings) && data.quality_warnings.length) toast.warning(`${data.quality_warnings.length} ponto(s) de qualidade para revisar: ${data.quality_warnings.slice(0, 2).join(" | ")}`, { duration: 12000 });
     } catch (err: any) {
       toast.error(err.message || "Erro ao gerar ferramenta");
     } finally {

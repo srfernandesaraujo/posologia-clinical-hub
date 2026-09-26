@@ -138,6 +138,9 @@ export const SIMULATOR_CATEGORIES: Record<string, string> = {
 
   // Informática em Saúde
   "prontuario-fhir": "Informática em Saúde",
+
+  // Assistência Farmacêutica
+  "cadeia-suprimentos": "Assistência Farmacêutica",
 };
 
 export function getSimulatorCategory(slug: string): string | undefined {
