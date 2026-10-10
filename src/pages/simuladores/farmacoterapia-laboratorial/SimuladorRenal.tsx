@@ -29,17 +29,37 @@ interface RenalDrug {
   effects: { creatinina: number; ureia: number; k: number; na: number };
   sideEffects: { nefrotox: number; ototox: number; gi: number; hipocalemia: number; hipoglicemia: number };
   contraindicatedBelow: number;
+  // --- Opcionais (revisão dos desafios): casos por IA e do marketplace não precisam deles ---
+  /** Conduta sem dose (slider oculto). */
+  noDose?: boolean;
+  /** Se definido, o fármaco só aparece nos casos com esse marcador em `flags`. */
+  caseFlag?: string;
+  /** Pseudo-fármaco "Suspender o fármaco suspeito": a trajetória vem de `RenalCase.recuperacao`. */
+  suspende?: boolean;
+  /** Dispensa ajuste pela função renal (ex.: linagliptina, excreção predominantemente biliar). */
+  semAjusteRenal?: boolean;
+  /** Dose máxima (na unidade do slider) compatível com o ClCr; null = sem teto. Abaixo de `contraindicatedBelow` vale "evitar". */
+  renalMax?: (clCr: number) => number | null;
 }
 
+/** Depuração da vancomicina (L/h) pela relação de Matzke 1984: CL(mL/min) = 0,689 × ClCr + 3,66. */
+function vancoClearance(clCr: number) { return (0.689 * clCr + 3.66) * 0.06; }
+/** AUC24 estimada (mg·h/L) da vancomicina dada em 12/12h, no equilíbrio (CIM 1 mg/L: AUC/CIM = AUC). */
+function vancoAuc24(dose12h: number, clCr: number) { return Math.round((dose12h * 2) / vancoClearance(clCr)); }
+
 const DRUGS: RenalDrug[] = [
-  { name: "Vancomicina", class: "Glicopeptídeo", doseMin: 500, doseMax: 2000, doseUnit: "mg EV 12/12h", doseStep: 250, effects: { creatinina: 0.3, ureia: 5, k: 0.1, na: 0 }, sideEffects: { nefrotox: 0.3, ototox: 0.15, gi: 0.1, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0 },
+  { name: "Vancomicina", class: "Glicopeptídeo", doseMin: 500, doseMax: 2000, doseUnit: "mg EV 12/12h", doseStep: 250, effects: { creatinina: 0.3, ureia: 5, k: 0.1, na: 0 }, sideEffects: { nefrotox: 0.3, ototox: 0.15, gi: 0.1, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0, renalMax: (clCr) => Math.floor((600 * vancoClearance(clCr)) / 2 / 50) * 50 },
   { name: "Gentamicina", class: "Aminoglicosídeo", doseMin: 1, doseMax: 7, doseUnit: "mg/kg/dia", doseStep: 0.5, effects: { creatinina: 0.5, ureia: 8, k: -0.2, na: 0 }, sideEffects: { nefrotox: 0.45, ototox: 0.25, gi: 0.05, hipocalemia: 0.1, hipoglicemia: 0 }, contraindicatedBelow: 0 },
-  { name: "Metformina", class: "Biguanida", doseMin: 500, doseMax: 2550, doseUnit: "mg/dia", doseStep: 250, effects: { creatinina: 0, ureia: 0, k: 0, na: 0 }, sideEffects: { nefrotox: 0.05, ototox: 0, gi: 0.3, hipocalemia: 0, hipoglicemia: 0.05 }, contraindicatedBelow: 30 },
-  { name: "Digoxina", class: "Glicosídeo cardíaco", doseMin: 0.0625, doseMax: 0.25, doseUnit: "mg/dia", doseStep: 0.0625, effects: { creatinina: 0, ureia: 0, k: -0.1, na: 0 }, sideEffects: { nefrotox: 0.05, ototox: 0, gi: 0.2, hipocalemia: 0.1, hipoglicemia: 0 }, contraindicatedBelow: 0 },
+  { name: "Metformina", class: "Biguanida", doseMin: 500, doseMax: 2550, doseUnit: "mg/dia", doseStep: 250, effects: { creatinina: 0, ureia: 0, k: 0, na: 0 }, sideEffects: { nefrotox: 0.05, ototox: 0, gi: 0.3, hipocalemia: 0, hipoglicemia: 0.05 }, contraindicatedBelow: 30, renalMax: (clCr) => (clCr < 45 ? 1000 : null) },
+  // Digoxina: o K⁺ e a função renal não mudam com a digoxina (a hipocalemia do Caso 5 vem do diurético); não é nefrotóxica.
+  { name: "Digoxina", class: "Glicosídeo cardíaco", doseMin: 0.0625, doseMax: 0.25, doseUnit: "mg/dia", doseStep: 0.0625, effects: { creatinina: 0, ureia: 0, k: 0, na: 0 }, sideEffects: { nefrotox: 0, ototox: 0, gi: 0.2, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0, renalMax: (clCr) => (clCr < 50 ? 0.125 : null) },
   { name: "Ibuprofeno", class: "AINE", doseMin: 200, doseMax: 1200, doseUnit: "mg/dia", doseStep: 200, effects: { creatinina: 0.4, ureia: 6, k: 0.3, na: -2 }, sideEffects: { nefrotox: 0.4, ototox: 0, gi: 0.25, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 30 },
   { name: "Alopurinol", class: "Inib. XO", doseMin: 100, doseMax: 600, doseUnit: "mg/dia", doseStep: 100, effects: { creatinina: 0, ureia: -3, k: 0, na: 0 }, sideEffects: { nefrotox: 0.05, ototox: 0, gi: 0.1, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0 },
   { name: "Gabapentina", class: "Anticonvulsivante", doseMin: 100, doseMax: 1200, doseUnit: "mg 8/8h", doseStep: 100, effects: { creatinina: 0, ureia: 0, k: 0, na: -1 }, sideEffects: { nefrotox: 0, ototox: 0, gi: 0.1, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0 },
   { name: "Lítio", class: "Estabilizador humor", doseMin: 300, doseMax: 1200, doseUnit: "mg/dia", doseStep: 150, effects: { creatinina: 0.15, ureia: 2, k: 0, na: -1 }, sideEffects: { nefrotox: 0.2, ototox: 0, gi: 0.2, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0 },
+  // Alternativa ao ajuste/suspensão da metformina: dose única de 5 mg, sem ajuste pela função renal (excreção predominantemente biliar).
+  { name: "Linagliptina", class: "iDPP-4", doseMin: 5, doseMax: 5, doseUnit: "mg/dia", doseStep: 1, noDose: true, semAjusteRenal: true, effects: { creatinina: 0, ureia: 0, k: 0, na: 0 }, sideEffects: { nefrotox: 0, ototox: 0, gi: 0.05, hipocalemia: 0, hipoglicemia: 0.02 }, contraindicatedBelow: 0 },
+  { name: "Suspender o fármaco suspeito", class: "Conduta", doseMin: 1, doseMax: 1, doseUnit: "", doseStep: 1, noDose: true, caseFlag: "suspensao", suspende: true, effects: { creatinina: 0, ureia: 0, k: 0, na: 0 }, sideEffects: { nefrotox: 0, ototox: 0, gi: 0, hipocalemia: 0, hipoglicemia: 0 }, contraindicatedBelow: 0 },
 ];
 
 interface RenalCase {
@@ -48,14 +68,21 @@ interface RenalCase {
   scenario: string;
   baseLab: { creatinina: number; ureia: number; k: number; na: number; ca: number; fosforo: number; hb: number };
   expectedDrugs: string[]; clinicalTip: string; references: string[];
+  // --- Opcionais (casos por IA e do marketplace não os têm) ---
+  /** Marcadores que liberam condutas específicas do caso (ver RenalDrug.caseFlag). */
+  flags?: string[];
+  /** Trajetória (didática) ao "Suspender o fármaco suspeito": a Cr sobe `picoCr` até o dia `lag`, depois vai linearmente a `crDia7`; `kDia7` (opcional) leva o K⁺ ao valor indicado. */
+  recuperacao?: { lag: number; picoCr: number; crDia7: number; kDia7?: number; nota: string };
+  /** Caso com digoxinemia: nível medido (ng/mL) na `doseAtual` (mg/dia); fora do equilíbrio, o nível cai com meia-vida `tMeiaDias`. */
+  digoxinemia?: { doseAtual: number; nivel: number; tMeiaDias: number };
 }
 
 const BUILT_IN_CASES: RenalCase[] = [
-  { title: "Caso 1: Carlos Eduardo", difficulty: "Médio", patient: { name: "Carlos Eduardo", age: 58, weight: 75, sex: "M", specialGroup: ["DRC G3b", "DM2"], diagnosis: "Osteomielite MRSA — ajuste de vancomicina por ClCr" }, scenario: "Homem 58a, DRC G3b (TFG 41), DM2, osteomielite por MRSA. Cr 2.1. Ajustar dose e intervalo.", baseLab: { creatinina: 2.1, ureia: 68, k: 4.8, na: 138, ca: 8.5, fosforo: 5.2, hb: 10.5 }, expectedDrugs: ["Vancomicina"], clinicalTip: "Vancomicina em DRC: vale 15-20 mcg/mL para MRSA. ClCr 30-50: 15mg/kg a cada 24-48h.", references: ["IDSA MRSA 2011", "Rybak MJ 2020"] },
-  { title: "Caso 2: Dona Maria", difficulty: "Fácil", patient: { name: "Dona Maria", age: 72, weight: 62, sex: "F", specialGroup: ["DRC G4", "DM2"], diagnosis: "DM2 com TFG 18 — metformina contraindicada" }, scenario: "Mulher 72a, DM2, metformina 2g/dia. Cr subiu para 2,8 (TFG ~18).", baseLab: { creatinina: 2.8, ureia: 95, k: 5.2, na: 136, ca: 8.0, fosforo: 6.1, hb: 9.8 }, expectedDrugs: [], clinicalTip: "Metformina: CI se TFG <30 (risco acidose láctica). Alternativas: linagliptina, insulina.", references: ["ADA 2023", "KDIGO 2022"] },
-  { title: "Caso 3: José Antônio", difficulty: "Difícil", patient: { name: "José Antônio", age: 65, weight: 70, sex: "M", specialGroup: ["DRC G4"], diagnosis: "Endocardite — Cr subindo com aminoglicosídeo" }, scenario: "Homem 65a, endocardite. Gentamicina+ampicilina há 10 dias. Cr: 1.3→1.8→2.5.", baseLab: { creatinina: 2.5, ureia: 72, k: 4.5, na: 140, ca: 9.0, fosforo: 4.5, hb: 11.5 }, expectedDrugs: ["Gentamicina"], clinicalTip: "Nefrotoxicidade por aminoglicosídeo: 10-25% dos pacientes. FR: uso >7d, desidratação, AINEs.", references: ["Beaucaire G 2000"] },
-  { title: "Caso 4: Dona Francisca", difficulty: "Médio", patient: { name: "Dona Francisca", age: 78, weight: 55, sex: "F", specialGroup: ["HAS"], diagnosis: "IRA pré-renal por AINE — triplo whammy" }, scenario: "Mulher 78a, osteoartrose, ibuprofeno 1200mg/dia há 3 meses. Cr: 1.1→2.3.", baseLab: { creatinina: 2.3, ureia: 78, k: 5.5, na: 134, ca: 8.8, fosforo: 5.0, hb: 10.8 }, expectedDrugs: [], clinicalTip: "AINEs causam IRA pré-renal (inibição PGE2). Triplo whammy: AINE+IECA+diurético. Alternativas: paracetamol.", references: ["Harirforoosh S 2009"] },
-  { title: "Caso 5: Seu Benedito", difficulty: "Difícil", patient: { name: "Seu Benedito", age: 82, weight: 65, sex: "M", specialGroup: ["ICC", "FA", "DRC G4"], diagnosis: "Digoxina 3.2 ng/mL — bradicardia + visão amarelada" }, scenario: "Homem 82a, ICC+FA, digoxina 0.25mg/dia. TFG 29. Náusea, visão amarelada, FC 48. Nível sérico de digoxina: 3.2 ng/mL.", baseLab: { creatinina: 1.8, ureia: 58, k: 3.2, na: 140, ca: 9.2, fosforo: 4.0, hb: 12.0 }, expectedDrugs: ["Digoxina"], clinicalTip: "Digoxina: 85% renal. Em DRC: 0.0625-0.125mg/dia. Hipocalemia potencializa toxicidade.", references: ["Bauman JL 2006"] },
+  { title: "Caso 1: Carlos Eduardo", difficulty: "Médio", patient: { name: "Carlos Eduardo", age: 58, weight: 75, sex: "M", specialGroup: ["DRC G3b", "DM2"], diagnosis: "Osteomielite MRSA — ajuste de vancomicina por ClCr" }, scenario: "Homem de 58 anos, 75 kg, DM2 e DRC G3b conhecida (creatinina estável em 2,1 mg/dL nas últimas dosagens), usa metformina 2 g/dia. Internado com osteomielite de tíbia por MRSA (CIM da vancomicina 1 mg/L) para antibioticoterapia IV prolongada. K⁺ 4,8 mEq/L.", baseLab: { creatinina: 2.1, ureia: 68, k: 4.8, na: 138, ca: 8.5, fosforo: 5.2, hb: 10.5 }, expectedDrugs: ["Vancomicina"], clinicalTip: "Vancomicina em DRC: o alvo é AUC24/CIM 400-600 (e não mais o vale 15-20); a depuração cai junto com o ClCr, então a dose diária total precisa cair (ou o intervalo, espaçar). Reavalie o ClCr sempre que a creatinina mudar. Metformina: ClCr 30-44 → máx. 1000 mg/dia.", references: ["Rybak MJ. Am J Health Syst Pharm 2020", "Matzke GR. Antimicrob Agents Chemother 1984", "KDIGO Diabetes in CKD 2022"] },
+  { title: "Caso 2: Dona Maria", difficulty: "Fácil", patient: { name: "Dona Maria", age: 72, weight: 62, sex: "F", specialGroup: ["DRC G4", "DM2"], diagnosis: "DM2 com TFG 18 — metformina contraindicada" }, scenario: "Mulher de 72 anos, 62 kg, DM2, usa metformina 2 g/dia. Creatinina estável em 2,8 mg/dL nas últimas três dosagens (era 1,4 há dois anos); K⁺ 5,2 mEq/L. Assintomática, sem desidratação.", baseLab: { creatinina: 2.8, ureia: 95, k: 5.2, na: 136, ca: 8.0, fosforo: 6.1, hb: 9.8 }, expectedDrugs: ["Linagliptina"], clinicalTip: "Metformina: contraindicada se ClCr <30 (acúmulo → acidose láctica); 30-44: máx. 1000 mg/dia. Alternativas sem ajuste renal: linagliptina; insulina com redução de dose.", references: ["KDIGO Diabetes in CKD 2022", "ADA Standards of Care 2024"] },
+  { title: "Caso 3: José Antônio", difficulty: "Difícil", patient: { name: "José Antônio", age: 65, weight: 70, sex: "M", specialGroup: ["DRC G4"], diagnosis: "Endocardite — Cr subindo com aminoglicosídeo" }, scenario: "Homem de 65 anos, 70 kg, endocardite por Enterococcus faecalis em tratamento com ampicilina + gentamicina (3 mg/kg/dia) há 10 dias. Creatinina 1,3 → 1,8 → 2,5 mg/dL nas três últimas dosagens; K⁺ 4,5 mEq/L; diurese preservada, sem outros nefrotóxicos.", baseLab: { creatinina: 2.5, ureia: 72, k: 4.5, na: 140, ca: 9.0, fosforo: 4.5, hb: 11.5 }, expectedDrugs: ["Suspender o fármaco suspeito"], flags: ["suspensao"], recuperacao: { lag: 2, picoCr: 0.2, crDia7: 2.4, nota: "Suspende a gentamicina (mantendo a ampicilina e a hidratação). A creatinina ainda sobe por 1-2 dias — a creatinina sérica reflete o dano de 24-48 h antes — e só então começa a cair; trajetória didática." }, clinicalTip: "Nefrotoxicidade por aminoglicosídeo: 10-25% dos pacientes; a toxicidade é tempo-dependente (risco ↑ após 5-7 dias). Em endocardite por E. faecalis, ampicilina + ceftriaxona é alternativa sem aminoglicosídeo. Suspender ao primeiro sinal de lesão.", references: ["Baddour LM. Circulation 2015 (AHA)", "Beaucaire G 2000"] },
+  { title: "Caso 4: Dona Francisca", difficulty: "Médio", patient: { name: "Dona Francisca", age: 78, weight: 55, sex: "F", specialGroup: ["HAS"], diagnosis: "IRA pré-renal por AINE — triplo whammy" }, scenario: "Mulher de 78 anos, 55 kg, osteoartrose de joelhos e HAS. Usa losartana 50 mg e hidroclorotiazida 25 mg há anos e ibuprofeno 1200 mg/dia há 3 meses. Creatinina 1,1 → 2,3 mg/dL; K⁺ 5,5 mEq/L; ureia 78 mg/dL; mucosas secas e PA 100x60 mmHg.", baseLab: { creatinina: 2.3, ureia: 78, k: 5.5, na: 134, ca: 8.8, fosforo: 5.0, hb: 10.8 }, expectedDrugs: ["Suspender o fármaco suspeito"], flags: ["suspensao"], recuperacao: { lag: 0, picoCr: 0, crDia7: 1.4, kDia7: 4.7, nota: "Suspende o AINE (e, no caso, pausa losartana e hidroclorotiazida) com reposição volêmica. A IRA pré-renal reverte em parte em 7 dias; trajetória didática." }, clinicalTip: "AINEs causam IRA pré-renal (inibição de prostaglandinas vasodilatadoras da arteríola aferente). Triplo whammy: AINE + IECA/BRA + diurético. Reversível se o AINE for suspenso cedo. Alternativas: paracetamol e AINE tópico.", references: ["Lapi F. BMJ 2013", "Harirforoosh S. J Pharm Pharm Sci 2013", "AGS Beers Criteria 2023"] },
+  { title: "Caso 5: Seu Benedito", difficulty: "Difícil", patient: { name: "Seu Benedito", age: 82, weight: 65, sex: "M", specialGroup: ["ICC", "FA", "DRC G4"], diagnosis: "Digoxina 3.2 ng/mL — bradicardia + visão amarelada" }, scenario: "Homem de 82 anos, 65 kg, ICC e FA, usa digoxina 0,25 mg/dia e furosemida 40 mg/dia. Há uma semana com náusea e visão amarelada; FC 48 bpm, PA 110x70 mmHg, sem síncope. Creatinina 1,8 mg/dL; K⁺ 3,2 mEq/L; digoxinemia 3,2 ng/mL (coleta ≥ 8 h após a dose).", baseLab: { creatinina: 1.8, ureia: 58, k: 3.2, na: 140, ca: 9.2, fosforo: 4.0, hb: 12.0 }, expectedDrugs: ["Suspender o fármaco suspeito", "Digoxina"], flags: ["suspensao"], recuperacao: { lag: 0, picoCr: 0, crDia7: 1.8, kDia7: 4.2, nota: "Suspende a digoxina e repõe K⁺ (e Mg²⁺), com ECG monitorizado. A digoxinemia cai pela meia-vida (adotada aqui: 3,5 dias, aproximação didática para ClCr ~30)." }, digoxinemia: { doseAtual: 0.25, nivel: 3.2, tMeiaDias: 3.5 }, clinicalTip: "Digoxina: ~85% de eliminação renal. Toxicidade sintomática: suspender, corrigir K⁺/Mg²⁺, ECG; Fab antidigoxina só se arritmia grave/instabilidade. Na IC, alvo de digoxinemia 0,5-0,9 ng/mL; reintroduzir em dose reduzida guiada por nível.", references: ["Bauman JL. Am J Cardiovasc Drugs 2006", "Ahmed A. Eur Heart J 2006 (DIG, baixas concentrações)"] },
 ];
 
 function calcClCr(age: number, weight: number, cr: number, sex: string) {
@@ -71,13 +98,27 @@ function drcStage(c: number) {
   return { stage: "G5", color: "text-red-600" };
 }
 
-function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["baseLab"], clCr: number) {
+function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["baseLab"], clCr: number, caso?: Pick<RenalCase, "recuperacao" | "digoxinemia">) {
   const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
   const intensity = 0.65 + doseFrac * 0.35;
   const accumFactor = clCr < 30 ? 2.0 : clCr < 60 ? 1.5 : 1.0;
+  const rec = drug.suspende ? caso?.recuperacao : undefined;
   const trend: any[] = [];
   for (let d = 0; d <= 7; d++) {
     const p = Math.min(d / 5, 1);
+    if (rec) {
+      const pico = baseLab.creatinina + rec.picoCr;
+      const cr = d <= rec.lag ? baseLab.creatinina + (rec.lag ? rec.picoCr * (d / rec.lag) : 0) : pico + (rec.crDia7 - pico) * ((d - rec.lag) / Math.max(7 - rec.lag, 1));
+      const k = rec.kDia7 !== undefined ? baseLab.k + (rec.kDia7 - baseLab.k) * (d / 7) : baseLab.k;
+      trend.push({
+        day: d,
+        creatinina: +Math.max(0.5, cr).toFixed(2),
+        ureia: Math.round(Math.max(10, baseLab.ureia * (cr / baseLab.creatinina))),
+        k: +Math.max(2.5, Math.min(7, k)).toFixed(1),
+        na: baseLab.na,
+      });
+      continue;
+    }
     trend.push({
       day: d,
       creatinina: +(Math.max(0.5, baseLab.creatinina + drug.effects.creatinina * intensity * p * accumFactor)).toFixed(2),
@@ -99,7 +140,17 @@ function computeSimulation(drug: RenalDrug, dose: number, baseLab: RenalCase["ba
     { name: "Ca²⁺", value: baseLab.ca, unit: "mg/dL", status: baseLab.ca < 8.5 ? "baixo" : "normal" },
     { name: "Hb", value: baseLab.hb, unit: "g/dL", status: baseLab.hb < 12 ? "baixo" : "normal" },
   ];
-  return { trend, sideEffects, labGauges, lastLab: last };
+  // Digoxinemia (só nos casos que a definem): no equilíbrio é proporcional à dose; ao suspender, cai pela meia-vida.
+  let digoxinemia: number | null = null;
+  const dg = caso?.digoxinemia;
+  if (dg && drug.name === "Digoxina") digoxinemia = +(dg.nivel * (dose / dg.doseAtual)).toFixed(1);
+  else if (dg && rec) digoxinemia = +(dg.nivel * Math.pow(0.5, 7 / dg.tMeiaDias)).toFixed(1);
+  if (digoxinemia !== null) labGauges.push({ name: "Digoxina sérica", value: digoxinemia, unit: "ng/mL", status: digoxinemia > 0.9 ? "alto" : digoxinemia < 0.5 ? "baixo" : "normal" });
+  // Faixa de dose para o ClCr do paciente
+  const doseMaxRenal = drug.renalMax ? drug.renalMax(clCr) : null;
+  const acimaDaFaixa = doseMaxRenal !== null && dose > doseMaxRenal;
+  const aucVanco = drug.name === "Vancomicina" ? vancoAuc24(dose, clCr) : null;
+  return { trend, sideEffects, labGauges, lastLab: last, digoxinemia, doseMaxRenal, acimaDaFaixa, aucVanco, suspende: !!drug.suspende };
 }
 
 function LabGauge({ name, value, unit, status }: { name: string; value: number; unit: string; status: string }) {
@@ -145,15 +196,18 @@ export default function SimuladorRenal() {
   useEffect(() => {
     if (virtualRoomCase) {
       const cd = virtualRoomCase as any;
-      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient ?? { name: "Paciente", age: 60, weight: 70, sex: "M", specialGroup: [] }, scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [] });
+      setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient ?? { name: "Paciente", age: 60, weight: 70, sex: "M", specialGroup: [] }, scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [], flags: cd.flags, recuperacao: cd.recuperacao, digoxinemia: cd.digoxinemia });
     }
   }, [virtualRoomCase]);
+
+  // Ao trocar de caso, volta ao primeiro fármaco (a conduta/dose do caso anterior não pode ficar presa na tela).
+  useEffect(() => { setSelectedDrugIdx(0); setDose(DRUGS[0].doseMin); }, [activeCase?.title]);
 
   const clCr = useMemo(() => activeCase ? calcClCr(activeCase.patient.age, activeCase.patient.weight, activeCase.baseLab.creatinina, activeCase.patient.sex) : 90, [activeCase]);
   const drc = useMemo(() => drcStage(clCr), [clCr]);
   const isContraindicated = selectedDrug.contraindicatedBelow > 0 && clCr < selectedDrug.contraindicatedBelow;
 
-  const simulation = useMemo(() => computeSimulation(selectedDrug, dose, activeCase?.baseLab ?? BUILT_IN_CASES[0].baseLab, clCr), [selectedDrug, dose, activeCase?.baseLab, clCr]);
+  const simulation = useMemo(() => computeSimulation(selectedDrug, dose, activeCase?.baseLab ?? BUILT_IN_CASES[0].baseLab, clCr, activeCase ?? undefined), [selectedDrug, dose, activeCase, clCr]);
   const displayTrend = useMemo(() => running ? simulation.trend.slice(0, animStep + 1) : simulation.trend, [running, animStep, simulation.trend]);
 
   useEffect(() => { if (!running) return; if (animStep >= simulation.trend.length - 1) { setRunning(false); return; } const t = setTimeout(() => setAnimStep(s => s + 1), 300); return () => clearTimeout(t); }, [running, animStep, simulation.trend.length]);
@@ -169,7 +223,7 @@ export default function SimuladorRenal() {
   useEffect(() => { if (challengeCompleted && !submitted && activeCase) handleFinish(); }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
-  const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient ?? { name: "Paciente", age: 60, weight: 70, sex: "M", specialGroup: [] }, scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [] });
+  const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient ?? { name: "Paciente", age: 60, weight: 70, sex: "M", specialGroup: [] }, scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [], flags: c.flags, recuperacao: c.recuperacao, digoxinemia: c.digoxinemia });
 
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -216,33 +270,59 @@ export default function SimuladorRenal() {
           <div><p className="text-xs text-muted-foreground">Cockcroft-Gault</p><p className="text-2xl font-mono font-bold text-primary">{clCr} <span className="text-xs">mL/min</span></p></div>
           <Badge className={drc.color}>DRC {drc.stage}</Badge>
           {isContraindicated && <Badge variant="destructive">⚠️ CI com ClCr &lt;{selectedDrug.contraindicatedBelow}</Badge>}
+          {/* Faixa de dose para este ClCr (só para os fármacos que têm regra de ajuste renal) */}
+          {!selectedDrug.suspende && (selectedDrug.renalMax || selectedDrug.semAjusteRenal) && (
+            <div className="border-l pl-4 space-y-0.5">
+              <p className="text-xs text-muted-foreground">Faixa de dose para este ClCr — {selectedDrug.name}</p>
+              {isContraindicated ? (
+                <p className="text-sm font-semibold text-destructive">Evitar neste ClCr (qualquer dose)</p>
+              ) : selectedDrug.semAjusteRenal ? (
+                <p className="text-sm font-semibold text-green-600">Dispensa ajuste renal</p>
+              ) : simulation.doseMaxRenal === null ? (
+                <p className="text-sm font-semibold text-green-600">Sem teto específico para este ClCr</p>
+              ) : (
+                <p className={`text-sm font-semibold ${simulation.acimaDaFaixa ? "text-destructive" : "text-green-600"}`}>
+                  Máx. {simulation.doseMaxRenal} {selectedDrug.doseUnit} {simulation.acimaDaFaixa ? "— dose ACIMA da faixa" : "— dose dentro da faixa"}
+                </p>
+              )}
+              {simulation.aucVanco !== null && (
+                <p className={`text-xs font-mono ${simulation.aucVanco > 600 ? "text-destructive" : simulation.aucVanco < 400 ? "text-chart-5" : "text-green-600"}`}>
+                  AUC₂₄ estimada: {simulation.aucVanco} mg·h/L (alvo 400–600)
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Lab Gauges */}
       <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Função Renal (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
+        <CardContent><div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${simulation.labGauges.length > 6 ? "md:grid-cols-7" : "md:grid-cols-6"}`}>{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card><CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader><CardContent className="space-y-4">
-          <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name}</SelectItem>)}</SelectContent></Select>
-          <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /></div>
+          <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => (!d.caseFlag || activeCase.flags?.includes(d.caseFlag)) ? <SelectItem key={i} value={String(i)}>{d.name}</SelectItem> : null)}</SelectContent></Select>
+          {selectedDrug.noDose ? (
+            <p className="text-xs text-muted-foreground">{selectedDrug.suspende ? (activeCase.recuperacao?.nota ?? "Conduta sem dose: retira o agente suspeito.") : `Dose fixa: ${selectedDrug.doseMin} ${selectedDrug.doseUnit}.`}</p>
+          ) : (
+            <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /></div>
+          )}
           <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
         </CardContent></Card>
-        <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (7 dias)</CardTitle></CardHeader><CardContent>
+        <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (7 dias)</CardTitle><p className="text-xs text-muted-foreground">Cr = creatinina (mg/dL); K⁺ em mEq/L. Linha vermelha pontilhada: limite superior da creatinina (1,3). Linha cinza pontilhada: creatinina no dia 0 do caso.</p></CardHeader><CardContent>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} /><Line type="monotone" dataKey="creatinina" name="Cr" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line type="monotone" dataKey="k" name="K⁺" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine y={1.3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" /></LineChart>
+            <LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Line type="monotone" dataKey="creatinina" name="Cr" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line type="monotone" dataKey="k" name="K⁺" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine y={1.3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" /><ReferenceLine y={activeCase.baseLab.creatinina} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" /></LineChart>
           </ResponsiveContainer>
         </CardContent></Card>
       </div>
 
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> EA</CardTitle></CardHeader><CardContent>
-        <ResponsiveContainer width="100%" height={140}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer>
+      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Eventos Adversos (%)</CardTitle></CardHeader><CardContent>
+        <ResponsiveContainer width="100%" height={140}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer>
       </CardContent></Card>
 
 
-      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getRenalChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
+      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getRenalChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated, doseMaxRenal: simulation.doseMaxRenal, acimaDaFaixa: simulation.acimaDaFaixa, aucVanco: simulation.aucVanco, digoxinemia: simulation.digoxinemia, suspende: simulation.suspende, semAjusteRenal: !!selectedDrug.semAjusteRenal }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
 
       {isVirtualRoom && submitted && (!showFeedback ? <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button><p className="text-xs text-center text-muted-foreground">Resultados enviados ✓</p></div> : <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-yellow-600"}`}>{lastScore}%</div></div>)}
     </div>

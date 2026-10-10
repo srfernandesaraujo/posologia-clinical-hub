@@ -801,6 +801,32 @@ ARQUÉTIPOS (varie entre eles): (1) intoxicação aguda por paracetamol; (2) hep
 
 COERÊNCIA OBRIGATÓRIA: valores plausíveis para o arquétipo (ALT > 1000 só em lesão aguda; cirrose avançada tem ALT baixa); o scenario, baseLab, clinical e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
 
+  "farmacoterapia-renal": `Gere um caso clínico COMPLETO para o Simulador de Função Renal e Ajuste de Dose (Farmacoterapia Laboratorial).
+O simulador calcula o ClCr por Cockcroft-Gault, mostra a "Faixa de dose para este ClCr" do fármaco escolhido (e a AUC24 estimada da vancomicina) e projeta 7 dias de creatinina, ureia, K⁺ e Na⁺. O caso é usado em atividades em grupo com "Modo Desafio": o aluno testa fármacos e doses, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array; use apenas: "DRC G3a", "DRC G3b", "DRC G4", "DM2", "HAS", "ICC", "FA", "Idoso"), diagnosis (hipótese curta, uso do professor) }
+- scenario: apresentação em 2-4 frases com idade, peso, comorbidades, medicamentos em uso (com dose) e os valores de creatinina e K⁺ IGUAIS aos de baseLab. NUNCA escreva o diagnóstico, a causa provável nem a conduta: apenas achados e valores. A creatinina deve estar ESTÁVEL (diga isso) quando o ajuste for por ClCr; só descreva lesão aguda se o arquétipo for esse.
+- baseLab: { creatinina (mg/dL), ureia (mg/dL), k (mEq/L), na (mEq/L), ca (mg/dL), fosforo (mg/dL), hb (g/dL) }. O ClCr do paciente é (140 - idade) × peso ÷ (72 × creatinina), × 0,85 se mulher: escolha idade, peso e creatinina para cair no estágio desejado (G3a 45-59; G3b 30-44; G4 15-29).
+- expectedDrugs: 1 a 2 nomes EXATOS da lista do simulador: "Vancomicina", "Gentamicina", "Metformina", "Digoxina", "Ibuprofeno", "Alopurinol", "Gabapentina", "Lítio", "Linagliptina", "Suspender o fármaco suspeito". Não invente outros.
+- flags: ["suspensao"] SOMENTE se o caso tiver um fármaco suspeito de causar a piora (lesão aguda ou toxicidade), para liberar "Suspender o fármaco suspeito"; caso contrário omita.
+- recuperacao (OPCIONAL, só com flags ["suspensao"]): { lag (dias até o pico da creatinina após suspender; 0 a 3), picoCr (aumento em mg/dL durante o lag; 0 a 0,3), crDia7 (creatinina no 7º dia; menor que baseLab.creatinina), kDia7 (K⁺ no 7º dia; opcional), nota (1-2 frases dizendo o que a conduta inclui e que a trajetória é didática) }
+- digoxinemia (OPCIONAL, só no arquétipo de toxicidade digitálica): { doseAtual (mg/dia, ex.: 0.25), nivel (ng/mL medido nessa dose), tMeiaDias (3.5) }
+- clinicalTip: 1-2 frases com a conduta e limites de segurança.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- Vancomicina: dose em mg a cada 12 h; AUC24 estimada = dose diária ÷ (0,689 × ClCr + 3,66) × 0,06 L/h; alvo 400-600; o teto da faixa mantém a AUC ≤ 600. A creatinina quase não diferencia as doses.
+- Metformina: teto de 1000 mg/dia com ClCr 30-44; selo de contraindicação abaixo de 30; não altera creatinina nem K⁺. Linagliptina: dose fixa, dispensa ajuste renal.
+- Gentamicina e ibuprofeno: elevam creatinina (mais intensamente com ClCr < 30); ibuprofeno também eleva K⁺ e tem selo de contraindicação abaixo de 30. A digoxina não altera creatinina nem K⁺; o simulador projeta a digoxinemia no equilíbrio proporcional à dose.
+- O simulador NÃO modela glicemia, lactato, magnésio, ECG nem eficácia antimicrobiana: não construa a pergunta em torno deles.
+
+ARQUÉTIPOS (varie entre eles): (1) vancomicina em DRC G3 (ajuste por AUC); (2) metformina em DRC G4 com alternativa sem ajuste renal; (3) aminoglicosídeo com creatinina em ascensão (suspender); (4) AINE em idoso com IRA pré-renal ("triplo whammy"); (5) toxicidade digitálica em DRC com hipocalemia por diurético.
+
+COERÊNCIA OBRIGATÓRIA: scenario, baseLab, expectedDrugs, flags, recuperacao e digoxinemia precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 

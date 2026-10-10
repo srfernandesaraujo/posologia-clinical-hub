@@ -2285,6 +2285,31 @@ REFERÊNCIAS:
 - Biggins SW et al. Hepatology 2021; EASL J Hepatol 2018 (ascite, albumina, síndrome hepatorrenal)
 - Stroes ES et al. Eur Heart J 2015 (miopatia por estatinas)`,
 
+  "sim-farmacoterapia-renal": `Você é um especialista em nefrologia clínica e farmacoterapia. Crie um simulador de Função Renal e Ajuste de Dose (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Card do topo: ClCr por Cockcroft-Gault (mulher × 0,85), estágio da DRC (G1-G5), selo vermelho "CI com ClCr <30" para metformina e ibuprofeno, "Faixa de dose para este ClCr" (teto de metformina 1000 mg/dia em ClCr 30-44; teto de digoxina 0,125 mg/dia em ClCr < 50; teto da vancomicina que mantém a AUC24 ≤ 600) e a AUC24 estimada da vancomicina (relação de Matzke: depuração = 0,689 × ClCr + 3,66 mL/min), com alvo 400-600
+- Controles: fármaco e dose (Vancomicina em mg a cada 12 h, Gentamicina em mg/kg/dia, Metformina, Digoxina, Ibuprofeno, Alopurinol, Gabapentina, Lítio, Linagliptina de dose fixa) e a conduta sem dose "Suspender o fármaco suspeito", só nos casos de piora por fármaco (flags ["suspensao"])
+- Medidores após 7 dias (creatinina, ureia, K⁺, Na⁺, Ca²⁺, Hb) e, no caso de toxicidade digitálica, a digoxina sérica projetada no equilíbrio (proporcional à dose; alvo na IC 0,5-0,9 ng/mL)
+- Gráfico de tendência de 7 dias (creatinina e K⁺) com linha de limite da creatinina e linha cinza da creatinina do dia 0; barras de risco (nefrotoxicidade, ototoxicidade, GI, hipocalemia, hipoglicemia)
+- Efeitos dependem do ClCr (acúmulo maior abaixo de 30); a suspensão tem trajetória didática do caso (pico por defasagem da creatinina, depois queda)
+- 5 casos nativos: vancomicina em DRC G3b (Carlos Eduardo), metformina em DRC G4 (Dona Maria), nefrotoxicidade por gentamicina na endocardite (José Antônio), IRA pré-renal por AINE no idoso (Dona Francisca), toxicidade digitálica com hipocalemia por furosemida (Seu Benedito)
+- Casos gerados por IA seguem o mesmo formato (baseLab, expectedDrugs, flags/recuperacao/digoxinemia opcionais)
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno testa fármacos e doses, lê o card do topo, os medidores, o gráfico e as barras de risco, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: dose habitual x dose renal (AUC); comparação entre fármacos; armadilha do número bonito (metformina não muda a creatinina, mas se acumula); reduzir a dose x suspender; revisão de prescrição multi-item (cada distrator erra um item); cálculo com dados do caso (Cockcroft-Gault, AUC, razão KDIGO); seguimento
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- O simulador não modela glicemia, lactato, magnésio, ECG nem eficácia antimicrobiana: esses pontos entram apenas como raciocínio, nunca como desfecho a observar
+
+REFERÊNCIAS:
+- Rybak MJ et al. Am J Health Syst Pharm 2020 (monitorização da vancomicina por AUC); Matzke GR. Antimicrob Agents Chemother 1984
+- KDIGO Diabetes in CKD 2022; KDIGO AKI 2012
+- Baddour LM et al. Circulation 2015 (endocardite)
+- Lapi F et al. BMJ 2013 (triplo whammy); AGS Beers Criteria 2023
+- Bauman JL et al. Am J Cardiovasc Drugs 2006; Ahmed A et al. Eur Heart J 2006 (digoxina)`,
+
   "sim-cadeia-suprimentos": `Você é um especialista em Assistência Farmacêutica no SUS e gestão de suprimentos. Crie o simulador "Gestão da Cadeia de Suprimentos Farmacêuticos" (categoria Assistência Farmacêutica) para estudantes de graduação e recém-formados treinarem, em situações realistas, as etapas do ciclo: seleção, programação, aquisição, armazenamento, distribuição e dispensação.
 
 REQUISITOS:
