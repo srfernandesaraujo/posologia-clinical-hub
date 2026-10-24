@@ -2285,6 +2285,31 @@ REFERÊNCIAS:
 - Biggins SW et al. Hepatology 2021; EASL J Hepatol 2018 (ascite, albumina, síndrome hepatorrenal)
 - Stroes ES et al. Eur Heart J 2015 (miopatia por estatinas)`,
 
+  "sim-farmacoterapia-infeccao-lab": `Você é um especialista em infectologia clínica e antimicrobianos. Crie um simulador de Sinais Laboratoriais de Infecção (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Card "Marcadores (após tratamento)" com Leucócitos, Neutrófilos absolutos, PCR, PCT, Lactato e Temperatura projetados para 48 h depois da conduta, com faixas de referência; "Leucograma Diferencial" (neutrófilos, linfócitos, bastões)
+- Controles: fármaco e dose (Amoxicilina, Ceftriaxona, Piperacilina-Tazobactam, Vancomicina, Meropenem, Oseltamivir) e a conduta sem dose "Sem antimicrobiano (observação)"
+- Card "Cobertura para o provável agente" por caso: cobertura adequada (efeito integral e, se for o caso, "espectro mais amplo que o necessário"), parcial (efeito ×0,4) ou inadequada (sem efeito sobre os marcadores). Com cobertura adequada todos os antibacterianos dão a mesma resposta nos marcadores: a diferença está no espectro e nos riscos
+- Gráfico de tendência de 48 h com PCR no eixo esquerdo, PCT e lactato no direito e temperatura em escala própria; barras de risco (GI, alergia, nefrotoxicidade, C. difficile) por dose
+- Leucócitos abaixo de 4000 não respondem ao tratamento (neutropenia); "Sem antimicrobiano" mantém o valor do caso (não modela evolução natural)
+- 5 casos nativos: PAC com DPOC (Pedro), sepse urinária com risco de resistência (Ana Clara), síndrome gripal (Juliana), neutropenia febril (Ricardo), desescalonamento pela cultura (Fátima)
+- Casos gerados por IA seguem o mesmo formato (baseLab, expectedDrugs, cobertura opcional)
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno testa condutas, lê os marcadores, o card de cobertura, o gráfico e as barras de risco, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: ler os marcadores sem tratamento; espectro adequado x amplo demais; cobertura parcial/inadequada (amoxicilina na DPOC, ceftriaxona na neutropenia, antibiótico na virose); dose x efeito adverso (dose-resposta plana do β-lactâmico); resposta tardia dos marcadores (6 h x 48 h); revisão de prescrição multi-item (cada distrator erra um item); cálculo com dados do caso (PAM, 30 mL/kg, % de bastões, queda da PCT); tempo até o antibiótico
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- O simulador não modela volume, vasopressor, duração de sintomas nem a cultura em tempo real: esses pontos entram só como raciocínio
+
+REFERÊNCIAS:
+- Metlay JP et al. Am J Respir Crit Care Med 2019 (ATS/IDSA, PAC)
+- Evans L et al. Crit Care Med 2021 (Surviving Sepsis Campaign); Singer M et al. JAMA 2016 (Sepsis-3)
+- Freifeld AG et al. Clin Infect Dis 2011 (neutropenia febril)
+- Uyeki TM et al. Clin Infect Dis 2019 (influenza); Schuetz P et al. Cochrane Database Syst Rev 2017 (procalcitonina)
+- Yahav D et al. Clin Infect Dis 2019 (7 x 14 dias em bacteremia por Gram-negativo)`,
+
   "sim-farmacoterapia-renal": `Você é um especialista em nefrologia clínica e farmacoterapia. Crie um simulador de Função Renal e Ajuste de Dose (categoria Farmacoterapia Laboratorial).
 
 REQUISITOS:

@@ -827,6 +827,30 @@ ARQUÉTIPOS (varie entre eles): (1) vancomicina em DRC G3 (ajuste por AUC); (2) 
 
 COERÊNCIA OBRIGATÓRIA: scenario, baseLab, expectedDrugs, flags, recuperacao e digoxinemia precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
 
+  "farmacoterapia-infeccao-lab": `Gere um caso clínico COMPLETO para o Simulador de Sinais Laboratoriais de Infecção (Farmacoterapia Laboratorial).
+O simulador projeta, para 48 h depois da conduta escolhida pelo aluno (fármaco + dose, ou "Sem antimicrobiano (observação)"), leucócitos, neutrófilos, PCR, PCT, lactato e temperatura, mostra a cobertura do fármaco para o provável agente e riscos de efeitos adversos. O caso é usado em atividades em grupo com "Modo Desafio": o aluno testa condutas, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array curto: comorbidades como "DM2", "DPOC", "Leucemia", "QT"), diagnosis (hipótese curta, uso do professor) }
+- scenario: apresentação em 3-5 frases com idade, peso, comorbidades, sinais vitais relevantes, tempo de doença e os valores de baseLab (leucócitos com bastões, PCR, PCT, lactato, temperatura). NUNCA escreva o diagnóstico etiológico, o agente nem a conduta: apenas achados e valores. Termine dizendo que os marcadores da tela mostram o valor projetado para 48 h depois da conduta escolhida.
+- baseLab: { leucocitos (/mm³), neutrofilos (/mm³, neutrófilos absolutos), linfocitos (/mm³), bastoes (/mm³), pcr (mg/L), pct (ng/mL), lactato (mmol/L), temp (°C), hemocultura (texto: "Pendente", "Colhida", "Não indicada" ou o resultado) }. neutrofilos + linfocitos + bastoes ≤ leucocitos.
+- expectedDrugs: 1 a 2 nomes EXATOS da lista do simulador: "Amoxicilina", "Ceftriaxona", "Piperacilina-Tazobactam", "Vancomicina", "Meropenem", "Oseltamivir", "Sem antimicrobiano (observação)". Não invente outros.
+- cobertura: { agentes (texto: agente(s) provável(is) contra os quais a cobertura é avaliada), adequada (array de nomes da lista), parcial (array opcional), amploDemais (array opcional, subconjunto de adequada: espectro maior que o necessário) }. O que não estiver em adequada nem em parcial é tratado como inadequado (sem efeito sobre os marcadores). expectedDrugs deve ser coerente com cobertura.adequada (ou "Sem antimicrobiano (observação)" em quadro viral).
+- clinicalTip: 1-2 frases com a conduta e limites de segurança.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- Com cobertura adequada, todos os antibacterianos produzem a mesma queda de PCR/PCT/leucócitos/temperatura (o espectro maior não derruba mais o PCR); a diferença entre eles está no card de cobertura (amploDemais) e nas barras de risco. Cobertura parcial reduz o efeito a 40%; inadequada (e antibiótico em quadro viral) não altera nada.
+- Oseltamivir só age em quadro viral (cobertura.adequada = ["Oseltamivir"]). "Sem antimicrobiano" mantém os marcadores no valor do caso: o simulador NÃO modela evolução natural nem piora sem tratamento.
+- Leucócitos abaixo de 4000 não se alteram com o tratamento (neutropenia: a recuperação medular não é modelada).
+- O simulador não modela volume, vasopressor, duração de sintomas nem a cultura em tempo real: não construa a pergunta em torno deles como desfecho a observar.
+
+ARQUÉTIPOS (varie entre eles): (1) pneumonia adquirida na comunidade (escolha do β-lactâmico dirigido); (2) sepse de foco urinário ou abdominal (lactato > 4, risco de resistência); (3) síndrome gripal / viral (PCR e PCT baixos, sem antibiótico); (4) neutropenia febril (cobertura antipseudomonas); (5) desescalonamento após cultura, com marcadores de "hoje" já em melhora.
+
+COERÊNCIA OBRIGATÓRIA: scenario, baseLab, cobertura e expectedDrugs precisam concordar entre si; valores plausíveis para o arquétipo (PCT > 2 e PCR > 100 em bacteriana grave; PCT < 0,25 e PCR < 50 em viral); o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 
