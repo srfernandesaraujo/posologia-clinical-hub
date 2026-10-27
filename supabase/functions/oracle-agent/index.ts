@@ -234,6 +234,8 @@ Ambiente para professores criarem atividades para alunos:
 - Suporta Simuladores, Laboratórios Virtuais e a atividade "Caso em Equipe (ao vivo)" — veja seção dedicada abaixo
 - Ao final de uma Atividade Simulada (prova com várias estações) o professor pode emitir um certificado OSCE por aluno — veja seção dedicada abaixo
 - Enunciados pedagógicos por etapa
+- **Líder e observadores em grupos**: em grupos atribuídos pelo professor, o primeiro a entrar vira líder (único que marca alternativas, avança e envia); os demais são observadores e acompanham em tempo real (atualização a cada ~3s). Um banner mostra papéis e membros online. O líder pode passar a liderança e um observador pode assumir se o líder ficar mais de 90s sem sinal; o líder recupera o progresso ao recarregar.
+- **Modo "Todos do grupo respondem (estilo TBL)"**: toggle do professor na sala; todos do grupo respondem por conta própria e cada envio registra nome/e-mail de quem enviou, exibido ao professor em "Enviado por". Ainda NÃO existe comparação gRAT entre as respostas — não prometa isso.
 - **Turmas** (/turmas) [Premium/Professor]: organiza alunos em turmas e vincula salas virtuais a cada turma; a tabela de desempenho por aluno também mostra o sinal de risco (veja seção dedicada abaixo)
 
 ### 7. FORMAÇÃO DOCENTE
