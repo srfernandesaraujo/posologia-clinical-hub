@@ -14,6 +14,20 @@ import { GAME_LABELS, isGameSlug } from "@/data/virtualRoomGames";
 
 const LAB_PREFIX = "lab-";
 
+// Identidade do dispositivo dentro do grupo (usada quando a sala não pede e-mail).
+function getMemberKey(): string {
+  try {
+    let k = localStorage.getItem("vrMemberKey");
+    if (!k) {
+      k = crypto.randomUUID();
+      localStorage.setItem("vrMemberKey", k);
+    }
+    return k;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
 const LAB_SLUGS = new Set([
   "lab-farmacos", "lab-microbiologia", "lab-toxicologia", "lab-farmacogenomica", "lab-estabilidade",
   "lab-controle-qualidade", "lab-epidemiologia", "lab-biotecnologia", "lab-simulacao-realistica",
@@ -95,6 +109,8 @@ export default function SalaVirtualAluno() {
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [resumeFromIndex, setResumeFromIndex] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
+  // Papel do aluno no grupo atribuído pelo professor (líder / observador / todos respondem).
+  const [groupInfo, setGroupInfo] = useState<any>(null);
 
   useEffect(() => {
     if (pinFromUrl) {
@@ -229,6 +245,8 @@ export default function SalaVirtualAluno() {
         email: isRestricted ? primaryEmail : null,
         is_group: isGroup,
         group_members: members,
+        member_key: getMemberKey(),
+        member_name: name,
       },
     });
     if (pErr || !presp?.participantId) {
@@ -265,6 +283,12 @@ export default function SalaVirtualAluno() {
     }
 
     setParticipantId(pid);
+    setGroupInfo(presp.group || null);
+    if (presp.group?.role === "observer") {
+      toast.info(`Você entrou como observador. ${presp.group.leaderName ?? "O líder"} é quem marca as respostas; você acompanha em tempo real.`);
+    } else if (presp.group?.role === "leader") {
+      toast.success("Você é o líder do grupo: só você marca as respostas e avança as questões.");
+    }
     setResumeFromIndex(resumeIdx);
     setCompletedCount(completed);
     sessionStorage.setItem("vrViewOnly", viewOnly ? "true" : "false");
@@ -288,6 +312,8 @@ export default function SalaVirtualAluno() {
         email: params.email,
         is_group: params.isGroup,
         group_members: params.members,
+        member_key: getMemberKey(),
+        member_name: params.name,
       },
     });
     if (pErr || !presp?.participantId) return;
@@ -320,6 +346,7 @@ export default function SalaVirtualAluno() {
         customChallenges: legacyAct?.custom_challenges || null,
         nativeCaseIndex,
         viewOnly: viewOnlyFlag,
+        group: groupInfo,
       }));
       navigate(getRouteForActivity(room.simulator_slug, room.case_id, legacyAct?.id));
     } else {
@@ -357,6 +384,7 @@ export default function SalaVirtualAluno() {
         nativeCaseIndex: a.custom_challenges?.nativeCaseIndex ?? null,
       })),
       viewOnly: viewOnlyFlag,
+      group: groupInfo,
     }));
     navigate(getRouteForActivity(act.simulator_slug, act.case_id, act.id));
   };

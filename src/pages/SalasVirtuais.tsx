@@ -190,6 +190,25 @@ interface RestrictedAccessSectionProps {
   activityOptions?: GroupActivityOption[];
 }
 
+// Como os integrantes de um grupo (atribuído acima) participam da atividade.
+function GroupModeSection({ collective, onChange }: { collective: boolean; onChange: (collective: boolean) => void }) {
+  return (
+    <div className="rounded-lg border border-border p-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-medium text-sm flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />Todos do grupo respondem (estilo TBL)</p>
+          <p className="text-xs text-muted-foreground">
+            {collective
+              ? "Todos os integrantes entram, respondem e enviam por conta própria; cada envio leva o nome e o e-mail de quem respondeu, para o grupo discutir as respostas depois."
+              : "Desligado: o primeiro a entrar vira o líder do grupo — só ele marca as alternativas e avança; os demais acompanham como observadores, em tempo real."}
+          </p>
+        </div>
+        <Switch checked={collective} onCheckedChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
 function RestrictedAccessSection({
   enabled, onEnabledChange, students, onStudentsChange,
   newName, onNewNameChange, newEmail, onNewEmailChange,
@@ -387,6 +406,7 @@ export default function SalasVirtuais() {
 
   // Restricted access state (create dialog)
   const [restrictedAccess, setRestrictedAccess] = useState(false);
+  const [collectiveMode, setCollectiveMode] = useState(false);
   const [authorizedStudents, setAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
   const [bulkStudentText, setBulkStudentText] = useState("");
   const [newStudentName, setNewStudentName] = useState("");
@@ -394,6 +414,7 @@ export default function SalasVirtuais() {
 
   // Restricted access state (edit dialog)
   const [editRestrictedAccess, setEditRestrictedAccess] = useState(false);
+  const [editCollectiveMode, setEditCollectiveMode] = useState(false);
   const [editAuthorizedStudents, setEditAuthorizedStudents] = useState<AuthorizedStudent[]>([]);
   const [editBulkStudentText, setEditBulkStudentText] = useState("");
   const [editNewStudentName, setEditNewStudentName] = useState("");
@@ -587,6 +608,7 @@ export default function SalasVirtuais() {
           expires_at: expiresAt || null,
           description: isLegacy ? validActivities[0].instruction || null : null,
           restricted_access: restrictedAccess,
+          group_mode: collectiveMode ? "collective" : "leader",
           class_id: classId && classId !== "none" ? classId : null,
         } as any)
         .select("id")
@@ -710,6 +732,7 @@ export default function SalasVirtuais() {
         description: editDescription || null,
         expires_at: editExpiresAt || null,
         restricted_access: editRestrictedAccess,
+        group_mode: editCollectiveMode ? "collective" : "leader",
       };
 
       if (editRestrictedAccess && editAuthorizedStudents.length === 0) {
@@ -819,6 +842,7 @@ export default function SalasVirtuais() {
       setEditCategory("");
     }
     setEditRestrictedAccess(!!room.restricted_access);
+    setEditCollectiveMode(room.group_mode === "collective");
     setEditBulkStudentText("");
     setEditNewStudentName("");
     setEditNewStudentEmail("");
@@ -853,6 +877,7 @@ export default function SalasVirtuais() {
     setToolType("simulator");
     setChallengeEditorIndex(null);
     setRestrictedAccess(false);
+    setCollectiveMode(false);
     setAuthorizedStudents([]);
     setBulkStudentText("");
     setNewStudentName("");
@@ -1373,6 +1398,9 @@ export default function SalasVirtuais() {
               classId={classId}
               activityOptions={groupActivityOptions}
             />
+            {restrictedAccess && groupActivityOptions.length > 1 && (
+              <GroupModeSection collective={collectiveMode} onChange={setCollectiveMode} />
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -1808,6 +1836,9 @@ export default function SalasVirtuais() {
                   classId={editRoom?.class_id || undefined}
                   activityOptions={editGroupActivityOptions}
                 />
+                {editRestrictedAccess && editGroupActivityOptions.length > 1 && (
+                  <GroupModeSection collective={editCollectiveMode} onChange={setEditCollectiveMode} />
+                )}
               </div>
             );
           })()}

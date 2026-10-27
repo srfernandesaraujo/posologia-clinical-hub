@@ -168,6 +168,16 @@ export function useVirtualRoomCase(simulatorSlug: string, builtInCases?: any[]) 
       return;
     }
 
+    // Observador de grupo (modo líder) nunca envia: só o líder registra a resposta do grupo.
+    if (ctx.group?.mode === "leader" && ctx.group?.role === "observer") {
+      setSubmitted(true);
+      return;
+    }
+    // Identifica quem enviou dentro do grupo (líder, ou cada integrante no modo "todos respondem").
+    if (ctx.group) {
+      opts.actions = { ...opts.actions, member: { id: ctx.group.memberId, name: ctx.group.memberName }, groupMode: ctx.group.mode };
+    }
+
     // No challenges — submit normally with simulator score
     try {
       const { error } = await supabase.from("room_submissions").insert({

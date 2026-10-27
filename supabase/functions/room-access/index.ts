@@ -14,7 +14,16 @@ type Body =
   | { action: "lookup"; pin: string }
   | { action: "validate-emails"; room_id: string; emails: string[] }
   | { action: "check-group-membership"; room_id: string; email: string }
-  | { action: "find-or-create-participant"; room_id: string; name: string; email?: string | null; is_group: boolean; group_members?: any[] };
+  | { action: "find-or-create-participant"; room_id: string; name: string; email?: string | null; is_group: boolean; group_members?: any[]; member_key?: string; member_name?: string }
+  | { action: "group-sync"; participant_id: string; activity_id: string; member_id: string; member_name?: string }
+  | { action: "group-push"; participant_id: string; activity_id: string; member_id: string; state: Record<string, unknown> }
+  | { action: "group-claim"; participant_id: string; member_id: string; member_name?: string }
+  | { action: "group-pass"; participant_id: string; member_id: string; to_member_id: string };
+
+// Sem sinal do líder por tanto tempo, qualquer observador pode assumir a liderança.
+const LEADER_STALE_MS = 90_000;
+// Presente = pingou nos últimos 20s (o cliente sincroniza a cada ~3s).
+const PRESENT_MS = 20_000;
 
 function bad(msg: string, status = 400) {
   return new Response(JSON.stringify({ error: msg }), {
@@ -35,6 +44,47 @@ async function getActiveRoom(idOrPin: { id?: string; pin?: string }) {
   const { data, error } = await q.maybeSingle();
   if (error) throw error;
   return data;
+}
+
+async function groupView(participantId: string) {
+  const { data: part } = await supabase
+    .from("room_participants")
+    .select("leader_member_id, leader_member_name, leader_seen_at")
+    .eq("id", participantId).maybeSingle();
+  const { data: mems } = await supabase
+    .from("room_group_members")
+    .select("member_id, member_name, last_seen_at")
+    .eq("participant_id", participantId)
+    .order("joined_at", { ascending: true });
+  const now = Date.now();
+  const leaderSeen = (part as any)?.leader_seen_at ? new Date((part as any).leader_seen_at).getTime() : 0;
+  return {
+    leaderId: (part as any)?.leader_member_id ?? null,
+    leaderName: (part as any)?.leader_member_name ?? null,
+    leaderStale: !!(part as any)?.leader_member_id && now - leaderSeen > LEADER_STALE_MS,
+    members: ((mems as any[]) || []).map((m) => ({
+      id: m.member_id as string,
+      name: m.member_name as string,
+      online: now - new Date(m.last_seen_at).getTime() < PRESENT_MS,
+    })),
+  };
+}
+
+async function touchMember(participantId: string, memberId: string, memberName?: string) {
+  const nowIso = new Date().toISOString();
+  const { data: existing } = await supabase
+    .from("room_group_members").select("member_name")
+    .eq("participant_id", participantId).eq("member_id", memberId).maybeSingle();
+  if (existing) {
+    const patch: Record<string, unknown> = { last_seen_at: nowIso };
+    if (memberName) patch.member_name = memberName;
+    await supabase.from("room_group_members").update(patch)
+      .eq("participant_id", participantId).eq("member_id", memberId);
+  } else {
+    await supabase.from("room_group_members").upsert({
+      participant_id: participantId, member_id: memberId, member_name: memberName || memberId, last_seen_at: nowIso,
+    } as any, { onConflict: "participant_id,member_id", ignoreDuplicates: true });
+  }
 }
 
 Deno.serve(async (req) => {
@@ -105,6 +155,7 @@ Deno.serve(async (req) => {
       let isGroup = !!body.is_group;
       let groupMembers: any[] = body.group_members || [];
       let assignedActivityId: string | null = null;
+      let memberDisplayName: string | null = body.member_name ? String(body.member_name).trim() : null;
 
       // Professor-assigned group: the authorized email carries an assigned_activity_id,
       // which overrides whatever the client sent (name/is_group/group_members) so every
@@ -127,6 +178,8 @@ Deno.serve(async (req) => {
           name = activity?.group_label || `Grupo ${(activity?.position ?? 0) + 1}`;
           isGroup = true;
           groupMembers = ((groupmates as any[]) || []).map((m) => ({ name: m.student_name, email: m.email }));
+          const me = ((groupmates as any[]) || []).find((m) => String(m.email).toLowerCase() === email);
+          memberDisplayName = me?.student_name || memberDisplayName;
         }
       }
 
@@ -157,17 +210,101 @@ Deno.serve(async (req) => {
       }
 
       // Compute resume index
+      // No modo "todos respondem" cada membro tem o próprio progresso: só conta o que ele enviou.
+      const collectiveMemberId = assignedActivityId && (room as any).group_mode === "collective"
+        ? (email || (body.member_key ? String(body.member_key).trim() : ""))
+        : "";
       const { data: subs } = await supabase
-        .from("room_submissions").select("activity_id")
+        .from("room_submissions").select("activity_id, member_id:actions->member->>id")
         .eq("room_id", room.id).eq("participant_id", participantId);
-      const submittedIds = new Set(((subs as any[]) || []).map((s) => s.activity_id).filter(Boolean));
+      const submittedIds = new Set(
+        ((subs as any[]) || [])
+          .filter((s) => !collectiveMemberId || s.member_id === collectiveMemberId)
+          .map((s) => s.activity_id).filter(Boolean),
+      );
+
+      // Papéis dentro do grupo (só em grupos atribuídos pelo professor, onde todos convergem
+      // na mesma linha de participante). Líder = primeiro a entrar; demais = observadores.
+      const groupMode: "leader" | "collective" = (room as any).group_mode === "collective" ? "collective" : "leader";
+      let group: null | Record<string, unknown> = null;
+      const memberId = email || (body.member_key ? String(body.member_key).trim() : "");
+      if (assignedActivityId && memberId) {
+        const memberName = memberDisplayName || name;
+        await touchMember(participantId!, memberId, memberName);
+        if (groupMode === "leader") {
+          // Atômico: só quem encontrar leader_member_id nulo vira líder.
+          await supabase.from("room_participants")
+            .update({ leader_member_id: memberId, leader_member_name: memberName, leader_seen_at: new Date().toISOString() } as any)
+            .eq("id", participantId!).is("leader_member_id", null);
+        }
+        const view = await groupView(participantId!);
+        const role = groupMode === "collective" ? "collective" : view.leaderId === memberId ? "leader" : "observer";
+        group = { mode: groupMode, memberId, memberName, role, ...view };
+      }
 
       return ok({
         participantId,
         resumed: !!existing,
         submittedActivityIds: [...submittedIds],
         assignedActivityId,
+        group,
       });
+    }
+
+    if (body.action === "group-sync") {
+      const memberId = String(body.member_id || "");
+      if (!body.participant_id || !body.activity_id || !memberId) return bad("Missing fields");
+      await touchMember(body.participant_id, memberId, body.member_name);
+      const view = await groupView(body.participant_id);
+      if (view.leaderId === memberId) {
+        await supabase.from("room_participants")
+          .update({ leader_seen_at: new Date().toISOString() } as any).eq("id", body.participant_id);
+      }
+      const { data: st } = await supabase
+        .from("room_group_state").select("state, updated_at")
+        .eq("participant_id", body.participant_id).eq("activity_id", body.activity_id).maybeSingle();
+      return ok({ ...view, state: (st as any)?.state ?? null, stateUpdatedAt: (st as any)?.updated_at ?? null });
+    }
+
+    if (body.action === "group-push") {
+      const view = await groupView(body.participant_id);
+      if (!view.leaderId || view.leaderId !== body.member_id) return bad("Not the group leader", 403);
+      const { error } = await supabase.from("room_group_state").upsert({
+        participant_id: body.participant_id,
+        activity_id: body.activity_id,
+        state: body.state,
+        updated_at: new Date().toISOString(),
+      } as any, { onConflict: "participant_id,activity_id" });
+      if (error) throw error;
+      return ok({ ok: true });
+    }
+
+    if (body.action === "group-claim") {
+      // Observador assume a liderança só se o líder atual sumiu (sem sinal há LEADER_STALE_MS).
+      const view = await groupView(body.participant_id);
+      if (view.leaderId === body.member_id) return ok({ claimed: true, ...view });
+      if (view.leaderId && !view.leaderStale) return ok({ claimed: false, ...view });
+      const mem = view.members.find((m) => m.id === body.member_id);
+      await supabase.from("room_participants").update({
+        leader_member_id: body.member_id,
+        leader_member_name: body.member_name || mem?.name || body.member_id,
+        leader_seen_at: new Date().toISOString(),
+      } as any).eq("id", body.participant_id);
+      return ok({ claimed: true, ...(await groupView(body.participant_id)) });
+    }
+
+    if (body.action === "group-pass") {
+      // O líder passa o bastão para um colega do grupo.
+      const view = await groupView(body.participant_id);
+      if (view.leaderId !== body.member_id) return bad("Not the group leader", 403);
+      const target = view.members.find((m) => m.id === body.to_member_id);
+      if (!target) return bad("Member not found", 404);
+      await supabase.from("room_participants").update({
+        leader_member_id: target.id,
+        leader_member_name: target.name,
+        leader_seen_at: new Date().toISOString(),
+      } as any).eq("id", body.participant_id);
+      return ok({ ...(await groupView(body.participant_id)) });
     }
 
     return bad("Unknown action");

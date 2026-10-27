@@ -16,6 +16,8 @@ import {
 import { CheckCircle2, XCircle, Target, BookOpen, Trophy, Play, RotateCcw, Lightbulb, ChevronRight, Eye, AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import GroupRoleBanner, { type GroupRole, type GroupMemberView } from "@/components/simulators/GroupRoleBanner";
+import { groupSync, groupPush, groupClaim, groupPass, type GroupContext } from "@/lib/groupSync";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -103,7 +105,7 @@ export default function SimulatorChallengeMode({
   // Virtual room detection
   const vrContextRef = useRef<any>(null);
   const [isVR, setIsVR] = useState(false);
-  const [viewOnly, setViewOnly] = useState(false);
+  const [legacyViewOnly, setViewOnly] = useState(false);
   const [vrSubmitStatus, setVrSubmitStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const lastSubmitArgsRef = useRef<{ finalScore: number; total: number } | null>(null);
 
@@ -114,6 +116,19 @@ export default function SimulatorChallengeMode({
     | null
   >(null);
 
+  // ── Grupo (Sala Virtual): líder responde, observadores acompanham em tempo real ──
+  const [group, setGroup] = useState<GroupContext | null>(null);
+  const [groupRole, setGroupRole] = useState<GroupRole | null>(null);
+  const [groupView, setGroupView] = useState<{ leaderId: string | null; leaderName: string | null; leaderStale: boolean; members: GroupMemberView[] }>({
+    leaderId: null, leaderName: null, leaderStale: false, members: [],
+  });
+  const [syncReady, setSyncReady] = useState(false);
+  const lastSeqRef = useRef(0);
+  const finishedNotifiedRef = useRef(false);
+  // Observador (ou aluno já listado em outro grupo) não marca nem avança nada.
+  const isObserver = groupRole === "observer";
+  const viewOnly = legacyViewOnly || isObserver;
+
   useEffect(() => {
     const raw = sessionStorage.getItem("virtualRoom");
     if (raw) {
@@ -122,6 +137,11 @@ export default function SimulatorChallengeMode({
         vrContextRef.current = ctx;
         setIsVR(true);
         if (ctx?.viewOnly === true) setViewOnly(true);
+        if (ctx?.group) {
+          setGroup(ctx.group);
+          setGroupRole(ctx.group.role);
+          setGroupView({ leaderId: ctx.group.leaderId ?? null, leaderName: ctx.group.leaderName ?? null, leaderStale: false, members: ctx.group.members ?? [] });
+        }
         // Signal that challenges exist so submitResults can skip
         sessionStorage.setItem("hasChallenges", "true");
       } catch {}
@@ -147,6 +167,118 @@ export default function SimulatorChallengeMode({
   useEffect(() => {
     if (started && !finished) questionShownAtRef.current = Date.now();
   }, [currentIndex, started, finished]);
+
+  // Refs com o valor mais recente para o polling (o intervalo não pode capturar closures velhas).
+  const liveRef = useRef({ currentIndex, total: challenges.length, onComplete, onResetForChallenge });
+  liveRef.current = { currentIndex, total: challenges.length, onComplete, onResetForChallenge };
+  const groupRoleRef = useRef<GroupRole | null>(null);
+  groupRoleRef.current = groupRole;
+
+  const applyRemoteState = useCallback((st: any) => {
+    lastSeqRef.current = st.seq;
+    const live = liveRef.current;
+    const idx = typeof st.currentIndex === "number" ? st.currentIndex : 0;
+    questionResultsRef.current = Array.isArray(st.results) ? st.results : [];
+    if (idx !== live.currentIndex) live.onResetForChallenge?.({});
+    setCurrentIndex(idx);
+    setScore(st.score ?? 0);
+    setAnswered(!!st.answered);
+    setIsCorrect(!!st.isCorrect);
+    setFeedback(st.feedback || "");
+    setAdjustValidated(!!st.adjustValidated);
+    setSelectedOption(st.answered ? (st.selectedOption ?? null) : (st.draftOption ?? null));
+    if (st.finished) {
+      setFinished(true);
+      if (!finishedNotifiedRef.current) {
+        finishedNotifiedRef.current = true;
+        live.onComplete?.(st.score ?? 0, live.total, questionResultsRef.current);
+      }
+    }
+  }, []);
+
+  // Polling do grupo: mantém o papel (líder/observador) e, para observadores, espelha o
+  // estado publicado pelo líder. O líder também restaura o próprio progresso ao recarregar.
+  useEffect(() => {
+    if (!group || group.mode !== "leader") return;
+    const ctx = vrContextRef.current;
+    if (!ctx?.participantId || !ctx?.activityId) return;
+    let cancelled = false;
+    let restored = false;
+    const tick = async () => {
+      const r = await groupSync({ participantId: ctx.participantId, activityId: ctx.activityId, memberId: group.memberId, memberName: group.memberName });
+      if (cancelled || !r) return;
+      const role: GroupRole = r.leaderId === group.memberId ? "leader" : "observer";
+      if (role !== groupRoleRef.current) {
+        if (role === "leader") toast.success("Você agora é o líder do grupo.");
+        else if (groupRoleRef.current === "leader") toast.info("A liderança foi passada para outro integrante do grupo.");
+      }
+      setGroupRole(role);
+      setGroupView({ leaderId: r.leaderId, leaderName: r.leaderName, leaderStale: r.leaderStale, members: r.members });
+      const st = r.state;
+      if (st && typeof st.seq === "number" && st.seq > lastSeqRef.current && (role === "observer" || !restored)) {
+        applyRemoteState(st);
+      }
+      if (!restored) { restored = true; setSyncReady(true); }
+    };
+    tick();
+    const id = setInterval(tick, 3000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [group, applyRemoteState]);
+
+  // Líder publica o estado do desafio a cada mudança (pergunta, alternativa, resultado).
+  useEffect(() => {
+    if (!group || groupRole !== "leader" || !syncReady) return;
+    const ctx = vrContextRef.current;
+    if (!ctx?.participantId || !ctx?.activityId) return;
+    lastSeqRef.current += 1;
+    groupPush({
+      participantId: ctx.participantId,
+      activityId: ctx.activityId,
+      memberId: group.memberId,
+      state: {
+        seq: lastSeqRef.current,
+        currentIndex,
+        answered,
+        selectedOption: answered ? selectedOption : null,
+        draftOption: answered ? null : (pendingConfirm?.kind === "mcq" ? pendingConfirm.optionIndex : selectedOption),
+        isCorrect,
+        feedback,
+        score,
+        finished,
+        adjustValidated,
+        results: questionResultsRef.current,
+      },
+    });
+  }, [group, groupRole, syncReady, currentIndex, answered, selectedOption, pendingConfirm, isCorrect, feedback, score, finished, adjustValidated]);
+
+  const handleClaimLeadership = useCallback(async () => {
+    const ctx = vrContextRef.current;
+    if (!group || !ctx) return;
+    const r = await groupClaim({ participantId: ctx.participantId, memberId: group.memberId, memberName: group.memberName });
+    if (r?.claimed) setGroupRole("leader");
+    else toast.info("O líder voltou — a liderança continua com ele.");
+  }, [group]);
+
+  const handlePassLeadership = useCallback(async (toMemberId: string) => {
+    const ctx = vrContextRef.current;
+    if (!group || !ctx) return;
+    const r = await groupPass({ participantId: ctx.participantId, memberId: group.memberId, toMemberId });
+    if (r) setGroupRole("observer");
+    else toast.error("Não foi possível passar a liderança.");
+  }, [group]);
+
+  const groupBanner = group && groupRole ? (
+    <GroupRoleBanner
+      role={groupRole}
+      memberId={group.memberId}
+      leaderId={groupView.leaderId}
+      leaderName={groupView.leaderName}
+      leaderStale={groupView.leaderStale}
+      members={groupView.members}
+      onClaim={handleClaimLeadership}
+      onPass={handlePassLeadership}
+    />
+  ) : null;
 
   const handleStart = useCallback(() => {
     setStarted(true);
@@ -284,6 +416,8 @@ export default function SimulatorChallengeMode({
           type: "challenge_results",
           questions: questionResultsRef.current,
           summary: { correct: finalScore, total, score: pctScore },
+          // Quem enviou dentro do grupo (líder, ou cada integrante no modo "todos respondem").
+          ...(group ? { member: { id: group.memberId, name: group.memberName }, groupMode: group.mode } : {}),
         } as any,
         time_spent_seconds: timeSpent,
         activity_id: ctx.activityId || null,
@@ -299,7 +433,7 @@ export default function SimulatorChallengeMode({
       setVrSubmitStatus("error");
       toast.error("Falha ao enviar seu resultado para o professor. Tente novamente antes de sair desta página.");
     }
-  }, []);
+  }, [group]);
 
   const handleNext = useCallback(() => {
     const newScore = score;
@@ -365,6 +499,22 @@ export default function SimulatorChallengeMode({
 
   // ── Finished ──
   if (finished) {
+    if (isObserver) {
+      const pctObs = Math.round((score / challenges.length) * 100);
+      return (
+        <Card className="border-primary/30">
+          <CardContent className="pt-6 space-y-4 text-center">
+            {groupBanner && <div className="text-left">{groupBanner}</div>}
+            <Trophy className={`h-10 w-10 mx-auto ${pctObs >= 60 ? "text-yellow-500" : "text-muted-foreground"}`} />
+            <h3 className="text-lg font-bold">Desafio do grupo concluído</h3>
+            <div className="text-3xl font-bold text-primary">{score}/{challenges.length}</div>
+            <p className="text-sm text-muted-foreground">
+              O resultado foi enviado ao professor pelo líder{groupView.leaderName ? ` (${groupView.leaderName})` : ""}.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
     if (viewOnly) {
       return (
         <Card className="border-primary/30">
@@ -449,7 +599,8 @@ export default function SimulatorChallengeMode({
         <Progress value={progress} className="h-2" />
       </CardHeader>
       <CardContent className="space-y-4">
-        {viewOnly && (
+        {groupBanner}
+        {legacyViewOnly && !group && (
           <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm flex items-start gap-2">
             <Eye className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
@@ -479,6 +630,9 @@ export default function SimulatorChallengeMode({
                 if (i === mcq.correctIndex) optClass = "border-green-500 bg-green-500/10";
                 else if (i === selectedOption) optClass = "border-destructive bg-destructive/10";
                 else optClass = "border opacity-50";
+              } else if (isObserver && i === selectedOption) {
+                // Observador vê a alternativa que o líder está considerando antes de confirmar.
+                optClass = "border-primary bg-primary/10";
               }
               return (
                 <button
@@ -553,7 +707,7 @@ export default function SimulatorChallengeMode({
         })()}
 
         {/* View-only navigation: lets the student browse questions without answering */}
-        {viewOnly && !answered && (
+        {legacyViewOnly && !isObserver && !answered && (
           <Button
             variant="outline"
             onClick={() => {
@@ -592,13 +746,19 @@ export default function SimulatorChallengeMode({
             {current.reference && (
               <p className="text-xs text-muted-foreground mt-2">📚 Ref: {current.reference}</p>
             )}
-            <Button onClick={handleNext} className="w-full mt-3 gap-2">
-              {currentIndex + 1 >= challenges.length ? (
-                <><Trophy className="h-4 w-4" /> Ver Resultado</>
-              ) : (
-                <><ChevronRight className="h-4 w-4" /> Próximo Desafio</>
-              )}
-            </Button>
+            {isObserver ? (
+              <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Aguardando o líder avançar para a próxima questão…
+              </p>
+            ) : (
+              <Button onClick={handleNext} className="w-full mt-3 gap-2">
+                {currentIndex + 1 >= challenges.length ? (
+                  <><Trophy className="h-4 w-4" /> Ver Resultado</>
+                ) : (
+                  <><ChevronRight className="h-4 w-4" /> Próximo Desafio</>
+                )}
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

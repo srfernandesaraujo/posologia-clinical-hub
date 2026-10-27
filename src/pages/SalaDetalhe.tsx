@@ -622,7 +622,17 @@ export default function SalaDetalhe() {
                         );
                       })()}
                       {pSubs.map((sub: any) => (
-                        <ParticipantDetail key={sub.id} submission={sub} roomSubmissions={submissions as any[]} isPremium={isPremium} onShowUpgrade={showUpgrade} forceOpen={isFocused} />
+                        <div key={sub.id}>
+                          {sub.actions?.member?.name && (
+                            <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              Enviado por <strong className="text-foreground">{sub.actions.member.name}</strong>
+                              {sub.actions.member.id?.includes("@") && <span>({sub.actions.member.id})</span>}
+                              {sub.actions.groupMode === "leader" && <span>· líder</span>}
+                            </p>
+                          )}
+                          <ParticipantDetail submission={sub} roomSubmissions={submissions as any[]} isPremium={isPremium} onShowUpgrade={showUpgrade} forceOpen={isFocused} />
+                        </div>
                       ))}
                     </div>
                   );
@@ -648,6 +658,9 @@ export default function SalaDetalhe() {
               <p><span className="text-muted-foreground">Criada em:</span> {new Date(room.created_at).toLocaleString("pt-BR")}</p>
               {room.expires_at && <p><span className="text-muted-foreground">Expira em:</span> {new Date(room.expires_at).toLocaleString("pt-BR")}</p>}
               <p><span className="text-muted-foreground">Acesso restrito:</span> {room.restricted_access ? "Sim" : "Não"}</p>
+              {room.restricted_access && (
+                <p><span className="text-muted-foreground">Respostas no grupo:</span> {(room as any).group_mode === "collective" ? "Todos respondem (estilo TBL)" : "Líder responde, demais observam"}</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
