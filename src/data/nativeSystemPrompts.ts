@@ -2260,6 +2260,31 @@ REFERÊNCIAS BASE:
 - GINA 2023 Report
 - Reddel HK et al. Lancet 2022 (MART)`,
 
+  "sim-farmacoterapia-dislipidemia": `Você é um especialista em lipidologia e prevenção cardiovascular. Crie um simulador de Dislipidemia e Risco Cardiovascular (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Card "Esquema hipolipemiante" com até 3 caixas ("Fármaco 1", "Associar fármaco 2", "Associar fármaco 3"), cada uma com fármaco e dose (Atorvastatina, Rosuvastatina, Sinvastatina, Ezetimiba, Fenofibrato, Evolocumabe, Ômega-3); Nenhum retira o fármaco. Fármacos de dose única (ezetimiba, fenofibrato, evolocumabe) mostram a dose fixa
+- Lipidograma projetado para 8 semanas: CT, LDL, Não-HDL (CT − HDL), HDL, TG, Apo-B (acompanha o não-HDL) e CPK; quadro "Metas do caso" (LDL, não-HDL e, quando o caso define, TG)
+- Efeitos multiplicativos entre fármacos; estatinas com efeito por dose (regra dos 6%: dobrar a dose rende ~6 pontos percentuais); efeito pleno em até 4 semanas (ômega-3, 8)
+- Gráfico de tendência de 8 semanas (LDL, não-HDL e HDL no eixo da esquerda; TG no eixo da direita) e barras de risco (mialgia, hepatotoxicidade, GI, rabdomiólise) do esquema inteiro
+- Casos com esquema em uso (campo opcional "background"): o lipidograma do caso já é COM esse esquema; manter devolve o caso, trocar/somar/retirar projeta a partir dele (CPK cai ao suspender o culpado)
+- Casos com TG como desfecho primário (campo "tgTarget") e interruptor de medidas não farmacológicas ("lifestyle")
+- 5 casos nativos: DM2 + HAS em prevenção primária (Carlos), intolerância a estatina com hipotireoidismo (Maria Teresa), hipertrigliceridemia grave por álcool/obesidade (Roberto), pós-IAM com estatina máxima (Antônio), hipercolesterolemia familiar em terapia dupla (Patrícia)
+- Casos gerados por IA seguem o mesmo formato (baseLab coerente com Friedewald, campos opcionais background, cpkOff, tgTarget, lifestyle)
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno monta o esquema, lê o lipidograma, as metas, o gráfico e as barras de risco, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: leitura do caso sem tratamento (risco, meta, redução necessária, não-HDL); armadilha do número bonito (fibrato melhora TG/HDL sem mexer no LDL; estatina melhora o LDL mas o TG segue > 500); regra dos 6% (dobrar a dose x somar ezetimiba); trocar de estatina de alta potência em dose máxima; iPCSK9 como passo seguinte e por que não retirar a estatina; intolerância (suspender, TSH, dose menor + ezetimiba); revisão de prescrição multi-item (cada distrator erra um item); rastreamento em cascata; gestação
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- O simulador não modela TSH, gestação, interações farmacocinéticas nem seguimento além de 8 semanas: esses pontos entram só como raciocínio
+
+REFERÊNCIAS:
+- Faludi AA et al. Arq Bras Cardiol 2017 (Diretriz SBC de Dislipidemias); Mach F et al. Eur Heart J 2020 (ESC/EAS 2019)
+- Law MR et al. BMJ 2003 (efeito das estatinas por dose); Cannon CP et al. N Engl J Med 2015 (IMPROVE-IT); Sabatine MS et al. N Engl J Med 2017 (FOURIER)
+- Ginsberg HN et al. N Engl J Med 2010 (ACCORD Lipid); Berglund L et al. J Clin Endocrinol Metab 2012 (hipertrigliceridemia)
+- Stroes ES et al. Eur Heart J 2015 (intolerância a estatinas); Raal FJ et al. Lancet 2015 (RUTHERFORD-2)`,
+
   "sim-farmacoterapia-hepatopatia": `Você é um especialista em hepatologia clínica e farmacoterapia. Crie um simulador de Hepatopatias e Ajuste Terapêutico (categoria Farmacoterapia Laboratorial).
 
 REQUISITOS:

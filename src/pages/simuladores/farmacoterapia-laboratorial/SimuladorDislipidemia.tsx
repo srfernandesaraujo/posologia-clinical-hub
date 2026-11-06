@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Sparkles, Loader2, Play, Eye, Heart, Activity, ShieldAlert } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -13,55 +14,58 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, Legend } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getDislipidemiaLabChallenges } from "@/data/simulatorChallenges";
+import { DRUGS, computeRegimen, drugByName, nonHdlTargetFor, type LipidLab, type RegimenItem, type LipidLifestyle } from "@/lib/dislipidemia/motor";
 
 const SLUG = "farmacoterapia-dislipidemia";
+const MAX_SLOTS = 3;
 
-interface LipidDrug { name: string; class: string; doseMin: number; doseMax: number; doseUnit: string; doseStep: number; effects: { ldl: number; hdl: number; tg: number; ct: number }; sideEffects: { mialgia: number; hepatotox: number; gi: number; rabdomiolise: number }; weeksToEffect: number; }
-
-const DRUGS: LipidDrug[] = [
-  { name: "Atorvastatina", class: "Estatina alta potência", doseMin: 10, doseMax: 80, doseUnit: "mg/dia", doseStep: 10, effects: { ldl: -50, hdl: 5, tg: -20, ct: -40 }, sideEffects: { mialgia: 0.12, hepatotox: 0.05, gi: 0.08, rabdomiolise: 0.01 }, weeksToEffect: 4 },
-  { name: "Rosuvastatina", class: "Estatina alta potência", doseMin: 5, doseMax: 40, doseUnit: "mg/dia", doseStep: 5, effects: { ldl: -55, hdl: 8, tg: -18, ct: -45 }, sideEffects: { mialgia: 0.10, hepatotox: 0.04, gi: 0.06, rabdomiolise: 0.008 }, weeksToEffect: 4 },
-  { name: "Sinvastatina", class: "Estatina moderada", doseMin: 10, doseMax: 40, doseUnit: "mg/dia", doseStep: 10, effects: { ldl: -35, hdl: 4, tg: -12, ct: -28 }, sideEffects: { mialgia: 0.15, hepatotox: 0.06, gi: 0.1, rabdomiolise: 0.02 }, weeksToEffect: 4 },
-  { name: "Ezetimiba", class: "Inib. absorção colesterol", doseMin: 10, doseMax: 10, doseUnit: "mg/dia", doseStep: 10, effects: { ldl: -18, hdl: 1, tg: -5, ct: -15 }, sideEffects: { mialgia: 0.03, hepatotox: 0.02, gi: 0.08, rabdomiolise: 0 }, weeksToEffect: 2 },
-  { name: "Fenofibrato", class: "Fibrato", doseMin: 160, doseMax: 250, doseUnit: "mg/dia", doseStep: 10, effects: { ldl: -5, hdl: 15, tg: -45, ct: -10 }, sideEffects: { mialgia: 0.08, hepatotox: 0.05, gi: 0.1, rabdomiolise: 0.03 }, weeksToEffect: 4 },
-  { name: "Evolocumabe", class: "iPCSK9", doseMin: 140, doseMax: 420, doseUnit: "mg SC/mês", doseStep: 140, effects: { ldl: -60, hdl: 3, tg: -8, ct: -50 }, sideEffects: { mialgia: 0.02, hepatotox: 0.01, gi: 0.03, rabdomiolise: 0 }, weeksToEffect: 2 },
-  { name: "Ômega-3", class: "Ácido graxo", doseMin: 1, doseMax: 4, doseUnit: "g/dia", doseStep: 1, effects: { ldl: 2, hdl: 2, tg: -30, ct: -3 }, sideEffects: { mialgia: 0, hepatotox: 0, gi: 0.1, rabdomiolise: 0 }, weeksToEffect: 8 },
-];
-
-interface LipidCase { id?: string; title: string; difficulty: string; isAI?: boolean; patient: { name: string; age: number; weight: number; sex: string; specialGroup: string[]; diagnosis?: string }; scenario: string; baseLab: { ct: number; ldl: number; hdl: number; tg: number; apoB: number; cpk: number }; riskLevel: string; ldlTarget: number; expectedDrugs: string[]; clinicalTip: string; references: string[]; }
+/**
+ * Motor em src/lib/dislipidemia/motor.ts. Campos opcionais do caso (casos antigos e de IA não os têm):
+ *  - background: esquema em uso quando o baseLab foi colhido (o laboratório do caso já é COM esse esquema);
+ *  - cpkOff: CPK depois de suspender/trocar o esquema em uso;
+ *  - tgTarget: meta de TG (casos em que o TG é o desfecho primário);
+ *  - lifestyle: medida não farmacológica (rótulo + efeitos %), com interruptor na tela;
+ *  - nonHdlTarget: sobrescreve a meta de não-HDL derivada do risco.
+ */
+interface LipidCase {
+  id?: string; title: string; difficulty: string; isAI?: boolean;
+  patient: { name: string; age: number; weight: number; sex: string; specialGroup: string[]; diagnosis?: string };
+  scenario: string; baseLab: LipidLab; riskLevel: string; ldlTarget: number; expectedDrugs: string[]; clinicalTip: string; references: string[];
+  background?: RegimenItem[]; cpkOff?: number; tgTarget?: number; nonHdlTarget?: number; lifestyle?: LipidLifestyle;
+}
 
 const BUILT_IN_CASES: LipidCase[] = [
-  { title: "Caso 1: Carlos Mendes", difficulty: "Médio", patient: { name: "Carlos Mendes", age: 55, weight: 85, sex: "M", specialGroup: ["DM2", "HAS"], diagnosis: "DM2+HAS, ERG>20%, LDL 180 — meta <70" }, scenario: "Homem 55a, DM2+HAS. CT 280, LDL 180, HDL 38, TG 220.", baseLab: { ct: 280, ldl: 180, hdl: 38, tg: 220, apoB: 160, cpk: 120 }, riskLevel: "alto", ldlTarget: 70, expectedDrugs: ["Atorvastatina"], clinicalTip: "Risco alto: atorvastatina 40-80mg reduz LDL 50-60%. Friedewald: LDL = CT - HDL - (TG/5).", references: ["ESC/EAS 2019"] },
-  { title: "Caso 2: Maria Teresa", difficulty: "Médio", patient: { name: "Maria Teresa", age: 62, weight: 65, sex: "F", specialGroup: ["Hipotiroidismo"], diagnosis: "Mialgia + CPK 680 com sinvastatina — trocar estatina" }, scenario: "Mulher 62a, LDL 165, sinvastatina 40mg. Mialgia intensa, CPK 680 (3×LSN). Hipotiroidismo.", baseLab: { ct: 250, ldl: 165, hdl: 52, tg: 145, apoB: 135, cpk: 680 }, riskLevel: "intermediário", ldlTarget: 100, expectedDrugs: ["Rosuvastatina"], clinicalTip: "Intolerância: trocar para rosuvastatina ou pravastatina. Se 2+ estatinas: ezetimiba ± iPCSK9.", references: ["ACC 2015"] },
-  { title: "Caso 3: Roberto Alves", difficulty: "Difícil", patient: { name: "Roberto Alves", age: 45, weight: 95, sex: "M", specialGroup: ["Etilista", "Obesidade"], diagnosis: "TG 850 — risco pancreatite aguda, fibrato 1ª linha" }, scenario: "Homem 45a, obeso, etilista. CT 320, LDL não calculável, HDL 28, TG 850.", baseLab: { ct: 320, ldl: 0, hdl: 28, tg: 850, apoB: 140, cpk: 90 }, riskLevel: "alto", ldlTarget: 70, expectedDrugs: ["Fenofibrato"], clinicalTip: "TG >500: fibrato 1ª linha. Abstinência alcoólica. NÃO calcular LDL por Friedewald se TG>400.", references: ["Berglund L 2012", "AHA/ACC 2018"] },
-  { title: "Caso 4: Antônio Ferreira", difficulty: "Difícil", patient: { name: "Antônio Ferreira", age: 58, weight: 78, sex: "M", specialGroup: ["IAM prévio", "Stent"], diagnosis: "Pós-IAM com stent, atorva 80mg, LDL 82 — precisa ezetimiba" }, scenario: "Homem 58a, 3m pós-IAM com stent. Atorvastatina 80mg. LDL 82, CT 185, HDL 45, TG 160.", baseLab: { ct: 185, ldl: 82, hdl: 45, tg: 160, apoB: 95, cpk: 140 }, riskLevel: "muito alto", ldlTarget: 50, expectedDrugs: ["Ezetimiba"], clinicalTip: "Pós-IAM = risco muito alto. Meta LDL <50. Adicionar ezetimiba; se insuficiente: iPCSK9.", references: ["IMPROVE-IT", "FOURIER", "ESC 2019"] },
-  { title: "Caso 5: Patrícia Lima", difficulty: "Difícil", patient: { name: "Patrícia Lima", age: 35, weight: 60, sex: "F", specialGroup: ["Xantomas", "Terapia dupla prévia"], diagnosis: "HF com LDL 180 em terapia dupla — candidata a iPCSK9" }, scenario: "Mulher 35a, com xantomas. Rosuvastatina 40mg + ezetimiba 10mg. LDL ainda 180, CT 380, HDL 55, TG 110.", baseLab: { ct: 380, ldl: 180, hdl: 55, tg: 110, apoB: 180, cpk: 100 }, riskLevel: "muito alto", ldlTarget: 50, expectedDrugs: ["Evolocumabe"], clinicalTip: "HF: prevalência 1:250. Escalonar: estatina max → ezetimiba → iPCSK9. Rastreamento familiar.", references: ["ESC/EAS HF 2020"] },
+  { title: "Caso 1: Carlos Mendes", difficulty: "Médio", patient: { name: "Carlos Mendes", age: 55, weight: 85, sex: "M", specialGroup: ["DM2", "HAS"], diagnosis: "DM2 e HAS, sem hipolipemiante" }, scenario: "Homem de 55 anos, 85 kg, com DM2 há 12 anos e hipertensão arterial (PA 146/90 mmHg em uso de losartana), sem doença cardiovascular conhecida e sem hipolipemiante. Lipidograma em jejum: CT 262, LDL 180, HDL 38, TG 220 mg/dL; Apo-B 160 mg/dL. A tela mostra o lipidograma projetado para 8 semanas depois do esquema que você montar.", baseLab: { ct: 262, ldl: 180, hdl: 38, tg: 220, apoB: 160, cpk: 120 }, riskLevel: "alto", ldlTarget: 70, expectedDrugs: ["Atorvastatina", "Ezetimiba"], clinicalTip: "Estatina de alta potência primeiro; dobrar a dose rende só ~6 pontos percentuais a mais no LDL, então, se a meta não vier, some ezetimiba. HDL baixo não é alvo de tratamento; o alvo é o LDL (e o não-HDL, quando o TG está alto).", references: ["Faludi AA. Arq Bras Cardiol 2017;109(2 Supl 1) (Diretriz SBC de Dislipidemias)", "Mach F. Eur Heart J 2020;41:111-188 (ESC/EAS 2019)"] },
+  { title: "Caso 2: Maria Teresa", difficulty: "Médio", patient: { name: "Maria Teresa", age: 62, weight: 65, sex: "F", specialGroup: ["Hipotireoidismo"], diagnosis: "Dislipidemia em uso de sinvastatina, queixa muscular" }, scenario: "Mulher de 62 anos, 65 kg, hipotireoidismo em reposição de levotiroxina (TSH 7,2 mUI/L), sem doença cardiovascular. Usa sinvastatina 40 mg há 3 meses e queixa-se de dor e fraqueza em coxas e ombros desde o 2º mês. Exames: CT 241, LDL 160, HDL 52, TG 145 mg/dL; CPK 680 U/L (referência até cerca de 200); Apo-B 135 mg/dL. A tela mostra o lipidograma projetado para 8 semanas depois do esquema que você montar; o laboratório de partida é o colhido com a sinvastatina em uso.", baseLab: { ct: 241, ldl: 160, hdl: 52, tg: 145, apoB: 135, cpk: 680 }, riskLevel: "intermediário", ldlTarget: 100, expectedDrugs: ["Rosuvastatina", "Ezetimiba"], clinicalTip: "Mialgia com CPK < 10× o limite superior: suspender a estatina, esperar a resolução, corrigir causas (TSH) e reintroduzir outra estatina em dose menor, somando ezetimiba para chegar à meta.", references: ["Stroes ES. Eur Heart J 2015;36:1012-1022 (EAS, intolerância a estatinas)", "Faludi AA. Arq Bras Cardiol 2017;109(2 Supl 1)"], background: [{ name: "Sinvastatina", dose: 40 }], cpkOff: 95 },
+  { title: "Caso 3: Roberto Alves", difficulty: "Difícil", patient: { name: "Roberto Alves", age: 45, weight: 95, sex: "M", specialGroup: ["Etilista", "Obesidade"], diagnosis: "Triglicerídeos muito elevados, obesidade e uso de álcool" }, scenario: "Homem de 45 anos, 95 kg (IMC 31), consome cerca de 6 doses de álcool por dia, sem diabetes conhecido nem uso de medicamentos. Veio por dor abdominal leve após uma festa. Exames em jejum: CT 320, HDL 28, TG 850 mg/dL; o laboratório informou LDL direto de 110 mg/dL (a conta de Friedewald não vale com TG acima de 400); Apo-B 140 mg/dL. A tela mostra o lipidograma projetado para 8 semanas depois do esquema que você montar; o interruptor das medidas não farmacológicas está ao lado dos fármacos.", baseLab: { ct: 320, ldl: 110, hdl: 28, tg: 850, apoB: 140, cpk: 90 }, riskLevel: "intermediário", ldlTarget: 100, tgTarget: 500, expectedDrugs: ["Fenofibrato", "Ômega-3"], clinicalTip: "TG acima de 500: fibrato e medidas não farmacológicas primeiro (o risco agudo é pancreatite); a estatina reduz pouco o TG e entra depois, para o risco cardiovascular. LDL calculado por Friedewald não vale com TG > 400.", references: ["Berglund L. J Clin Endocrinol Metab 2012;97:2969-2989 (Endocrine Society)", "Mach F. Eur Heart J 2020;41:111-188 (ESC/EAS 2019)"], lifestyle: { label: "Abstinência alcoólica + dieta + perda de peso (efeito estimado)", effects: { tg: -35, hdl: 8 } } },
+  { title: "Caso 4: Antônio Ferreira", difficulty: "Difícil", patient: { name: "Antônio Ferreira", age: 58, weight: 78, sex: "M", specialGroup: ["IAM prévio", "Stent"], diagnosis: "3 meses após evento coronariano, em uso de estatina" }, scenario: "Homem de 58 anos, 78 kg, 3 meses após infarto do miocárdio com implante de stent, em uso regular de atorvastatina 80 mg (adesão confirmada pela farmácia) e AAS. Exames: CT 159, LDL 82, HDL 45, TG 160 mg/dL; Apo-B 95 mg/dL; CPK 140 U/L. A tela mostra o lipidograma projetado para 8 semanas depois do esquema que você montar; o laboratório de partida é o colhido com a atorvastatina 80 mg em uso.", baseLab: { ct: 159, ldl: 82, hdl: 45, tg: 160, apoB: 95, cpk: 140 }, riskLevel: "muito alto", ldlTarget: 50, expectedDrugs: ["Atorvastatina", "Ezetimiba", "Evolocumabe"], clinicalTip: "Prevenção secundária: meta de LDL < 50 mg/dL. Estatina potente em dose máxima tolerada + ezetimiba; se o LDL seguir acima da meta, iPCSK9.", references: ["Cannon CP. N Engl J Med 2015;372:2387-2397 (IMPROVE-IT)", "Sabatine MS. N Engl J Med 2017;376:1713-1722 (FOURIER)"], background: [{ name: "Atorvastatina", dose: 80 }] },
+  { title: "Caso 5: Patrícia Lima", difficulty: "Difícil", patient: { name: "Patrícia Lima", age: 35, weight: 60, sex: "F", specialGroup: ["Xantomas", "Terapia dupla prévia"], diagnosis: "LDL persistentemente elevado em terapia dupla, xantomas" }, scenario: "Mulher de 35 anos, 60 kg, com xantomas em tendões de Aquiles e pai que teve infarto aos 48 anos. Há 6 meses usa rosuvastatina 40 mg + ezetimiba 10 mg, com adesão confirmada; TSH, glicemia e proteinúria normais. Exames atuais: CT 247, LDL 170, HDL 55, TG 110 mg/dL; Apo-B 150 mg/dL. Não tem doença cardiovascular estabelecida. A tela mostra o lipidograma projetado para 8 semanas depois do esquema que você montar; o laboratório de partida é o colhido com a terapia dupla em uso.", baseLab: { ct: 247, ldl: 170, hdl: 55, tg: 110, apoB: 150, cpk: 100 }, riskLevel: "alto", ldlTarget: 70, expectedDrugs: ["Rosuvastatina", "Ezetimiba", "Evolocumabe"], clinicalTip: "Hipercolesterolemia familiar: meta de LDL < 70 mg/dL e redução ≥ 50% (sem DCV); estatina máxima + ezetimiba + iPCSK9 se a meta não vier. Rastreamento em cascata dos familiares e orientação contraceptiva (estatinas e gestação).", references: ["Mach F. Eur Heart J 2020;41:111-188 (ESC/EAS 2019)", "Raal FJ. Lancet 2015;385:331-340 (RUTHERFORD-2)"], background: [{ name: "Rosuvastatina", dose: 40 }, { name: "Ezetimiba", dose: 10 }] },
 ];
 
-function computeSimulation(drug: LipidDrug, dose: number, baseLab: LipidCase["baseLab"]) {
-  const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  // Therapeutic intensity: 65% at doseMin, 100% at doseMax — ensures switching
-  // drugs produces visibly different curves without requiring dose escalation.
-  const intensity = 0.65 + doseFrac * 0.35;
-  const trend: any[] = [];
-  for (let w = 0; w <= 8; w++) {
-    const p = w >= drug.weeksToEffect ? Math.min((w - drug.weeksToEffect + 1) / 6, 1) : 0;
-    trend.push({ week: w, ldl: Math.max(20, Math.round(baseLab.ldl + (drug.effects.ldl * intensity * p * baseLab.ldl) / 100)), hdl: Math.max(20, Math.round(baseLab.hdl + (drug.effects.hdl * intensity * p * baseLab.hdl) / 100)), tg: Math.max(30, Math.round(baseLab.tg + (drug.effects.tg * intensity * p * baseLab.tg) / 100)), ct: Math.max(80, Math.round(baseLab.ct + (drug.effects.ct * intensity * p * baseLab.ct) / 100)) });
-  }
-  const last = trend[trend.length - 1];
-  const sideEffects = Object.entries(drug.sideEffects).map(([k, v]) => ({ name: k === "mialgia" ? "Mialgia" : k === "hepatotox" ? "Hepatotoxicidade" : k === "gi" ? "GI" : "Rabdomiólise", risco: Math.round(Math.max(0, v * (0.5 + doseFrac * 0.8)) * 100) }));
-  // CPK escala com o risco de rabdomiólise do fármaco/dose atual: normal (~60 U/L) quando o risco é nulo
-  // (ex. ezetimiba, iPCSK9), subindo até a faixa de miopatia grave para fármacos/doses mais miotóxicos.
-  const cpk = Math.round(60 + drug.sideEffects.rabdomiolise * intensity * 65000);
-  return { trend, sideEffects, lastLab: last, cpk };
+/** Normaliza um caso vindo da Sala Virtual, de IA ou nativo, preservando os campos opcionais do motor. */
+function toLipidCase(c: any): LipidCase {
+  return {
+    id: c.id, title: c.title, difficulty: c.difficulty, isAI: c.isAI,
+    patient: c.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] },
+    scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, riskLevel: c.riskLevel ?? "alto", ldlTarget: c.ldlTarget ?? 70,
+    expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [],
+    background: c.background, cpkOff: c.cpkOff, tgTarget: c.tgTarget, nonHdlTarget: c.nonHdlTarget, lifestyle: c.lifestyle,
+  };
 }
+
+type Slot = { idx: number; dose: number };
+const slotsFromCase = (c: LipidCase | null): Slot[] => {
+  const base: Slot[] = Array.from({ length: MAX_SLOTS }, () => ({ idx: -1, dose: 0 }));
+  (c?.background ?? []).slice(0, MAX_SLOTS).forEach((b, i) => { const di = DRUGS.findIndex(d => d.name === b.name); if (di >= 0) base[i] = { idx: di, dose: b.dose }; });
+  return base;
+};
 
 function LabGauge({ name, value, unit, color }: { name: string; value: number; unit: string; color: string }) {
   return (<div className={`rounded-lg border p-3 text-center ${color.includes("destructive") ? "bg-destructive/10 border-destructive/30" : color.includes("green") ? "bg-green-500/10 border-green-500/30" : "bg-chart-5/10 border-chart-5/30"}`}><p className="text-xs text-muted-foreground font-medium">{name}</p><p className={`text-lg font-mono font-bold ${color}`}>{value}</p><p className="text-[10px] text-muted-foreground">{unit}</p></div>);
@@ -84,30 +88,43 @@ export default function SimuladorDislipidemia() {
       if (found) setActiveCase(found as any);
     }
   }, [isEmbed, embedCaseId, activeCase]);
-  const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
-  const [dose, setDose] = useState(DRUGS[0].doseMin);
+  const [slots, setSlots] = useState<Slot[]>(slotsFromCase(null));
+  const [lifestyleOn, setLifestyleOn] = useState(false);
   const [running, setRunning] = useState(false);
   const [animStep, setAnimStep] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [lastScore, setLastScore] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const selectedDrug = DRUGS[selectedDrugIdx];
+  // Ao trocar de caso, o esquema volta ao que o paciente usa (ou a nenhum fármaco).
+  useEffect(() => { setSlots(slotsFromCase(activeCase)); setLifestyleOn(false); setRunning(false); setAnimStep(0); }, [activeCase?.title]);
 
-  useEffect(() => { if (virtualRoomCase) { const cd = virtualRoomCase as any; setActiveCase({ id: virtualRoomCase.id, title: virtualRoomCase.title, difficulty: virtualRoomCase.difficulty, isAI: virtualRoomCase.isAI, patient: cd.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] }, scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab, riskLevel: cd.riskLevel ?? "alto", ldlTarget: cd.ldlTarget ?? 70, expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [] }); } }, [virtualRoomCase]);
+  useEffect(() => { if (virtualRoomCase) setActiveCase(toLipidCase(virtualRoomCase)); }, [virtualRoomCase]);
 
-  const simulation = useMemo(() => computeSimulation(selectedDrug, dose, activeCase?.baseLab ?? BUILT_IN_CASES[0].baseLab), [selectedDrug, dose, activeCase?.baseLab]);
+  const regimen: RegimenItem[] = useMemo(() => slots.filter(s => s.idx >= 0).map(s => ({ name: DRUGS[s.idx].name, dose: s.dose })), [slots]);
+  const fallbackCase = BUILT_IN_CASES[0];
+  const simulation = useMemo(() => computeRegimen(regimen, { baseLab: (activeCase ?? fallbackCase).baseLab, background: activeCase?.background, cpkOff: activeCase?.cpkOff, lifestyle: activeCase?.lifestyle }, lifestyleOn), [regimen, activeCase, lifestyleOn]);
   const displayTrend = useMemo(() => running ? simulation.trend.slice(0, animStep + 1) : simulation.trend, [running, animStep, simulation.trend]);
+  const nonHdlTarget = activeCase ? (activeCase.nonHdlTarget ?? nonHdlTargetFor(activeCase.riskLevel)) : 130;
   const atTarget = activeCase ? simulation.lastLab.ldl <= activeCase.ldlTarget : false;
+  const atNonHdlTarget = simulation.lastLab.nonHdl < nonHdlTarget;
+  const atTgTarget = activeCase?.tgTarget !== undefined ? simulation.lastLab.tg < activeCase.tgTarget : undefined;
   const ldlReduction = activeCase ? Math.round(((activeCase.baseLab.ldl - simulation.lastLab.ldl) / Math.max(activeCase.baseLab.ldl, 1)) * 100) : 0;
+  const primary = regimen[0] ? drugByName(regimen[0].name) : undefined;
 
   useEffect(() => { if (!running) return; if (animStep >= simulation.trend.length - 1) { setRunning(false); return; } const t = setTimeout(() => setAnimStep(s => s + 1), 250); return () => clearTimeout(t); }, [running, animStep, simulation.trend.length]);
   const handleStart = () => { setAnimStep(0); setRunning(true); };
 
-  const handleFinish = useCallback(() => { if (!activeCase || submitted) return; const s = lastScore; const decisions: SimDecision[] = [{ label: "Fármaco", userChoice: selectedDrug.name, idealChoice: activeCase.expectedDrugs.join(", ") || "—", correct: activeCase.expectedDrugs.includes(selectedDrug.name), category: "Seleção" }]; submitResults({ score: s, actions: buildSimulatorDecisions(SLUG, decisions) }); }, [activeCase, selectedDrug, submitted, submitResults, lastScore]);
+  const handleFinish = useCallback(() => {
+    if (!activeCase || submitted) return;
+    const s = lastScore;
+    const chosen = regimen.map(r => r.name);
+    const decisions: SimDecision[] = [{ label: "Esquema", userChoice: chosen.join(" + ") || "Sem hipolipemiante", idealChoice: activeCase.expectedDrugs.join(", ") || "—", correct: activeCase.expectedDrugs.some(e => chosen.includes(e)), category: "Seleção" }];
+    submitResults({ score: s, actions: buildSimulatorDecisions(SLUG, decisions) });
+  }, [activeCase, regimen, submitted, submitResults, lastScore]);
   useEffect(() => { if (challengeCompleted && !submitted && activeCase) handleFinish(); }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
-  const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] }, scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, riskLevel: c.riskLevel ?? "alto", ldlTarget: c.ldlTarget ?? 70, expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [] });
+  const loadAICase = (c: any) => setActiveCase(toLipidCase({ ...c, isAI: true }));
 
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -127,43 +144,71 @@ export default function SimuladorDislipidemia() {
     );
   }
 
+  const setSlotDrug = (i: number, v: number) => setSlots(prev => prev.map((s, k) => k === i ? { idx: v, dose: v >= 0 ? DRUGS[v].doseMin : 0 } : s));
+  const setSlotDose = (i: number, dose: number) => setSlots(prev => prev.map((s, k) => k === i ? { ...s, dose } : s));
+  const bgLabel = activeCase.background?.length ? activeCase.background.map(b => `${b.name} ${b.dose} ${drugByName(b.name)?.doseUnit ?? ""}`).join(" + ") : null;
+
   return (
     <div className="space-y-4">
       {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
       <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
       <div className="flex items-center gap-3 flex-wrap">{!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}<h2 className="text-xl font-bold">{activeCase.title}</h2><Badge className={riskColor(activeCase.riskLevel)}>Risco {activeCase.riskLevel}</Badge><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" caseId={activeCase.title} /></div></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
+      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p>{bgLabel && <p className="text-xs"><strong>Esquema em uso:</strong> {bgLabel}</p>}</CardContent></Card>
 
       {/* Lipid Gauges */}
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Lipidograma (após tratamento)</CardTitle></CardHeader><CardContent><div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Lipidograma (após 8 semanas do esquema escolhido)</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <LabGauge name="CT" value={simulation.lastLab.ct} unit="mg/dL" color={simulation.lastLab.ct > 200 ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="LDL" value={simulation.lastLab.ldl} unit="mg/dL" color={simulation.lastLab.ldl > (activeCase.ldlTarget) ? "text-destructive" : "text-green-500"} />
+        <LabGauge name="LDL" value={simulation.lastLab.ldl} unit="mg/dL" color={simulation.lastLab.ldl > activeCase.ldlTarget ? "text-destructive" : "text-green-500"} />
+        <LabGauge name="Não-HDL (CT − HDL)" value={simulation.lastLab.nonHdl} unit="mg/dL" color={simulation.lastLab.nonHdl >= nonHdlTarget ? "text-destructive" : "text-green-500"} />
         <LabGauge name="HDL" value={simulation.lastLab.hdl} unit="mg/dL" color={simulation.lastLab.hdl < 40 ? "text-destructive" : "text-green-500"} />
-        <LabGauge name="TG" value={simulation.lastLab.tg} unit="mg/dL" color={simulation.lastLab.tg > 150 ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="Apo-B" value={Math.round(simulation.lastLab.ldl * 0.9)} unit="mg/dL" color={simulation.lastLab.ldl * 0.9 > 100 ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="CPK" value={simulation.cpk} unit="U/L" color={simulation.cpk > 200 ? "text-destructive" : "text-green-500"} />
+        <LabGauge name="TG" value={simulation.lastLab.tg} unit="mg/dL" color={simulation.lastLab.tg > (activeCase.tgTarget ?? 150) ? "text-chart-5" : "text-green-500"} />
+        <LabGauge name="Apo-B" value={simulation.apoB} unit="mg/dL (acompanha o não-HDL)" color="text-chart-5" />
+        <LabGauge name="CPK" value={simulation.cpk} unit="U/L (ref. até ~200)" color={simulation.cpk > 200 ? "text-destructive" : "text-green-500"} />
       </div></CardContent></Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">Hipolipemiante</CardTitle></CardHeader><CardContent className="space-y-4">
-          <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name}</SelectItem>)}</SelectContent></Select>
-          <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /></div>
-          <div className={`rounded-lg p-3 ${atTarget ? "bg-green-500/10 border border-green-500/30" : "bg-destructive/10 border border-destructive/30"}`}>
-            <p className="text-xs font-semibold">Meta LDL: &lt;{activeCase.ldlTarget} mg/dL</p>
-            <p className="text-lg font-mono font-bold">{simulation.lastLab.ldl} <span className="text-xs font-normal">mg/dL</span></p>
-            <p className="text-[10px]">{atTarget ? "✅ Meta atingida!" : `❌ Faltam ${simulation.lastLab.ldl - activeCase.ldlTarget}`} (redução: {ldlReduction}%)</p>
+        <Card><CardHeader><CardTitle className="text-base">Esquema hipolipemiante</CardTitle></CardHeader><CardContent className="space-y-4">
+          {slots.map((slot, i) => {
+            const d = slot.idx >= 0 ? DRUGS[slot.idx] : null;
+            const taken = new Set(slots.filter((_, k) => k !== i && _.idx >= 0).map(x => x.idx));
+            return (
+              <div key={i} className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">{i === 0 ? "Fármaco 1" : `Associar fármaco ${i + 1}`}</p>
+                <Select value={String(slot.idx)} onValueChange={v => setSlotDrug(i, Number(v))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="-1">{i === 0 ? "Nenhum (sem hipolipemiante)" : "Nenhum"}</SelectItem>{DRUGS.map((dr, k) => <SelectItem key={k} value={String(k)} disabled={taken.has(k)}>{dr.name}</SelectItem>)}</SelectContent></Select>
+                {d && (d.doseMax > d.doseMin
+                  ? <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{slot.dose} {d.doseUnit}</span></div><Slider value={[slot.dose]} onValueChange={([v]) => setSlotDose(i, v)} min={d.doseMin} max={d.doseMax} step={d.doseStep} /></div>
+                  : <p className="text-xs">Dose fixa: <span className="font-bold">{d.doseMin} {d.doseUnit}</span></p>)}
+              </div>
+            );
+          })}
+          {activeCase.lifestyle && (
+            <div className="flex items-start gap-3 rounded-lg border p-3"><Switch checked={lifestyleOn} onCheckedChange={setLifestyleOn} /><div><p className="text-xs font-semibold">Medidas não farmacológicas</p><p className="text-[11px] text-muted-foreground">{activeCase.lifestyle.label}</p></div></div>
+          )}
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-xs font-semibold">Metas do caso (após 8 semanas)</p>
+            <p className={`text-xs ${atTarget ? "text-green-500" : "text-destructive"}`}>LDL &lt; {activeCase.ldlTarget}: <span className="font-mono font-bold">{simulation.lastLab.ldl}</span> {atTarget ? "✅" : `❌ (faltam ${simulation.lastLab.ldl - activeCase.ldlTarget})`} · variação {-ldlReduction}% em relação ao laboratório do caso</p>
+            <p className={`text-xs ${atNonHdlTarget ? "text-green-500" : "text-destructive"}`}>Não-HDL &lt; {nonHdlTarget}: <span className="font-mono font-bold">{simulation.lastLab.nonHdl}</span> {atNonHdlTarget ? "✅" : "❌"}</p>
+            {activeCase.tgTarget !== undefined && <p className={`text-xs ${atTgTarget ? "text-green-500" : "text-destructive"}`}>TG &lt; {activeCase.tgTarget}: <span className="font-mono font-bold">{simulation.lastLab.tg}</span> {atTgTarget ? "✅" : "❌"}</p>}
+            {primary && <p className="text-[10px] text-muted-foreground">Efeito pleno do 1º fármaco em ~{primary.weeksToEffect} semanas (o de ação mais lenta define a curva).</p>}
           </div>
           <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 8 semanas"}</Button>
         </CardContent></Card>
         <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (8 semanas)</CardTitle></CardHeader><CardContent>
-          <ResponsiveContainer width="100%" height={200}><LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} /><Line type="monotone" dataKey="ldl" name="LDL" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line type="monotone" dataKey="hdl" name="HDL" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line type="monotone" dataKey="tg" name="TG" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine y={activeCase.ldlTarget} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Meta LDL", fontSize: 9 }} /></LineChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height={260}><LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis yAxisId="l" stroke="hsl(var(--muted-foreground))" label={{ value: "LDL / Não-HDL / HDL (mg/dL)", angle: -90, position: "insideLeft", fontSize: 9 }} /><YAxis yAxisId="r" orientation="right" stroke="hsl(var(--chart-3))" label={{ value: "TG (mg/dL)", angle: 90, position: "insideRight", fontSize: 9 }} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Line yAxisId="l" type="monotone" dataKey="ldl" name="LDL" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="nonHdl" name="Não-HDL" stroke="hsl(var(--chart-4))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="hdl" name="HDL" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line yAxisId="r" type="monotone" dataKey="tg" name="TG (eixo direito)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine yAxisId="l" y={activeCase.ldlTarget} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Meta LDL", fontSize: 9 }} /></LineChart></ResponsiveContainer>
         </CardContent></Card>
       </div>
 
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> EA</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={120}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de efeitos adversos (%) do esquema</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={140}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
 
-
-      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getDislipidemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, ldlTarget: activeCase.ldlTarget, riskLevel: activeCase.riskLevel, atTarget, ldlReduction }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
+      {(() => {
+        const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+        const state = {
+          drug: regimen[0]?.name ?? "Nenhum", dose: regimen[0]?.dose ?? 0, regimen, drugs: regimen.map(r => r.name), nDrugs: regimen.length, lifestyleOn,
+          sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, apoB: simulation.apoB, cpk: simulation.cpk,
+          ldlTarget: activeCase.ldlTarget, nonHdlTarget, tgTarget: activeCase.tgTarget, riskLevel: activeCase.riskLevel, atTarget, atNonHdlTarget, atTgTarget, ldlReduction, unchanged: simulation.unchanged,
+        };
+        return <SimulatorChallengeMode challengeSet={getDislipidemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={state} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
+      })()}
 
       {isVirtualRoom && submitted && <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button></div>}
     </div>

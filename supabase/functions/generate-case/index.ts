@@ -851,6 +851,34 @@ ARQUÉTIPOS (varie entre eles): (1) pneumonia adquirida na comunidade (escolha d
 
 COERÊNCIA OBRIGATÓRIA: scenario, baseLab, cobertura e expectedDrugs precisam concordar entre si; valores plausíveis para o arquétipo (PCT > 2 e PCR > 100 em bacteriana grave; PCT < 0,25 e PCR < 50 em viral); o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora.`,
 
+  "farmacoterapia-dislipidemia": `Gere um caso clínico COMPLETO para o Simulador de Dislipidemia e Risco Cardiovascular (Farmacoterapia Laboratorial).
+O simulador projeta, para 8 semanas depois do esquema montado pelo aluno (até 3 fármacos com dose), LDL, HDL, TG, CT, não-HDL (CT − HDL), Apo-B (acompanha o não-HDL) e CPK, com as metas do caso e barras de efeitos adversos. Os efeitos de fármacos diferentes se multiplicam. O caso é usado em atividades em grupo com "Modo Desafio": o aluno monta o esquema, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array curto: "DM2", "HAS", "IAM prévio", "Hipotireoidismo"...), diagnosis (descrição NEUTRA e curta do motivo da consulta, sem a conduta) }
+- scenario: apresentação em 3-5 frases com idade, peso, comorbidades, esquema em uso (se houver) e TODOS os valores do baseLab (CT, LDL, HDL, TG, Apo-B e, se relevante, CPK). NUNCA escreva o diagnóstico, a conduta nem "precisa de X". Termine dizendo que a tela mostra o lipidograma projetado para 8 semanas depois do esquema escolhido.
+- baseLab: { ct, ldl, hdl, tg (mg/dL), apoB (mg/dL), cpk (U/L, normal ~90-150) }. COERÊNCIA OBRIGATÓRIA: com TG ≤ 400, CT = LDL + HDL + TG/5 (Friedewald). Com TG > 400 informe o LDL DIRETO no ldl e diga isso no scenario.
+- riskLevel: "intermediário"|"alto"|"muito alto" (muito alto = doença aterosclerótica; alto = DM2 longo com fatores, hipercolesterolemia familiar sem DCV, LDL ≥ 190, DRC), ldlTarget: 100 (intermediário) | 70 (alto) | 50 (muito alto).
+- expectedDrugs: 1 a 3 nomes EXATOS da lista: "Atorvastatina", "Rosuvastatina", "Sinvastatina", "Ezetimiba", "Fenofibrato", "Evolocumabe", "Ômega-3".
+- clinicalTip: 1-2 frases com a conduta e seus limites.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+- OPCIONAIS (use só quando o arquétipo pedir):
+  - background: array de { name, dose } com o esquema EM USO (nomes da lista; doses: Atorvastatina 10-80, Rosuvastatina 5-40, Sinvastatina 10-40, Ezetimiba 10, Fenofibrato 160, Evolocumabe 140, Ômega-3 1-4). Quando existe, o baseLab é o laboratório COM esse esquema (manter o esquema devolve exatamente o baseLab; trocar, somar ou retirar projeta a partir dele).
+  - cpkOff: CPK depois de suspender o esquema em uso (mialgia por estatina: ~90-110).
+  - tgTarget: meta de TG (500) quando o TG for o desfecho primário (TG > 500: risco de pancreatite). Nesse caso o ldl é direto e o riskLevel costuma ser "intermediário".
+  - lifestyle: { label, effects: { tg: negativo, hdl: positivo, ldl: opcional } } para medidas não farmacológicas (abstinência alcoólica, dieta, perda de peso), com rótulo "(efeito estimado)".
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- Estatinas seguem a regra dos 6%: dobrar a dose rende só ~6 pontos percentuais de LDL a mais (atorvastatina 10/20/40/80 = -37/-43/-49/-55%; rosuvastatina 5/10/20/40 = -38/-43/-48/-53%; sinvastatina 10/20/40 = -27/-32/-37%). Ezetimiba soma ~18% sobre o LDL que sobrou; evolocumabe ~60%; fenofibrato reduz TG ~45% e quase não mexe no LDL; ômega-3 reduz TG até ~30% em 4 g e proporcionalmente menos em doses menores.
+- Mialgia/hepatotoxicidade/GI/rabdomiólise crescem com a dose e se combinam entre os fármacos; CPK sobe com fibrato + estatina e cai para o cpkOff ao suspender o esquema em uso.
+- NÃO modela: PCSK9 em hipercolesterolemia familiar homozigótica, aférese, inclisirana, ácido bempedoico, interação farmacocinética (genfibrozila, CYP3A4), gestação, TSH, dados de seguimento além de 8 semanas.
+
+ARQUÉTIPOS (varie entre eles): (1) prevenção primária de alto risco, naïve, com meta de LDL e não-HDL; (2) intolerância muscular a estatina (background com a estatina culpada, CPK alto, cpkOff); (3) hipertrigliceridemia grave (TG > 500, LDL direto, tgTarget, lifestyle); (4) prevenção secundária com estatina máxima em uso e LDL acima da meta (ezetimiba, depois iPCSK9); (5) hipercolesterolemia familiar com terapia dupla em uso (iPCSK9).
+
+COERÊNCIA OBRIGATÓRIA: scenario, baseLab, riskLevel, ldlTarget, background e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora (ex.: o fibrato que melhora TG/HDL sem mexer no LDL; trocar de estatina de alta potência em dose máxima; retirar a ezetimiba).`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 
