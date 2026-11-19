@@ -10,8 +10,8 @@ export function PublicLayout() {
   useCookieAnalytics();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0F1C]">
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0A0F1C]/80 backdrop-blur-xl pt-safe">
+    <div className="min-h-screen flex flex-col bg-[#050b12]">
+      <header className="sticky top-0 z-50 border-b border-teal-200/[0.08] bg-[#050b12]/85 backdrop-blur-xl pt-safe">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="rounded-lg bg-emerald-500/10 p-1.5">
@@ -32,7 +32,7 @@ export function PublicLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
-      <footer className="border-t border-white/[0.06] bg-[#080C18] py-12">
+      <footer className="border-t border-teal-200/[0.08] bg-[#040910] py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
             {/* Brand */}

@@ -90,17 +90,15 @@ export function SalesAgent() {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-2xl transition-all duration-300",
-          "bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500",
-          "text-white hover:scale-110 active:scale-95",
+          "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 rounded-full p-3.5 sm:p-4 shadow-2xl transition-all duration-300",
+          "bg-gradient-to-br from-teal-500 to-sky-600 hover:from-teal-400 hover:to-sky-500",
+          "text-[#04131a] border border-teal-300/30 hover:scale-105 active:scale-95",
           open && "rotate-90 opacity-0 pointer-events-none"
         )}
         aria-label="Falar com consultora"
       >
-        <MessageSquare className="h-6 w-6" />
-        {/* Pulse indicator */}
-        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-amber-400 animate-ping" />
-        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-amber-400" />
+        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+        <span className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-300 ring-2 ring-[#050b12]" />
       </button>
 
       {/* Chat panel */}
