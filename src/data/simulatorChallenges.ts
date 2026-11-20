@@ -2753,53 +2753,594 @@ export function getDislipidemiaLabChallenges(caseIndex?: number): ChallengeSet {
 // ═══════════════════════════════════════════════════════════════════════════════
 // FARMACOTERAPIA LABORATORIAL — GLICEMIA
 // ═══════════════════════════════════════════════════════════════════════════════
+// Revisado no padrão "mexe no simulador → interpreta → decide em grupo". Números calculados no motor
+// (src/lib/glicemia/engine.ts; src/lib/glicemia/engine.test.ts fixa cada um deles).
+// O painel mostra o paciente já estabilizado (HbA1c = projeção de ~3 meses; jejum e pós-prandial em dias).
+// Casos com esquema em uso (Caso 2, 3 e 5): o laboratório é COM o esquema; cada item pode ser suspenso ou ter a dose ajustada.
+// Números por caso (jejum/pós-prandial/HbA1c):
+//  Caso 1 (Maria, sem tratamento 185/260/8,2): Metformina 500/1000/1500/2000/2550 = HbA1c 7,2/7,1/7,0/6,8/6,7 e GI 18/24/31/38/45%;
+//   Metformina 2000 = 149/215/6,8, hipo 2%, peso 0%; Glibenclamida 10 = 141/204/7,0, hipo 34%, peso 25%;
+//   Glargina 20 = 140/243; Lispro 10 = 178/202; HOMA-IR = 22×185/405 = 10,05.
+//  Caso 2 (José, Metformina 2000 mantida 195/280/8,5, meta até 7,5): Pioglitazona 30 = 7,7, IC 45%, peso 32%; Empagliflozina 25 = 7,7, IC 0%;
+//   Liraglutida 0,6/1,2/1,8 = 7,7/7,5/7,3, GI 53/65/77% (base 38%); Glibenclamida 10 = 7,3, hipo 36%, peso 25%;
+//   Empagliflozina 25 sem metformina = 9,1; sem metformina e sem fármaco = 9,9.
+//  Caso 3 (Fátima, Metformina 1000 + Glibenclamida 10 = 170/240/8,0, hipo 54%, meta até 8,0, TFG 38): glib suspensa = 214/296/9,2, hipo 1%;
+//   Metformina 2000 = 8,9 e acidose láctica 33% (1000 = 7%); Glargina 20 + glib mantida = 6,9, hipo 67%;
+//   Glargina 10/20/34/40 (glib suspensa) = 8,2/8,1/8,0/8,0, hipo 13/15/19/20%, peso 18/22/27/30%;
+//   Sitagliptina 50 = 8,7 (limite 50), 100 = 8,5 (acima do limite); Empagliflozina 25 = 8,8 (9,2 → 8,8); Liraglutida 1,8 = 8,0, GI 63%, hipo 4%.
+//  Caso 4 (Pedro, CAD 450/520, pH 7,18, HCO₃⁻ 11, gap 24, K 5,8): Lispro 16 = pH 7,32, HCO₃⁻ 19,1, gap 17, glicemia 294; Lispro 30 = pH 7,40, HCO₃⁻ 24, gap 12, glicemia 200, K 5,3;
+//   Glargina 80 = pH 7,26, HCO₃⁻ 15,6, gap 20; Metformina 2550 = acidose láctica 52%; Empagliflozina 25 = cetoacidose 62%.
+//  Caso 5 (Antônio, Glibenclamida 15 + Metformina 1500 = 110/180/7,0, hipo 70%, meta até 8,5, CG 36): glib suspensa = 160/243/8,3, hipo 2%, acidose láctica 27%;
+//   Metformina 1000 = 8,5, acidose láctica 7%; + Sitagliptina 50 = 7,9, hipo 3%; Sitagliptina 100 = 7,8 (acima do limite); Glargina 10 = 7,5, hipo 13%, peso 18%.
+
+const glRisk = (s: any, n: string): number => (s.sideEffects || []).find((e: any) => e.name === n)?.risco ?? 0;
+const glKept = (s: any, n: string): boolean => (s.kept || []).includes(n);
+const glRegDose = (s: any, n: string): number => s.regDoses?.[n] ?? 0;
+const glOpt = (pos: number, correct: string, wrong: [string, string, string]) => {
+  const options = [...wrong];
+  options.splice(pos, 0, correct);
+  return { options, correctIndex: pos };
+};
+const GL_CTX_REG = "Onde fica cada coisa: no card Prescrição, o bloco \"Esquema atual do paciente\" tem, para cada fármaco em uso, um interruptor Mantido/Suspenso e um slider de dose; logo abaixo, \"Fármaco a adicionar\" escolhe o fármaco e a dose. O Painel Glicêmico traz Jejum, Pós-prandial e HbA1c (projeção); \"Risco de Efeitos Adversos\" é o gráfico de barras no fim da tela; a caixa \"Meta de HbA1c do caso\" mostra se a projeção está dentro da meta. Com \"Nenhum fármaco adicional\" você vê só o esquema mantido.";
+const GL_CTX_NAIVE = "Onde fica cada coisa: no card Prescrição, a lista \"Prescrição\" escolhe o fármaco e o slider \"Dose\" a dose. O Painel Glicêmico traz Jejum, Pós-prandial e HbA1c (projeção de ~3 meses); \"Risco de Efeitos Adversos\" é o gráfico de barras no fim da tela; a caixa \"Meta de HbA1c do caso\" mostra se a projeção está dentro da meta. Com \"Nenhum fármaco adicional\" você vê o paciente sem tratamento.";
 
 export function getGlicemiaLabChallenges(caseIndex?: number): ChallengeSet {
   const caseSets: Challenge[][] = [
-    // Caso 1: DM2 Recém-diagnosticado (Maria Santos, 52a, obesa — jejum 185, HbA1c 8.2%)
+    // Caso 1: DM2 sem tratamento (Maria Santos, 52a, obesa — jejum 185, pós-prandial 260, HbA1c 8,2%, insulina 22, peptídeo-C 3,0, TFG 95)
     [
-      { type: "mcq", question: "Qual é o fármaco de 1ª linha para DM2 recém-diagnosticado com HbA1c 8.2%?", options: ["Glibenclamida", "Metformina", "Insulina NPH", "Empagliflozina"], correctIndex: 1, explanation: "Metformina é 1ª linha universal em DM2: reduz HbA1c 1-1.5%, sem ganho de peso, baixo risco de hipoglicemia, benefício CV (UKPDS).", reference: "ADA Standards of Care 2024" },
-      { type: "adjust", question: "Selecione Metformina com dose ≥1000mg e observe a glicemia de jejum e a HbA1c caírem no painel (basal jejum 185, HbA1c 8.2%).\n\nQual o mecanismo da metformina que explica essa queda sem risco relevante de hipoglicemia?", targetParams: {}, validator: (s) => { if (s.drug !== "Metformina") return { correct: false, feedback: "Selecione Metformina." }; if ((s.dose ?? 0) < 1000) return { correct: false, feedback: "Suba a dose para ≥1000mg." }; return (s.lastLab?.jejum ?? 999) < (s.baseLab?.jejum ?? 0) ? { correct: true, feedback: "Jejum e HbA1c caindo." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["Secretagogo de insulina — estimula diretamente as células β", "Redução da produção hepática de glicose (via AMPK) + sensibilização periférica à insulina — não aumenta a secreção de insulina, por isso o risco de hipoglicemia é baixo", "Bloqueio da absorção intestinal de glicose", "Inibição da DPP-4"], correctIndex: 1, explanation: "Metformina ativa AMPK → ↓gliconeogênese hepática, ↑captação muscular de glicose, ↓absorção intestinal. Não aumenta insulina — por isso raramente causa hipoglicemia em monoterapia.", reference: "Rena G. Diabetologia 2017" },
-      { type: "mcq", question: "Quando NÃO iniciar metformina?", options: ["HbA1c > 7%", "TFG < 30 mL/min", "Obesidade", "Idade > 60 anos"], correctIndex: 1, explanation: "Contraindicações: TFG <30 (risco acidose láctica), insuficiência hepática grave, alcoolismo ativo, uso de contraste iodado (suspender 48h). A TFG desta paciente é 95, sem contraindicação.", reference: "KDIGO 2022" },
-      { type: "mcq", question: "Qual efeito adverso mais comum da metformina?", options: ["Hipoglicemia severa", "Intolerância gastrointestinal (náusea, diarreia, meteorismo)", "Ganho de peso >5kg", "Hepatotoxicidade"], correctIndex: 1, explanation: "GI ocorre em 20-30%: titular lentamente (500mg/sem), usar formulação XR, tomar com refeições. Deficiência de B12 com uso prolongado.", reference: "ADA 2024" },
-      { type: "mcq", question: "Com HbA1c 8.2%, qual a meta de HbA1c para esta paciente?", options: ["< 6.0%", "< 7.0% (individualizar: idade, comorbidades, risco de hipo)", "< 8.5%", "< 9.0%"], correctIndex: 1, explanation: "ADA: <7% para maioria. Individualizar: <6.5% se jovem sem comorbidades, <8% se idoso/frágil/complicações. Evitar hipoglicemia.", reference: "ADA 2024" },
-      { type: "adjust", question: "Suponha que, após 3 meses de metformina, a HbA1c ainda esteja em 7.8% (fora da meta). Selecione Empagliflozina como 2º agente e observe a HbA1c cair mais.\n\nQual o critério para escolher o 2º agente nesta paciente sem DCV/IC/DRC estabelecidas?", targetParams: {}, validator: (s) => { if (s.drug !== "Empagliflozina") return { correct: false, feedback: "Selecione Empagliflozina." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo com o 2º agente." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["Sempre usar sulfonilureia como 2º agente, independente do perfil", "A escolha é baseada em comorbidades e objetivos individuais: iSGLT2 se DCV/IC/DRC, GLP-1 RA se obesidade/DCV, e agentes de baixo custo/hipo se não houver indicação preferencial — mesmo sem essas comorbidades, iSGLT2 é uma opção razoável pelo perfil de segurança", "Sempre iniciar insulina como 2º agente", "Suspender a metformina ao adicionar um novo fármaco"], correctIndex: 1, explanation: "Se não atingiu meta em 3 meses com metformina: adicionar 2º agente. ADA/EASD 2022: escolha baseada em benefícios cardiometabólicos e perfil do paciente (comorbidades, risco de hipo, custo, preferência).", reference: "ADA/EASD Consensus 2022" },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Maria (52 anos, 85 kg, TFG 95) chega sem tratamento: jejum 185, pós-prandial 260 e HbA1c 8,2% (meta do caso: até 7,0%). Em \"Prescrição\", teste um de cada vez: Metformina 2000 mg/dia e Glibenclamida 10 mg/dia. Para cada um, anote a HbA1c (projeção) e as barras Hipoglicemia e Ganho de Peso.\n\nDiscutam em grupo e deixem selecionada a Metformina 2000 mg/dia. Um residente defende a glibenclamida \"porque baixa a glicemia mais rápido\". O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Metformina") return { correct: false, feedback: "Deixe a Metformina selecionada." };
+          if ((s.dose ?? 0) < 1500 || (s.dose ?? 0) > 2000) return { correct: false, feedback: "Ajuste a dose da Metformina para 2000 mg/dia." };
+          if ((s.lastLab?.hba1c ?? 99) > 7.0) return { correct: false, feedback: "A HbA1c projetada precisa estar dentro da meta (até 7,0%); confira a dose." };
+          return glRisk(s, "Hipoglicemia") <= 5 ? { correct: true, feedback: `Metformina 2000 mg: HbA1c ${s.lastLab.hba1c}% e hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a barra de hipoglicemia." };
+        },
+        ...glOpt(2,
+          "Os dois chegam à meta (6,8% e 7,0%), mas a glibenclamida paga isso com hipoglicemia de 34% e ganho de peso de 25%, contra 2% e 0% da metformina; por isso a metformina é a primeira escolha.",
+          [
+            "Os dois chegam à meta (6,8% e 7,0%), mas a glibenclamida reduz mais o pós-prandial (204 contra 215), e esse ganho justifica a hipoglicemia de 34% em uma paciente que nunca foi tratada.",
+            "Os dois chegam à meta (6,8% e 7,0%), mas a metformina só reduz a HbA1c quando testada em dose alta; na dose inicial de 500 mg ela não mudaria o resultado, então não serve para começar.",
+            "Os dois chegam à meta (6,8% e 7,0%), mas as barras de hipoglicemia e de peso refletem só o início do tratamento e desaparecem com a titulação, então a escolha pode seguir a rapidez do efeito.",
+          ]),
+        explanation: "Com os dois fármacos a HbA1c projetada fica dentro da meta (metformina 2000 mg = 6,8%; glibenclamida 10 mg = 7,0%). A diferença está no custo: glibenclamida = hipoglicemia 34% e ganho de peso 25% (e já com 5 mg a hipoglicemia é de 25%); metformina = 2% e 0%. Em paciente obesa, sem complicação e com TFG 95, a metformina é a 1ª escolha porque entrega a meta sem esses riscos (e a glibenclamida reduz o pós-prandial um pouco mais, mas isso não paga a hipoglicemia). A metformina já reduz a HbA1c em dose inicial: com 500 mg a projeção é 7,2%.",
+        reference: "ADA Standards of Care in Diabetes 2024 (Pharmacologic Approaches); SBD 2024",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Ainda com Maria sem tratamento, selecione Metformina e varie a dose: 500, 1000, 1500, 2000 e 2550 mg/dia. Para cada uma anote a HbA1c (projeção) e a barra GI.\n\nDiscutam em grupo e deixem selecionada a MENOR dose que já leva a HbA1c à meta de até 7,0%. O que o padrão dos números ensina sobre como titular a metformina?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Metformina") return { correct: false, feedback: "Selecione a Metformina." };
+          if ((s.dose ?? 0) > 1500) return { correct: false, feedback: "Existe dose menor que já atinge a meta; reduza o slider." };
+          if ((s.dose ?? 0) < 1500) return { correct: false, feedback: "Com essa dose a HbA1c projetada ainda está acima de 7,0%; suba o slider." };
+          return (s.lastLab?.hba1c ?? 99) <= 7.0 ? { correct: true, feedback: `1500 mg: HbA1c ${s.lastLab.hba1c}% e GI ${glRisk(s, "GI")}%.` } : { correct: false, feedback: "Confira a HbA1c projetada." };
+        },
+        ...glOpt(0,
+          "A HbA1c cai de 8,2% para 7,2% já com 500 mg e chega à meta com 1500 mg (GI 31%); de 1500 para 2550 mg a queda extra é de 0,3 ponto e o GI vai a 45%, então se titula aos poucos até a meta.",
+          [
+            "A HbA1c cai de 8,2% para 7,2% já com 500 mg, mas a barra GI só passa a existir acima de 1500 mg; assim a titulação pode começar em 1500 mg sem qualquer prejuízo de tolerância digestiva.",
+            "A HbA1c só começa a cair acima de 1500 mg e a barra GI diminui conforme a dose sobe; por isso a titulação deve começar na dose máxima para a tolerância melhorar com o uso.",
+            "A HbA1c cai de 8,2% para 7,2% já com 500 mg e chega à meta com 1500 mg (GI 31%); como o GI depende da dose total, convém dar a dose completa de uma vez para chegar logo à meta.",
+          ]),
+        explanation: "Metformina: 500 mg = HbA1c 7,2% / GI 18%; 1000 mg = 7,1% / 24%; 1500 mg = 7,0% / 31%; 2000 mg = 6,8% / 38%; 2550 mg = 6,7% / 45%. A maior parte do efeito aparece nas doses iniciais, e cada degrau seguinte rende pouco e custa mais intolerância gastrointestinal. Por isso se começa baixo (500 mg com refeições), sobe-se a cada 1–2 semanas e se para quando a meta é atingida (aqui 1500 mg). A formulação de liberação prolongada também ajuda na tolerância.",
+        reference: "ADA Standards of Care in Diabetes 2024; Bula da metformina (titulação gradual)",
+      },
+      {
+        type: "mcq",
+        question: "Maria tem insulina de jejum de 22 µUI/mL e glicemia de jejum de 185 mg/dL (peptídeo-C 3,0 ng/mL). Calcule o HOMA-IR (glicemia em mg/dL × insulina em µUI/mL ÷ 405) e interprete junto com o peptídeo-C: qual leitura orienta a classe do 1º fármaco?",
+        ...glOpt(3,
+          "HOMA-IR ≈ 10,0 (referência de cerca de 2,5), com peptídeo-C de 3,0 ng/mL: a paciente produz insulina em excesso e resiste a ela, o que favorece um sensibilizador de insulina como a metformina.",
+          [
+            "HOMA-IR ≈ 2,3, dentro do esperado, com peptídeo-C de 3,0 ng/mL: a hiperglicemia vem de falta de insulina e não de resistência, o que favorece de início um secretagogo como a glibenclamida.",
+            "HOMA-IR ≈ 10,0 indica resistência à insulina, mas o peptídeo-C de 3,0 ng/mL revela falência das células beta, o que favorece insulina basal já na primeira consulta desta paciente.",
+            "HOMA-IR ≈ 10,0 indica resistência à insulina e, como a insulina circulante já é alta, o ganho esperado com a metformina é pequeno; o melhor é somar um secretagogo logo de início.",
+          ]),
+        explanation: "HOMA-IR = 185 × 22 ÷ 405 = 10,05 (referência de cerca de 2,5; os pontos de corte variam). Com peptídeo-C de 3,0 ng/mL (acima do normal de ~0,5–2,0) a reserva de células beta está preservada e há hiperinsulinemia: o problema é resistência periférica/hepática, o alvo da metformina (↓ produção hepática de glicose, ↑ sensibilidade). Secretagogo ou insulina inicial acrescentariam insulina a quem já tem em excesso (e mais hipoglicemia e peso).",
+        reference: "Matthews DR. Diabetologia 1985 (HOMA); ADA Standards of Care 2024",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Maria tem jejum 185 e pós-prandial 260. Compare em \"Prescrição\": Insulina Glargina 20 UI/dia e Insulina Lispro 10 UI/refeição. Para cada uma anote o jejum e o pós-prandial do painel.\n\nDiscutam em grupo e deixem selecionada a Insulina Glargina. Um colega diz que \"como o pós-prandial é muito maior que o jejum, a insulina rápida resolve tudo\". O que a comparação mostra sobre cada insulina?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Insulina Glargina") return { correct: false, feedback: "Deixe a Insulina Glargina selecionada." };
+          if ((s.dose ?? 0) < 20) return { correct: false, feedback: "Ajuste a glargina para 20 UI/dia." };
+          return (s.lastLab?.jejum ?? 999) <= 150 ? { correct: true, feedback: `Glargina 20 UI: jejum ${s.lastLab.jejum}, pós-prandial ${s.lastLab.pp}.` } : { correct: false, feedback: "Confira o jejum do painel." };
+        },
+        ...glOpt(1,
+          "A glargina reduz sobretudo o jejum (185 para 140) e pouco o pós-prandial (260 para 243); a lispro faz o inverso (pós-prandial 260 para 202, jejum 185 para 178): cada insulina age no seu horário do dia.",
+          [
+            "A glargina reduz sobretudo o pós-prandial (260 para 202) e pouco o jejum (185 para 178); a lispro faz o inverso (jejum 185 para 140): cada insulina age no horário oposto ao do nome.",
+            "As duas insulinas reduzem jejum e pós-prandial na mesma proporção (jejum 185 para 140 e pós-prandial 260 para 202), então a escolha entre elas não depende do perfil glicêmico da paciente.",
+            "A glargina reduz o jejum (185 para 140) e a lispro reduz o pós-prandial (260 para 202), mas como a hipoglicemia é igual nas duas, a insulina rápida deve ser a escolha inicial desta paciente.",
+          ]),
+        explanation: "Glargina 20 UI: jejum 185 → 140 e pós-prandial 260 → 243 (insulina basal cobre o jejum). Lispro 10 UI: pós-prandial 260 → 202 e jejum 185 → 178 (insulina rápida cobre a refeição). A metformina 2000 mg, em comparação, reduz os dois (149/215) sem hipoglicemia relevante. Mesmo assim, a insulina não é o 1º passo nesta paciente (HbA1c 8,2%, sem sintomas catabólicos, peptídeo-C 3,0): as barras de hipoglicemia (glargina 12%, lispro 31%) e de ganho de peso (22% e 27%) mostram o custo.",
+        reference: "ADA Standards of Care in Diabetes 2024 (insulin therapy); SBD 2024",
+      },
+      {
+        type: "mcq",
+        question: "A tela projeta HbA1c de 6,8% para Maria com metformina 2000 mg/dia. Três meses depois, com a dose já titulada, ela chega à consulta com HbA1c de 7,8%. Qual é o 1º passo coerente com o que o simulador mostrou?",
+        ...glOpt(2,
+          "Verificar adesão, a dose realmente tomada e a dieta antes de somar outro fármaco, pois a projeção de 6,8% indica que a metformina nessa dose bastaria; depois se reavalia um 2º agente.",
+          [
+            "Suspender a metformina por falha terapêutica e iniciar insulina basal, porque uma HbA1c de 7,8% sob metformina em dose plena mostra que o fármaco não funciona nesta paciente.",
+            "Somar glibenclamida de imediato, já que a HbA1c acima da meta com metformina em dose plena é a indicação formal de associação, sem necessidade de investigar a adesão antes.",
+            "Reduzir a metformina para 1000 mg, porque a projeção de 6,8% mostra que o efeito da dose de 2000 mg é igual ao de doses menores e a HbA1c de 7,8% deve ser ignorada.",
+          ]),
+        explanation: "O painel projeta o efeito esperado da dose (metformina 2000 mg → 6,8%). Uma HbA1c bem acima disso após 3 meses de dose plena sugere que o tratamento não está sendo tomado como previsto (adesão, titulação incompleta, dieta) antes de sugerir falha do fármaco; só depois disso se discute o 2º agente, escolhido pelo perfil do paciente (comorbidades, peso, risco de hipoglicemia, custo).",
+        reference: "ADA/EASD Consensus Report 2022 (Management of Hyperglycemia in T2D)",
+      },
+      {
+        type: "mcq",
+        question: "Depois de 7 dias de metformina 2000 mg/dia o painel mostra, para Maria, jejum de 149 mg/dL e HbA1c de 6,8%. Como o grupo deve ler esses dois números e planejar o seguimento?",
+        ...glOpt(0,
+          "O jejum já reflete o efeito em dias, mas a HbA1c é projeção de equilíbrio (cerca de 3 meses); a HbA1c real é repetida após esse prazo para confirmar a meta.",
+          [
+            "A HbA1c real cai 1,4 ponto em 7 dias, igual ao painel, então repetir o exame em 1 semana já confirma a meta de até 7,0% e dispensa o seguimento em 3 meses.",
+            "O jejum de 149 mg/dL já está na faixa-alvo de jejum, o que torna a HbA1c redundante; o seguimento pode ser feito com glicemia capilar, sem repetir a HbA1c em 3 meses.",
+            "A HbA1c de 6,8% é o valor medido após 7 dias de tratamento, e deve ser repetida a cada semana até estabilizar, para ajustar a dose da metformina com segurança.",
+          ]),
+        explanation: "Glicemia de jejum e pós-prandial respondem em dias; a HbA1c reflete a glicemia média de ~8–12 semanas (vida média da hemácia ~120 dias), por isso o painel a chama de projeção de equilíbrio. A HbA1c é repetida a cada ~3 meses até atingir a meta (e depois a cada 6 meses). Aqui o jejum de 149 ainda está acima da faixa de jejum de 80–130 mg/dL; a titulação segue.",
+        reference: "ADA Standards of Care in Diabetes 2024 (Glycemic Assessment)",
+      },
     ],
-    // Caso 2: DM2 com Doença CV (José Oliveira, 63a, IAM prévio, IC FE 35% — HbA1c 8.5%)
+    // Caso 2: DM2 + IAM prévio + IC (José Oliveira, 63a — Metformina 2000 mantida, jejum 195, pós-prandial 280, HbA1c 8,5%, meta até 7,5%)
     [
-      { type: "adjust", question: "Selecione Empagliflozina com dose ≥10mg e observe a HbA1c cair no painel (basal 8.5%, o paciente tem IC com FE 35%).\n\nPor que o iSGLT2 é a classe prioritária para adicionar à metformina neste paciente com IC?", targetParams: {}, validator: (s) => { if (s.drug !== "Empagliflozina") return { correct: false, feedback: "Selecione Empagliflozina." }; if ((s.dose ?? 0) < 10) return { correct: false, feedback: "Confirme a dose (≥10mg)." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo com o iSGLT2." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["Porque é a classe mais barata disponível", "Empagliflozina (iSGLT2) tem benefício comprovado em IC independente do controle glicêmico — o estudo EMPA-REG mostrou redução de 35% na hospitalização por IC, tornando essa classe prioritária neste perfil de paciente", "Porque não existe alternativa farmacológica para este paciente", "Porque reduz a HbA1c mais que qualquer outra classe"], correctIndex: 1, explanation: "EMPA-REG: empagliflozina ↓hospitalização por IC em 35%. DAPA-HF/EMPEROR-Reduced: benefício em IC mesmo em pacientes sem DM. Pioglitazona, ao contrário, é CONTRAINDICADA em IC (retenção hídrica).", reference: "EMPA-REG OUTCOME 2015" },
-      { type: "mcq", question: "Qual tiazolidinediona (não disponível como opção segura aqui) é CONTRAINDICADA em IC?", options: ["Nenhuma — todas são seguras", "Pioglitazona (e rosiglitazona) — causam retenção hídrica e pioram IC", "Metformina", "Sitagliptina"], correctIndex: 1, explanation: "TZDs ativam PPARγ → retenção renal de Na⁺/H₂O → edema, ↑volemia → descompensação de IC. Contraindicadas em IC NYHA III-IV — este simulador inclui pioglitazona como opção justamente para o aluno evitá-la neste perfil de paciente.", reference: "Nesto RW. Circulation 2004" },
-      { type: "adjust", question: "Selecione Liraglutida (alternativa correta, GLP-1 RA) e observe a HbA1c cair de forma semelhante à Empagliflozina do desafio anterior.\n\nQual o benefício cardiovascular comprovado da liraglutida que justifica ser também considerada prioritária aqui?", targetParams: {}, validator: (s) => { if (s.drug !== "Liraglutida") return { correct: false, feedback: "Selecione Liraglutida." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo — alternativa igualmente válida ao iSGLT2 neste perfil." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["Reduz arritmias diretamente", "Redução de eventos cardiovasculares maiores (MACE: IAM, AVC, morte CV) demonstrada no estudo LEADER — GLP-1 RA e iSGLT2 são ambos considerados prioritários em DM2 com DCV estabelecida, com a escolha entre eles dependendo de outros fatores (obesidade, preferência de via, IC especificamente)", "Aumenta o HDL em 50%", "Cura a insuficiência cardíaca"], correctIndex: 1, explanation: "LEADER: liraglutida ↓MACE 13% vs placebo em DM2 com alto risco CV. Semaglutida (SUSTAIN-6): ↓MACE 26%. Em IC especificamente, a evidência de iSGLT2 é mais robusta, mas GLP-1 RA continua sendo opção válida para o componente aterosclerótico/obesidade.", reference: "Marso SP. NEJM 2016" },
-      { type: "mcq", question: "Qual iDPP-4 (não disponível neste simulador) mostrou risco aumentado de hospitalização por IC em estudo controlado?", options: ["Sitagliptina", "Saxagliptina (estudo SAVOR-TIMI 53) — aumento significativo de hospitalização por IC", "Linagliptina", "Alogliptina"], correctIndex: 1, explanation: "SAVOR-TIMI 53: saxagliptina ↑hospitalização por IC em 27% (p=0.007). TECOS (sitagliptina): neutro para IC. Reforça que nem toda a classe iDPP-4 é equivalente — importante saber mesmo que a saxagliptina não esteja disponível aqui.", reference: "Scirica BM. NEJM 2013" },
-      { type: "adjust", question: "Compare com Sitagliptina (iDPP-4): selecione-a e observe que a queda de HbA1c é mais discreta que com Empagliflozina/Liraglutida.\n\nPor que a sitagliptina não é a escolha prioritária para este paciente com IAM prévio e IC, apesar de também reduzir a HbA1c?", targetParams: {}, validator: (s) => { if (s.drug !== "Sitagliptina") return { correct: false, feedback: "Selecione Sitagliptina." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c cai, mas compare a magnitude com iSGLT2/GLP-1 RA." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["A sitagliptina é sempre superior a qualquer outra classe em pacientes cardiopatas", "Os iDPP-4 têm eficácia glicêmica modesta e não demonstraram o mesmo benefício cardiovascular robusto que iSGLT2/GLP-1 RA em DCV estabelecida — a escolha do 2º agente deve priorizar a classe com evidência de proteção cardiovascular, não apenas o controle glicêmico isolado", "A sitagliptina é contraindicada em qualquer paciente com IAM prévio", "Não existe diferença de evidência cardiovascular entre as classes de antidiabéticos"], correctIndex: 1, explanation: "ADA/EASD 2022: em DM2 com DCV/IC estabelecida, iSGLT2 ou GLP-1 RA são priorizados sobre iDPP-4 justamente pelo benefício cardiovascular comprovado em ensaios clínicos, não apenas pela redução de HbA1c.", reference: "ADA/EASD Consensus 2022" },
-      { type: "mcq", question: "Este paciente tem TFG 72 (função renal preservada). Em pacientes DM2 + DRC com TFG 30-60, qual classe (representada aqui pela empagliflozina) tem evidência de nefroproteção?", options: ["Nenhuma — todas contraindicadas abaixo de TFG 60", "iSGLT2 (ex: dapagliflozina no estudo DAPA-CKD: ↓progressão renal em 39%) — pode ser usada até TFG bem baixa, e a classe é recomendada para nefroproteção mesmo em pacientes sem diabetes", "Apenas metformina", "Apenas insulina"], correctIndex: 1, explanation: "DAPA-CKD: dapagliflozina ↓desfecho renal composto em 39% em TFG 25-75. EMPA-KIDNEY (com empagliflozina) mostrou resultado semelhante. iSGLT2 hoje são recomendados para nefroproteção mesmo em pacientes sem diabetes.", reference: "Heerspink HJL. NEJM 2020" },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "José (63 anos, IAM prévio, IC com FE 35%) usa metformina 2 g/dia (TFG 72) e está com HbA1c de 8,5%; a meta do caso é até 7,5%. Mantenha a metformina e teste um por vez em \"Fármaco a adicionar\": Pioglitazona 30 mg/dia e Empagliflozina 25 mg/dia. Anote a HbA1c (projeção) e as barras Descompensação de IC e Ganho de Peso.\n\nDiscutam em grupo e deixem selecionada a Empagliflozina 25 mg. O que os números mostram sobre escolher entre as duas?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Empagliflozina") return { correct: false, feedback: "Deixe a Empagliflozina selecionada." };
+          if ((s.dose ?? 0) < 25) return { correct: false, feedback: "Ajuste a empagliflozina para 25 mg/dia." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina no esquema atual." };
+          return glRisk(s, "Descompensação de IC") <= 5 ? { correct: true, feedback: `Empagliflozina 25 mg: HbA1c ${s.lastLab.hba1c}%, IC ${glRisk(s, "Descompensação de IC")}%.` } : { correct: false, feedback: "Confira a barra de Descompensação de IC." };
+        },
+        ...glOpt(1,
+          "As duas levam a HbA1c a 7,7%; a diferença está na barra de Descompensação de IC (45% com a pioglitazona e 0% com a empagliflozina), reflexo da retenção hídrica, que contraindica a pioglitazona na IC.",
+          [
+            "As duas levam a HbA1c a 7,7%; a barra de Descompensação de IC (45% com a pioglitazona) mede o risco de hipoglicemia, então basta associar a pioglitazona a um fármaco com baixo risco de hipo.",
+            "As duas levam a HbA1c a 7,7%; a barra de Descompensação de IC (45% com a pioglitazona) indica hepatotoxicidade, que só pesa se houver doença hepática, então a pioglitazona é aceitável aqui.",
+            "As duas levam a HbA1c a 7,7%; como o resultado glicêmico é igual, a escolha pode seguir o custo, já que a barra de Descompensação de IC não altera a conduta em paciente compensado.",
+          ]),
+        explanation: "Com metformina mantida, pioglitazona 30 mg e empagliflozina 25 mg levam a HbA1c a 7,7% (ambas acima da meta de 7,5%, o que é parte da discussão). A diferença: pioglitazona = Descompensação de IC 45% e Ganho de Peso 32%; empagliflozina = 0% e 0% (com cetoacidose 10%). A tiazolidinediona causa retenção de sódio e água e é contraindicada na IC sintomática; a barra mostra isso. A escolha pelo iSGLT2 neste paciente se apoia também em desfechos (EMPA-REG, EMPEROR-Reduced), que o simulador não mostra.",
+        reference: "Nesto RW. Circulation 2004; ADA/EASD Consensus Report 2022",
+      },
+      {
+        type: "mcq",
+        question: "Em \"Fármaco a adicionar\", Empagliflozina 25 mg leva o José (TFG 72) de 8,5% para 7,7%, uma queda de 0,8 ponto. No Caso 3, com a Dona Fátima (TFG 38, glibenclamida suspensa), a mesma dose leva de 9,2% para 8,8%, queda de 0,4 ponto. O que explica a diferença e o que ela significa para a indicação?",
+        ...glOpt(3,
+          "O efeito glicêmico do iSGLT2 depende da filtração glomerular (menos glicosúria); o benefício cardiorrenal independe do efeito glicêmico, então a indicação por IC ou DRC se mantém com TFG menor.",
+          [
+            "O efeito glicêmico do iSGLT2 depende da filtração glomerular, e o benefício cardiorrenal acompanha essa queda; por isso com TFG 38 a classe deixa de ser indicada para proteção do coração e do rim.",
+            "A queda menor na Dona Fátima mostra que a empagliflozina é pouco eficaz em mulheres idosas, e a indicação nessa população deve ser reavaliada pela resposta glicêmica observada em cada paciente.",
+            "O efeito glicêmico do iSGLT2 não depende da função renal; a diferença vem apenas do esquema de base de cada caso, e a indicação na DRC deve ser guiada pela HbA1c alcançada.",
+          ]),
+        explanation: "No motor, a eficácia glicêmica da empagliflozina cai com a TFG (fator 1 com TFG ≥ 60; 0,5 com TFG 30–44): mesma dose, metade do efeito na HbA1c. Isso reproduz a farmacologia (menor carga filtrada de glicose, menor glicosúria). O benefício em IC e DRC (EMPEROR-Reduced, DAPA-CKD, EMPA-KIDNEY) foi observado independentemente da HbA1c e até em quem não tem diabetes; a classe é indicada por esses desfechos, não pela queda glicêmica.",
+        reference: "Packer M. NEJM 2020 (EMPEROR-Reduced); Heerspink HJL. NEJM 2020 (DAPA-CKD); KDIGO 2022",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "José mantém a metformina. Teste em \"Fármaco a adicionar\" a Liraglutida 0,6, 1,2 e 1,8 mg/dia. Para cada dose anote a HbA1c (projeção) e a barra GI (só a metformina 2 g já mostra 38% nessa barra).\n\nDiscutam em grupo e deixem selecionada a MENOR dose que leva a HbA1c à meta de até 7,5%. O que o resultado diz sobre a liraglutida como alternativa ao iSGLT2?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Liraglutida") return { correct: false, feedback: "Selecione a Liraglutida." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina no esquema atual." };
+          if ((s.dose ?? 0) > 1.2) return { correct: false, feedback: "Existe dose menor que já atinge a meta; reduza o slider." };
+          return (s.lastLab?.hba1c ?? 99) <= 7.5 ? { correct: true, feedback: `Liraglutida ${s.dose} mg: HbA1c ${s.lastLab.hba1c}%, GI ${glRisk(s, "GI")}%.` } : { correct: false, feedback: "Com essa dose a HbA1c ainda está acima da meta; suba o slider." };
+        },
+        ...glOpt(0,
+          "A dose de 1,2 mg é a menor que fecha a meta (7,5%), mas o GI sobe de 38% para 65%; o custo de tolerância pesa, e a liraglutida entra como alternativa com benefício cardiovascular.",
+          [
+            "A dose de 0,6 mg já fecha a meta (7,5%) e o GI se mantém em 38%, então a liraglutida é a opção de melhor tolerância e deve ser preferida ao iSGLT2 neste paciente com IC.",
+            "A dose de 1,2 mg é a menor que fecha a meta (7,5%), e o GI se mantém em 38%, porque a barra reflete só a metformina; a liraglutida não acrescenta efeito digestivo nessa dose.",
+            "A dose de 1,8 mg é a única que fecha a meta (7,5%), e o GI de 77% é aceitável por se tratar de um paciente cardiopata; por isso a liraglutida substitui a metformina.",
+          ]),
+        explanation: "Liraglutida (com metformina mantida): 0,6 mg = HbA1c 7,7% / GI 53%; 1,2 mg = 7,5% / 65%; 1,8 mg = 7,3% / 77%. A menor dose que fecha a meta é 1,2 mg, e o GI soma o da metformina (38%) ao da liraglutida: o custo digestivo é real, por isso se titula devagar. O benefício cardiovascular da liraglutida (LEADER, redução de MACE) a mantém como alternativa quando o iSGLT2 não puder ser usado ou for insuficiente.",
+        reference: "Marso SP. NEJM 2016 (LEADER); ADA/EASD Consensus Report 2022",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "José mantém a metformina. Teste em \"Fármaco a adicionar\" a Glibenclamida 10 mg/dia e compare com a Empagliflozina 25 mg/dia do desafio 1 (HbA1c 7,7%). Anote a HbA1c e as barras Hipoglicemia e Ganho de Peso da glibenclamida.\n\nDiscutam em grupo e deixem selecionada a Glibenclamida 10 mg. A HbA1c dela é melhor; por que isso não decide a escolha neste paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Glibenclamida") return { correct: false, feedback: "Selecione a Glibenclamida." };
+          if ((s.dose ?? 0) < 10) return { correct: false, feedback: "Ajuste a glibenclamida para 10 mg/dia." };
+          return glRisk(s, "Hipoglicemia") >= 30 ? { correct: true, feedback: `Glibenclamida 10 mg: HbA1c ${s.lastLab.hba1c}%, hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a barra de hipoglicemia." };
+        },
+        ...glOpt(2,
+          "A queda extra de 0,4 ponto da glibenclamida (7,3% contra 7,7%) vem com hipoglicemia de 36% e ganho de peso de 25%, risco inadequado num paciente com IAM prévio e IC, havendo alternativas melhores.",
+          [
+            "A queda extra de 0,4 ponto da glibenclamida (7,3% contra 7,7%) é o argumento decisivo, pois a hipoglicemia de 36% pode ser controlada com ajuste de dose e o ganho de peso não pesa em cardiopatas.",
+            "A queda extra de 0,4 ponto da glibenclamida (7,3% contra 7,7%) vem com hipoglicemia de 36%, mas esse risco só importa em idosos frágeis e é irrelevante em um paciente de 63 anos com TFG 72.",
+            "A queda extra de 0,4 ponto da glibenclamida (7,3% contra 7,7%) é ilusória, porque a HbA1c do painel é a mesma para todos os fármacos quando a dose é corrigida pelo peso do paciente.",
+          ]),
+        explanation: "Glibenclamida 10 mg com metformina mantida: HbA1c 7,3%, hipoglicemia 36%, ganho de peso 25%. Empagliflozina 25 mg: 7,7%, hipoglicemia 3%, peso 0%. A diferença glicêmica de 0,4 ponto não compensa o risco de hipoglicemia (arritmia, isquemia) e o ganho de peso num paciente com IAM prévio e IC; a escolha prioriza segurança e desfechos cardiovasculares. É a armadilha do número bonito: o melhor valor de HbA1c não é a melhor decisão.",
+        reference: "ADA/EASD Consensus Report 2022; Zinman B. NEJM 2015 (EMPA-REG OUTCOME)",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Uma colega propõe \"simplificar\": trocar a metformina pela empagliflozina. Desligue o interruptor da Metformina (Suspenso), escolha Empagliflozina 25 mg em \"Fármaco a adicionar\" e anote a HbA1c (projeção) e se ela está dentro da meta de até 7,5%.\n\nDiscutam em grupo e deixem esse estado na tela. O que o resultado diz sobre a troca?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Metformina")) return { correct: false, feedback: "Desligue o interruptor da Metformina (Suspenso)." };
+          if (s.drug !== "Empagliflozina" || (s.dose ?? 0) < 25) return { correct: false, feedback: "Selecione Empagliflozina 25 mg/dia em \"Fármaco a adicionar\"." };
+          return (s.lastLab?.hba1c ?? 0) >= 9.0 ? { correct: true, feedback: `Sem metformina, a HbA1c projetada é ${s.lastLab.hba1c}%.` } : { correct: false, feedback: "Confira a HbA1c do painel." };
+        },
+        ...glOpt(3,
+          "A HbA1c projetada sobe de 8,5% para 9,1%, fora da meta: a metformina 2 g reduz mais que a empagliflozina 25 mg isolada e a TFG 72 não impede mantê-la; o iSGLT2 entra como adição, não como troca.",
+          [
+            "A HbA1c projetada sobe de 8,5% para 9,1%, fora da meta, porque a TFG de 72 mL/min contraindica a metformina em cardiopatas; a troca pelo iSGLT2 é obrigatória e o ajuste vem depois.",
+            "A HbA1c projetada se mantém em 8,5% após a troca, porque a empagliflozina compensa por completo a metformina suspensa, e a simplificação do esquema é segura neste paciente.",
+            "A HbA1c projetada sobe de 8,5% para 9,1%, fora da meta, mas isso é esperado: a HbA1c só importa após 3 meses e o painel de 7 dias não deve orientar a decisão de manter a metformina.",
+          ]),
+        explanation: "Sem a metformina, a empagliflozina 25 mg sozinha projeta 9,1% (a HbA1c do paciente sem nenhum fármaco seria 9,9%). A metformina 2 g contribui com cerca de 1,4 ponto, mais que a empagliflozina (cerca de 0,8). Com TFG 72 e IC estável não há motivo para suspendê-la (o limite renal só aparece com TFG < 45). O iSGLT2 é adicionado pelo benefício em IC, mantendo a base.",
+        reference: "ADA/EASD Consensus Report 2022; ESC Heart Failure Guidelines 2021",
+      },
+      {
+        type: "mcq",
+        question: "Um residente prescreve para José: (1) metformina 2000 mg/dia mantida; (2) empagliflozina 25 mg/dia adicionada; (3) sem pioglitazona; (4) HbA1c repetida em 3 meses, com meta individualizada de até 7,5%. Revise item a item com o que o simulador mostrou: qual versão da prescrição está correta?",
+        ...glOpt(1,
+          "(1) manter a metformina 2000 mg (TFG 72, sem limite renal); (2) adicionar empagliflozina; (3) evitar a pioglitazona, pela retenção hídrica na IC; (4) repetir a HbA1c em 3 meses, com meta de até 7,5%.",
+          [
+            "(1) manter a metformina 2000 mg (TFG 72, sem limite renal); (2) adicionar glibenclamida 10 mg, que dá a menor HbA1c; (3) evitar a pioglitazona, pela retenção hídrica na IC; (4) repetir a HbA1c em 3 meses.",
+            "(1) manter a metformina 2000 mg (TFG 72, sem limite renal); (2) adicionar empagliflozina; (3) usar pioglitazona 15 mg para reforçar, pois a IC está compensada; (4) repetir a HbA1c em 3 meses.",
+            "(1) manter a metformina 2000 mg (TFG 72, sem limite renal); (2) adicionar empagliflozina; (3) evitar a pioglitazona, pela retenção hídrica; (4) repetir a HbA1c em 1 semana, com meta de até 6,0%.",
+          ]),
+        explanation: "Item 1: com TFG 72 não há limite renal para a metformina (o aviso de limite só aparece abaixo de 45). Item 2: o iSGLT2 acrescenta benefício em IC e nefroproteção; a glibenclamida baixa mais a HbA1c (7,3%) mas custa hipoglicemia de 36% e peso. Item 3: pioglitazona soma 25% (15 mg) a 45% (30 mg) na barra de Descompensação de IC. Item 4: a HbA1c é projeção de ~3 meses, e em cardiopata com IC a meta é individualizada (aqui até 7,5%), sem perseguir 6,0%.",
+        reference: "ADA Standards of Care in Diabetes 2024; ESC Heart Failure Guidelines 2021",
+      },
     ],
-    // Caso 3: DM2 com DRC G3b (Dona Fátima, 68a — TFG 38, jejum 170, HbA1c 8.0%, glibenclamida 10mg)
+    // Caso 3: DM2 + DRC G3b (Dona Fátima, 68a — Metformina 1000 + Glibenclamida 10 mantidas = 170/240/8,0, hipo 54%, TFG 38, meta até 8,0%)
     [
-      { type: "adjust", question: "Selecione Metformina com dose ≤1000mg (o limite recomendado para TFG 38) e observe a HbA1c cair no painel.\n\nCom TFG 38 mL/min (faixa 30-45), qual o ajuste correto da metformina, em vez de simplesmente mantê-la na dose usual?", targetParams: {}, validator: (s) => { if (s.drug !== "Metformina") return { correct: false, feedback: "Selecione Metformina." }; if ((s.dose ?? 9999) > 1000) return { correct: false, feedback: "Reduza a dose para ≤1000mg/dia." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo com a dose ajustada." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["Mantida na dose máxima, sem qualquer ajuste", "Reduzida para ≤1000mg/dia (faixa TFG 30-45) — não suspensa, já que o limiar de suspensão obrigatória é TFG <30", "Aumentada para compensar a perda de função renal", "Substituída diretamente por glibenclamida em dose mais alta"], correctIndex: 1, explanation: "Metformina: reduzir para ≤1000mg/dia se TFG 30-45, suspender se TFG <30. Monitorar B12 e função renal a cada 3-6 meses. Este caso está na faixa de redução, não de suspensão obrigatória.", reference: "KDIGO 2022" },
-      { type: "adjust", question: "Selecione Glibenclamida (como se estivesse mantendo o tratamento atual) e observe a barra de risco de Hipoglicemia no painel de efeitos adversos.\n\nPor que a glibenclamida deveria ser suspensa nesta paciente com DRC G3b e hipoglicemias frequentes, mesmo sendo eficaz em reduzir a glicemia?", targetParams: {}, validator: (s) => { if (s.drug !== "Glibenclamida") return { correct: false, feedback: "Selecione Glibenclamida." }; const hipo = (s.sideEffects || []).find((e: any) => e.name === "Hipoglicemia"); return (hipo && hipo.risco >= 25) ? { correct: true, feedback: `Risco de Hipoglicemia no painel: ${hipo.risco}% — alto para esta paciente.` } : { correct: false, feedback: "Suba a dose para ver o risco de hipoglicemia subir." }; }, options: ["A glibenclamida não funciona em pacientes com DRC", "Seus metabólitos ativos se acumulam na DRC (excreção renal), prolongando e intensificando o efeito hipoglicemiante de forma imprevisível — exatamente o padrão de hipoglicemias frequentes já relatado no caso", "A glibenclamida causa nefrotoxicidade direta", "A glibenclamida interage perigosamente com anti-hipertensivos, mas não tem relação com hipoglicemia"], correctIndex: 1, explanation: "Glibenclamida: metabólito ativo (4-OH-glibenclamida) com ~50% da atividade, excreção renal. Em DRC, o acúmulo causa hipoglicemia severa e prolongada (pode durar dias). Alternativa mais segura: gliclazida (não modelada aqui) ou classes sem risco de hipo.", reference: "Balant L. Clin Pharmacokinet 1992" },
-      { type: "adjust", question: "Selecione Insulina Glargina e compare a barra de risco de Hipoglicemia com a Glibenclamida do desafio anterior, observando também a HbA1c cair.\n\nPor que a insulina basal análoga é preferida sobre sulfonilureias/NPH em DRC avançada?", targetParams: {}, validator: (s) => { if (s.drug !== "Insulina Glargina") return { correct: false, feedback: "Selecione Insulina Glargina." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo — compare o risco de hipoglicemia com a glibenclamida." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["A insulina análoga nunca causa hipoglicemia, ao contrário da glibenclamida", "Análogos basais (glargina/detemir) têm farmacocinética mais previsível e perfil mais 'flat' que NPH ou sulfonilureias de longa ação, resultando em menor risco de hipoglicemia noturna em DRC — ainda assim a dose deve ser reduzida (25-50%) se TFG <30", "A insulina glargina é contraindicada em qualquer grau de DRC", "A insulina glargina exige monitorização mais complexa que a glibenclamida"], correctIndex: 1, explanation: "DRC: ↓clearance de insulina → ↑meia-vida → maior risco de hipo com qualquer insulina, mas análogos basais têm perfil mais previsível ('flat') que NPH. Reduzir dose em 25-50% se TFG <30 e titular com cautela.", reference: "Iglesias P. J Nephrol 2017" },
-      { type: "mcq", question: "Se a sitagliptina (iDPP-4) fosse escolhida para esta paciente com TFG 38, qual ajuste de dose seria necessário?", options: ["Sem ajuste necessário, independente da TFG", "50mg se TFG 30-45 (como neste caso); 25mg se TFG <30 — ajuste obrigatório pela excreção renal de 80%", "Contraindicada abaixo de TFG 60, sem exceção", "Dobrar a dose para compensar a perda de função renal"], correctIndex: 1, explanation: "Sitagliptina: excreção renal ~80%. Ajuste: 100mg se TFG >50, 50mg se TFG 30-50 (esta paciente), 25mg se TFG <30. Linagliptina (não neste simulador): sem ajuste renal (excreção biliar).", reference: "Bula FDA Januvia" },
-      { type: "mcq", question: "O caso informa Peptídeo C 4.0 ng/mL para esta paciente — valor não exibido diretamente no painel deste simulador, mas parte dos dados clínicos do caso.\n\nO que esse valor indica sobre a fisiopatologia do diabetes desta paciente?", options: ["DM tipo 1, com destruição autoimune das células β", "Reserva pancreática PRESERVADA — produção endógena de insulina presente, o que favorece o uso de antidiabéticos orais (que dependem de alguma função pancreática residual) em vez de insulinoterapia obrigatória", "Insulinoma (tumor produtor de insulina)", "Nenhuma informação clínica relevante"], correctIndex: 1, explanation: "Peptídeo C >0.6: reserva de células β presente (típico de DM2). <0.2: deficiência absoluta (DM1, LADA avançado). Peptídeo C 4.0 confirma que esta paciente ainda produz insulina endógena, sustentando a lógica de tentar otimizar agentes orais antes de insulinizar plenamente.", reference: "Jones AG. Diabet Med 2013" },
-      { type: "mcq", question: "Qual a meta de HbA1c mais apropriada para esta paciente, com DRC G3b e hipoglicemias frequentes?", options: ["< 6.5%, meta rigorosa para qualquer paciente com DRC", "< 7.5-8.0% — meta MENOS rigorosa, priorizando evitar hipoglicemia (associada a maior morbimortalidade em DRC) sobre o controle glicêmico estrito", "< 7.0% sempre, independente do contexto clínico", "< 9.0%, sem necessidade de controle real"], correctIndex: 1, explanation: "KDIGO: a HbA1c pode SUBESTIMAR a glicemia real em DRC (menor vida útil da hemácia, uso de EPO, uremia). Meta individualizada — em DRC avançada com hipoglicemia frequente, <8% é considerado aceitável, priorizando segurança sobre controle rígido.", reference: "KDIGO 2022" },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Dona Fátima (68 anos, TFG 38) usa metformina 1 g e glibenclamida 10 mg e tem hipoglicemias frequentes. Com \"Nenhum fármaco adicional\", anote a barra Hipoglicemia e a HbA1c do esquema atual; depois desligue o interruptor da Glibenclamida (Suspenso) e anote de novo.\n\nDiscutam em grupo e deixem a glibenclamida suspensa. O que a comparação mostra sobre a causa das crises e sobre o custo de resolvê-la?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Desligue o interruptor da Glibenclamida (Suspenso)." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina." };
+          if (s.drug !== "Nenhum fármaco adicional") return { correct: false, feedback: "Deixe \"Nenhum fármaco adicional\" em \"Fármaco a adicionar\"." };
+          return glRisk(s, "Hipoglicemia") <= 5 ? { correct: true, feedback: `Sem glibenclamida: hipoglicemia ${glRisk(s, "Hipoglicemia")}%, HbA1c ${s.lastLab.hba1c}%.` } : { correct: false, feedback: "Confira a barra de hipoglicemia." };
+        },
+        ...glOpt(3,
+          "A hipoglicemia cai de 54% para 1%, confirmando a glibenclamida como causa das crises, mas a HbA1c projetada sobe de 8,0% para 9,2%: suspender resolve a segurança e pede outro fármaco.",
+          [
+            "A hipoglicemia cai de 54% para 1% e a HbA1c projetada sobe de 8,0% para 9,2%; como o aumento é inaceitável, a conduta é manter a glibenclamida em dose menor para preservar o controle.",
+            "A hipoglicemia cai de 54% para 1% e a HbA1c projetada sobe de 8,0% para 9,2%, o que mostra que a causa das crises era a metformina, e não a sulfonilureia que foi suspensa.",
+            "A hipoglicemia se mantém alta com a glibenclamida suspensa, pois o risco depende da TFG de 38 e da idade da paciente; a HbA1c de 9,2% resulta do descontrole prévio, e não da suspensão.",
+          ]),
+        explanation: "Esquema atual: hipoglicemia 54%, HbA1c 8,0%. Glibenclamida suspensa: hipoglicemia 1% e HbA1c 9,2% (jejum 214, pós-prandial 296). A sulfonilureia tem metabólito ativo de excreção renal e acumula na DRC (no motor, o risco de hipoglicemia da glibenclamida é multiplicado por 1,55 com TFG 38). Retirar a causa resolve a segurança, mas o ganho glicêmico dela deixa de existir e precisa ser substituído por um fármaco de menor risco; os próximos desafios testam as opções.",
+        reference: "KDIGO Diabetes in CKD 2022; Balant L. Clin Pharmacokinet 1992",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Com a glibenclamida suspensa e \"Nenhum fármaco adicional\", use o slider de dose da Metformina no esquema atual: leve-o para 2000 mg e anote a barra Acidose Láctica, o aviso vermelho de limite de dose e a HbA1c; depois volte para 1000 mg e anote de novo.\n\nDiscutam em grupo e deixem a metformina em 1000 mg. A dobra de dose compensa o que se perdeu com a glibenclamida?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina ligada." };
+          const d = glRegDose(s, "Metformina");
+          if (d > 1000) return { correct: false, feedback: "A dose da metformina está acima do limite de 1000 mg para TFG 38." };
+          return d >= 500 ? { correct: true, feedback: `Metformina ${d} mg: acidose láctica ${glRisk(s, "Acidose Láctica")}%.` } : { correct: false, feedback: "Confira a dose da metformina." };
+        },
+        ...glOpt(0,
+          "Dobrar para 2000 mg reduz a HbA1c em 0,3 ponto (9,2% para 8,9%) e leva a acidose láctica de 7% para 33%, com aviso de limite acima de 1000 mg para TFG 38; o ganho não compensa o risco.",
+          [
+            "Dobrar para 2000 mg reduz a HbA1c em 1,0 ponto (9,2% para 8,2%) e leva a acidose láctica de 7% para 12%, o que compensa a glibenclamida perdida e justifica ultrapassar 1000 mg com a TFG de 38.",
+            "Dobrar para 2000 mg reduz a HbA1c em 0,3 ponto (9,2% para 8,9%), mas a barra de acidose láctica não muda, porque o risco depende só do fármaco e não da dose nem da função renal.",
+            "Dobrar para 2000 mg não altera a HbA1c (9,2%) e leva a acidose láctica de 7% para 33%; a metformina deve ser suspensa na DRC G3b e substituída por insulina em qualquer dose.",
+          ]),
+        explanation: "Metformina com glibenclamida suspensa: 1000 mg = HbA1c 9,2%, acidose láctica 7%; 2000 mg = 8,9% e 33% (o simulador multiplica o risco por 6 acima do limite de 1000 mg para TFG 30–44 e por 10 com TFG < 30). Em G3b a metformina não é suspensa, mas limitada a 1000 mg/dia com monitorização da função renal; dobrar a dose rende 0,3 ponto e quintuplica o risco. A perda glicêmica da glibenclamida precisa vir de outro fármaco.",
+        reference: "KDIGO Diabetes in CKD 2022; Lalau JD. Diabetes Obes Metab 2018",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Primeiro, com a glibenclamida MANTIDA e a metformina em 1000 mg, adicione Insulina Glargina 20 UI/dia e anote a HbA1c e a barra Hipoglicemia. Depois suspenda a glibenclamida e titule a glargina: 10, 20, 34 e 40 UI/dia, anotando HbA1c, Hipoglicemia e Ganho de Peso.\n\nDiscutam em grupo e deixem a glibenclamida suspensa, com a MENOR dose de glargina que leva a HbA1c à meta de até 8,0%. O que a comparação ensina sobre trocar × somar?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Suspenda a glibenclamida antes de fechar a conduta." };
+          if (s.drug !== "Insulina Glargina") return { correct: false, feedback: "Selecione a Insulina Glargina." };
+          if ((s.dose ?? 0) > 34) return { correct: false, feedback: "Há dose menor que já atinge a meta; reduza o slider." };
+          if ((s.dose ?? 0) < 34) return { correct: false, feedback: "Com essa dose a HbA1c ainda está acima de 8,0%; suba o slider." };
+          return (s.lastLab?.hba1c ?? 99) <= 8.0 && glRisk(s, "Hipoglicemia") <= 25 ? { correct: true, feedback: `Glargina ${s.dose} UI: HbA1c ${s.lastLab.hba1c}%, hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a HbA1c e a barra de hipoglicemia." };
+        },
+        ...glOpt(2,
+          "Somar a glargina à glibenclamida leva a HbA1c a 6,9% mas a hipoglicemia a 67%; trocando uma pela outra a meta de 8,0% vem com 34 UI e hipoglicemia de 19%, com ganho de peso de 27%.",
+          [
+            "Somar a glargina à glibenclamida leva a HbA1c a 6,9% e a hipoglicemia a 67%, o que é aceitável pela HbA1c excelente; trocar uma pela outra só adia a meta e aumenta o ganho de peso.",
+            "Somar a glargina à glibenclamida leva a HbA1c a 6,9% e a hipoglicemia a 15%, a melhor combinação; trocar uma pela outra exige 34 UI e eleva o risco de hipoglicemia para 67%.",
+            "Somar a glargina à glibenclamida leva a HbA1c a 6,9% mas a hipoglicemia a 67%; trocar uma pela outra atinge a meta com 10 UI, sem ganho de peso e com hipoglicemia de 13%.",
+          ]),
+        explanation: "Glibenclamida mantida + glargina 20 UI: HbA1c 6,9%, hipoglicemia 67%, ganho de peso 47% (armadilha do número bonito: o 6,9% parece ótimo, mas é sobretratamento numa paciente que já tem crises). Glibenclamida suspensa, metformina 1000 mg: glargina 10 UI = 8,2% / 13%; 20 UI = 8,1% / 15%; 34 UI = 8,0% / 19% / peso 27%; 40 UI = 8,0% / 20%. A meta de 8,0% é atingida com 34 UI e hipoglicemia de 19%, bem abaixo dos 54% do esquema atual. Em DRC o clearance da insulina cai, e a titulação deve ser cautelosa.",
+        reference: "KDIGO Diabetes in CKD 2022; ADA Standards of Care in Diabetes 2024 (Older Adults, CKD)",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Com a glibenclamida suspensa e a metformina em 1000 mg, teste Sitagliptina 100 mg/dia e depois 50 mg/dia. Anote, para cada dose, a HbA1c, a barra Hipoglicemia e a mensagem de limite de dose abaixo do slider.\n\nDiscutam em grupo e deixem a Sitagliptina em 50 mg. O que a comparação mostra e a sitagliptina resolve o caso sozinha?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (s.drug !== "Sitagliptina") return { correct: false, feedback: "Selecione a Sitagliptina." };
+          if (s.overRenal) return { correct: false, feedback: "A dose está acima do limite para a TFG; reduza para 50 mg." };
+          return (s.dose ?? 0) === 50 ? { correct: true, feedback: `Sitagliptina 50 mg: HbA1c ${s.lastLab.hba1c}%.` } : { correct: false, feedback: "Deixe a dose em 50 mg." };
+        },
+        ...glOpt(1,
+          "De 50 para 100 mg a HbA1c melhora 0,2 ponto (8,7% para 8,5%), mas a dose passa do limite para a TFG 38; com 50 mg a hipoglicemia é 3%, mas a HbA1c de 8,7% segue acima da meta.",
+          [
+            "De 50 para 100 mg a HbA1c melhora 0,2 ponto (8,7% para 8,5%), e a dose de 100 mg é aceitável com TFG 38; como a hipoglicemia é de 4%, ela atinge a meta e dispensa outro fármaco.",
+            "De 50 para 100 mg a HbA1c melhora 1,0 ponto (9,2% para 8,2%), mas passa do limite para a TFG 38; com 50 mg a hipoglicemia é de 3% e a meta de 8,0% é atingida, resolvendo o caso.",
+            "De 50 para 100 mg a HbA1c melhora 0,2 ponto (8,7% para 8,5%), mas a dose passa do limite para a TFG 38; a hipoglicemia de 3% mostra que a sitagliptina é equivalente à glargina em eficácia.",
+          ]),
+        explanation: "Sitagliptina com metformina 1000 mg e glibenclamida suspensa: 50 mg = HbA1c 8,7%, hipoglicemia 3%; 100 mg = 8,5%, hipoglicemia 4% e aviso de dose acima do limite (a sitagliptina tem excreção renal de ~80%: 100 mg com TFG > 50; 50 mg com TFG 30–50; 25 mg com TFG < 30). A segurança é ótima, mas a potência é modesta: 8,7% fica acima da meta de 8,0%, e dobrar a dose não é a solução. A glargina (desafio anterior) chega à meta; o iDPP-4 serve como alternativa de baixo risco quando a meta é mais folgada.",
+        reference: "Bula da sitagliptina (ajuste renal); KDIGO Diabetes in CKD 2022",
+      },
+      {
+        type: "mcq",
+        question: "Dona Fátima tem 68 anos, 65 kg, creatinina de 1,6 mg/dL e é mulher (a TFG do caso é 38 mL/min). Calcule o clearance de creatinina por Cockcroft-Gault, [(140 − idade) × peso ÷ (72 × creatinina)] × 0,85, e diga como o resultado orienta as doses.",
+        ...glOpt(0,
+          "Resulta em cerca de 35 mL/min, na faixa 30–44: a metformina fica em até 1000 mg/dia, a sitagliptina em 50 mg/dia e a glibenclamida deve ser evitada pelo acúmulo de metabólitos.",
+          [
+            "Resulta em cerca de 35 mL/min, abaixo do limite de 45: a metformina está contraindicada e deve ser suspensa, e a sitagliptina também, com insulina como única opção glicêmica restante.",
+            "Resulta em cerca de 35 mL/min, na faixa 30–44: a metformina pode seguir em 2000 mg/dia e a sitagliptina em 100 mg/dia, pois o ajuste de dose só começa abaixo de 30 mL/min.",
+            "Resulta em cerca de 48 mL/min, acima do limite de 45: a metformina e a sitagliptina seguem em dose plena, e a glibenclamida pode ser mantida com monitorização da glicemia.",
+          ]),
+        explanation: "Cockcroft-Gault: (140 − 68) × 65 ÷ (72 × 1,6) × 0,85 = 4680 ÷ 115,2 × 0,85 ≈ 34,5 mL/min. Na faixa 30–44 mL/min: metformina até 1000 mg/dia (suspender com TFG < 30), sitagliptina 50 mg/dia, glibenclamida evitada (metabólito ativo de excreção renal), insulina com dose reduzida e titulação cuidadosa. O valor é próximo do 38 do caso, e a conduta é a mesma.",
+        reference: "KDIGO Diabetes in CKD 2022; Bula da sitagliptina; Cockcroft DW. Nephron 1976",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Compare duas formas de substituir a glibenclamida (suspensa, com metformina 1000 mg mantida): a Insulina Glargina 34 UI/dia (desafio 3) e a Liraglutida 1,8 mg/dia. Para a liraglutida anote a HbA1c e as barras GI, Hipoglicemia e Ganho de Peso.\n\nDiscutam em grupo e deixem a Liraglutida 1,8 mg selecionada. As duas chegam à meta de 8,0%; o que decide entre elas nesta paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (s.drug !== "Liraglutida" || (s.dose ?? 0) < 1.8) return { correct: false, feedback: "Selecione a Liraglutida 1,8 mg/dia." };
+          return (s.lastLab?.hba1c ?? 99) <= 8.0 ? { correct: true, feedback: `Liraglutida 1,8 mg: HbA1c ${s.lastLab.hba1c}%, GI ${glRisk(s, "GI")}%, hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a HbA1c do painel." };
+        },
+        ...glOpt(2,
+          "Ambas chegam a 8,0%: a liraglutida com hipoglicemia de 4% e sem ganho de peso, mas com GI de 63%, que pode desidratar e piorar a função renal na G3b; a escolha pesa esse risco.",
+          [
+            "Ambas chegam a 8,0%: a liraglutida com hipoglicemia de 4% e sem ganho de peso, e o GI de 63% é irrelevante na DRC; por isso ela deve ser preferida à insulina nesta paciente.",
+            "Ambas chegam a 8,0%: a liraglutida com hipoglicemia de 4%, mas com ganho de peso maior que o da glargina (30%); por isso a insulina basal é a opção mais segura nesta paciente.",
+            "Ambas chegam a 8,0%: a liraglutida com GI de 63%, que é uma contraindicação formal na DRC G3b; por isso a insulina basal é a alternativa mais indicada para substituir a glibenclamida.",
+          ]),
+        explanation: "Com glibenclamida suspensa e metformina 1000 mg: liraglutida 1,8 mg = HbA1c 8,0%, GI 63%, hipoglicemia 4%, peso 0%; glargina 34 UI = 8,0%, GI 24%, hipoglicemia 19%, peso 27%. Os dois são alternativas válidas à glibenclamida. A liraglutida tem a vantagem de peso e de hipoglicemia, mas o GI alto (náusea, vômito, diarreia) pode levar a desidratação e lesão renal aguda em DRC; a titulação lenta e a orientação de hidratação são parte da conduta. A insulina basal é mais previsível quanto a isso, com mais risco de hipoglicemia (19%) e de peso.",
+        reference: "KDIGO Diabetes in CKD 2022; Davies MJ. Diabetes Care 2022 (ADA/EASD)",
+      },
     ],
-    // Caso 4: Cetoacidose Diabética (Pedro Lima, 28a, DM1 — glicemia 450, pH 7.18, insulina 2)
+    // Caso 4: Cetoacidose diabética (Pedro Lima, 28a, DM1 — glicemia 450, pH 7,18, HCO₃⁻ 11, ânion gap 24, K 5,8)
     [
-      { type: "mcq", question: "Qual o critério diagnóstico de cetoacidose diabética (CAD)?", options: ["Apenas glicemia >500", "Glicemia >250 + pH <7.30 + HCO₃⁻ <18 + cetonemia/cetonúria + ânion gap elevado", "Apenas cetona positiva na urina", "HbA1c >10%, isoladamente"], correctIndex: 1, explanation: "CAD: hiperglicemia + acidose metabólica com AG elevado + cetose. Leve: pH 7.25-7.30. Moderada: 7.0-7.24. Grave: <7.0. Este paciente (pH 7.18) está em faixa moderada-grave.", reference: "Kitabchi AE. Diabetes Care 2009" },
-      { type: "mcq", question: "Potássio sérico 5.8 mEq/L neste paciente: quando iniciar a insulina em relação ao K⁺?", options: ["Imediatamente, independente do valor de K⁺", "Verificar K⁺: se >5.3 (como aqui), iniciar insulina normalmente (a insulina REDUZ K⁺ por shift). Se K⁺ <3.3: repor K⁺ ANTES da insulina (risco de arritmia grave)", "Nunca iniciar insulina se o K⁺ estiver elevado", "Apenas após o pH normalizar completamente"], correctIndex: 1, explanation: "K⁺ >5.3: iniciar insulina normalmente (o shift intracelular vai reduzir o K⁺). K⁺ 3.3-5.3: repor K⁺ concomitante à insulina. K⁺ <3.3: ADIAR insulina e repor K⁺ primeiro (risco de fibrilação ventricular).", reference: "ADA 2024 DKA Protocol" },
-      { type: "adjust", question: "Selecione Insulina Lispro com dose alta e observe a glicemia de jejum cair rapidamente no painel (basal 450 mg/dL).\n\nEste simulador modela a insulina de ação rápida como proxy para o esquema real de CAD (que usa insulina regular EV contínua, não Lispro em bolus). Qual é a via/estratégia de insulinoterapia correta na CAD moderada-grave?", targetParams: {}, validator: (s) => { if (s.drug !== "Insulina Lispro") return { correct: false, feedback: "Selecione Insulina Lispro." }; return (s.lastLab?.jejum ?? 9999) < (s.baseLab?.jejum ?? 0) ? { correct: true, feedback: "Glicemia caindo rapidamente." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["Subcutânea intermitente, mais prática no pronto-socorro", "Insulina regular ENDOVENOSA CONTÍNUA (0.1 UI/kg/h) na CAD moderada-grave — absorção previsível e ajuste rápido, diferente da via subcutânea intermitente usada em CAD leve ou na manutenção ambulatorial (representada de forma simplificada pela Insulina Lispro neste simulador)", "Intramuscular a cada 6 horas", "Via oral com insulina inalatória"], correctIndex: 1, explanation: "Insulina regular EV contínua: absorção previsível, ajuste rápido, padrão-ouro na CAD moderada-grave. SC pode ser usada em CAD LEVE. Este simulador, por trabalhar apenas com insulinas SC, usa a Lispro como aproximação didática do efeito rápido da insulina — não como recomendação literal de via na CAD.", reference: "Kitabchi AE. Diabetes Care 2009" },
-      { type: "mcq", question: "Quando transicionar da insulina EV contínua (usada na fase aguda) para o esquema SC de manutenção?", options: ["Assim que a glicemia cair abaixo de 200, independente da acidose", "Quando houver resolução da acidose: pH >7.30, HCO₃⁻ >18, AG <12, e o paciente conseguir se alimentar — com sobreposição de 1-2h entre a insulina SC basal e a suspensão da bomba EV, para evitar rebote hiperglicêmico/cetótico", "Quando o K⁺ normalizar, independente do pH", "Após exatas 24 horas, independente da evolução clínica"], correctIndex: 1, explanation: "Critérios de resolução da CAD: pH >7.30, HCO₃⁻ >18, AG <12. Transição: iniciar insulina SC basal 1-2h ANTES de desligar a bomba EV (evitar rebote). Calcular a dose diária total a partir da taxa EV × 0.6-0.8.", reference: "ADA 2024" },
-      { type: "mcq", question: "O caso informa Peptídeo C 0.3 ng/mL para este paciente — não exibido diretamente no painel, mas parte dos dados do caso.\n\nO que esse valor confirma sobre a fisiopatologia deste DM1 recém-diagnosticado?", options: ["DM tipo 2 com reserva pancreática preservada", "Deficiência ABSOLUTA de insulina (compatível com DM1) — necessidade vitalícia de insulinoterapia, sem possibilidade de tratamento apenas com agentes orais", "Resistência periférica à insulina isolada", "Resultado dentro da normalidade, sem significado clínico"], correctIndex: 1, explanation: "Peptídeo C <0.6: deficiência grave de insulina endógena. <0.2 (como este caso): praticamente ausente. No DM1, a destruição autoimune das células β (confirmável por anti-GAD e anti-IA2) explica essa deficiência absoluta, exigindo insulinoterapia vitalícia.", reference: "Jones AG. Diabet Med 2013" },
-      { type: "adjust", question: "Além da Insulina Lispro (bolus), selecione Insulina Glargina (basal) e observe o jejum também cair, agora com efeito mais prolongado.\n\nO que caracteriza o esquema basal-bolus recomendado na alta deste paciente com DM1, que este simulador de fármaco único não consegue demonstrar simultaneamente?", targetParams: {}, validator: (s) => { if (s.drug !== "Insulina Glargina") return { correct: false, feedback: "Selecione Insulina Glargina." }; return (s.lastLab?.jejum ?? 9999) < (s.baseLab?.jejum ?? 0) ? { correct: true, feedback: "Jejum caindo com a insulina basal — componente complementar ao bolus do desafio anterior." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["Apenas insulina nas refeições, sem componente basal", "Insulina BASAL (1-2x/dia, como a glargina testada aqui) + BOLUS pré-prandial (como a lispro do desafio anterior) — juntas mimetizam a secreção fisiológica de insulina; este simulador só permite testar um fármaco por vez, mas na prática ambas são usadas simultaneamente e são obrigatórias no DM1", "Metformina associada a insulina NPH", "Insulina regular fixa a cada 6 horas, sem distinção basal/bolus"], correctIndex: 1, explanation: "Basal-bolus: ~50% basal (glargina/detemir/NPH) + ~50% bolus (lispro/aspart/regular) dividido nas refeições, com contagem de carboidratos para ajuste fino. No DM1 (como este paciente), o esquema basal-bolus é obrigatório — não há papel para antidiabéticos orais isolados.", reference: "ADA 2024" },
+      {
+        type: "mcq",
+        question: "Pedro (28 anos, DM1, 70 kg) parou a insulina há 3 dias. Com \"Nenhum fármaco adicional\", leia o painel: glicemia 450, pH 7,18, HCO₃⁻ 11, ânion gap 24 e K⁺ 5,8 mEq/L. Classifique a gravidade da cetoacidose (leve: pH 7,25–7,30 e HCO₃⁻ 15–18; moderada: pH 7,00–7,24 e HCO₃⁻ 10–15; grave: pH < 7,00 e HCO₃⁻ < 10) e decida o que fazer com o K⁺ agora.",
+        ...glOpt(0,
+          "Cetoacidose moderada (pH 7,18; HCO₃⁻ 11): iniciar fluidos e insulina agora e adiar a reposição de K⁺, pois 5,8 está acima de 5,3; medir o K⁺ a cada 2–4 horas e repor quando cair abaixo de 5,3.",
+          [
+            "Cetoacidose grave (pH 7,18; HCO₃⁻ 11): iniciar fluidos e insulina agora e adiar a reposição de K⁺, pois 5,8 está acima de 5,3; medir o K⁺ a cada 2–4 horas e repor quando cair abaixo de 5,3.",
+            "Cetoacidose moderada (pH 7,18; HCO₃⁻ 11): repor K⁺ antes de começar a insulina, pois a insulina vai derrubar o potássio, e só então iniciar a insulina quando o K⁺ estiver abaixo de 5,0.",
+            "Cetoacidose leve (pH 7,18; HCO₃⁻ 11): iniciar insulina subcutânea e suspender a reposição de K⁺ até a alta, pois o potássio de 5,8 indica sobrecarga e tende a se corrigir sozinho.",
+          ]),
+        explanation: "pH 7,18 e HCO₃⁻ 11 mEq/L = CAD moderada (pH 7,00–7,24; HCO₃⁻ 10–15). O ânion gap de 24 confirma acidose por cetoácidos. K⁺ 5,8 (acima de 5,3): iniciar fluidos e insulina; a insulina e a correção da acidose derrubam o K⁺ (déficit corporal total existe mesmo com K⁺ sérico alto), por isso se mede o K⁺ a cada 2–4 h e se repõe 20–30 mEq por litro de fluido quando ele estiver entre 3,3 e 5,3. Com K⁺ < 3,3 a insulina é adiada até a reposição.",
+        reference: "Kitabchi AE. Diabetes Care 2009; Umpierrez GE. Diabetes Care 2024 (consenso de crises hiperglicêmicas)",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Neste caso as doses de insulina do painel representam a intensidade da insulinização (na prática, é insulina regular EV contínua, 0,1 UI/kg/h). Selecione Insulina Lispro com 16 UI e anote pH, HCO₃⁻, ânion gap e glicemia; depois suba para 30 UI e anote de novo. Critério de resolução usado: pH ≥ 7,30, HCO₃⁻ ≥ 18 e ânion gap ≤ 12.\n\nDiscutam em grupo e deixem 30 UI selecionadas. Um colega acha que com 16 UI \"já resolveu, o pH passou de 7,30\". O que os números mostram?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Insulina Lispro") return { correct: false, feedback: "Selecione a Insulina Lispro." };
+          const l = s.lastLab || {};
+          const resolvido = (l.ph ?? 0) >= 7.30 && (l.hco3 ?? 0) >= 18 && (l.anionGap ?? 99) <= 12;
+          return resolvido ? { correct: true, feedback: `pH ${l.ph}, HCO₃⁻ ${l.hco3}, ânion gap ${l.anionGap}: critérios de resolução atingidos.` } : { correct: false, feedback: "Suba a dose até os três critérios (pH, HCO₃⁻ e ânion gap) serem atingidos." };
+        },
+        ...glOpt(2,
+          "Com 16 UI o pH (7,32) e o HCO₃⁻ (19,1) já passam do corte, mas o gap segue em 17: ainda há cetoácidos circulando; com 30 UI o gap chega a 12 (pH 7,40), e a insulina continua até o gap fechar.",
+          [
+            "Com 16 UI o pH (7,32) e o HCO₃⁻ (19,1) já passam do corte e o gap segue em 17, mas isso basta para considerar resolvida a cetoacidose; com 30 UI o ganho adicional é apenas laboratorial.",
+            "Com 16 UI o pH (7,32) e o HCO₃⁻ (19,1) já passam do corte e o gap segue em 17, o que indica erro de medida; o gap deve ser ignorado e o pH usado como único critério de resolução.",
+            "Com 16 UI a glicemia de 294 ainda está alta e é ela que impede a resolução; com 30 UI a glicemia de 200 libera a transição, e o ânion gap não precisa ser acompanhado.",
+          ]),
+        explanation: "Lispro 16 UI: pH 7,32, HCO₃⁻ 19,1, gap 17, glicemia 294 (pH e bicarbonato já \"normais\", gap ainda aberto). Lispro 30 UI: pH 7,40, HCO₃⁻ 24, gap 12, glicemia 200, K⁺ 5,3. O pH e o bicarbonato podem melhorar antes de os cetoácidos sumirem; o ânion gap acompanha o clearance dos cetoácidos e por isso a infusão só é suspensa quando ele fecha (mesmo com glicemia abaixo de 200, caso em que se associa glicose à infusão). Número bonito, ainda doente.",
+        reference: "Kitabchi AE. Diabetes Care 2009; Umpierrez GE. Diabetes Care 2024",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Um colega propõe resolver a CAD com a insulina de ação prolongada, pois \"a basal já cobre 24 horas\". Selecione Insulina Glargina no máximo (80 UI/dia) e anote pH, HCO₃⁻, ânion gap e glicemia; compare com a Lispro 30 UI do desafio anterior (pH 7,40, gap 12, glicemia 200).\n\nDiscutam em grupo e deixem a Glargina 80 UI selecionada. O que os números mostram sobre a fase aguda?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Insulina Glargina") return { correct: false, feedback: "Selecione a Insulina Glargina." };
+          if ((s.dose ?? 0) < 60) return { correct: false, feedback: "Suba a glargina para perto do máximo (80 UI)." };
+          const l = s.lastLab || {};
+          const resolvido = (l.ph ?? 0) >= 7.30 && (l.hco3 ?? 0) >= 18 && (l.anionGap ?? 99) <= 12;
+          return resolvido ? { correct: false, feedback: "Confira o painel." } : { correct: true, feedback: `Glargina ${s.dose} UI: pH ${l.ph}, gap ${l.anionGap}: cetoacidose não resolvida.` };
+        },
+        ...glOpt(3,
+          "Mesmo com 80 UI a glargina deixa o pH em 7,26 e o gap em 20, (glicemia 370): a ação lenta não fecha a cetoacidose; a fase aguda exige insulina rápida EV, e a basal entra na transição.",
+          [
+            "Com 80 UI a glargina leva o pH a 7,26 e o gap a 20, com glicemia de 370, o que mostra resolução parcial; basta mantê-la por mais dias para a cetoacidose resolver e dispensar a insulina rápida.",
+            "Com 80 UI a glargina leva o pH a 7,40 e o gap a 12, igual à lispro 30 UI; a escolha entre as duas é então apenas de conveniência de posologia e de custo na fase aguda.",
+            "Com 80 UI a glargina deixa o pH em 7,26 e o gap em 20, porque a dose máxima do simulador é baixa; em doses reais maiores a basal resolveria a cetoacidose e seria a primeira escolha.",
+          ]),
+        explanation: "Glargina 80 UI: pH 7,26, HCO₃⁻ 15,6, gap 20, glicemia 370 (cetoacidose persiste); a insulina basal tem início lento e perfil plano, não substitui a infusão EV de insulina regular/rápida, que age em minutos e permite titular a cada hora. Na transição, a basal entra para evitar rebote (desafio 6). O efeito intermediário (K⁺ 5,4) é o shift de potássio pela insulina.",
+        reference: "Kitabchi AE. Diabetes Care 2009; Umpierrez GE. Diabetes Care 2024",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_NAIVE,
+        question: "Outro colega sugere \"baixar a glicemia\" com antidiabéticos orais, já que Pedro está de jejum e consciente. Selecione Metformina 2550 mg e anote pH, ânion gap e a barra Acidose Láctica; depois Empagliflozina 25 mg e anote pH, ânion gap e a barra Cetoacidose.\n\nDiscutam em grupo e deixem a Empagliflozina 25 mg selecionada. O que cada fármaco faz na acidose deste paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Empagliflozina") return { correct: false, feedback: "Deixe a Empagliflozina selecionada." };
+          if ((s.dose ?? 0) < 25) return { correct: false, feedback: "Ajuste a empagliflozina para 25 mg." };
+          return glRisk(s, "Cetoacidose") >= 50 ? { correct: true, feedback: `Empagliflozina 25 mg: risco de cetoacidose ${glRisk(s, "Cetoacidose")}%.` } : { correct: false, feedback: "Confira a barra de cetoacidose." };
+        },
+        ...glOpt(1,
+          "Nenhuma das duas mexe no pH (segue 7,18) nem no gap (24); a metformina leva a acidose láctica a 52% e a empagliflozina leva o risco de cetoacidose a 62%, então ambas agravam o quadro e não têm papel aqui.",
+          [
+            "As duas reduzem a glicemia (cerca de 410 e 425) e deixam o pH em 7,18; a metformina leva a acidose láctica a 52% e a empagliflozina a cetoacidose a 62%, mas são aceitáveis se associadas à insulina.",
+            "A metformina melhora o pH ao reduzir a produção hepática de glicose, e a empagliflozina agrava a cetoacidose a 62%; assim, a metformina em dose plena pode substituir a insulina na fase aguda.",
+            "Nenhuma das duas mexe no pH (segue 7,18) nem no gap (24); a metformina leva a acidose láctica a 52%, mas a empagliflozina é segura aqui, pois sua barra de cetoacidose só vale para DM2.",
+          ]),
+        explanation: "Metformina 2550 mg: glicemia 410, pH 7,18 e gap 24 (inalterados), acidose láctica 52% (no motor, o risco é multiplicado por 8 na cetoacidose, com perfusão e hipóxia em jogo). Empagliflozina 25 mg: glicemia 425, pH inalterado, cetoacidose 62% (multiplicada por 6); iSGLT2 aumenta lipólise e cetogênese e causa CAD euglicêmica, razão pela qual são suspensos na doença aguda e contraindicados no DM1. O pH só muda com insulina.",
+        reference: "Peters AL. Diabetes Care 2015 (CAD euglicêmica com iSGLT2); ADA Standards of Care in Diabetes 2024",
+      },
+      {
+        type: "mcq",
+        question: "Duas horas depois de iniciar fluidos e insulina, o K⁺ de Pedro (antes 5,8) é 5,0 mEq/L; o painel mostrou o K⁺ caindo com a insulina (5,3 com Lispro 30 UI). Qual é a conduta coerente com a queda do potássio?",
+        ...glOpt(2,
+          "Manter a insulina e repor K⁺ (20–30 mEq por litro de fluido), pois abaixo de 5,3 ele continua caindo e há déficit corporal total; dosar a cada 2–4 horas e adiar a insulina se ficar abaixo de 3,3.",
+          [
+            "Manter a insulina e adiar a reposição de K⁺ até ele cair abaixo de 3,3 mEq/L, quando então se repõe antes de continuar a insulina; antes disso o K⁺ sérico alto dispensa suplementação.",
+            "Suspender a insulina até que o K⁺ volte a 5,3 mEq/L, pois a queda mostra que a insulina está causando hipocalemia e o K⁺ deve ser corrigido antes de nova dose, com nova medida em 4 horas.",
+            "Manter a insulina e dar um bolus de 40 mEq de K⁺ EV em 10 minutos para antecipar a queda, já que o shift intracelular com a correção da acidose será rápido e intenso, sem esperar nova medida.",
+          ]),
+        explanation: "Protocolo: K⁺ ≥ 5,3 = não repor, medir a cada 2 h; 3,3–5,3 = repor 20–30 mEq por litro de fluido, mantendo a insulina; < 3,3 = adiar a insulina e repor antes. O painel mostra o shift (K⁺ 5,8 → 5,3 com Lispro 30 UI), e o déficit corporal total de potássio na CAD costuma ser de 3–5 mEq/kg mesmo com K⁺ sérico alto. Bolus rápido de K⁺ é perigoso (arritmia).",
+        reference: "Kitabchi AE. Diabetes Care 2009 (protocolo de potássio na CAD)",
+      },
+      {
+        type: "mcq",
+        question: "Com ânion gap 12, pH 7,40 e Pedro comendo, o grupo vai fazer a transição para insulina subcutânea basal-bolus. Use uma dose total diária inicial de 0,5 UI/kg (70 kg), 50% basal e 50% em 3 refeições. Qual é o esquema e como se faz a sobreposição com a infusão EV?",
+        ...glOpt(3,
+          "Dose total de 35 UI/dia: cerca de 18 UI de basal e cerca de 6 UI de bolus antes de cada refeição; a basal é aplicada 1–2 horas antes de suspender a infusão EV, para evitar o rebote de cetose.",
+          [
+            "Dose total de 35 UI/dia: cerca de 6 UI de basal e cerca de 18 UI de bolus antes de cada refeição; a basal é aplicada 1–2 horas antes de suspender a infusão EV, para evitar o rebote de cetose.",
+            "Dose total de 35 UI/dia: cerca de 18 UI de basal e cerca de 6 UI de bolus antes de cada refeição; a infusão EV é suspensa antes e a basal é aplicada 4 horas depois, para evitar sobreposição.",
+            "Dose total de 350 UI/dia, calculada como 0,5 UI/kg/h × 70 kg × 10 h: cerca de 175 UI de basal e 58 UI de bolus; a basal é aplicada 1–2 horas antes de suspender a infusão EV.",
+          ]),
+        explanation: "0,5 UI/kg × 70 kg = 35 UI/dia; 50% basal ≈ 17–18 UI; 50% bolus ≈ 17–18 UI divididas em 3 refeições ≈ 6 UI cada. A insulina EV tem meia-vida de minutos; sem sobreposição com a basal a cetose reaparece em poucas horas. Aplicar a basal 1–2 horas antes de desligar a infusão é a regra. A dose é estimativa de partida, reajustada pela glicemia capilar; no DM1 com peptídeo-C 0,3 ng/mL (deficiência de insulina) a insulinoterapia é vitalícia.",
+        reference: "Kitabchi AE. Diabetes Care 2009; ADA Standards of Care in Diabetes 2024 (insulin therapy)",
+      },
     ],
-    // Caso 5: DM2 Idoso Frágil (Seu Antônio, 82a — HbA1c 7.0% com glibenclamida 15mg + metformina 1.5g, hipoglicemias noturnas)
+    // Caso 5: DM2 idoso frágil (Seu Antônio, 82a — Glibenclamida 15 + Metformina 1500 mantidas = 110/180/7,0, hipo 70%, CG 36, meta até 8,5%)
     [
-      { type: "mcq", question: "Qual a meta de HbA1c para este idoso frágil com hipoglicemias noturnas recorrentes?", options: ["< 6.5%, meta rigorosa como em jovens saudáveis", "< 8.0-8.5% — metas menos rigorosas para evitar hipoglicemia (associada a quedas, fraturas e mortalidade no idoso frágil)", "< 7.0% sempre, independente da fragilidade", "Sem meta — não tratar DM no idoso"], correctIndex: 1, explanation: "ADA Older Adults: <7.5% se saudável, <8.0% se complexo, <8.5% se muito complexo/frágil (como este paciente). O estudo ACCORD mostrou que controle intensivo (<6%) aumentou mortalidade em idosos de alto risco.", reference: "ADA Older Adults 2024" },
-      { type: "adjust", question: "Selecione Glibenclamida na dose atual do caso (15mg, próximo do máximo) e observe a glicemia de jejum se aproximar ou cruzar a faixa de hipoglicemia no painel (o basal já está em 110, próximo do normal).\n\nPor que a glibenclamida em dose alta é especialmente perigosa neste paciente que JÁ tem hipoglicemias noturnas?", targetParams: {}, validator: (s) => { if (s.drug !== "Glibenclamida") return { correct: false, feedback: "Selecione Glibenclamida." }; if ((s.dose ?? 0) < 17.5) return { correct: false, feedback: "Suba a dose para próximo do máximo (~20mg)." }; return (s.lastLab?.jejum ?? 999) < 70 ? { correct: true, feedback: "A glicemia de jejum cruzou para a zona de hipoglicemia no painel — exatamente o problema relatado no caso." } : { correct: false, feedback: "Confira o painel — a glicemia deve entrar na faixa de hipoglicemia." }; }, options: ["A glibenclamida não tem relação com hipoglicemia em nenhuma dose", "Meia-vida longa (10-16h) e metabólitos ativos, somados à função renal reduzida do idoso, prolongam o efeito hipoglicemiante muito além do esperado — o próprio painel mostra a glicemia cruzando para a zona de hipoglicemia com esta dose, partindo de um jejum já próximo do normal", "A glibenclamida causa apenas hipertensão, não hipoglicemia", "A glibenclamida interage exclusivamente com café, sem relação com glicemia"], correctIndex: 1, explanation: "Sulfonilureias de longa ação (glibenclamida): listadas nos critérios de Beers/STOPP como potencialmente inapropriadas no idoso, justamente pelo risco de hipoglicemia prolongada e imprevisível. A dose de 15mg neste paciente já causa hipoglicemias noturnas segundo o caso — o painel demonstra por que.", reference: "AGS Beers Criteria 2023" },
-      { type: "adjust", question: "Troque para Sitagliptina e observe a glicemia de jejum se manter em faixa segura (sem cruzar para hipoglicemia), com queda mais discreta que a glibenclamida.\n\nPor que a sitagliptina é preferida especificamente no idoso frágil, apesar do efeito hipoglicemiante mais discreto?", targetParams: {}, validator: (s) => { if (s.drug !== "Sitagliptina") return { correct: false, feedback: "Selecione Sitagliptina." }; return (s.lastLab?.jejum ?? -1) >= 70 ? { correct: true, feedback: "Glicemia permanece em faixa segura, sem cruzar para hipoglicemia." } : { correct: false, feedback: "Confira o painel." }; }, options: ["Porque é o antidiabético mais potente disponível", "Os iDPP-4 aumentam a insulina de forma glicose-dependente (só quando a glicemia está alta), resultando em baixíssimo risco de hipoglicemia — são peso-neutros e têm dose única diária simples, ideal para o perfil de segurança necessário no idoso frágil, mesmo com efeito glicêmico mais modesto", "Porque cura definitivamente o diabetes no idoso", "Porque é a opção mais barata entre os antidiabéticos"], correctIndex: 1, explanation: "iDPP-4: aumentam GLP-1 endógeno → insulina liberada de forma glicose-dependente (sem hipo relevante), peso-neutro, perfil de segurança favorável, dose única diária. Prioriza segurança sobre potência máxima — apropriado para a meta menos rigorosa deste paciente.", reference: "Pratley RE. Lancet 2010" },
-      { type: "adjust", question: "Este paciente também usa Metformina 1.5g com TFG 45. Selecione Metformina com dose ≤1000mg e observe a HbA1c cair de forma segura.\n\nCom TFG 45 mL/min, qual o ajuste correto da metformina?", targetParams: {}, validator: (s) => { if (s.drug !== "Metformina") return { correct: false, feedback: "Selecione Metformina." }; if ((s.dose ?? 9999) > 1000) return { correct: false, feedback: "Reduza a dose para ≤1000mg/dia." }; return (s.lastLab?.hba1c ?? 99) < (s.baseLab?.hba1c ?? 0) ? { correct: true, feedback: "HbA1c caindo com a dose ajustada." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["Mantida em 1.5g sem qualquer ajuste", "Reduzida para ≤1000mg/dia e monitorar a TFG a cada 3 meses — TFG 45 está na zona de redução (30-45), não de suspensão obrigatória (<30)", "Suspensa imediatamente, independente da TFG", "Aumentada para 2.5g para compensar a idade avançada"], correctIndex: 1, explanation: "TFG 45: zona de redução de dose (30-45) — manter ≤1g/dia, reavaliar a cada 3 meses. Suspender apenas se TFG cair abaixo de 30. Monitorar B12 anualmente em uso crônico.", reference: "KDIGO 2022" },
-      { type: "mcq", question: "Qual o principal risco da hipoglicemia noturna especificamente no idoso, além do desconforto imediato?", options: ["Apenas desconforto transitório, sem outras consequências", "Quedas, fraturas de quadril, arritmias e morte súbita — idosos frequentemente não percebem os sintomas adrenérgicos de alerta (hipoglicemia assintomática), atrasando a correção", "Apenas cefaleia leve", "Ganho de peso progressivo"], correctIndex: 1, explanation: "Hipoglicemia no idoso: percepção adrenérgica reduzida (neuropatia, uso de β-bloqueadores), maior risco de queda (até metade das hipoglicemias noturnas graves), maior mortalidade cardiovascular associada. O estudo NICE-SUGAR reforçou essa associação entre hipoglicemia e pior desfecho.", reference: "Seaquist ER. Diabetes Care 2013" },
-      { type: "mcq", question: "Qual esquema, entre os disponíveis neste simulador, é considerado mais seguro caso este paciente eventualmente precise de insulinoterapia?", options: ["Esquema basal-bolus intensivo com múltiplas aplicações diárias", "Insulina Glargina (basal) 1x/dia em dose conservadora, com monitoramento cuidadoso — evitar esquemas complexos com múltiplas aplicações, que aumentam o risco de erro e de hipoglicemia em um paciente frágil com menor capacidade de autogestão", "Insulina Lispro antes de cada refeição, sem componente basal", "Combinar Insulina NPH 3x/dia com glibenclamida em dose plena"], correctIndex: 1, explanation: "Idoso frágil: simplificar o esquema terapêutico sempre que possível. Insulina basal 1x/dia (glargina) tem menor risco de hipoglicemia noturna, dose fixa e autogestão mais fácil que esquemas basal-bolus intensivos ou múltiplas aplicações de NPH.", reference: "ADA Older Adults 2024" },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Seu Antônio (82 anos, frágil) tem hipoglicemias noturnas e HbA1c de 7,0% com glibenclamida 15 mg + metformina 1,5 g (meta do caso: até 8,5%). Com \"Nenhum fármaco adicional\", anote a barra Hipoglicemia e a HbA1c; depois desligue o interruptor da Glibenclamida (Suspenso) e anote de novo.\n\nDiscutam em grupo e deixem a glibenclamida suspensa. O que a HbA1c de 7,0% significa neste paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Desligue o interruptor da Glibenclamida (Suspenso)." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina por enquanto." };
+          if (s.drug !== "Nenhum fármaco adicional") return { correct: false, feedback: "Deixe \"Nenhum fármaco adicional\" em \"Fármaco a adicionar\"." };
+          return (s.lastLab?.hba1c ?? 99) <= 8.5 && glRisk(s, "Hipoglicemia") <= 5 ? { correct: true, feedback: `Sem glibenclamida: HbA1c ${s.lastLab.hba1c}%, hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a HbA1c e a barra de hipoglicemia." };
+        },
+        ...glOpt(2,
+          "Com a glibenclamida suspensa a hipoglicemia cai de 70% para 2% e a HbA1c sobe de 7,0% para 8,3%, ainda dentro da meta de 8,5%: a HbA1c de 7,0% era sobretratamento neste idoso frágil.",
+          [
+            "Com a glibenclamida suspensa a hipoglicemia cai de 70% para 2% e a HbA1c sobe de 7,0% para 8,3%; esse aumento mostra falha terapêutica e exige repor de imediato outro fármaco hipoglicemiante.",
+            "Com a glibenclamida suspensa a hipoglicemia cai de 70% para 2% porque a metformina compensa a falta da sulfonilureia, e a HbA1c de 8,3% passa a ser a nova linha de base ideal.",
+            "Com a glibenclamida suspensa a HbA1c sobe de 7,0% para 8,3%, dentro da meta, mas a hipoglicemia se mantém alta (cerca de 70%), pois o risco depende da idade e não do fármaco usado.",
+          ]),
+        explanation: "Esquema atual: HbA1c 7,0%, hipoglicemia 70%. Glibenclamida suspensa: HbA1c 8,3% (jejum 160, pós-prandial 243) e hipoglicemia 2%. A meta do caso é até 8,5%; a HbA1c de 7,0% estava abaixo do necessário e foi obtida à custa de risco de hipoglicemia (no motor, a hipoglicemia da glibenclamida é multiplicada por 1,6 com clearance de 36 mL/min). Em idoso frágil, desintensificar é parte do tratamento: queda, fratura e arritmia custam mais que 1,5 ponto de HbA1c.",
+        reference: "ADA Standards of Care in Diabetes 2024 (Older Adults); AGS Beers Criteria 2023",
+      },
+      {
+        type: "mcq",
+        question: "Seu Antônio tem 82 anos, 58 kg e creatinina de 1,3 mg/dL (homem). Calcule o clearance de creatinina por Cockcroft-Gault, [(140 − idade) × peso ÷ (72 × creatinina)], e diga como o resultado orienta a metformina e a sitagliptina.",
+        ...glOpt(1,
+          "Resulta em cerca de 36 mL/min, na faixa 30–44: a metformina fica em até 1000 mg/dia (hoje 1,5 g está acima) e a sitagliptina em 50 mg/dia, com reavaliação da função renal a cada 3 meses.",
+          [
+            "Resulta em cerca de 36 mL/min, na faixa 30–44: a metformina pode seguir em 1,5 g/dia e a sitagliptina em 100 mg/dia, pois o ajuste de dose só passa a valer abaixo de 30 mL/min.",
+            "Resulta em cerca de 36 mL/min, abaixo de 45: a metformina deve ser suspensa e a sitagliptina também, e a insulina basal passa a ser a única opção glicêmica para este paciente.",
+            "Resulta em cerca de 52 mL/min, acima de 45: a metformina e a sitagliptina seguem em dose plena, e a idade avançada não interfere no cálculo nem nas doses dos fármacos.",
+          ]),
+        explanation: "Cockcroft-Gault: (140 − 82) × 58 ÷ (72 × 1,3) = 3364 ÷ 93,6 ≈ 36 mL/min. Na faixa 30–44: metformina até 1000 mg/dia (o simulador avisa que 1,5 g está acima do limite e eleva a acidose láctica de 7% para 27%); sitagliptina 50 mg/dia; suspender a metformina só com TFG < 30. Em idoso de baixo peso, a creatinina sozinha superestima a função renal: a fórmula que considera idade e peso é a que orienta a dose.",
+        reference: "KDIGO Diabetes in CKD 2022; Cockcroft DW. Nephron 1976",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Com a glibenclamida suspensa e \"Nenhum fármaco adicional\", use o slider de dose da Metformina no esquema atual: anote a barra Acidose Láctica, o aviso de limite e a HbA1c com 1500 mg, depois com 1000 mg e com 500 mg.\n\nDiscutam em grupo e deixem a MENOR dose de metformina que mantém a HbA1c dentro da meta de até 8,5%. O que a redução custa e o que ela traz?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (!glKept(s, "Metformina")) return { correct: false, feedback: "Mantenha a metformina ligada." };
+          const d = glRegDose(s, "Metformina");
+          if (d > 1000) return { correct: false, feedback: "A dose está acima do limite de 1000 mg para este clearance." };
+          if (d < 750) return { correct: false, feedback: "Com essa dose a HbA1c projetada passa da meta; suba o slider." };
+          return (s.lastLab?.hba1c ?? 99) <= 8.5 ? { correct: true, feedback: `Metformina ${d} mg: HbA1c ${s.lastLab.hba1c}%, acidose láctica ${glRisk(s, "Acidose Láctica")}%.` } : { correct: false, feedback: "Confira a HbA1c do painel." };
+        },
+        ...glOpt(3,
+          "Reduzir de 1500 para 1000 mg leva a acidose láctica de 27% para 7% e a HbA1c de 8,3% para 8,5%, ainda na meta: troca-se 0,2 ponto de HbA1c por menos risco, ajuste adequado para o clearance de 36 mL/min.",
+          [
+            "Reduzir de 1500 para 1000 mg leva a acidose láctica de 27% para 7% e a HbA1c de 8,3% para 9,5%, fora da meta; portanto a dose de 1500 mg deve ser mantida mesmo acima do limite renal.",
+            "Reduzir de 1500 para 1000 mg não altera a acidose láctica (27%) e leva a HbA1c de 8,3% para 8,5%, ainda na meta; a redução só se justifica por tolerância digestiva, e não por segurança renal.",
+            "Reduzir de 1500 para 500 mg leva a acidose láctica de 27% para 5% e a HbA1c de 8,3% para 8,6%, na meta; 500 mg é a dose recomendada para todo idoso frágil, independentemente da função renal.",
+          ]),
+        explanation: "Metformina (glibenclamida suspensa): 1500 mg = HbA1c 8,3%, acidose láctica 27% (acima do limite de 1000 mg para clearance 30–44); 1000 mg = 8,5% e 7%; 500 mg = 8,6% (acima da meta de 8,5%). A redução para 1000 mg troca cerca de 0,2 ponto de HbA1c por uma queda grande do risco de acidose láctica, mantendo a meta. A dose de 750 mg já fica em 8,5%, mas o ganho de segurança sobre 1000 mg é pequeno.",
+        reference: "KDIGO Diabetes in CKD 2022; Lalau JD. Diabetes Obes Metab 2018",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Com a glibenclamida suspensa e a metformina em 1000 mg, a HbA1c projetada já está na meta de 8,5%. Se o grupo quisesse reduzir um pouco mais a glicemia, teste a Sitagliptina 100 mg/dia e depois 50 mg/dia: anote a HbA1c, a barra Hipoglicemia e o aviso de limite de dose.\n\nDiscutam em grupo e deixem a Sitagliptina em 50 mg. O que muda de 50 para 100 mg?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (glRegDose(s, "Metformina") > 1000) return { correct: false, feedback: "Deixe a metformina em até 1000 mg." };
+          if (s.drug !== "Sitagliptina") return { correct: false, feedback: "Selecione a Sitagliptina." };
+          return (s.dose ?? 0) === 50 && !s.overRenal ? { correct: true, feedback: `Sitagliptina 50 mg: HbA1c ${s.lastLab.hba1c}%, hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Deixe a sitagliptina em 50 mg, dentro do limite renal." };
+        },
+        ...glOpt(0,
+          "De 50 para 100 mg a HbA1c melhora só 0,1 ponto (7,9% para 7,8%) e a dose passa do limite para o clearance de 36 mL/min; com 50 mg a hipoglicemia é de 3%, e a dose renal de 50 mg é a que se justifica.",
+          [
+            "De 50 para 100 mg a HbA1c melhora 0,6 ponto (7,9% para 7,3%) e a dose ainda respeita o limite para o clearance de 36 mL/min; a hipoglicemia de 4% é baixa e justifica a dose maior.",
+            "De 50 para 100 mg a HbA1c melhora 0,1 ponto (7,9% para 7,8%) e a dose ainda respeita o limite renal; como a hipoglicemia vai de 3% para 4%, a dose de 100 mg é a mais segura.",
+            "De 50 para 100 mg a HbA1c piora de 7,8% para 7,9% e a dose passa do limite para o clearance de 36 mL/min; o iDPP-4 em dose maior perde efeito por saturação, e 25 mg seria a melhor dose.",
+          ]),
+        explanation: "Sitagliptina com glibenclamida suspensa e metformina 1000 mg: 50 mg = HbA1c 7,9%, hipoglicemia 3%; 100 mg = 7,8%, hipoglicemia 4%, acima do limite de 50 mg para clearance 30–50 mL/min (excreção renal de ~80%, acúmulo). Dobrar a dose rende 0,1 ponto e quebra o limite renal. Como a meta (até 8,5%) já estava cumprida sem ela, o iDPP-4 em dose renal é opcional; a segurança dele (hipoglicemia 3%) o torna a escolha se for necessário intensificar.",
+        reference: "Bula da sitagliptina (ajuste renal); ADA Standards of Care in Diabetes 2024 (Older Adults)",
+      },
+      {
+        type: "adjust",
+        context: GL_CTX_REG,
+        question: "Se o grupo precisasse intensificar, compare duas opções com a glibenclamida suspensa e a metformina em 1000 mg: Insulina Glargina 10 UI/dia e Sitagliptina 50 mg/dia. Anote, para cada uma, a HbA1c e as barras Hipoglicemia e Ganho de Peso.\n\nDiscutam em grupo e deixem a Sitagliptina 50 mg selecionada. A glargina baixa mais a HbA1c; por que a sitagliptina é a escolha neste paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (glKept(s, "Glibenclamida")) return { correct: false, feedback: "Mantenha a glibenclamida suspensa." };
+          if (s.drug !== "Sitagliptina" || (s.dose ?? 0) !== 50) return { correct: false, feedback: "Deixe a Sitagliptina 50 mg selecionada." };
+          return glRisk(s, "Hipoglicemia") <= 5 ? { correct: true, feedback: `Sitagliptina 50 mg: hipoglicemia ${glRisk(s, "Hipoglicemia")}%.` } : { correct: false, feedback: "Confira a barra de hipoglicemia." };
+        },
+        ...glOpt(2,
+          "A glargina 10 UI baixa um pouco mais a HbA1c (7,5% contra 7,9%), mas a hipoglicemia vai de 3% para 13% e o ganho de peso chega a 18%; como a meta de 8,5% já foi cumprida, a sitagliptina custa menos em segurança.",
+          [
+            "A glargina 10 UI baixa um pouco mais a HbA1c (7,5% contra 7,9%) com hipoglicemia de 13%, risco aceitável em idoso; por isso a insulina basal deve ser preferida, sendo mais potente e igualmente simples.",
+            "A glargina 10 UI baixa um pouco mais a HbA1c (7,5% contra 7,9%), e a hipoglicemia é igual nas duas (3%); por isso a escolha depende apenas da via de administração e da preferência do paciente.",
+            "A glargina 10 UI baixa a HbA1c a 8,5% e a sitagliptina a 7,9%, mas a hipoglicemia de 13% da insulina é aceitável pela facilidade de titular; por isso a sitagliptina só entra se a insulina falhar.",
+          ]),
+        explanation: "Com glibenclamida suspensa e metformina 1000 mg: glargina 10 UI = HbA1c 7,5%, hipoglicemia 13%, ganho de peso 18%; sitagliptina 50 mg = 7,9%, hipoglicemia 3%, ganho de peso 4%. A meta do caso (até 8,5%) já estava cumprida com a metformina isolada, então a diferença de 0,4 ponto não tem valor clínico e custa 10 pontos de risco de hipoglicemia. Se algum dia a meta exigir insulina, a basal única diária em dose conservadora é a opção mais simples e segura entre as insulinas.",
+        reference: "ADA Standards of Care in Diabetes 2024 (Older Adults); AGS Beers Criteria 2023",
+      },
+      {
+        type: "mcq",
+        question: "Após a desintensificação (glibenclamida suspensa, metformina 1000 mg), o painel projeta para Seu Antônio jejum de 163 e HbA1c de 8,5%. Que alvos de monitorização são coerentes com o perfil dele (muito complexo, frágil, hipoglicemias prévias)?",
+        ...glOpt(1,
+          "Evitar hipoglicemia e hiperglicemia sintomática, com jejum em torno de 100–180 mg/dL e HbA1c aceitável até 8,5%, reavaliando em 3 meses e a cada intercorrência (infecção, má ingestão).",
+          [
+            "Perseguir glicemia de jejum de 80–130 mg/dL e HbA1c abaixo de 7,0%, como em adultos saudáveis, reavaliando em cerca de 3 meses e a cada intercorrência (infecção, má ingestão).",
+            "Evitar hipoglicemia e hiperglicemia sintomática, com glicemia de jejum em torno de 100–180 mg/dL, mas a HbA1c deve ser reduzida para 7,5% pela adição de outro fármaco na próxima consulta.",
+            "Dispensar a monitorização glicêmica, porque a suspensão da glibenclamida elimina o risco de hipoglicemia, mantendo apenas a HbA1c de 8,5% como alvo e a reavaliação em um ano.",
+          ]),
+        explanation: "ADA 2024 (idosos): saudável = HbA1c < 7,0–7,5% e jejum 80–130; complexo/intermediário = < 8,0% e jejum 90–150; muito complexo/saúde precária = evitar depender da HbA1c, evitar hipoglicemia e hiperglicemia sintomática, jejum 100–180 mg/dL. Seu Antônio se enquadra no último grupo: jejum 163 e HbA1c 8,5% estão dentro do que se busca. A reavaliação em ~3 meses e diante de doença aguda ou má ingestão protege contra desvios nos dois sentidos.",
+        reference: "ADA Standards of Care in Diabetes 2024 (Older Adults, Tabela 13.1)",
+      },
     ],
   ];
 
@@ -2809,7 +3350,7 @@ export function getGlicemiaLabChallenges(caseIndex?: number): ChallengeSet {
 
   return {
     title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Glicemia e Insulinoterapia",
-    description: "Interprete glicemia, HbA1c e perfil insulínico para ajuste farmacoterapêutico.",
+    description: "Monte o esquema, leia glicemia, HbA1c e riscos e decida em grupo.",
     challenges,
   };
 }

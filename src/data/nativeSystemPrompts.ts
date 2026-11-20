@@ -2285,6 +2285,30 @@ REFERÊNCIAS:
 - Ginsberg HN et al. N Engl J Med 2010 (ACCORD Lipid); Berglund L et al. J Clin Endocrinol Metab 2012 (hipertrigliceridemia)
 - Stroes ES et al. Eur Heart J 2015 (intolerância a estatinas); Raal FJ et al. Lancet 2015 (RUTHERFORD-2)`,
 
+  "sim-farmacoterapia-glicemia": `Você é um especialista em endocrinologia e farmacoterapia do diabetes. Crie um simulador de Glicemia, Diabetes e Insulinoterapia (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Painel glicêmico projetado após o tratamento (efeito pleno no dia 7): Jejum, Pós-prandial, HbA1c (projeção de equilíbrio de ~3 meses), Insulina, Peptídeo-C, K⁺ e TFG, com limites de referência; e, nos casos de cetoacidose, pH, HCO₃⁻ e ânion gap
+- Controles: lista "Prescrição"/"Fármaco a adicionar" (Metformina, Glibenclamida, Empagliflozina, Sitagliptina, Liraglutida, Insulina NPH, Insulina Glargina, Insulina Lispro, Pioglitazona e "Nenhum fármaco adicional") com slider de dose
+- Casos com esquema em uso (campo opcional "regimen"): bloco "Esquema atual do paciente" com interruptor Mantido/Suspenso e slider de dose por item; o baseLab é o laboratório COM o esquema; suspender desfaz o efeito do item e o fármaco escolhido soma por cima (se for o mesmo fármaco de um item, substitui o item)
+- Ajuste renal pela TFG: metformina limitada a 1000 mg/dia com TFG 30–44 e contraindicada abaixo de 30 (risco de acidose láctica multiplicado acima do limite); sitagliptina 50 mg com TFG < 50 e 25 mg com TFG < 30; eficácia glicêmica da empagliflozina cai com a TFG; hipoglicemia da glibenclamida e das insulinas maior na DRC
+- Barras de risco: hipoglicemia, GI, ganho de peso, cetoacidose, acidose láctica e, em caso com IC (campo "ic"), descompensação de IC (pioglitazona)
+- Caixa "Meta de HbA1c do caso" (campo "hba1cTarget") e gráfico de 7 dias de jejum e pós-prandial com linhas de hipoglicemia (70) e meta pós-prandial (180)
+- 5 casos nativos: DM2 sem tratamento e obesa (Maria), DM2 + IAM + IC em metformina (José), DRC G3b com hipoglicemias por glibenclamida (Dona Fátima), cetoacidose diabética por abandono de insulina (Pedro), idoso frágil com sobretratamento (Seu Antônio)
+- Casos gerados por IA seguem o mesmo formato (baseLab, regimen, ic, hba1cTarget e, para cetoacidose, ph/hco3/anionGap)
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno monta o esquema (suspende itens, ajusta doses, escolhe o fármaco a adicionar), lê o painel, as barras de risco e a meta, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa"
+- Tipos: metformina × sulfonilureia (efeito × risco); titulação com retorno decrescente; HOMA-IR e peptídeo-C; perfil jejum × pós-prandial (basal × rápida); projeção × realidade (adesão); armadilha do número bonito (glibenclamida com a menor HbA1c; HbA1c de 7,0% em idoso frágil é sobretratamento); pioglitazona na IC; suspender a sulfonilureia na DRC; limite de dose renal; cetoacidose (pH e bicarbonato normalizam antes do ânion gap; basal sozinha não resolve; metformina e iSGLT2 pioram); potássio na CAD; transição basal-bolus; desintensificação do idoso; Cockcroft-Gault
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- O simulador não modela desfechos cardiovasculares (EMPA-REG, LEADER), a insulina EV contínua, a reposição de potássio nem o seguimento além de 7 dias: esses pontos entram só como raciocínio
+
+REFERÊNCIAS:
+- ADA Standards of Care in Diabetes 2024; Davies MJ et al. Diabetes Care 2022 (ADA/EASD); KDIGO Diabetes in CKD 2022
+- Kitabchi AE et al. Diabetes Care 2009; Umpierrez GE et al. Diabetes Care 2024 (crises hiperglicêmicas)
+- Zinman B et al. N Engl J Med 2015 (EMPA-REG OUTCOME); Marso SP et al. N Engl J Med 2016 (LEADER); Packer M et al. N Engl J Med 2020 (EMPEROR-Reduced)`,
+
   "sim-farmacoterapia-hepatopatia": `Você é um especialista em hepatologia clínica e farmacoterapia. Crie um simulador de Hepatopatias e Ajuste Terapêutico (categoria Farmacoterapia Laboratorial).
 
 REQUISITOS:

@@ -879,6 +879,33 @@ ARQUÉTIPOS (varie entre eles): (1) prevenção primária de alto risco, naïve,
 
 COERÊNCIA OBRIGATÓRIA: scenario, baseLab, riskLevel, ldlTarget, background e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora (ex.: o fibrato que melhora TG/HDL sem mexer no LDL; trocar de estatina de alta potência em dose máxima; retirar a ezetimiba).`,
 
+  "farmacoterapia-glicemia": `Gere um caso clínico COMPLETO para o Simulador de Glicemia, Diabetes e Insulinoterapia (Farmacoterapia Laboratorial).
+O simulador projeta, para o paciente já estabilizado após o esquema escolhido pelo aluno (um fármaco a adicionar + itens mantidos do esquema em uso), jejum, pós-prandial, HbA1c (projeção de ~3 meses), insulina, peptídeo-C, K⁺ e TFG, com barras de risco (hipoglicemia, GI, ganho de peso, cetoacidose, acidose láctica e, se houver IC, descompensação de IC). O caso é usado em atividades em grupo com "Modo Desafio": o aluno mexe no esquema, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array curto: "Obesa", "DRC G3b", "IC", "Idoso frágil", "DM1"...), diagnosis (descrição NEUTRA e curta do motivo da consulta, sem a conduta) }
+- scenario: apresentação em 3-5 frases com idade, peso, comorbidades, esquema em uso (com doses) e TODOS os valores do baseLab (jejum, pós-prandial, HbA1c, insulina, peptídeo-C, creatinina, TFG, K⁺ e, na cetoacidose, pH, HCO₃⁻ e ânion gap) e a meta de HbA1c do caso. NUNCA escreva o diagnóstico, a conduta nem "precisa de X".
+- baseLab: { jejum (mg/dL), pp (mg/dL), hba1c (%), insulina (µUI/mL), peptideoC (ng/mL), creatinina (mg/dL), tfg (mL/min), potassio (mEq/L) }. Opcionais, SÓ na cetoacidose: ph (ex.: 7.18), hco3 (ex.: 11), anionGap (ex.: 24). COERÊNCIA OBRIGATÓRIA: peptídeo-C baixo (< 0,6) só em DM1/deficiência de insulina; TFG coerente com a creatinina, a idade e o peso (Cockcroft-Gault).
+- expectedDrugs: 1 a 3 nomes EXATOS da lista: "Metformina", "Glibenclamida", "Empagliflozina", "Sitagliptina", "Liraglutida", "Insulina NPH", "Insulina Glargina", "Insulina Lispro", "Pioglitazona".
+- clinicalTip: 1-2 frases com a conduta e seus limites.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+- OPCIONAIS (use só quando o arquétipo pedir):
+  - regimen: array de { drug, dose } com o esquema EM USO. Nomes e doses válidas: Metformina 500-2550 (passo 250), Glibenclamida 2.5-20 (passo 2.5), Empagliflozina 10 ou 25, Sitagliptina 25/50/75/100, Liraglutida 0.6/1.2/1.8, Insulina NPH 10-60 (passo 2), Insulina Glargina 10-80 (passo 2), Insulina Lispro 4-30 (passo 2), Pioglitazona 15/30/45. Quando existe, o baseLab é o laboratório COM esse esquema (o aluno pode suspender itens e ajustar doses; o simulador desfaz o efeito de cada item suspenso).
+  - ic: true quando o paciente tem insuficiência cardíaca (mostra a barra de descompensação de IC da pioglitazona).
+  - hba1cTarget: meta de HbA1c do caso em % (ex.: 7.0, 7.5, 8.0, 8.5), escrita também no scenario.
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- Efeito pleno em 7 dias: metformina 2000 mg reduz ~1,4 ponto de HbA1c e ~40 mg/dL de jejum; sulfonilureia reduz ~1,4 ponto com hipoglicemia importante; insulina basal reduz sobretudo o jejum, a rápida sobretudo o pós-prandial; iDPP-4 e iSGLT2 têm efeito modesto; liraglutida reduz ~1,2 ponto com GI alto.
+- TFG: metformina acima de 1000 mg com TFG 30-44 e sitagliptina acima de 50 mg com TFG < 50 acendem aviso de limite e elevam o risco; glibenclamida e insulinas têm mais hipoglicemia na DRC; a empagliflozina perde metade do efeito glicêmico com TFG 30-44.
+- Cetoacidose: só insulina melhora pH, HCO₃⁻ e ânion gap (a rápida em dose alta fecha o gap, a basal sozinha não); metformina e empagliflozina agravam as barras de acidose láctica e cetoacidose.
+- NÃO modela: desfechos cardiovasculares e renais, insulina EV contínua, reposição de potássio, hidratação, gestação, dieta, insulina combinada (basal + bolus ao mesmo tempo), seguimento além de 7 dias.
+
+ARQUÉTIPOS (varie entre eles): (1) DM2 sem tratamento, obeso, com HOMA-IR alto; (2) DM2 com DCV/IC em uso de metformina (regimen, ic, hba1cTarget); (3) DRC G3b com sulfonilureia e hipoglicemias (regimen com glibenclamida, TFG 30-44); (4) cetoacidose diabética por abandono da insulina (ph, hco3, anionGap, K⁺ alto, peptídeo-C baixo); (5) idoso frágil com sobretratamento (regimen com sulfonilureia + metformina, HbA1c abaixo da meta, hba1cTarget 8.0-8.5).
+
+COERÊNCIA OBRIGATÓRIA: scenario, baseLab, regimen, hba1cTarget e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora (ex.: a sulfonilureia com a menor HbA1c mas hipoglicemia alta; a pioglitazona na IC; a metformina acima do limite renal; o pH que normaliza com o ânion gap ainda aberto).`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 

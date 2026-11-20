@@ -20,125 +20,11 @@ import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { getGlicemiaLabChallenges } from "@/data/simulatorChallenges";
+import { Switch } from "@/components/ui/switch";
+import { DRUGS, computeSimulation, getDrug } from "@/lib/glicemia/engine";
+import { BUILT_IN_CASES, type GlicCase } from "@/lib/glicemia/cases";
 
 const SLUG = "farmacoterapia-glicemia";
-
-interface GlicDrug {
-  name: string; class: string;
-  doseMin: number; doseMax: number; doseUnit: string; doseStep: number;
-  // `k` = shift transcelular de potássio (só a insulina exógena tem esse efeito relevante aqui).
-  effects: { jejum: number; pp: number; hba1c: number; insulina: number; peptideoC: number; k: number };
-  sideEffects: { hipo: number; gi: number; peso: number; cetoacidose: number; lacticoacidose: number };
-  daysToEffect: number;
-}
-
-const DRUGS: GlicDrug[] = [
-  { name: "Metformina", class: "Biguanida", doseMin: 500, doseMax: 2550, doseUnit: "mg/dia", doseStep: 250, effects: { jejum: -40, pp: -50, hba1c: -1.5, insulina: 0, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.35, peso: -0.1, cetoacidose: 0, lacticoacidose: 0.05 }, daysToEffect: 7 },
-  { name: "Glibenclamida", class: "Sulfonilureia", doseMin: 2.5, doseMax: 20, doseUnit: "mg/dia", doseStep: 2.5, effects: { jejum: -55, pp: -70, hba1c: -1.5, insulina: 15, peptideoC: 0.5, k: 0 }, sideEffects: { hipo: 0.4, gi: 0.1, peso: 0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 3 },
-  { name: "Empagliflozina", class: "iSGLT2", doseMin: 10, doseMax: 25, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -25, pp: -35, hba1c: -0.8, insulina: -5, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.01, gi: 0.05, peso: -0.2, cetoacidose: 0.08, lacticoacidose: 0 }, daysToEffect: 5 },
-  { name: "Sitagliptina", class: "iDPP-4", doseMin: 25, doseMax: 100, doseUnit: "mg/dia", doseStep: 25, effects: { jejum: -15, pp: -40, hba1c: -0.7, insulina: 8, peptideoC: 0.3, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.08, peso: 0.05, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 5 },
-  { name: "Liraglutida", class: "GLP-1 RA", doseMin: 0.6, doseMax: 1.8, doseUnit: "mg/dia SC", doseStep: 0.6, effects: { jejum: -30, pp: -55, hba1c: -1.2, insulina: 10, peptideoC: 0.4, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.3, peso: -0.3, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 7 },
-  { name: "Insulina NPH", class: "Insulina Basal", doseMin: 10, doseMax: 60, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -60, pp: -30, hba1c: -1.5, insulina: 30, peptideoC: 0, k: -0.4 }, sideEffects: { hipo: 0.35, gi: 0, peso: 0.4, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 2 },
-  { name: "Insulina Glargina", class: "Insulina Basal", doseMin: 10, doseMax: 80, doseUnit: "UI/dia", doseStep: 2, effects: { jejum: -65, pp: -25, hba1c: -1.5, insulina: 25, peptideoC: 0, k: -0.4 }, sideEffects: { hipo: 0.2, gi: 0, peso: 0.35, cetoacidose: -0.5, lacticoacidose: 0 }, daysToEffect: 3 },
-  { name: "Insulina Lispro", class: "Insulina Rápida", doseMin: 4, doseMax: 30, doseUnit: "UI/refeição", doseStep: 2, effects: { jejum: -10, pp: -80, hba1c: -1.0, insulina: 40, peptideoC: 0, k: -0.5 }, sideEffects: { hipo: 0.45, gi: 0, peso: 0.4, cetoacidose: -0.3, lacticoacidose: 0 }, daysToEffect: 0.5 },
-  { name: "Pioglitazona", class: "Tiazolidinediona", doseMin: 15, doseMax: 45, doseUnit: "mg/dia", doseStep: 15, effects: { jejum: -35, pp: -40, hba1c: -1.0, insulina: -8, peptideoC: 0, k: 0 }, sideEffects: { hipo: 0.02, gi: 0.05, peso: 0.35, cetoacidose: 0, lacticoacidose: 0 }, daysToEffect: 14 },
-];
-
-interface GlicCase {
-  id?: string; title: string; difficulty: string; isAI?: boolean;
-  patient: { name: string; age: number; weight: number; sex: string; specialGroup: string[]; diagnosis?: string };
-  scenario: string;
-  baseLab: { jejum: number; pp: number; hba1c: number; insulina: number; peptideoC: number; creatinina: number; tfg: number; potassio: number };
-  expectedDrugs: string[];
-  clinicalTip: string;
-  references: string[];
-}
-
-const BUILT_IN_CASES: GlicCase[] = [
-  {
-    title: "Caso 1: Maria Santos",
-    difficulty: "Fácil",
-    patient: { name: "Maria Santos", age: 52, weight: 85, sex: "F", specialGroup: ["Obesa"], diagnosis: "DM2 HbA1c 8.2% — 1ª linha" },
-    scenario: "Mulher 52a, obesa (IMC 32), glicemia de jejum 185 mg/dL, HbA1c 8.2%. Sem complicações. TFG 95. Primeira consulta.",
-    baseLab: { jejum: 185, pp: 260, hba1c: 8.2, insulina: 22, peptideoC: 3.0, creatinina: 0.8, tfg: 95, potassio: 4.2 },
-    expectedDrugs: ["Metformina"],
-    clinicalTip: "DM2 recém-diagnosticado com HbA1c 7-9%: metformina 1ª linha. Iniciar 500mg e titular a cada 1-2 semanas. Associar MEV.",
-    references: ["SBD 2024", "ADA Standards of Care 2024"],
-  },
-  {
-    title: "Caso 2: José Oliveira",
-    difficulty: "Médio",
-    patient: { name: "José Oliveira", age: 63, weight: 92, sex: "M", specialGroup: ["DCV", "IC"], diagnosis: "DM2 + IC com FE reduzida" },
-    scenario: "Homem 63a, DM2 há 8 anos, IAM prévio, IC FE 35%. HbA1c 8.5% em uso de metformina 2g/dia. TFG 72.",
-    baseLab: { jejum: 195, pp: 280, hba1c: 8.5, insulina: 18, peptideoC: 2.5, creatinina: 1.1, tfg: 72, potassio: 4.5 },
-    expectedDrugs: ["Empagliflozina", "Liraglutida"],
-    clinicalTip: "DM2 + DCV/IC: priorizar iSGLT2 (empagliflozina/dapagliflozina) por benefício cardiorrenal. GLP-1 RA como alternativa com benefício CV.",
-    references: ["EMPA-REG OUTCOME 2015", "ADA/EASD Consensus 2022"],
-  },
-  {
-    title: "Caso 3: Dona Fátima",
-    difficulty: "Difícil",
-    patient: { name: "Dona Fátima", age: 68, weight: 65, sex: "F", specialGroup: ["DRC G3b"], diagnosis: "DM2 + DRC G3b TFG 38" },
-    scenario: "Mulher 68a, DM2 há 15 anos. TFG 38 mL/min (G3b). HbA1c 8.0% em metformina 1g + glibenclamida 10mg. Hipoglicemias frequentes.",
-    baseLab: { jejum: 170, pp: 240, hba1c: 8.0, insulina: 14, peptideoC: 4.0, creatinina: 1.6, tfg: 38, potassio: 5.0 },
-    expectedDrugs: ["Insulina Glargina"],
-    clinicalTip: "DRC G3b (TFG 30-44): suspender metformina se <30. Suspender glibenclamida (hipoglicemia). iSGLT2 com cautela. Insulina é segura.",
-    references: ["KDIGO 2022", "SBD 2024"],
-  },
-  {
-    title: "Caso 4: Pedro Lima",
-    difficulty: "Difícil",
-    patient: { name: "Pedro Lima", age: 28, weight: 70, sex: "M", specialGroup: ["DM1"], diagnosis: "CAD — pH 7.18, glicemia 450" },
-    scenario: "Homem 28a, DM1 diagnosticado há 5 meses. Parou insulina há 3 dias. Náusea, dor abdominal, Kussmaul. pH 7.18, glicemia 450.",
-    baseLab: { jejum: 450, pp: 520, hba1c: 11.0, insulina: 2, peptideoC: 0.3, creatinina: 1.4, tfg: 75, potassio: 5.8 },
-    expectedDrugs: ["Insulina Lispro"],
-    clinicalTip: "CAD: SF 0.9% 1-1.5L/h → insulina regular EV 0.1 UI/kg/h. Repor K⁺ se <5.3. Manter insulina até gap AG normalizar. Transição para basal-bolus.",
-    references: ["ADA 2024", "Kitabchi AE, Diabetes Care 2009"],
-  },
-  {
-    title: "Caso 5: Seu Antônio",
-    difficulty: "Médio",
-    patient: { name: "Seu Antônio", age: 82, weight: 58, sex: "M", specialGroup: ["Idoso frágil", "Polifarmácia"], diagnosis: "DM2 + fragilidade — meta HbA1c <8.5%" },
-    scenario: "Homem 82a, frágil, DM2 há 20 anos. HbA1c 7.0% com glibenclamida 15mg + metformina 1.5g. Hipoglicemias noturnas recorrentes.",
-    baseLab: { jejum: 110, pp: 180, hba1c: 7.0, insulina: 10, peptideoC: 1.5, creatinina: 1.3, tfg: 45, potassio: 4.8 },
-    expectedDrugs: ["Sitagliptina"],
-    clinicalTip: "Idoso frágil: meta HbA1c <8-8.5%. Suspender sulfonilureias (hipo). iDPP-4 seguro, peso-neutro. Reduzir metformina se TFG <45.",
-    references: ["ADA Older Adults 2024", "SBD 2024"],
-  },
-];
-
-function computeSimulation(drug: GlicDrug, dose: number, baseLab: GlicCase["baseLab"]) {
-  const doseFrac = (dose - drug.doseMin) / Math.max(drug.doseMax - drug.doseMin, 1);
-  const intensity = 0.65 + doseFrac * 0.35;
-  const trend: any[] = [];
-  for (let d = 0; d <= 7; d++) {
-    const p = d >= drug.daysToEffect ? Math.min((d - drug.daysToEffect + 1) / 5, 1) : 0;
-    trend.push({
-      day: d,
-      jejum: Math.max(40, Math.round(baseLab.jejum + drug.effects.jejum * intensity * p)),
-      pp: Math.max(60, Math.round(baseLab.pp + drug.effects.pp * intensity * p)),
-      hba1c: Math.max(4, +(baseLab.hba1c + drug.effects.hba1c * intensity * p * 0.3).toFixed(1)),
-      insulina: Math.max(0, +(baseLab.insulina + drug.effects.insulina * intensity * p).toFixed(1)),
-      peptideoC: Math.max(0, +(baseLab.peptideoC + drug.effects.peptideoC * intensity * p).toFixed(1)),
-      k: Math.max(2.5, +(baseLab.potassio + drug.effects.k * intensity * p).toFixed(1)),
-    });
-  }
-  const last = trend[trend.length - 1];
-  const sideEffects = Object.entries(drug.sideEffects).map(([k, v]) => ({
-    name: k === "hipo" ? "Hipoglicemia" : k === "gi" ? "GI" : k === "peso" ? "Ganho de Peso" : k === "cetoacidose" ? "Cetoacidose" : "Acidose Láctica",
-    risco: Math.round(Math.max(0, v * (0.5 + doseFrac * 0.8)) * 100),
-  }));
-  const labGauges = [
-    { name: "Jejum", value: last.jejum, unit: "mg/dL", refLow: 70, refHigh: 99, status: last.jejum < 70 ? "baixo" : last.jejum > 99 ? "alto" : "normal" },
-    { name: "Pós-prandial", value: last.pp, unit: "mg/dL", refLow: 70, refHigh: 140, status: last.pp > 140 ? "alto" : "normal" },
-    { name: "HbA1c", value: last.hba1c, unit: "%", refLow: 4.0, refHigh: 7.0, status: last.hba1c > 7.0 ? "alto" : "normal" },
-    { name: "Insulina", value: last.insulina, unit: "µUI/mL", refLow: 2.6, refHigh: 24.9, status: last.insulina < 2.6 ? "baixo" : last.insulina > 24.9 ? "alto" : "normal" },
-    { name: "Peptídeo-C", value: last.peptideoC, unit: "ng/mL", refLow: 0.5, refHigh: 2.0, status: last.peptideoC < 0.5 ? "baixo" : last.peptideoC > 2.0 ? "alto" : "normal" },
-    { name: "K⁺", value: last.k, unit: "mEq/L", refLow: 3.5, refHigh: 5.0, status: last.k < 3.5 ? "baixo" : last.k > 5.0 ? "alto" : "normal" },
-    { name: "TFG", value: baseLab.tfg, unit: "mL/min", refLow: 60, refHigh: 120, status: baseLab.tfg < 60 ? "baixo" : "normal" },
-  ];
-  return { trend, sideEffects, labGauges, lastLab: last };
-}
 
 function LabGauge({ name, value, unit, status }: { name: string; value: number; unit: string; status: string }) {
   const color = status === "baixo" ? "text-destructive" : status === "alto" ? "text-chart-5" : "text-green-500";
@@ -187,6 +73,9 @@ export default function SimuladorGlicemia() {
   }, [isEmbed, embedCaseId, activeCase]);
   const [selectedDrugIdx, setSelectedDrugIdx] = useState(0);
   const [dose, setDose] = useState(DRUGS[0].doseMin);
+  // Esquema já em uso: quais itens continuam e com que dose (só nos casos com `regimen`).
+  const [kept, setKept] = useState<string[]>([]);
+  const [regDoses, setRegDoses] = useState<Record<string, number>>({});
   const [running, setRunning] = useState(false);
   const [animStep, setAnimStep] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
@@ -203,11 +92,23 @@ export default function SimuladorGlicemia() {
         patient: cd.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] },
         scenario: cd.scenario ?? "", baseLab: cd.baseLab ?? BUILT_IN_CASES[0].baseLab,
         expectedDrugs: cd.expectedDrugs ?? [], clinicalTip: cd.clinicalTip ?? "", references: cd.references ?? [],
+        regimen: cd.regimen, ic: cd.ic, hba1cTarget: cd.hba1cTarget,
       });
     }
   }, [virtualRoomCase]);
 
-  const simulation = useMemo(() => computeSimulation(selectedDrug, dose, activeCase?.baseLab ?? BUILT_IN_CASES[0].baseLab), [selectedDrug, dose, activeCase?.baseLab]);
+  // Ao trocar de caso: volta ao esquema atual do paciente, sem fármaco adicional.
+  useEffect(() => {
+    setSelectedDrugIdx(0); setDose(DRUGS[0].doseMin);
+    const reg = activeCase?.regimen ?? [];
+    setKept(reg.map(r => r.drug));
+    setRegDoses(Object.fromEntries(reg.map(r => [r.drug, r.dose])));
+  }, [activeCase?.title]);
+
+  const simulation = useMemo(
+    () => computeSimulation(selectedDrug, dose, activeCase?.baseLab ?? BUILT_IN_CASES[0].baseLab, { regimen: activeCase?.regimen, kept, doses: regDoses, ic: activeCase?.ic }),
+    [selectedDrug, dose, activeCase?.baseLab, activeCase?.regimen, activeCase?.ic, kept, regDoses],
+  );
   const displayTrend = useMemo(() => running ? simulation.trend.slice(0, animStep + 1) : simulation.trend, [running, animStep, simulation.trend]);
 
   useEffect(() => {
@@ -232,7 +133,7 @@ export default function SimuladorGlicemia() {
   useEffect(() => { if (challengeCompleted && !submitted && activeCase) { handleFinish(); } }, [challengeCompleted]);
   useEffect(() => { if (isVirtualRoom && submitted) { const t = setTimeout(() => navigate("/"), 15000); return () => clearTimeout(t); } }, [isVirtualRoom, submitted, navigate]);
 
-  const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] }, scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [] });
+  const loadAICase = (c: any) => setActiveCase({ id: c.id, title: c.title, difficulty: c.difficulty, isAI: true, patient: c.patient ?? { name: "Paciente", age: 50, weight: 70, sex: "M", specialGroup: [] }, scenario: c.scenario ?? "", baseLab: c.baseLab ?? BUILT_IN_CASES[0].baseLab, expectedDrugs: c.expectedDrugs ?? [], clinicalTip: c.clinicalTip ?? "", references: c.references ?? [], regimen: c.regimen, ic: c.ic, hba1cTarget: c.hba1cTarget });
 
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -292,21 +193,62 @@ export default function SimuladorGlicemia() {
         <Card>
           <CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            {(activeCase.regimen?.length ?? 0) > 0 && (
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                <p className="text-xs font-semibold">Esquema atual do paciente</p>
+                <p className="text-[11px] text-muted-foreground">O laboratório do caso já é COM este esquema. Desligue um item para suspendê-lo (o painel desfaz o efeito dele) ou ajuste a dose.</p>
+                {activeCase.regimen!.map(r => {
+                  const dr = getDrug(r.drug); if (!dr) return null;
+                  const on = kept.includes(r.drug); const replacedNow = on && r.drug === selectedDrug.name;
+                  const cur = regDoses[r.drug] ?? r.dose;
+                  return (
+                    <div key={r.drug} className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium">{r.drug} <span className="text-muted-foreground">({r.dose} {dr.doseUnit} no caso)</span></span>
+                        <div className="flex items-center gap-1.5"><span className="text-[10px] text-muted-foreground">{on ? "Mantido" : "Suspenso"}</span><Switch checked={on} onCheckedChange={v => setKept(k => v ? [...k, r.drug] : k.filter(x => x !== r.drug))} aria-label={`Manter ${r.drug}`} /></div>
+                      </div>
+                      {on && (
+                        <>
+                          <div className="flex justify-between"><span className="text-[11px]">Dose do esquema</span><span className="text-[11px] font-bold">{cur} {dr.doseUnit}</span></div>
+                          <Slider value={[cur]} onValueChange={([v]) => setRegDoses(d => ({ ...d, [r.drug]: v }))} min={dr.doseMin} max={dr.doseMax} step={dr.doseStep} />
+                        </>
+                      )}
+                      {replacedNow && <p className="text-[10px] text-chart-5">Este fármaco também está em "Prescrição": a dose da Prescrição substitui a do esquema.</p>}
+                    </div>
+                  );
+                })}
+                {simulation.keptOverRenal.length > 0 && <p className="text-[11px] font-semibold text-destructive">Acima do limite para a TFG ({activeCase.baseLab.tfg} mL/min): {simulation.keptOverRenal.join(", ")}.</p>}
+              </div>
+            )}
+            <p className="text-xs font-semibold">{(activeCase.regimen?.length ?? 0) > 0 ? "Fármaco a adicionar (Prescrição)" : "Prescrição"}</p>
             <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem>)}</SelectContent>
+              <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.noDose ? d.name : `${d.name} (${d.class})`}</SelectItem>)}</SelectContent>
             </Select>
-            <div>
-              <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
-              <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
-            </div>
+            {!selectedDrug.noDose && (
+              <div>
+                <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
+                <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
+                {simulation.renalMax !== null && (
+                  <p className={`text-[11px] mt-1 ${simulation.overRenal ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                    {simulation.renalMax === 0 ? `Contraindicada com TFG ${activeCase.baseLab.tfg} mL/min.` : `Limite para TFG ${activeCase.baseLab.tfg} mL/min: ≤ ${simulation.renalMax} ${selectedDrug.doseUnit}.`}
+                  </p>
+                )}
+              </div>
+            )}
+            {activeCase.hba1cTarget !== undefined && (
+              <div className={`rounded-lg border p-2 text-xs ${simulation.lastLab.hba1c <= activeCase.hba1cTarget ? "border-green-500/40 bg-green-500/10" : "border-chart-5/40 bg-chart-5/10"}`}>
+                <strong>Meta de HbA1c do caso: até {activeCase.hba1cTarget}%</strong> — projeção atual {simulation.lastLab.hba1c}% ({simulation.lastLab.hba1c <= activeCase.hba1cTarget ? "dentro da meta" : "acima da meta"}).
+              </div>
+            )}
             <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
           </CardContent>
         </Card>
 
         {/* Trend */}
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Curva Glicêmica (7 dias)</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Curva Glicêmica (7 dias)</CardTitle>
+            <p className="text-[11px] text-muted-foreground">Jejum e pós-prandial respondem em dias. A HbA1c do painel é a projeção de equilíbrio (~3 meses). Linha "Alvo PP 180" = meta pós-prandial; "Hipo 70" = limite de hipoglicemia.</p></CardHeader>
           <CardContent className="space-y-4">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={displayTrend}>
@@ -347,7 +289,7 @@ export default function SimuladorGlicemia() {
       {/* Challenges */}
       {(() => {
         const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return <SimulatorChallengeMode challengeSet={getGlicemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
+        return <SimulatorChallengeMode challengeSet={getGlicemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, kept, regDoses, regimen: activeCase.regimen ?? [], hba1cTarget: activeCase.hba1cTarget, renalMax: simulation.renalMax, overRenal: simulation.overRenal, keptOverRenal: simulation.keptOverRenal, untreated: simulation.untreated }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
       })()}
 
       {isVirtualRoom && submitted && (!showFeedback ? (
