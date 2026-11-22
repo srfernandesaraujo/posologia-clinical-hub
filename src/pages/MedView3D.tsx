@@ -1,14 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Search, Bone, Heart, SmilePlus, Pill, Sparkles, Scissors,
-  LayoutGrid, List, ArrowRight,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CatalogHub, type CatalogItem } from "@/components/catalog/CatalogHub";
+import type { PreviewKind } from "@/data/catalogAreas";
+import { Bone, Heart, SmilePlus, Pill, Sparkles, Scissors, type LucideIcon } from "lucide-react";
 
 interface Procedure {
   name: string;
@@ -19,7 +11,7 @@ interface Procedure {
 interface Category {
   id: string;
   name: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;
   procedures: Procedure[];
 }
@@ -90,147 +82,39 @@ const categories: Category[] = [
   },
 ];
 
+const PREVIEW_BY_ID: Record<string, PreviewKind> = {
+  ortopedia: "bars",
+  cardiologia: "ecg",
+  odontologia: "molecule",
+  farmacologia: "curve",
+  dermatologia: "gauge",
+  "cirurgia-geral": "cycle",
+};
+
+const items: CatalogItem[] = categories.flatMap((cat) =>
+  cat.procedures.map((proc) => ({
+    id: `medview:${cat.id}:${proc.name}`,
+    name: proc.name,
+    description: proc.description,
+    category: cat.name,
+    icon: cat.icon,
+    to: `/medview-3d/${proc.slug}`,
+    previewKind: PREVIEW_BY_ID[cat.id] ?? "curve",
+    tags: ["Modelo 3D"],
+    keywords: cat.name,
+  })),
+);
+
 export default function MedView3D() {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  const filteredCategories = categories
-    .filter((c) => !selectedCategory || c.id === selectedCategory)
-    .map((c) => ({
-      ...c,
-      procedures: c.procedures.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.description.toLowerCase().includes(search.toLowerCase())
-      ),
-    }))
-    .filter((c) => c.procedures.length > 0);
-
-  const totalProcedures = categories.reduce((sum, c) => sum + c.procedures.length, 0);
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">MedView 3D</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Demonstração interativa de procedimentos médicos com modelos anatômicos 3D
-        </p>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar de categorias */}
-        <aside className="lg:w-64 shrink-0 space-y-1">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={cn(
-              "w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              !selectedCategory
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-secondary"
-            )}
-          >
-            <span>Todas</span>
-            <Badge variant="secondary" className="text-xs">{totalProcedures}</Badge>
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-              className={cn(
-                "w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                selectedCategory === cat.id
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              <span className="flex items-center gap-2">
-                <cat.icon className={cn("h-4 w-4", cat.color)} />
-                <span className="truncate">{cat.name}</span>
-              </span>
-              <Badge variant="secondary" className="text-xs">{cat.procedures.length}</Badge>
-            </button>
-          ))}
-        </aside>
-
-        {/* Main content */}
-        <div className="flex-1 space-y-4">
-          {/* Search + view toggle */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar procedimento..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="flex border border-border rounded-lg overflow-hidden">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-9 w-9 rounded-none"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-9 w-9 rounded-none"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Procedures */}
-          {filteredCategories.map((cat) => (
-            <div key={cat.id} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <cat.icon className={cn("h-5 w-5", cat.color)} />
-                <h2 className="text-lg font-semibold text-foreground">{cat.name}</h2>
-              </div>
-
-              <div className={cn(
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                  : "flex flex-col gap-2"
-              )}>
-                {cat.procedures.map((proc) => (
-                  <Link key={proc.name} to={`/medview-3d/${proc.slug}`}>
-                    <Card className="group hover:border-primary/40 transition-colors cursor-pointer">
-                      <CardContent className={cn(
-                        "p-4",
-                        viewMode === "list" && "flex items-center justify-between"
-                      )}>
-                        <div className={viewMode === "list" ? "flex-1" : ""}>
-                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {proc.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {proc.description}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-2" />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {filteredCategories.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-sm">Nenhum procedimento encontrado.</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <CatalogHub
+      eyebrow="Praticar"
+      title="MedView"
+      titleAccent="3D"
+      description={`${items.length} procedimentos demonstrados em modelos anatômicos 3D interativos, de ortopedia a cirurgia geral.`}
+      itemNoun={{ singular: "procedimento", plural: "procedimentos" }}
+      items={items}
+      favoritesKey="posologia_fav_medview_v1"
+    />
   );
 }

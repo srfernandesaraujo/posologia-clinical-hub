@@ -19,7 +19,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3, Check, ChevronsUpDown } from "lucide-react";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3, Check, ChevronsUpDown, MoreHorizontal, Search } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
@@ -379,6 +380,8 @@ export default function SalasVirtuais() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  const [roomSearch, setRoomSearch] = useState("");
+  const [roomFilter, setRoomFilter] = useState<"all" | "active" | "inactive" | "exam">("all");
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
@@ -960,6 +963,10 @@ export default function SalasVirtuais() {
   };
 
   const isRoomExam = (room: any) => !room.simulator_slug;
+  const visibleRooms = [...rooms]
+    .filter((r: any) => roomFilter === "all" || (roomFilter === "active" ? r.is_active : roomFilter === "inactive" ? !r.is_active : isRoomExam(r)))
+    .filter((r: any) => { const q = roomSearch.trim().toLowerCase(); return !q || String(r.title || "").toLowerCase().includes(q) || String(r.pin || "").includes(q); })
+    .sort((a: any, b: any) => Number(!!b.is_active) - Number(!!a.is_active));
 
   const isRoomLab = (room: any) => {
     if (room.simulator_slug) return isLabTool(room.simulator_slug);
@@ -1007,86 +1014,107 @@ export default function SalasVirtuais() {
       ) : rooms.length === 0 ? (
         <EmptyState icon={<DoorOpen />} title="Nenhuma sala criada ainda" description="Clique em Nova Sala para começar." />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rooms.map((room: any) => (
-            <Card key={room.id} className="relative">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Inativa"}</Badge>
-                    {isRoomExam(room) && (
-                      <Badge variant="outline" className="text-xs">
-                        <ClipboardList className="h-3 w-3 mr-1" />Prova
-                      </Badge>
-                    )}
-                    {room.restricted_access && (
-                      <Badge variant="outline" className="text-xs">
-                        <Lock className="h-3 w-3 mr-1" />Restrita
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(room)} title="Editar sala">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={roomSearch} onChange={e => setRoomSearch(e.target.value)} placeholder="Buscar por título ou PIN…" className="pl-9" />
+            </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar salas">
+              {([["all", "Todas", rooms.length], ["active", "Ativas", rooms.filter((r: any) => r.is_active).length], ["inactive", "Inativas", rooms.filter((r: any) => !r.is_active).length], ["exam", "Provas", rooms.filter((r: any) => isRoomExam(r)).length]] as const).map(([key, label, n]) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={roomFilter === key}
+                  onClick={() => setRoomFilter(key)}
+                  className={cn("rounded-full border px-3 py-1 text-xs font-medium transition-colors", roomFilter === key ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground")}
+                >
+                  {label} <span className="ml-1 tabular-nums opacity-70">{n}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {visibleRooms.length === 0 ? (
+            <EmptyState icon={<Search />} title="Nenhuma sala encontrada" description="Ajuste a busca ou o filtro." />
+          ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleRooms.map((room: any) => (
+            <Card key={room.id} className={cn("flex flex-col overflow-hidden transition-colors hover:border-primary/40", !room.is_active && "bg-card/60")}>
+              <div className="flex items-start justify-between gap-2 px-4 pt-4">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold", room.is_active ? "border-status-ok/40 text-status-ok" : "border-border text-muted-foreground")}>
+                    <span className={cn("h-1.5 w-1.5 rounded-full", room.is_active ? "bg-status-ok" : "bg-muted-foreground/60")} />
+                    {room.is_active ? "Ativa" : "Inativa"}
+                  </span>
+                  {isRoomExam(room) && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"><ClipboardList className="h-3 w-3" />Prova</span>
+                  )}
+                  {room.restricted_access && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"><Lock className="h-3 w-3" />Restrita</span>
+                  )}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-8 w-8" aria-label="Mais ações da sala"><MoreHorizontal className="h-4 w-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEdit(room)}><Pencil className="mr-2 h-4 w-4" />Editar sala</DropdownMenuItem>
                     {room.is_active ? (
-                      <Button variant="ghost" size="icon" onClick={() => toggleRoom.mutate({ id: room.id, is_active: false })} title="Desativar sala">
-                        <EyeOff className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenuItem onClick={() => toggleRoom.mutate({ id: room.id, is_active: false })}><EyeOff className="mr-2 h-4 w-4" />Desativar</DropdownMenuItem>
                     ) : (
-                      <Button variant="ghost" size="icon" onClick={() => reactivateRoom.mutate(room)} title="Reativar sala">
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenuItem onClick={() => reactivateRoom.mutate(room)}><RotateCcw className="mr-2 h-4 w-4" />Reativar</DropdownMenuItem>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => deleteRoom.mutate(room.id)} title="Excluir">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => deleteRoom.mutate(room.id)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <CardContent className="flex flex-1 flex-col gap-3 pt-2">
+                <h3 className="line-clamp-2 min-h-[2.5rem] font-semibold leading-snug">{room.title}</h3>
+                <button
+                  type="button"
+                  onClick={() => copyPin(room.pin)}
+                  aria-label={"Copiar PIN " + room.pin}
+                  className="group flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2 transition-colors hover:border-primary/40"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">PIN</span>
+                  <code className="font-mono text-2xl font-bold tracking-[0.2em] text-primary">{room.pin}</code>
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                </button>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {room.simulator_slug ? (
+                    <p className="flex items-center gap-1.5">
+                      {isLabTool(room.simulator_slug) ? (
+                        <><FlaskConical className="h-3.5 w-3.5" /> Lab: {getToolLabel(room.simulator_slug)}</>
+                      ) : isGameTool(room.simulator_slug) ? (
+                        <><Gamepad2 className="h-3.5 w-3.5" /> Jogo: {getToolLabel(room.simulator_slug)}</>
+                      ) : (
+                        <><Cpu className="h-3.5 w-3.5" /> Simulador: {getToolLabel(room.simulator_slug)}</>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-1.5"><ClipboardList className="h-3.5 w-3.5" /> Prova com múltiplas atividades</p>
+                  )}
+                  {room.expires_at && (
+                    <p className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Expira em {new Date(room.expires_at).toLocaleDateString("pt-BR")}</p>
+                  )}
                 </div>
-                <CardTitle className="text-lg">{room.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">PIN:</span>
-                  <code className="text-2xl font-mono font-bold tracking-widest text-primary">{room.pin}</code>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyPin(room.pin)}>
-                    <Copy className="h-3 w-3" />
+                <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+                  <Button variant="outline" size="sm" onClick={() => setDetailRoom(room)}>
+                    <Users className="mr-2 h-4 w-4" />Participantes
                   </Button>
-                </div>
-                {room.simulator_slug ? (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    {isLabTool(room.simulator_slug) ? (
-                      <><FlaskConical className="h-3 w-3" /> Lab: {getToolLabel(room.simulator_slug)}</>
-                    ) : isGameTool(room.simulator_slug) ? (
-                      <><Gamepad2 className="h-3 w-3" /> Jogo: {getToolLabel(room.simulator_slug)}</>
-                    ) : (
-                      <>Simulador: {getToolLabel(room.simulator_slug)}</>
-                    )}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Prova com múltiplas atividades
-                  </p>
-                )}
-                {room.expires_at && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Expira: {new Date(room.expires_at).toLocaleDateString("pt-BR")}
-                  </p>
-                )}
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setDetailRoom(room)}>
-                    <Users className="h-4 w-4 mr-2" />Participantes
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                  <Button size="sm" asChild>
                     <Link to={room.class_id ? `/turmas/${room.class_id}/salas/${room.id}` : `/salas/${room.id}`}>
-                      <BarChart3 className="h-4 w-4 mr-2" />Analytics
+                      <BarChart3 className="mr-2 h-4 w-4" />Analytics
                     </Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+          )}
         </div>
       )}
 

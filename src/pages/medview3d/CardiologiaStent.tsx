@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Heart, Search } from "lucide-react";
+import { ProcedureWorkspace } from "@/components/medview3d/ProcedureWorkspace";
+import { Heart, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { External3DViewer, type SketchfabApi } from "@/components/medview3d/External3DViewer";
 import { ZAnatomy3DViewer } from "@/components/medview3d/ZAnatomy3DViewer";
 import { MedViewToolbar } from "@/components/medview3d/MedViewToolbar";
-import { ProcedureTimeline, type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
+import { type ProcedureStep } from "@/components/medview3d/ProcedureTimeline";
 import { SketchfabModelSearch } from "@/components/medview3d/SketchfabModelSearch";
 import { ProviderToggle, type ViewerProvider } from "@/components/medview3d/ProviderToggle";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -37,21 +37,15 @@ export default function CardiologiaStent() {
   const isZAnatomy = provider === "zanatomy";
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link to="/medview-3d" className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-foreground">Cardiologia — Angioplastia e Stent</h1>
-          <p className="text-xs text-muted-foreground">Cateterismo cardíaco com implante de stent coronário</p>
-        </div>
+    <ProcedureWorkspace
+      title="Cardiologia — Angioplastia e Stent"
+      description="Cateterismo cardíaco com implante de stent coronário"
+      badge={
         <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
           <Heart className="h-3 w-3 mr-1" /> Cardiologia
         </Badge>
-      </div>
-
-      <div className="flex items-center gap-3 flex-wrap">
+      }
+      tools={<>
         <ProviderToggle provider={provider} onChange={setProvider} />
         {!isZAnatomy && (
           <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
@@ -69,29 +63,29 @@ export default function CardiologiaStent() {
             </CollapsibleContent>
           </Collapsible>
         )}
+      </>}
+      viewer={<div className="flex h-full gap-3">
+      <div className="flex-1">
+        {isZAnatomy ? (
+          <ZAnatomy3DViewer title="Z-Anatomy — Cardiologia" />
+        ) : (
+          <External3DViewer
+            modelId={activeModel}
+            title="Coração — Angioplastia"
+            onApiReady={(api) => { setViewerApi(api); setViewerReady(true); }}
+          />
+        )}
       </div>
-
-      <div className="flex gap-3" style={{ height: "60vh" }}>
-        <div className="flex-1">
-          {isZAnatomy ? (
-            <ZAnatomy3DViewer title="Z-Anatomy — Cardiologia" />
-          ) : (
-            <External3DViewer
-              modelId={activeModel}
-              title="Coração — Angioplastia"
-              onApiReady={(api) => { setViewerApi(api); setViewerReady(true); }}
-            />
-          )}
-        </div>
-        <MedViewToolbar
-          api={viewerApi}
-          isReady={viewerReady}
-          disabled={isZAnatomy}
-          disabledMessage="Use as ferramentas dentro do Z-Anatomy"
-        />
-      </div>
-
-      <ProcedureTimeline steps={steps} currentStep={currentStep} onStepChange={setCurrentStep} />
-    </div>
+      <MedViewToolbar
+        api={viewerApi}
+        isReady={viewerReady}
+        disabled={isZAnatomy}
+        disabledMessage="Use as ferramentas dentro do Z-Anatomy"
+      />
+      </div>}
+      steps={steps}
+      currentStep={currentStep}
+      onStepChange={setCurrentStep}
+    />
   );
 }

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Users, GraduationCap, ArrowRight } from "lucide-react";
+import { Plus, Users, GraduationCap, ArrowRight, DoorOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +26,7 @@ export default function Turmas() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("virtual_rooms")
-        .select("id, class_id")
+        .select("id, class_id, is_active")
         .eq("created_by", user!.id);
       if (error) throw error;
       return data || [];
@@ -96,36 +96,59 @@ export default function Turmas() {
       ) : (list.data?.length ?? 0) === 0 ? (
         <EmptyState icon={<GraduationCap />} title="Você ainda não tem turmas" description="Crie sua primeira turma para organizar alunos e salas virtuais." />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {list.data!.map(c => {
-            const roomCount = rooms.filter((r: any) => r.class_id === c.id).length;
-            const studentCount = students.filter((s: any) => s.class_id === c.id).length;
-            return (
-              <Card key={c.id} className="hover:border-primary/50 transition-colors">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center justify-between gap-2">
-                    <span className="truncate">{c.name}</span>
-                    {c.semester && <span className="text-xs font-normal text-muted-foreground">{c.semester}</span>}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {c.description && <p className="text-sm text-muted-foreground line-clamp-2">{c.description}</p>}
-                  <div className="flex gap-4 text-sm">
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="h-3.5 w-3.5" /> {studentCount} aluno(s)
-                    </span>
-                    <span className="text-muted-foreground">{roomCount} sala(s)</span>
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "Turmas", value: list.data!.length, icon: <GraduationCap /> },
+              { label: "Alunos", value: students.length, icon: <Users /> },
+              { label: "Salas ativas", value: rooms.filter((r: any) => r.is_active).length, icon: <DoorOpen /> },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary [&_svg]:h-4 [&_svg]:w-4">{s.icon}</span>
+                <div>
+                  <p className="font-mono text-xl font-semibold tabular-nums leading-none">{s.value}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {list.data!.map(c => {
+              const classRooms = rooms.filter((r: any) => r.class_id === c.id);
+              const roomCount = classRooms.length;
+              const activeCount = classRooms.filter((r: any) => r.is_active).length;
+              const studentCount = students.filter((s: any) => s.class_id === c.id).length;
+              return (
+                <Link
+                  key={c.id}
+                  to={`/turmas/${c.id}`}
+                  className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="line-clamp-2 text-base font-semibold leading-snug">{c.name}</h3>
+                    {c.semester && <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{c.semester}</span>}
                   </div>
-                  <Button asChild size="sm" variant="outline" className="w-full">
-                    <Link to={`/turmas/${c.id}`}>
-                      Abrir turma <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  {c.description && <p className="line-clamp-2 text-sm text-muted-foreground">{c.description}</p>}
+                  <div className="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
+                    {[
+                      { v: studentCount, l: "alunos" },
+                      { v: roomCount, l: "salas" },
+                      { v: activeCount, l: "ativas", ok: activeCount > 0 },
+                    ].map(x => (
+                      <div key={x.l}>
+                        <p className={`font-mono text-lg font-semibold tabular-nums leading-none ${x.ok ? "text-status-ok" : ""}`}>{x.v}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{x.l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <span className="flex items-center gap-1 text-sm font-medium text-primary">
+                    Abrir turma <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
