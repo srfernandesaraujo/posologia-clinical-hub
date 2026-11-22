@@ -20,6 +20,7 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { CommandPalette } from "@/components/CommandPalette";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -441,6 +442,9 @@ export function AppLayout() {
         </nav>
 
         <main className="flex-1 p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:p-8">
+          {/* Contém erros de render da página (nos três ramos abaixo) para que a barra
+              lateral continue funcionando; a key reseta o boundary ao trocar de rota. */}
+          <ErrorBoundary key={location.pathname}>
           {isPremiumRoute && !isPremium ? (
             <PremiumGate
               title={
@@ -476,6 +480,7 @@ export function AppLayout() {
           ) : (
             <Outlet />
           )}
+          </ErrorBoundary>
         </main>
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} groups={groups} isPremium={isPremium} />

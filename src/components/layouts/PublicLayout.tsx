@@ -1,12 +1,14 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Pill, Mail } from "lucide-react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginPopover } from "@/components/LoginPopover";
 import { useCookieAnalytics } from "@/hooks/useCookieAnalytics";
 
 export function PublicLayout() {
   const { t } = useTranslation();
+  const location = useLocation();
   useCookieAnalytics();
 
   return (
@@ -30,7 +32,9 @@ export function PublicLayout() {
         </div>
       </header>
       <main className="flex-1">
-        <Outlet />
+        <ErrorBoundary key={location.pathname} className="px-4">
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <footer className="border-t border-teal-200/[0.08] bg-[#040910] py-12">
         <div className="container mx-auto px-4">

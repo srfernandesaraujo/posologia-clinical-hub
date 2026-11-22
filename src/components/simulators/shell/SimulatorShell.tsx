@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useChallengeMode, useMovableContent, FloatingChallengeWindow, ChallengeBottomSheet, DockedChallengeBar } from "@/components/simulators/shell/ChallengeDock";
 import { cn } from "@/lib/utils";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 
 // Espaço de trabalho padrão dos simuladores (plano de redesign, Fase 4).
@@ -181,7 +182,15 @@ export function SimulatorWorkspace({
   const isDesktop = useIsDesktop();
   const [mode, setMode] = useChallengeMode();
   const floating = !!challenge && mode === "float";
-  const { portal: challengePortal, slotRef } = useMovableContent(challenge);
+  // Boundary local: uma falha no desafio vira um aviso dentro da área do desafio
+  // em vez de derrubar o simulador inteiro.
+  const { portal: challengePortal, slotRef } = useMovableContent(
+    challenge ? (
+      <ErrorBoundary variant="inline" inlineMessage="O desafio encontrou um erro — recarregue a página.">
+        {challenge}
+      </ErrorBoundary>
+    ) : challenge,
+  );
   const [caseOpen, setCaseOpen] = useState(true);
   const patientBlock = patient ? (
     <section className="rounded-xl border border-border bg-card/40">
