@@ -40,6 +40,8 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { CatalogHub, type CatalogItem } from "@/components/catalog/CatalogHub";
+import type { PreviewKind } from "@/data/catalogAreas";
 
 const gamePromptSlugMap: Record<string, string> = {
   "rpg-tcc": "rpg-tcc",
@@ -495,276 +497,113 @@ export default function JogosClinicos() {
   }
 
   // ── GAMES LISTING ──
-  const GameCard = ({ game }: { game: typeof games[0] }) => {
-    const catInfo = categoryLabels.find(c => c.id === game.category);
-    const color = catInfo?.color || "173 66% 50%";
-
-    return (
-      <div
-        onClick={() => handleOpenGame(game.id)}
-        className={cn(
-          "cursor-pointer group relative rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5",
-          !isPremium && "opacity-75"
-        )}
-      >
-        {!isPremium && (
-          <div className="absolute top-3 right-3 z-10">
-            <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-        )}
-        <div className="flex items-start gap-3">
-          <div
-            className="shrink-0 rounded-lg p-2"
-            style={{ backgroundColor: `hsl(${color} / 0.12)` }}
-          >
-            <game.icon className="h-4 w-4" style={{ color: `hsl(${color})` }} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors">{game.title}</h3>
-            <p className="text-xs text-muted-foreground line-clamp-2">{game.description}</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary/60 transition-colors shrink-0 mt-0.5" />
-        </div>
-      </div>
-    );
+  const PREVIEW_BY_GAME_CATEGORY: Record<GameCategory, PreviewKind> = {
+    farmacologia: "curve",
+    investigacao: "record",
+    simulacao: "bars",
+    acao: "cycle",
+    emergencia: "ecg",
   };
+  const catalogItems: CatalogItem[] = games.map((game) => ({
+    id: `game:${game.id}`,
+    name: game.title,
+    description: game.description,
+    category: categoryLabels.find((c) => c.id === game.category)?.label || "Outros",
+    icon: game.icon,
+    to: "/jogos-clinicos",
+    previewKind: PREVIEW_BY_GAME_CATEGORY[game.category] || "record",
+    tags: [game.badge],
+    locked: !isPremium,
+  }));
+  const gameIdOf = (item: CatalogItem) => item.id.replace(/^game:/, "");
 
   return (
-    <div>
+    <>
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
-
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">{t("games.title")}</h1>
-            <p className="text-muted-foreground text-sm">
-              {totalCount} jogos em {categoriesWithCounts.length} categorias
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isPremium && (
-              <Badge variant="outline" className="gap-1 text-xs">
-                <Lock className="h-3 w-3" />
-                Premium
-              </Badge>
+      <CatalogHub
+        eyebrow="Praticar"
+        title="Jogos"
+        titleAccent="clínicos"
+        description={`${games.length} jogos de farmacologia, investigação, simulação, ação e emergência para revisar conteúdo jogando, sozinho ou com a turma.`}
+        itemNoun={{ singular: "jogo", plural: "jogos" }}
+        items={catalogItems}
+        favoritesKey="posologia_fav_jogos_v1"
+        onOpen={(item, e) => {
+          e.preventDefault();
+          handleOpenGame(gameIdOf(item));
+          return false;
+        }}
+        onLockedClick={(item) => handleOpenGame(gameIdOf(item))}
+        headerActions={
+          <>
+            {isPremium ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Crown className="h-3.5 w-3.5" /> Premium
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
+                <Lock className="h-3.5 w-3.5" /> Exclusivo Premium
+              </span>
             )}
-            {isPremium && (
-              <Badge className="gap-1 bg-primary/10 text-primary border-primary/20 text-xs">
-                <Crown className="h-3 w-3" />
-                Premium
-              </Badge>
-            )}
-            <div className="flex items-center border border-border rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={cn("p-2 transition-colors", viewMode === "grid" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={cn("p-2 transition-colors", viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
             {isAdmin && (
               <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                Criar
+                <Plus className="h-4 w-4" /> Criar com IA
               </Button>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Search + Category navigation */}
-      <div className="flex gap-6 items-start">
-        {/* Left sidebar */}
-        <div className="hidden lg:block w-56 shrink-0 sticky top-4">
-          <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar jogo..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-9 text-sm"
-            />
-          </div>
-          <ScrollArea className="h-[calc(100vh-220px)]">
-            <nav className="space-y-0.5 pr-2">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors",
-                  !selectedCategory
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-              >
-                <span>Todos</span>
-                <span className="text-xs tabular-nums opacity-60">{totalCount}</span>
-              </button>
-              {categoriesWithCounts.map(({ id, label, icon: CatIcon, count }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedCategory(selectedCategory === id ? null : id)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
-                    selectedCategory === id
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <CatIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate flex-1 text-left">{label}</span>
-                  <span className="text-xs tabular-nums opacity-60 shrink-0">{count}</span>
-                </button>
-              ))}
-            </nav>
-          </ScrollArea>
-        </div>
-
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
-          {/* Mobile search */}
-          <div className="lg:hidden mb-4">
-            <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar jogo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={cn(
-                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                  !selectedCategory
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                Todos
-              </button>
-              {categoriesWithCounts.map(({ id, label, count }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedCategory(selectedCategory === id ? null : id)}
-                  className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                    selectedCategory === id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {label} ({count})
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* AI games section */}
-          {aiGames.length > 0 && !selectedCategory && !search && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-5 w-1 rounded-full bg-primary" />
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">Jogos Criados com IA</h2>
-                <span className="text-xs text-muted-foreground">({aiGames.length})</span>
-              </div>
-              <div className={cn(
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                  : "space-y-2"
-              )}>
+          </>
+        }
+        beforeCatalog={
+          aiGames.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Jogos criados com IA <span className="tabular-nums">{aiGames.length}</span>
+              </h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {aiGames.map((game) => (
                   <div
                     key={game.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleOpenGame(game.id)}
-                    className="cursor-pointer group relative rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleOpenGame(game.id); }}
+                    className="group relative flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="shrink-0 rounded-lg p-2 bg-primary/10">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors">{game.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{game.description}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary/60 transition-colors shrink-0 mt-0.5" />
-                    </div>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold group-hover:text-primary">{game.title}</span>
+                      <span className="line-clamp-2 text-xs text-muted-foreground">{game.description}</span>
+                    </span>
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); handleDeleteAiGame(game.id); }}
-                      className="absolute top-3 right-3 text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="text-xs text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       Remover
                     </button>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Grouped games */}
-          {groupedGames.map((group) => (
-            <div key={group.id} className="mb-6">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div
-                  className="rounded-lg p-1.5"
-                  style={{ backgroundColor: `hsl(${group.color} / 0.12)` }}
-                >
-                  <group.icon className="h-4 w-4" style={{ color: `hsl(${group.color})` }} />
-                </div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">{group.label}</h2>
-                <span className="text-xs text-muted-foreground">({group.games.length})</span>
-              </div>
-              <div className={cn(
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                  : "space-y-2"
-              )}>
-                {group.games.map((game) => (
-                  <GameCard key={game.id} game={game} />
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {filteredGames.length === 0 && (
-            <div className="text-center py-16">
-              <Gamepad2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">
-                {search ? "Nenhum jogo encontrado para essa busca." : "Nenhum jogo disponível."}
-              </p>
-            </div>
-          )}
-
-          {/* Premium lock banner */}
-          {!isPremium && (
-            <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex items-center gap-4">
-              <Crown className="h-7 w-7 text-primary shrink-0" />
-              <div className="flex-1">
-                <h3 className="font-bold text-base">Jogos Clínicos — Exclusivo Premium</h3>
-                <p className="text-sm text-muted-foreground">Assine o plano Premium para acessar todos os jogos clínicos interativos.</p>
+            </section>
+          )
+        }
+        afterCatalog={
+          !isPremium && (
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-primary/30 bg-primary/5 p-5">
+              <Crown className="h-7 w-7 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold">Jogos Clínicos são exclusivos do Premium</h3>
+                <p className="text-sm text-muted-foreground">Assine o plano Premium para jogar todos os jogos e usá-los com a turma.</p>
               </div>
               <Button onClick={() => showUpgrade("Jogos Clínicos")} size="sm" className="shrink-0 gap-2">
-                <Crown className="h-4 w-4" />
-                Upgrade
+                <Crown className="h-4 w-4" /> Ver planos
               </Button>
             </div>
-          )}
-        </div>
-      </div>
-
-      <CreateGameDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onGameCreated={handleGameCreated}
+          )
+        }
       />
-    </div>
+      <CreateGameDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onGameCreated={handleGameCreated} />
+    </>
   );
 }

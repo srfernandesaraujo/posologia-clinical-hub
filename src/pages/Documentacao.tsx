@@ -6,7 +6,7 @@ const sections = [
   {
     title: "Calculadoras Clínicas",
     icon: Calculator,
-    description: "34 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline. Organização por categorias (Cardiologia, Nefrologia, Endocrinologia, Pediatria, Oncologia, Ginecologia/Obstetrícia e mais) com busca e visualização em grade/lista.",
+    description: "34 calculadoras nativas com fórmulas validadas, modo clínico/educativo, relatório PDF e referências inline. Organização por especialidades (Cardiologia, Nefrologia, Endocrinologia, Pediatria, Oncologia, Ginecologia/Obstetrícia e mais) em chips no topo, busca sem acentos, favoritos (estrela, salvos no navegador) e visualização em cartões com prévia ou em lista (componente compartilhado src/components/catalog/CatalogHub.tsx).",
     items: [
       { name: "CKD-EPI 2021 (TFGe)", desc: "Equação sem correção racial — KDIGO 2021", link: "/calculadoras/ckd-epi" },
       { name: "Ajuste de Dose Renal", desc: "Cockcroft-Gault, CKD-EPI e ajuste posológico", link: "/calculadoras/ajuste-dose-renal" },
@@ -47,7 +47,7 @@ const sections = [
   {
     title: "Simuladores — Farmácia Clínica",
     icon: Pill,
-    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 111 simuladores em 14 categorias. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
+    description: "Simuladores de raciocínio farmacoterapêutico com casos gerados por IA, modo exame e integração com Salas Virtuais. A plataforma possui 111 simuladores nativos. No hub /simuladores eles ficam agrupados em 5 áreas (Terapêutica e farmácia clínica, Ciências básicas, Produção e gestão, Outras profissões, Formação docente; mapa em src/data/catalogAreas.ts) com as categorias originais como subfiltro, filtros “Com Modo Desafio” e “Funciona em Sala Virtual”, favoritos e cartões com prévia visual. Recurso exclusivo do plano Premium — bloqueado tanto no hub quanto por rota (/simuladores/*) via AppLayout, incluindo simuladores dinâmicos criados por IA, que agora seguem a mesma regra dos nativos (Premium para uso, não só para criação).",
     items: [
       { name: "Método SOAP", desc: "Documentação clínica estruturada", link: "/simuladores/metodo-soap" },
       { name: "Paciente-IA por Voz", desc: "Anamnese e comunicação por voz com paciente simulado por IA, avaliação final da anamnese e leitura em voz alta nativa do navegador. Exclusivo Premium, limite diário de 15 turnos de voz, indisponível em Sala Virtual", link: "/simuladores/paciente-ia-voz" },
@@ -287,7 +287,7 @@ const sections = [
   {
     title: "Jogos Clínicos",
     icon: Gamepad2,
-    description: "Mais de 20 jogos educativos para treinar farmacologia e clínica de forma divertida e gamificada. Organização por categorias com busca e visualização em grade/lista.",
+    description: "Mais de 20 jogos educativos para treinar farmacologia e clínica de forma divertida e gamificada. Mesma página de catálogo dos simuladores e calculadoras: categorias em chips, busca, favoritos e cartões com prévia.",
     items: [
       { name: "Alerta Vermelho", desc: "Identificação de emergências" },
       { name: "Código Azul", desc: "Simulação de parada cardíaca" },

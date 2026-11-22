@@ -1,6 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { Lock } from "lucide-react";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { CatalogPreview } from "@/components/catalog/CatalogPreview";
+import type { PreviewKind } from "@/data/catalogAreas";
+import { cn } from "@/lib/utils";
 import {
   FlaskConical,
   Microscope,
@@ -150,87 +153,88 @@ export const benches: BenchCard[] = [
   },
 ];
 
+const BENCH_PREVIEW: Record<string, PreviewKind> = {
+  farmacos: "molecule",
+  microbiologia: "bars",
+  toxicologia: "curve",
+  farmacogenomica: "helix",
+  estabilidade: "curve",
+  "controle-qualidade": "bars",
+  epidemiologia: "record",
+  biotecnologia: "helix",
+  "simulacao-realistica": "ecg",
+  "pericia-forense": "record",
+  "modelagem-molecular": "molecule",
+};
+
+const METHOD_STEPS = ["Hipótese", "Desenho experimental", "Execução", "Análise", "Validação", "Publicação"];
+
 export default function LaboratorioVirtual() {
-  const navigate = useNavigate();
+  const { isPremium } = useFeatureGating();
+  const available = benches.filter((b) => b.status === "disponivel").length;
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FlaskConical className="h-7 w-7 text-primary" />
-          Laboratório Virtual de Pesquisa
+    <div className="mx-auto max-w-7xl space-y-8">
+      <header className="max-w-2xl space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Praticar</p>
+        <h1 className="text-3xl font-semibold md:text-4xl">
+          Laboratório Virtual <span className="text-gradient">de pesquisa</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Conduza projetos de pesquisa completos: formule hipóteses, desenhe
-          experimentos, execute, analise resultados e publique relatórios
-          científicos.
+        <p className="text-sm text-muted-foreground md:text-[15px]">
+          {available} bancadas para conduzir um projeto completo: formular a hipótese, desenhar e executar o
+          experimento, analisar os resultados e escrever o relatório.
         </p>
-      </div>
+      </header>
 
-      {/* Methodology banner */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-4 py-2.5 border border-border/50">
-        <span className="font-semibold text-foreground">Fluxo metodológico:</span>
-        {["Hipótese", "Desenho Experimental", "Execução", "Análise", "Validação", "Publicação"].map(
-          (step, i, arr) => (
-            <span key={step} className="flex items-center gap-1.5">
-              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-medium">
-                {step}
-              </span>
-              {i < arr.length - 1 && <span className="text-muted-foreground">→</span>}
+      {/* Fluxo metodológico — a ordem é a própria informação, por isso numerada */}
+      <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
+        {METHOD_STEPS.map((step, i) => (
+          <li key={step} className="flex items-center gap-2.5 bg-card px-4 py-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-primary/40 font-mono text-[11px] font-semibold text-primary">
+              {i + 1}
             </span>
-          )
-        )}
-      </div>
+            <span className="text-[13px] font-medium">{step}</span>
+          </li>
+        ))}
+      </ol>
 
-      {/* Bench grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {benches.map((bench) => {
           const isAvailable = bench.status === "disponivel";
-          return (
-            <Card
-              key={bench.id}
-              className={`group relative overflow-hidden transition-all duration-200 ${
-                isAvailable
-                  ? "cursor-pointer hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5"
-                  : "opacity-60 cursor-default"
-              }`}
-              onClick={() => isAvailable && navigate(bench.route)}
-            >
-              <CardContent className="p-5 flex flex-col gap-3 h-full">
-                <div className="flex items-start justify-between">
-                  <div
-                    className="p-2.5 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: `${bench.color}15`,
-                      color: bench.color,
-                    }}
-                  >
-                    {bench.icon}
-                  </div>
-                  <Badge
-                    variant={isAvailable ? "default" : "secondary"}
-                    className="text-[10px] px-1.5 py-0"
-                  >
-                    {isAvailable ? "Disponível" : "Em breve"}
-                  </Badge>
+          const locked = isAvailable && !isPremium;
+          const card = (
+            <>
+              <div className="relative h-[84px] border-b border-border bg-background/60 bg-grid px-3 pb-1.5 pt-3">
+                <div className={cn("h-full transition-opacity", isAvailable ? "opacity-80 group-hover:opacity-100" : "opacity-30")}>
+                  <CatalogPreview id={bench.id} kind={BENCH_PREVIEW[bench.id] || "record"} tone="highlight" />
                 </div>
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-sm leading-tight">
-                    {bench.title}
-                  </h3>
-                  <p
-                    className="text-[11px] font-medium"
-                    style={{ color: bench.color }}
-                  >
-                    {bench.subtitle}
-                  </p>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed flex-1">
-                  {bench.description}
-                </p>
-              </CardContent>
-            </Card>
+                <span className="absolute left-2.5 top-2.5 grid h-8 w-8 place-items-center rounded-md border border-border bg-card/90 text-highlight backdrop-blur [&_svg]:h-4 [&_svg]:w-4">
+                  {bench.icon}
+                </span>
+                {!isAvailable && (
+                  <span className="absolute right-2.5 top-2.5 rounded-md bg-card/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">Em breve</span>
+                )}
+                {locked && (
+                  <span className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 rounded-md bg-card/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <Lock className="h-3 w-3" /> Premium
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-highlight">{bench.subtitle}</p>
+                <h3 className="text-[15px] font-semibold leading-snug group-hover:text-primary">{bench.title}</h3>
+                <p className="text-xs leading-relaxed text-muted-foreground">{bench.description}</p>
+              </div>
+            </>
+          );
+          const className = cn(
+            "group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all",
+            isAvailable ? "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/30" : "opacity-60",
+          );
+          return isAvailable ? (
+            <Link key={bench.id} to={bench.route} className={className}>{card}</Link>
+          ) : (
+            <div key={bench.id} className={className} aria-disabled>{card}</div>
           );
         })}
       </div>

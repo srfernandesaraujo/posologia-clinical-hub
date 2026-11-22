@@ -22,6 +22,7 @@ const sections: DocSection[] = [
     id: "inicio", title: "Primeiros Passos", icon: UserPlus, color: "text-emerald-400 bg-emerald-500/10",
     items: [
       { q: "Como criar uma conta?", a: "Clique em 'Criar Conta' na página inicial, preencha seu nome, e-mail e senha. Após o cadastro, um administrador irá aprovar seu acesso." },
+      { q: "Como encontro um simulador ou calculadora específica?", a: "Use Ctrl+K (Cmd+K no Mac) de qualquer tela, ou a busca no topo das páginas Simuladores, Calculadoras e Jogos — ela ignora acentos. Os simuladores estão agrupados em 5 áreas (Terapêutica e farmácia clínica, Ciências básicas, Produção e gestão, Outras profissões, Formação docente), e dá para filtrar só os que têm Modo Desafio ou os que funcionam em Sala Virtual. Toque na estrela de um cartão para favoritá-lo: os favoritos aparecem no topo da página." },
       { q: "Como fazer login?", a: "Acesse a página de Login e utilize seu e-mail e senha cadastrados, ou faça login com sua conta Google." },
       { q: "O que acontece após o cadastro?", a: "Novos cadastros ficam com status 'Pendente' até a aprovação de um administrador. Após aprovação, você terá acesso ao plano Gratuito com limite diário de uso." },
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
