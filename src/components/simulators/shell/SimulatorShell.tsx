@@ -83,6 +83,24 @@ export function LabValueTile({ name, value, unit, status }: { name: string; valu
   );
 }
 
+/** Sinal vital ou indicador clínico: valor, unidade e alerta (forma + cor). */
+export function VitalTile({ name, icon, value, unit, alert, note }: {
+  name: string; icon?: ReactNode; value: number | string; unit?: string; alert?: boolean;
+  /** Indicador sem faixa de normalidade: mostra este texto em tom neutro no lugar do estado. */
+  note?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col gap-0.5 rounded-lg border px-3 py-2.5", note !== undefined ? "border-border bg-card text-muted-foreground" : alert ? "border-status-crit/40 bg-status-crit/5 text-status-crit" : "border-border bg-card text-status-ok")}>
+      <span className="flex items-center gap-1.5 truncate text-[11px] font-medium text-muted-foreground [&_svg]:h-3.5 [&_svg]:w-3.5 [&_svg]:shrink-0">{icon}{name}</span>
+      <span className="flex items-baseline gap-1">
+        <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{value}</span>
+        {unit && <span className="truncate text-[10px] text-muted-foreground">{unit}</span>}
+      </span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide">{note ?? (alert ? "▲ Alerta" : "● Adequado")}</span>
+    </div>
+  );
+}
+
 /** Painel com título discreto, usado dentro das colunas do espaço de trabalho. */
 export function ShellPanel({
   title, icon, aside, children, className, bodyClassName,

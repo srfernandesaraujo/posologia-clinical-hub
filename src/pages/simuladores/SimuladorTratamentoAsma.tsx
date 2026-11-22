@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, Wind, Eye, Play, Heart, Activity, Droplets, Thermometer, ShieldAlert } from "lucide-react";
+import { Sparkles, Loader2, Wind, Eye, Play, Activity, Droplets, Thermometer, Lightbulb, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -14,7 +13,8 @@ import { NativeCaseCard } from "@/components/NativeCaseCard";
 import { AICaseCard } from "@/components/AICaseCard";
 import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, VitalTile } from "@/components/simulators/shell/SimulatorShell";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
@@ -425,33 +425,18 @@ export default function SimuladorTratamentoAsma() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Tratamento da Asma</h1>
-            <p className="text-muted-foreground">Classifique, trate e monitore pacientes asmáticos conforme os Steps GINA, espirometria e situações especiais.</p>
-            <ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" /><AdminPromptViewer toolSlug="sim-tratamento-asma" toolName="Tratamento da Asma" toolType="simulator" prompt={getNativePrompt("sim-tratamento-asma") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Wind className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Tratamento da Asma"
+        description="Classifique, trate e monitore pacientes asmáticos conforme os Steps GINA, espirometria e situações especiais."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" /><AdminPromptViewer toolSlug="sim-tratamento-asma" toolName="Tratamento da Asma" toolType="simulator" prompt={getNativePrompt("sim-tratamento-asma") || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+      </SimulatorCasePicker>
     );
   }
 
@@ -462,65 +447,138 @@ export default function SimuladorTratamentoAsma() {
     "persistente-grave": "Persistente Grave",
     "crise-aguda": "Crise Aguda",
   };
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
+  const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const vitalTiles = [
+    { name: "SpO₂", icon: <Droplets />, value: Math.round(simulation.vitals.spo2), unit: "%", alert: simulation.vitals.spo2 < 92 },
+    { name: "FR", icon: <Activity />, value: simulation.vitals.fr, unit: "irpm", alert: simulation.vitals.fr > 24 },
+    { name: "PFE", icon: <Wind />, value: simulation.vitals.pfe, unit: "L/min", alert: false },
+    { name: "Sintomas noturnos", icon: <Thermometer />, value: simulation.vitals.sintomasNoturnos, unit: "/sem", alert: simulation.vitals.sintomasNoturnos > 2 },
+  ];
+  const spiro = [
+    { label: "VEF1", value: `${activeCase.spirometry.vef1}% predito` },
+    { label: "VEF1/CVF", value: String(activeCase.spirometry.vef1cvf / 100) },
+    { label: "PFE", value: `${activeCase.spirometry.pfe} L/min` },
+    { label: "Resposta ao BD", value: `${activeCase.spirometry.bdResponse}%` },
+  ];
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Tratamento da Asma"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<>
         <Badge variant="secondary">{severityLabels[activeCase.severity]}</Badge>
         <Badge>Step {activeCase.ginaStep}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" caseId={activeCase.title} /></div>
-      </div>
-
-      {/* Patient Info + Spirometry */}
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-        <div className="mt-2 rounded-lg bg-muted/50 p-3 border border-border">
-          <p className="text-xs font-semibold mb-1">🫁 Espirometria:</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div><strong>VEF1:</strong> {activeCase.spirometry.vef1}% predito</div>
-            <div><strong>VEF1/CVF:</strong> {activeCase.spirometry.vef1cvf / 100}</div>
-            <div><strong>PFE:</strong> {activeCase.spirometry.pfe} L/min</div>
-            <div><strong>BD (+):</strong> {activeCase.spirometry.bdResponse}%</div>
+        <ShareToolButton toolSlug="tratamento-asma" toolName="Tratamento da Asma" caseId={activeCase.title} />
+      </>}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={<>
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <p className="text-xs"><span className="text-muted-foreground">Grupo especial:</span> {activeCase.patient.specialGroup.join(", ")}</p>}
+        />
+        <ShellPanel title="Espirometria" icon={<Wind />}>
+          <div className="grid grid-cols-2 gap-2">
+            {spiro.map(s => (
+              <div key={s.label} className="rounded-lg border border-border bg-background/40 px-3 py-2">
+                <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                <p className="font-mono text-sm font-semibold tabular-nums">{s.value}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </CardContent></Card>
+        </ShellPanel>
+      </>}
+      stage={<>
+        {simulation.warnings.length > 0 && (
+          <div className="space-y-1 rounded-xl border border-status-crit/40 bg-status-crit/5 px-4 py-3">
+            {simulation.warnings.map((w, i) => <p key={i} className={`text-sm font-medium ${w.startsWith("✅") ? "text-status-ok" : "text-status-crit"}`}>{w}</p>)}
+          </div>
+        )}
 
-      {/* Warnings */}
-      {simulation.warnings.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="pt-4 space-y-1">
-            {simulation.warnings.map((w, i) => <p key={i} className={`text-sm font-medium ${w.startsWith("✅") ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{w}</p>)}
-          </CardContent>
-        </Card>
-      )}
+        <ShellPanel title="Painel clínico e monitoramento" icon={<Activity />} aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{vitalTiles.map(v => <VitalTile key={v.name} {...v} />)}</div>
+        </ShellPanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Controls */}
-        <Card className="lg:col-span-1">
-          <CardHeader><CardTitle className="text-base">Prescrição — Step {ginaStep}</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Step GINA</label>
+        <ShellPanel title="Função pulmonar (VEF1 % predito) em 12 semanas">
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={displayLungData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[30, 105]} label={{ value: "VEF1 (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...tooltipProps} />
+              <Legend />
+              <ReferenceLine y={80} stroke="hsl(var(--status-ok))" strokeDasharray="5 5" label={{ value: "≥80% (normal)", fill: "hsl(var(--status-ok))", fontSize: 10 }} />
+              <ReferenceLine y={60} stroke="hsl(var(--status-warn))" strokeDasharray="5 5" label={{ value: "60% (moderada)", fill: "hsl(var(--status-warn))", fontSize: 10 }} />
+              <Line type="monotone" dataKey="vef1" name="VEF1 (%)" stroke="hsl(var(--primary))" dot strokeWidth={2.5} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+
+        <ShellPanel title="Frequência de crises e uso de SABA">
+          <ResponsiveContainer width="100%" height={230}>
+            <LineChart data={displayCrisisData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis label={{ value: "Episódios/sem", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...tooltipProps} />
+              <Legend />
+              <Line type="monotone" dataKey="crises" name="Exacerbações" stroke="hsl(var(--status-crit))" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="sabaUse" name="Uso de SABA" stroke="hsl(var(--status-warn))" dot={false} strokeWidth={2} strokeDasharray="5 5" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+
+        <ShellPanel title="Risco de efeitos adversos (%)">
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={simulation.sideEffectData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+              <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...tooltipProps} />
+              <Bar dataKey="risco" name="Risco (%)" radius={[4, 4, 0, 0]}>
+                {simulation.sideEffectData.map((e: { risco: number }, i: number) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+
+        {activeCase.clinicalTip && (
+          <ShellPanel title="Dica clínica" icon={<Lightbulb />}>
+            <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
+            {activeCase.references?.length > 0 && (
+              <div className="mt-2 space-y-0.5">
+                <p className="text-[11px] font-semibold text-muted-foreground">Referências</p>
+                {activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}
+              </div>
+            )}
+          </ShellPanel>
+        )}
+      </>}
+      controls={
+        <ShellPanel title={`Prescrição · Step ${ginaStep}`}>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Step GINA</label>
               <Select value={String(ginaStep)} onValueChange={v => setGinaStep(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5].map(s => <SelectItem key={s} value={String(s)}>Step {s}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{[1, 2, 3, 4, 5].map(s => <SelectItem key={s} value={String(s)}>Step {s}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
             {selectedDrugIndices.map((dIdx, pos) => {
               const d = DRUGS[dIdx];
               return (
-                <div key={pos} className="rounded-lg border border-border p-3 space-y-2">
+                <div key={pos} className="space-y-2 rounded-lg border border-border bg-background/40 p-3">
                   <div className="flex items-center gap-2">
                     <Select value={String(dIdx)} onValueChange={v => {
                       const newIdx = Number(v);
@@ -528,18 +586,16 @@ export default function SimuladorTratamentoAsma() {
                       setDrugDoses(prev => prev.map((old, i) => i === pos ? DRUGS[newIdx].doseLow : old));
                     }}>
                       <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {DRUGS.map((dr, i) => <SelectItem key={i} value={String(i)}>{dr.name} ({dr.class})</SelectItem>)}
-                      </SelectContent>
+                      <SelectContent>{DRUGS.map((dr, i) => <SelectItem key={i} value={String(i)}>{dr.name} ({dr.class})</SelectItem>)}</SelectContent>
                     </Select>
                     {selectedDrugIndices.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeDrug(pos)}>✕</Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Remover ${d.name}`} onClick={() => removeDrug(pos)}><X className="h-4 w-4" /></Button>
                     )}
                   </div>
-                  <div>
-                    <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{drugDoses[pos]} {d.doseUnit}</span></div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{drugDoses[pos]} {d.doseUnit}</span></div>
                     <Slider value={[drugDoses[pos]]} onValueChange={([v]) => setDrugDoses(prev => prev.map((old, i) => i === pos ? v : old))} min={d.doseLow} max={d.doseHigh} step={(d.doseHigh - d.doseLow) <= 10 ? 0.5 : (d.doseHigh - d.doseLow) <= 50 ? 2.5 : (d.doseHigh - d.doseLow) <= 100 ? 10 : d.doseHigh <= 200 ? 10 : d.doseHigh <= 600 ? 25 : 50} />
-                    <p className="text-xs text-muted-foreground">{d.doseLow}–{d.doseHigh} {d.doseUnit} • Steps: {d.ginaSteps.join(",")}</p>
+                    <p className="text-[10px] text-muted-foreground">{d.doseLow}–{d.doseHigh} {d.doseUnit} · Steps {d.ginaSteps.join(", ")}</p>
                   </div>
                 </div>
               );
@@ -549,15 +605,15 @@ export default function SimuladorTratamentoAsma() {
               <Select onValueChange={v => addDrug(Number(v))}>
                 <SelectTrigger><SelectValue placeholder="+ Adicionar fármaco" /></SelectTrigger>
                 <SelectContent>
-                  {DRUGS.filter((_, i) => !selectedDrugIndices.includes(i)).map((d, i) => (
+                  {DRUGS.filter((_, i) => !selectedDrugIndices.includes(i)).map(d => (
                     <SelectItem key={DRUGS.indexOf(d)} value={String(DRUGS.indexOf(d))}>{d.name} ({d.class})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">Dispositivo Inalatório</label>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Dispositivo inalatório</label>
               <Select value={device} onValueChange={setDevice}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -569,8 +625,8 @@ export default function SimuladorTratamentoAsma() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Situação especial</p>
+            <div className="space-y-2.5 border-t border-border pt-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Situação especial</p>
               {([
                 { key: "gestante" as const, label: "Gestante" },
                 { key: "crianca" as const, label: "Criança (<5 anos)" },
@@ -579,142 +635,38 @@ export default function SimuladorTratamentoAsma() {
                 { key: "drge" as const, label: "DRGE associada" },
                 { key: "obesidade" as const, label: "Obesidade" },
               ]).map(g => (
-                <div key={g.key} className="flex items-center gap-2">
-                  <Switch checked={specialGroups[g.key]} onCheckedChange={v => setSpecialGroups(prev => ({ ...prev, [g.key]: v }))} id={`sg-${g.key}`} />
-                  <label htmlFor={`sg-${g.key}`} className="text-xs cursor-pointer">{g.label}</label>
-                </div>
+                <label key={g.key} className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+                  {g.label}
+                  <Switch checked={specialGroups[g.key]} onCheckedChange={v => setSpecialGroups(prev => ({ ...prev, [g.key]: v }))} />
+                </label>
               ))}
             </div>
 
-            <Button className="w-full gap-2" onClick={handleStart} disabled={running}>
-              <Play className="h-4 w-4" /> {running ? "Simulando..." : "Iniciar Simulação"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Clinical Panel */}
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Painel Clínico e Monitoramento</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <div className="rounded-lg bg-muted p-3 text-center">
-                <Droplets className="h-4 w-4 mx-auto text-primary mb-1" />
-                <p className="text-xs text-muted-foreground">SpO2</p>
-                <p className={`text-lg font-bold ${simulation.vitals.spo2 < 92 ? "text-destructive" : ""}`}>{Math.round(simulation.vitals.spo2)}%</p>
-              </div>
-              <div className="rounded-lg bg-muted p-3 text-center">
-                <Activity className="h-4 w-4 mx-auto text-destructive mb-1" />
-                <p className="text-xs text-muted-foreground">FR</p>
-                <p className={`text-lg font-bold ${simulation.vitals.fr > 24 ? "text-destructive" : ""}`}>{simulation.vitals.fr} <span className="text-xs">irpm</span></p>
-              </div>
-              <div className="rounded-lg bg-muted p-3 text-center">
-                <Wind className="h-4 w-4 mx-auto text-chart-3 mb-1" />
-                <p className="text-xs text-muted-foreground">PFE</p>
-                <p className="text-lg font-bold">{simulation.vitals.pfe} <span className="text-xs">L/min</span></p>
-              </div>
-              <div className="rounded-lg bg-muted p-3 text-center">
-                <Thermometer className="h-4 w-4 mx-auto text-chart-5 mb-1" />
-                <p className="text-xs text-muted-foreground">Sint. noturnos/sem</p>
-                <p className={`text-lg font-bold ${simulation.vitals.sintomasNoturnos > 2 ? "text-destructive" : ""}`}>{simulation.vitals.sintomasNoturnos}</p>
-              </div>
-            </div>
-
-            {/* Lung Function Chart */}
-            <p className="text-sm font-semibold mb-2">Função Pulmonar (VEF1% predito) ao longo de 12 semanas</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={displayLungData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[30, 105]} label={{ value: "VEF1 (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <ReferenceLine y={80} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "≥80% (normal)", fill: "hsl(var(--chart-3))", fontSize: 10 }} />
-                <ReferenceLine y={60} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" label={{ value: "60% (moderada)", fill: "hsl(var(--chart-5))", fontSize: 10 }} />
-                <Line type="monotone" dataKey="vef1" name="VEF1 (%)" stroke="hsl(var(--primary))" dot strokeWidth={2.5} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Crisis and Side Effects Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Frequência de Crises e Uso de SABA</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={displayCrisisData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis label={{ value: "Episódios/sem", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <Line type="monotone" dataKey="crises" name="Exacerbações" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="sabaUse" name="Uso de SABA" stroke="hsl(var(--chart-5))" dot={false} strokeWidth={2} strokeDasharray="5 5" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">Risco de Efeitos Adversos</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={simulation.sideEffectData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                <YAxis domain={[0, 100]} label={{ value: "Risco (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="risco" name="Risco (%)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Clinical Tip */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-          {activeCase.references?.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-muted-foreground">Referências:</p>
-              {activeCase.references.map((r, i) => <p key={i} className="text-xs text-muted-foreground">• {r}</p>)}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Challenge Mode */}
-      {(() => {
-        const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return (
-          <SimulatorChallengeMode
-            challengeSet={getTratamentoAsmaChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
-            simulatorState={{ drugs: selectedDrugs.map(d => d.name), drugClasses: selectedDrugs.map(d => d.class), doses: drugDoses, ginaStep, device, severity: activeCase.severity, finalVef1: simulation.finalVef1, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: selectedDrugs.every(d => d.safePregnancy), sideEffectData: simulation.sideEffectData, lungData: simulation.lungData, crisisData: simulation.crisisData, specialGroups }}
-            onComplete={() => setChallengeCompleted(true)}
-          />
-        );
-      })()}
-
-      {/* Virtual Room Results */}
-      {isVirtualRoom && submitted && (
-        !showFeedback ? (
-          <div className="space-y-2">
-            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 12 semanas"}</Button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-              <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+        </ShellPanel>
+      }
+      challenge={
+        <SimulatorChallengeMode
+          challengeSet={getTratamentoAsmaChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
+          simulatorState={{ drugs: selectedDrugs.map(d => d.name), drugClasses: selectedDrugs.map(d => d.class), doses: drugDoses, ginaStep, device, severity: activeCase.severity, finalVef1: simulation.finalVef1, vitals: simulation.vitals, warnings: simulation.warnings, safePregnancy: selectedDrugs.every(d => d.safePregnancy), sideEffectData: simulation.sideEffectData, lungData: simulation.lungData, crisisData: simulation.crisisData, specialGroups }}
+          onComplete={() => setChallengeCompleted(true)}
+        />
+      }
+      footer={isVirtualRoom && submitted && (!showFeedback ? (
+        <div className="space-y-2">
+          <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button>
+          <p className="text-center text-xs text-muted-foreground">Resultados enviados ✓ — redirecionando para a página inicial em 15s…</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+            <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-status-crit"}`}>{lastScore}%</div>
+            <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
           </div>
-        )
-      )}
-    </div>
+          <p className="text-center text-xs text-muted-foreground">Redirecionando para a página inicial em 15s…</p>
+        </div>
+      ))}
+    />
   );
 }
