@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +121,7 @@ const RATING_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function SimuladorMAI() {
+  const navigate = useNavigate();
   const SLUG = "mai";
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
@@ -215,15 +218,13 @@ export default function SimuladorMAI() {
   // Dashboard
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Simulador MAI</h1>
-            <p className="text-muted-foreground">Medication Appropriateness Index – Avalie a adequação de cada medicamento em 10 critérios</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador MAI" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Simulador MAI"
+        description="Medication Appropriateness Index – Avalie a adequação de cada medicamento em 10 critérios"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador MAI" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+      >
           {allCases.map((c: any, i: number) => (
             c.isAI ? (
               <AICaseCard key={c.id || i} caseItem={c} onClick={() => startCase(i)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
@@ -237,8 +238,7 @@ export default function SimuladorMAI() {
               <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
             </div>
           </Card>
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -320,20 +320,19 @@ export default function SimuladorMAI() {
   const completedDrugs = currentCase.drugs.map((_, di) => MAI_CRITERIA.every(c => userRatings[di]?.[c] != null));
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Simulador MAI"
+      caseTitle={currentCase.title}
+      difficulty={currentCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      {isVirtualRoom ? (
-        <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
-      ) : (
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-      )}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase?.title} examProgress={examProgress} />
-      <h2 className="text-xl font-bold mb-4">{currentCase.title}</h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Patient */}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase?.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />Paciente</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
@@ -354,8 +353,8 @@ export default function SimuladorMAI() {
             )}
           </CardContent>
         </Card>
-
-        {/* Drug selector */}
+      }
+      stage={<>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Pill className="h-4 w-4" />Medicamentos</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -374,8 +373,8 @@ export default function SimuladorMAI() {
             ))}
           </CardContent>
         </Card>
-
-        {/* MAI Criteria */}
+      </>}
+      controls={<>
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="pb-2">
@@ -408,8 +407,6 @@ export default function SimuladorMAI() {
             </CardContent>
           </Card>
         </div>
-      </div>
-
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allRated} onClick={() => {
           const { drugScores, totalScore } = getScore();
@@ -429,6 +426,7 @@ export default function SimuladorMAI() {
           <ClipboardCheck className="h-4 w-4 mr-2" />Finalizar Avaliação MAI
         </Button>
       </div>
-    </div>
+      </>}
+    />
   );
 }

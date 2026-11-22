@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { buildSimulatorDecisions } from "@/lib/buildSimulatorDecisions";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -319,24 +320,18 @@ export default function SimuladorDispensacao344() {
   /* ─── Dashboard ─── */
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-            <div>
-              <h1 className="text-xl font-bold flex items-center gap-2"><Store className="h-5 w-5 text-primary" /> Dispensação — Portaria 344/98</h1>
-              <p className="text-sm text-muted-foreground">Treine a dispensação de medicamentos controlados no balcão da farmácia</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <SimulatorHowToUse title="Dispensação 344" steps={HOW_TO_USE_STEPS} />
-            <AdminPromptViewer toolSlug={SLUG} toolName="Dispensação 344" toolType="simulator" prompt={getNativePrompt(SLUG)} />
-          </div>
-        </div>
-
-        {examProgress && <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Dispensação — Portaria 344/98"
+        description="Treine a dispensação de medicamentos controlados no balcão da farmácia"
+        onBack={() => navigate(isVirtualRoom ? "/sala" : "/simuladores")}
+        actions={<>
+          <SimulatorHowToUse title="Dispensação 344" steps={HOW_TO_USE_STEPS} />
+          <AdminPromptViewer toolSlug={SLUG} toolName="Dispensação 344" toolType="simulator" prompt={getNativePrompt(SLUG)} />
+        </>}
+        banner={examProgress && <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={<Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
           {BUILT_IN_CASES.map((c, i) => (
             <NativeCaseCard key={i} caseItem={c} onClick={() => startCase(c)} />
           ))}
@@ -352,13 +347,7 @@ export default function SimuladorDispensacao344() {
               onToggleMarketplace={toggleCaseMarketplace}
             />
           ))}
-        </div>
-
-        <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2">
-          {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          Gerar caso com IA
-        </Button>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -366,16 +355,14 @@ export default function SimuladorDispensacao344() {
   const PrescriptionComponent = activeCase.tipo === "A" ? PrescricaoAmarelaA : activeCase.tipo === "B" ? PrescricaoAzulB : ReceitaControleEspecial;
 
   return (
-    <div className="space-y-6">
-      {examProgress && <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-lg font-bold">{activeCase.title}</h1>
-          <Badge variant="secondary">{activeCase.difficulty}</Badge>
-        </div>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Dispensação — Portaria 344/98"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => setActiveCase(null)}
+      banners={examProgress && <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+      stage={<>
       {/* Step Progress */}
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
         {STEP_LABELS.map((s, i) => {
@@ -532,6 +519,7 @@ export default function SimuladorDispensacao344() {
           </>
         );
       })()}
-    </div>
+      </>}
+    />
   );
 }

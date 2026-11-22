@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, ChevronDown, ChevronUp, Clock, Stethoscope, FlaskConical } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, ChevronDown, ChevronUp, Clock, Stethoscope, FlaskConical } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -57,6 +59,7 @@ const BUILT_IN: CaseData[] = [
 ];
 
 export default function SimuladorAntimicrobianos() {
+  const navigate = useNavigate();
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("antimicrobianos", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("antimicrobianos", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "day1" | "day3" | "report">("dashboard");
@@ -114,9 +117,13 @@ export default function SimuladorAntimicrobianos() {
 
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Antimicrobial Stewardship</h1><p className="text-muted-foreground">Uso Racional de Antimicrobianos – Terapia empírica e descalonamento</p><AdminPromptViewer toolSlug="sim-antimicrobianos" toolName="Simulador Antimicrobianos" toolType="simulator" prompt={getNativePrompt("sim-antimicrobianos") || ""} /></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="antimicrobianos"
+        title="Simulador de Antimicrobial Stewardship"
+        description="Uso Racional de Antimicrobianos – Terapia empírica e descalonamento"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-antimicrobianos" toolName="Simulador Antimicrobianos" toolType="simulator" prompt={getNativePrompt("sim-antimicrobianos") || ""} />}
+      >
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
@@ -143,8 +150,7 @@ export default function SimuladorAntimicrobianos() {
               <div className="text-center p-6">{isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}<p className="font-medium">{isGenerating ? "Gerando..." : "Gerar com IA"}</p></div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -166,13 +172,19 @@ export default function SimuladorAntimicrobianos() {
 
   if (screen === "day1") {
     return (
-      <div className="max-w-6xl mx-auto">
+      <SimulatorWorkspace
+        slug="antimicrobianos"
+        simulatorName="Simulador de Antimicrobial Stewardship"
+        caseTitle={c.title}
+        difficulty={c.difficulty}
+        onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+        banners={<>
         {examFeedback && examProgress && (
           <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
         )}
-        {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
         <ExamBanner simulatorSlug="antimicrobianos" caseTitle={c?.title} examProgress={examProgress} />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        </>}
+        patient={<>
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Stethoscope className="h-4 w-4" />Ficha do Paciente – Admissão</CardTitle></CardHeader>
             <CardContent className="text-sm space-y-2">
@@ -187,6 +199,11 @@ export default function SimuladorAntimicrobianos() {
               <Badge variant="outline" className="mt-2">{c.day1.suspectedDiagnosis}</Badge>
             </CardContent>
           </Card>
+        </>}
+        stage={<>
+<Timeline />
+        </>}
+        controls={<>
           <Card>
             <CardHeader><CardTitle className="text-base">Prescrição Empírica</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -218,17 +235,23 @@ export default function SimuladorAntimicrobianos() {
               </Button>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </>}
+      />
     );
   }
 
   if (screen === "day3") {
     return (
-      <div className="max-w-6xl mx-auto">
-        <Button variant="ghost" onClick={() => setScreen("day1")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Dia 1</Button>
+      <SimulatorWorkspace
+        slug="antimicrobianos"
+        simulatorName="Simulador de Antimicrobial Stewardship"
+        caseTitle={c.title}
+        difficulty={c.difficulty}
+        onBack={() => setScreen("day1")}
+        banners={<>
+        </>}
+        stage={<>
         <Timeline />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
             <Card>
               <CardHeader><CardTitle className="text-base">Evolução – 48-72h depois</CardTitle></CardHeader>
@@ -252,6 +275,8 @@ export default function SimuladorAntimicrobianos() {
               </CardContent>
             </Card>
           </div>
+        </>}
+        controls={<>
           <Card>
             <CardHeader><CardTitle className="text-base">Conduta – Descalonamento</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -294,8 +319,8 @@ export default function SimuladorAntimicrobianos() {
               }} className="w-full mt-4">Finalizar Conduta</Button>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </>}
+      />
     );
   }
 
@@ -303,8 +328,16 @@ export default function SimuladorAntimicrobianos() {
   const s1 = scoreDay1();
   const s3 = scoreDay3();
   return (
-    <div className="max-w-4xl mx-auto">
-      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
+    <SimulatorWorkspace
+      slug="antimicrobianos"
+      simulatorName="Simulador de Antimicrobial Stewardship"
+      caseTitle={c.title}
+      difficulty={c.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+
+      </>}
+      stage={<>
       <Timeline />
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card><CardContent className="pt-6 text-center"><p className="text-4xl font-bold">{s1}%</p><p className="text-muted-foreground mt-1">Score Dia 1 (Empírico)</p></CardContent></Card>
@@ -321,6 +354,9 @@ export default function SimuladorAntimicrobianos() {
         </Card>
       ))}
       <div className="flex gap-3 mt-6"><Button onClick={() => start(caseIdx)}>Tentar Novamente</Button>{isVirtualRoom ? <Button variant="outline" onClick={goBack}>Voltar à Home</Button> : <Button variant="outline" onClick={() => setScreen("dashboard")}>Voltar aos Casos</Button>}</div>
-    </div>
+      </>}
+      controls={<>
+      </>}
+    />
   );
 }

@@ -5,7 +5,8 @@ import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, Trash2, TestTube, HelpCircle, Eye } from "lucide-react";
+import { Search, Plus, X, AlertTriangle, ShieldAlert, ShieldCheck, Info, Loader2, Beaker, Sparkles, TestTube, HelpCircle, Eye } from "lucide-react";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -304,33 +305,23 @@ export default function SimuladorInteracoes() {
   /* ─── Dashboard ─── */
   if (!activeCase) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Simulador de Interações Medicamentosas</h1>
-            <p className="text-sm text-muted-foreground">Analise interações entre fármacos com dados do RxNav (NIH)</p>
-            <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" /><AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} />
-          </div>
-        </div>
-
-        {/* Disclaimer */}
-        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>Base de dados para fins educacionais. Sempre consulte o bulário oficial e o julgamento clínico antes de prescrever.</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Casos Clínicos</h2>
-          {!isVR && (
-            <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="gap-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Gerar com IA
-            </Button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="interacoes"
+        title="Simulador de Interações Medicamentosas"
+        description="Analise interações entre fármacos com dados do RxNav (NIH)"
+        onBack={() => navigate(-1)}
+        actions={<><ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" /><AdminPromptViewer toolSlug="sim-interacoes" toolName="Simulador Interações" toolType="simulator" prompt={getNativePrompt("sim-interacoes") || ""} /></>}
+        banner={<div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-2">
+<AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+<span>Base de dados para fins educacionais. Sempre consulte o bulário oficial e o julgamento clínico antes de prescrever.</span>
+</div>}
+        footer={!isVR && (
+          <Button onClick={generateCase} disabled={isGenerating} variant="outline" className="w-full gap-2">
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Gerar caso com IA
+          </Button>
+        )}
+      >
           {/* Free mode */}
           <Card className="cursor-pointer hover:shadow-md transition-shadow border-dashed border-primary/40" onClick={() => setActiveCase({ id: "free", title: "Modo Livre" })}>
             <CardContent className="flex flex-col items-center justify-center py-8 gap-2">
@@ -355,26 +346,18 @@ export default function SimuladorInteracoes() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
   /* ─── Simulator UI ─── */
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
-      {examFeedback && examProgress && (
-        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
-      )}
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && (<Button variant="ghost" size="icon" onClick={isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>)}
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate">{activeCase.title || "Interações Medicamentosas"}</h1>
-          <p className="text-xs text-muted-foreground">Dados: RxNav / National Library of Medicine</p>
-        </div>
+    <SimulatorWorkspace
+      slug="interacoes"
+      simulatorName="Interações Medicamentosas"
+      caseTitle={activeCase.title || "Interações Medicamentosas"}
+      onBack={isEmbed ? undefined : isVR ? goBack : () => { setActiveCase(null); setSelectedDrugs([]); setInteractions([]); setSelectedComorbidities([]); }}
+      actions={<>
         <ShareToolButton toolSlug="interacoes" toolName="Interações Medicamentosas" caseId={activeCase?.title} />
 
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
@@ -393,115 +376,26 @@ export default function SimuladorInteracoes() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Disclaimer */}
+      </>}
+      banners={<>
+      {examFeedback && examProgress && (
+        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+      )}
       <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
         <span>SIMULADOR DIDÁTICO. Sempre consulte o bulário oficial e o julgamento clínico antes de prescrever.</span>
       </div>
-
-      {/* Case context */}
-      {activeCase.patient && (
+      </>}
+      patient={activeCase.patient ? (
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="py-3 text-sm space-y-1">
             <p><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
             {activeCase.scenario && <p><strong>Cenário:</strong> {activeCase.scenario}</p>}
           </CardContent>
         </Card>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* ─── Left: Drug List ─── */}
-        <div className="lg:col-span-4 space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <TestTube className="h-4 w-4 text-primary" />
-                Prescrição
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar medicamento..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-8 text-sm"
-                />
-                {isSearching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
-              </div>
-
-              {/* Suggestions dropdown */}
-              {suggestions.length > 0 && (
-                <div className="border rounded-md bg-popover max-h-48 overflow-y-auto shadow-lg">
-                  {suggestions.map(s => (
-                    <button
-                      key={s.rxcui}
-                      onClick={() => addDrug(s)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 transition-colors flex items-center justify-between"
-                    >
-                      <span className="truncate">{s.name}</span>
-                      <Plus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Selected drugs */}
-              <div className="space-y-1.5">
-                {selectedDrugs.length === 0 && (
-                  <p className="text-xs text-muted-foreground py-4 text-center">Adicione medicamentos para iniciar a análise</p>
-                )}
-                {selectedDrugs.map(d => (
-                  <div key={d.rxcui} className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2">
-                    <span className="text-sm font-medium truncate">{d.name}</span>
-                    <button onClick={() => removeDrug(d.rxcui)} className="text-muted-foreground hover:text-destructive transition-colors">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Scenario Test */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Beaker className="h-4 w-4 text-primary" />
-                Cenário de Teste
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground">Selecione comorbidades para avaliar agravamento de interações:</p>
-              {COMORBIDITIES.map(c => (
-                <div key={c.id} className="flex items-start gap-2">
-                  <Checkbox
-                    id={c.id}
-                    checked={selectedComorbidities.includes(c.id)}
-                    onCheckedChange={() => toggleComorbidity(c.id)}
-                  />
-                  <label htmlFor={c.id} className="text-sm cursor-pointer">
-                    <span className="font-medium">{c.name}</span>
-                  </label>
-                </div>
-              ))}
-              {selectedComorbidities.length > 0 && (
-                <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => setShowScenario(!showScenario)}>
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {showScenario ? "Ocultar Análise" : "Testar Prescrição"}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ─── Right: Interaction Timeline ─── */}
+      ) : undefined}
+      stage={<>
         <div className="lg:col-span-8 space-y-4">
-          {/* Comorbidity warnings */}
           {showScenario && selectedComorbidities.length > 0 && (
             <Card className="border-orange-500/30 bg-orange-500/5">
               <CardHeader className="pb-2">
@@ -527,7 +421,6 @@ export default function SimuladorInteracoes() {
             </Card>
           )}
 
-          {/* Loading */}
           {isLoadingInteractions && (
             <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -535,7 +428,6 @@ export default function SimuladorInteracoes() {
             </div>
           )}
 
-          {/* No interactions */}
           {!isLoadingInteractions && selectedDrugs.length >= 2 && interactions.length === 0 && (
             <Card className="border-green-500/30 bg-green-500/5">
               <CardContent className="py-6 text-center space-y-1">
@@ -546,7 +438,6 @@ export default function SimuladorInteracoes() {
             </Card>
           )}
 
-          {/* Prompt */}
           {!isLoadingInteractions && selectedDrugs.length < 2 && (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
               <TestTube className="h-10 w-10" />
@@ -554,7 +445,6 @@ export default function SimuladorInteracoes() {
             </div>
           )}
 
-          {/* Interaction cards */}
           {sortedInteractions.map((inter, idx) => (
             <Card key={idx} className={`border ${inter.severity === "high" ? "border-red-500/40" : inter.severity === "medium" ? "border-yellow-500/40" : "border-green-500/40"}`}>
               <CardContent className="py-4 space-y-2">
@@ -603,9 +493,91 @@ export default function SimuladorInteracoes() {
             </Card>
           ))}
         </div>
-      </div>
+      </>}
+      controls={<>
+        <div className="lg:col-span-4 space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <TestTube className="h-4 w-4 text-primary" />
+                Prescrição
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar medicamento..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8 text-sm"
+                />
+                {isSearching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
 
-      {/* VR Results */}
+              {suggestions.length > 0 && (
+                <div className="border rounded-md bg-popover max-h-48 overflow-y-auto shadow-lg">
+                  {suggestions.map(s => (
+                    <button
+                      key={s.rxcui}
+                      onClick={() => addDrug(s)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 transition-colors flex items-center justify-between"
+                    >
+                      <span className="truncate">{s.name}</span>
+                      <Plus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                {selectedDrugs.length === 0 && (
+                  <p className="text-xs text-muted-foreground py-4 text-center">Adicione medicamentos para iniciar a análise</p>
+                )}
+                {selectedDrugs.map(d => (
+                  <div key={d.rxcui} className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2">
+                    <span className="text-sm font-medium truncate">{d.name}</span>
+                    <button onClick={() => removeDrug(d.rxcui)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Beaker className="h-4 w-4 text-primary" />
+                Cenário de Teste
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">Selecione comorbidades para avaliar agravamento de interações:</p>
+              {COMORBIDITIES.map(c => (
+                <div key={c.id} className="flex items-start gap-2">
+                  <Checkbox
+                    id={c.id}
+                    checked={selectedComorbidities.includes(c.id)}
+                    onCheckedChange={() => toggleComorbidity(c.id)}
+                  />
+                  <label htmlFor={c.id} className="text-sm cursor-pointer">
+                    <span className="font-medium">{c.name}</span>
+                  </label>
+                </div>
+              ))}
+              {selectedComorbidities.length > 0 && (
+                <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => setShowScenario(!showScenario)}>
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {showScenario ? "Ocultar Análise" : "Testar Prescrição"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </>}
+      footer={<>
       {isVR && vrSubmitted && (
         !showVRFeedback ? (
           <div className="space-y-2">
@@ -623,6 +595,7 @@ export default function SimuladorInteracoes() {
           </div>
         )
       )}
-    </div>
+      </>}
+    />
   );
 }

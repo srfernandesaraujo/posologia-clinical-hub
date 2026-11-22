@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -359,25 +360,21 @@ export default function SimuladorDesmameBenzo() {
   // ═══ DASHBOARD ═══
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/simuladores")} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />Voltar
-        </Button>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Desmame de Benzodiazepínicos</h1>
-          <p className="text-muted-foreground">Planejamento de redução gradual baseado no Protocolo de Ashton</p>
-          <AdminPromptViewer toolSlug="sim-desmame-benzo" toolName="Desmame de Benzodiazepínicos" toolType="simulator" prompt={getNativePrompt("sim-desmame-benzo") || ""} />
-        </div>
-
-        {/* Legal disclaimer */}
+      <SimulatorCasePicker
+        slug="desmame-benzo"
+        title="Desmame de Benzodiazepínicos"
+        description="Planejamento de redução gradual baseado no Protocolo de Ashton"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-desmame-benzo" toolName="Desmame de Benzodiazepínicos" toolType="simulator" prompt={getNativePrompt("sim-desmame-benzo") || ""} />}
+        banner={<>
         <div className="mb-6 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-amber-800 dark:text-amber-200">
             <strong>SIMULADOR DIDÁTICO.</strong> O desmame de benzodiazepínicos deve ser supervisionado estritamente por um médico psiquiatra.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+      >
           {/* Free mode card */}
           <Card className="cursor-pointer hover:shadow-lg transition-shadow border-dashed border-primary/40" onClick={() => { setActiveCase(null); setSelectedDrug(""); setDailyDose(""); setUsageDuration(""); setSensitivity("normal"); setPatientName(""); setScreen("config"); }}>
             <CardContent className="flex flex-col items-center justify-center min-h-[140px] pt-6">
@@ -419,8 +416,7 @@ export default function SimuladorDesmameBenzo() {
               </div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -559,33 +555,34 @@ export default function SimuladorDesmameBenzo() {
 
   // ═══ PLAN SCREEN ═══
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <Button variant="ghost" onClick={() => setScreen("config")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />Voltar à Configuração
-        </Button>
-        <div className="flex items-center gap-2">
+    <SimulatorWorkspace
+      slug="desmame-benzo"
+      simulatorName="Desmame de Benzodiazepínicos"
+      caseTitle={"Plano de Desmame"}
+      onBack={() => setScreen("config")}
+      banners={<>
+
+      </>}
+      stage={<>
+      <div className="flex items-center justify-end mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)} className="gap-1">
             <HelpCircle className="h-4 w-4" /> Ajuda
           </Button>
           <PdfExportButton onExport={exportPDF} label="Exportar PDF" />
         </div>
       </div>
-
-      {/* Legal disclaimer */}
       <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
         <p className="text-xs text-amber-800 dark:text-amber-200">
           <strong>SIMULADOR DIDÁTICO.</strong> O desmame de benzodiazepínicos deve ser supervisionado estritamente por um médico psiquiatra.
         </p>
       </div>
-
       <h1 className="text-2xl font-bold mb-1">Plano de Desmame</h1>
       <p className="text-sm text-muted-foreground mb-4">
         {selectedDrug} {dailyDose}mg/dia → Diazepam {diazepamEquiv.toFixed(1)}mg equiv. | Duração estimada: ~{plan.length > 0 ? plan[plan.length - 1].week : 0} semanas
         {patientName && ` | ${patientName}`}
       </p>
-
       {needsConversion && (
         <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
           <p className="text-xs text-amber-800 dark:text-amber-200">
@@ -593,9 +590,7 @@ export default function SimuladorDesmameBenzo() {
           </p>
         </div>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-6">
-        {/* Chart */}
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Curva de Redução</CardTitle></CardHeader>
           <CardContent>
@@ -627,7 +622,6 @@ export default function SimuladorDesmameBenzo() {
           </CardContent>
         </Card>
 
-        {/* Schedule Table */}
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -672,7 +666,6 @@ export default function SimuladorDesmameBenzo() {
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>
 
-                      {/* Symptom feedback */}
                       {severity === "severe" && (
                         <div className="mt-1 p-1.5 rounded bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
                           <p className="text-[10px] text-red-700 dark:text-red-300 font-medium">⚠ Sintomas graves detectados. Recomendação: pausar redução e consultar médico imediatamente.</p>
@@ -696,8 +689,6 @@ export default function SimuladorDesmameBenzo() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Symptom Check-in Dialog */}
       <Dialog open={checkinWeek !== null} onOpenChange={() => setCheckinWeek(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Check-in Semanal – Semana {checkinWeek}</DialogTitle></DialogHeader>
@@ -735,8 +726,6 @@ export default function SimuladorDesmameBenzo() {
           <Button onClick={() => setCheckinWeek(null)} className="w-full mt-2">Salvar Check-in</Button>
         </DialogContent>
       </Dialog>
-
-      {/* Help Dialog */}
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><HelpCircle className="h-5 w-5 text-primary" />Síndrome de Abstinência de Benzodiazepínicos</DialogTitle></DialogHeader>
@@ -748,8 +737,6 @@ export default function SimuladorDesmameBenzo() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* VR Results */}
       {isVR && vrSubmitted && (
         !showVRFeedback ? (
           <div className="space-y-2 mt-4">
@@ -759,7 +746,7 @@ export default function SimuladorDesmameBenzo() {
         ) : (
           <div className="space-y-2 mt-4">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-status-ok" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
               <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
               <p className="text-xs text-muted-foreground">Duração do plano: ~{plan.length > 0 ? plan[plan.length - 1].week : 0} semanas</p>
             </div>
@@ -767,8 +754,6 @@ export default function SimuladorDesmameBenzo() {
           </div>
         )
       )}
-
-      {/* Educational cards */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="font-semibold text-sm mb-2">⏱ Visualização do Tempo</h3>
@@ -783,6 +768,9 @@ export default function SimuladorDesmameBenzo() {
           <p className="text-xs text-muted-foreground">Pausar o desmame quando sintomas são fortes imita a prática clínica real e previne recaídas.</p>
         </div>
       </div>
-    </div>
+      </>}
+      controls={<>
+      </>}
+    />
   );
 }

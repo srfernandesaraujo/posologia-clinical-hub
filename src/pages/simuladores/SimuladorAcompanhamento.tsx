@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { supabase } from "@/integrations/supabase/client";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle, AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, CheckCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -85,6 +87,7 @@ const BUILT_IN: CaseData[] = [
 type UserAction = { drug: string; action: string; newDose?: string; newFrequency?: string };
 
 export default function SimuladorAcompanhamento() {
+  const navigate = useNavigate();
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("acompanhamento", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("acompanhamento", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
@@ -234,9 +237,13 @@ export default function SimuladorAcompanhamento() {
 
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador de Acompanhamento Farmacoterapêutico</h1><p className="text-muted-foreground">Monitore pacientes crônicos ao longo de várias consultas</p><AdminPromptViewer toolSlug="sim-acompanhamento" toolName="Simulador Acompanhamento" toolType="simulator" prompt={getNativePrompt("sim-acompanhamento") || ""} /></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="acompanhamento"
+        title="Simulador de Acompanhamento Farmacoterapêutico"
+        description="Monitore pacientes crônicos ao longo de várias consultas"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-acompanhamento" toolName="Simulador Acompanhamento" toolType="simulator" prompt={getNativePrompt("sim-acompanhamento") || ""} />}
+      >
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
@@ -263,8 +270,7 @@ export default function SimuladorAcompanhamento() {
               <div className="text-center p-6">{isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}<p className="font-medium">{isGenerating ? "Gerando..." : "Gerar com IA"}</p></div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -293,23 +299,19 @@ export default function SimuladorAcompanhamento() {
 
   // Simulation
   return (
-    <div className="max-w-7xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug="acompanhamento"
+      simulatorName="Simulador de Acompanhamento Farmacoterapêutico"
+      caseTitle={c.title}
+      difficulty={c.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
-      <ExamBanner simulatorSlug="acompanhamento" caseTitle={c?.title} examProgress={examProgress} />
-      {/* Tabs navigation */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto">
-        {c.consultations.map((cons, i) => (
-          <div key={i} className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${i === consultIdx ? "bg-primary text-primary-foreground" : i < consultIdx ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground opacity-50"}`}>
-            Mês {cons.month} {i < consultIdx && <CheckCircle className="inline h-3 w-3 ml-1" />}
-          </div>
-        ))}
-      </div>
-      <h2 className="text-lg font-bold mb-4">{c.patient.name}, {c.patient.age} anos – Consulta Mês {consultation.month}</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Labs & Chart */}
+        <ExamBanner simulatorSlug="acompanhamento" caseTitle={c?.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Exames Laboratoriais</CardTitle></CardHeader>
           <CardContent>
@@ -318,7 +320,7 @@ export default function SimuladorAcompanhamento() {
                 <div key={i} className="flex items-center justify-between py-1 text-sm">
                   <span>{l.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`font-medium ${l.status === "high" ? "text-red-600" : l.status === "low" ? "text-yellow-600" : "text-green-600"}`}>{l.value} {l.unit}</span>
+                    <span className={`font-medium ${l.status === "high" ? "text-red-600" : l.status === "low" ? "text-yellow-600" : "text-status-ok"}`}>{l.value} {l.unit}</span>
                     {l.status === "high" ? <TrendingUp className="h-3 w-3 text-red-500" /> : l.status === "low" ? <TrendingDown className="h-3 w-3 text-yellow-500" /> : <Minus className="h-3 w-3 text-green-500" />}
                   </div>
                 </div>
@@ -337,37 +339,19 @@ export default function SimuladorAcompanhamento() {
             )}
           </CardContent>
         </Card>
-
-        {/* Clinical */}
+      }
+      stage={<>
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto">
+        {c.consultations.map((cons, i) => (
+          <div key={i} className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${i === consultIdx ? "bg-primary text-primary-foreground" : i < consultIdx ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground opacity-50"}`}>
+            Mês {cons.month} {i < consultIdx && <CheckCircle className="inline h-3 w-3 ml-1" />}
+          </div>
+        ))}
+      </div>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Avaliação Clínica</CardTitle></CardHeader>
           <CardContent className="text-sm"><p>{consultation.symptoms}</p></CardContent>
         </Card>
-
-        {/* Prescription */}
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Prescrição Atual</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {displayedRx.map((rx, i) => {
-              const ua = (userActions[consultIdx] || []).find(a => a.drug === rx.drug);
-              return (
-                <div key={i} className={`p-3 rounded-lg border flex items-center justify-between ${ua ? "border-primary/50" : ""}`}>
-                  <div>
-                    <p className="font-medium text-sm">{rx.drug} {rx.dose}</p>
-                    <p className="text-xs text-muted-foreground">{rx.frequency}</p>
-                    {ua && (ua.action !== "manter" || ua.newFrequency) && <Badge variant="outline" className="text-xs mt-1">{ua.action}{ua.newDose ? ` → ${ua.newDose}` : ""}{ua.newFrequency ? ` (${ua.newFrequency})` : ""}</Badge>}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => { setModal({ drug: rx.drug, idx: i }); setModalAction("manter"); setModalDose(""); setModalFrequency(""); }}>Modificar</Button>
-                </div>
-              );
-            })}
-            <Button onClick={submitConsultation} className="w-full mt-4">
-              {consultIdx < c.consultations.length - 1 ? `Finalizar e Avançar para Mês ${c.consultations[consultIdx + 1]?.month}` : "Finalizar Acompanhamento"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
       <Dialog open={!!modal} onOpenChange={() => setModal(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Modificar: {modal?.drug}</DialogTitle></DialogHeader>
@@ -393,6 +377,30 @@ export default function SimuladorAcompanhamento() {
           <DialogFooter><Button onClick={saveModal}>Confirmar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </>}
+      controls={<>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Prescrição Atual</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {displayedRx.map((rx, i) => {
+              const ua = (userActions[consultIdx] || []).find(a => a.drug === rx.drug);
+              return (
+                <div key={i} className={`p-3 rounded-lg border flex items-center justify-between ${ua ? "border-primary/50" : ""}`}>
+                  <div>
+                    <p className="font-medium text-sm">{rx.drug} {rx.dose}</p>
+                    <p className="text-xs text-muted-foreground">{rx.frequency}</p>
+                    {ua && (ua.action !== "manter" || ua.newFrequency) && <Badge variant="outline" className="text-xs mt-1">{ua.action}{ua.newDose ? ` → ${ua.newDose}` : ""}{ua.newFrequency ? ` (${ua.newFrequency})` : ""}</Badge>}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { setModal({ drug: rx.drug, idx: i }); setModalAction("manter"); setModalDose(""); setModalFrequency(""); }}>Modificar</Button>
+                </div>
+              );
+            })}
+            <Button onClick={submitConsultation} className="w-full mt-4">
+              {consultIdx < c.consultations.length - 1 ? `Finalizar e Avançar para Mês ${c.consultations[consultIdx + 1]?.month}` : "Finalizar Acompanhamento"}
+            </Button>
+          </CardContent>
+        </Card>
+      </>}
+    />
   );
 }

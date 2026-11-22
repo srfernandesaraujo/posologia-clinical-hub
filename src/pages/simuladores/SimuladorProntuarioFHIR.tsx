@@ -13,6 +13,8 @@ import {
 import { FhirSectionViewer } from "@/components/FhirSectionViewer";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import {
-  ArrowLeft, Sparkles, Loader2, User, ClipboardList, CheckCircle, XCircle, ChevronDown, ChevronUp,
-  FileText, Lock, Stethoscope, TestTube, Pill,
-} from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, User, ClipboardList, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Lock, Stethoscope, TestTube, Pill } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { NativeCaseCard } from "@/components/NativeCaseCard";
@@ -177,6 +176,7 @@ function scorePercent(correct: number, total: number) {
 }
 
 export default function SimuladorProntuarioFHIR() {
+  const navigate = useNavigate();
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
 
@@ -293,15 +293,13 @@ export default function SimuladorProntuarioFHIR() {
   // Dashboard
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Simulador de Prontuário Eletrônico (FHIR)</h1>
-            <p className="text-muted-foreground">Navegue um prontuário clínico longitudinal — solicite exames, revise histórico e prescreva ao longo de várias consultas, vendo em cada seção como os dados trafegam como recursos FHIR.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador de Prontuário Eletrônico (FHIR)" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Simulador de Prontuário Eletrônico (FHIR)"
+        description="Navegue um prontuário clínico longitudinal — solicite exames, revise histórico e prescreva ao longo de várias consultas, vendo em cada seção como os dados trafegam como recursos FHIR."
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador de Prontuário Eletrônico (FHIR)" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+      >
           {allCases.map((c: any, i: number) => (
             c.isAI ? (
               <AICaseCard key={c.id || i} caseItem={c} onClick={() => startCase(i)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
@@ -315,8 +313,7 @@ export default function SimuladorProntuarioFHIR() {
               <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
             </div>
           </Card>
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -406,23 +403,19 @@ export default function SimuladorProntuarioFHIR() {
   const isLastEncounter = encounterIdx >= currentCase.encounters.length - 1;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Simulador de Prontuário Eletrônico (FHIR)"
+      caseTitle={currentCase.title}
+      difficulty={currentCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      {isVirtualRoom ? (
-        <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
-      ) : (
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-      )}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase.title} examProgress={examProgress} />
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">{currentCase.title}</h2>
-        <Badge variant="outline">{currentEncounter.label} ({encounterIdx + 1}/{currentCase.encounters.length})</Badge>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Patient snapshot */}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />{currentEncounter.dateDescription}</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
@@ -436,8 +429,8 @@ export default function SimuladorProntuarioFHIR() {
             {Object.entries(currentEncounter.vitals).map(([k, v]) => <p key={k} className="text-xs">{k}: {v}</p>)}
           </CardContent>
         </Card>
-
-        {/* Chart tabs */}
+      }
+      stage={<>
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4" />Prontuário</CardTitle></CardHeader>
@@ -511,9 +504,8 @@ export default function SimuladorProntuarioFHIR() {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* Action cards for current encounter */}
+      </>}
+      controls={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Solicitar Exames</CardTitle></CardHeader>
@@ -566,19 +558,18 @@ export default function SimuladorProntuarioFHIR() {
           </CardContent>
         </Card>
       </div>
-
       {currentEncounter.educationalNote && isOrdersConfirmed && isPrescribingConfirmed && (
         <Card className="mt-4 border-primary/20 bg-primary/5">
           <CardContent className="text-sm p-4">📚 {currentEncounter.educationalNote}</CardContent>
         </Card>
       )}
-
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!isOrdersConfirmed || !isPrescribingConfirmed} onClick={goToNextEncounter}>
           <ClipboardList className="h-4 w-4 mr-2" />
           {isLastEncounter ? "Finalizar e Ver Relatório" : "Avançar para próxima consulta"}
         </Button>
       </div>
-    </div>
+      </>}
+    />
   );
 }

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +78,7 @@ const BUILT_IN_CASES: CaseData[] = [
 ];
 
 export default function SimuladorCascataPrescricao() {
+  const navigate = useNavigate();
   const SLUG = "cascata-prescricao";
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases(SLUG, BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase(SLUG, BUILT_IN_CASES);
@@ -136,15 +139,13 @@ export default function SimuladorCascataPrescricao() {
   // Dashboard
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Simulador de Cascata de Prescrição</h1>
-            <p className="text-muted-foreground">Identifique medicamentos prescritos para tratar efeitos adversos de outros medicamentos</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador Cascata de Prescrição" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Simulador de Cascata de Prescrição"
+        description="Identifique medicamentos prescritos para tratar efeitos adversos de outros medicamentos"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Simulador Cascata de Prescrição" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+      >
           {allCases.map((c: any, i: number) => (
             c.isAI ? (
               <AICaseCard key={c.id || i} caseItem={c} onClick={() => startCase(i)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
@@ -158,8 +159,7 @@ export default function SimuladorCascataPrescricao() {
               <p className="font-medium">{isGenerating ? "Gerando caso..." : "Gerar com IA"}</p>
             </div>
           </Card>
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -263,20 +263,19 @@ export default function SimuladorCascataPrescricao() {
 
   // Simulation
   return (
-    <div className="max-w-5xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Simulador de Cascata de Prescrição"
+      caseTitle={currentCase.title}
+      difficulty={currentCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      {isVirtualRoom ? (
-        <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
-      ) : (
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-      )}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase?.title} examProgress={examProgress} />
-      <h2 className="text-xl font-bold mb-4">{currentCase.title}</h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Patient */}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={currentCase?.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />Paciente</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
@@ -287,8 +286,10 @@ export default function SimuladorCascataPrescricao() {
             <ul className="list-disc list-inside">{currentCase.patient.diseases.map((d, i) => <li key={i} className="text-xs">{d}</li>)}</ul>
           </CardContent>
         </Card>
-
-        {/* Medication timeline & analysis */}
+      }
+      stage={<>
+      </>}
+      controls={<>
         <div className="lg:col-span-2 space-y-3">
           <p className="text-sm text-muted-foreground">Para cada medicamento, classifique como <strong>Original</strong> (início de tratamento) ou <strong>Cascata</strong> (prescrito para tratar efeito adverso de outro):</p>
           {currentCase.medications.map((med, i) => {
@@ -339,8 +340,6 @@ export default function SimuladorCascataPrescricao() {
             );
           })}
         </div>
-      </div>
-
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allAnswered} onClick={() => {
           if (currentCase) {
@@ -361,6 +360,7 @@ export default function SimuladorCascataPrescricao() {
           <ClipboardCheck className="h-4 w-4 mr-2" />Finalizar Análise
         </Button>
       </div>
-    </div>
+      </>}
+    />
   );
 }

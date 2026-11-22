@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Volume2, VolumeX, AlertTriangle, Sparkles, Loader2, Eye } from "lucide-react";
+import { Volume2, VolumeX, AlertTriangle, Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -415,16 +416,13 @@ export default function SimuladorBombaInfusao() {
   // ═══ DASHBOARD ═══
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/simuladores")} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />Voltar
-        </Button>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Simulador de Bomba de Infusão</h1>
-          <p className="text-muted-foreground">Treinamento de programação de bombas de seringa/equipo – Segurança do paciente</p>
-          <AdminPromptViewer toolSlug="sim-bomba-infusao" toolName="Simulador Bomba de Infusão" toolType="simulator" prompt={getNativePrompt("sim-bomba-infusao") || ""} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="bomba-infusao"
+        title="Simulador de Bomba de Infusão"
+        description="Treinamento de programação de bombas de seringa/equipo – Segurança do paciente"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-bomba-infusao" toolName="Simulador Bomba de Infusão" toolType="simulator" prompt={getNativePrompt("sim-bomba-infusao") || ""} />}
+      >
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startCase(i)}>
               <CardHeader className="pb-2">
@@ -454,24 +452,25 @@ export default function SimuladorBombaInfusao() {
               </div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
   // ═══ SIMULATOR SCREEN ═══
   return (
-    <div className="max-w-5xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug="bomba-infusao"
+      simulatorName="Simulador de Bomba de Infusão"
+      caseTitle={activeCase?.title ?? "Simulador de Bomba de Infusão"}
+      difficulty={activeCase?.difficulty}
+      onBack={isVR ? goBack : backToDashboard}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      <Button variant="ghost" onClick={isVR ? goBack : backToDashboard} className="mb-4">
-        <ArrowLeft className="h-4 w-4 mr-2" />{isVR ? "Voltar à Home" : "Voltar aos Casos"}
-      </Button>
-      <ExamBanner simulatorSlug="bomba-infusao" caseTitle={activeCase?.title} examProgress={examProgress} />
-      <h1 className="text-2xl font-bold mb-2">Simulador de Bomba de Infusão</h1>
-
-      {/* Case context card */}
+        <ExamBanner simulatorSlug="bomba-infusao" caseTitle={activeCase?.title} examProgress={examProgress} />
+      </>}
+      patient={<>
       {activeCase && (
         <Card className="mb-4 border-primary/30 bg-primary/5">
           <CardContent className="pt-4 pb-3">
@@ -504,8 +503,8 @@ export default function SimuladorBombaInfusao() {
           </CardContent>
         </Card>
       )}
-
-      {/* Drug Selection Dialog */}
+      </>}
+      stage={<>
       <Dialog open={drugDialogOpen} onOpenChange={setDrugDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Biblioteca de Drogas</DialogTitle></DialogHeader>
@@ -519,8 +518,6 @@ export default function SimuladorBombaInfusao() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Error Explanation Dialog */}
       <Dialog open={!!errorExplanation} onOpenChange={() => setErrorExplanation(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />Explicação Farmacológica</DialogTitle></DialogHeader>
@@ -533,8 +530,22 @@ export default function SimuladorBombaInfusao() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* ═══ PUMP BODY ═══ */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold text-sm mb-2">📐 Programação Mental</h3>
+          <p className="text-xs text-muted-foreground">Diferença entre infundir em mL/h (volume) vs. mcg/kg/min (concentração/dose). O modo Dose/Peso calcula automaticamente.</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold text-sm mb-2">⚠️ Atenção aos Detalhes</h3>
+          <p className="text-xs text-muted-foreground">O perigo de errar uma vírgula (1.0 vs 10) em drogas vasoativas. Hard limits protegem contra doses tóxicas.</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold text-sm mb-2">🔔 Gestão de Alarmes</h3>
+          <p className="text-xs text-muted-foreground">Priorize resolver o problema técnico (oclusão, ar) antes de reiniciar a droga. Silencie → resolva → retome.</p>
+        </div>
+      </div>
+      </>}
+      controls={<>
       <div className="rounded-2xl border-2 border-[hsl(var(--border))] bg-gradient-to-b from-[hsl(220,15%,18%)] to-[hsl(220,15%,12%)] p-4 md:p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -547,7 +558,6 @@ export default function SimuladorBombaInfusao() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
-          {/* LCD Screen */}
           <div className={`relative rounded-xl p-1 transition-all duration-300 ${isAlarm ? "ring-2 ring-destructive shadow-[0_0_20px_hsl(var(--destructive)/0.4)]" : isInfusing ? "ring-1 ring-primary/50" : ""}`}>
             <div className={`rounded-lg p-4 md:p-5 font-mono text-sm transition-colors duration-300 ${isAlarm ? "bg-[hsl(0,80%,8%)] text-red-400" : "bg-[hsl(160,60%,6%)] text-[hsl(160,100%,70%)]"}`}
               style={{ textShadow: isAlarm ? "0 0 8px hsl(0 80% 50% / 0.5)" : "0 0 8px hsl(160 100% 50% / 0.3)" }}
@@ -576,7 +586,6 @@ export default function SimuladorBombaInfusao() {
               )}
             </div>
 
-            {/* Indicator lights */}
             <div className="flex items-center gap-4 mt-3 px-2">
               <div className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-full border transition-all duration-300 ${isInfusing && infusingBlink ? "bg-green-500 border-green-400 shadow-[0_0_8px_hsl(120,60%,50%/0.6)]" : "bg-green-900/30 border-green-800/50"}`} />
@@ -593,7 +602,6 @@ export default function SimuladorBombaInfusao() {
             </div>
           </div>
 
-          {/* Keypad */}
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-3 gap-1.5">
               {["7","8","9","4","5","6","1","2","3",".","0",""].map((k, i) => (
@@ -622,7 +630,6 @@ export default function SimuladorBombaInfusao() {
           </div>
         </div>
 
-        {/* Mode Selection */}
         {mode === "menu" && pumpState === "stopped" && (
           <div className="mt-5 pt-4 border-t border-[hsl(220,15%,20%)]">
             <p className="text-xs font-mono text-muted-foreground mb-3 uppercase tracking-wider">Selecione o modo de operação:</p>
@@ -649,8 +656,8 @@ export default function SimuladorBombaInfusao() {
           </div>
         )}
       </div>
-
-      {/* VR Results */}
+      </>}
+      footer={<>
       {isVR && vrSubmitted && (
         !showVRFeedback ? (
           <div className="space-y-2 mt-4">
@@ -660,29 +667,14 @@ export default function SimuladorBombaInfusao() {
         ) : (
           <div className="space-y-2 mt-4">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-status-ok" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
               <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
           </div>
         )
       )}
-
-      {/* Educational Info */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold text-sm mb-2">📐 Programação Mental</h3>
-          <p className="text-xs text-muted-foreground">Diferença entre infundir em mL/h (volume) vs. mcg/kg/min (concentração/dose). O modo Dose/Peso calcula automaticamente.</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold text-sm mb-2">⚠️ Atenção aos Detalhes</h3>
-          <p className="text-xs text-muted-foreground">O perigo de errar uma vírgula (1.0 vs 10) em drogas vasoativas. Hard limits protegem contra doses tóxicas.</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold text-sm mb-2">🔔 Gestão de Alarmes</h3>
-          <p className="text-xs text-muted-foreground">Priorize resolver o problema técnico (oclusão, ar) antes de reiniciar a droga. Silencie → resolva → retome.</p>
-        </div>
-      </div>
-    </div>
+      </>}
+    />
   );
 }

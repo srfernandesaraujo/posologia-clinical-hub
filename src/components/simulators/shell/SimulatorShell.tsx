@@ -252,7 +252,7 @@ export function SimulatorWorkspace({
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
 
-      {isDesktop && !floating ? (
+      {isDesktop && !floating && (controls || challenge) ? (
         // Duas áreas lado a lado, cada uma com rolagem própria: o aluno lê a
         // questão e mexe na conduta à direita sem perder de vista os exames e
         // gráficos à esquerda. A divisória é arrastável e a largura fica salva.
@@ -273,11 +273,15 @@ export function SimulatorWorkspace({
               <div className="h-full space-y-4 overflow-y-auto overscroll-contain pb-16 pl-4">
                 {/* A conduta fica presa no topo enquanto o aluno rola as alternativas,
                     limitada a metade da altura (com rolagem própria) para não tomar o desafio. */}
-                {controls && (
+                {controls && (challenge ? (
                   <div className="sticky top-0 z-10 max-h-[50%] overflow-y-auto overscroll-contain bg-background pb-1 shadow-[0_12px_16px_-12px_hsl(var(--background))]">
                     {controls}
                   </div>
-                )}
+                ) : (
+                  // Sem Modo Desafio não há o que disputar espaço: a área de trabalho
+                  // ocupa a coluna inteira e rola junto com ela.
+                  <div className="space-y-4">{controls}</div>
+                ))}
                 {challenge && <DockedChallengeBar onUndock={() => setMode("float")} />}
                 <div ref={slotRef} />
               </div>

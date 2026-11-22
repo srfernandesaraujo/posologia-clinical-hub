@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { buildSimulatorDecisions, type SimDecision } from "@/lib/buildSimulatorDecisions";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Sparkles, Loader2, User, Pill, ClipboardCheck, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, User, Pill, ClipboardCheck, CheckCircle, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -90,6 +92,7 @@ const BUILT_IN_CASES: CaseData[] = [
 const PRM_LABELS: Record<string, string> = { Seguranca: "Segurança", Efetividade: "Efetividade", Indicacao: "Indicação", Adesao: "Adesão" };
 
 export default function SimuladorPRM() {
+  const navigate = useNavigate();
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("prm", BUILT_IN_CASES);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVRCase, goBack, submitResults, examProgress, examFeedback, proceedToNext, nativeCaseIndex } = useVirtualRoomCase("prm", BUILT_IN_CASES);
   const [screen, setScreen] = useState<"dashboard" | "sim" | "report">("dashboard");
@@ -162,15 +165,13 @@ export default function SimuladorPRM() {
 
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Simulador de PRM</h1>
-            <p className="text-muted-foreground">Problemas Relacionados a Medicamentos – Treine a avaliação de prescrições médicas</p>
-            <AdminPromptViewer toolSlug="sim-prm" toolName="Simulador PRM" toolType="simulator" prompt={getNativePrompt("sim-prm") || ""} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="prm"
+        title="Simulador de PRM"
+        description="Problemas Relacionados a Medicamentos – Treine a avaliação de prescrições médicas"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-prm" toolName="Simulador PRM" toolType="simulator" prompt={getNativePrompt("sim-prm") || ""} />}
+      >
           {allCases.map((c: any, i: number) => (
             <Card key={c.id || i} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => startCase(i)}>
               <CardHeader className="pb-2">
@@ -202,8 +203,7 @@ export default function SimuladorPRM() {
               </div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -273,8 +273,14 @@ export default function SimuladorPRM() {
 
   // Simulation screen
   return (
-    <div className="max-w-7xl mx-auto">
-      {examFeedback && examProgress && (
+    <SimulatorWorkspace
+      slug="prm"
+      simulatorName="Simulador de PRM"
+      caseTitle={currentCase.title}
+      difficulty={currentCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
         <ExamFeedbackOverlay
           score={examFeedback.score}
           simulatorSlug={examFeedback.simulatorSlug}
@@ -284,15 +290,9 @@ export default function SimuladorPRM() {
           isFinalActivity={examFeedback.isFinalActivity}
         />
       )}
-      {isVirtualRoom ? (
-        <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button>
-      ) : (
-        <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-      )}
-      <ExamBanner simulatorSlug="prm" caseTitle={currentCase?.title} examProgress={examProgress} />
-      <h2 className="text-xl font-bold mb-4">{currentCase.title}</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Patient profile */}
+        <ExamBanner simulatorSlug="prm" caseTitle={currentCase?.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />Perfil do Paciente</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
@@ -320,8 +320,8 @@ export default function SimuladorPRM() {
             )}
           </CardContent>
         </Card>
-
-        {/* Prescription */}
+      }
+      stage={<>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Pill className="h-4 w-4" />Prescrição Médica</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -339,8 +339,8 @@ export default function SimuladorPRM() {
             ))}
           </CardContent>
         </Card>
-
-        {/* Intervention panel */}
+      </>}
+      controls={<>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="h-4 w-4" />Análise</CardTitle></CardHeader>
           <CardContent>
@@ -374,7 +374,6 @@ export default function SimuladorPRM() {
             )}
           </CardContent>
         </Card>
-      </div>
       <div className="mt-6 flex justify-end">
         <Button size="lg" disabled={!allReviewed} onClick={() => {
           {
@@ -398,6 +397,7 @@ export default function SimuladorPRM() {
           <ClipboardCheck className="h-4 w-4 mr-2" />Finalizar Avaliação
         </Button>
       </div>
-    </div>
+      </>}
+    />
   );
 }

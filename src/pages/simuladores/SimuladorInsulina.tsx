@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { buildSimulatorDecisions, SimDecision } from "@/lib/buildSimulatorDecisions";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, AlertTriangle, Eye } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, BrainCircuit, Apple, Dumbbell, FileText, Eye } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -58,6 +60,7 @@ function calcISF(tdd: number, isAnalog: boolean) { return Math.round((isAnalog ?
 function estimateA1c(glycemics: number[]) { const avg = glycemics.reduce((a, b) => a + b, 0) / glycemics.length; return Math.round(((avg + 46.7) / 28.7) * 10) / 10; }
 
 export default function SimuladorInsulina() {
+  const navigate = useNavigate();
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("insulina", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("insulina", BUILT_IN);
   const [screen, setScreen] = useState<"dashboard" | "prontuario" | "prescricao" | "painel">("dashboard");
@@ -190,9 +193,14 @@ export default function SimuladorInsulina() {
 
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2 flex items-center gap-2"><BrainCircuit className="h-7 w-7 cursor-pointer" onClick={() => setScreen("dashboard")} />Simulador de Dose de Insulina</h1><p className="text-muted-foreground">Treinamento de insulinoterapia intensiva (Koda-Kimble)</p><AdminPromptViewer toolSlug="sim-insulina" toolName="Simulador Insulina" toolType="simulator" prompt={getNativePrompt("sim-insulina") || ""} /></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="insulina"
+        title="Simulador de Dose de Insulina"
+        description="Treinamento de insulinoterapia intensiva (Koda-Kimble)"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-insulina" toolName="Simulador Insulina" toolType="simulator" prompt={getNativePrompt("sim-insulina") || ""} />}
+        footer={<p className="text-center text-xs text-muted-foreground">Applied Therapeutics • Sergio Araujo</p>}
+      >
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
@@ -219,9 +227,7 @@ export default function SimuladorInsulina() {
               <div className="text-center p-6">{isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}<p className="font-medium">{isGenerating ? "Gerando..." : "Gerar com IA"}</p></div>
             </Card>
           )}
-        </div>
-        <p className="text-xs text-muted-foreground text-center mt-8">Applied Therapeutics • Sergio Araujo</p>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -299,14 +305,18 @@ export default function SimuladorInsulina() {
   const chartData = TIMES.map((t, i) => ({ time: t, value: glycemics[i] }));
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="ghost" onClick={() => setScreen("prescricao")}><ArrowLeft className="h-4 w-4 mr-2" />Prescrição</Button>
-        <BrainCircuit className="h-6 w-6 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => setScreen("dashboard")} />
-      </div>
+    <SimulatorWorkspace
+      slug="insulina"
+      simulatorName="Simulador de Dose de Insulina"
+      caseTitle={c.title}
+      difficulty={c.difficulty}
+      onBack={() => setScreen("prescricao")}
+      banners={<>
+
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Glycemic Profile */}
-        <Card className="lg:col-span-2">
+        <Card className="">
           <CardHeader className="pb-2"><CardTitle className="text-base">Perfil Glicêmico de 4 Pontos</CardTitle></CardHeader>
           <CardContent>
             <div className="h-[250px]">
@@ -330,12 +340,11 @@ export default function SimuladorInsulina() {
           </CardContent>
         </Card>
 
-        {/* Metas & Protocol */}
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-base">Metas</CardTitle></CardHeader>
             <CardContent className="text-sm space-y-1">
-              <div className="flex justify-between"><span>HbA1c estimada</span><span className={`font-bold ${hba1c <= 7 ? "text-green-600" : "text-red-600"}`}>{String(hba1c)}%</span></div>
+              <div className="flex justify-between"><span>HbA1c estimada</span><span className={`font-bold ${hba1c <= 7 ? "text-status-ok" : "text-red-600"}`}>{String(hba1c)}%</span></div>
               <div className="flex justify-between"><span>Glicemia média</span><span>{String(Math.round(glycemics.reduce((a, b) => a + b, 0) / 4))} mg/dL</span></div>
               <div className="flex justify-between"><span>PA</span><span>{c.patient.bp}</span></div>
               <div className="flex justify-between"><span>LDL</span><span>{String(c.patient.lipidProfile.ldl)} mg/dL</span></div>
@@ -366,27 +375,6 @@ export default function SimuladorInsulina() {
           </Card>
         </div>
       </div>
-
-      {/* VR Results */}
-      {isVirtualRoom && vrSubmitted && (
-        !showVRFeedback ? (
-          <div className="space-y-2 mt-4">
-            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
-          </div>
-        ) : (
-          <div className="space-y-2 mt-4">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-green-600" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
-              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
-              <p className="text-xs text-muted-foreground">HbA1c estimada: {String(hba1c)}%</p>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
-          </div>
-        )
-      )}
-
-      {/* Preceptor Modal */}
       <Dialog open={preceptorOpen} onOpenChange={setPreceptorOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle className="flex items-center gap-2"><BrainCircuit className="h-5 w-5" />Parecer Clínico – Preceptor</DialogTitle></DialogHeader>
@@ -400,8 +388,29 @@ export default function SimuladorInsulina() {
           <DialogFooter>{preceptorFeedback && <Button onClick={confirmPreceptor}>Aplicar Mudança</Button>}</DialogFooter>
         </DialogContent>
       </Dialog>
-
+      </>}
+      controls={<>
+      </>}
+      footer={<>
+      {isVirtualRoom && vrSubmitted && (
+        !showVRFeedback ? (
+          <div className="space-y-2 mt-4">
+            <Button onClick={() => setShowVRFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+              <div className={`text-3xl font-bold ${vrScore >= 80 ? "text-status-ok" : vrScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{vrScore}%</div>
+              <p className="text-sm text-muted-foreground">{vrScore >= 80 ? "🏆 Excelente desempenho!" : vrScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+              <p className="text-xs text-muted-foreground">HbA1c estimada: {String(hba1c)}%</p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+          </div>
+        )
+      )}
       <p className="text-xs text-muted-foreground text-center mt-6">Applied Therapeutics • Sergio Araujo</p>
-    </div>
+      </>}
+    />
   );
 }

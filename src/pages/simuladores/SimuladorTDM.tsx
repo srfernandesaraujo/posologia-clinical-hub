@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Sparkles, Loader2, AlertTriangle, CheckCircle, Activity, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Loader2, AlertTriangle, CheckCircle, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
@@ -80,6 +82,7 @@ function generateCurveData(dose: number, interval: number, halfLife: number, vd:
 export default function SimuladorTDM() {
   const { allCases, generateCase, isGenerating, deleteCase, updateCase, copyCase, availableTargets, toggleCaseMarketplace } = useSimulatorCases("tdm", BUILT_IN);
   const { virtualRoomCase, isVirtualRoom, loading: loadingVR, goBack, submitResults, examProgress, examFeedback, proceedToNext } = useVirtualRoomCase("tdm", BUILT_IN);
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<"dashboard" | "sim" | "feedback">("dashboard");
   const [caseIdx, setCaseIdx] = useState(0);
   const [newDose, setNewDose] = useState("");
@@ -124,9 +127,13 @@ export default function SimuladorTDM() {
 
   if (screen === "dashboard") {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8"><h1 className="text-3xl font-bold mb-2">Simulador TDM</h1><p className="text-muted-foreground">Monitoramento Terapêutico de Fármacos – Ajuste de doses de medicamentos de baixo índice terapêutico</p><AdminPromptViewer toolSlug="sim-tdm" toolName="Simulador TDM" toolType="simulator" prompt={getNativePrompt("sim-tdm") || ""} /></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SimulatorCasePicker
+        slug="tdm"
+        title="Simulador TDM"
+        description="Monitoramento Terapêutico de Fármacos – Ajuste de doses de medicamentos de baixo índice terapêutico"
+        onBack={() => navigate("/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-tdm" toolName="Simulador TDM" toolType="simulator" prompt={getNativePrompt("sim-tdm") || ""} />}
+      >
           {allCases.map((cs: any, i: number) => (
             <Card key={cs.id || i} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => start(i)}>
               <CardHeader className="pb-2">
@@ -153,8 +160,7 @@ export default function SimuladorTDM() {
               <div className="text-center p-6">{isGenerating ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /> : <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}<p className="font-medium">{isGenerating ? "Gerando..." : "Gerar com IA"}</p></div>
             </Card>
           )}
-        </div>
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -163,14 +169,19 @@ export default function SimuladorTDM() {
   const troughStatus = (c.tdmResult.troughLevel ?? 0) > (c.therapeuticRange.troughMax ?? 0) ? "toxic" : (c.tdmResult.troughLevel ?? 0) < (c.therapeuticRange.troughMin ?? 0) ? "sub" : "ok";
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {examFeedback && examProgress && (
-        <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
-      )}
-      {isVirtualRoom ? <Button variant="ghost" onClick={goBack} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar à Home</Button> : <Button variant="ghost" onClick={() => setScreen("dashboard")} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
-      <ExamBanner simulatorSlug="tdm" caseTitle={c?.title} examProgress={examProgress} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Patient & Labs */}
+    <SimulatorWorkspace
+      slug="tdm"
+      simulatorName="Simulador TDM"
+      caseTitle={c.title}
+      difficulty={c.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setScreen("dashboard")}
+      banners={<>
+        {examFeedback && examProgress && (
+          <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={examFeedback.simulatorSlug} caseTitle={examFeedback.caseTitle} examProgress={examProgress} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
+        )}
+        <ExamBanner simulatorSlug="tdm" caseTitle={c?.title} examProgress={examProgress} />
+      </>}
+      patient={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4" />Paciente &amp; Labs</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
@@ -194,8 +205,8 @@ export default function SimuladorTDM() {
             <p className="text-xs text-muted-foreground"><strong>Meia-vida:</strong> {c.pharmacokineticData.halfLife}h | <strong>Vd:</strong> {c.pharmacokineticData.vd} L/kg | <strong>Eliminação:</strong> {c.pharmacokineticData.elimination}</p>
           </CardContent>
         </Card>
-
-        {/* Graph */}
+      }
+      stage={<>
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2"><CardTitle className="text-base">Curva Concentração x Tempo</CardTitle></CardHeader>
           <CardContent>
@@ -216,8 +227,8 @@ export default function SimuladorTDM() {
             <div className="flex gap-4 mt-2 text-xs"><span className="flex items-center gap-1"><div className="w-3 h-0.5 bg-red-500" />Atual</span>{submitted && <span className="flex items-center gap-1"><div className="w-3 h-0.5 bg-blue-500" />Novo esquema</span>}<span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500/20 border border-green-500 rounded" />Janela terapêutica</span></div>
           </CardContent>
         </Card>
-
-        {/* Adjustment panel */}
+      </>}
+      controls={
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Ajuste Posológico</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -260,7 +271,7 @@ export default function SimuladorTDM() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      }
+    />
   );
 }

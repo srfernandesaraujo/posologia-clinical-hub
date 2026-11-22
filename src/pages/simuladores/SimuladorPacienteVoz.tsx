@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -271,37 +272,19 @@ export default function SimuladorPacienteVoz() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Paciente-IA por Voz</h1>
-            <p className="text-muted-foreground">Treine anamnese e comunicação: converse por voz com um paciente simulado por IA. Limite de {DAILY_VOICE_TURN_CAP} turnos por dia.</p>
-            <AdminPromptViewer toolSlug="sim-paciente-ia-voz" toolName="Paciente-IA por Voz" toolType="simulator" prompt={getNativePrompt("sim-paciente-ia-voz") || ""} />
-          </div>
-        </div>
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Stethoscope className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => startCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard
-                key={c.id}
-                caseItem={c}
-                onClick={() => loadAICase(c)}
-                onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase}
-                availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace}
-              />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug="paciente-ia-voz"
+        title="Paciente-IA por Voz"
+        description={`Treine anamnese e comunicação: converse por voz com um paciente simulado por IA. Limite de ${DAILY_VOICE_TURN_CAP} turnos por dia.`}
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-paciente-ia-voz" toolName="Paciente-IA por Voz" toolType="simulator" prompt={getNativePrompt("sim-paciente-ia-voz") || ""} />}
+        footer={<Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => startCase(c)} />)}
+        {aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
@@ -341,22 +324,25 @@ export default function SimuladorPacienteVoz() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
+    <SimulatorWorkspace
+      slug="paciente-ia-voz"
+      simulatorName="Paciente-IA por Voz"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => setActiveCase(null)}
+      actions={<>
         {voiceUsage !== null && (
-          <Badge variant="secondary" className="ml-auto">{voiceUsage} de {DAILY_VOICE_TURN_CAP} turnos hoje</Badge>
+          <Badge variant="secondary">{voiceUsage} de {DAILY_VOICE_TURN_CAP} turnos hoje</Badge>
         )}
-      </div>
-
+      </>}
+      banners={<>
       {!ttsSupported && (
         <Card className="border-amber-500/40 bg-amber-500/5">
           <CardContent className="pt-4"><p className="text-xs text-muted-foreground">Este navegador não suporta leitura de voz — as respostas do paciente aparecem só como texto.</p></CardContent>
         </Card>
       )}
-
+      </>}
+      stage={<>
       <Card>
         <CardContent className="pt-4 space-y-3 max-h-[420px] overflow-y-auto" ref={scrollRef}>
           {turns.length === 0 && (
@@ -378,7 +364,8 @@ export default function SimuladorPacienteVoz() {
           )}
         </CardContent>
       </Card>
-
+      </>}
+      controls={<>
       {recorder.error && <p className="text-xs text-destructive">{recorder.error}</p>}
 
       <div className="flex gap-2">
@@ -397,6 +384,7 @@ export default function SimuladorPacienteVoz() {
       {ttsSupported && turns.some((t) => t.role === "assistant") && (
         <p className="text-xs text-muted-foreground flex items-center gap-1"><Volume2 className="h-3 w-3" /> As respostas do paciente são lidas em voz alta automaticamente.</p>
       )}
-    </div>
+      </>}
+    />
   );
 }
