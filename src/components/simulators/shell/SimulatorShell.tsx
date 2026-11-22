@@ -240,7 +240,13 @@ export function SimulatorWorkspace({
             <ResizablePanel defaultSize={42} minSize={30} className="min-w-0">
               {/* pb-16: o botão flutuante do Oráculo não cobre a última linha do desafio */}
               <div className="h-full space-y-4 overflow-y-auto overscroll-contain pb-16 pl-4">
-                {controls}
+                {/* A conduta fica presa no topo enquanto o aluno rola as alternativas,
+                    limitada a metade da altura (com rolagem própria) para não tomar o desafio. */}
+                {controls && (
+                  <div className="sticky top-0 z-10 max-h-[50%] overflow-y-auto overscroll-contain bg-background pb-1 shadow-[0_12px_16px_-12px_hsl(var(--background))]">
+                    {controls}
+                  </div>
+                )}
                 {challenge}
               </div>
             </ResizablePanel>
