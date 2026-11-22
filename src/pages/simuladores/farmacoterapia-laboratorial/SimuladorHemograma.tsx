@@ -16,6 +16,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -366,75 +367,140 @@ export default function SimuladorHemograma() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Hemograma e Condutas Hematológicas</h1>
-            <p className="text-muted-foreground">Interprete o hemograma completo e ajuste a farmacoterapia com base nos resultados laboratoriais.</p>
-            <ShareToolButton toolSlug="farmacoterapia-hemograma" toolName="Hemograma e Condutas Hematológicas" /><AdminPromptViewer toolSlug="sim-farmacoterapia-hemograma" toolName="Hemograma" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-hemograma") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Droplets className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (<NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-hemograma"
+        title="Hemograma e Condutas Hematológicas"
+        description="Interprete o hemograma completo e ajuste a farmacoterapia com base nos resultados laboratoriais."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-hemograma" toolName="Hemograma e Condutas Hematológicas" /><AdminPromptViewer toolSlug="sim-farmacoterapia-hemograma" toolName="Hemograma" toolType="simulator" prompt={getNativePrompt("sim-farmacoterapia-hemograma") || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && (
+          <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA
+          </Button>
+        )}
+      >
+        {BUILT_IN_CASES.map((c, i) => (<NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />))}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   const leucColors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+  const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
+  const baseRows: [string, string][] = [
+    ["Hb", `${activeCase.baseLab.hb} g/dL`], ["Ht", `${activeCase.baseLab.ht}%`], ["VCM", `${activeCase.baseLab.vcm} fL`], ["HCM", `${activeCase.baseLab.hcm} pg`],
+    ["CHCM", `${activeCase.baseLab.chcm} g/dL`], ["RDW", `${activeCase.baseLab.rdw}%`], ["Leucócitos", activeCase.baseLab.leucocitos.toLocaleString("pt-BR")],
+    ["Neutrófilos", activeCase.baseLab.neutrofilos.toLocaleString("pt-BR")], ["Linfócitos", activeCase.baseLab.linfocitos.toLocaleString("pt-BR")],
+    ["Plaquetas", (activeCase.baseLab.plaquetas * 1000).toLocaleString("pt-BR")], ["Reticulócitos", `${activeCase.baseLab.reticulocitos}%`],
+    ["Ferritina", `${activeCase.baseLab.ferritina} ng/mL`], ["Ferro", `${activeCase.baseLab.ferro} µg/dL`], ["TIBC", `${activeCase.baseLab.tibc} µg/dL`],
+    ["B12", `${activeCase.baseLab.b12} pg/mL`], ["Folato", `${activeCase.baseLab.folato} ng/mL`],
+  ];
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+    <SimulatorWorkspace
+      slug="farmacoterapia-hemograma"
+      simulatorName="Hemograma e Condutas Hematológicas"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<ShareToolButton toolSlug="farmacoterapia-hemograma" toolName="Hemograma e Condutas Hematológicas" caseId={activeCase.title} />}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={<>
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <div className="flex flex-wrap gap-1.5">{activeCase.patient.specialGroup.map(g => <span key={g} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">{g}</span>)}</div>}
+        />
+        <ShellPanel title="Exames iniciais do caso">
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+            {baseRows.map(([k, v]) => (
+              <div key={k} className="flex min-w-0 items-baseline justify-between gap-2 border-b border-border/50 pb-1">
+                <dt className="truncate text-muted-foreground">{k}</dt>
+                <dd className="font-mono font-medium tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </ShellPanel>
+      </>}
+      stage={<>
+        <ShellPanel title="Painel laboratorial após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} />)}</div>
+        </ShellPanel>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-hemograma" toolName="Hemograma e Condutas Hematológicas" caseId={activeCase.title} /></div>
-      </div>
-
-
-      {/* Patient */}
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
-
-      {/* Lab Panel Gauges */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Painel Laboratorial (após tratamento)</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}
+        <ShellPanel title="Tendência laboratorial em 8 semanas" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <div className="space-y-4">
+            <p className="text-sm font-semibold">Hemoglobina (g/dL)</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={displayTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[(dataMin: number) => Math.max(0, Math.floor(dataMin - 1)), (dataMax: number) => Math.ceil(dataMax + 1)]} label={{ value: "Hb (g/dL)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip {...tooltipProps} />
+                <ReferenceLine y={12} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Ref ≥12", fill: "hsl(var(--chart-3))", fontSize: 10 }} />
+                <Line type="monotone" dataKey="hb" name="Hb" stroke="hsl(var(--destructive))" dot strokeWidth={2.5} />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="text-sm font-semibold">Leucócitos (/mm³)</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={displayTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Leuc/mm³", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip {...tooltipProps} />
+                <ReferenceLine y={4000} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" />
+                <ReferenceLine y={11000} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" />
+                <Line type="monotone" dataKey="leucocitos" name="Leucócitos" stroke="hsl(var(--chart-2))" dot strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
+        </ShellPanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Controls */}
-        <Card className="lg:col-span-1">
-          <CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
+          <ShellPanel title="Leucograma diferencial">
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart data={simulation.leucDifferential}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                <YAxis label={{ value: "/mm³", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip {...tooltipProps} formatter={(v: any, n: any, p: any) => [`${v.toLocaleString()} (${p.payload.pct}%)`, "Absoluto"]} />
+                <Bar dataKey="valor" name="Absoluto" radius={[4, 4, 0, 0]}>
+                  {simulation.leucDifferential.map((_, i) => <Cell key={i} fill={leucColors[i % leucColors.length]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ShellPanel>
+          <ShellPanel title="Risco de efeitos adversos (%)">
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart data={simulation.sideEffectData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                <YAxis domain={[0, 100]} label={{ value: "Risco (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip {...tooltipProps} />
+                <Bar dataKey="risco" name="Risco (%)" radius={[4, 4, 0, 0]}>
+                  {simulation.sideEffectData.map((e: any, i: number) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ShellPanel>
+        </div>
+      </>}
+      controls={
+        <ShellPanel title="Prescrição">
+          <div className="space-y-4">
             {selectedDrugIndices.map((dIdx, pos) => {
               const d = DRUGS[dIdx];
               return (
-                <div key={pos} className="rounded-lg border border-border p-3 space-y-2">
+                <div key={pos} className="space-y-2 rounded-lg border border-border p-3">
                   <div className="flex items-center gap-2">
                     <Select value={String(dIdx)} onValueChange={v => {
                       const newIdx = Number(v);
@@ -447,18 +513,17 @@ export default function SimuladorHemograma() {
                       </SelectContent>
                     </Select>
                     {selectedDrugIndices.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeDrug(pos)}>✕</Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeDrug(pos)} aria-label={`Remover ${d.name}`}>✕</Button>
                     )}
                   </div>
-                  <div>
-                    <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{drugDoses[pos]} {d.doseUnit}</span></div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{drugDoses[pos]} {d.doseUnit}</span></div>
                     <Slider value={[drugDoses[pos]]} onValueChange={([v]) => setDrugDoses(prev => prev.map((old, i) => i === pos ? v : old))} min={d.doseMin} max={d.doseMax} step={d.doseStep} />
-                    <p className="text-xs text-muted-foreground">{d.doseMin}–{d.doseMax} {d.doseUnit}</p>
+                    <div className="flex justify-between text-[10px] text-muted-foreground"><span>{d.doseMin}</span><span>{d.doseMax} {d.doseUnit}</span></div>
                   </div>
                 </div>
               );
             })}
-
             {selectedDrugIndices.length < 4 && (
               <Select onValueChange={v => addDrug(Number(v))}>
                 <SelectTrigger><SelectValue placeholder="+ Adicionar fármaco" /></SelectTrigger>
@@ -469,150 +534,45 @@ export default function SimuladorHemograma() {
                 </SelectContent>
               </Select>
             )}
-
             <Button className="w-full gap-2" onClick={handleStart} disabled={running}>
-              <Play className="h-4 w-4" /> {running ? "Simulando..." : "Iniciar Simulação"}
+              <Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 8 semanas"}
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Trend Charts */}
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Tendência Laboratorial (8 semanas)</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {/* Hb Trend */}
-            <p className="text-sm font-semibold">Hemoglobina (g/dL)</p>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={displayTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis
-                  domain={[(dataMin: number) => Math.max(0, Math.floor(dataMin - 1)), (dataMax: number) => Math.ceil(dataMax + 1)]}
-                  label={{ value: "Hb (g/dL)", angle: -90, position: "insideLeft" }}
-                  stroke="hsl(var(--muted-foreground))"
-                />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine y={12} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Ref ≥12", fill: "hsl(var(--chart-3))", fontSize: 10 }} />
-                <Line type="monotone" dataKey="hb" name="Hb" stroke="hsl(var(--destructive))" dot strokeWidth={2.5} />
-              </LineChart>
-            </ResponsiveContainer>
-
-            {/* Leucocytes Trend */}
-            <p className="text-sm font-semibold">Leucócitos (/mm³)</p>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={displayTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis label={{ value: "Leuc/mm³", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine y={4000} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" />
-                <ReferenceLine y={11000} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" />
-                <Line type="monotone" dataKey="leucocitos" name="Leucócitos" stroke="hsl(var(--chart-2))" dot strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Leucogram Differential + Side Effects */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Leucograma Diferencial</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={simulation.leucDifferential}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                <YAxis label={{ value: "/mm³", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: any, n: any, p: any) => [`${v.toLocaleString()} (${p.payload.pct}%)`, "Absoluto"]} />
-                <Bar dataKey="valor" name="Absoluto" radius={[4, 4, 0, 0]}>
-                  {simulation.leucDifferential.map((_, i) => <Cell key={i} fill={leucColors[i % leucColors.length]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">Risco de Efeitos Adversos</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={simulation.sideEffectData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                <YAxis domain={[0, 100]} label={{ value: "Risco (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="risco" name="Risco (%)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Initial Lab Values */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-2">🔬 Valores Laboratoriais Iniciais</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs">
-            <div><strong>Hb:</strong> {activeCase.baseLab.hb} g/dL</div>
-            <div><strong>Ht:</strong> {activeCase.baseLab.ht}%</div>
-            <div><strong>VCM:</strong> {activeCase.baseLab.vcm} fL</div>
-            <div><strong>HCM:</strong> {activeCase.baseLab.hcm} pg</div>
-            <div><strong>CHCM:</strong> {activeCase.baseLab.chcm} g/dL</div>
-            <div><strong>RDW:</strong> {activeCase.baseLab.rdw}%</div>
-            <div><strong>Leucócitos:</strong> {activeCase.baseLab.leucocitos.toLocaleString()}</div>
-            <div><strong>Neutrófilos:</strong> {activeCase.baseLab.neutrofilos.toLocaleString()}</div>
-            <div><strong>Linfócitos:</strong> {activeCase.baseLab.linfocitos.toLocaleString()}</div>
-            <div><strong>Plaquetas:</strong> {(activeCase.baseLab.plaquetas * 1000).toLocaleString()}</div>
-            <div><strong>Reticulócitos:</strong> {activeCase.baseLab.reticulocitos}%</div>
-            <div><strong>Ferritina:</strong> {activeCase.baseLab.ferritina} ng/mL</div>
-            <div><strong>Ferro:</strong> {activeCase.baseLab.ferro} µg/dL</div>
-            <div><strong>TIBC:</strong> {activeCase.baseLab.tibc} µg/dL</div>
-            <div><strong>B12:</strong> {activeCase.baseLab.b12} pg/mL</div>
-            <div><strong>Folato:</strong> {activeCase.baseLab.folato} ng/mL</div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Challenge Mode */}
-      {(() => {
-        const activeCaseIndex = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return (
-          <SimulatorChallengeMode
-            challengeSet={getHemogramaChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
-            simulatorState={{
-              drugs: selectedDrugs.map(d => d.name),
-              drugClasses: selectedDrugs.map(d => d.class),
-              doses: drugDoses,
-              labGauges: simulation.labGauges,
-              leucDifferential: simulation.leucDifferential,
-              sideEffectData: simulation.sideEffectData,
-              labTrend: simulation.labTrend,
-              lastLab: simulation.lastLab,
-              baseLab: activeCase.baseLab,
-            }}
-            onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }}
-          />
-        );
-      })()}
-
-      {/* Virtual Room Results */}
-      {isVirtualRoom && submitted && (
+        </ShellPanel>
+      }
+      challenge={
+        <SimulatorChallengeMode
+          challengeSet={getHemogramaChallenges(activeCaseIndex >= 0 ? activeCaseIndex : undefined)}
+          simulatorState={{
+            drugs: selectedDrugs.map(d => d.name),
+            drugClasses: selectedDrugs.map(d => d.class),
+            doses: drugDoses,
+            labGauges: simulation.labGauges,
+            leucDifferential: simulation.leucDifferential,
+            sideEffectData: simulation.sideEffectData,
+            labTrend: simulation.labTrend,
+            lastLab: simulation.lastLab,
+            baseLab: activeCase.baseLab,
+          }}
+          onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }}
+        />
+      }
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
-            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
+            <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button>
+            <p className="text-center text-xs text-muted-foreground">Resultados enviados ✓ — redirecionando em 15s…</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+            <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-status-crit"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
             </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
+            <p className="text-center text-xs text-muted-foreground">Redirecionando em 15s…</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

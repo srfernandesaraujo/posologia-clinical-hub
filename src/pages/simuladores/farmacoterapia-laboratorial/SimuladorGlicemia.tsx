@@ -15,6 +15,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, Area, AreaChart } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -41,7 +42,7 @@ function LabGauge({ name, value, unit, status }: { name: string; value: number; 
 
 function GlycemicZone({ jejum, pp }: { jejum: number; pp: number }) {
   const zone = jejum < 70 || pp < 70 ? "HIPOGLICEMIA" : jejum <= 130 && pp <= 180 ? "ALVO" : "HIPERGLICEMIA";
-  const zoneColor = zone === "HIPOGLICEMIA" ? "bg-destructive/20 border-destructive text-destructive" : zone === "ALVO" ? "bg-green-500/20 border-green-500 text-green-500" : "bg-chart-5/20 border-chart-5 text-chart-5";
+  const zoneColor = zone === "HIPOGLICEMIA" ? "bg-status-crit/10 border-status-crit/50 text-status-crit" : zone === "ALVO" ? "bg-status-ok/10 border-status-ok/50 text-status-ok" : "bg-status-warn/10 border-status-warn/50 text-status-warn";
   const icon = zone === "HIPOGLICEMIA" ? <TrendingDown className="h-5 w-5" /> : zone === "ALVO" ? <Activity className="h-5 w-5" /> : <TrendingUp className="h-5 w-5" />;
   return (
     <div className={`rounded-xl border-2 p-4 flex items-center gap-3 ${zoneColor}`}>
@@ -139,62 +140,92 @@ export default function SimuladorGlicemia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Glicemia, Diabetes e Insulinoterapia</h1>
-            <p className="text-muted-foreground">Interprete glicemia, HbA1c e perfil insulínico para ajuste farmacoterapêutico.</p>
-            <ShareToolButton toolSlug="farmacoterapia-glicemia" toolName="Glicemia, Diabetes e Insulinoterapia" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Glicemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-glicemia"
+        title="Glicemia, Diabetes e Insulinoterapia"
+        description="Interprete glicemia, HbA1c e perfil insulínico para ajustar o esquema antidiabético."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-glicemia" toolName="Glicemia, Diabetes e Insulinoterapia" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Glicemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
+
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-glicemia" toolName="Glicemia, Diabetes e Insulinoterapia" caseId={activeCase.title} /></div>
-      </div>
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
+    <SimulatorWorkspace
+      slug="farmacoterapia-glicemia"
+      simulatorName="Glicemia, Diabetes e Insulinoterapia"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<ShareToolButton toolSlug="farmacoterapia-glicemia" toolName="Glicemia, Diabetes e Insulinoterapia" caseId={activeCase.title} />}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <div className="flex flex-wrap gap-1.5">{activeCase.patient.specialGroup.map(g => <span key={g} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">{g}</span>)}</div>}
+        />
+      }
+      stage={<>
+        <GlycemicZone jejum={simulation.lastLab.jejum} pp={simulation.lastLab.pp} />
 
-      {/* Glycemic Zone indicator */}
-      <GlycemicZone jejum={simulation.lastLab.jejum} pp={simulation.lastLab.pp} />
+        <ShellPanel title="Painel glicêmico após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} />)}</div>
+        </ShellPanel>
 
-      {/* Lab Gauges */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Painel Glicêmico (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
-      </Card>
+        <ShellPanel title="Curva glicêmica em 7 dias" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <p className="mb-2 text-[11px] text-muted-foreground">Jejum e pós-prandial respondem em dias. A HbA1c do painel é a projeção de equilíbrio (~3 meses). Linha "Alvo PP 180" = meta pós-prandial; "Hipo 70" = limite de hipoglicemia.</p>
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={displayTrend}>
+              <defs>
+                <linearGradient id="gradJejum" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} /></linearGradient>
+                <linearGradient id="gradPP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} /></linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...tooltipProps} />
+              <ReferenceLine y={70} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: "Hipo 70", fill: "hsl(var(--destructive))", fontSize: 10 }} />
+              <ReferenceLine y={180} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" label={{ value: "Alvo PP 180", fill: "hsl(var(--chart-5))", fontSize: 10 }} />
+              <Area type="monotone" dataKey="jejum" name="Jejum" stroke="hsl(var(--chart-1))" fill="url(#gradJejum)" strokeWidth={2} />
+              <Area type="monotone" dataKey="pp" name="Pós-prandial" stroke="hsl(var(--chart-2))" fill="url(#gradPP)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ShellPanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Controls */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <ShellPanel title="Risco de efeitos adversos (%)" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 90 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={90} />
+              <Tooltip {...tooltipProps} />
+              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Prescrição">
+          <div className="space-y-4">
             {(activeCase.regimen?.length ?? 0) > 0 && (
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+              <div className="space-y-3 rounded-lg border border-border bg-background/40 p-3">
                 <p className="text-xs font-semibold">Esquema atual do paciente</p>
                 <p className="text-[11px] text-muted-foreground">O laboratório do caso já é COM este esquema. Desligue um item para suspendê-lo (o painel desfaz o efeito dele) ou ajuste a dose.</p>
                 {activeCase.regimen!.map(r => {
@@ -209,92 +240,46 @@ export default function SimuladorGlicemia() {
                       </div>
                       {on && (
                         <>
-                          <div className="flex justify-between"><span className="text-[11px]">Dose do esquema</span><span className="text-[11px] font-bold">{cur} {dr.doseUnit}</span></div>
+                          <div className="flex justify-between"><span className="text-[11px] text-muted-foreground">Dose do esquema</span><span className="font-mono text-[11px] font-semibold">{cur} {dr.doseUnit}</span></div>
                           <Slider value={[cur]} onValueChange={([v]) => setRegDoses(d => ({ ...d, [r.drug]: v }))} min={dr.doseMin} max={dr.doseMax} step={dr.doseStep} />
                         </>
                       )}
-                      {replacedNow && <p className="text-[10px] text-chart-5">Este fármaco também está em "Prescrição": a dose da Prescrição substitui a do esquema.</p>}
+                      {replacedNow && <p className="text-[10px] text-status-warn">Este fármaco também está em "Prescrição": a dose da Prescrição substitui a do esquema.</p>}
                     </div>
                   );
                 })}
-                {simulation.keptOverRenal.length > 0 && <p className="text-[11px] font-semibold text-destructive">Acima do limite para a TFG ({activeCase.baseLab.tfg} mL/min): {simulation.keptOverRenal.join(", ")}.</p>}
+                {simulation.keptOverRenal.length > 0 && <p className="text-[11px] font-semibold text-status-crit">Acima do limite para a TFG ({activeCase.baseLab.tfg} mL/min): {simulation.keptOverRenal.join(", ")}.</p>}
               </div>
             )}
-            <p className="text-xs font-semibold">{(activeCase.regimen?.length ?? 0) > 0 ? "Fármaco a adicionar (Prescrição)" : "Prescrição"}</p>
+            <p className="text-xs font-semibold">{(activeCase.regimen?.length ?? 0) > 0 ? "Fármaco a adicionar" : "Fármaco"}</p>
             <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.noDose ? d.name : `${d.name} (${d.class})`}</SelectItem>)}</SelectContent>
             </Select>
             {!selectedDrug.noDose && (
-              <div>
-                <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{dose} {selectedDrug.doseUnit}</span></div>
                 <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
                 {simulation.renalMax !== null && (
-                  <p className={`text-[11px] mt-1 ${simulation.overRenal ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                  <p className={`text-[11px] ${simulation.overRenal ? "font-semibold text-status-crit" : "text-muted-foreground"}`}>
                     {simulation.renalMax === 0 ? `Contraindicada com TFG ${activeCase.baseLab.tfg} mL/min.` : `Limite para TFG ${activeCase.baseLab.tfg} mL/min: ≤ ${simulation.renalMax} ${selectedDrug.doseUnit}.`}
                   </p>
                 )}
               </div>
             )}
             {activeCase.hba1cTarget !== undefined && (
-              <div className={`rounded-lg border p-2 text-xs ${simulation.lastLab.hba1c <= activeCase.hba1cTarget ? "border-green-500/40 bg-green-500/10" : "border-chart-5/40 bg-chart-5/10"}`}>
+              <div className={`rounded-lg border p-2.5 text-xs ${simulation.lastLab.hba1c <= activeCase.hba1cTarget ? "border-status-ok/40 bg-status-ok/10" : "border-status-warn/40 bg-status-warn/10"}`}>
                 <strong>Meta de HbA1c do caso: até {activeCase.hba1cTarget}%</strong> — projeção atual {simulation.lastLab.hba1c}% ({simulation.lastLab.hba1c <= activeCase.hba1cTarget ? "dentro da meta" : "acima da meta"}).
               </div>
             )}
-            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
-          </CardContent>
-        </Card>
-
-        {/* Trend */}
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Curva Glicêmica (7 dias)</CardTitle>
-            <p className="text-[11px] text-muted-foreground">Jejum e pós-prandial respondem em dias. A HbA1c do painel é a projeção de equilíbrio (~3 meses). Linha "Alvo PP 180" = meta pós-prandial; "Hipo 70" = limite de hipoglicemia.</p></CardHeader>
-          <CardContent className="space-y-4">
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={displayTrend}>
-                <defs>
-                  <linearGradient id="gradJejum" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} /></linearGradient>
-                  <linearGradient id="gradPP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} /></linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine y={70} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: "Hipo 70", fill: "hsl(var(--destructive))", fontSize: 10 }} />
-                <ReferenceLine y={180} stroke="hsl(var(--chart-5))" strokeDasharray="5 5" label={{ value: "Alvo PP 180", fill: "hsl(var(--chart-5))", fontSize: 10 }} />
-                <Area type="monotone" dataKey="jejum" name="Jejum" stroke="hsl(var(--chart-1))" fill="url(#gradJejum)" strokeWidth={2} />
-                <Area type="monotone" dataKey="pp" name="Pós-prandial" stroke="hsl(var(--chart-2))" fill="url(#gradPP)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Side Effects */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Efeitos Adversos</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 90 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={90} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Challenges */}
-      {(() => {
-        const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return <SimulatorChallengeMode challengeSet={getGlicemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, kept, regDoses, regimen: activeCase.regimen ?? [], hba1cTarget: activeCase.hba1cTarget, renalMax: simulation.renalMax, overRenal: simulation.overRenal, keptOverRenal: simulation.keptOverRenal, untreated: simulation.untreated }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
-      })()}
-
-      {isVirtualRoom && submitted && (!showFeedback ? (
-        <Card className="border-green-500/30 bg-green-500/5"><CardContent className="pt-4 text-center"><p className="text-green-500 font-bold">✅ Resultados enviados!</p><p className="text-muted-foreground text-sm">Redirecionando em 15s...</p></CardContent></Card>
-      ) : null)}
-    </div>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 7 dias"}</Button>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getGlicemiaLabChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, kept, regDoses, regimen: activeCase.regimen ?? [], hba1cTarget: activeCase.hba1cTarget, renalMax: simulation.renalMax, overRenal: simulation.overRenal, keptOverRenal: simulation.keptOverRenal, untreated: simulation.untreated }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && !showFeedback && (
+        <div className="rounded-xl border border-status-ok/30 bg-status-ok/5 p-4 text-center"><p className="font-semibold text-status-ok">✅ Resultados enviados!</p><p className="text-sm text-muted-foreground">Redirecionando em 15s…</p></div>
+      )}
+    />
   );
 }

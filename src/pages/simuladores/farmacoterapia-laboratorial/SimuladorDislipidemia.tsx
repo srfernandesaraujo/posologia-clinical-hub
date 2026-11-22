@@ -16,6 +16,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, Legend } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -68,7 +69,10 @@ const slotsFromCase = (c: LipidCase | null): Slot[] => {
 };
 
 function LabGauge({ name, value, unit, color }: { name: string; value: number; unit: string; color: string }) {
-  return (<div className={`rounded-lg border p-3 text-center ${color.includes("destructive") ? "bg-destructive/10 border-destructive/30" : color.includes("green") ? "bg-green-500/10 border-green-500/30" : "bg-chart-5/10 border-chart-5/30"}`}><p className="text-xs text-muted-foreground font-medium">{name}</p><p className={`text-lg font-mono font-bold ${color}`}>{value}</p><p className="text-[10px] text-muted-foreground">{unit}</p></div>);
+  // Mesmo visual do LabValueTile: cor do motor traduzida para os tons clínicos (crítico / atenção / normal).
+  const tone = color.includes("destructive") ? "border-status-crit/40 bg-status-crit/5 text-status-crit" : color.includes("green") ? "border-border bg-card text-status-ok" : "border-status-warn/30 bg-status-warn/5 text-status-warn";
+  const label = color.includes("destructive") ? "Fora da meta" : color.includes("green") ? "Na meta" : "Atenção";
+  return (<div className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2.5 ${tone}`}><span className="truncate text-[11px] font-medium text-muted-foreground">{name}</span><span className="font-mono text-lg font-semibold tabular-nums text-foreground">{value}</span><span className="text-[10px] text-muted-foreground">{unit}</span><span className="text-[10px] font-semibold uppercase tracking-wide">{label}</span></div>);
 }
 
 export default function SimuladorDislipidemia() {
@@ -132,85 +136,102 @@ export default function SimuladorDislipidemia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Dislipidemia e Risco Cardiovascular</h1><p className="text-muted-foreground">Interprete lipidograma, calcule risco CV e ajuste hipolipemiantes.</p><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Dislipidemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card><CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader><CardContent className="space-y-3">
-          {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-          {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
-          {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-        </CardContent></Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-dislipidemia"
+        title="Dislipidemia e Risco Cardiovascular"
+        description="Interprete o lipidograma, considere o risco cardiovascular e ajuste o esquema hipolipemiante."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Dislipidemia" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+      </SimulatorCasePicker>
     );
   }
 
   const setSlotDrug = (i: number, v: number) => setSlots(prev => prev.map((s, k) => k === i ? { idx: v, dose: v >= 0 ? DRUGS[v].doseMin : 0 } : s));
   const setSlotDose = (i: number, dose: number) => setSlots(prev => prev.map((s, k) => k === i ? { ...s, dose } : s));
   const bgLabel = activeCase.background?.length ? activeCase.background.map(b => `${b.name} ${b.dose} ${drugByName(b.name)?.doseUnit ?? ""}`).join(" + ") : null;
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
+  const challengeState = {
+    drug: regimen[0]?.name ?? "Nenhum", dose: regimen[0]?.dose ?? 0, regimen, drugs: regimen.map(r => r.name), nDrugs: regimen.length, lifestyleOn,
+    sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, apoB: simulation.apoB, cpk: simulation.cpk,
+    ldlTarget: activeCase.ldlTarget, nonHdlTarget, tgTarget: activeCase.tgTarget, riskLevel: activeCase.riskLevel, atTarget, atNonHdlTarget, atTgTarget, ldlReduction, unchanged: simulation.unchanged,
+  };
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">{!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}<h2 className="text-xl font-bold">{activeCase.title}</h2><Badge className={riskColor(activeCase.riskLevel)}>Risco {activeCase.riskLevel}</Badge><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" caseId={activeCase.title} /></div></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p>{bgLabel && <p className="text-xs"><strong>Esquema em uso:</strong> {bgLabel}</p>}</CardContent></Card>
-
-      {/* Lipid Gauges */}
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Lipidograma (após 8 semanas do esquema escolhido)</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        <LabGauge name="CT" value={simulation.lastLab.ct} unit="mg/dL" color={simulation.lastLab.ct > 200 ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="LDL" value={simulation.lastLab.ldl} unit="mg/dL" color={simulation.lastLab.ldl > activeCase.ldlTarget ? "text-destructive" : "text-green-500"} />
-        <LabGauge name="Não-HDL (CT − HDL)" value={simulation.lastLab.nonHdl} unit="mg/dL" color={simulation.lastLab.nonHdl >= nonHdlTarget ? "text-destructive" : "text-green-500"} />
-        <LabGauge name="HDL" value={simulation.lastLab.hdl} unit="mg/dL" color={simulation.lastLab.hdl < 40 ? "text-destructive" : "text-green-500"} />
-        <LabGauge name="TG" value={simulation.lastLab.tg} unit="mg/dL" color={simulation.lastLab.tg > (activeCase.tgTarget ?? 150) ? "text-chart-5" : "text-green-500"} />
-        <LabGauge name="Apo-B" value={simulation.apoB} unit="mg/dL (acompanha o não-HDL)" color="text-chart-5" />
-        <LabGauge name="CPK" value={simulation.cpk} unit="U/L (ref. até ~200)" color={simulation.cpk > 200 ? "text-destructive" : "text-green-500"} />
-      </div></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">Esquema hipolipemiante</CardTitle></CardHeader><CardContent className="space-y-4">
-          {slots.map((slot, i) => {
-            const d = slot.idx >= 0 ? DRUGS[slot.idx] : null;
-            const taken = new Set(slots.filter((_, k) => k !== i && _.idx >= 0).map(x => x.idx));
-            return (
-              <div key={i} className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">{i === 0 ? "Fármaco 1" : `Associar fármaco ${i + 1}`}</p>
-                <Select value={String(slot.idx)} onValueChange={v => setSlotDrug(i, Number(v))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="-1">{i === 0 ? "Nenhum (sem hipolipemiante)" : "Nenhum"}</SelectItem>{DRUGS.map((dr, k) => <SelectItem key={k} value={String(k)} disabled={taken.has(k)}>{dr.name}</SelectItem>)}</SelectContent></Select>
-                {d && (d.doseMax > d.doseMin
-                  ? <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{slot.dose} {d.doseUnit}</span></div><Slider value={[slot.dose]} onValueChange={([v]) => setSlotDose(i, v)} min={d.doseMin} max={d.doseMax} step={d.doseStep} /></div>
-                  : <p className="text-xs">Dose fixa: <span className="font-bold">{d.doseMin} {d.doseUnit}</span></p>)}
-              </div>
-            );
-          })}
-          {activeCase.lifestyle && (
-            <div className="flex items-start gap-3 rounded-lg border p-3"><Switch checked={lifestyleOn} onCheckedChange={setLifestyleOn} /><div><p className="text-xs font-semibold">Medidas não farmacológicas</p><p className="text-[11px] text-muted-foreground">{activeCase.lifestyle.label}</p></div></div>
-          )}
-          <div className="rounded-lg border p-3 space-y-1">
-            <p className="text-xs font-semibold">Metas do caso (após 8 semanas)</p>
-            <p className={`text-xs ${atTarget ? "text-green-500" : "text-destructive"}`}>LDL &lt; {activeCase.ldlTarget}: <span className="font-mono font-bold">{simulation.lastLab.ldl}</span> {atTarget ? "✅" : `❌ (faltam ${simulation.lastLab.ldl - activeCase.ldlTarget})`} · variação {-ldlReduction}% em relação ao laboratório do caso</p>
-            <p className={`text-xs ${atNonHdlTarget ? "text-green-500" : "text-destructive"}`}>Não-HDL &lt; {nonHdlTarget}: <span className="font-mono font-bold">{simulation.lastLab.nonHdl}</span> {atNonHdlTarget ? "✅" : "❌"}</p>
-            {activeCase.tgTarget !== undefined && <p className={`text-xs ${atTgTarget ? "text-green-500" : "text-destructive"}`}>TG &lt; {activeCase.tgTarget}: <span className="font-mono font-bold">{simulation.lastLab.tg}</span> {atTgTarget ? "✅" : "❌"}</p>}
-            {primary && <p className="text-[10px] text-muted-foreground">Efeito pleno do 1º fármaco em ~{primary.weeksToEffect} semanas (o de ação mais lenta define a curva).</p>}
+    <SimulatorWorkspace
+      slug="farmacoterapia-dislipidemia"
+      simulatorName="Perfil Lipídico e Risco Cardiovascular"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<><Badge variant="outline" className={`border-current ${riskColor(activeCase.riskLevel)}`}>Risco {activeCase.riskLevel}</Badge><ShareToolButton toolSlug="farmacoterapia-dislipidemia" toolName="Perfil Lipídico e Risco Cardiovascular" caseId={activeCase.title} /></>}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} sex={activeCase.patient.sex} scenario={activeCase.scenario}>
+          {bgLabel && <p className="rounded-md bg-secondary/60 p-2 text-xs"><strong>Esquema em uso:</strong> {bgLabel}</p>}
+        </PatientCard>
+      }
+      stage={<>
+        <ShellPanel title="Lipidograma após 8 semanas do esquema escolhido" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <LabGauge name="CT" value={simulation.lastLab.ct} unit="mg/dL" color={simulation.lastLab.ct > 200 ? "text-chart-5" : "text-green-500"} />
+            <LabGauge name="LDL" value={simulation.lastLab.ldl} unit="mg/dL" color={simulation.lastLab.ldl > activeCase.ldlTarget ? "text-destructive" : "text-green-500"} />
+            <LabGauge name="Não-HDL (CT − HDL)" value={simulation.lastLab.nonHdl} unit="mg/dL" color={simulation.lastLab.nonHdl >= nonHdlTarget ? "text-destructive" : "text-green-500"} />
+            <LabGauge name="HDL" value={simulation.lastLab.hdl} unit="mg/dL" color={simulation.lastLab.hdl < 40 ? "text-destructive" : "text-green-500"} />
+            <LabGauge name="TG" value={simulation.lastLab.tg} unit="mg/dL" color={simulation.lastLab.tg > (activeCase.tgTarget ?? 150) ? "text-chart-5" : "text-green-500"} />
+            <LabGauge name="Apo-B" value={simulation.apoB} unit="mg/dL (acompanha o não-HDL)" color="text-chart-5" />
+            <LabGauge name="CPK" value={simulation.cpk} unit="U/L (ref. até ~200)" color={simulation.cpk > 200 ? "text-destructive" : "text-green-500"} />
           </div>
-          <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 8 semanas"}</Button>
-        </CardContent></Card>
-        <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (8 semanas)</CardTitle></CardHeader><CardContent>
-          <ResponsiveContainer width="100%" height={260}><LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis yAxisId="l" stroke="hsl(var(--muted-foreground))" label={{ value: "LDL / Não-HDL / HDL (mg/dL)", angle: -90, position: "insideLeft", fontSize: 9 }} /><YAxis yAxisId="r" orientation="right" stroke="hsl(var(--chart-3))" label={{ value: "TG (mg/dL)", angle: 90, position: "insideRight", fontSize: 9 }} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Line yAxisId="l" type="monotone" dataKey="ldl" name="LDL" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="nonHdl" name="Não-HDL" stroke="hsl(var(--chart-4))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="hdl" name="HDL" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line yAxisId="r" type="monotone" dataKey="tg" name="TG (eixo direito)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine yAxisId="l" y={activeCase.ldlTarget} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Meta LDL", fontSize: 9 }} /></LineChart></ResponsiveContainer>
-        </CardContent></Card>
-      </div>
+        </ShellPanel>
 
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de efeitos adversos (%) do esquema</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={140}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
+        <ShellPanel title="Tendência em 8 semanas" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <ResponsiveContainer width="100%" height={280}><LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="week" label={{ value: "Semana", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis yAxisId="l" stroke="hsl(var(--muted-foreground))" label={{ value: "LDL / Não-HDL / HDL (mg/dL)", angle: -90, position: "insideLeft", fontSize: 9 }} /><YAxis yAxisId="r" orientation="right" stroke="hsl(var(--chart-3))" label={{ value: "TG (mg/dL)", angle: 90, position: "insideRight", fontSize: 9 }} /><Tooltip {...tooltipProps} /><Legend wrapperStyle={{ fontSize: 11 }} /><Line yAxisId="l" type="monotone" dataKey="ldl" name="LDL" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="nonHdl" name="Não-HDL" stroke="hsl(var(--chart-4))" strokeWidth={2} dot /><Line yAxisId="l" type="monotone" dataKey="hdl" name="HDL" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line yAxisId="r" type="monotone" dataKey="tg" name="TG (eixo direito)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine yAxisId="l" y={activeCase.ldlTarget} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Meta LDL", fontSize: 9, fill: "hsl(var(--muted-foreground))" }} /></LineChart></ResponsiveContainer>
+        </ShellPanel>
 
-      {(() => {
-        const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        const state = {
-          drug: regimen[0]?.name ?? "Nenhum", dose: regimen[0]?.dose ?? 0, regimen, drugs: regimen.map(r => r.name), nDrugs: regimen.length, lifestyleOn,
-          sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, apoB: simulation.apoB, cpk: simulation.cpk,
-          ldlTarget: activeCase.ldlTarget, nonHdlTarget, tgTarget: activeCase.tgTarget, riskLevel: activeCase.riskLevel, atTarget, atNonHdlTarget, atTgTarget, ldlReduction, unchanged: simulation.unchanged,
-        };
-        return <SimulatorChallengeMode challengeSet={getDislipidemiaLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={state} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
-      })()}
-
-      {isVirtualRoom && submitted && <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button></div>}
-    </div>
+        <ShellPanel title="Risco de efeitos adversos (%) do esquema" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={150}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip {...tooltipProps} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar></BarChart></ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Esquema hipolipemiante">
+          <div className="space-y-4">
+            {slots.map((slot, i) => {
+              const d = slot.idx >= 0 ? DRUGS[slot.idx] : null;
+              const taken = new Set(slots.filter((_, k) => k !== i && _.idx >= 0).map(x => x.idx));
+              return (
+                <div key={i} className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground">{i === 0 ? "Fármaco 1" : `Associar fármaco ${i + 1}`}</p>
+                  <Select value={String(slot.idx)} onValueChange={v => setSlotDrug(i, Number(v))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="-1">{i === 0 ? "Nenhum (sem hipolipemiante)" : "Nenhum"}</SelectItem>{DRUGS.map((dr, k) => <SelectItem key={k} value={String(k)} disabled={taken.has(k)}>{dr.name}</SelectItem>)}</SelectContent></Select>
+                  {d && (d.doseMax > d.doseMin
+                    ? <div className="space-y-2"><div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{slot.dose} {d.doseUnit}</span></div><Slider value={[slot.dose]} onValueChange={([v]) => setSlotDose(i, v)} min={d.doseMin} max={d.doseMax} step={d.doseStep} /></div>
+                    : <p className="text-xs">Dose fixa: <span className="font-mono font-semibold">{d.doseMin} {d.doseUnit}</span></p>)}
+                </div>
+              );
+            })}
+            {activeCase.lifestyle && (
+              <div className="flex items-start gap-3 rounded-lg border border-border p-3"><Switch checked={lifestyleOn} onCheckedChange={setLifestyleOn} /><div><p className="text-xs font-semibold">Medidas não farmacológicas</p><p className="text-[11px] text-muted-foreground">{activeCase.lifestyle.label}</p></div></div>
+            )}
+            <div className="space-y-1 rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs font-semibold">Metas do caso (após 8 semanas)</p>
+              <p className={`text-xs ${atTarget ? "text-status-ok" : "text-status-crit"}`}>LDL &lt; {activeCase.ldlTarget}: <span className="font-mono font-bold">{simulation.lastLab.ldl}</span> {atTarget ? "✅" : `❌ (faltam ${simulation.lastLab.ldl - activeCase.ldlTarget})`} · variação {-ldlReduction}% em relação ao laboratório do caso</p>
+              <p className={`text-xs ${atNonHdlTarget ? "text-status-ok" : "text-status-crit"}`}>Não-HDL &lt; {nonHdlTarget}: <span className="font-mono font-bold">{simulation.lastLab.nonHdl}</span> {atNonHdlTarget ? "✅" : "❌"}</p>
+              {activeCase.tgTarget !== undefined && <p className={`text-xs ${atTgTarget ? "text-status-ok" : "text-status-crit"}`}>TG &lt; {activeCase.tgTarget}: <span className="font-mono font-bold">{simulation.lastLab.tg}</span> {atTgTarget ? "✅" : "❌"}</p>}
+              {primary && <p className="text-[10px] text-muted-foreground">Efeito pleno do 1º fármaco em ~{primary.weeksToEffect} semanas (o de ação mais lenta define a curva).</p>}
+            </div>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 8 semanas"}</Button>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getDislipidemiaLabChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={challengeState} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button></div>}
+    />
   );
 }

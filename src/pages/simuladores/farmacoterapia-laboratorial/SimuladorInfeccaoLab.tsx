@@ -15,6 +15,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -181,63 +182,81 @@ export default function SimuladorInfeccaoLab() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button><div><h1 className="text-2xl font-bold">Sinais Laboratoriais de Infecção</h1><p className="text-muted-foreground">Interprete leucograma, PCR, PCT e lactato para guiar antibioticoterapia.</p><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Infecção Lab" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></div></div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card><CardHeader><CardTitle className="flex items-center gap-2"><Bug className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader><CardContent className="space-y-3">
-          {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-          {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
-          {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-        </CardContent></Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-infeccao-lab"
+        title="Sinais Laboratoriais de Infecção"
+        description="Interprete leucograma, PCR, PCT e lactato para guiar a antibioticoterapia."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Infecção Lab" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+      </SimulatorCasePicker>
     );
   }
 
   const leucColors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">{!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}<h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge><div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" caseId={activeCase.title} /></div></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p><p className="text-xs font-mono bg-muted/50 p-2 rounded">Hemocultura: {activeCase.baseLab.hemocultura}</p></CardContent></Card>
+    <SimulatorWorkspace
+      slug="farmacoterapia-infeccao-lab"
+      simulatorName="Marcadores de Infecção e Antibioticoterapia"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<ShareToolButton toolSlug="farmacoterapia-infeccao-lab" toolName="Marcadores de Infecção e Antibioticoterapia" caseId={activeCase.title} />}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} sex={activeCase.patient.sex} scenario={activeCase.scenario}>
+          <p className="rounded-md bg-secondary/60 p-2 font-mono text-xs">Hemocultura: {activeCase.baseLab.hemocultura}</p>
+        </PatientCard>
+      }
+      stage={<>
+        <ShellPanel title="Marcadores após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} />)}</div>
+        </ShellPanel>
 
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Marcadores (após tratamento)</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent></Card>
+        <ShellPanel title="Tendência em 48 h" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <p className="mb-2 text-xs text-muted-foreground">Eixo esquerdo: PCR (mg/L). Eixo direito: PCT (ng/mL) e Lactato (mmol/L). A Temp (tracejada) usa uma escala própria de 36 a 41 °C; leia o valor exato no marcador Temp. Passe o mouse sobre os pontos para ver cada hora.</p>
+          <ResponsiveContainer width="100%" height={240}><LineChart data={displayTrend} margin={{ right: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="hour" label={{ value: "Horas", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis yAxisId="pcr" stroke="hsl(var(--chart-1))" /><YAxis yAxisId="pct" orientation="right" stroke="hsl(var(--chart-2))" /><YAxis yAxisId="temp" hide domain={[36, 41]} /><Tooltip {...tooltipProps} /><Legend /><Line yAxisId="pcr" type="monotone" dataKey="pcr" name="PCR (mg/L)" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line yAxisId="pct" type="monotone" dataKey="pct" name="PCT (ng/mL)" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line yAxisId="pct" type="monotone" dataKey="lactato" name="Lactato (mmol/L)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><Line yAxisId="temp" type="monotone" dataKey="temp" name="Temp (°C)" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="4 3" dot /></LineChart></ResponsiveContainer>
+        </ShellPanel>
 
-      {/* Cobertura do provável agente (só nos casos que a definem) */}
-      {activeCase.cobertura && (
-        <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4 space-y-1">
-          <p className="text-xs text-muted-foreground">Cobertura para o provável agente — {activeCase.cobertura.agentes}</p>
-          {simulation.cobertura === "adequada" && <p className="text-sm font-semibold text-green-600">{selectedDrug.name}: cobertura ADEQUADA{simulation.amploDemais ? " — espectro mais amplo que o necessário" : ""}</p>}
-          {simulation.cobertura === "parcial" && <p className="text-sm font-semibold text-chart-5">{selectedDrug.name}: cobertura PARCIAL — efeito reduzido sobre os marcadores</p>}
-          {simulation.cobertura === "inadequada" && <p className="text-sm font-semibold text-destructive">{selectedDrug.name}: cobertura INADEQUADA — sem efeito sobre os marcadores</p>}
-          {simulation.cobertura === "nenhuma" && <p className="text-sm font-semibold text-muted-foreground">Sem antimicrobiano: nenhum agente é tratado</p>}
-        </CardContent></Card>
-      )}
+        <ShellPanel title="Leucograma diferencial">
+          <ResponsiveContainer width="100%" height={140}><BarChart data={simulation.leucogramData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip {...tooltipProps} /><Bar dataKey="valor" name="/mm³">{simulation.leucogramData.map((_, i) => <Cell key={i} fill={leucColors[i % leucColors.length]} />)}</Bar></BarChart></ResponsiveContainer>
+        </ShellPanel>
 
-      {/* Leucogram */}
-      <Card><CardHeader><CardTitle className="text-base">Leucograma Diferencial</CardTitle></CardHeader><CardContent>
-        <ResponsiveContainer width="100%" height={120}><BarChart data={simulation.leucogramData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="valor" name="/mm³">{simulation.leucogramData.map((_, i) => <Cell key={i} fill={leucColors[i % leucColors.length]} />)}</Bar></BarChart></ResponsiveContainer>
-      </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">Antibioticoterapia</CardTitle></CardHeader><CardContent className="space-y-4">
-          <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name}</SelectItem>)}</SelectContent></Select>
-          <p className="text-[10px] text-muted-foreground">Espectro: {selectedDrug.spectrum}</p>
-          {selectedDrug.noDose ? <p className="text-xs text-muted-foreground">Sem dose: representa a conduta de não iniciar antimicrobiano e observar. Os marcadores ficam no valor do caso (o simulador não modela a evolução natural da doença).</p> : <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /></div>}
-          <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 48h"}</Button>
-        </CardContent></Card>
-        <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (48h)</CardTitle><p className="text-xs text-muted-foreground">Eixo esquerdo: PCR (mg/L). Eixo direito: PCT (ng/mL) e Lactato (mmol/L). A Temp (tracejada) usa uma escala própria de 36 a 41 °C; leia o valor exato no medidor Temp. Passe o mouse sobre os pontos para ver cada hora.</p></CardHeader><CardContent>
-          <ResponsiveContainer width="100%" height={220}><LineChart data={displayTrend} margin={{ right: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="hour" label={{ value: "Horas", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" /><YAxis yAxisId="pcr" stroke="hsl(var(--chart-1))" /><YAxis yAxisId="pct" orientation="right" stroke="hsl(var(--chart-2))" /><YAxis yAxisId="temp" hide domain={[36, 41]} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Legend /><Line yAxisId="pcr" type="monotone" dataKey="pcr" name="PCR (mg/L)" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line yAxisId="pct" type="monotone" dataKey="pct" name="PCT (ng/mL)" stroke="hsl(var(--chart-2))" strokeWidth={2} dot /><Line yAxisId="pct" type="monotone" dataKey="lactato" name="Lactato (mmol/L)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><Line yAxisId="temp" type="monotone" dataKey="temp" name="Temp (°C)" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="4 3" dot /></LineChart></ResponsiveContainer>
-        </CardContent></Card>
-      </div>
-
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Eventos Adversos (%)</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={120}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
-
-
-      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getInfeccaoLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, spectrum: selectedDrug.spectrum, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, leucogramData: simulation.leucogramData, cobertura: simulation.cobertura, amploDemais: simulation.amploDemais, semAntimicrobiano: simulation.semAntimicrobiano }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
-
-      {isVirtualRoom && submitted && <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button></div>}
-    </div>
+        <ShellPanel title="Risco de eventos adversos (%)" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={130}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip {...tooltipProps} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar></BarChart></ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Antibioticoterapia">
+          <div className="space-y-4">
+            <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name}</SelectItem>)}</SelectContent></Select>
+            <p className="text-[11px] text-muted-foreground">Espectro: {selectedDrug.spectrum}</p>
+            {selectedDrug.noDose ? <p className="text-xs text-muted-foreground">Sem dose: representa a conduta de não iniciar antimicrobiano e observar. Os marcadores ficam no valor do caso (o simulador não modela a evolução natural da doença).</p> : <div className="space-y-2"><div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /><div className="flex justify-between text-[10px] text-muted-foreground"><span>{selectedDrug.doseMin}</span><span>{selectedDrug.doseMax} {selectedDrug.doseUnit}</span></div></div>}
+            {activeCase.cobertura && (
+              <div className="space-y-1 rounded-lg border border-border bg-background/40 px-3 py-2.5">
+                <p className="text-[11px] text-muted-foreground">Cobertura para o provável agente · {activeCase.cobertura.agentes}</p>
+                {simulation.cobertura === "adequada" && <p className="text-sm font-semibold text-status-ok">{selectedDrug.name}: cobertura ADEQUADA{simulation.amploDemais ? " — espectro mais amplo que o necessário" : ""}</p>}
+                {simulation.cobertura === "parcial" && <p className="text-sm font-semibold text-status-warn">{selectedDrug.name}: cobertura PARCIAL — efeito reduzido sobre os marcadores</p>}
+                {simulation.cobertura === "inadequada" && <p className="text-sm font-semibold text-status-crit">{selectedDrug.name}: cobertura INADEQUADA — sem efeito sobre os marcadores</p>}
+                {simulation.cobertura === "nenhuma" && <p className="text-sm font-semibold text-muted-foreground">Sem antimicrobiano: nenhum agente é tratado</p>}
+              </div>
+            )}
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 48h"}</Button>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getInfeccaoLabChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, spectrum: selectedDrug.spectrum, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, leucogramData: simulation.leucogramData, cobertura: simulation.cobertura, amploDemais: simulation.amploDemais, semAntimicrobiano: simulation.semAntimicrobiano }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button></div>}
+    />
   );
 }

@@ -8,7 +8,7 @@ interface NativeCaseCardProps {
 
 export function NativeCaseCard({ caseItem: c, onClick }: NativeCaseCardProps) {
   const patient = c.patient;
-  const facts = [patient?.name, patient?.age !== undefined && `${patient.age} anos`].filter(Boolean).join(" · ");
+  const facts = [patient?.age !== undefined && `${patient.age} anos`, patient?.weight !== undefined && `${patient.weight} kg`, patient?.sex === "M" ? "Masculino" : patient?.sex === "F" ? "Feminino" : null].filter(Boolean).join(" · ");
   return (
     <button
       type="button"

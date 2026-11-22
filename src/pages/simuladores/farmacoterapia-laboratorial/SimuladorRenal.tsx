@@ -293,7 +293,7 @@ export default function SimuladorRenal() {
           <div className="space-y-2">
             <p className="text-[11px] text-muted-foreground">Cockcroft-Gault</p>
             <p className="font-mono text-3xl font-semibold tabular-nums text-primary">{clCr} <span className="text-sm text-muted-foreground">mL/min</span></p>
-            <div className="flex flex-wrap gap-1.5"><Badge className={drc.color}>DRC {drc.stage}</Badge>{isContraindicated && <Badge variant="destructive">Contraindicado com ClCr &lt;{selectedDrug.contraindicatedBelow}</Badge>}</div>
+            <div className="flex flex-wrap gap-1.5"><Badge variant="outline" className={`border-current ${drc.color}`}>DRC {drc.stage}</Badge>{isContraindicated && <Badge variant="destructive">Contraindicado com ClCr &lt;{selectedDrug.contraindicatedBelow}</Badge>}</div>
           </div>
         </ShellPanel>
       </>}

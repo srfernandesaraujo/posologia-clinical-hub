@@ -15,6 +15,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -240,117 +241,104 @@ export default function SimuladorCoagulacao() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Coagulação e Anticoagulantes</h1>
-            <p className="text-muted-foreground">Interprete INR, TTPa e coagulograma para manejo de anticoagulação.</p>
-            <ShareToolButton toolSlug="farmacoterapia-coagulacao" toolName="Coagulação e Anticoagulantes" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Coagulação" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-coagulacao"
+        title="Coagulação e Anticoagulantes"
+        description="Interprete INR, TTPa e coagulograma para conduzir a anticoagulação."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-coagulacao" toolName="Coagulação e Anticoagulantes" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Coagulação" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const tooltipProps = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }, labelStyle: { color: "hsl(var(--foreground))" }, itemStyle: { color: "hsl(var(--foreground))" } };
+  // Neste motor "alto" já é a faixa crítica e "elevado" é acima do normal.
+  const tileStatus = (s: string) => (s === "alto" ? "critico" : s === "elevado" ? "alto" : s);
+
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-coagulacao" toolName="Coagulação e Anticoagulantes" caseId={activeCase.title} /></div>
-      </div>
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
+    <SimulatorWorkspace
+      slug="farmacoterapia-coagulacao"
+      simulatorName="Coagulação e Anticoagulantes"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<ShareToolButton toolSlug="farmacoterapia-coagulacao" toolName="Coagulação e Anticoagulantes" caseId={activeCase.title} />}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <div className="flex flex-wrap gap-1.5">{activeCase.patient.specialGroup.map(g => <span key={g} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">{g}</span>)}</div>}
+        />
+      }
+      stage={<>
+        <BleedingRisk inr={simulation.lastLab.inr} ttpa={simulation.lastLab.ttpa} plaquetas={simulation.lastLab.plaquetas} hb={activeCase.baseLab.hb} />
 
-      {/* Bleeding Risk */}
-      <BleedingRisk inr={simulation.lastLab.inr} ttpa={simulation.lastLab.ttpa} plaquetas={simulation.lastLab.plaquetas} hb={activeCase.baseLab.hb} />
+        <ShellPanel title="Coagulograma após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} status={tileStatus(g.status)} />)}</div>
+        </ShellPanel>
 
-      {/* Lab Gauges */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Coagulograma (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
-      </Card>
+        <ShellPanel title="Tendência do coagulograma em 7 dias" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={displayTrend}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...tooltipProps} />
+              <ReferenceLine y={3} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: "INR 3", fill: "hsl(var(--destructive))", fontSize: 10 }} />
+              <Line type="monotone" dataKey="inr" name="INR" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
+              <Line type="monotone" dataKey="ttpa" name="TTPa" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
+              <Line type="monotone" dataKey="antiXa" name="Anti-Xa" stroke="hsl(var(--chart-3))" strokeWidth={2} dot />
+            </LineChart>
+          </ResponsiveContainer>
+        </ShellPanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Controls */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <ShellPanel title="Risco de efeitos adversos (%)" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 90 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={90} />
+              <Tooltip {...tooltipProps} />
+              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Prescrição">
+          <div className="space-y-4">
             <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DRUGS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem>)}</SelectContent>
             </Select>
-            <div>
-              <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{dose} {selectedDrug.doseUnit}</span></div>
               <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
+              <div className="flex justify-between text-[10px] text-muted-foreground"><span>{selectedDrug.doseMin}</span><span>{selectedDrug.doseMax} {selectedDrug.doseUnit}</span></div>
             </div>
-            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
-          </CardContent>
-        </Card>
-
-        {/* Trend */}
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Tendência do Coagulograma (7 dias)</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={displayTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine y={3} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: "INR 3", fill: "hsl(var(--destructive))", fontSize: 10 }} />
-                <Line type="monotone" dataKey="inr" name="INR" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
-                <Line type="monotone" dataKey="ttpa" name="TTPa" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
-                <Line type="monotone" dataKey="antiXa" name="Anti-Xa" stroke="hsl(var(--chart-3))" strokeWidth={2} dot />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Side Effects */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Efeitos Adversos</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 90 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={90} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Challenges */}
-      {(() => {
-        const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return <SimulatorChallengeMode challengeSet={getCoagulacaoLabChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
-      })()}
-
-      {isVirtualRoom && submitted && (!showFeedback ? (
-        <Card className="border-green-500/30 bg-green-500/5"><CardContent className="pt-4 text-center"><p className="text-green-500 font-bold">✅ Resultados enviados!</p><p className="text-muted-foreground text-sm">Redirecionando em 15s...</p></CardContent></Card>
-      ) : null)}
-    </div>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 7 dias"}</Button>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getCoagulacaoLabChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && !showFeedback && (
+        <div className="rounded-xl border border-status-ok/30 bg-status-ok/5 p-4 text-center"><p className="font-semibold text-status-ok">✅ Resultados enviados!</p><p className="text-sm text-muted-foreground">Redirecionando em 15s…</p></div>
+      )}
+    />
   );
 }

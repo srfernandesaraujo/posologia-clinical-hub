@@ -15,6 +15,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -294,62 +295,154 @@ export default function SimuladorHepatopatia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Hepatopatias e Ajuste Terapêutico</h1>
-            <p className="text-muted-foreground">Interprete hepatograma, calcule Child-Pugh e ajuste doses em hepatopatas.</p>
-            <ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Hepatopatias" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-hepatopatia"
+        title="Hepatopatias e Ajuste Terapêutico"
+        description="Interprete o hepatograma, calcule o Child-Pugh e ajuste doses em pacientes com doença hepática."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Hepatopatias" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <button type="button" className="ml-auto" title="Ver como o Child-Pugh é calculado" onClick={() => document.getElementById("card-child-pugh")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
-          <Badge className={`cursor-pointer ${cpColor}`}>Child-Pugh {childPugh.class} ({childPugh.score}pts) · ver cálculo</Badge>
+    <SimulatorWorkspace
+      slug="farmacoterapia-hepatopatia"
+      simulatorName="Hepatopatias e Ajuste Hepático"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<>
+        <button type="button" title="Ver como o Child-Pugh é calculado" onClick={() => document.getElementById("card-child-pugh")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+          <Badge variant="outline" className={`cursor-pointer border-current ${cpColor}`}>Child-Pugh {childPugh.class} ({childPugh.score} pts) · ver cálculo</Badge>
         </button>
         <ShareToolButton toolSlug="farmacoterapia-hepatopatia" toolName="Hepatopatias e Ajuste Hepático" caseId={activeCase.title} />
+      </>}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <div className="flex flex-wrap gap-1.5">{activeCase.patient.specialGroup.map(g => <span key={g} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">{g}</span>)}</div>}
+        />
+      }
+      stage={<>
+        <ShellPanel title="Hepatograma após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} />)}</div>
+        </ShellPanel>
 
-      </div>
+        <ShellPanel title="Tendência laboratorial em 7 dias" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <p className="mb-2 text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L) e Amônia (µmol/L), quando o caso a tem; o eixo não parte do zero, para destacar a variação; a linha pontilhada é o ALT basal. Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={displayTrend} margin={{ right: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis yAxisId="enz" domain={[(min: number) => Math.max(0, Math.floor(min * 0.85)), (max: number) => Math.ceil(max * 1.08)]} stroke="hsl(var(--muted-foreground))" />
+              <YAxis yAxisId="fn" orientation="right" domain={[0, "auto"]} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip {...TOOLTIP_STYLE} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <ReferenceLine yAxisId="enz" y={activeCase?.baseLab.alt} stroke="hsl(var(--chart-1))" strokeDasharray="2 4" strokeOpacity={0.5} label={{ value: "ALT basal", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
+              <Line yAxisId="enz" type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
+              {activeCase?.baseLab.nh3 !== undefined && <Line yAxisId="enz" type="monotone" dataKey="nh3" name="Amônia (µmol/L)" stroke="hsl(var(--primary))" strokeWidth={3} dot />}
+              <Line yAxisId="fn" type="monotone" dataKey="inr" name="INR (eixo dir.)" stroke="hsl(var(--chart-4))" strokeWidth={3} dot />
+              <Line yAxisId="fn" type="monotone" dataKey="bilirrubinaT" name="Bili T (eixo dir.)" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
+              <Line yAxisId="fn" type="monotone" dataKey="albumina" name="Albumina (eixo dir.)" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ShellPanel>
 
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
+        <div id="card-child-pugh" className="scroll-mt-20">
+          <ShellPanel title="Escore de Child-Pugh" aside={<Badge variant="outline" className={`border-current ${cpColor}`}>Classe {childPugh.class} · {childPugh.score} pts</Badge>}>
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">Soma de 5 variáveis (3 laboratoriais + 2 clínicas), cada uma valendo 1, 2 ou 3 pontos. Os valores laboratoriais usados são os do hepatograma acima (dia 7 do tratamento simulado); encefalopatia e ascite você define aqui.</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Encefalopatia</label>
+                  <Select value={String(encefalopatia)} onValueChange={v => setEncefalopatia(Number(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="1">Ausente</SelectItem><SelectItem value="2">Grau I-II</SelectItem><SelectItem value="3">Grau III-IV</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Ascite</label>
+                  <Select value={String(ascite)} onValueChange={v => setAscite(Number(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="1">Ausente</SelectItem><SelectItem value="2">Leve</SelectItem><SelectItem value="3">Mod-Grave</SelectItem></SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-1.5 pr-2 font-medium">Variável</th>
+                      <th className="py-1.5 pr-2 font-medium">Valor atual</th>
+                      <th className="py-1.5 pr-2 font-medium">1 ponto</th>
+                      <th className="py-1.5 pr-2 font-medium">2 pontos</th>
+                      <th className="py-1.5 pr-2 font-medium">3 pontos</th>
+                      <th className="py-1.5 text-right font-medium">Pontos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { name: "Bilirrubina total", value: `${simulation.lastLab.bilirrubinaT} mg/dL`, bands: ["< 2", "2 a 3", "> 3"], pts: childPugh.parts.bili },
+                      { name: "Albumina", value: `${simulation.lastLab.albumina} g/dL`, bands: ["> 3,5", "2,8 a 3,5", "< 2,8"], pts: childPugh.parts.alb },
+                      { name: "INR", value: `${simulation.lastLab.inr}`, bands: ["< 1,7", "1,7 a 2,3", "> 2,3"], pts: childPugh.parts.inr },
+                      { name: "Ascite", value: ["Ausente", "Leve", "Mod-Grave"][ascite - 1], bands: ["Ausente", "Leve", "Mod-Grave"], pts: childPugh.parts.ascite },
+                      { name: "Encefalopatia", value: ["Ausente", "Grau I-II", "Grau III-IV"][encefalopatia - 1], bands: ["Ausente", "Grau I-II", "Grau III-IV"], pts: childPugh.parts.encefalopatia },
+                    ].map(row => (
+                      <tr key={row.name} className="border-b border-border/50">
+                        <td className="py-1.5 pr-2 font-medium">{row.name}</td>
+                        <td className="py-1.5 pr-2 font-mono">{row.value}</td>
+                        {row.bands.map((b, i) => (
+                          <td key={i} className={`py-1.5 pr-2 ${row.pts === i + 1 ? "font-bold text-primary" : "text-muted-foreground"}`}>{b}</td>
+                        ))}
+                        <td className="py-1.5 text-right font-mono font-bold">{row.pts}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={5} className="py-1.5 pr-2 font-semibold">Total</td>
+                      <td className={`py-1.5 text-right font-mono font-bold ${cpColor}`}>{childPugh.score}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">Classe <strong>A</strong>: 5–6 pontos · <strong>B</strong>: 7–9 pontos · <strong>C</strong>: 10–15 pontos. Criado para pacientes com cirrose crônica.</p>
+            </div>
+          </ShellPanel>
+        </div>
 
-      {/* Lab Gauges */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Hepatograma (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${simulation.labGauges.length > 7 ? "md:grid-cols-8" : "md:grid-cols-7"}`}>{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Controls */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <ShellPanel title="Risco de efeitos adversos (%)" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={130}>
+            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} />
+              <Tooltip {...TOOLTIP_STYLE} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
+              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Prescrição">
+          <div className="space-y-4">
             <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DRUGS.map((d, i) => (!d.caseFlag || activeCase?.flags?.includes(d.caseFlag)) ? <SelectItem key={i} value={String(i)}>{d.name} ({d.class})</SelectItem> : null)}</SelectContent>
@@ -357,136 +450,22 @@ export default function SimuladorHepatopatia() {
             {selectedDrug.noDose ? (
               <p className="text-xs text-muted-foreground">Sem dose: representa uma conduta (retirar o agente causador, ou manter o esquema atual). Só tem efeito nos casos de lesão por fármaco de uso contínuo.</p>
             ) : (
-              <div>
-                <div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{dose} {selectedDrug.doseUnit}</span></div>
                 <Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>{selectedDrug.doseMin}</span><span>{selectedDrug.doseMax} {selectedDrug.doseUnit}</span></div>
               </div>
             )}
-            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
-          </CardContent>
-        </Card>
-
-        {/* Trend */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Tendência Laboratorial (7 dias)</CardTitle>
-            <p className="text-xs text-muted-foreground">Eixo esquerdo: ALT e AST (U/L) e Amônia (µmol/L), quando o caso a tem; o eixo não parte do zero, para destacar a variação; a linha pontilhada é o ALT basal). Eixo direito: INR, Bilirrubina T (mg/dL) e Albumina (g/dL) — escalas diferentes, por isso ficam em eixos separados.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={displayTrend} margin={{ right: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" label={{ value: "Dia", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="enz" domain={[(min: number) => Math.max(0, Math.floor(min * 0.85)), (max: number) => Math.ceil(max * 1.08)]} stroke="hsl(var(--muted-foreground))" />
-                <YAxis yAxisId="fn" orientation="right" domain={[0, "auto"]} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip {...TOOLTIP_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <ReferenceLine yAxisId="enz" y={activeCase?.baseLab.alt} stroke="hsl(var(--chart-1))" strokeDasharray="2 4" strokeOpacity={0.5} label={{ value: "ALT basal", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                <Line yAxisId="enz" type="monotone" dataKey="alt" name="ALT" stroke="hsl(var(--chart-1))" strokeWidth={2} dot />
-                <Line yAxisId="enz" type="monotone" dataKey="ast" name="AST" stroke="hsl(var(--chart-2))" strokeWidth={2} dot />
-                {activeCase?.baseLab.nh3 !== undefined && <Line yAxisId="enz" type="monotone" dataKey="nh3" name="Amônia (µmol/L)" stroke="hsl(var(--primary))" strokeWidth={3} dot />}
-                <Line yAxisId="fn" type="monotone" dataKey="inr" name="INR (eixo dir.)" stroke="hsl(var(--chart-4))" strokeWidth={3} dot />
-                <Line yAxisId="fn" type="monotone" dataKey="bilirrubinaT" name="Bili T (eixo dir.)" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
-                <Line yAxisId="fn" type="monotone" dataKey="albumina" name="Albumina (eixo dir.)" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Child-Pugh */}
-      <Card id="card-child-pugh" className="scroll-mt-20">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            Escore de Child-Pugh
-            <Badge className={cpColor}>Classe {childPugh.class} · {childPugh.score} pts</Badge>
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">Soma de 5 variáveis (3 laboratoriais + 2 clínicas), cada uma valendo 1, 2 ou 3 pontos. Os valores laboratoriais usados são os do Hepatograma acima (dia 7 do tratamento simulado); Encefalopatia e Ascite você define aqui.</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium">Encefalopatia</label>
-              <Select value={String(encefalopatia)} onValueChange={v => setEncefalopatia(Number(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="1">Ausente</SelectItem><SelectItem value="2">Grau I-II</SelectItem><SelectItem value="3">Grau III-IV</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs font-medium">Ascite</label>
-              <Select value={String(ascite)} onValueChange={v => setAscite(Number(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="1">Ausente</SelectItem><SelectItem value="2">Leve</SelectItem><SelectItem value="3">Mod-Grave</SelectItem></SelectContent>
-              </Select>
-            </div>
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 7 dias"}</Button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-1.5 pr-2 font-medium">Variável</th>
-                  <th className="py-1.5 pr-2 font-medium">Valor atual</th>
-                  <th className="py-1.5 pr-2 font-medium">1 ponto</th>
-                  <th className="py-1.5 pr-2 font-medium">2 pontos</th>
-                  <th className="py-1.5 pr-2 font-medium">3 pontos</th>
-                  <th className="py-1.5 text-right font-medium">Pontos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { name: "Bilirrubina total", value: `${simulation.lastLab.bilirrubinaT} mg/dL`, bands: ["< 2", "2 a 3", "> 3"], pts: childPugh.parts.bili },
-                  { name: "Albumina", value: `${simulation.lastLab.albumina} g/dL`, bands: ["> 3,5", "2,8 a 3,5", "< 2,8"], pts: childPugh.parts.alb },
-                  { name: "INR", value: `${simulation.lastLab.inr}`, bands: ["< 1,7", "1,7 a 2,3", "> 2,3"], pts: childPugh.parts.inr },
-                  { name: "Ascite", value: ["Ausente", "Leve", "Mod-Grave"][ascite - 1], bands: ["Ausente", "Leve", "Mod-Grave"], pts: childPugh.parts.ascite },
-                  { name: "Encefalopatia", value: ["Ausente", "Grau I-II", "Grau III-IV"][encefalopatia - 1], bands: ["Ausente", "Grau I-II", "Grau III-IV"], pts: childPugh.parts.encefalopatia },
-                ].map(row => (
-                  <tr key={row.name} className="border-b border-border/50">
-                    <td className="py-1.5 pr-2 font-medium">{row.name}</td>
-                    <td className="py-1.5 pr-2 font-mono">{row.value}</td>
-                    {row.bands.map((b, i) => (
-                      <td key={i} className={`py-1.5 pr-2 ${row.pts === i + 1 ? "font-bold text-primary" : "text-muted-foreground"}`}>{b}</td>
-                    ))}
-                    <td className="py-1.5 text-right font-mono font-bold">{row.pts}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={5} className="py-1.5 pr-2 font-semibold">Total</td>
-                  <td className={`py-1.5 text-right font-mono font-bold ${cpColor}`}>{childPugh.score}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-muted-foreground">Classe <strong>A</strong>: 5–6 pontos · <strong>B</strong>: 7–9 pontos · <strong>C</strong>: 10–15 pontos. Criado para pacientes com cirrose crônica.</p>
-        </CardContent>
-      </Card>
-
-      {/* Side Effects */}
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Efeitos Adversos</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} />
-              <Tooltip {...TOOLTIP_STYLE} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
-              <Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Challenges */}
-      {(() => {
-        const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
-        return <SimulatorChallengeMode challengeSet={getHeppatopatiaChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, childPugh, encefalopatia, ascite }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />;
-      })()}
-
-      {isVirtualRoom && submitted && (!showFeedback ? (
-        <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button><p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p></div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getHeppatopatiaChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, childPugh, encefalopatia, ascite }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && (!showFeedback ? (
+        <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button><p className="text-center text-xs text-muted-foreground">Resultados enviados ✓ — redirecionando em 15s…</p></div>
       ) : (
-        <div className="space-y-2"><div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div></div><p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p></div>
+        <div className="space-y-2"><div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-status-crit"}`}>{lastScore}%</div></div><p className="text-center text-xs text-muted-foreground">Redirecionando em 15s…</p></div>
       ))}
-    </div>
+    />
   );
 }
