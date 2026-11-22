@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -105,52 +105,38 @@ export default function SimuladorToleranciaDependencia() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Tolerância, Dependência e Abstinência</h1>
-            <p className="text-muted-foreground">Simule uso crônico de opioides, benzodiazepínicos e álcool e observe tolerância e síndrome de abstinência.</p>
-            <AdminPromptViewer toolSlug="sim-tolerancia-dependencia" toolName="Tolerância e Dependência" toolType="simulator" prompt={getNativePrompt("sim-tolerancia-dependencia") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Tolerância, Dependência e Abstinência"
+        description="Simule uso crônico de opioides, benzodiazepínicos e álcool e observe tolerância e síndrome de abstinência."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-tolerancia-dependencia" toolName="Tolerância e Dependência" toolType="simulator" prompt={getNativePrompt("sim-tolerancia-dependencia") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div className="border rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold">Classe Farmacológica</p>
-              {(["opioide", "benzodiazepínico", "álcool"] as const).map(d => (<button key={d} onClick={() => setDrugClass(d)} className={`w-full text-left p-2.5 rounded text-sm capitalize ${drugClass === d ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"}`}>{d}</button>))}
-            </div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Semanas de Uso</label><span className="text-sm font-bold">{weeksOfUse} sem</span></div><Slider value={[weeksOfUse]} onValueChange={([v]) => setWeeksOfUse(v)} min={1} max={40} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Escalação de Dose</label><span className="text-sm font-bold">{doseEscalation}%</span></div><Slider value={[doseEscalation]} onValueChange={([v]) => setDoseEscalation(v)} min={0} max={100} step={5} /></div>
-            
-          </CardContent>
-        </Card>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Tolerância, Dependência e Abstinência"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario} />
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Dinâmica Temporal</CardTitle></CardHeader>
           <CardContent>
@@ -172,11 +158,24 @@ export default function SimuladorToleranciaDependencia() {
             </p>
           </CardContent>
         </Card>
-      </div>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getToleranciaDependenciaChallenges()} simulatorState={{ drugClass, weeksOfUse, doseEscalation }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="border rounded-lg p-4 space-y-3">
+              <p className="text-sm font-semibold">Classe Farmacológica</p>
+              {(["opioide", "benzodiazepínico", "álcool"] as const).map(d => (<button key={d} onClick={() => setDrugClass(d)} className={`w-full text-left p-2.5 rounded text-sm capitalize ${drugClass === d ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"}`}>{d}</button>))}
+            </div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Semanas de Uso</label><span className="text-sm font-bold">{weeksOfUse} sem</span></div><Slider value={[weeksOfUse]} onValueChange={([v]) => setWeeksOfUse(v)} min={1} max={40} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Escalação de Dose</label><span className="text-sm font-bold">{doseEscalation}%</span></div><Slider value={[doseEscalation]} onValueChange={([v]) => setDoseEscalation(v)} min={0} max={100} step={5} /></div>
+            
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getToleranciaDependenciaChallenges()} simulatorState={{ drugClass, weeksOfUse, doseEscalation }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -185,13 +184,13 @@ export default function SimuladorToleranciaDependencia() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

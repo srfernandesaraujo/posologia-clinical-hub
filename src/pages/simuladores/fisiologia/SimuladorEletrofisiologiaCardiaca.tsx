@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, Heart } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
@@ -192,61 +192,65 @@ export default function SimuladorEletrofisiologiaCardiaca() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Eletrofisiologia Cardíaca</h1>
-            <p className="text-muted-foreground">Manipule canais iônicos e observe o potencial de ação cardíaco.</p>
-            <AdminPromptViewer toolSlug="sim-eletrofisiologia-cardiaca" toolName="Eletrofisiologia Cardíaca" toolType="simulator" prompt={getNativePrompt("sim-eletrofisiologia-cardiaca") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Gerar Caso com IA
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Eletrofisiologia Cardíaca"
+        description="Manipule canais iônicos e observe o potencial de ação cardíaco."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-eletrofisiologia-cardiaca" toolName="Eletrofisiologia Cardíaca" toolType="simulator" prompt={getNativePrompt("sim-eletrofisiologia-cardiaca") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && (
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Eletrofisiologia Cardíaca"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
-      <Card>
-        <CardContent className="pt-4 space-y-2">
-          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
-          <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
-          <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} scenario={activeCase.scenario}
+          extra={<div className="space-y-1"><p className="text-sm"><span className="text-muted-foreground">Diagnóstico:</span> <span className="font-medium">{activeCase.patient.diagnosis}</span></p></div>} />
+      }
+      stage={<>
+      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
+        <Card className="lg:col-span-2">
+          <CardHeader><CardTitle className="text-base">Potencial de Ação — {cellType === "ventricular" ? "Miócito Ventricular" : "Célula Nodal SA"}</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={apData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="ms" label={{ value: "Tempo (ms)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[-100, 60]} label={{ value: "mV", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+                <Line type="monotone" dataKey="mV" name="Potencial (mV)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2.5} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4">
+          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
+          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
-
-      {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      </>}
+      controls={
         <Card className="lg:col-span-1">
           <CardHeader><CardTitle className="text-base">Canais Iônicos</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -273,38 +277,13 @@ export default function SimuladorEletrofisiologiaCardiaca() {
             <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
           </CardContent>
         </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Potencial de Ação — {cellType === "ventricular" ? "Miócito Ventricular" : "Célula Nodal SA"}</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={apData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="ms" label={{ value: "Tempo (ms)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[-100, 60]} label={{ value: "mV", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-                <Line type="monotone" dataKey="mV" name="Potencial (mV)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2.5} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-        </CardContent>
-      </Card>
-
-      <SimulatorChallengeMode
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getEletrofisiologiaCardiacaChallenges()}
         simulatorState={{ na, k, ca }}
         onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         <Card className="border-primary/20">
           <CardContent className="pt-4 space-y-2">
             <Button variant="outline" className="w-full" onClick={() => setShowFeedback(!showFeedback)}>
@@ -318,6 +297,6 @@ export default function SimuladorEletrofisiologiaCardiaca() {
           </CardContent>
         </Card>
       )}
-    </div>
+    />
   );
 }

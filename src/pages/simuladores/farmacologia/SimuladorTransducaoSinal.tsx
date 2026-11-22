@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -93,64 +93,41 @@ export default function SimuladorTransducaoSinal() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Transdução de Sinal</h1>
-            <p className="text-muted-foreground">Visualize cascatas intracelulares (GPCR, tirosina quinase, ionotrópico, nuclear) e bloqueios farmacológicos.</p>
-            <AdminPromptViewer toolSlug="sim-transducao-sinal" toolName="Transdução de Sinal" toolType="simulator" prompt={getNativePrompt("sim-transducao-sinal") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Transdução de Sinal"
+        description="Visualize cascatas intracelulares (GPCR, tirosina quinase, ionotrópico, nuclear) e bloqueios farmacológicos."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-transducao-sinal" toolName="Transdução de Sinal" toolType="simulator" prompt={getNativePrompt("sim-transducao-sinal") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   const info = RECEPTOR_INFO[selectedReceptor];
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Receptor e Fármaco</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(RECEPTOR_INFO) as ReceptorType[]).map(r => (
-                <button key={r} onClick={() => setSelectedReceptor(r)} className={`p-2 rounded-lg border text-xs font-medium transition-colors ${selectedReceptor === r ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}>{RECEPTOR_INFO[r].name}</button>
-              ))}
-            </div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">[Agonista]</label><span className="text-sm font-bold">{agonistConc}%</span></div><Slider value={[agonistConc]} onValueChange={([v]) => setAgonistConc(v)} min={0} max={100} step={5} /></div>
-            <div className="border rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold">Bloqueio Farmacológico</p>
-              <div className="space-y-1">
-                <button onClick={() => setBlockStep(-1)} className={`w-full text-left text-xs p-2 rounded ${blockStep < 0 ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Nenhum bloqueio</button>
-                {info.cascade.map((_, i) => (
-                  <button key={i} onClick={() => setBlockStep(i)} className={`w-full text-left text-xs p-2 rounded ${blockStep === i ? "bg-destructive/10 text-destructive" : "hover:bg-muted"}`}>Bloquear etapa {i + 1}</button>
-                ))}
-              </div>
-              {blockStep >= 0 && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">Intensidade do bloqueio</label><span className="text-sm font-bold text-destructive">{blockIntensity}%</span></div><Slider value={[blockIntensity]} onValueChange={([v]) => setBlockIntensity(v)} min={0} max={100} step={5} /></div>)}
-            </div>
-            
-          </CardContent>
-        </Card>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Transdução de Sinal"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario}
+          extra={<div className="space-y-1"><p className="text-sm"><span className="text-muted-foreground">Diagnóstico:</span> <span className="font-medium">{activeCase.patient.diagnosis}</span></p></div>} />
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Cascata: {info.name}</CardTitle></CardHeader>
           <CardContent>
@@ -173,11 +150,34 @@ export default function SimuladorTransducaoSinal() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getTransducaoSinalChallenges()} simulatorState={{ selectedReceptor, blockStep, agonistConc, blockIntensity }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Receptor e Fármaco</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(RECEPTOR_INFO) as ReceptorType[]).map(r => (
+                <button key={r} onClick={() => setSelectedReceptor(r)} className={`p-2 rounded-lg border text-xs font-medium transition-colors ${selectedReceptor === r ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}>{RECEPTOR_INFO[r].name}</button>
+              ))}
+            </div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">[Agonista]</label><span className="text-sm font-bold">{agonistConc}%</span></div><Slider value={[agonistConc]} onValueChange={([v]) => setAgonistConc(v)} min={0} max={100} step={5} /></div>
+            <div className="border rounded-lg p-4 space-y-3">
+              <p className="text-sm font-semibold">Bloqueio Farmacológico</p>
+              <div className="space-y-1">
+                <button onClick={() => setBlockStep(-1)} className={`w-full text-left text-xs p-2 rounded ${blockStep < 0 ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>Nenhum bloqueio</button>
+                {info.cascade.map((_, i) => (
+                  <button key={i} onClick={() => setBlockStep(i)} className={`w-full text-left text-xs p-2 rounded ${blockStep === i ? "bg-destructive/10 text-destructive" : "hover:bg-muted"}`}>Bloquear etapa {i + 1}</button>
+                ))}
+              </div>
+              {blockStep >= 0 && (<div><div className="flex justify-between mb-2"><label className="text-sm font-medium text-destructive">Intensidade do bloqueio</label><span className="text-sm font-bold text-destructive">{blockIntensity}%</span></div><Slider value={[blockIntensity]} onValueChange={([v]) => setBlockIntensity(v)} min={0} max={100} step={5} /></div>)}
+            </div>
+            
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getTransducaoSinalChallenges()} simulatorState={{ selectedReceptor, blockStep, agonistConc, blockIntensity }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -186,13 +186,13 @@ export default function SimuladorTransducaoSinal() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

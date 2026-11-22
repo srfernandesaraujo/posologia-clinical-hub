@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -134,53 +134,38 @@ export default function SimuladorViasAdministracao() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Vias de Administração</h1>
-            <p className="text-muted-foreground">Compare perfis Cp×t para IV bolus, IV infusão, IM, SC, oral e sublingual.</p>
-            <AdminPromptViewer toolSlug="sim-vias-administracao" toolName="Vias de Administração" toolType="simulator" prompt={getNativePrompt("sim-vias-administracao") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Vias de Administração"
+        description="Compare perfis Cp×t para IV bolus, IV infusão, IM, SC, oral e sublingual."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-vias-administracao" toolName="Vias de Administração" toolType="simulator" prompt={getNativePrompt("sim-vias-administracao") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros Farmacocinéticos</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose (mg)</label><span className="text-sm font-bold">{dose}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={10} max={500} step={10} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Biodisponibilidade Global (%)</label><span className="text-sm font-bold">{bioFactor}%</span></div><Slider value={[bioFactor]} onValueChange={([v]) => setBioFactor(v)} min={10} max={100} step={5} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Taxa de Eliminação</label><span className="text-sm font-bold">{elimRate}</span></div><Slider value={[elimRate]} onValueChange={([v]) => setElimRate(v)} min={1} max={20} step={1} /></div>
-            <div className="border rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold">Vias de Administração</p>
-              {ROUTES.map(r => (<div key={r.key} className="flex items-center justify-between"><label className="text-sm">{r.label} (F={r.bioavail}%)</label><Switch checked={enabledRoutes.includes(r.key)} onCheckedChange={() => toggleRoute(r.key)} /></div>))}
-            </div>
-            
-          </CardContent>
-        </Card>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Vias de Administração"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario} />
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Perfil Cp×t Comparativo</CardTitle></CardHeader>
           <CardContent>
@@ -196,11 +181,25 @@ export default function SimuladorViasAdministracao() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getViasAdministracaoChallenges()} simulatorState={{ dose, enabledRoutes, bioFactor, elimRate }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Farmacocinéticos</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose (mg)</label><span className="text-sm font-bold">{dose}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={10} max={500} step={10} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Biodisponibilidade Global (%)</label><span className="text-sm font-bold">{bioFactor}%</span></div><Slider value={[bioFactor]} onValueChange={([v]) => setBioFactor(v)} min={10} max={100} step={5} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Taxa de Eliminação</label><span className="text-sm font-bold">{elimRate}</span></div><Slider value={[elimRate]} onValueChange={([v]) => setElimRate(v)} min={1} max={20} step={1} /></div>
+            <div className="border rounded-lg p-4 space-y-3">
+              <p className="text-sm font-semibold">Vias de Administração</p>
+              {ROUTES.map(r => (<div key={r.key} className="flex items-center justify-between"><label className="text-sm">{r.label} (F={r.bioavail}%)</label><Switch checked={enabledRoutes.includes(r.key)} onCheckedChange={() => toggleRoute(r.key)} /></div>))}
+            </div>
+            
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getViasAdministracaoChallenges()} simulatorState={{ dose, enabledRoutes, bioFactor, elimRate }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -209,13 +208,13 @@ export default function SimuladorViasAdministracao() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

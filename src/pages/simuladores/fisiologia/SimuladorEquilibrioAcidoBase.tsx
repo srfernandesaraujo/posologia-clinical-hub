@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, Beaker } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
@@ -98,7 +98,7 @@ function computeAB(basePCO2: number, baseHCO3: number, rrMod: number, renalMod: 
 function getClassColor(c: string) {
   if (c.includes("Acidose")) return "text-destructive";
   if (c.includes("Alcalose")) return "text-primary";
-  if (c === "Normal") return "text-green-600 dark:text-green-400";
+  if (c === "Normal") return "text-status-ok dark:text-green-400";
   return "text-muted-foreground";
 }
 
@@ -213,66 +213,48 @@ export default function SimuladorEquilibrioAcidoBase() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Equilíbrio Ácido-Base</h1>
-            <p className="text-muted-foreground">Manipule ventilação e excreção renal para corrigir distúrbios ácido-base.</p>
-            <AdminPromptViewer toolSlug="sim-equilibrio-acido-base" toolName="Equilíbrio Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-equilibrio-acido-base") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Gerar Caso com IA
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Equilíbrio Ácido-Base"
+        description="Manipule ventilação e excreção renal para corrigir distúrbios ácido-base."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-equilibrio-acido-base" toolName="Equilíbrio Ácido-Base" toolType="simulator" prompt={getNativePrompt("sim-equilibrio-acido-base") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
-      <Card>
-        <CardContent className="pt-4 space-y-2">
-          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
-          <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
-          <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-        </CardContent>
-      </Card>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Equilíbrio Ácido-Base"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} scenario={activeCase.scenario}
+          extra={<div className="space-y-1"><p className="text-sm"><span className="text-muted-foreground">Diagnóstico:</span> <span className="font-medium">{activeCase.patient.diagnosis}</span></p></div>} />
+      }
+      stage={<>
       {!isVirtualRoom && <DigitalPatientPanel simulatorSlug={SLUG} />}
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         {[
           { label: "pH", value: ab.ph, ref: "7.35–7.45", warn: ab.ph < 7.35 || ab.ph > 7.45 },
           { label: "pCO₂", value: ab.pCO2, ref: "35–45 mmHg", warn: ab.pCO2 < 35 || ab.pCO2 > 45 },
           { label: "HCO₃⁻", value: ab.hco3, ref: "22–26 mEq/L", warn: ab.hco3 < 22 || ab.hco3 > 26 },
           { label: "BE", value: ab.be, ref: "-2 a +2", warn: false },
         ].map((g) => (
-          <Card key={g.label} className={g.warn ? "border-destructive/50" : "border-green-500/50"}>
+          <Card key={g.label} className={g.warn ? "border-status-crit/50" : "border-status-ok/50"}>
             <CardContent className="p-3 text-center">
               <p className="text-xs text-muted-foreground">{g.label}</p>
               <p className="text-2xl font-bold">{g.value}</p>
@@ -280,38 +262,13 @@ export default function SimuladorEquilibrioAcidoBase() {
             </CardContent>
           </Card>
         ))}
-        <Card className="md:col-span-1 col-span-2">
+        <Card className="col-span-2 xl:col-span-1">
           <CardContent className="p-3 text-center">
             <p className="text-xs text-muted-foreground">Classificação</p>
             <p className={`text-sm font-bold ${getClassColor(ab.classification)}`}>{ab.classification}</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Controles Fisiológicos</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <div className="flex justify-between mb-1"><label className="text-sm font-medium">Frequência Respiratória</label><span className="text-sm font-bold">{rrModifier < 50 ? "↓ Hipoventilação" : rrModifier > 50 ? "↑ Hiperventilação" : "Normal"}</span></div>
-              <Slider value={[rrModifier]} onValueChange={([v]) => setRrModifier(v)} min={0} max={100} step={1} />
-            </div>
-            <div>
-              <div className="flex justify-between mb-1"><label className="text-sm font-medium">Excreção Renal de HCO₃⁻</label><span className="text-sm font-bold">{renalModifier < 50 ? "↓ Excreção" : renalModifier > 50 ? "↑ Retenção" : "Normal"}</span></div>
-              <Slider value={[renalModifier]} onValueChange={([v]) => setRenalModifier(v)} min={0} max={100} step={1} />
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Injetar Distúrbio:</p>
-              <div className="flex flex-wrap gap-2">
-                {[["cetoacidose", "Cetoacidose"], ["dpoc", "DPOC"], ["vomitos", "Vômitos"], ["diarreia", "Diarreia"]].map(([k, l]) => (
-                  <Button key={k} size="sm" variant="outline" onClick={() => injectDisturbance(k)}>{l}</Button>
-                ))}
-              </div>
-            </div>
-            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
-          </CardContent>
-        </Card>
-
+        </div>
         {history.length > 1 && (
           <Card>
             <CardHeader><CardTitle className="text-base">Evolução da Gasometria</CardTitle></CardHeader>
@@ -334,22 +291,43 @@ export default function SimuladorEquilibrioAcidoBase() {
             </CardContent>
           </Card>
         )}
-      </div>
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
-
-      <SimulatorChallengeMode
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Controles Fisiológicos</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <div className="flex justify-between mb-1"><label className="text-sm font-medium">Frequência Respiratória</label><span className="text-sm font-bold">{rrModifier < 50 ? "↓ Hipoventilação" : rrModifier > 50 ? "↑ Hiperventilação" : "Normal"}</span></div>
+              <Slider value={[rrModifier]} onValueChange={([v]) => setRrModifier(v)} min={0} max={100} step={1} />
+            </div>
+            <div>
+              <div className="flex justify-between mb-1"><label className="text-sm font-medium">Excreção Renal de HCO₃⁻</label><span className="text-sm font-bold">{renalModifier < 50 ? "↓ Excreção" : renalModifier > 50 ? "↑ Retenção" : "Normal"}</span></div>
+              <Slider value={[renalModifier]} onValueChange={([v]) => setRenalModifier(v)} min={0} max={100} step={1} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Injetar Distúrbio:</p>
+              <div className="flex flex-wrap gap-2">
+                {[["cetoacidose", "Cetoacidose"], ["dpoc", "DPOC"], ["vomitos", "Vômitos"], ["diarreia", "Diarreia"]].map(([k, l]) => (
+                  <Button key={k} size="sm" variant="outline" onClick={() => injectDisturbance(k)}>{l}</Button>
+                ))}
+              </div>
+            </div>
+            <VirtualRoomSubmitButton isVirtualRoom={isVirtualRoom} submitted={submitted} onSubmit={handleFinish} fallbackLabel="Finalizar Caso" />
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getEquilibrioAcidoBaseChallenges()}
         simulatorState={{ pH: ab.ph, pCO2: ab.pCO2, hco3: ab.hco3 }}
         onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         <Card className="border-primary/20">
           <CardContent className="pt-4 space-y-2">
             <Button variant="outline" className="w-full" onClick={() => setShowFeedback(!showFeedback)}>
@@ -363,6 +341,6 @@ export default function SimuladorEquilibrioAcidoBase() {
           </CardContent>
         </Card>
       )}
-    </div>
+    />
   );
 }

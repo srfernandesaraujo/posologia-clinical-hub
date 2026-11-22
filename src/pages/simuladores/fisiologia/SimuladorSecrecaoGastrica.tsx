@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import VirtualRoomSubmitButton from "@/components/simulators/VirtualRoomSubmitButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
@@ -206,59 +206,110 @@ export default function SimuladorSecrecaoGastrica() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Secreção Ácida Gástrica</h1>
-            <p className="text-muted-foreground">Explore as vias de estimulação da célula parietal e os mecanismos de bloqueio farmacológico.</p>
-            <AdminPromptViewer toolSlug="sim-secrecao-gastrica" toolName="Secreção Gástrica" toolType="simulator" prompt={getNativePrompt("sim-secrecao-gastrica") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Gerar Caso com IA
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Secreção Ácida Gástrica"
+        description="Explore as vias de estimulação da célula parietal e os mecanismos de bloqueio farmacológico."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-secrecao-gastrica" toolName="Secreção Gástrica" toolType="simulator" prompt={getNativePrompt("sim-secrecao-gastrica") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && (
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Secreção Ácida Gástrica"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && (
         <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />
       )}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario}
+          extra={<div className="space-y-1"><p className="text-sm"><span className="text-muted-foreground">Diagnóstico:</span> <span className="font-medium">{activeCase.patient.diagnosis}</span></p></div>} />
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Gástricos</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className={`p-3 rounded-lg text-center ${outputs.pH < 2 ? "bg-destructive/10 border border-destructive/30" : "bg-muted"}`}>
+                <p className="text-xs text-muted-foreground">pH Gástrico</p>
+                <p className={`text-3xl font-bold ${outputs.pH < 2 ? "text-destructive" : outputs.pH >= 4 ? "text-status-ok" : ""}`}>{outputs.pH}</p>
+              </div>
+              <div className="p-3 rounded-lg text-center bg-muted">
+                <p className="text-xs text-muted-foreground">Secreção H⁺</p>
+                <p className="text-3xl font-bold">{outputs.hSecretionRate}</p>
+                <p className="text-xs text-muted-foreground">mEq/h</p>
+              </div>
+              <div className="p-3 rounded-lg text-center bg-muted">
+                <p className="text-xs text-muted-foreground">Atividade da Bomba</p>
+                <p className="text-2xl font-bold">{outputs.pumpActivity}%</p>
+              </div>
+              <div className="p-3 rounded-lg text-center bg-muted">
+                <p className="text-xs text-muted-foreground">Via Dominante</p>
+                <p className="text-sm font-bold">
+                  {outputs.histamineContrib >= outputs.achContrib && outputs.histamineContrib >= outputs.gastrinContrib ? "Histamina" :
+                   outputs.achContrib >= outputs.gastrinContrib ? "ACh" : "Gastrina"}
+                </p>
+              </div>
+            </div>
 
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
-      <Card>
-        <CardContent className="pt-4 space-y-2">
-          <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
-          <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
-          <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Contribuição por Via</p>
+              {[
+                { label: "Histamina (H2 + ECL)", value: outputs.histamineContrib, color: "bg-primary" },
+                { label: "Acetilcolina (M3)", value: outputs.achContrib, color: "bg-green-500" },
+                { label: "Gastrina (CCK-B)", value: outputs.gastrinContrib, color: "bg-amber-500" },
+              ].map((v) => (
+                <div key={v.label}>
+                  <div className="flex justify-between text-xs mb-1"><span>{v.label}</span><span>{v.value}%</span></div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full ${v.color} rounded-full transition-all`} style={{ width: `${v.value}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      {history.length > 1 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={history}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Line type="monotone" dataKey="pH" name="pH Gástrico" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="hSecretionRate" name="Secreção H⁺ (mEq/h)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4">
+          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
+          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Vias de Estimulação</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -300,85 +351,13 @@ export default function SimuladorSecrecaoGastrica() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros Gástricos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`p-3 rounded-lg text-center ${outputs.pH < 2 ? "bg-destructive/10 border border-destructive/30" : "bg-muted"}`}>
-                <p className="text-xs text-muted-foreground">pH Gástrico</p>
-                <p className={`text-3xl font-bold ${outputs.pH < 2 ? "text-destructive" : outputs.pH >= 4 ? "text-green-600" : ""}`}>{outputs.pH}</p>
-              </div>
-              <div className="p-3 rounded-lg text-center bg-muted">
-                <p className="text-xs text-muted-foreground">Secreção H⁺</p>
-                <p className="text-3xl font-bold">{outputs.hSecretionRate}</p>
-                <p className="text-xs text-muted-foreground">mEq/h</p>
-              </div>
-              <div className="p-3 rounded-lg text-center bg-muted">
-                <p className="text-xs text-muted-foreground">Atividade da Bomba</p>
-                <p className="text-2xl font-bold">{outputs.pumpActivity}%</p>
-              </div>
-              <div className="p-3 rounded-lg text-center bg-muted">
-                <p className="text-xs text-muted-foreground">Via Dominante</p>
-                <p className="text-sm font-bold">
-                  {outputs.histamineContrib >= outputs.achContrib && outputs.histamineContrib >= outputs.gastrinContrib ? "Histamina" :
-                   outputs.achContrib >= outputs.gastrinContrib ? "ACh" : "Gastrina"}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Contribuição por Via</p>
-              {[
-                { label: "Histamina (H2 + ECL)", value: outputs.histamineContrib, color: "bg-primary" },
-                { label: "Acetilcolina (M3)", value: outputs.achContrib, color: "bg-green-500" },
-                { label: "Gastrina (CCK-B)", value: outputs.gastrinContrib, color: "bg-amber-500" },
-              ].map((v) => (
-                <div key={v.label}>
-                  <div className="flex justify-between text-xs mb-1"><span>{v.label}</span><span>{v.value}%</span></div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full ${v.color} rounded-full transition-all`} style={{ width: `${v.value}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {history.length > 1 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={history}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <Line type="monotone" dataKey="pH" name="pH Gástrico" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="hSecretionRate" name="Secreção H⁺ (mEq/h)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-        </CardContent>
-      </Card>
-
-      <SimulatorChallengeMode
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getSecrecaoGastricaChallenges()}
         simulatorState={{}}
         onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         <Card className="border-primary/20">
           <CardContent className="pt-4 space-y-2">
             <Button variant="outline" className="w-full" onClick={() => setShowFeedback(!showFeedback)}>
@@ -392,6 +371,6 @@ export default function SimuladorSecrecaoGastrica() {
           </CardContent>
         </Card>
       )}
-    </div>
+    />
   );
 }

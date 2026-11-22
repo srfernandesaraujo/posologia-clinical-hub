@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -135,48 +135,68 @@ export default function SimuladorDoseResposta() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Curva Dose-Resposta</h1>
-            <p className="text-muted-foreground">Explore potência (EC50) vs eficácia (Emax), agonistas parciais e antagonismo competitivo/não-competitivo.</p>
-            <AdminPromptViewer toolSlug="sim-dose-resposta" toolName="Curva Dose-Resposta" toolType="simulator" prompt={getNativePrompt("sim-dose-resposta") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Curva Dose-Resposta"
+        description="Explore potência (EC50) vs eficácia (Emax), agonistas parciais e antagonismo competitivo/não-competitivo."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-dose-resposta" toolName="Curva Dose-Resposta" toolType="simulator" prompt={getNativePrompt("sim-dose-resposta") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
-        <p className="text-sm"><strong>Diagnóstico:</strong> {activeCase.patient.diagnosis}</p>
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Curva Dose-Resposta"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario}
+          extra={<div className="space-y-1"><p className="text-sm"><span className="text-muted-foreground">Diagnóstico:</span> <span className="font-medium">{activeCase.patient.diagnosis}</span></p></div>} />
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Efetivos</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">EC50 Efetivo</p><p className={`text-2xl font-bold ${effEC50 > ec50 * 1.5 ? "text-destructive" : ""}`}>{effEC50}</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Emax Efetivo</p><p className={`text-2xl font-bold ${effEmax < emax * 0.7 ? "text-destructive" : ""}`}>{effEmax}%</p></div>
+            </div>
+          </CardContent>
+        </Card>
+<Card>
+        <CardHeader><CardTitle className="text-base">Curva Dose-Resposta (log[Dose] vs Efeito)</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={points}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="logDose" label={{ value: "log[Dose]", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[0, 110]} label={{ value: "Efeito (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+              <Legend />
+              <ReferenceLine y={effEmax} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Emax=${effEmax}`, fill: "hsl(var(--destructive))" }} />
+              {hasModifier && <Line type="monotone" dataKey="baseline" name="Sem Modificador (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1.5} strokeDasharray="6 3" />}
+              <Line type="monotone" dataKey="effect" name={hasModifier ? "Com Modificador (%)" : "Efeito (%)"} stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros Farmacodinâmicos</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -194,38 +214,9 @@ export default function SimuladorDoseResposta() {
             
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros Efetivos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">EC50 Efetivo</p><p className={`text-2xl font-bold ${effEC50 > ec50 * 1.5 ? "text-destructive" : ""}`}>{effEC50}</p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Emax Efetivo</p><p className={`text-2xl font-bold ${effEmax < emax * 0.7 ? "text-destructive" : ""}`}>{effEmax}%</p></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Curva Dose-Resposta (log[Dose] vs Efeito)</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={points}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="logDose" label={{ value: "log[Dose]", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis domain={[0, 110]} label={{ value: "Efeito (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <Legend />
-              <ReferenceLine y={effEmax} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Emax=${effEmax}`, fill: "hsl(var(--destructive))" }} />
-              {hasModifier && <Line type="monotone" dataKey="baseline" name="Sem Modificador (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1.5} strokeDasharray="6 3" />}
-              <Line type="monotone" dataKey="effect" name={hasModifier ? "Com Modificador (%)" : "Efeito (%)"} stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getDoseRespostaChallenges()} simulatorState={{ ec50, emax, effEC50, effEmax, partialAgonist, competitiveAntag, nonCompAntag }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getDoseRespostaChallenges()} simulatorState={{ ec50, emax, effEC50, effEmax, partialAgonist, competitiveAntag, nonCompAntag }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -234,13 +225,13 @@ export default function SimuladorDoseResposta() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

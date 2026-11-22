@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, VitalTile } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -84,99 +83,96 @@ export default function SimuladorJanelaTerapeutica() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Janela Terapêutica e Índice Terapêutico</h1>
-            <p className="text-muted-foreground">Compare DE50 vs DL50, calcule o índice terapêutico e identifique fármacos de janela estreita vs ampla.</p>
-            <AdminPromptViewer toolSlug="sim-janela-terapeutica-farma" toolName="Janela Terapêutica" toolType="simulator" prompt={getNativePrompt("sim-janela-terapeutica-farma") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Janela Terapêutica e Índice Terapêutico"
+        description="Compare DE50 vs DL50, calcule o índice terapêutico e identifique fármacos de janela estreita vs ampla."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-janela-terapeutica-farma" toolName="Janela Terapêutica" toolType="simulator" prompt={getNativePrompt("sim-janela-terapeutica-farma") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
+  const itTone = it < 3 ? "text-status-crit border-status-crit/40 bg-status-crit/5" : it < 5 ? "text-status-warn border-status-warn/30 bg-status-warn/5" : "text-status-ok border-border bg-card";
+  const itNote = it < 3 ? "▲ Janela estreita – TDM obrigatório" : it < 5 ? "● Janela moderada – monitorar" : "● Janela ampla – maior segurança";
+
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm"><strong>Fármaco:</strong> {activeCase.drugName}</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Dose administrada</label><span className="text-sm font-bold">{dose} mg/kg</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={0} max={100} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DE50</label><span className="text-sm font-bold">{de50} mg/kg</span></div><Slider value={[de50]} onValueChange={([v]) => setDE50(v)} min={5} max={80} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">DL50</label><span className="text-sm font-bold">{dl50} mg/kg</span></div><Slider value={[dl50]} onValueChange={([v]) => setDL50(v)} min={20} max={100} step={1} /></div>
-            
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Índice Terapêutico</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DE50</p><p className="text-2xl font-bold">{de50} <span className="text-sm font-normal">mg/kg</span></p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">DL50</p><p className="text-2xl font-bold">{dl50} <span className="text-sm font-normal">mg/kg</span></p></div>
-              <div className={`p-3 rounded-lg text-center ${it < 3 ? "bg-destructive/10" : it < 5 ? "bg-yellow-500/10" : "bg-green-500/10"}`}><p className="text-xs text-muted-foreground">IT (DL50/DE50)</p><p className={`text-2xl font-bold ${it < 3 ? "text-destructive" : it < 5 ? "text-yellow-600" : "text-green-600"}`}>{it}</p></div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Janela Terapêutica"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario}
+          extra={<p className="text-sm"><span className="text-muted-foreground">Fármaco:</span> <span className="font-medium">{activeCase.drugName}</span></p>} />
+      }
+      stage={<>
+        <ShellPanel title="Índice terapêutico">
+          <div className="grid grid-cols-3 gap-2">
+            <VitalTile name="DE50" value={de50} unit="mg/kg" note="Dose eficaz" />
+            <VitalTile name="DL50" value={dl50} unit="mg/kg" note="Dose letal" />
+            <div className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2.5 ${itTone}`}>
+              <span className="text-[11px] font-medium text-muted-foreground">IT (DL50/DE50)</span>
+              <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{it}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">{itNote}</span>
             </div>
-            <p className="text-xs text-muted-foreground">{it < 3 ? "⚠️ Janela estreita – TDM obrigatório" : it < 5 ? "⚡ Janela moderada – monitorar" : "✅ Janela ampla – maior segurança"}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Curvas Populacionais: Efeito vs Toxicidade</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
+          </div>
+        </ShellPanel>
+        <ShellPanel title="Curvas populacionais: efeito vs toxicidade">
+          <ResponsiveContainer width="100%" height={320}>
             <LineChart data={points}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="dose" label={{ value: "Dose", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
               <YAxis domain={[0, 100]} label={{ value: "% População", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} />
               <Legend />
               <ReferenceArea x1={de50} x2={dl50} fill="hsl(var(--primary))" fillOpacity={0.08} />
               <ReferenceLine x={dose} stroke="hsl(var(--foreground))" strokeDasharray="5 5" label={{ value: `Dose=${dose}`, fill: "hsl(var(--foreground))" }} />
-              <Line type="monotone" dataKey="terapeutico" name="Efeito Terapêutico (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-              <Line type="monotone" dataKey="toxico" name="Efeito Tóxico (%)" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="terapeutico" name="Efeito terapêutico (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="toxico" name="Efeito tóxico (%)" stroke="hsl(var(--status-crit))" dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getJanelaTerapeuticaFarmaChallenges()} simulatorState={{ dose, de50, dl50 }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+        </ShellPanel>
+        <ShellPanel title="Dica clínica"><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Parâmetros">
+          <div className="space-y-5">
+            <div><div className="mb-2 flex justify-between text-xs"><label className="text-muted-foreground">Dose administrada</label><span className="font-mono font-semibold text-primary">{dose} mg/kg</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={0} max={100} step={1} /></div>
+            <div><div className="mb-2 flex justify-between text-xs"><label className="text-muted-foreground">DE50</label><span className="font-mono font-semibold text-primary">{de50} mg/kg</span></div><Slider value={[de50]} onValueChange={([v]) => setDE50(v)} min={5} max={80} step={1} /></div>
+            <div><div className="mb-2 flex justify-between text-xs"><label className="text-muted-foreground">DL50</label><span className="font-mono font-semibold text-primary">{dl50} mg/kg</span></div><Slider value={[dl50]} onValueChange={([v]) => setDL50(v)} min={20} max={100} step={1} /></div>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getJanelaTerapeuticaFarmaChallenges()} simulatorState={{ dose, de50, dl50 }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
+            <p className="text-center text-xs text-muted-foreground">Resultados enviados ✓ — Redirecionando para a página inicial em 15s...</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+            <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-status-crit"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
-            <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
+            <p className="text-center text-xs text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

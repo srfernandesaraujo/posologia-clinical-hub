@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -139,40 +139,59 @@ export default function SimuladorBloqueioNeuromuscular() {
   if (isVirtualRoom && !activeCase) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Bloqueio Neuromuscular</h1>
-            <p className="text-muted-foreground">Simule bloqueadores despolarizantes vs não-despolarizantes na junção neuromuscular e suas reversões.</p>
-            <AdminPromptViewer toolSlug="sim-bloqueio-neuromuscular" toolName="Bloqueio Neuromuscular" toolType="simulator" prompt={getNativePrompt("sim-bloqueio-neuromuscular") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Bloqueio Neuromuscular"
+        description="Simule bloqueadores despolarizantes vs não-despolarizantes na junção neuromuscular e suas reversões."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-bloqueio-neuromuscular" toolName="Bloqueio Neuromuscular" toolType="simulator" prompt={getNativePrompt("sim-bloqueio-neuromuscular") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button><h2 className="text-xl font-bold">{activeCase.title}</h2><Badge variant="outline">{activeCase.difficulty}</Badge></div>
-      <Card><CardContent className="pt-4 space-y-2"><p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Bloqueio Neuromuscular"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
+        <PatientCard name={activeCase.patient.name} age={activeCase.patient.age} weight={activeCase.patient.weight} scenario={activeCase.scenario} />
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Recuperação da Placa Motora (Twitch Único)</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-2">Amplitude de um twitch isolado ao longo do tempo — não representa o fade entre os 4 estímulos do TOF ratio real (T4/T1).</p>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={points}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="time" label={{ value: "Tempo (min)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 110]} label={{ value: "Twitch (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <ReferenceLine y={90} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Recuperação ≥90%", fill: "hsl(var(--chart-3))" }} />
+                <Line type="monotone" dataKey="twitch" name="Twitch (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                {agent === "despolarizante" && <Line type="monotone" dataKey="fasciculation" name="Fasciculação" stroke="hsl(var(--destructive))" dot={false} strokeWidth={1} strokeDasharray="3 3" />}
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Agente e Reversão</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -194,29 +213,9 @@ export default function SimuladorBloqueioNeuromuscular() {
             
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Recuperação da Placa Motora (Twitch Único)</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground mb-2">Amplitude de um twitch isolado ao longo do tempo — não representa o fade entre os 4 estímulos do TOF ratio real (T4/T1).</p>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={points}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="time" label={{ value: "Tempo (min)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[0, 110]} label={{ value: "Twitch (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <ReferenceLine y={90} stroke="hsl(var(--chart-3))" strokeDasharray="5 5" label={{ value: "Recuperação ≥90%", fill: "hsl(var(--chart-3))" }} />
-                <Line type="monotone" dataKey="twitch" name="Twitch (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                {agent === "despolarizante" && <Line type="monotone" dataKey="fasciculation" name="Fasciculação" stroke="hsl(var(--destructive))" dot={false} strokeWidth={1} strokeDasharray="3 3" />}
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal, agentDose, reversalDose }} onComplete={() => setChallengeCompleted(true)} />
-      {isVirtualRoom && submitted && (
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getBloqueioNeuromuscularChallenges()} simulatorState={{ agent, reversal, agentDose, reversalDose }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -225,13 +224,13 @@ export default function SimuladorBloqueioNeuromuscular() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }
