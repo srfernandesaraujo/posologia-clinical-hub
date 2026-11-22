@@ -225,25 +225,27 @@ export function SimulatorWorkspace({
         // Duas áreas lado a lado, cada uma com rolagem própria: o aluno lê a
         // questão e mexe na conduta à direita sem perder de vista os exames e
         // gráficos à esquerda. A divisória é arrastável e a largura fica salva.
-        <ResizablePanelGroup
-          direction="horizontal"
-          autoSaveId="posologia-sim-workspace-v1"
-          className="h-[calc(100dvh-13rem)] min-h-[560px] rounded-xl"
-        >
-          <ResizablePanel defaultSize={58} minSize={38} className="min-w-0">
-            <div className="h-full space-y-4 overflow-y-auto overscroll-contain pr-4">
-              {patientBlock}
-              {stage}
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle className="mx-1 bg-border/70 hover:bg-primary/50" />
-          <ResizablePanel defaultSize={42} minSize={30} className="min-w-0">
-            <div className="h-full space-y-4 overflow-y-auto overscroll-contain pl-4">
-              {controls}
-              {challenge}
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        // A biblioteca grava height:100% no estilo do grupo, então a altura fixa
+        // fica num contêiner em volta — sem isso o grupo cresce com o conteúdo
+        // e as áreas deixam de rolar sozinhas.
+        <div className="h-[calc(100dvh-12rem)] min-h-[520px]">
+          <ResizablePanelGroup direction="horizontal" autoSaveId="posologia-sim-workspace-v1">
+            <ResizablePanel defaultSize={58} minSize={38} className="min-w-0">
+              <div className="h-full space-y-4 overflow-y-auto overscroll-contain pb-6 pr-4">
+                {patientBlock}
+                {stage}
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle className="mx-1 bg-border/70 hover:bg-primary/50" />
+            <ResizablePanel defaultSize={42} minSize={30} className="min-w-0">
+              {/* pb-16: o botão flutuante do Oráculo não cobre a última linha do desafio */}
+              <div className="h-full space-y-4 overflow-y-auto overscroll-contain pb-16 pl-4">
+                {controls}
+                {challenge}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
       ) : (
         <div className="space-y-4">
           {patientBlock}
