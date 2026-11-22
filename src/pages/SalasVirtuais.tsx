@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -980,19 +981,13 @@ export default function SalasVirtuais() {
     return (
       <div className="max-w-6xl mx-auto">
         <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
-        <div className="flex items-center gap-3 mb-8">
-          <DoorOpen className="h-7 w-7 text-primary" />
-          <h1 className="text-3xl font-bold">Salas Virtuais</h1>
-        </div>
-        <Card>
-          <CardContent className="py-12 text-center space-y-4">
-            <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
-            <p className="text-muted-foreground">Salas Virtuais são um recurso exclusivo do plano <strong>Posologia Premium</strong>.</p>
-            <Button onClick={() => showUpgrade("Salas virtuais ilimitadas são exclusivas do plano Premium")}>
-              Assinar Premium
-            </Button>
-          </CardContent>
-        </Card>
+        <PageHeader icon={<DoorOpen />} title="Salas Virtuais" />
+        <EmptyState
+          icon={<Lock />}
+          title="Recurso do plano Premium"
+          description="Salas Virtuais são um recurso exclusivo do plano Posologia Premium."
+          action={<Button onClick={() => showUpgrade("Salas virtuais ilimitadas são exclusivas do plano Premium")}>Assinar Premium</Button>}
+        />
       </div>
     );
   }
@@ -1000,20 +995,17 @@ export default function SalasVirtuais() {
   return (
     <div className="max-w-6xl mx-auto">
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <DoorOpen className="h-7 w-7 text-primary" />
-          <h1 className="text-3xl font-bold">Salas Virtuais</h1>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />Nova Sala
-        </Button>
-      </div>
+      <PageHeader
+        icon={<DoorOpen />}
+        title="Salas Virtuais"
+        description="Crie salas com PIN para os alunos praticarem um simulador, em grupo ou individualmente."
+        actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />Nova Sala</Button>}
+      />
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
       ) : rooms.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma sala criada ainda. Clique em "Nova Sala" para começar.</CardContent></Card>
+        <EmptyState icon={<DoorOpen />} title="Nenhuma sala criada ainda" description="Clique em Nova Sala para começar." />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rooms.map((room: any) => (
@@ -1455,7 +1447,7 @@ export default function SalasVirtuais() {
             };
 
             return (
-              <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 space-y-2">
+              <div className="mb-4 rounded-lg border border-status-warn/40 bg-status-warn/5 p-3 space-y-2">
                 <p className="text-sm font-semibold">Alunos sem grupo ({ungroupedAuthorized.length})</p>
                 <p className="text-xs text-muted-foreground">
                   Esses alunos ainda não têm um grupo/caso atribuído e não conseguirão concluir a atividade
@@ -1546,9 +1538,9 @@ export default function SalasVirtuais() {
               <>
                 {isRestricted && (
                   <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Ingressou</Badge> entrou na sala</span>
+                    <span className="flex items-center gap-1.5"><Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40">Ingressou</Badge> entrou na sala</span>
                     <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-primary/40 text-primary"><Lock className="h-2.5 w-2.5 mr-1" />Cadastrado</Badge> autorizado por e-mail</span>
-                    <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-amber-500/40 text-amber-400">Aguardando</Badge> ainda não entrou</span>
+                    <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-status-warn/40 text-status-warn">Aguardando</Badge> ainda não entrou</span>
                   </div>
                 )}
 
@@ -1575,7 +1567,7 @@ export default function SalasVirtuais() {
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {p.is_group && <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                                   <p className="font-medium">{p.participant_name}</p>
-                                  <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                  <Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
                                   {leaderAuthorized && (
                                     <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                       <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
@@ -1590,7 +1582,7 @@ export default function SalasVirtuais() {
                               </div>
                               <div className="text-right shrink-0">
                                 {avgScore !== null ? (
-                                  <Badge variant={avgScore >= 80 ? "secondary" : avgScore >= 50 ? "default" : "destructive"} className={avgScore >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                  <Badge variant={avgScore >= 80 ? "secondary" : avgScore >= 50 ? "default" : "destructive"} className={avgScore >= 80 ? "bg-status-ok/10 text-status-ok" : ""}>
                                     {avgScore}% média
                                   </Badge>
                                 ) : (
@@ -1608,7 +1600,7 @@ export default function SalasVirtuais() {
                                   return (
                                     <div key={i} className="flex items-center gap-1.5 flex-wrap">
                                       <p className="text-sm">{name}</p>
-                                      <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                      <Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
                                       {memberAuthorized && (
                                         <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                           <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
@@ -1635,7 +1627,7 @@ export default function SalasVirtuais() {
                                         <span>{actLabel}</span>
                                         <div className="flex items-center gap-3">
                                           <span className="text-muted-foreground">{Math.floor(s.time_spent_seconds / 60)}m{s.time_spent_seconds % 60}s</span>
-                                          <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-green-100 text-green-800" : ""}>
+                                          <Badge variant={s.score >= 80 ? "secondary" : "destructive"} className={s.score >= 80 ? "bg-status-ok/10 text-status-ok" : ""}>
                                             {s.score}%
                                           </Badge>
                                         </div>
@@ -1664,7 +1656,7 @@ export default function SalasVirtuais() {
                                   <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                     <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
                                   </Badge>
-                                  <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Aguardando</Badge>
+                                  <Badge variant="outline" className="border-status-warn/40 text-status-warn text-[10px] px-1.5 py-0">Aguardando</Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                               </div>

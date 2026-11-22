@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useClasses, useClassStudents } from "@/hooks/useClasses";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -119,18 +120,14 @@ export default function TurmaDetalhe() {
 
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-6xl">
-      <div className="space-y-2">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link to="/turmas"><ArrowLeft className="h-4 w-4 mr-1" /> Turmas</Link>
-        </Button>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold">{turma.name}</h1>
-            {turma.semester && <Badge variant="outline" className="mt-1">{turma.semester}</Badge>}
-            {turma.description && <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{turma.description}</p>}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        backTo="/turmas"
+        backLabel="Voltar para Turmas"
+        title={turma.name}
+        badges={turma.semester ? <Badge variant="outline">{turma.semester}</Badge> : undefined}
+        description={turma.description || undefined}
+        className="mb-0"
+      />
 
       <Tabs defaultValue="alunos" className="space-y-4">
         <TabsList>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import {
   useSupportTickets, useTicketMessages,
   type SupportTicket, type TicketCategory,
@@ -18,9 +19,9 @@ import { SidebarContactForm } from "@/components/SidebarContactForm";
 import { ptBR } from "date-fns/locale";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  open: { label: "Aberto", className: "bg-blue-500 text-white border-blue-500" },
-  in_progress: { label: "Em Andamento", className: "bg-orange-500 text-white border-orange-500" },
-  resolved: { label: "Resolvido", className: "bg-green-600 text-white border-green-600" },
+  open: { label: "Aberto", className: "bg-status-info/15 text-status-info border-status-info/40" },
+  in_progress: { label: "Em Andamento", className: "bg-status-warn/15 text-status-warn border-status-warn/40" },
+  resolved: { label: "Resolvido", className: "bg-status-ok/15 text-status-ok border-status-ok/40" },
   closed: { label: "Fechado", className: "bg-muted text-muted-foreground border-border" },
 };
 
@@ -154,14 +155,12 @@ export default function Suporte() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <LifeBuoy className="h-6 w-6 text-primary" />
-            Suporte
-          </h1>
-          <p className="text-sm text-muted-foreground">Abra um chamado técnico e acompanhe o andamento.</p>
-        </div>
+      <PageHeader
+        icon={<LifeBuoy />}
+        title="Suporte"
+        description="Abra um chamado técnico e acompanhe o andamento."
+        className="mb-0"
+        actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-2" />Novo Chamado</Button>
@@ -190,14 +189,13 @@ export default function Suporte() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : tickets.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">
-          Você ainda não abriu nenhum chamado.
-        </div>
+        <EmptyState icon={<LifeBuoy />} title="Você ainda não abriu nenhum chamado" description="Use Novo Chamado para falar com o suporte técnico." />
       ) : (
         <div className="space-y-3">
           {tickets.map((t) => {

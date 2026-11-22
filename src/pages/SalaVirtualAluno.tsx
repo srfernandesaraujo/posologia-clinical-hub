@@ -516,8 +516,8 @@ export default function SalaVirtualAluno() {
             <CardTitle className="text-xl">{room?.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-center">
-            <div className="mx-auto inline-flex rounded-2xl bg-amber-500/10 p-4">
-              <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+            <div className="mx-auto inline-flex rounded-2xl bg-status-warn/10 p-4">
+              <Loader2 className="h-8 w-8 text-status-warn animate-spin" />
             </div>
             <p className="text-sm">
               Seu e-mail ainda não foi atribuído a nenhum grupo nesta sala. Assim que o
@@ -538,11 +538,11 @@ export default function SalaVirtualAluno() {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-8 space-y-4 text-center">
-          <div className="mx-auto inline-flex rounded-full bg-green-100 p-4 dark:bg-green-900/30">
+          <div className="mx-auto inline-flex rounded-full bg-status-ok/10 p-4">
             {isExam ? (
-              <ClipboardList className="h-10 w-10 text-green-600 dark:text-green-400" />
+              <ClipboardList className="h-10 w-10 text-status-ok" />
             ) : (
-              <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+              <CheckCircle className="h-10 w-10 text-status-ok" />
             )}
           </div>
           <h2 className="text-2xl font-bold">
@@ -574,7 +574,7 @@ export default function SalaVirtualAluno() {
                 </p>
               )}
               {resumeFromIndex >= activities.length && (
-                <p className="text-xs text-green-600 font-medium mt-2">
+                <p className="text-xs text-status-ok font-medium mt-2">
                   Todas as atividades já foram enviadas. Obrigado!
                 </p>
               )}

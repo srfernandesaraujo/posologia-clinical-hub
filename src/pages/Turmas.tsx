@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Link } from "react-router-dom";
 import { useClasses } from "@/hooks/useClasses";
 import { Button } from "@/components/ui/button";
@@ -55,16 +56,12 @@ export default function Turmas() {
 
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-6xl">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Turmas
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Organize seus alunos em turmas e crie salas virtuais vinculadas a cada turma.
-            Os analytics ficam disponíveis dentro de cada sala.
-          </p>
-        </div>
+      <PageHeader
+        icon={<GraduationCap />}
+        title="Turmas"
+        description="Organize seus alunos em turmas e crie salas virtuais vinculadas a cada turma. Os analytics ficam disponíveis dentro de cada sala."
+        className="mb-0"
+        actions={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Nova turma</Button>
@@ -91,16 +88,13 @@ export default function Turmas() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       {list.isLoading ? (
         <p className="text-muted-foreground">Carregando…</p>
       ) : (list.data?.length ?? 0) === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Você ainda não tem turmas. Crie sua primeira turma para começar.
-          </CardContent>
-        </Card>
+        <EmptyState icon={<GraduationCap />} title="Você ainda não tem turmas" description="Crie sua primeira turma para organizar alunos e salas virtuais." />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {list.data!.map(c => {

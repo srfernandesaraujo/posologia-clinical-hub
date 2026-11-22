@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { PageHeader } from "@/components/layouts/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -365,15 +366,7 @@ export default function AgenteFeedback() {
   if (!selectedRoom) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Feedback de Simulação</h1>
-            <p className="text-xs text-muted-foreground">Selecione uma sala virtual para analisar o desempenho dos alunos</p>
-          </div>
-        </div>
+        <PageHeader icon={<MessageSquare />} title="Feedback de Simulação" description="Selecione uma sala virtual para analisar o desempenho dos alunos" className="mb-0" />
 
         {loadingRooms ? (
           <div className="flex items-center justify-center py-16">
@@ -495,7 +488,7 @@ export default function AgenteFeedback() {
                       onClick={() => handleCopy(msg.content, idx)}
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
                     >
-                      {copiedIdx === idx ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {copiedIdx === idx ? <Check className="h-3.5 w-3.5 text-status-ok" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
                     </button>
                   </>
                 ) : (

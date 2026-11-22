@@ -252,7 +252,7 @@ export default function Marketplace() {
             {tool.short_description || tool.description || "Sem descrição"}
           </p>
           {tool.clinically_validated && (
-            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-status-ok bg-status-ok/100/10 rounded-full px-2 py-0.5">
               <ShieldCheck className="h-3 w-3" /> Validado clinicamente
             </span>
           )}
@@ -261,7 +261,7 @@ export default function Marketplace() {
           <div className="flex items-center gap-1">
             {stats ? (
               <>
-                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                <Star className="h-3.5 w-3.5 text-status-warn fill-yellow-500" />
                 <span className="text-xs font-semibold">{stats.avg.toFixed(1)}</span>
                 <span className="text-xs text-muted-foreground">({stats.count})</span>
               </>
@@ -296,10 +296,10 @@ export default function Marketplace() {
     const actionVariant = getActionVariant(caseItem, "caso_clinico");
 
     const difficultyColor = caseItem.difficulty === "Fácil"
-      ? "text-green-600 bg-green-500/10"
+      ? "text-status-ok bg-status-ok/100/10"
       : caseItem.difficulty === "Difícil"
-        ? "text-red-600 bg-red-500/10"
-        : "text-yellow-600 bg-yellow-500/10";
+        ? "text-status-crit bg-status-crit/10"
+        : "text-status-warn bg-status-warn/10";
 
     return (
       <div
@@ -309,7 +309,7 @@ export default function Marketplace() {
         <div className="p-5 pb-0">
           <div className="flex items-start gap-3">
             <div className="rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-3 group-hover:scale-105 transition-transform">
-              <BookOpen className="h-7 w-7 text-amber-600" />
+              <BookOpen className="h-7 w-7 text-status-warn" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm leading-tight line-clamp-2">{caseItem.title}</h3>
@@ -382,7 +382,7 @@ export default function Marketplace() {
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
                       key={s}
-                      className={`h-4 w-4 ${s <= Math.round(reviewStats[featured.id].avg) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground/30"}`}
+                      className={`h-4 w-4 ${s <= Math.round(reviewStats[featured.id].avg) ? "text-status-warn fill-yellow-500" : "text-muted-foreground/30"}`}
                     />
                   ))}
                 </div>

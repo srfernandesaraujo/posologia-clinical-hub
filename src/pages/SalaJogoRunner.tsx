@@ -176,7 +176,7 @@ export default function SalaJogoRunner() {
         <Badge variant="secondary" className="ml-2">Jogo Clínico</Badge>
       </div>
       {ctx?.viewOnly && (
-        <div className="mb-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-300">
+        <div className="mb-3 rounded-md border border-status-warn/40 bg-status-warn/100/10 p-3 text-xs text-status-warn">
           Modo somente-leitura. Você pode jogar, mas o resultado não será registrado pois seu e-mail já está vinculado a um grupo.
         </div>
       )}

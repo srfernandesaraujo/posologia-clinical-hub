@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,7 +104,7 @@ export default function MinhaConta() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-3xl font-bold mb-8">{t("account.title")}</h1>
+      <PageHeader title={t("account.title")} />
       <div className="space-y-6 rounded-2xl border border-border bg-card p-8">
         <div className="space-y-2">
           <Label>{t("auth.email")}</Label>

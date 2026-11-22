@@ -156,7 +156,7 @@ export default function Planos() {
             </span>
           )}
           <div className="flex items-center gap-2 mb-2">
-            <Crown className="h-5 w-5 text-yellow-500" />
+            <Crown className="h-5 w-5 text-status-warn" />
             <h2 className="text-2xl font-bold">Premium</h2>
           </div>
           <div className="mb-6">

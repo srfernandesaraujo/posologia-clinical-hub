@@ -231,7 +231,7 @@ export default function SalaAoVivo() {
                 <span>{r.icon} {r.label}</span>
                 {sp ? (
                   <span className="flex items-center gap-1.5">
-                    <span className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+                    <span className={`h-2 w-2 rounded-full ${online ? "bg-status-ok/100" : "bg-muted-foreground/40"}`} />
                     {nameById.get(sp.participant_id) || "Participante"}
                   </span>
                 ) : (

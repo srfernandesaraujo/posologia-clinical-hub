@@ -1,4 +1,5 @@
 import { Trophy, Flame, Target, Medal, Star, Award, TrendingUp, Brain, GraduationCap, Download, Loader2 } from "lucide-react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -171,10 +172,7 @@ export default function Gamificacao() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <Trophy className="h-7 w-7 text-primary" />
-        <h1 className="text-3xl font-bold">Gamificação</h1>
-      </div>
+      <PageHeader icon={<Trophy />} title="Gamificação" description="Pontos, conquistas e ranking da sua prática nos simuladores." />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

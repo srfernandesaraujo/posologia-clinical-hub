@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
@@ -410,29 +411,22 @@ export default function SalaDetalhe() {
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-6xl">
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeFeature} />
-      <div className="space-y-2">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link to={classId ? `/turmas/${classId}` : "/salas-virtuais"}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-          </Link>
-        </Button>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold">{room.title}</h1>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Encerrada"}</Badge>
-              {isExam ? (
-                <Badge variant="outline"><ClipboardList className="h-3 w-3 mr-1" />Prova · {activities.length} atividades</Badge>
-              ) : room.simulator_slug ? (
-                <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
-              ) : null}
-              <button onClick={copyPin} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                PIN: <span className="font-mono">{room.pin}</span> <Copy className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        backTo={classId ? `/turmas/${classId}` : "/salas-virtuais"}
+        title={room.title}
+        className="mb-0"
+        badges={<>
+          <Badge variant={room.is_active ? "default" : "secondary"}>{room.is_active ? "Ativa" : "Encerrada"}</Badge>
+          {isExam ? (
+            <Badge variant="outline"><ClipboardList className="h-3 w-3 mr-1" />Prova · {activities.length} atividades</Badge>
+          ) : room.simulator_slug ? (
+            <Badge variant="outline">{SIMULATOR_LABELS[room.simulator_slug] || room.simulator_slug}</Badge>
+          ) : null}
+          <button onClick={copyPin} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+            PIN: <span className="font-mono">{room.pin}</span> <Copy className="h-3 w-3" />
+          </button>
+        </>}
+      />
 
       <Tabs defaultValue="analytics" className="space-y-4">
         <TabsList>
@@ -469,7 +463,7 @@ export default function SalaDetalhe() {
                           <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
                         )}
                         {actAvg !== null && (
-                          <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}`}>
+                          <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-status-ok/10 text-status-ok" : ""}`}>
                             {actAvg}%
                           </Badge>
                         )}
@@ -553,7 +547,7 @@ export default function SalaDetalhe() {
                         </div>
                         <div className="flex items-center gap-2">
                           {pTime > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
-                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}>
+                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-status-ok/10 text-status-ok" : ""}>
                             {pAvg}%
                           </Badge>
                           <Button
@@ -575,7 +569,7 @@ export default function SalaDetalhe() {
                           {(activities as any[]).map((act: any, i: number) => {
                             const actSub = pSubs.find((s: any) => s.activity_id === act.id);
                             return (
-                              <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : actSub.score >= 50 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400") : "bg-muted text-muted-foreground"}`}>
+                              <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-status-ok/10 text-status-ok" : actSub.score >= 50 ? "bg-status-warn/10 text-status-warn" : "bg-status-crit/10 text-status-crit") : "bg-muted text-muted-foreground"}`}>
                                 {(SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug).substring(0, 5)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
                               </span>
                             );
