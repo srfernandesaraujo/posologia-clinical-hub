@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, Crosshair, BarChart3, Wrench, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Crosshair, BarChart3, Wrench, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -123,18 +124,21 @@ export default function SimuladorCefalometria() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Cefalometria e Classificação de Angle</h1><p className="text-sm text-muted-foreground">Marcação cefalométrica interativa com cálculo SNA, SNB, ANB</p></div>
+      <SimulatorCasePicker
+        slug="cefalometria"
+        title="Cefalometria e Classificação de Angle"
+        description="Marcação cefalométrica interativa com cálculo SNA, SNB, ANB"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Cefalometria" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-cefalometria" toolName="Cefalometria" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />)}
-        </div>
+        </>}
+        footer={<>
         {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+        </>}
+      >
+          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />)}
+      </SimulatorCasePicker>
     );
   }
 
@@ -142,12 +146,15 @@ export default function SimuladorCefalometria() {
   const expSummary: Record<string, string> = caseData ? { "Caso": caseData.classe, "SNA": `${userSNA}° (ref: ${caseData.sna}°)`, "SNB": `${userSNB}° (ref: ${caseData.snb}°)`, "ANB": `${userANB}° (ref: ${caseData.anb}°)`, "Classificação": selectedClassification || "-", "Tratamento": TREATMENTS.find(t => t.id === selectedTreatment)?.label || "-", "Pontuação": `${feedback.score}%` } : {};
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setUserPoints({}); setCurrentPoint("S"); setSelectedClassification(""); setSelectedTreatment(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Cefalometria e Classificação de Angle</h1></div>
+    <SimulatorWorkspace
+      slug="cefalometria"
+      simulatorName="Cefalometria e Classificação de Angle"
+      caseTitle="Cefalometria e Classificação de Angle"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setUserPoints({}); setCurrentPoint("S"); setSelectedClassification(""); setSelectedTreatment(""); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Cefalometria" steps={HOW_TO} />
-      </div>
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card><CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Crosshair className="h-4 w-4 text-primary" /> 1. Seleção do Caso {completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><Select value={selectedCase} onValueChange={setSelectedCase}><SelectTrigger><SelectValue placeholder="Selecione a classe..." /></SelectTrigger><SelectContent>{CASES.map(c => <SelectItem key={c.id} value={c.id}>{c.classe}</SelectItem>)}</SelectContent></Select>{caseData && <div className="bg-muted/50 rounded-lg p-3 text-sm"><p>{caseData.profile}</p></div>}<Button onClick={() => completeModule(1)} disabled={!caseData || completedModules.has(1)} className="w-full">Confirmar Caso</Button></CardContent></Card>
 
@@ -158,9 +165,9 @@ export default function SimuladorCefalometria() {
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wrench className="h-4 w-4 text-primary" /> 4. Plano de Tratamento {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{TREATMENTS.map(t => (<label key={t.id} className={`block p-3 rounded border cursor-pointer ${selectedTreatment === t.id ? "border-primary bg-primary/5" : "border-border"}`}><input type="radio" name="treatment" value={t.id} checked={selectedTreatment === t.id} onChange={() => setSelectedTreatment(t.id)} className="sr-only" /><p className="text-sm font-medium">{t.label}</p><p className="text-xs text-muted-foreground">{t.desc}</p></label>))}<Button onClick={confirmTreatment} disabled={!selectedTreatment || completedModules.has(4)} className="w-full">Confirmar Tratamento</Button></CardContent></Card>
 
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Cefalometria Ortodôntica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

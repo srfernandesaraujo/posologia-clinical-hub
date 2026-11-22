@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Stethoscope, ChevronRight, RotateCcw, Award, User, Eye } from "lucide-react";
+import { ChevronRight, RotateCcw, Award, User, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -140,17 +141,13 @@ export default function SimuladorPreceptoriaClinica() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold">Preceptoria Clínica — One-Minute Preceptor</h1>
-          <p className="text-muted-foreground text-sm">Treine os 5 passos do modelo OMP</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Case Presentation */}
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Preceptoria Clínica — One-Minute Preceptor"
+      caseTitle="Preceptoria Clínica — One-Minute Preceptor"
+      onBack={() => navigate(isVirtualRoom ? "/" : "/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4 text-primary" /> {scenario.residentName}</CardTitle>
@@ -159,8 +156,6 @@ export default function SimuladorPreceptoriaClinica() {
           <div className="bg-muted/50 rounded-lg p-4 text-sm italic">{scenario.casePresentation}</div>
         </CardContent>
       </Card>
-
-      {/* OMP Steps Visual */}
       <div className="flex items-center gap-1 text-xs overflow-x-auto pb-2">
         {scenario.steps.map((s, i) => (
           <div key={i} className={`flex items-center gap-1 whitespace-nowrap ${i <= step || showResult ? "text-primary font-medium" : "text-muted-foreground"}`}>
@@ -172,8 +167,6 @@ export default function SimuladorPreceptoriaClinica() {
           </div>
         ))}
       </div>
-
-      {/* Steps */}
       {!showResult && (
         <Card>
           <CardHeader>
@@ -205,8 +198,6 @@ export default function SimuladorPreceptoriaClinica() {
           </CardContent>
         </Card>
       )}
-
-      {/* Result */}
       {showResult && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Resultado — One-Minute Preceptor</CardTitle></CardHeader>
@@ -251,6 +242,8 @@ export default function SimuladorPreceptoriaClinica() {
           </CardContent>
         </Card>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Users, ChevronRight, RotateCcw, Award, MessageCircle, Eye } from "lucide-react";
+import { Users, ChevronRight, RotateCcw, Award, MessageCircle, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -156,17 +157,13 @@ export default function SimuladorConducaoCaso() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold">Condução de Caso Clínico (PBL/TBL)</h1>
-          <p className="text-muted-foreground text-sm">Treine a facilitação de discussões em grupo</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Case Context */}
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Condução de Caso Clínico (PBL/TBL)"
+      caseTitle="Condução de Caso Clínico (PBL/TBL)"
+      onBack={() => navigate(isVirtualRoom ? "/" : "/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {pblCase.title}</CardTitle>
@@ -182,8 +179,6 @@ export default function SimuladorConducaoCaso() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Moments */}
       {!showResult && (
         <Card>
           <CardHeader>
@@ -230,8 +225,6 @@ export default function SimuladorConducaoCaso() {
           </CardContent>
         </Card>
       )}
-
-      {/* Results */}
       {showResult && (
         <Card>
           <CardHeader>
@@ -290,6 +283,8 @@ export default function SimuladorConducaoCaso() {
           </CardContent>
         </Card>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

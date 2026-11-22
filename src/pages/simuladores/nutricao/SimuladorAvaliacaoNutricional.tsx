@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
@@ -144,24 +145,24 @@ export default function SimuladorAvaliacaoNutricional() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">Avaliação Nutricional Antropométrica</h1>
-            <p className="text-sm text-muted-foreground">IMC, composição corporal e classificação de risco metabólico</p>
-          </div>
+      <SimulatorCasePicker
+        slug="avaliacao-nutricional"
+        title="Avaliação Nutricional Antropométrica"
+        description="IMC, composição corporal e classificação de risco metabólico"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Avaliação Nutricional" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-avaliacao-nutricional" toolName="Avaliação Nutricional" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+        footer={<>
+        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
+        </>}
+      >
           {allCases.map((c: any) => c.isAI
             ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(PATIENTS[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(c.id); }} />
           )}
-        </div>
-        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -177,15 +178,16 @@ export default function SimuladorAvaliacaoNutricional() {
   } : undefined;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setBmiClass(""); setSelectedRisks([]); setSelectedGoal(""); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Avaliação Nutricional</h1></div>
+    <SimulatorWorkspace
+      slug="avaliacao-nutricional"
+      simulatorName="Avaliação Nutricional Antropométrica"
+      caseTitle="Avaliação Nutricional"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setBmiClass(""); setSelectedRisks([]); setSelectedGoal(""); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Avaliação Nutricional" steps={HOW_TO} />
-      </div>
-
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* M1 */}
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(1) ? "default" : "secondary"}>M1</Badge>Dados do Paciente{completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -201,7 +203,6 @@ export default function SimuladorAvaliacaoNutricional() {
           </CardContent>
         </Card>
 
-        {/* M2 — Classificação IMC */}
         <Card className="relative">
           {!completedModules.has(1) && <LockedOverlay module={1} />}
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(2) ? "default" : "secondary"}>M2</Badge>Classificação Nutricional{completedModules.has(2) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -218,7 +219,6 @@ export default function SimuladorAvaliacaoNutricional() {
           </CardContent>
         </Card>
 
-        {/* M3 — Indicadores de Risco */}
         <Card className="relative">
           {!completedModules.has(2) && <LockedOverlay module={2} />}
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(3) ? "default" : "secondary"}>M3</Badge>Indicadores de Risco{completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -237,7 +237,6 @@ export default function SimuladorAvaliacaoNutricional() {
           </CardContent>
         </Card>
 
-        {/* M4 — Metas */}
         <Card className="relative">
           {!completedModules.has(3) && <LockedOverlay module={3} />}
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(4) ? "default" : "secondary"}>M4</Badge>Metas Nutricionais{completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -253,9 +252,9 @@ export default function SimuladorAvaliacaoNutricional() {
           </CardContent>
         </Card>
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Avaliação Nutricional Antropométrica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

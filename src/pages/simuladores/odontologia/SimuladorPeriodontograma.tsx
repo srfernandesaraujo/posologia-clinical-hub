@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, Ruler, ClipboardList, Wrench, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Ruler, ClipboardList, Wrench, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -150,18 +151,21 @@ export default function SimuladorPeriodontograma() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Periodontograma e Classificação</h1><p className="text-sm text-muted-foreground">Sondagem periodontal interativa AAP/EFP 2018</p></div>
+      <SimulatorCasePicker
+        slug="periodontograma"
+        title="Periodontograma e Classificação"
+        description="Sondagem periodontal interativa AAP/EFP 2018"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Periodontograma" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-periodontograma" toolName="Periodontograma" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />)}
-        </div>
+        </>}
+        footer={<>
         {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+        </>}
+      >
+          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />)}
+      </SimulatorCasePicker>
     );
   }
 
@@ -169,12 +173,15 @@ export default function SimuladorPeriodontograma() {
   const expSummary: Record<string, string> = caseData ? { "Caso": caseData.name, "Prof. máxima": `${maxDepth}mm`, "BOP": `${bopPercent}%`, "Classificação": selectedStage ? `Estágio ${selectedStage}` : "-", "Grau": selectedGrade || "-", "Tratamentos": selectedTreatments.length > 0 ? selectedTreatments.join(", ") : "-", "Pontuação": `${feedback.score}%` } : {};
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setProbedSites(new Set()); setRevealedDepths([0,0,0,0,0,0]); setRevealedBop([false,false,false,false,false,false]); setSelectedStage(""); setSelectedGrade(""); setSelectedTreatments([]); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Periodontograma e Classificação</h1></div>
+    <SimulatorWorkspace
+      slug="periodontograma"
+      simulatorName="Periodontograma e Classificação"
+      caseTitle="Periodontograma e Classificação"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setProbedSites(new Set()); setRevealedDepths([0,0,0,0,0,0]); setRevealedBop([false,false,false,false,false,false]); setSelectedStage(""); setSelectedGrade(""); setSelectedTreatments([]); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Periodontograma" steps={HOW_TO} />
-      </div>
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card><CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> 1. Caso Clínico {completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><Select value={selectedCase} onValueChange={setSelectedCase}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{CASES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>{caseData && <div className="bg-muted/50 rounded-lg p-3 text-sm"><p>{caseData.desc}</p><p className="text-muted-foreground mt-1">Perda óssea estimada: {caseData.boneLoss}%</p></div>}<Button onClick={() => completeModule(1)} disabled={!caseData || completedModules.has(1)} className="w-full">Confirmar Caso</Button></CardContent></Card>
 
@@ -196,9 +203,9 @@ export default function SimuladorPeriodontograma() {
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wrench className="h-4 w-4 text-primary" /> 4. Plano Terapêutico {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{TREATMENTS.map(t => { const checked = selectedTreatments.includes(t.id); return (<label key={t.id} className="flex items-start gap-2 p-2 rounded border border-border hover:bg-muted/30 cursor-pointer text-sm"><input type="checkbox" checked={checked} onChange={() => setSelectedTreatments(prev => checked ? prev.filter(x => x !== t.id) : [...prev, t.id])} className="mt-1 rounded" /><div><p className="font-medium">{t.label}</p><p className="text-xs text-muted-foreground">{t.desc}</p></div></label>); })}<Button onClick={confirmTreatment} disabled={selectedTreatments.length === 0 || completedModules.has(4)} className="w-full">Confirmar Tratamento</Button></CardContent></Card>
 
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Periodontograma" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

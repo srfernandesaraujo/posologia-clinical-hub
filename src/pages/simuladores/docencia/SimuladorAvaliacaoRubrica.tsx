@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ClipboardCheck, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
+import { ClipboardCheck, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -171,17 +172,13 @@ export default function SimuladorAvaliacaoRubrica() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/simuladores"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
-        <div>
-          <h1 className="text-2xl font-bold">Avaliação por Rubrica (OSCE)</h1>
-          <p className="text-muted-foreground text-sm">Treine a calibração como avaliador clínico</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Station Narrative */}
+    <SimulatorWorkspace
+      slug="avaliacao-rubrica"
+      simulatorName="Avaliação por Rubrica (OSCE)"
+      caseTitle="Avaliação por Rubrica (OSCE)"
+      onBack={() => navigate("/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-primary" /> {station.title}</CardTitle>
@@ -192,8 +189,6 @@ export default function SimuladorAvaliacaoRubrica() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Scoring */}
       {!showResult && (
         <Card>
           <CardHeader>
@@ -222,8 +217,6 @@ export default function SimuladorAvaliacaoRubrica() {
           </CardContent>
         </Card>
       )}
-
-      {/* Result */}
       {showResult && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Resultado da Calibração</CardTitle></CardHeader>
@@ -266,7 +259,6 @@ export default function SimuladorAvaliacaoRubrica() {
           </CardContent>
         </Card>
       )}
-
       {isVR && submitted && !vrShowFeedback && (
         <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
           <Eye className="h-4 w-4" /> Mostrar Resultados
@@ -279,6 +271,8 @@ export default function SimuladorAvaliacaoRubrica() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

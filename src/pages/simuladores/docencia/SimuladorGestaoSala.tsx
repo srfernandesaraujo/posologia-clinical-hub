@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ShieldAlert, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
+import { ShieldAlert, ChevronRight, RotateCcw, Award, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -129,16 +130,13 @@ export default function SimuladorGestaoSala() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold">Gestão de Sala de Aula — Incidentes Críticos</h1>
-          <p className="text-muted-foreground text-sm">Responda a situações difíceis em tempo real</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Gestão de Sala de Aula — Incidentes Críticos"
+      caseTitle="Gestão de Sala de Aula — Incidentes Críticos"
+      onBack={() => navigate(isVirtualRoom ? "/" : "/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       {!showResult && (
         <Card>
           <CardHeader>
@@ -180,7 +178,6 @@ export default function SimuladorGestaoSala() {
           </CardContent>
         </Card>
       )}
-
       {showResult && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Perfil de Gestão de Sala</CardTitle></CardHeader>
@@ -232,6 +229,8 @@ export default function SimuladorGestaoSala() {
           </CardContent>
         </Card>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

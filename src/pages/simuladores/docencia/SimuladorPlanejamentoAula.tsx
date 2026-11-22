@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BookOpen, CheckCircle, XCircle, ChevronRight, RotateCcw, Award, Target, Eye } from "lucide-react";
+import { CheckCircle, XCircle, ChevronRight, RotateCcw, Award, Target, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -131,17 +132,13 @@ export default function SimuladorPlanejamentoAula() {
   const stepIdx = steps.indexOf(step);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(isVirtualRoom ? "/" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold">Planejamento de Aula por Competências</h1>
-          <p className="text-muted-foreground text-sm">Alinhamento construtivo com DCNs de Farmácia (Biggs)</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Progress */}
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Planejamento de Aula por Competências"
+      caseTitle="Planejamento de Aula por Competências"
+      onBack={() => navigate(isVirtualRoom ? "/" : "/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <div className="flex items-center gap-2 text-xs">
         {["Competência", "Objetivo", "Metodologia", "Avaliação", "Resultado"].map((label, i) => (
           <div key={i} className={`flex items-center gap-1 ${i <= stepIdx ? "text-primary font-medium" : "text-muted-foreground"}`}>
@@ -153,8 +150,6 @@ export default function SimuladorPlanejamentoAula() {
           </div>
         ))}
       </div>
-
-      {/* Step 1: Competence */}
       {step === "competence" && (
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Selecione a Competência (DCN)</CardTitle></CardHeader>
@@ -173,8 +168,6 @@ export default function SimuladorPlanejamentoAula() {
           </CardContent>
         </Card>
       )}
-
-      {/* Step 2: Objective */}
       {step === "objective" && (
         <Card>
           <CardHeader><CardTitle className="text-base">Defina o Nível do Objetivo de Aprendizagem</CardTitle></CardHeader>
@@ -196,8 +189,6 @@ export default function SimuladorPlanejamentoAula() {
           </CardContent>
         </Card>
       )}
-
-      {/* Step 3: Methodology */}
       {step === "methodology" && (
         <Card>
           <CardHeader><CardTitle className="text-base">Escolha as Metodologias (selecione 1-3)</CardTitle></CardHeader>
@@ -222,8 +213,6 @@ export default function SimuladorPlanejamentoAula() {
           </CardContent>
         </Card>
       )}
-
-      {/* Step 4: Assessment */}
       {step === "assessment" && (
         <Card>
           <CardHeader><CardTitle className="text-base">Escolha os Métodos Avaliativos (1-3)</CardTitle></CardHeader>
@@ -242,8 +231,6 @@ export default function SimuladorPlanejamentoAula() {
           </CardContent>
         </Card>
       )}
-
-      {/* Result */}
       {step === "result" && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Alinhamento Construtivo (Biggs)</CardTitle></CardHeader>
@@ -306,6 +293,8 @@ export default function SimuladorPlanejamentoAula() {
           </CardContent>
         </Card>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

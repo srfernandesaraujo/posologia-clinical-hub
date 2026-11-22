@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, ClipboardList, Eye, Stethoscope, FileText, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, ClipboardList, Eye, Stethoscope, FileText, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -167,29 +168,29 @@ export default function SimuladorOdontograma() {
   // Dashboard mode
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">Odontograma Interativo e Diagnóstico</h1>
-            <p className="text-sm text-muted-foreground">Registro clínico odontológico padronizado com arcada SVG interativa</p>
-          </div>
+      <SimulatorCasePicker
+        slug="odontograma"
+        title="Odontograma Interativo e Diagnóstico"
+        description="Registro clínico odontológico padronizado com arcada SVG interativa"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Odontograma" steps={HOW_TO_STEPS} />
           <AdminPromptViewer toolSlug="sim-odontograma" toolName="Odontograma Interativo" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allCases.map((c: any) => c.isAI
-            ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(PATIENTS[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(c.id); }} />
-          )}
-        </div>
+        </>}
+        footer={<>
         {isAdmin && !isVR && (
           <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2">
             <Sparkles className="h-4 w-4" />
             {isGenerating ? "Gerando..." : "Gerar Caso com IA"}
           </Button>
         )}
-      </div>
+        </>}
+      >
+          {allCases.map((c: any) => c.isAI
+            ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(PATIENTS[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+            : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(c.id); }} />
+          )}
+      </SimulatorCasePicker>
     );
   }
 
@@ -210,20 +211,16 @@ export default function SimuladorOdontograma() {
   } : {};
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setUserFindings({}); setDiagAnswers({}); setTreatmentPlan([]); setShowFeedback(false); setSelectedPatient(""); }}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Odontograma Interativo e Diagnóstico</h1>
-          <p className="text-sm text-muted-foreground">Registro clínico odontológico padronizado</p>
-        </div>
+    <SimulatorWorkspace
+      slug="odontograma"
+      simulatorName="Odontograma Interativo e Diagnóstico"
+      caseTitle="Odontograma Interativo e Diagnóstico"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setUserFindings({}); setDiagAnswers({}); setTreatmentPlan([]); setShowFeedback(false); setSelectedPatient(""); }}
+      actions={<>
         <SimulatorHowToUse title="Odontograma" steps={HOW_TO_STEPS} />
-      </div>
-
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* M1 — Seleção do Paciente + RX */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -258,7 +255,6 @@ export default function SimuladorOdontograma() {
           </CardContent>
         </Card>
 
-        {/* M2 — Exame Clínico Visual */}
         <Card className="lg:col-span-1 relative">
           {!completedModules.has(1) && <LockedOverlay module={1} />}
           <CardHeader className="pb-3">
@@ -295,7 +291,6 @@ export default function SimuladorOdontograma() {
           </CardContent>
         </Card>
 
-        {/* M3 — Classificação Diagnóstica (Quiz ICDAS) */}
         <Card className="relative">
           {!completedModules.has(2) && <LockedOverlay module={2} />}
           <CardHeader className="pb-3">
@@ -335,7 +330,6 @@ export default function SimuladorOdontograma() {
           </CardContent>
         </Card>
 
-        {/* M4 — Plano de Tratamento */}
         <Card className="relative">
           {!completedModules.has(3) && <LockedOverlay module={3} />}
           <CardHeader className="pb-3">
@@ -368,12 +362,9 @@ export default function SimuladorOdontograma() {
         </Card>
 
       </div>
-
-      {/* Feedback */}
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
-
-      {/* M5 — Relatório */}
       <LabReportPanel benchTitle="Odontograma Interativo" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

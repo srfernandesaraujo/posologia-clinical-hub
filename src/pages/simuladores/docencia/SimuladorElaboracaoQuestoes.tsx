@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Award, Lightbulb, Eye } from "lucide-react";
+import { ChevronRight, RotateCcw, Award, Lightbulb, Eye } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -135,17 +136,13 @@ export default function SimuladorElaboracaoQuestoes() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/simuladores"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
-        <div>
-          <h1 className="text-2xl font-bold">Elaboração de Questões — Taxonomia de Bloom</h1>
-          <p className="text-muted-foreground text-sm">Treine a criação de questões em diferentes níveis cognitivos</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Bloom Pyramid */}
+    <SimulatorWorkspace
+      slug="elaboracao-questoes"
+      simulatorName="Elaboração de Questões — Taxonomia de Bloom"
+      caseTitle="Elaboração de Questões — Taxonomia de Bloom"
+      onBack={() => navigate("/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <Card>
         <CardContent className="pt-5">
           <div className="flex flex-wrap gap-2 justify-center">
@@ -159,8 +156,6 @@ export default function SimuladorElaboracaoQuestoes() {
           <p className="text-center text-xs text-muted-foreground mt-2">← Nível inferior · Nível superior →</p>
         </CardContent>
       </Card>
-
-      {/* Objective */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2"><Lightbulb className="h-4 w-4 text-primary" /> Objetivo de Aprendizagem</CardTitle>
@@ -170,8 +165,6 @@ export default function SimuladorElaboracaoQuestoes() {
           <p className="text-xs text-muted-foreground mt-1">Nível-alvo da avaliação: <Badge className={BLOOM_LEVELS[challenge.targetLevel - 1].color + " text-white"}>{BLOOM_LEVELS[challenge.targetLevel - 1].name}</Badge></p>
         </CardContent>
       </Card>
-
-      {/* Phase 1: Classify */}
       {phase === "classify" && !showClassifyResult && (
         <Card>
           <CardHeader>
@@ -207,8 +200,6 @@ export default function SimuladorElaboracaoQuestoes() {
           </CardContent>
         </Card>
       )}
-
-      {/* Classify Results */}
       {showClassifyResult && phase === "classify" && (
         <Card>
           <CardHeader>
@@ -240,8 +231,6 @@ export default function SimuladorElaboracaoQuestoes() {
           </CardContent>
         </Card>
       )}
-
-      {/* Phase 2: Elevate */}
       {phase === "elevate" && !showElevateResult && (
         <Card>
           <CardHeader>
@@ -274,7 +263,6 @@ export default function SimuladorElaboracaoQuestoes() {
           </CardContent>
         </Card>
       )}
-
       {showElevateResult && (
         <Card>
           <CardContent className="pt-5 space-y-4">
@@ -296,7 +284,6 @@ export default function SimuladorElaboracaoQuestoes() {
           </CardContent>
         </Card>
       )}
-
       {isVR && submitted && !vrShowFeedback && (
         <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
           <Eye className="h-4 w-4" /> Mostrar Resultados
@@ -313,6 +300,8 @@ export default function SimuladorElaboracaoQuestoes() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

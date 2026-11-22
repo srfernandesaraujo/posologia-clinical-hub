@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
@@ -160,36 +161,36 @@ export default function SimuladorDisfagia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">Avaliação e Conduta em Disfagia</h1>
-            <p className="text-sm text-muted-foreground">Testes à beira-leito, FOIS e manejo de consistências</p>
-          </div>
+      <SimulatorCasePicker
+        slug="disfagia"
+        title="Avaliação e Conduta em Disfagia"
+        description="Testes à beira-leito, FOIS e manejo de consistências"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Disfagia" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-disfagia" toolName="Disfagia" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+        footer={<>
+        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
+        </>}
+      >
           {allCases.map((c: any) => c.isAI
             ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(PATIENTS[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedPatient(c.id); }} />
           )}
-        </div>
-        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
   const LockedOverlay = ({ module }: { module: number }) => (<div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-xl"><Lock className="h-6 w-6 text-muted-foreground" /><p className="text-xs text-muted-foreground font-medium">Complete o módulo {module}</p></div>);
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Avaliação de Disfagia</h1></div>
-      </div>
-
+    <SimulatorWorkspace
+      slug="disfagia"
+      simulatorName="Avaliação e Conduta em Disfagia"
+      caseTitle="Avaliação de Disfagia"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setShowFeedback(false); }}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(1) ? "default" : "secondary"}>M1</Badge>Caso Clínico{completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -256,9 +257,9 @@ export default function SimuladorDisfagia() {
           </CardContent>
         </Card>
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Avaliação de Disfagia" isUnlocked={completedModules.has(4)} experimentSummary={patient ? { "Paciente": `${patient.name}, ${patient.age}a`, "FOIS": FOIS_OPTIONS.find(o => o.value === fois)?.label || "—", "Consistência": CONSISTENCY_OPTIONS.find(o => o.value === consistency)?.label || "—", "Exame": EXAM_OPTIONS.find(o => o.value === exam)?.label || "—", "Pontuação": `${feedback.score}%` } : undefined} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

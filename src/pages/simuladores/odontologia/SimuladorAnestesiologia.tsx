@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, Syringe, AlertTriangle, Target, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Syringe, AlertTriangle, Target, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -140,18 +141,21 @@ export default function SimuladorAnestesiologia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Anestesiologia Odontológica</h1><p className="text-sm text-muted-foreground">Técnicas de bloqueio com cálculo de dose</p></div>
+      <SimulatorCasePicker
+        slug="anestesiologia-odonto"
+        title="Anestesiologia Odontológica"
+        description="Técnicas de bloqueio com cálculo de dose"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Anestesiologia" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-anestesiologia" toolName="Anestesiologia Odontológica" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedProcedure(PROCEDURES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedProcedure(c.id); }} />)}
-        </div>
+        </>}
+        footer={<>
         {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+        </>}
+      >
+          {allCases.map((c: any) => c.isAI ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedProcedure(PROCEDURES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} /> : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedProcedure(c.id); }} />)}
+      </SimulatorCasePicker>
     );
   }
 
@@ -160,12 +164,15 @@ export default function SimuladorAnestesiologia() {
   const expSummary = { "Procedimento": procedure?.label || "-", "Técnica": TECHNIQUES.find(t => t.id === selectedTechnique)?.label || "-", "Anestésico": anesthetic?.label || "-", "Peso": `${patientWeight} kg`, "Dose escolhida": selectedOption?.label || "-", "Pontuação": `${feedback.score}%` };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedTechnique(""); setSelectedAnesthetic(""); setSelectedDoseOption(null); setDoseOptions([]); setComplicationAnswer(null); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Anestesiologia Odontológica</h1></div>
+    <SimulatorWorkspace
+      slug="anestesiologia-odonto"
+      simulatorName="Anestesiologia Odontológica"
+      caseTitle="Anestesiologia Odontológica"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setSelectedTechnique(""); setSelectedAnesthetic(""); setSelectedDoseOption(null); setDoseOptions([]); setComplicationAnswer(null); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Anestesiologia" steps={HOW_TO} />
-      </div>
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card><CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> 1. Procedimento e Região {completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3"><Select value={selectedProcedure} onValueChange={setSelectedProcedure}><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{PROCEDURES.map(p => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent></Select>{procedure && <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1"><p><strong>Região:</strong> {procedure.region}</p><p><strong>Nervo-alvo:</strong> {procedure.nerve}</p><p><strong>Peso do paciente:</strong> {procedure.weight} kg</p></div>}<Button onClick={() => completeModule(1)} disabled={!procedure || completedModules.has(1)} className="w-full">Confirmar</Button></CardContent></Card>
 
@@ -199,9 +206,9 @@ export default function SimuladorAnestesiologia() {
         <Card className="relative">{!completedModules.has(3) && <LockedOverlay module={3} />}<CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" /> 4. Complicação {completedModules.has(4) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}</CardTitle></CardHeader><CardContent className="space-y-3">{complication && <><div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm"><p className="font-medium text-destructive">⚠️ {complication.title}</p><p className="text-muted-foreground mt-1">{complication.desc}</p></div><p className="text-sm font-medium">Qual a conduta adequada?</p>{complication.options.map((opt, i) => (<label key={i} className={`block p-2 rounded border text-sm cursor-pointer ${complicationAnswer === opt.label ? (completedModules.has(4) ? (opt.correct ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10") : "border-primary bg-primary/5") : "border-border hover:bg-muted/30"}`}><input type="radio" name="comp" value={opt.label} checked={complicationAnswer === opt.label} onChange={() => setComplicationAnswer(opt.label)} className="sr-only" />{opt.label}</label>))}</>}<Button onClick={confirmComplication} disabled={!complicationAnswer || completedModules.has(4)} className="w-full">Confirmar Conduta</Button></CardContent></Card>
 
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Anestesiologia Odontológica" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
-    </div>
+      </>}
+    />
   );
 }

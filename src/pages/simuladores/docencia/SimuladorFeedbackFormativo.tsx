@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award, Eye } from "lucide-react";
+import { MessageSquareHeart, CheckCircle, XCircle, RotateCcw, ChevronRight, User, Award, Eye } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -273,19 +274,13 @@ export default function SimuladorFeedbackFormativo() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/simuladores">
-          <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">Simulador de Feedback Formativo</h1>
-          <p className="text-muted-foreground text-sm">Treine a habilidade de dar feedback construtivo usando modelos validados</p>
-        </div>
-        <Badge className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/20">Formação Docente</Badge>
-      </div>
-
-      {/* Scenario Card */}
+    <SimulatorWorkspace
+      slug="feedback-formativo"
+      simulatorName="Simulador de Feedback Formativo"
+      caseTitle="Simulador de Feedback Formativo"
+      onBack={() => navigate("/simuladores")}
+      stage={<>
+<div className="mx-auto w-full max-w-3xl space-y-4">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -313,8 +308,6 @@ export default function SimuladorFeedbackFormativo() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Model Selection */}
       {!model && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">Escolha o Modelo de Feedback</h2>
@@ -332,8 +325,6 @@ export default function SimuladorFeedbackFormativo() {
           </div>
         </div>
       )}
-
-      {/* Simulation Steps */}
       {model && !showResult && (
         <Card>
           <CardHeader>
@@ -379,8 +370,6 @@ export default function SimuladorFeedbackFormativo() {
           </CardContent>
         </Card>
       )}
-
-      {/* Results */}
       {showResult && model && (
         <Card>
           <CardHeader>
@@ -431,7 +420,6 @@ export default function SimuladorFeedbackFormativo() {
           </CardContent>
         </Card>
       )}
-
       {isVR && submitted && !vrShowFeedback && (
         <Button onClick={() => setVrShowFeedback(true)} variant="outline" className="w-full gap-2">
           <Eye className="h-4 w-4" /> Mostrar Resultados
@@ -444,6 +432,8 @@ export default function SimuladorFeedbackFormativo() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+</div>
+      </>}
+    />
   );
 }

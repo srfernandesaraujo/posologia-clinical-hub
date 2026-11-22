@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, CheckCircle2, Bone, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
 import SimulatorFeedback, { FeedbackDecision } from "@/components/simulators/SimulatorFeedback";
@@ -141,21 +142,24 @@ export default function SimuladorTestesOrtopedicos() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Testes Ortopédicos Especiais</h1><p className="text-sm text-muted-foreground">Execução e interpretação de testes provocativos</p></div>
+      <SimulatorCasePicker
+        slug="testes-ortopedicos"
+        title="Testes Ortopédicos Especiais"
+        description="Execução e interpretação de testes provocativos"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Testes Ortopédicos" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-testes-ortopedicos" toolName="Testes Ortopédicos" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+        footer={<>
+        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
+        </>}
+      >
           {allCases.map((c: any) => c.isAI
             ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedJoint(JOINTS_DATA[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedJoint(c.id); }} />
           )}
-        </div>
-        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -163,13 +167,15 @@ export default function SimuladorTestesOrtopedicos() {
   const expSummary = jointData ? { "Articulação": `${jointData.name} — ${jointData.complaint}`, "Testes": jointData.tests.map(t => `${t.name}: ${testedResults[t.id] ? "+" : "-"}`).join("; "), "Diagnóstico": selectedDiagnosis || "-", "Reabilitação": selectedPhases.map(i => jointData.rehabPhases[i]?.split(":")[0]).join("; ") || "Nenhuma", "Pontuação": `${feedback.score}%` } : undefined;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setTestedResults({}); setSelectedDiagnosis(""); setSelectedPhases([]); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Testes Ortopédicos</h1></div>
+    <SimulatorWorkspace
+      slug="testes-ortopedicos"
+      simulatorName="Testes Ortopédicos Especiais"
+      caseTitle="Testes Ortopédicos"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setTestedResults({}); setSelectedDiagnosis(""); setSelectedPhases([]); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Testes Ortopédicos" steps={HOW_TO} />
-      </div>
-
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(1) ? "default" : "secondary"}>M1</Badge>Seleção da Articulação{completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -205,7 +211,6 @@ export default function SimuladorTestesOrtopedicos() {
           </CardContent>
         </Card>
 
-        {/* M3 — Student chooses diagnosis */}
         <Card className="relative">
           {!completedModules.has(2) && <LockedOverlay module={2} />}
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(3) ? "default" : "secondary"}>M3</Badge>Diagnóstico Diferencial{completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -239,7 +244,6 @@ export default function SimuladorTestesOrtopedicos() {
           </CardContent>
         </Card>
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Testes Ortopédicos Especiais" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
       {isVR && submitted && (
@@ -249,6 +253,7 @@ export default function SimuladorTestesOrtopedicos() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+      </>}
+    />
   );
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Lock, CheckCircle2, Scale, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -160,21 +161,24 @@ export default function SimuladorBerg() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Escala de Equilíbrio de Berg</h1><p className="text-sm text-muted-foreground">Avaliação funcional de equilíbrio e risco de queda</p></div>
+      <SimulatorCasePicker
+        slug="berg"
+        title="Escala de Equilíbrio de Berg"
+        description="Avaliação funcional de equilíbrio e risco de queda"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Escala de Berg" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-berg" toolName="Escala de Berg" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+        footer={<>
+        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
+        </>}
+      >
           {allCases.map((c: any) => c.isAI
             ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />
           )}
-        </div>
-        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -182,13 +186,15 @@ export default function SimuladorBerg() {
   const expSummary = caseData ? { "Paciente": `${caseData.name}, ${caseData.age}a`, "Score Real": `${realTotalScore}/56`, "Score Aluno": userTotalScore || "-", "Risco": userRiskLevel || "-", "Programa": selectedExercises.map(id => EXERCISES.find(e => e.id === id)?.name).join(", ") || "Nenhum", "Pontuação": `${feedback.score}%` } : undefined;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setUserScores(new Array(14).fill(null)); setUserTotalScore(""); setUserRiskLevel(""); setSelectedExercises([]); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Escala de Berg</h1></div>
+    <SimulatorWorkspace
+      slug="berg"
+      simulatorName="Escala de Equilíbrio de Berg"
+      caseTitle="Escala de Berg"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setUserScores(new Array(14).fill(null)); setUserTotalScore(""); setUserRiskLevel(""); setSelectedExercises([]); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Escala de Berg" steps={HOW_TO} />
-      </div>
-
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(1) ? "default" : "secondary"}>M1</Badge>Seleção do Caso{completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -227,7 +233,6 @@ export default function SimuladorBerg() {
           </CardContent>
         </Card>
 
-        {/* M3 — Student interprets the radar and decides score + risk */}
         <Card className="relative">
           {!completedModules.has(2) && <LockedOverlay module={2} />}
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(3) ? "default" : "secondary"}>M3</Badge>Interpretação do Resultado{completedModules.has(3) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -277,7 +282,6 @@ export default function SimuladorBerg() {
           </CardContent>
         </Card>
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Escala de Equilíbrio de Berg" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
       {isVR && submitted && (
@@ -287,6 +291,7 @@ export default function SimuladorBerg() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+      </>}
+    />
   );
 }

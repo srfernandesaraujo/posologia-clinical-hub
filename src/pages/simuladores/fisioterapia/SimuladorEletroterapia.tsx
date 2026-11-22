@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace } from "@/components/simulators/shell/SimulatorShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Lock, CheckCircle2, Zap, ArrowLeft, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles } from "lucide-react";
 import { LabReportPanel } from "@/components/lab-virtual/LabReportPanel";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import SimulatorHowToUse from "@/components/simulators/SimulatorHowToUse";
@@ -145,21 +146,24 @@ export default function SimuladorEletroterapia() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div className="flex-1"><h1 className="text-2xl font-bold">Eletroterapia e Parâmetros de Corrente</h1><p className="text-sm text-muted-foreground">Programação de TENS, FES, corrente russa e interferencial</p></div>
+      <SimulatorCasePicker
+        slug="eletroterapia"
+        title="Eletroterapia e Parâmetros de Corrente"
+        description="Programação de TENS, FES, corrente russa e interferencial"
+        onBack={() => navigate("/simuladores")}
+        actions={<>
           <SimulatorHowToUse title="Eletroterapia" steps={HOW_TO} />
           <AdminPromptViewer toolSlug="sim-eletroterapia" toolName="Eletroterapia" toolType="simulator" prompt={prompt} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>}
+        footer={<>
+        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
+        </>}
+      >
           {allCases.map((c: any) => c.isAI
             ? <AICaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(CASES[0]?.id || ""); }} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
             : <NativeCaseCard key={c.id} caseItem={c} onClick={() => { setActiveCase(c.id); setSelectedCase(c.id); }} />
           )}
-        </div>
-        {isAdmin && !isVR && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="gap-2"><Sparkles className="h-4 w-4" />{isGenerating ? "Gerando..." : "Gerar Caso com IA"}</Button>}
-      </div>
+      </SimulatorCasePicker>
     );
   }
 
@@ -167,13 +171,15 @@ export default function SimuladorEletroterapia() {
   const expSummary = caseData && modality ? { "Caso": `${caseData.name}`, "Modalidade": modality.name, "Parâmetros": `${freq}Hz | ${pulseWidth}μs | ${intensity}mA | ON${timeOn}s/OFF${timeOff}s`, "Região": caseData.region, "Pontuação": `${feedback.score}%` } : undefined;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setActiveCase(null); setCompletedModules(new Set()); setElectrodes({ a: false, b: false }); setShowFeedback(false); }}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Eletroterapia</h1></div>
+    <SimulatorWorkspace
+      slug="eletroterapia"
+      simulatorName="Eletroterapia e Parâmetros de Corrente"
+      caseTitle="Eletroterapia"
+      onBack={() => { setActiveCase(null); setCompletedModules(new Set()); setElectrodes({ a: false, b: false }); setShowFeedback(false); }}
+      actions={<>
         <SimulatorHowToUse title="Eletroterapia" steps={HOW_TO} />
-      </div>
-
+      </>}
+      stage={<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Badge variant={completedModules.has(1) ? "default" : "secondary"}>M1</Badge>Seleção do Caso{completedModules.has(1) && <CheckCircle2 className="h-4 w-4 text-green-500" />}</CardTitle></CardHeader>
@@ -236,7 +242,6 @@ export default function SimuladorEletroterapia() {
           </CardContent>
         </Card>
       </div>
-
       <SimulatorFeedback score={feedback.score} decisions={feedback.decisions} narrative={feedback.narrative} visible={showFeedback} />
       <LabReportPanel benchTitle="Eletroterapia" isUnlocked={completedModules.has(4)} experimentSummary={expSummary} isVirtualRoom={isVR} onVRSubmit={handleVRSubmit} vrSubmitted={submitted} />
       {isVR && submitted && (
@@ -246,6 +251,7 @@ export default function SimuladorEletroterapia() {
           <p className="text-xs text-muted-foreground">Redirecionando em 15 segundos...</p>
         </div>
       )}
-    </div>
+      </>}
+    />
   );
 }
