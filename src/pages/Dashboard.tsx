@@ -149,7 +149,8 @@ export default function Dashboard() {
   }, [user]);
 
   const firstName = profileName?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "";
-  const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const todayRaw = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const today = todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1);
 
   const reliableMastery = useMemo(() => (mastery || []).filter((m) => m.reliable), [mastery]);
   const [lastActivity, ...moreRecent] = recent || [];
@@ -161,7 +162,7 @@ export default function Dashboard() {
       {/* Cabeçalho */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <p className="text-sm capitalize text-muted-foreground">{today}</p>
+          <p className="text-sm text-muted-foreground">{today}</p>
           <h1 className="text-3xl font-semibold md:text-4xl">
             {greeting()}
             {firstName ? `, ${firstName}` : ""}.{" "}
@@ -194,7 +195,7 @@ export default function Dashboard() {
       </header>
 
       {/* Continuar + salas */}
-      <div className={cn("grid gap-4", isTeacher ? "lg:grid-cols-[1.45fr_1fr]" : "lg:grid-cols-[1.45fr_1fr]")}>
+      <div className="grid gap-4 lg:grid-cols-[1.45fr_1fr] [&>*]:min-w-0">
         {lastActivity ? (
           <Link
             to={lastActivity.link}
@@ -328,7 +329,7 @@ export default function Dashboard() {
       )}
 
       {/* Recomendado · Competências · Novidades */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />

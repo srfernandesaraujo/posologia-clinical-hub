@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
+import { NATIVE_CALCULATORS } from "@/data/calculatorCatalog";
+
+function calculatorName(slug: string) {
+  return NATIVE_CALCULATORS.find((c) => c.path === `/calculadoras/${slug}`)?.name;
+}
 
 // Mesma lógica de recência/cobertura do edge function generate-review-digest
 // (supabase/functions/generate-review-digest/index.ts) — não existe dado de
@@ -69,7 +74,7 @@ async function fetchRecommendations(userId: string): Promise<Recommendation[]> {
     if (days < STALE_DAYS) continue;
     const tool = toolsBySlug.get(slug);
     staleCandidates.push({
-      type: "calculadora", slug, name: tool?.name || prettifySlug(slug),
+      type: "calculadora", slug, name: tool?.name || calculatorName(slug) || prettifySlug(slug),
       link: `/calculadoras/${slug}`, reason: "parado", daysSince: days,
     });
   }
