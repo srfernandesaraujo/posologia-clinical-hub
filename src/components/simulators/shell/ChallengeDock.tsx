@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export type ChallengeMode = "side" | "float";
 
 const MODE_KEY = "posologia-sim-challenge-mode-v1";
-const WINDOW_KEY = "posologia-sim-challenge-window-v1";
+const WINDOW_KEY = "posologia-sim-challenge-window-v2";
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -71,8 +71,9 @@ interface WindowBox { x: number; y: number; w: number; h: number }
 function defaultBox(): WindowBox {
   const w = Math.min(460, window.innerWidth - 48);
   const h = Math.min(620, window.innerHeight - 140);
-  // Canto inferior direito, acima do botão do Oráculo.
-  return { x: window.innerWidth - w - 24, y: Math.max(72, window.innerHeight - h - 88), w, h };
+  // À esquerda da coluna da conduta (360px + margens), para não cobrir a
+  // prescrição que o aluno precisa mexer enquanto lê a questão.
+  return { x: Math.max(8, window.innerWidth - w - 420), y: Math.max(72, window.innerHeight - h - 88), w, h };
 }
 
 function clampBox(b: WindowBox): WindowBox {
@@ -123,8 +124,13 @@ export function FloatingChallengeWindow({ slotRef, onDock, title = "Modo Desafio
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!drag.current) return;
-    setBox((b) => clampBox({ ...b, x: e.clientX - drag.current!.dx, y: e.clientY - drag.current!.dy }));
+    const d = drag.current;
+    if (!d) return;
+    // Calcula AGORA: o atualizador do setState roda depois, quando o ponteiro
+    // pode já ter sido solto (drag.current = null) — isso derrubava a página.
+    const x = e.clientX - d.dx;
+    const y = e.clientY - d.dy;
+    setBox((b) => clampBox({ ...b, x, y }));
   };
   const onPointerUp = () => {
     drag.current = null;
