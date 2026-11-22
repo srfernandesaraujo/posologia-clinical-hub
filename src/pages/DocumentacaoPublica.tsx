@@ -27,6 +27,8 @@ const sections: DocSection[] = [
       { q: "Esqueci minha senha, como recupero?", a: "Na tela de login, clique em 'Esqueceu a senha?' e informe seu e-mail. Você receberá um link de redefinição." },
       { q: "A plataforma tem um assistente para tirar dúvidas?", a: "Sim! O Oráculo é um chat de IA disponível para usuários logados que orienta sobre qual ferramenta usar e como aproveitar cada funcionalidade. Dentro de um simulador, ele também pode agir como um preceptor — veja a pergunta sobre isso na seção de Simuladores." },
       { q: "Recebo algum e-mail de revisão ou lembrete de uso?", a: "Sim, toda segunda-feira enviamos um resumo semanal com sugestões de até 5 ferramentas: calculadoras/simuladores que você usou mas não toca há 14+ dias, e calculadoras de categorias que você frequenta mas ainda não abriu. Essa recomendação também aparece em tempo real no Dashboard, no bloco 'Recomendado para você'. Você pode ativar ou desativar o recebimento do e-mail em Minha Conta → Preferências." },
+      { q: "Como está organizado o menu lateral?", a: "O menu é dividido em grupos: Início (Painel), Praticar (Simuladores, Calculadoras, Laboratório Virtual, MedView 3D e Jogos Clínicos, com o tamanho do catálogo ao lado), Ensinar (Turmas, Salas Virtuais, Feedback de Simulação e Marketplace — recolhível e aberto por padrão para professores), Meu progresso (Conquistas) e, só para administradores, Administração. Conta, plano, documentação, suporte, idioma e sair ficam no menu do seu avatar, no rodapé da barra lateral (ou no canto superior no celular). No celular, a barra inferior traz Início, Simuladores, Buscar, Calculadoras e Mais (que abre os grupos acima)." },
+      { q: "Existe uma busca para encontrar ferramentas rapidamente?", a: "Sim. Pressione Ctrl+K (Cmd+K no Mac) ou clique em 'Buscar…' na barra lateral (no celular, no botão central 'Buscar' da barra inferior). A busca encontra simuladores, calculadoras, bancadas do Laboratório Virtual e páginas, ignora acentos, mostra seus 5 itens recentes e marca com cadeado o que é Premium." },
     ],
   },
   {
@@ -101,9 +103,9 @@ const sections: DocSection[] = [
   {
     id: "gamificacao", title: "Gamificação", icon: Trophy, color: "text-yellow-400 bg-yellow-500/10",
     items: [
-      { q: "Como funciona o sistema de pontos, badges e streaks?", a: "Você ganha pontos ao usar calculadoras, simuladores e jogos, conquista badges por marcos de uso (Explorer, Maratonista, etc.) e mantém um streak diário. Tudo isso é visível em 'Gamificação' no menu, junto com o leaderboard global." },
+      { q: "Como funciona o sistema de pontos, badges e streaks?", a: "Você ganha pontos ao usar calculadoras, simuladores e jogos, conquista badges por marcos de uso (Explorer, Maratonista, etc.) e mantém um streak diário. Tudo isso é visível em 'Conquistas' (grupo 'Meu progresso' do menu, rota /gamificacao), junto com o leaderboard global." },
       { q: "Agora ganho pontos resolvendo um simulador sozinho, fora de uma Sala Virtual?", a: "Sim! Antes, a pontuação por simulador só era dada dentro de Salas Virtuais. Agora, resolver qualquer simulador individualmente também credita pontos, proporcionais ao score que você tirou no caso." },
-      { q: "O que é o Mapa de Competências?", a: "É uma aba em 'Gamificação' que mostra, por categoria de simulador (Farmácia Clínica, Bioquímica, Farmacologia Básica, etc.), um placar de 0 a 100 que resume o seu desempenho recente naquela área — dando mais peso aos casos resolvidos nos últimos dias do que aos mais antigos. Categorias em que você resolveu poucos casos aparecem à parte, como 'poucos dados ainda', para não sugerir uma confiança que os dados ainda não sustentam." },
+      { q: "O que é o Mapa de Competências?", a: "É uma aba em 'Conquistas' (/gamificacao) que mostra, por categoria de simulador (Farmácia Clínica, Bioquímica, Farmacologia Básica, etc.), um placar de 0 a 100 que resume o seu desempenho recente naquela área — dando mais peso aos casos resolvidos nos últimos dias do que aos mais antigos. Categorias em que você resolveu poucos casos aparecem à parte, como 'poucos dados ainda', para não sugerir uma confiança que os dados ainda não sustentam." },
       { q: "O Mapa de Competências usa inteligência artificial para prever meu conhecimento?", a: "Não. É uma média ponderada por recência sobre as suas notas reais em cada tentativa — simples e transparente, sem modelo preditivo por trás. Serve como um retrato do seu histórico recente, não uma previsão." },
       { q: "Onde vejo um resumo rápido da minha maestria?", a: "O Dashboard mostra um card com a sua categoria mais forte e a mais fraca (quando já há dados suficientes), com um link direto para o Mapa de Competências completo." },
       { q: "O que são os Créditos de Educação Continuada?", a: "Na mesma aba 'Competências', ao atingir 70% de maestria ponderada com pelo menos 3 simuladores distintos concluídos numa categoria (trilha), você pode emitir um certificado de trilha concluída em PDF, com um código de verificação público. É um recurso exclusivo do plano Premium, e a elegibilidade é recalculada no servidor a partir do seu histórico real — nunca confiando apenas no que aparece na tela." },
@@ -143,10 +145,11 @@ const sections: DocSection[] = [
   {
     id: "suporte", title: "Suporte Técnico", icon: LifeBuoy, color: "text-sky-400 bg-sky-500/10",
     items: [
-      { q: "Como abro um chamado de suporte?", a: "Acesse 'Suporte' no menu lateral (usuário logado), clique em 'Novo Chamado' e informe assunto, categoria (bug, dúvida, financeiro, sugestão ou outro), descrição e, se quiser, um anexo." },
+      { q: "Como abro um chamado de suporte?", a: "Abra o menu do seu avatar (rodapé da barra lateral, ou canto superior no celular) e escolha 'Suporte e contato' (usuário logado), clique em 'Novo Chamado' e informe assunto, categoria (bug, dúvida, financeiro, sugestão ou outro), descrição e, se quiser, um anexo." },
       { q: "Como acompanho meu chamado?", a: "A página Suporte lista todos os seus chamados com status (Aberto, Em Andamento, Resolvido ou Fechado) e prioridade. Você pode responder na thread a qualquer momento — responder um chamado Resolvido ou Fechado o reabre automaticamente." },
       { q: "Recebo notificação quando meu chamado é respondido?", a: "Sim, você recebe um e-mail assim que a equipe responder ao seu chamado." },
       { q: "Preciso enviar print de erro junto do chamado?", a: "Não é obrigatório: ao abrir o chamado, a plataforma já captura automaticamente informações técnicas do seu navegador (rota, resolução de tela e idioma) para ajudar no diagnóstico. Anexar um arquivo é opcional." },
+      { q: "Onde fica o formulário 'Fale conosco'?", a: "No fim da página Suporte (/suporte). Ele não aparece mais na barra lateral." },
     ],
   },
   {
@@ -154,7 +157,7 @@ const sections: DocSection[] = [
     items: [
       { q: "Quais planos estão disponíveis?", a: "Oferecemos Gratuito (com limite diário de calculadoras) e Premium (acesso ilimitado a calculadoras, 111 simuladores, 11 bancadas de laboratório, jogos, salas virtuais com analytics, formação docente, relatórios PDF e emissão de créditos de educação continuada)." },
       { q: "Existe algum limite de uso mesmo no plano Premium?", a: "Sim, em um único caso: o simulador Paciente-IA por Voz (Farmácia Clínica) tem um limite diário de 15 turnos de voz por usuário, mesmo para assinantes Premium — é a única funcionalidade da plataforma com custo real de IA a cada interação em tempo real (transcrição de voz + resposta do paciente + avaliação final). Os demais recursos Premium (calculadoras, os demais simuladores, laboratório virtual, MedView 3D) não têm limite diário de uso." },
-      { q: "Como faço upgrade para Premium?", a: "Acesse a página de Planos no menu lateral e clique em 'Assinar Premium'. Pagamento seguro pelo Stripe." },
+      { q: "Como faço upgrade para Premium?", a: "Abra o menu do seu avatar, escolha 'Plano e assinatura' (página de Planos) e clique em 'Assinar Premium'. Pagamento seguro pelo Stripe." },
       { q: "Posso cancelar a qualquer momento?", a: "Sim, o cancelamento pode ser solicitado pelo portal do cliente Stripe." },
       { q: "Quais formas de pagamento são aceitas?", a: "Cartão de crédito e débito via Stripe, com suporte a bandeiras internacionais." },
     ],

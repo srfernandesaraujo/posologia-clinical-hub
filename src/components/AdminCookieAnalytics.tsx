@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Globe, MousePointerClick, Clock, TrendingUp } from "lucide-react";
 
-const COLORS = ["hsl(168 80% 42%)", "hsl(262 83% 65%)", "hsl(38 92% 50%)", "hsl(0 62% 50%)", "hsl(200 80% 50%)"];
+const COLORS = ["hsl(173 66% 50%)", "hsl(255 92% 76%)", "hsl(38 92% 50%)", "hsl(0 62% 50%)", "hsl(200 80% 50%)"];
 
 export default function AdminCookieAnalytics() {
   const { data: events = [], isLoading } = useQuery({
@@ -96,8 +96,8 @@ export default function AdminCookieAnalytics() {
             <BarChart data={dailyData}>
               <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(220 10% 55%)" />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(220 10% 55%)" />
-              <Tooltip contentStyle={{ background: "hsl(222 40% 9%)", border: "1px solid hsl(220 20% 16%)", borderRadius: 8, color: "#fff" }} />
-              <Bar dataKey="views" fill="hsl(168 80% 42%)" radius={[6, 6, 0, 0]} />
+              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "#fff" }} />
+              <Bar dataKey="views" fill="hsl(173 66% 50%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -112,7 +112,7 @@ export default function AdminCookieAnalytics() {
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ background: "hsl(222 40% 9%)", border: "1px solid hsl(220 20% 16%)", borderRadius: 8, color: "#fff" }} />
+              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "#fff" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

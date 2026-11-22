@@ -47,12 +47,12 @@ const CATEGORY_ICONS: Record<string, any> = {
 
 // Category color accents (HSL-based using design tokens where possible)
 const CATEGORY_COLORS: Record<string, string> = {
-  "Farmácia Clínica": "168 80% 42%",
+  "Farmácia Clínica": "173 66% 50%",
   "Infectologia": "0 62% 50%",
   "Farmacocinética": "200 70% 50%",
   "Endocrinologia": "45 90% 50%",
   "Enfermagem / UTI": "340 70% 55%",
-  "Psiquiatria": "262 83% 65%",
+  "Psiquiatria": "255 92% 76%",
   "Farmacologia Clínica": "30 90% 55%",
   "Fisiologia Humana": "200 70% 50%",
   "Bioquímica": "150 60% 45%",
@@ -60,7 +60,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Farmacotécnica": "190 70% 45%",
   "Química Farmacêutica": "320 60% 50%",
   "Formação Docente": "45 80% 50%",
-  "Odontologia": "168 80% 42%",
+  "Odontologia": "173 66% 50%",
   "Fisioterapia": "210 70% 50%",
   "Nutrição": "140 60% 45%",
   "Genética": "260 70% 55%",
@@ -204,7 +204,7 @@ export default function Simuladores() {
 
   const SimCard = ({ sim, isDynamic, isLocked }: { sim: any; isDynamic?: boolean; isLocked?: boolean }) => {
     const Icon = sim.icon;
-    const color = CATEGORY_COLORS[sim.category] || "168 80% 42%";
+    const color = CATEGORY_COLORS[sim.category] || "173 66% 50%";
 
     if (isLocked) {
       return (
@@ -414,7 +414,7 @@ export default function Simuladores() {
           {/* Grouped simulators */}
           {groupedSimulators.map(([cat, sims]) => {
             const CatIcon = CATEGORY_ICONS[cat] || FlaskConical;
-            const color = CATEGORY_COLORS[cat] || "168 80% 42%";
+            const color = CATEGORY_COLORS[cat] || "173 66% 50%";
             return (
               <div key={cat} className="mb-6" ref={el => { categoryRefs.current[cat] = el; }}>
                 <div className="flex items-center gap-2.5 mb-3">

@@ -355,6 +355,20 @@ const sections = [
     ],
   },
   {
+    title: "Navegação e Busca",
+    icon: Shield,
+    description: "Estrutura do app shell: menu lateral em grupos, busca universal, trilha de navegação e barra inferior no celular.",
+    items: [
+      { name: "Menu lateral em grupos", desc: "Início (Painel /dashboard); Praticar (Simuladores, Calculadoras, Laboratório Virtual, MedView 3D, Jogos Clínicos — com o tamanho do catálogo ao lado); Ensinar (Turmas, Salas Virtuais, Feedback de Simulação, Marketplace com cadeado nos Premium — recolhível, aberto por padrão para professor/admin); Meu progresso (Conquistas, rota /gamificacao); Administração (só admin, recolhido por padrão: Painel admin, Pipeline, Chamados, Curadoria — um ponto vermelho no cabeçalho do grupo indica pendências). Fonte: src/components/layouts/appNavigation.ts" },
+      { name: "Menu do avatar", desc: "Rodapé da barra lateral (canto superior no celular): Minha conta, Plano e assinatura, Documentação, Suporte e contato, Idioma (PT/EN/ES) e Sair" },
+      { name: "Busca universal (Ctrl+K / Cmd+K)", desc: "Botão \"Buscar…\" na barra lateral ou botão central \"Buscar\" na barra inferior do celular. Busca simuladores, calculadoras, bancadas do Laboratório Virtual e páginas, ignora acentos, mostra os 5 itens recentes e marca com cadeado o que é Premium (src/components/CommandPalette.tsx)" },
+      { name: "Trilha de navegação (breadcrumb)", desc: "No topo das páginas no desktop, ex.: Praticar › Simuladores › Função Renal e Ajuste de Dose" },
+      { name: "Barra inferior do celular", desc: "Início, Simuladores, Buscar (centro), Calculadoras e Mais (gaveta com os grupos do menu)" },
+      { name: "Fale conosco", desc: "O formulário saiu da barra lateral e fica no fim da página Suporte", link: "/suporte" },
+      { name: "Identidade visual", desc: "Alinhada à landing page: fundo azul-tinta, teal como cor principal, céu e violeta de apoio; tokens de cor para estados clínicos (status-ok/warn/crit/info) em src/index.css e tailwind.config.ts" },
+    ],
+  },
+  {
     title: "Recursos Gerais",
     icon: Shield,
     description: "Funcionalidades transversais da plataforma.",
@@ -369,7 +383,7 @@ const sections = [
       { name: "Oráculo (assistente de IA)", desc: "Chat flutuante que orienta o usuário logado sobre qual ferramenta usar. Dentro da página de um simulador, se a última tentativa individual do usuário teve decisões erradas, o Oráculo vira um preceptor socrático (método do preceptor de um minuto): pergunta sobre uma decisão específica antes de revelar a resposta certa, em vez de responder direto — ação rápida 'Refletir sobre este caso'" },
       { name: "Lia (consultora comercial de IA)", desc: "Assistente de vendas para visitantes não autenticados" },
       { name: "Recomendado para você (Dashboard)", desc: "Bloco no Dashboard com até 5 sugestões baseadas em recência/cobertura de uso: ferramentas paradas há 14+ dias e calculadoras de categorias que você frequenta mas nunca abriu" },
-      { name: "Revisão espaçada semanal (e-mail)", desc: "E-mail semanal (segunda-feira, via Resend) com a mesma lógica de recomendação do Dashboard. Opt-in em Minha Conta → Preferências (ativado por padrão)" },
+      { name: "Revisão espaçada semanal (e-mail)", desc: "E-mail semanal (segunda-feira, via Resend) com a mesma lógica de recomendação do Dashboard. Opt-in em Minha Conta (menu do avatar) → Preferências (ativado por padrão)" },
       { name: "App instalável e uso offline (PWA)", desc: "Instale a plataforma como aplicativo; as 34 calculadoras continuam funcionando offline após a primeira visita — um aviso informa que os resultados só são salvos no histórico ao reconectar" },
     ],
   },
@@ -381,7 +395,7 @@ const techSections = [
     icon: Code,
     content: [
       { label: "Frontend", value: "React 18 + TypeScript + Vite 7 (SPA)" },
-      { label: "Estilização", value: "Tailwind CSS 3.4 + shadcn/ui (Radix primitives)" },
+      { label: "Estilização", value: "Tailwind CSS 3.4 + shadcn/ui (Radix primitives); tokens de estado clínico status-ok/warn/crit/info (src/index.css, tailwind.config.ts)" },
       { label: "Roteamento", value: "React Router DOM v7 (client-side routing)" },
       { label: "Gráficos", value: "Recharts (LineChart, BarChart, RadarChart, PieChart)" },
       { label: "Animações", value: "tailwindcss-animate (utilitários de animação Tailwind) + transições CSS" },

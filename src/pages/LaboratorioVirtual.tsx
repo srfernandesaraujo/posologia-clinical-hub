@@ -15,7 +15,7 @@ import {
   Atom,
 } from "lucide-react";
 
-interface BenchCard {
+export interface BenchCard {
   id: string;
   title: string;
   subtitle: string;
@@ -26,7 +26,7 @@ interface BenchCard {
   color: string;
 }
 
-const benches: BenchCard[] = [
+export const benches: BenchCard[] = [
   {
     id: "farmacos",
     title: "Desenvolvimento de Fármacos",
@@ -69,7 +69,7 @@ const benches: BenchCard[] = [
     icon: <Dna className="h-8 w-8" />,
     route: "/laboratorio-virtual/farmacogenomica",
     status: "disponivel",
-    color: "hsl(262 83% 58%)",
+    color: "hsl(var(--accent))",
   },
   {
     id: "estabilidade",

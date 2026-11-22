@@ -6,53 +6,66 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 30% 98%;
+    /* Identidade do app = identidade da landing (src/pages/home-landing.css, --lp-*):
+       fundo azul-tinta, superfícies azul-petróleo, teal como cor de ação,
+       céu e violeta como cores de apoio. Mude aqui e o app inteiro acompanha. */
+    --background: 212 57% 5%;
+    --foreground: 173 43% 96%;
 
-    --card: 222 40% 10%;
-    --card-foreground: 210 30% 98%;
+    --card: 214 51% 8.5%;
+    --card-foreground: 173 43% 96%;
 
-    --popover: 222 40% 10%;
-    --popover-foreground: 210 30% 98%;
+    --popover: 214 51% 9.5%;
+    --popover-foreground: 173 43% 96%;
 
-    --primary: 168 80% 48%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 173 66% 50%;
+    --primary-foreground: 212 57% 5%;
 
-    --secondary: 220 18% 20%;
-    --secondary-foreground: 210 30% 98%;
+    --secondary: 214 42% 14%;
+    --secondary-foreground: 173 43% 96%;
 
-    --muted: 220 18% 18%;
-    --muted-foreground: 220 15% 78%;
+    --muted: 214 40% 13%;
+    --muted-foreground: 200 22% 70%;
 
-    --accent: 262 83% 70%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 255 92% 76%;
+    --accent-foreground: 212 57% 5%;
 
-    --destructive: 0 70% 58%;
-    --destructive-foreground: 210 30% 98%;
+    /* Cor de apoio (selos "novo", links secundários) — o azul-céu da landing */
+    --highlight: 198 93% 60%;
+    --highlight-foreground: 212 57% 5%;
 
-    --border: 220 18% 28%;
-    --input: 220 18% 30%;
-    --ring: 168 80% 48%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 212 57% 5%;
+
+    /* Estados clínicos — use estes em vez de text-red-500 / text-green-500 */
+    --status-ok: 158 64% 52%;
+    --status-warn: 43 96% 56%;
+    --status-crit: 0 91% 71%;
+    --status-info: 198 93% 60%;
+
+    --border: 196 32% 16%;
+    --input: 200 30% 19%;
+    --ring: 173 66% 50%;
 
     --radius: 0.75rem;
 
-    --chart-1: 168 80% 50%;
-    --chart-2: 45 93% 62%;
-    --chart-3: 280 70% 68%;
-    --chart-4: 200 85% 62%;
-    --chart-5: 340 80% 62%;
+    --chart-1: 173 66% 50%;
+    --chart-2: 43 96% 56%;
+    --chart-3: 255 92% 76%;
+    --chart-4: 198 93% 60%;
+    --chart-5: 0 91% 71%;
 
-    --sidebar-background: 222 40% 8%;
-    --sidebar-foreground: 210 30% 98%;
-    --sidebar-primary: 168 80% 48%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 220 18% 18%;
-    --sidebar-accent-foreground: 210 30% 98%;
-    --sidebar-border: 220 18% 26%;
-    --sidebar-ring: 168 80% 48%;
+    --sidebar-background: 213 59% 6.5%;
+    --sidebar-foreground: 173 43% 96%;
+    --sidebar-primary: 173 66% 50%;
+    --sidebar-primary-foreground: 212 57% 5%;
+    --sidebar-accent: 196 45% 11%;
+    --sidebar-accent-foreground: 173 43% 96%;
+    --sidebar-border: 196 32% 13%;
+    --sidebar-ring: 173 66% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(168 80% 42%), hsl(262 83% 65%));
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 6%), hsl(222 40% 12%));
+    --gradient-primary: linear-gradient(110deg, hsl(170 76% 64%) 0%, hsl(198 93% 60%) 55%, hsl(255 92% 76%) 100%);
+    --gradient-hero: linear-gradient(150deg, hsl(196 50% 11%), hsl(214 51% 8%));
   }
 }
 
@@ -73,6 +86,18 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+  }
+
+  /* Barras de rolagem discretas, no tom da superfície */
+  * {
+    scrollbar-color: hsl(var(--border)) transparent;
+    scrollbar-width: thin;
   }
 
   /* Toque em botões/links não deve disparar o delay de 300ms nem o double-tap
@@ -95,6 +120,12 @@
 
   .bg-gradient-hero {
     background-image: var(--gradient-hero);
+  }
+
+  .bg-grid {
+    background-image: linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
 
   .glass {

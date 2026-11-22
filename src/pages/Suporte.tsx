@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Loader2, ArrowLeft, Paperclip, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { SidebarContactForm } from "@/components/SidebarContactForm";
 import { ptBR } from "date-fns/locale";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -219,6 +220,11 @@ export default function Suporte() {
           })}
         </div>
       )}
+
+      {/* "Fale conosco" (mensagem por e-mail, sem chamado) — antes ficava fixo na barra lateral */}
+      <div className="rounded-xl border border-border bg-card px-1 pb-2 [&>div]:mt-0 [&>div]:border-t-0">
+        <SidebarContactForm />
+      </div>
     </div>
   );
 }

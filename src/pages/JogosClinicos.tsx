@@ -68,7 +68,7 @@ const gamePromptSlugMap: Record<string, string> = {
 type GameCategory = "farmacologia" | "investigacao" | "simulacao" | "acao" | "emergencia";
 
 const categoryLabels: { id: GameCategory; label: string; icon: any; color: string }[] = [
-  { id: "farmacologia", label: "Farmacologia", icon: Pill, color: "168 80% 42%" },
+  { id: "farmacologia", label: "Farmacologia", icon: Pill, color: "173 66% 50%" },
   { id: "investigacao", label: "Investigação", icon: Search, color: "45 90% 50%" },
   { id: "simulacao", label: "Simulação", icon: Activity, color: "200 70% 50%" },
   { id: "acao", label: "Ação & Estratégia", icon: Target, color: "280 60% 55%" },
@@ -497,7 +497,7 @@ export default function JogosClinicos() {
   // ── GAMES LISTING ──
   const GameCard = ({ game }: { game: typeof games[0] }) => {
     const catInfo = categoryLabels.find(c => c.id === game.category);
-    const color = catInfo?.color || "168 80% 42%";
+    const color = catInfo?.color || "173 66% 50%";
 
     return (
       <div
