@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { ArrowLeft, Heart, User, Stethoscope } from "lucide-react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
+import { Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -8,7 +9,6 @@ import { CalculationHistory, HistoryConsentBanner } from "@/components/Calculati
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -217,7 +217,7 @@ function classificar(risco: number, modo: Modo, histFamiliar: boolean): Resultad
       risco: Math.round(r * 10) / 10,
       faixa: "Baixo Risco",
       cor: "hsl(142 71% 45%)",
-      bgClass: "border-green-500/30 bg-green-500/10",
+      bgClass: "border-status-ok/30 bg-status-ok/10",
       recomendacoes: isPro
         ? [
             "Manter estilo de vida saudável com dieta equilibrada e atividade física regular.",
@@ -278,7 +278,7 @@ function classificar(risco: number, modo: Modo, histFamiliar: boolean): Resultad
     risco: Math.round(r * 10) / 10,
     faixa: "Muito Alto Risco",
     cor: "hsl(0 72% 51%)",
-    bgClass: "border-red-500/30 bg-red-500/10",
+    bgClass: "border-status-crit/30 bg-status-crit/10",
     recomendacoes: isPro
       ? [
           "Terapia hipolipemiante de alta intensidade obrigatória.",
@@ -391,7 +391,6 @@ function gerarPDF(form: FormData, resultado: Resultado, modo: Modo) {
 
 /* ─── Component ─── */
 export default function RiscoCardiovascular() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("pro");
@@ -464,32 +463,8 @@ export default function RiscoCardiovascular() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button
-          onClick={() => navigate("/calculadoras")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar às Calculadoras
-        </button>
-      )}
-
-      {/* Header */}
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Heart className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Calculadora de Risco Cardiovascular Posologia</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Estima o risco de eventos cardiovasculares em 10 anos via Framingham, ASCVD ou SCORE2.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="risco-cardiovascular" actions={<>
             <ShareToolButton toolSlug="risco-cardiovascular" toolName="Calculadora de Risco Cardiovascular" />
             <AdminPromptViewer toolSlug="risco-cardiovascular" toolName="Risco Cardiovascular" toolType="calculator" prompt={getNativePrompt("risco-cardiovascular") || ""} />
             <CalculationHistory calculatorSlug="risco-cardiovascular" />
@@ -512,9 +487,7 @@ export default function RiscoCardiovascular() {
               <User className="h-3.5 w-3.5" />
               Paciente
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <HistoryConsentBanner />
 

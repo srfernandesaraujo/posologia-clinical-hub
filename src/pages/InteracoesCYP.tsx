@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
-import { ArrowLeft, Dna, User, Stethoscope } from "lucide-react";
+import { Dna } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,6 @@ const DRUG_DB: Drug[] = [
 const CYP_ENZYMES = ["1A2", "2B6", "2C9", "2C19", "2D6", "3A4"];
 
 export default function InteracoesCYP() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [modo, setModo] = useState<Modo>("clinico");
   const [search, setSearch] = useState("");
@@ -114,29 +113,12 @@ export default function InteracoesCYP() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar as Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><Dna className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">Radar de Interacoes CYP450</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Visualizacao das interacoes farmacocineticas via citocromo P450.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="interacoes-cyp" actions={<>
             <ShareToolButton toolSlug="interacoes-cyp" toolName="Interacoes CYP" />
             <AdminPromptViewer toolSlug="interacoes-cyp" toolName="Interações CYP" toolType="calculator" prompt={getNativePrompt("interacoes-cyp") || ""} />
             <CalculationHistory calculatorSlug="interacoes-cyp" />
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

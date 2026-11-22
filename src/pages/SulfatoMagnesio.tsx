@@ -1,13 +1,13 @@
 import { useState } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
-import { ArrowLeft, HeartPulse, User, Stethoscope, AlertTriangle } from "lucide-react";
+import { HeartPulse, User, Stethoscope, AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,6 @@ const PROTOCOLOS = {
 };
 
 export default function SulfatoMagnesio() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [modo, setModo] = useState<Modo>("clinico");
   const [nomePaciente, setNomePaciente] = useState("");
@@ -79,23 +78,8 @@ export default function SulfatoMagnesio() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar as Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><HeartPulse className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">Dosagem de Sulfato de Magnesio</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Protocolos Zuspan e Pritchard para eclampsia/pre-eclampsia grave.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="sulfato-magnesio" actions={<>
             <ShareToolButton toolSlug="sulfato-magnesio" toolName="Sulfato Magnesio" />
             <AdminPromptViewer toolSlug="sulfato-magnesio" toolName="Sulfato Magnesio" toolType="calculator" prompt={getNativePrompt("sulfato-magnesio") || ""} />
             <CalculationHistory calculatorSlug="sulfato-magnesio" />
@@ -106,9 +90,7 @@ export default function SulfatoMagnesio() {
             <button onClick={() => setModo("educativo")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "educativo" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <User className="h-3.5 w-3.5" /> Educativo
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -154,17 +136,17 @@ export default function SulfatoMagnesio() {
           {resultado ? (
             <>
               {resultado.alertaToxicidade && (
-                <div className="rounded-2xl border border-red-500/50 bg-red-500/10 p-6">
+                <div className="rounded-2xl border border-status-crit/50 bg-status-crit/10 p-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                    <h2 className="font-semibold text-sm uppercase tracking-wider text-red-600">Alerta de Toxicidade</h2>
+                    <AlertTriangle className="h-5 w-5 text-status-crit" />
+                    <h2 className="font-semibold text-sm uppercase tracking-wider text-status-crit">Alerta de Toxicidade</h2>
                   </div>
-                  <p className="text-sm font-medium text-red-600">{resultado.alertaToxicidade}</p>
+                  <p className="text-sm font-medium text-status-crit">{resultado.alertaToxicidade}</p>
                   <p className="text-xs text-muted-foreground mt-2">Antidoto: Gluconato de Calcio 10% — 10 mL IV lento (3-5 min).</p>
                 </div>
               )}
 
-              <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-6">
+              <div className="rounded-2xl border border-status-ok/30 bg-status-ok/10 p-6">
                 <h2 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Protocolo: {resultado.protocolo.label}</h2>
                 <div className="space-y-3 text-sm">
                   <div>

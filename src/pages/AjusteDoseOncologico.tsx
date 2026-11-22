@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Pill, AlertTriangle, Beaker, FlaskConical } from "lucide-react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
+import { Pill, AlertTriangle, Beaker, FlaskConical } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -325,29 +326,12 @@ export default function AjusteDoseOncologico() {
   
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {!isEmbed && (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/calculadoras")} className="shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <FlaskConical className="h-6 w-6 text-primary" />
-              Ajuste de Dose em Oncologia
-            </h1>
-            <p className="text-sm text-muted-foreground">Carboplatina (Calvert), Ajuste Renal e Hepático</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <CalculatorHeader slug="ajuste-dose-oncologico" actions={<>
           <ShareToolButton toolSlug={SLUG} toolName="Ajuste de Dose Oncológico" />
           <AdminPromptViewer toolSlug={SLUG} toolName="Ajuste de Dose Oncológico" toolType="calculator" prompt={getNativePrompt(SLUG) || ""} />
           <CalculationHistory calculatorSlug={SLUG} />
-        </div>
-      </div>
+      </>} />
 
       <HistoryConsentBanner />
 

@@ -1,14 +1,14 @@
 import { useState } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
-import { ArrowLeft, FlaskConical, User, Stethoscope } from "lucide-react";
+import { FlaskConical, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,21 +97,21 @@ function calcular(form: FormData, modo: Modo): Resultado {
   if (aucMic >= 400 && aucMic <= 600) {
     classificacao = "AUC/MIC Alvo Atingido (400-600)";
     cor = "hsl(142 71% 45%)";
-    bgClass = "border-green-500/30 bg-green-500/10";
+    bgClass = "border-status-ok/30 bg-status-ok/10";
     recomendacoes = isPro
       ? ["AUC/MIC dentro do alvo terapeutico (400-600 mg·h/L).", "Manter dose atual. Monitorar niveis sericos a cada 3-5 dias.", "Se funcao renal estavel: reavaliar semanalmente."]
       : ["O nivel do antibiotico esta na faixa ideal.", "Continue o tratamento conforme prescrito."];
   } else if (aucMic < 400) {
     classificacao = "AUC/MIC Subterapeutico (<400)";
     cor = "hsl(38 92% 50%)";
-    bgClass = "border-yellow-500/30 bg-yellow-500/10";
+    bgClass = "border-status-warn/30 bg-status-warn/10";
     recomendacoes = isPro
       ? ["AUC/MIC abaixo do alvo. Risco de falha terapeutica.", "Aumentar dose ou reduzir intervalo.", "Se MIC >= 2: considerar troca para daptomicina, linezolida ou ceftarolina.", "Repetir niveis apos 2-3 doses da nova posologia."]
       : ["O nivel do antibiotico esta abaixo do ideal.", "Seu medico pode precisar ajustar a dose."];
   } else {
     classificacao = "AUC/MIC Supraterapeutico (>600)";
     cor = "hsl(0 72% 51%)";
-    bgClass = "border-red-500/30 bg-red-500/10";
+    bgClass = "border-status-crit/30 bg-status-crit/10";
     recomendacoes = isPro
       ? ["AUC/MIC acima do alvo. Risco aumentado de nefrotoxicidade.", "Reduzir dose ou aumentar intervalo.", "Monitorar creatinina diariamente.", "Considerar infusao continua ou troca de antimicrobiano.", "Referencia: IDSA/ASHP/SIDP Guidelines 2020."]
       : ["O nivel do antibiotico esta acima do desejavel.", "Ajustes na dose serao necessarios para proteger seus rins."];
@@ -149,7 +149,6 @@ function gerarPDF(form: FormData, resultado: Resultado) {
 }
 
 export default function VancomicinaAUC() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("clinico");
@@ -177,23 +176,8 @@ export default function VancomicinaAUC() {
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar as Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><FlaskConical className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">Vancomicina AUC/MIC</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Monitoramento farmacocinetico baseado em AUC — IDSA/ASHP 2020.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="vancomicina-auc" actions={<>
             <ShareToolButton toolSlug="vancomicina-auc" toolName="Vancomicina AUC/MIC" />
             <AdminPromptViewer toolSlug="vancomicina-auc" toolName="Vancomicina AUC/MIC" toolType="calculator" prompt={getNativePrompt("vancomicina-auc") || ""} />
             <CalculationHistory calculatorSlug="vancomicina-auc" />
@@ -204,9 +188,7 @@ export default function VancomicinaAUC() {
             <button onClick={() => setModo("educativo")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "educativo" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <User className="h-3.5 w-3.5" /> Educativo
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

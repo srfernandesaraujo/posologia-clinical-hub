@@ -1,13 +1,13 @@
 import { useState } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
-import { ArrowLeft, Bone, User, Stethoscope } from "lucide-react";
+import { Bone, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,28 +42,28 @@ function classificar(caCorr: number, delta: number, modo: Modo): Resultado {
   const isPro = modo === "clinico";
   if (caCorr < 8.5) return {
     calcioCorrigido: caCorr, delta, classificacao: "Hipocalcemia",
-    cor: "hsl(25 90% 50%)", bgClass: "border-orange-500/30 bg-orange-500/10",
+    cor: "hsl(25 90% 50%)", bgClass: "border-status-warn/30 bg-status-warn/10",
     recomendacoes: isPro
       ? ["Hipocalcemia. Avaliar PTH, 25-OH vitamina D, magnésio, fósforo.", "Se sintomática (Chvostek/Trousseau+, QT longo): gluconato de cálcio 10% IV.", "Se crônica: suplementação oral de cálcio + calcitriol.", "Causas comuns: hipoparatireoidismo, deficiência de vitamina D, IRC, pancreatite."]
       : ["Seu cálcio está abaixo do normal.", "Converse com seu médico sobre suplementação."],
   };
   if (caCorr <= 10.5) return {
     calcioCorrigido: caCorr, delta, classificacao: "Normal",
-    cor: "hsl(142 71% 45%)", bgClass: "border-green-500/30 bg-green-500/10",
+    cor: "hsl(142 71% 45%)", bgClass: "border-status-ok/30 bg-status-ok/10",
     recomendacoes: isPro
       ? ["Cálcio corrigido dentro da normalidade (8,5-10,5 mg/dL).", delta !== 0 ? `Correção de ${delta > 0 ? "+" : ""}${delta.toFixed(1)} mg/dL pela albumina.` : "Albumina normal, sem necessidade de correção."]
       : ["Seu cálcio está normal após correção pela albumina."],
   };
   if (caCorr <= 12.0) return {
     calcioCorrigido: caCorr, delta, classificacao: "Hipercalcemia Leve",
-    cor: "hsl(38 92% 50%)", bgClass: "border-yellow-500/30 bg-yellow-500/10",
+    cor: "hsl(38 92% 50%)", bgClass: "border-status-warn/30 bg-status-warn/10",
     recomendacoes: isPro
       ? ["Hipercalcemia leve. Investigar PTH: se elevado → hiperparatireoidismo primário.", "Se PTH suprimido: investigar malignidade (PTHrp, mieloma, metástases ósseas).", "Revisar medicamentos: tiazídicos, lítio, vitamina D excessiva.", "Hidratação oral adequada."]
       : ["Seu cálcio está levemente acima do normal.", "Exames adicionais podem ser necessários."],
   };
   return {
     calcioCorrigido: caCorr, delta, classificacao: "Hipercalcemia Moderada/Grave",
-    cor: "hsl(0 72% 51%)", bgClass: "border-red-500/30 bg-red-500/10",
+    cor: "hsl(0 72% 51%)", bgClass: "border-status-crit/30 bg-status-crit/10",
     recomendacoes: isPro
       ? ["Hipercalcemia significativa — potencial emergência.", "Hidratação agressiva: SF 0,9% 200-300 mL/h. Furosemida após euvolemia.", "Pamidronato 60-90 mg IV ou ácido zoledrônico 4 mg IV.", "Calcitonina 4 UI/kg SC/IM a cada 12h (efeito rápido, transitório).", "Se linfoma/granulomatosa: prednisona 40-60 mg/dia.", "Investigar: PTH, PTHrp, 1,25-(OH)₂D, eletroforese de proteínas."]
       : ["Seu cálcio está significativamente elevado.", "Procure atendimento médico com urgência."],
@@ -90,7 +90,6 @@ function gerarPDF(form: FormData, resultado: Resultado) {
 }
 
 export default function CorrecaoCalcio() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("clinico");
@@ -113,23 +112,8 @@ export default function CorrecaoCalcio() {
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar às Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><Bone className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">Correção de Cálcio pela Albumina</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Ajusta o cálcio total pela albumina sérica (fórmula de Payne).</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="correcao-calcio" actions={<>
             <ShareToolButton toolSlug="correcao-calcio" toolName="Correção de Cálcio" />
             <AdminPromptViewer toolSlug="correcao-calcio" toolName="Correção de Cálcio" toolType="calculator" prompt={getNativePrompt("correcao-calcio") || ""} />
             <CalculationHistory calculatorSlug="correcao-calcio" />
@@ -149,9 +133,7 @@ export default function CorrecaoCalcio() {
             <button onClick={() => setModo("educativo")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "educativo" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <User className="h-3.5 w-3.5" /> Educativo
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

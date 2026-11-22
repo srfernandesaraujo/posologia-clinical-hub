@@ -1,14 +1,14 @@
 import { useState } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
-import { ArrowLeft, FileText, Stethoscope, User, Flame } from "lucide-react";
+import { Stethoscope, User, Flame } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +79,6 @@ function calcChild(bili: number, alb: number, inr: number, ascite: string, encef
 }
 
 export default function MeldScore() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [tipo, setTipo] = useState<Tipo>("meld");
   const [modo, setModo] = useState<Modo>("clinico");
@@ -123,23 +122,8 @@ export default function MeldScore() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar as Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><Flame className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">MELD / MELD-Na / Child-Pugh</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Prognostico hepatico e priorizacao para transplante.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="meld-score" actions={<>
             <ShareToolButton toolSlug="meld-score" toolName="MELD/Child-Pugh" />
             <AdminPromptViewer toolSlug="meld-score" toolName="MELD Score" toolType="calculator" prompt={getNativePrompt("meld-score") || ""} />
             <CalculationHistory calculatorSlug="meld-score" />
@@ -150,9 +134,7 @@ export default function MeldScore() {
             <button onClick={() => setModo("educativo")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "educativo" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <User className="h-3.5 w-3.5" /> Educativo
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -233,7 +215,7 @@ export default function MeldScore() {
         <div className="space-y-6">
           {resultado?.tipo === "meld" && (
             <>
-              <div className={`rounded-2xl border p-6 ${resultado.meld >= 30 ? "border-red-500/30 bg-red-500/10" : resultado.meld >= 20 ? "border-orange-500/30 bg-orange-500/10" : resultado.meld >= 10 ? "border-yellow-500/30 bg-yellow-500/10" : "border-green-500/30 bg-green-500/10"}`}>
+              <div className={`rounded-2xl border p-6 ${resultado.meld >= 30 ? "border-status-crit/30 bg-status-crit/10" : resultado.meld >= 20 ? "border-status-warn/30 bg-status-warn/10" : resultado.meld >= 10 ? "border-status-warn/30 bg-status-warn/10" : "border-status-ok/30 bg-status-ok/10"}`}>
                 <h2 className="font-semibold mb-2 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
                 <RiskGauge value={resultado.meld} maxValue={40} label={`Mortalidade 3m: ${resultado.mortalidade3m}`} unit="pts" segments={[
                   { min: 0, max: 25, color: "hsl(142 71% 45%)", label: "<10" },
@@ -260,7 +242,7 @@ export default function MeldScore() {
           )}
           {resultado?.tipo === "child" && (
             <>
-              <div className={`rounded-2xl border p-6 ${resultado.classe === "C" ? "border-red-500/30 bg-red-500/10" : resultado.classe === "B" ? "border-yellow-500/30 bg-yellow-500/10" : "border-green-500/30 bg-green-500/10"}`}>
+              <div className={`rounded-2xl border p-6 ${resultado.classe === "C" ? "border-status-crit/30 bg-status-crit/10" : resultado.classe === "B" ? "border-status-warn/30 bg-status-warn/10" : "border-status-ok/30 bg-status-ok/10"}`}>
                 <h2 className="font-semibold mb-2 text-sm uppercase tracking-wider text-muted-foreground">Resultado</h2>
                 <div className="text-center py-4">
                   <div className="text-5xl font-bold text-primary">{resultado.classe}</div>

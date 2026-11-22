@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, Activity, User, Stethoscope } from "lucide-react";
+import { Activity, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { RiskGauge } from "@/components/calculators/RiskGauge";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,21 +56,21 @@ function classificar(homa: number, modo: Modo): Resultado {
   const isPro = modo === "clinico";
   if (homa < 1.0) return {
     homaIR: homa, faixa: "Sensibilidade aumentada à insulina",
-    cor: "hsl(142 71% 45%)", bgClass: "border-green-500/30 bg-green-500/10",
+    cor: "hsl(142 71% 45%)", bgClass: "border-status-ok/30 bg-status-ok/10",
     recomendacoes: isPro
       ? ["Sensibilidade insulínica normal/aumentada. Sem intervenção necessária.", "Manter estilo de vida saudável."]
       : ["Seu corpo responde bem à insulina. Continue com hábitos saudáveis!"],
   };
   if (homa < 2.5) return {
     homaIR: homa, faixa: "Normal",
-    cor: "hsl(142 71% 45%)", bgClass: "border-green-500/30 bg-green-500/10",
+    cor: "hsl(142 71% 45%)", bgClass: "border-status-ok/30 bg-status-ok/10",
     recomendacoes: isPro
       ? ["HOMA-IR dentro da faixa de normalidade.", "Reavaliar periodicamente se fatores de risco presentes."]
       : ["Seu resultado está normal. Mantenha uma alimentação equilibrada e exercícios regulares."],
   };
   if (homa < 3.0) return {
     homaIR: homa, faixa: "Resistência insulínica provável",
-    cor: "hsl(38 92% 50%)", bgClass: "border-yellow-500/30 bg-yellow-500/10",
+    cor: "hsl(38 92% 50%)", bgClass: "border-status-warn/30 bg-status-warn/10",
     recomendacoes: isPro
       ? ["HOMA-IR elevado — resistência insulínica provável.", "Investigar síndrome metabólica: circunferência abdominal, perfil lipídico, PA.",
          "Orientar mudança de estilo de vida: dieta com baixo índice glicêmico + atividade física 150min/sem.",
@@ -80,7 +80,7 @@ function classificar(homa: number, modo: Modo): Resultado {
   };
   return {
     homaIR: homa, faixa: "Resistência insulínica significativa",
-    cor: "hsl(0 72% 51%)", bgClass: "border-red-500/30 bg-red-500/10",
+    cor: "hsl(0 72% 51%)", bgClass: "border-status-crit/30 bg-status-crit/10",
     recomendacoes: isPro
       ? ["HOMA-IR significativamente elevado.", "Forte indicativo de resistência insulínica. Considerar metformina se clinicamente indicado (SOP, pré-diabetes, SM).",
          "Solicitar HbA1c, perfil lipídico completo, OGTT se não realizado.", "Avaliar para síndrome metabólica, SOP, esteatose hepática.",
@@ -128,7 +128,6 @@ function gerarPDF(form: FormData, resultado: Resultado, modo: Modo, imc: string)
 }
 
 export default function HomaIR() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("clinico");
@@ -164,23 +163,8 @@ export default function HomaIR() {
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button onClick={() => navigate("/calculadoras")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Voltar às Calculadoras
-        </button>
-      )}
-
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3"><Activity className="h-6 w-6 text-primary" /></div>
-            <div>
-              <h1 className="text-2xl font-bold">Calculadora de Resistência Insulínica (HOMA-IR)</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Cálculo e interpretação do índice HOMA-IR.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="homa-ir" actions={<>
             <ShareToolButton toolSlug="homa-ir" toolName="Calculadora HOMA-IR" />
             <AdminPromptViewer toolSlug="homa-ir" toolName="HOMA-IR" toolType="calculator" prompt={getNativePrompt("homa-ir") || ""} />
             <CalculationHistory calculatorSlug="homa-ir" />
@@ -191,9 +175,7 @@ export default function HomaIR() {
             <button onClick={() => setModo("educativo")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${modo === "educativo" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               <User className="h-3.5 w-3.5" /> Educativo
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

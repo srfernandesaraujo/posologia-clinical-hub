@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, Activity, AlertTriangle } from "lucide-react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
+import { AlertTriangle } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
@@ -256,29 +257,12 @@ export default function ToxicidadeAntineoplasicos() {
 
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          {!isEmbed && (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/calculadoras")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Activity className="h-6 w-6 text-primary" />
-              Predição de Reações Adversas a Antineoplásicos
-            </h1>
-            <p className="text-sm text-muted-foreground">CARG • CRASH • HFA-ICOS (ESC)</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <CalculatorHeader slug="toxicidade-antineoplasicos" actions={<>
           <ShareToolButton toolSlug={SLUG} toolName="Toxicidade Antineoplásicos" />
           <AdminPromptViewer toolSlug={SLUG} toolName="Toxicidade Antineoplásicos" toolType="calculator" prompt={getNativePrompt(SLUG) || ""} />
           <CalculationHistory calculatorSlug={SLUG} />
-        </div>
-      </div>
+      </>} />
 
       <HistoryConsentBanner />
 

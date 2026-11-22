@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, Plus, X } from "lucide-react";
+import { Syringe, User, Stethoscope, AlertTriangle, ArrowRightLeft, X } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -473,7 +473,6 @@ function gerarPDF(form: FormData, resultado: Resultado, modo: Modo, simulacoes: 
 
 /* ─── Component ─── */
 export default function EquivalenciaOpioides() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("pro");
@@ -587,32 +586,8 @@ export default function EquivalenciaOpioides() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button
-          onClick={() => navigate("/calculadoras")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar às Calculadoras
-        </button>
-      )}
-
-      {/* Header */}
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Syringe className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Calculadora de Equivalência de Opioides</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Conversão segura entre opioides com fatores de correção para tolerância cruzada incompleta.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="equivalencia-opioides" actions={<>
             <ShareToolButton toolSlug="equivalencia-opioides" toolName="Calculadora de Equivalência de Opioides" />
             <AdminPromptViewer toolSlug="equivalencia-opioides" toolName="Equivalência de Opioides" toolType="calculator" prompt={getNativePrompt("equivalencia-opioides") || ""} />
             <CalculationHistory calculatorSlug="equivalencia-opioides" />
@@ -635,9 +610,7 @@ export default function EquivalenciaOpioides() {
               <User className="h-3.5 w-3.5" />
               Paciente
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ─── Left: Inputs ─── */}

@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
+import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
-import { ArrowLeft, Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Pill, User, Stethoscope, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ClinicalReferences, CALCULATOR_REFERENCES } from "@/components/calculators/ClinicalReferences";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, CartesianGrid, ReferenceLine, Tooltip } from "recharts";
-import { useNavigate } from "react-router-dom";
 import { useIsEmbed } from "@/contexts/EmbedContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -483,7 +483,6 @@ function gerarPDF(form: FormData, resultado: ResultadoDesmame, modo: Modo, metod
 
 /* ─── Component ─── */
 export default function DesmaCorticoide() {
-  const navigate = useNavigate();
   const isEmbed = useIsEmbed();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [modo, setModo] = useState<Modo>("pro");
@@ -569,9 +568,9 @@ export default function DesmaCorticoide() {
   }, [form.doseAtual, form.corticoide]);
 
   const riscoCorLabel = {
-    baixo: { text: "Baixo Risco", bgClass: "border-green-500/30 bg-green-500/10", cor: "hsl(142 71% 45%)", icon: CheckCircle },
+    baixo: { text: "Baixo Risco", bgClass: "border-status-ok/30 bg-status-ok/10", cor: "hsl(142 71% 45%)", icon: CheckCircle },
     moderado: { text: "Risco Moderado", bgClass: "border-orange-400/30 bg-orange-400/10", cor: "hsl(38 92% 50%)", icon: Clock },
-    alto: { text: "Alto Risco", bgClass: "border-red-500/30 bg-red-500/10", cor: "hsl(0 72% 51%)", icon: AlertTriangle },
+    alto: { text: "Alto Risco", bgClass: "border-status-crit/30 bg-status-crit/10", cor: "hsl(0 72% 51%)", icon: AlertTriangle },
   };
 
   const tipoDesmaLabel = {
@@ -581,32 +580,8 @@ export default function DesmaCorticoide() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {!isEmbed && (
-        <button
-          onClick={() => navigate("/calculadoras")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar às Calculadoras
-        </button>
-      )}
-
-      {/* Header */}
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Pill className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Calculadora de Desmame de Corticoides</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Plano individualizado de redução de dose com avaliação de risco de supressão adrenal.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+    <div className="max-w-6xl mx-auto">
+      <CalculatorHeader slug="desmame-corticoide" actions={<>
             <ShareToolButton toolSlug="desmame-corticoide" toolName="Calculadora de Desmame de Corticoides" />
             <AdminPromptViewer toolSlug="desmame-corticoide" toolName="Desmame de Corticoide" toolType="calculator" prompt={getNativePrompt("desmame-corticoide") || ""} />
             <CalculationHistory calculatorSlug="desmame-corticoide" />
@@ -629,9 +604,7 @@ export default function DesmaCorticoide() {
               <User className="h-3.5 w-3.5" />
               Paciente
             </button>
-          </div>
-        </div>
-      </div>
+      </>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ─── Left: Inputs ─── */}
