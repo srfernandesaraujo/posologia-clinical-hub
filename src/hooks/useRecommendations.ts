@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 
 // Mesma lógica de recência/cobertura do edge function generate-review-digest
 // (supabase/functions/generate-review-digest/index.ts) — não existe dado de
@@ -76,7 +77,7 @@ async function fetchRecommendations(userId: string): Promise<Recommendation[]> {
     const days = daysBetween(lastUsed);
     if (days < STALE_DAYS) continue;
     staleCandidates.push({
-      type: "simulador", slug, name: prettifySlug(slug),
+      type: "simulador", slug, name: NATIVE_SIMULATORS.find((s) => s.slug === slug)?.name || prettifySlug(slug),
       link: `/simuladores/${slug}`, reason: "parado", daysSince: days,
     });
   }
