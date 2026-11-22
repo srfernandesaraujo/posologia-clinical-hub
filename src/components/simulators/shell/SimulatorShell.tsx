@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { useChallengeMode, useMovableContent, FloatingChallengeWindow, ChallengeBottomSheet, DockedChallengeBar } from "@/components/simulators/shell/ChallengeDock";
 import { cn } from "@/lib/utils";
 import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 
@@ -178,6 +179,9 @@ export function SimulatorWorkspace({
 }: WorkspaceProps) {
   const meta = simulatorMeta(slug);
   const isDesktop = useIsDesktop();
+  const [mode, setMode] = useChallengeMode();
+  const floating = !!challenge && mode === "float";
+  const { portal: challengePortal, slotRef } = useMovableContent(challenge);
   const [caseOpen, setCaseOpen] = useState(true);
   const patientBlock = patient ? (
     <section className="rounded-xl border border-border bg-card/40">
@@ -221,7 +225,7 @@ export function SimulatorWorkspace({
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
 
-      {isDesktop ? (
+      {isDesktop && !floating ? (
         // Duas áreas lado a lado, cada uma com rolagem própria: o aluno lê a
         // questão e mexe na conduta à direita sem perder de vista os exames e
         // gráficos à esquerda. A divisória é arrastável e a largura fica salva.
@@ -247,20 +251,39 @@ export function SimulatorWorkspace({
                     {controls}
                   </div>
                 )}
-                {challenge}
+                {challenge && <DockedChallengeBar onUndock={() => setMode("float")} />}
+                <div ref={slotRef} />
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
+        </div>
+      ) : floating ? (
+        // Desafio em janela flutuante: o simulador ganha a largura toda, com a
+        // conduta presa à direita enquanto a página rola.
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-4">
+            {patientBlock}
+            {stage}
+          </div>
+          {controls && <div className="min-w-0 space-y-4 lg:sticky lg:top-4">{controls}</div>}
         </div>
       ) : (
         <div className="space-y-4">
           {patientBlock}
           {controls}
           {stage}
-          {challenge}
+          {challenge && <DockedChallengeBar onUndock={() => setMode("float")} />}
+          <div ref={slotRef} />
         </div>
       )}
+      {challenge && floating && (isDesktop
+        ? <FloatingChallengeWindow slotRef={slotRef} onDock={() => setMode("side")} />
+        : <ChallengeBottomSheet slotRef={slotRef} onDock={() => setMode("side")} />)}
+      {/* O desafio vive aqui (sempre montado) e é pendurado no lugar certo via slotRef. */}
+      {challengePortal}
       {footer}
+      {/* Espaço para a gaveta do celular não cobrir o fim da página */}
+      {challenge && floating && !isDesktop && <div className="h-[50dvh]" aria-hidden />}
     </div>
   );
 }
