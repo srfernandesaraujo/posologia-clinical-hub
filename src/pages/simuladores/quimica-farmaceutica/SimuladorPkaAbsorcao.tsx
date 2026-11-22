@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -151,46 +151,73 @@ export default function SimuladorPkaAbsorcao() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">pKa, Ionização e Absorção de Fármacos</h1>
-            <p className="text-muted-foreground">Henderson-Hasselbalch interativo com compartimentos fisiológicos.</p>
-            <AdminPromptViewer toolSlug="sim-pka-absorcao" toolName="pKa e Absorção" toolType="simulator" prompt={getNativePrompt("sim-pka-absorcao") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && (
-              <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="pKa, Ionização e Absorção de Fármacos"
+        description="Henderson-Hasselbalch interativo com compartimentos fisiológicos."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-pka-absorcao" toolName="pKa e Absorção" toolType="simulator" prompt={getNativePrompt("sim-pka-absorcao") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="pKa, Ionização e Absorção de Fármacos"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4"><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Ionização por Compartimento</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {compartments.map(c => (
+                <div key={c.name} className={`p-3 rounded-lg text-center ${c.nonIonized > 50 ? 'bg-primary/10' : 'bg-muted'}`}>
+                  <p className="text-xs text-muted-foreground">{c.name} (pH {c.pH})</p>
+                  <p className="text-xl font-bold">{c.nonIonized.toFixed(1)}%</p>
+                  <p className="text-xs">{c.nonIonized > 50 ? "✓ Absorção favorável" : "Absorção limitada"}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Curva de Ionização (% Não-Ionizado vs pH)</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={ionizationCurve}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="pH" label={{ value: "pH", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[0, 100]} label={{ value: "% Não-ionizado", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+              <ReferenceArea x1={1} x2={3} fill="hsl(var(--destructive))" fillOpacity={0.05} label={{ value: "Estômago", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+              <ReferenceArea x1={5.5} x2={7} fill="hsl(var(--primary))" fillOpacity={0.05} label={{ value: "Duodeno", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+              <ReferenceArea x1={7.2} x2={7.6} fill="hsl(var(--accent))" fillOpacity={0.1} label={{ value: "Sangue", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+              <ReferenceLine x={pKa} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `pKa=${pKa}`, fill: "hsl(var(--destructive))" }} />
+              <Line type="monotone" dataKey="nonIonized" name="% Não-ionizado" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -216,7 +243,7 @@ export default function SimuladorPkaAbsorcao() {
             )}
             {isVirtualRoom && showFeedbackVR && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
                 <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
               </div>
             )}
@@ -225,43 +252,9 @@ export default function SimuladorPkaAbsorcao() {
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Ionização por Compartimento</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {compartments.map(c => (
-                <div key={c.name} className={`p-3 rounded-lg text-center ${c.nonIonized > 50 ? 'bg-primary/10' : 'bg-muted'}`}>
-                  <p className="text-xs text-muted-foreground">{c.name} (pH {c.pH})</p>
-                  <p className="text-xl font-bold">{c.nonIonized.toFixed(1)}%</p>
-                  <p className="text-xs">{c.nonIonized > 50 ? "✓ Absorção favorável" : "Absorção limitada"}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Curva de Ionização (% Não-Ionizado vs pH)</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={ionizationCurve}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="pH" label={{ value: "pH", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis domain={[0, 100]} label={{ value: "% Não-ionizado", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <ReferenceArea x1={1} x2={3} fill="hsl(var(--destructive))" fillOpacity={0.05} label={{ value: "Estômago", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
-              <ReferenceArea x1={5.5} x2={7} fill="hsl(var(--primary))" fillOpacity={0.05} label={{ value: "Duodeno", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
-              <ReferenceArea x1={7.2} x2={7.6} fill="hsl(var(--accent))" fillOpacity={0.1} label={{ value: "Sangue", fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
-              <ReferenceLine x={pKa} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `pKa=${pKa}`, fill: "hsl(var(--destructive))" }} />
-              <Line type="monotone" dataKey="nonIonized" name="% Não-ionizado" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
-    </div>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ drugType, pKa, pH, nonIonized: currentFraction }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />}
+      footer={null}
+    />
   );
 }

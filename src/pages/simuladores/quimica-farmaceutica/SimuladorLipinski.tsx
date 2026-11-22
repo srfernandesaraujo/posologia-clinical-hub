@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -138,64 +138,38 @@ export default function SimuladorLipinski() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Regra de Lipinski e Druglikeness</h1>
-            <p className="text-muted-foreground">Avalie propriedades físico-químicas e espaço de druglikeness.</p>
-            <AdminPromptViewer toolSlug="sim-lipinski" toolName="Lipinski / Druglikeness" toolType="simulator" prompt={getNativePrompt("sim-lipinski") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Regra de Lipinski e Druglikeness"
+        description="Avalie propriedades físico-químicas e espaço de druglikeness."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-lipinski" toolName="Lipinski / Druglikeness" toolType="simulator" prompt={getNativePrompt("sim-lipinski") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Regra de Lipinski e Druglikeness"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4"><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Propriedades do Composto</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Massa Molecular (Da)</label><span className={`text-sm font-bold ${mw > 500 ? 'text-destructive' : ''}`}>{mw}</span></div><Slider value={[mw]} onValueChange={([v]) => setMw(v)} min={100} max={1200} step={10} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP</label><span className={`text-sm font-bold ${logP > 5 ? 'text-destructive' : ''}`}>{logP}</span></div><Slider value={[logP * 10 + 10]} onValueChange={([v]) => setLogP((v - 10) / 10)} min={0} max={60} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Donors (HBD)</label><span className={`text-sm font-bold ${hbd > 5 ? 'text-destructive' : ''}`}>{hbd}</span></div><Slider value={[hbd]} onValueChange={([v]) => setHbd(v)} min={0} max={15} step={1} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Acceptors (HBA)</label><span className={`text-sm font-bold ${hba > 10 ? 'text-destructive' : ''}`}>{hba}</span></div><Slider value={[hba]} onValueChange={([v]) => setHba(v)} min={0} max={25} step={1} /></div>
-            {isVirtualRoom && submitted && !showFeedbackVR && (
-              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            )}
-            {isVirtualRoom && showFeedbackVR && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
-                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
-              </div>
-            )}
-            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
-          </CardContent>
-        </Card>
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Avaliação de Druglikeness</CardTitle></CardHeader>
           <CardContent>
@@ -210,8 +184,6 @@ export default function SimuladorLipinski() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
       <Card>
         <CardHeader><CardTitle className="text-base">Espaço Químico: MW vs logP</CardTitle></CardHeader>
         <CardContent>
@@ -230,9 +202,32 @@ export default function SimuladorLipinski() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ mw, logP, hbd, hba, violations: result.violations, psa: result.psa }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
-    </div>
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Propriedades do Composto</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Massa Molecular (Da)</label><span className={`text-sm font-bold ${mw > 500 ? 'text-destructive' : ''}`}>{mw}</span></div><Slider value={[mw]} onValueChange={([v]) => setMw(v)} min={100} max={1200} step={10} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">logP</label><span className={`text-sm font-bold ${logP > 5 ? 'text-destructive' : ''}`}>{logP}</span></div><Slider value={[logP * 10 + 10]} onValueChange={([v]) => setLogP((v - 10) / 10)} min={0} max={60} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Donors (HBD)</label><span className={`text-sm font-bold ${hbd > 5 ? 'text-destructive' : ''}`}>{hbd}</span></div><Slider value={[hbd]} onValueChange={([v]) => setHbd(v)} min={0} max={15} step={1} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">H-Bond Acceptors (HBA)</label><span className={`text-sm font-bold ${hba > 10 ? 'text-destructive' : ''}`}>{hba}</span></div><Slider value={[hba]} onValueChange={([v]) => setHba(v)} min={0} max={25} step={1} /></div>
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ mw, logP, hbd, hba, violations: result.violations, psa: result.psa }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />}
+      footer={null}
+    />
   );
 }

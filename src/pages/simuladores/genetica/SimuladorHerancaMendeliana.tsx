@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, Dna, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -145,43 +146,35 @@ export default function SimuladorHerancaMendeliana() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Herança Mendeliana e Heredogramas</h1>
-            <p className="text-muted-foreground">Padrões de herança, Punnett e cálculo de probabilidades.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Herança Mendeliana" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Dna className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Herança Mendeliana e Heredogramas"
+        description="Padrões de herança, Punnett e cálculo de probabilidades."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Herança Mendeliana" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Herança Mendeliana e Heredogramas"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
@@ -189,43 +182,9 @@ export default function SimuladorHerancaMendeliana() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      }
+      stage={<>
         {/* Parameters */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros Genéticos</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 mb-2">
-              <div className="p-3 rounded-lg bg-muted text-center">
-                <p className="text-xs text-muted-foreground mb-1">♂ Pai</p>
-                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.father}</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted text-center">
-                <p className="text-xs text-muted-foreground mb-1">♀ Mãe</p>
-                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.mother}</p>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Penetrância</label><span className="text-sm font-bold">{penetrance}%</span></div>
-              <Slider value={[penetrance]} onValueChange={([v]) => setPenetrance(v)} min={10} max={100} step={5} />
-              <p className="text-xs text-muted-foreground mt-1">% dos portadores que manifestam a doença</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Gerações no Heredograma</label><span className="text-sm font-bold">{generations}</span></div>
-              <Slider value={[generations]} onValueChange={([v]) => setGenerations(v)} min={2} max={5} step={1} />
-            </div>
-
-            {probabilities && (
-              <div className="p-3 rounded-lg border space-y-1">
-                <p className="text-sm"><strong>Probabilidade bruta:</strong> {probabilities.rawProb}%</p>
-                <p className="text-sm"><strong>Com penetrância ({penetrance}%):</strong> {probabilities.adjustedProb}%</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Punnett + Chart */}
         <Card>
           <CardHeader><CardTitle className="text-base">Quadro de Punnett</CardTitle></CardHeader>
@@ -280,8 +239,6 @@ export default function SimuladorHerancaMendeliana() {
             )}
           </CardContent>
         </Card>
-      </div>
-
       {/* Pattern Selection */}
       <Card>
         <CardHeader><CardTitle className="text-base">Identifique o Padrão de Herança</CardTitle></CardHeader>
@@ -294,7 +251,7 @@ export default function SimuladorHerancaMendeliana() {
             ))}
           </div>
           {submitted && selectedPattern && (
-            <div className={`p-3 rounded-lg border ${selectedPattern === activeCase.expectedPattern ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10"}`}>
+            <div className={`p-3 rounded-lg border ${selectedPattern === activeCase.expectedPattern ? "border-green-500 bg-status-ok/10" : "border-destructive bg-destructive/10"}`}>
               <p className="text-sm font-medium">
                 {selectedPattern === activeCase.expectedPattern ? "✅ Correto!" : `❌ Resposta: ${activeCase.expectedPattern} — ${PATTERN_LABELS[activeCase.expectedPattern]}`}
               </p>
@@ -303,21 +260,54 @@ export default function SimuladorHerancaMendeliana() {
           {!isVirtualRoom && <Button onClick={() => handleFinish()} disabled={submitted || !selectedPattern} className="w-full">Finalizar</Button>}
         </CardContent>
       </Card>
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Genéticos</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 mb-2">
+              <div className="p-3 rounded-lg bg-muted text-center">
+                <p className="text-xs text-muted-foreground mb-1">♂ Pai</p>
+                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.father}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted text-center">
+                <p className="text-xs text-muted-foreground mb-1">♀ Mãe</p>
+                <p className="text-2xl font-mono font-bold">{activeCase.parentGenotypes.mother}</p>
+              </div>
+            </div>
 
-      <SimulatorChallengeMode
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Penetrância</label><span className="text-sm font-bold">{penetrance}%</span></div>
+              <Slider value={[penetrance]} onValueChange={([v]) => setPenetrance(v)} min={10} max={100} step={5} />
+              <p className="text-xs text-muted-foreground mt-1">% dos portadores que manifestam a doença</p>
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">Gerações no Heredograma</label><span className="text-sm font-bold">{generations}</span></div>
+              <Slider value={[generations]} onValueChange={([v]) => setGenerations(v)} min={2} max={5} step={1} />
+            </div>
+
+            {probabilities && (
+              <div className="p-3 rounded-lg border space-y-1">
+                <p className="text-sm"><strong>Probabilidade bruta:</strong> {probabilities.rawProb}%</p>
+                <p className="text-sm"><strong>Com penetrância ({penetrance}%):</strong> {probabilities.adjustedProb}%</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getHerancaMendelianaChallenges()}
         simulatorState={{ selectedPattern, penetrance, generations }}
         onComplete={() => setChallengeCompleted(true)}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -325,11 +315,11 @@ export default function SimuladorHerancaMendeliana() {
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-destructive"}`}>{lastScore}%</div></div>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : "text-destructive"}`}>{lastScore}%</div></div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
+import { Sparkles, Loader2, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -154,47 +154,60 @@ export default function SimuladorHLB() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Equilíbrio HLB e Emulsões</h1>
-            <p className="text-muted-foreground">Calcule o HLB de misturas de tensoativos e otimize a estabilidade de emulsões.</p>
-            <AdminPromptViewer toolSlug="sim-hlb-emulsoes" toolName="HLB e Emulsões" toolType="simulator" prompt={getNativePrompt("sim-hlb-emulsoes") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Equilíbrio HLB e Emulsões"
+        description="Calcule o HLB de misturas de tensoativos e otimize a estabilidade de emulsões."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-hlb-emulsoes" toolName="HLB e Emulsões" toolType="simulator" prompt={getNativePrompt("sim-hlb-emulsoes") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Equilíbrio HLB e Emulsões"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Fase Oleosa:</strong> {oil.name} (HLB requerido = {oil.hlbReq})</p>
         <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
       </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Estabilidade vs HLB</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <ComposedChart data={stabilityData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="hlb" label={{ value: "HLB", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis domain={[0, 110]} label={{ value: "Estabilidade (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Area type="monotone" dataKey="stability" name="Estabilidade" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
+                <Scatter dataKey="mixPoint" name="HLB Atual" fill="hsl(var(--destructive))" r={6} />
+                <ReferenceLine x={Math.round(hlbMix * 2) / 2} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))", position: "top" }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Sistema de Tensoativos</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -221,9 +234,9 @@ export default function SimuladorHLB() {
             </div>
             <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">% Tensoativo A na mistura</label><span className="text-sm font-bold">{surfAPct}%</span></div><Slider value={[surfAPct]} onValueChange={([v]) => setSurfAPct(v)} min={0} max={100} step={5} /></div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">HLB Mistura</p><p className={`text-2xl font-bold ${hlbDiff < 1 ? "text-green-600" : hlbDiff < 2 ? "text-yellow-600" : "text-destructive"}`}>{Math.round(hlbMix * 10) / 10}</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">HLB Mistura</p><p className={`text-2xl font-bold ${hlbDiff < 1 ? "text-status-ok" : hlbDiff < 2 ? "text-status-warn" : "text-destructive"}`}>{Math.round(hlbMix * 10) / 10}</p></div>
               <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">HLB Requerido</p><p className="text-2xl font-bold">{oil.hlbReq}</p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Estabilidade</p><p className={`text-2xl font-bold ${stabilityPct > 80 ? "text-green-600" : stabilityPct > 50 ? "text-yellow-600" : "text-destructive"}`}>{Math.round(stabilityPct)}%</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Estabilidade</p><p className={`text-2xl font-bold ${stabilityPct > 80 ? "text-status-ok" : stabilityPct > 50 ? "text-status-warn" : "text-destructive"}`}>{Math.round(stabilityPct)}%</p></div>
             </div>
             {isVirtualRoom ? (
               !submitted ? (
@@ -232,7 +245,7 @@ export default function SimuladorHLB() {
                 <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
               ) : (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
                   <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
                   <p className="text-xs text-muted-foreground">HLB Mistura: {Math.round(hlbMix * 10) / 10} | Faixa esperada: {activeCase?.expectedHLBRange?.[0]}–{activeCase?.expectedHLBRange?.[1]}</p>
                 </div>
@@ -243,26 +256,9 @@ export default function SimuladorHLB() {
             {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Estabilidade vs HLB</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <ComposedChart data={stabilityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="hlb" label={{ value: "HLB", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis domain={[0, 110]} label={{ value: "Estabilidade (%)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Area type="monotone" dataKey="stability" name="Estabilidade" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-                <Scatter dataKey="mixPoint" name="HLB Atual" fill="hsl(var(--destructive))" r={6} />
-                <ReferenceLine x={Math.round(hlbMix * 2) / 2} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Mix=${Math.round(hlbMix * 10) / 10}`, fill: "hsl(var(--destructive))", position: "top" }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getHLBChallenges()} simulatorState={{ hlbMix, selectedOil }} />
-    </div>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getHLBChallenges()} simulatorState={{ hlbMix, selectedOil }} />}
+      footer={null}
+    />
   );
 }

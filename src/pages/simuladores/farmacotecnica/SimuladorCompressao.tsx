@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
+import { Sparkles, Loader2, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -131,76 +131,41 @@ export default function SimuladorCompressao() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Compressão de Comprimidos</h1>
-            <p className="text-muted-foreground">Gráficos de Heckel e Kawakita, dureza, friabilidade e desintegração.</p>
-            <AdminPromptViewer toolSlug="sim-compressao" toolName="Compressão de Comprimidos" toolType="simulator" prompt={getNativePrompt("sim-compressao") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Compressão de Comprimidos"
+        description="Gráficos de Heckel e Kawakita, dureza, friabilidade e desintegração."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-compressao" toolName="Compressão de Comprimidos" toolType="simulator" prompt={getNativePrompt("sim-compressao") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Compressão de Comprimidos"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Produto:</strong> {activeCase.patient.product}</p>
         <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
       </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros de Compressão</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Força de Compressão (%)</label><span className="text-sm font-bold">{force}%</span></div><Slider value={[force]} onValueChange={([v]) => setForce(v)} min={10} max={100} step={5} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Tamanho de Grânulo (%)</label><span className="text-sm font-bold">{granuleSize}%</span></div><Slider value={[granuleSize]} onValueChange={([v]) => setGranuleSize(v)} min={10} max={100} step={5} /></div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Lubrificante (%)</label><span className="text-sm font-bold">{lubricant}%</span></div><Slider value={[lubricant]} onValueChange={([v]) => setLubricant(v)} min={0} max={50} step={5} /></div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Dureza</p><p className={`text-lg font-bold ${hardness >= 4 && hardness <= 12 ? "" : "text-destructive"}`}>{hardness} kp</p></div>
-              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Friabilidade</p><p className={`text-lg font-bold ${friability <= 1 ? "" : "text-destructive"}`}>{friability}%</p></div>
-              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Desintegração</p><p className={`text-lg font-bold ${disintegration <= 15 ? "" : "text-destructive"}`}>{disintegration} min</p></div>
-            </div>
-            {isVirtualRoom ? (
-              !submitted ? (
-                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
-              ) : !showFeedback ? (
-                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-              ) : (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
-                  <p className="text-xs text-muted-foreground">Dureza: {hardness} kp | Faixa esperada: {activeCase?.expectedHardnessRange?.[0]}–{activeCase?.expectedHardnessRange?.[1]} kp</p>
-                </div>
-              )
-            ) : (
-              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
-            )}
-            {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
-          </CardContent>
-        </Card>
+      }
+      stage={<>
         <div className="space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base">Gráfico de Heckel</CardTitle></CardHeader>
@@ -231,10 +196,41 @@ export default function SimuladorCompressao() {
             </CardContent>
           </Card>
         </div>
-      </div>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getCompressaoChallenges()} simulatorState={{ force, granuleSize, lubricant, hardness }} />
-    </div>
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros de Compressão</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Força de Compressão (%)</label><span className="text-sm font-bold">{force}%</span></div><Slider value={[force]} onValueChange={([v]) => setForce(v)} min={10} max={100} step={5} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Tamanho de Grânulo (%)</label><span className="text-sm font-bold">{granuleSize}%</span></div><Slider value={[granuleSize]} onValueChange={([v]) => setGranuleSize(v)} min={10} max={100} step={5} /></div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Lubrificante (%)</label><span className="text-sm font-bold">{lubricant}%</span></div><Slider value={[lubricant]} onValueChange={([v]) => setLubricant(v)} min={0} max={50} step={5} /></div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Dureza</p><p className={`text-lg font-bold ${hardness >= 4 && hardness <= 12 ? "" : "text-destructive"}`}>{hardness} kp</p></div>
+              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Friabilidade</p><p className={`text-lg font-bold ${friability <= 1 ? "" : "text-destructive"}`}>{friability}%</p></div>
+              <div className="p-2 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Desintegração</p><p className={`text-lg font-bold ${disintegration <= 15 ? "" : "text-destructive"}`}>{disintegration} min</p></div>
+            </div>
+            {isVirtualRoom ? (
+              !submitted ? (
+                <Button onClick={handleFinish} className="w-full gap-2"><Send className="h-4 w-4" /> Enviar Resultados</Button>
+              ) : !showFeedback ? (
+                <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+              ) : (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
+                  <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
+                  <p className="text-xs text-muted-foreground">Dureza: {hardness} kp | Faixa esperada: {activeCase?.expectedHardnessRange?.[0]}–{activeCase?.expectedHardnessRange?.[1]} kp</p>
+                </div>
+              )
+            ) : (
+              <Button variant="outline" onClick={handleFinish} disabled={submitted} className="w-full">Finalizar Caso</Button>
+            )}
+            {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getCompressaoChallenges()} simulatorState={{ force, granuleSize, lubricant, hardness }} />}
+      footer={null}
+    />
   );
 }

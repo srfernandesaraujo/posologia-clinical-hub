@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -196,45 +196,35 @@ export default function SimuladorCineticaAvancada() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Cinética Enzimática Avançada</h1>
-            <p className="text-muted-foreground">Michaelis-Menten, Lineweaver-Burk e inibição competitiva, não-competitiva e acompetitiva.</p>
-            <AdminPromptViewer toolSlug="sim-cinetica-avancada" toolName="Cinética Enzimática Avançada" toolType="simulator" prompt={getNativePrompt("sim-cinetica-avancada") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Cinética Enzimática Avançada"
+        description="Michaelis-Menten, Lineweaver-Burk e inibição competitiva, não-competitiva e acompetitiva."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-cinetica-avancada" toolName="Cinética Enzimática Avançada" toolType="simulator" prompt={getNativePrompt("sim-cinetica-avancada") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Cinética Enzimática Avançada"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
@@ -242,8 +232,70 @@ export default function SimuladorCineticaAvancada() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
+      }
+      stage={<>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Michaelis-Menten</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={outputs.mmData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="s" label={{ value: "[S] (mM)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "V (µmol/min)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend />
+                  <Line dataKey="vRef" name="Sem inibidor" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
+                  <Line dataKey="v" name="Com inibidor" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Lineweaver-Burk (Duplo Recíproco)</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={outputs.lwbData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="invS" label={{ value: "1/[S]", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis label={{ value: "1/V", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend />
+                  <Line dataKey="invVRef" name="Sem inibidor" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
+                  <Line dataKey="invV" name="Com inibidor" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+           </Card>
+
+          {history.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="kmApp" name="Km aparente" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                    <Line type="monotone" dataKey="vmaxApp" name="Vmax aparente" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4">
+          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
+          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
+        </CardContent>
+      </Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros Enzimáticos</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -299,77 +351,13 @@ export default function SimuladorCineticaAvancada() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Michaelis-Menten</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={outputs.mmData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="s" label={{ value: "[S] (mM)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis label={{ value: "V (µmol/min)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Legend />
-                  <Line dataKey="vRef" name="Sem inibidor" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
-                  <Line dataKey="v" name="Com inibidor" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Lineweaver-Burk (Duplo Recíproco)</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={outputs.lwbData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="invS" label={{ value: "1/[S]", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis label={{ value: "1/V", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Legend />
-                  <Line dataKey="invVRef" name="Sem inibidor" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1} strokeDasharray="5 5" />
-                  <Line dataKey="invV" name="Com inibidor" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-           </Card>
-
-          {history.length > 0 && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={history}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="time" label={{ value: "Tempo (s)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="kmApp" name="Km aparente" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                    <Line type="monotone" dataKey="vmaxApp" name="Vmax aparente" stroke="hsl(var(--destructive))" dot={false} strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
-          <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
-        </CardContent>
-      </Card>
-
-      <SimulatorChallengeMode
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getCineticaAvancadaChallenges()}
         simulatorState={{ vmax, km, inhibitorType, inhibitorConc, ki, kmApp: outputs.kmApp, vmaxApp: outputs.vmaxApp }}
         onComplete={() => setChallengeCompleted(true)}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -378,13 +366,13 @@ export default function SimuladorCineticaAvancada() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

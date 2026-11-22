@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -171,40 +171,74 @@ export default function SimuladorDocking() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Interação Fármaco-Receptor (Docking)</h1>
-            <p className="text-muted-foreground">Simule interações moleculares e energia de ligação.</p>
-            <AdminPromptViewer toolSlug="sim-docking-simplificado" toolName="Docking Simplificado" toolType="simulator" prompt={getNativePrompt("sim-docking-simplificado") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Interação Fármaco-Receptor (Docking)"
+        description="Simule interações moleculares e energia de ligação."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-docking-simplificado" toolName="Docking Simplificado" toolType="simulator" prompt={getNativePrompt("sim-docking-simplificado") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Interação Fármaco-Receptor (Docking)"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4"><p className="text-sm text-muted-foreground">{activeCase.scenario}</p></CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Resultados</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className={`p-3 rounded-lg text-center ${result.deltaG < -8 ? 'bg-primary/10' : 'bg-muted'}`}><p className="text-xs text-muted-foreground">ΔG (kcal/mol)</p><p className="text-2xl font-bold">{result.deltaG}</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Ki (estimado)</p><p className="text-sm font-bold">{result.Ki}</p></div>
+            </div>
+            <h4 className="text-sm font-medium mb-2">Contribuições por Interação</h4>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={result.interactionContributions} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" label={{ value: "ΔG (kcal/mol)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis type="category" dataKey="name" width={120} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Bar dataKey="contribution" name="ΔG (kcal/mol)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Energia vs Distância (Å)</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={result.energyVsDistance}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="distance" label={{ value: "Distância (Å)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis label={{ value: "Energia (kcal/mol)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+              <Line type="monotone" dataKey="energy" name="Energia" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros de Docking</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -231,7 +265,7 @@ export default function SimuladorDocking() {
             )}
             {isVirtualRoom && showFeedbackVR && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
                 <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
                 <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
               </div>
@@ -239,44 +273,9 @@ export default function SimuladorDocking() {
             {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Resultados</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`p-3 rounded-lg text-center ${result.deltaG < -8 ? 'bg-primary/10' : 'bg-muted'}`}><p className="text-xs text-muted-foreground">ΔG (kcal/mol)</p><p className="text-2xl font-bold">{result.deltaG}</p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Ki (estimado)</p><p className="text-sm font-bold">{result.Ki}</p></div>
-            </div>
-            <h4 className="text-sm font-medium mb-2">Contribuições por Interação</h4>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={result.interactionContributions} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" label={{ value: "ΔG (kcal/mol)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis type="category" dataKey="name" width={120} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="contribution" name="ΔG (kcal/mol)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Energia vs Distância (Å)</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={result.energyVsDistance}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="distance" label={{ value: "Distância (Å)", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis label={{ value: "Energia (kcal/mol)", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-              <Line type="monotone" dataKey="energy" name="Energia" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ targetId, distance, activeInter, deltaG: result.deltaG }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
-    </div>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ targetId, distance, activeInter, deltaG: result.deltaG }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />}
+      footer={null}
+    />
   );
 }

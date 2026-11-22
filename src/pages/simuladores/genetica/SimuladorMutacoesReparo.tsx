@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles, Loader2, Dna, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -130,47 +131,43 @@ export default function SimuladorMutacoesReparo() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Mutações e Reparo de DNA</h1>
-            <p className="text-muted-foreground">Simule mutações e escolha mecanismos de reparo.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Mutações e Reparo" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Dna className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (<AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Mutações e Reparo de DNA"
+        description="Simule mutações e escolha mecanismos de reparo."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Mutações e Reparo" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <Badge variant="secondary">{MUTATION_LABELS[activeCase.mutationType]}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Mutações e Reparo de DNA"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
-
+      }
+      stage={<>
       {/* Sequences comparison */}
       {sequences && (
         <Card>
@@ -204,7 +201,6 @@ export default function SimuladorMutacoesReparo() {
           </CardContent>
         </Card>
       )}
-
       {/* Repair selection */}
       <Card>
         <CardHeader><CardTitle className="text-base">Selecione a Via de Reparo</CardTitle></CardHeader>
@@ -219,7 +215,7 @@ export default function SimuladorMutacoesReparo() {
           </div>
 
           {submitted && selectedRepair && (
-            <div className={`p-3 rounded-lg border ${selectedRepair === activeCase.expectedRepair ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10"}`}>
+            <div className={`p-3 rounded-lg border ${selectedRepair === activeCase.expectedRepair ? "border-green-500 bg-status-ok/10" : "border-destructive bg-destructive/10"}`}>
               <p className="text-sm font-medium">
                 {selectedRepair === activeCase.expectedRepair ? `✅ Correto! ${REPAIR_INFO[activeCase.expectedRepair].name}` : `❌ Via correta: ${activeCase.expectedRepair} — ${REPAIR_INFO[activeCase.expectedRepair].name}`}
               </p>
@@ -229,7 +225,6 @@ export default function SimuladorMutacoesReparo() {
           {!isVirtualRoom && <Button onClick={() => handleFinish()} disabled={submitted || !selectedRepair} className="w-full">Finalizar</Button>}
         </CardContent>
       </Card>
-
       {/* Consequence graph */}
       {selectedRepair && consequenceData.length > 0 && (
         <Card>
@@ -254,18 +249,17 @@ export default function SimuladorMutacoesReparo() {
           </CardContent>
         </Card>
       )}
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent>
       </Card>
+      </>}
 
-      <SimulatorChallengeMode challengeSet={getMutacoesReparoChallenges()} simulatorState={{ selectedRepair, mutationType: activeCase.mutationType }} onComplete={() => setChallengeCompleted(true)} />
-
-      {isVirtualRoom && submitted && (!showFeedback ? (
+      challenge={<SimulatorChallengeMode challengeSet={getMutacoesReparoChallenges()} simulatorState={{ selectedRepair, mutationType: activeCase.mutationType }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (!showFeedback ? (
         <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button><p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p></div>
       ) : (
-        <div className="space-y-2"><div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-destructive"}`}>{lastScore}%</div></div><p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p></div>
+        <div className="space-y-2"><div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : "text-destructive"}`}>{lastScore}%</div></div><p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p></div>
       ))}
-    </div>
+    />
   );
 }

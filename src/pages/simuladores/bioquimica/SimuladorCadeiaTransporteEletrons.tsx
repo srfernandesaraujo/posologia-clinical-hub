@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Sparkles, Loader2, Flame, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -216,35 +216,24 @@ export default function SimuladorCadeiaTransporteEletrons() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Cadeia de Transporte de Elétrons</h1>
-            <p className="text-muted-foreground">Fosforilação oxidativa, inibidores de complexos e desacopladores.</p>
-            <AdminPromptViewer toolSlug="sim-cadeia-transporte-eletrons" toolName="Cadeia de Transporte de Elétrons" toolType="simulator" prompt={getNativePrompt("sim-cadeia-transporte-eletrons") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Flame className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Cadeia de Transporte de Elétrons"
+        description="Fosforilação oxidativa, inibidores de complexos e desacopladores."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-cadeia-transporte-eletrons" toolName="Cadeia de Transporte de Elétrons" toolType="simulator" prompt={getNativePrompt("sim-cadeia-transporte-eletrons") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
-  const complexBarData = [
+const complexBarData = [
     { name: "Complexo I", activity: outputs.complex1 },
     { name: "Complexo II", activity: outputs.complex2 },
     { name: "Complexo III", activity: outputs.complex3 },
@@ -252,16 +241,17 @@ export default function SimuladorCadeiaTransporteEletrons() {
   ];
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Cadeia de Transporte de Elétrons"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos, {activeCase.patient.weight} kg</p>
@@ -269,41 +259,8 @@ export default function SimuladorCadeiaTransporteEletrons() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Substratos & Inibidores</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <div className="flex justify-between mb-2"><label className="text-sm font-medium">NADH</label><span className="text-sm font-bold">{nadh}%</span></div>
-              <Slider value={[nadh]} onValueChange={([v]) => setNadh(v)} min={0} max={100} step={1} />
-            </div>
-            <div>
-              <div className="flex justify-between mb-2"><label className="text-sm font-medium">FADH₂</label><span className="text-sm font-bold">{fadh2}%</span></div>
-              <Slider value={[fadh2]} onValueChange={([v]) => setFadh2(v)} min={0} max={100} step={1} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {([
-                { key: "rotenone" as const, label: "Rotenona (CI)", color: "text-destructive" },
-                { key: "antimycinA" as const, label: "Antimicina A (CIII)", color: "text-orange-500" },
-                { key: "cyanide" as const, label: "Cianeto (CIV)", color: "text-destructive" },
-                { key: "dnp" as const, label: "DNP (Desacoplador)", color: "text-yellow-600" },
-              ]).map(({ key, label, color }) => (
-                <div key={key} className="flex items-center gap-2">
-                  <Switch checked={inhibitors[key]} onCheckedChange={() => toggleInhibitor(key)} />
-                  <span className={`text-xs font-medium ${color}`}>{label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
-              {!isVirtualRoom && (
-                <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="flex-1">Finalizar</Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Outputs Mitocondriais</CardTitle></CardHeader>
           <CardContent>
@@ -331,8 +288,6 @@ export default function SimuladorCadeiaTransporteEletrons() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
-
       {history.length > 1 && (
         <Card>
           <CardHeader><CardTitle className="text-base">Evolução Temporal</CardTitle></CardHeader>
@@ -352,21 +307,53 @@ export default function SimuladorCadeiaTransporteEletrons() {
           </CardContent>
         </Card>
       )}
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
-
-      <SimulatorChallengeMode
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Substratos & Inibidores</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">NADH</label><span className="text-sm font-bold">{nadh}%</span></div>
+              <Slider value={[nadh]} onValueChange={([v]) => setNadh(v)} min={0} max={100} step={1} />
+            </div>
+            <div>
+              <div className="flex justify-between mb-2"><label className="text-sm font-medium">FADH₂</label><span className="text-sm font-bold">{fadh2}%</span></div>
+              <Slider value={[fadh2]} onValueChange={([v]) => setFadh2(v)} min={0} max={100} step={1} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { key: "rotenone" as const, label: "Rotenona (CI)", color: "text-destructive" },
+                { key: "antimycinA" as const, label: "Antimicina A (CIII)", color: "text-orange-500" },
+                { key: "cyanide" as const, label: "Cianeto (CIV)", color: "text-destructive" },
+                { key: "dnp" as const, label: "DNP (Desacoplador)", color: "text-status-warn" },
+              ]).map(({ key, label, color }) => (
+                <div key={key} className="flex items-center gap-2">
+                  <Switch checked={inhibitors[key]} onCheckedChange={() => toggleInhibitor(key)} />
+                  <span className={`text-xs font-medium ${color}`}>{label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setRunning(!running)} className="flex-1">{running ? "⏸ Pausar" : "▶ Iniciar"}</Button>
+              {!isVirtualRoom && (
+                <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="flex-1">Finalizar</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode
         challengeSet={getCadeiaTransporteEletronsChallenges()}
         simulatorState={{ nadh, fadh2, ...inhibitors, atpRate: outputs.atpRate }}
         onComplete={() => setChallengeCompleted(true)}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -375,13 +362,13 @@ export default function SimuladorCadeiaTransporteEletrons() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
               <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando para a página inicial em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

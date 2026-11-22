@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Eye } from "lucide-react";
+import { Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -137,68 +137,42 @@ export default function SimuladorMetabolismo() {
   if (!activeCase) {
     if (isVirtualRoom) return <div className="p-8 text-center text-muted-foreground">Carregando caso da sala virtual...</div>;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Metabolismo de Fármacos e Pró-Fármacos</h1>
-            <p className="text-muted-foreground">Cinética de ativação de pró-fármacos e impacto de CYP450.</p>
-            <AdminPromptViewer toolSlug="sim-metabolismo-farmacos" toolName="Metabolismo de Fármacos" toolType="simulator" prompt={getNativePrompt("sim-metabolismo-farmacos") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos de Estudo</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Metabolismo de Fármacos e Pró-Fármacos"
+        description="Cinética de ativação de pró-fármacos e impacto de CYP450."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-metabolismo-farmacos" toolName="Metabolismo de Fármacos" toolType="simulator" prompt={getNativePrompt("sim-metabolismo-farmacos") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Metabolismo de Fármacos e Pró-Fármacos"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => isVirtualRoom ? navigate("/") : setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Fármaco:</strong> {selectedPD.name}</p>
         <p className="text-sm"><strong>Enzima:</strong> {selectedPD.enzyme} | <strong>Fase:</strong> {selectedPD.phase}</p>
         <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
       </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Parâmetros Metabólicos</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Pró-fármaco</label>
-              <Select value={prodrugId} onValueChange={setProdrugId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{PRODRUGS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Atividade CYP (%)</label><span className="text-sm font-bold">{cypActivity}%</span></div><Slider value={[cypActivity]} onValueChange={([v]) => setCypActivity(v)} min={10} max={300} step={10} /><p className="text-xs text-muted-foreground mt-1">&lt;50%: Metabolizador Lento | 100%: Normal | &gt;150%: Ultra-rápido</p></div>
-            {isVirtualRoom && submitted && !showFeedbackVR && (
-              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
-            )}
-            {isVirtualRoom && showFeedbackVR && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
-                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
-                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
-              </div>
-            )}
-            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
-          </CardContent>
-        </Card>
+      }
+      stage={<>
         <Card>
           <CardHeader><CardTitle className="text-base">Resultados</CardTitle></CardHeader>
           <CardContent>
@@ -209,8 +183,6 @@ export default function SimuladorMetabolismo() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
       <Card>
         <CardHeader><CardTitle className="text-base">Cinética Pró-fármaco → Ativo → Metabólito (h)</CardTitle></CardHeader>
         <CardContent>
@@ -228,9 +200,36 @@ export default function SimuladorMetabolismo() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
       <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ prodrugId, cypActivity, peakActive, tMax }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />
-    </div>
+      </>}
+      controls={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Parâmetros Metabólicos</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Pró-fármaco</label>
+              <Select value={prodrugId} onValueChange={setProdrugId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PRODRUGS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><div className="flex justify-between mb-2"><label className="text-sm font-medium">Atividade CYP (%)</label><span className="text-sm font-bold">{cypActivity}%</span></div><Slider value={[cypActivity]} onValueChange={([v]) => setCypActivity(v)} min={10} max={300} step={10} /><p className="text-xs text-muted-foreground mt-1">&lt;50%: Metabolizador Lento | 100%: Normal | &gt;150%: Ultra-rápido</p></div>
+            {isVirtualRoom && submitted && !showFeedbackVR && (
+              <Button onClick={() => setShowFeedbackVR(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
+            )}
+            {isVirtualRoom && showFeedbackVR && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
+                <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise os conceitos"}</p>
+                <p className="text-xs text-muted-foreground">Redirecionando em 15s...</p>
+              </div>
+            )}
+            {!isVirtualRoom && <Button variant="outline" onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar Caso</Button>}
+          </CardContent>
+        </Card>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getChallengesBySlug(SLUG)} simulatorState={{ prodrugId, cypActivity, peakActive, tMax }} onComplete={(score) => { setChallengeCompleted(true); setLastScore(score); }} />}
+      footer={null}
+    />
   );
 }

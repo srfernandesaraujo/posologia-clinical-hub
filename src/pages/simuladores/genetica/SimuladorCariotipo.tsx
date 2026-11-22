@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles, Loader2, Dna, Eye, CheckCircle2, XCircle, Shuffle } from "lucide-react";
+import { Sparkles, Loader2, Eye, CheckCircle2, XCircle, Shuffle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -175,33 +176,24 @@ export default function SimuladorCariotipo() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Cariótipo e Anomalias Cromossômicas</h1>
-            <p className="text-muted-foreground">Monte cariótipos e identifique anomalias cromossômicas.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Cariótipo" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Dna className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Cariótipo e Anomalias Cromossômicas"
+        description="Monte cariótipos e identifique anomalias cromossômicas."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Cariótipo" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
-  const anomalyOptions = [...new Set([
+const anomalyOptions = [...new Set([
     ...activeCase.chromosomes.filter(c => c.anomaly).map(c => c.anomaly!),
     "Cariótipo Normal", "Deleção parcial", "Duplicação cromossômica", "Inversão pericêntrica",
   ])];
@@ -209,16 +201,17 @@ export default function SimuladorCariotipo() {
   const maxSize = 249;
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Cariótipo e Anomalias Cromossômicas"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age} anos</p>
@@ -226,7 +219,8 @@ export default function SimuladorCariotipo() {
           <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
         </CardContent>
       </Card>
-
+      }
+      stage={<>
       {/* Chromosome Assembly Area */}
       <Card>
         <CardHeader>
@@ -249,7 +243,7 @@ export default function SimuladorCariotipo() {
                 <button key={chr.id} onClick={() => { if (!showAnswer) { setSelectedChrId(chr.id); setAssigningPair(null); } }}
                   className={`flex flex-col items-center p-1 rounded border-2 transition-all min-w-[28px] ${
                     isSelected ? "border-primary bg-primary/10 ring-2 ring-primary" :
-                    isCorrect ? "border-green-500 bg-green-500/10" :
+                    isCorrect ? "border-green-500 bg-status-ok/10" :
                     isWrong ? "border-destructive bg-destructive/10" :
                     isAssigned ? "border-primary/40 bg-primary/5" :
                     "border-border hover:border-primary/50"
@@ -281,7 +275,6 @@ export default function SimuladorCariotipo() {
           </div>
         </CardContent>
       </Card>
-
       {/* Anomaly identification + karyotype */}
       <Card>
         <CardHeader><CardTitle className="text-base">Identifique as Anomalias</CardTitle></CardHeader>
@@ -302,7 +295,7 @@ export default function SimuladorCariotipo() {
             <input type="text" value={userKaryotype} onChange={e => setUserKaryotype(e.target.value)}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" placeholder="46,XX ou 47,XXY..." disabled={showAnswer} />
             {showAnswer && (
-              <p className={`text-xs mt-1 ${userKaryotype.trim().toLowerCase() === activeCase.expectedKaryotype.toLowerCase() ? "text-green-600" : "text-destructive"}`}>
+              <p className={`text-xs mt-1 ${userKaryotype.trim().toLowerCase() === activeCase.expectedKaryotype.toLowerCase() ? "text-status-ok" : "text-destructive"}`}>
                 Resposta: {activeCase.expectedKaryotype}
               </p>
             )}
@@ -311,21 +304,20 @@ export default function SimuladorCariotipo() {
           {!isVirtualRoom && <Button onClick={() => handleFinish()} disabled={submitted} className="w-full">Finalizar</Button>}
         </CardContent>
       </Card>
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4">
           <p className="text-sm font-semibold mb-1">💡 Dica Clínica</p>
           <p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p>
         </CardContent>
       </Card>
+      </>}
 
-      <SimulatorChallengeMode
+      challenge={<SimulatorChallengeMode
         challengeSet={getCariotipoChallenges()}
         simulatorState={{ selectedAnomalies, userKaryotype, correctPairings }}
         onComplete={() => setChallengeCompleted(true)}
-      />
-
-      {isVirtualRoom && submitted && (
+      />}
+      footer={isVirtualRoom && submitted && (
         !showFeedback ? (
           <div className="space-y-2">
             <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
@@ -334,12 +326,12 @@ export default function SimuladorCariotipo() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+              <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
             </div>
             <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
           </div>
         )
       )}
-    </div>
+    />
   );
 }

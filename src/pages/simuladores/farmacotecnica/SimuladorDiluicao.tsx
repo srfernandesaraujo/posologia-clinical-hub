@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, FlaskConical, Send, Eye } from "lucide-react";
+import { Sparkles, Loader2, Send, Eye } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -122,47 +122,65 @@ export default function SimuladorDiluicao() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Cálculos de Diluição e Concentração</h1>
-            <p className="text-muted-foreground">Diluição simples, seriada, conversão de unidades e isotonia.</p>
-            <AdminPromptViewer toolSlug="sim-diluicao" toolName="Diluição e Concentração" toolType="simulator" prompt={getNativePrompt("sim-diluicao") || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => (
-              <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />
-            ))}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="Cálculos de Diluição e Concentração"
+        description="Diluição simples, seriada, conversão de unidades e isotonia."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug="sim-diluicao" toolName="Diluição e Concentração" toolType="simulator" prompt={getNativePrompt("sim-diluicao") || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="Cálculos de Diluição e Concentração"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={() => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card><CardContent className="pt-4 space-y-2">
         <p className="text-sm"><strong>Contexto:</strong> {activeCase.patient.context}</p>
         <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
       </CardContent></Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      }
+      stage={<>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Resultados</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">C2 (final)</p><p className="text-2xl font-bold">{c2}</p></div>
+              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Diluente</p><p className="text-2xl font-bold">{diluent} <span className="text-sm">mL</span></p></div>
+              {mode === "isotony" && <div className="p-3 rounded-lg bg-muted text-center col-span-2"><p className="text-xs text-muted-foreground">NaCl para isotonia</p><p className="text-2xl font-bold">{naclNeeded} g</p></div>}
+            </div>
+            {mode === "serial" && (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={serial}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="tube" label={{ value: "Tubo", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <YAxis label={{ value: "Concentração", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Bar dataKey="concentration" fill="hsl(var(--primary))" name="Concentração" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
+      </>}
+      controls={
         <Card>
           <CardHeader><CardTitle className="text-base">Parâmetros de Diluição</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -187,7 +205,7 @@ export default function SimuladorDiluicao() {
                 <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
               ) : (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
-                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : lastScore >= 50 ? "text-yellow-600" : "text-destructive"}`}>{lastScore}%</div>
+                  <div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : lastScore >= 50 ? "text-status-warn" : "text-destructive"}`}>{lastScore}%</div>
                   <p className="text-sm text-muted-foreground">{lastScore >= 80 ? "🏆 Excelente desempenho!" : lastScore >= 50 ? "📈 Bom, pode melhorar" : "⚠️ Revise seus conceitos"}</p>
                   <p className="text-xs text-muted-foreground">C2: {c2} | Faixa esperada: {activeCase?.expectedC2Range?.[0]}–{activeCase?.expectedC2Range?.[1]}</p>
                 </div>
@@ -198,31 +216,9 @@ export default function SimuladorDiluicao() {
             {isVirtualRoom && submitted && <p className="text-xs text-center text-muted-foreground mt-2">Resultados enviados ✓ — Redirecionando em 15s...</p>}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-base">Resultados</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">C2 (final)</p><p className="text-2xl font-bold">{c2}</p></div>
-              <div className="p-3 rounded-lg bg-muted text-center"><p className="text-xs text-muted-foreground">Diluente</p><p className="text-2xl font-bold">{diluent} <span className="text-sm">mL</span></p></div>
-              {mode === "isotony" && <div className="p-3 rounded-lg bg-muted text-center col-span-2"><p className="text-xs text-muted-foreground">NaCl para isotonia</p><p className="text-2xl font-bold">{naclNeeded} g</p></div>}
-            </div>
-            {mode === "serial" && (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={serial}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="tube" label={{ value: "Tubo", position: "insideBottom", offset: -5 }} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                  <YAxis label={{ value: "Concentração", angle: -90, position: "insideLeft" }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="concentration" fill="hsl(var(--primary))" name="Concentração" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent></Card>
-      <SimulatorChallengeMode challengeSet={getDiluicaoChallenges()} simulatorState={{ c1, v1, v2, c2 }} />
-    </div>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getDiluicaoChallenges()} simulatorState={{ c1, v1, v2, c2 }} />}
+      footer={null}
+    />
   );
 }

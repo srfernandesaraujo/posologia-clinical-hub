@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SimulatorCasePicker, SimulatorWorkspace, PatientCard } from "@/components/simulators/shell/SimulatorShell";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Sparkles, Loader2, Dna, Eye, Play, Pause } from "lucide-react";
+import { Sparkles, Loader2, Eye, Play, Pause } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSimulatorCases } from "@/hooks/useSimulatorCases";
 import { useVirtualRoomCase } from "@/hooks/useVirtualRoomCase";
@@ -124,33 +124,24 @@ export default function SimuladorPCREletroforese() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">PCR e Eletroforese em Gel</h1>
-            <p className="text-muted-foreground">Ciclos térmicos, primers e visualização de bandas em gel.</p>
-            <AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="PCR e Eletroforese" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Dna className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-            {aiCases.filter((c: any) => c.isAI).map((c: any) => (
-              <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
-            ))}
-            <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SimulatorCasePicker
+        slug={SLUG}
+        title="PCR e Eletroforese em Gel"
+        description="Ciclos térmicos, primers e visualização de bandas em gel."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="PCR e Eletroforese" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => (
+          <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />
+        ))}
+      </SimulatorCasePicker>
     );
   }
 
-  const maxBand = Math.max(...activeCase.ladderBands);
+const maxBand = Math.max(...activeCase.ladderBands);
 
   // Gel bands with animation
   const gelBands = outputs && gelProgress > 0.2 ? (() => {
@@ -170,16 +161,17 @@ export default function SimuladorPCREletroforese() {
   })() : [];
 
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={isVirtualRoom ? goBack : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-      </div>
-
+    <SimulatorWorkspace
+      slug={SLUG}
+      simulatorName="PCR e Eletroforese em Gel"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isVirtualRoom ? goBack : () => setActiveCase(null)}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={
       <Card>
         <CardContent className="pt-4 space-y-2">
           <p className="text-sm"><strong>Gene-alvo:</strong> {activeCase.targetGene}</p>
@@ -190,7 +182,8 @@ export default function SimuladorPCREletroforese() {
           </div>
         </CardContent>
       </Card>
-
+      }
+      stage={<>
       {/* Parameters */}
       <Card>
         <CardHeader><CardTitle className="text-base">Ciclo Térmico</CardTitle></CardHeader>
@@ -209,8 +202,8 @@ export default function SimuladorPCREletroforese() {
             <Slider value={[mgCl2]} onValueChange={([v]) => setMgCl2(v)} min={0.5} max={4} step={0.25} />
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <div className="p-2 rounded bg-muted text-center"><p className="text-xs text-muted-foreground">Especif.</p><p className={`font-bold ${(outputs?.specificity ?? 0) >= 80 ? "text-green-600" : "text-destructive"}`}>{outputs?.specificity}%</p></div>
-            <div className="p-2 rounded bg-muted text-center"><p className="text-xs text-muted-foreground">Rendim.</p><p className={`font-bold ${(outputs?.yield ?? 0) >= 60 ? "text-green-600" : "text-yellow-600"}`}>{outputs?.yield}%</p></div>
+            <div className="p-2 rounded bg-muted text-center"><p className="text-xs text-muted-foreground">Especif.</p><p className={`font-bold ${(outputs?.specificity ?? 0) >= 80 ? "text-status-ok" : "text-destructive"}`}>{outputs?.specificity}%</p></div>
+            <div className="p-2 rounded bg-muted text-center"><p className="text-xs text-muted-foreground">Rendim.</p><p className={`font-bold ${(outputs?.yield ?? 0) >= 60 ? "text-status-ok" : "text-status-warn"}`}>{outputs?.yield}%</p></div>
             <div className="p-2 rounded bg-muted text-center"><p className="text-xs text-muted-foreground">Ct</p><p className="font-bold">{outputs?.ct ?? "—"}</p></div>
           </div>
           <div className="flex gap-2">
@@ -221,9 +214,7 @@ export default function SimuladorPCREletroforese() {
           </div>
         </CardContent>
       </Card>
-
       {/* Amplification curve + Gel side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader><CardTitle className="text-base">Curva de Amplificação (Ciclo {animCycle}/40)</CardTitle></CardHeader>
           <CardContent>
@@ -238,7 +229,6 @@ export default function SimuladorPCREletroforese() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader><CardTitle className="text-base">Gel de Agarose</CardTitle></CardHeader>
           <CardContent>
@@ -263,25 +253,23 @@ export default function SimuladorPCREletroforese() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4"><p className="text-sm font-semibold mb-1">💡 Dica Clínica</p><p className="text-sm text-muted-foreground">{activeCase.clinicalTip}</p></CardContent>
       </Card>
+      </>}
 
-      <SimulatorChallengeMode challengeSet={getPCREletroforeseChallenges()} simulatorState={{ annealingTemp, cycles, mgCl2, specificity: outputs?.specificity, yield: outputs?.yield }} onComplete={() => setChallengeCompleted(true)} />
-
-      {isVirtualRoom && submitted && (!showFeedback ? (
+      challenge={<SimulatorChallengeMode challengeSet={getPCREletroforeseChallenges()} simulatorState={{ annealingTemp, cycles, mgCl2, specificity: outputs?.specificity, yield: outputs?.yield }} onComplete={() => setChallengeCompleted(true)} />}
+      footer={isVirtualRoom && submitted && (!showFeedback ? (
         <div className="space-y-2">
           <Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button>
           <p className="text-xs text-center text-muted-foreground">Resultados enviados ✓ — Redirecionando em 15s...</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-destructive"}`}>{lastScore}%</div></div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : "text-destructive"}`}>{lastScore}%</div></div>
           <p className="text-xs text-center text-muted-foreground">Redirecionando em 15s...</p>
         </div>
       ))}
-    </div>
+    />
   );
 }
