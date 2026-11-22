@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 
@@ -8,9 +9,11 @@ import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
 // continua na página do simulador, que preenche os "slots" abaixo.
 //
 //   ┌ cabeçalho: voltar · área › simulador · título do caso · ações ┐
-//   │ paciente/exames │ bancada (gráficos)      │ conduta + desafio │
-//   └─────────────────┴─────────────────────────┴───────────────────┘
-// lg: paciente em cima da bancada; xl: três colunas; celular: empilhado.
+//   │ caso clínico (recolhível)          ║ conduta                  │
+//   │ bancada: exames e gráficos         ║ Modo Desafio             │
+//   └──── rola sozinha ──────────────────╨──── rola sozinha ────────┘
+// A partir de 1024 px as duas áreas ficam lado a lado com divisória
+// arrastável; abaixo disso, tudo empilhado (caso, conduta, bancada, desafio).
 
 export type LabStatus = "baixo" | "alto" | "normal" | "critico" | string;
 
@@ -36,6 +39,20 @@ export function DifficultyPill({ value, className }: { value?: string; className
       {value}
     </span>
   );
+}
+
+/** true a partir de 1024 px: aí cabe a divisão lado a lado. */
+function useIsDesktop() {
+  const query = "(min-width: 1024px)";
+  const [matches, setMatches] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    mql.addEventListener("change", onChange);
+    onChange();
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return matches;
 }
 
 function simulatorMeta(slug?: string) {
@@ -143,13 +160,13 @@ interface WorkspaceProps {
   actions?: ReactNode;
   /** Banners e sobreposições de prova/Sala Virtual */
   banners?: ReactNode;
-  /** Coluna esquerda: paciente, cenário, exames de base */
+  /** Bloco recolhível no topo da área esquerda: paciente, cenário, exames de base */
   patient?: ReactNode;
-  /** Centro: gráficos e resultados do motor */
+  /** Área esquerda: gráficos e resultados do motor */
   stage: ReactNode;
-  /** Direita, em cima: conduta/parâmetros que o aluno ajusta */
+  /** Área direita, em cima: conduta/parâmetros que o aluno ajusta */
   controls?: ReactNode;
-  /** Direita, embaixo: Modo Desafio */
+  /** Área direita, embaixo: Modo Desafio */
   challenge?: ReactNode;
   /** Conteúdo extra abaixo de tudo (resultado enviado, etc.) */
   footer?: ReactNode;
@@ -160,8 +177,25 @@ export function SimulatorWorkspace({
   slug, simulatorName, caseTitle, difficulty, onBack, actions, banners, patient, stage, controls, challenge, footer,
 }: WorkspaceProps) {
   const meta = simulatorMeta(slug);
+  const isDesktop = useIsDesktop();
+  const [caseOpen, setCaseOpen] = useState(true);
+  const patientBlock = patient ? (
+    <section className="rounded-xl border border-border bg-card/40">
+      <button
+        type="button"
+        onClick={() => setCaseOpen((o) => !o)}
+        aria-expanded={caseOpen}
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left"
+      >
+        <span className="flex-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Caso clínico</span>
+        <span className="text-xs text-muted-foreground">{caseOpen ? "Recolher" : "Mostrar"}</span>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !caseOpen && "-rotate-90")} />
+      </button>
+      {caseOpen && <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3 border-t border-border p-3 [&>*]:min-w-0">{patient}</div>}
+    </section>
+  ) : null;
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4">
+    <div className="mx-auto max-w-[1600px] space-y-4">
       {banners}
       <header className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
         {onBack && (
@@ -187,21 +221,37 @@ export function SimulatorWorkspace({
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[300px_minmax(0,1fr)_360px]">
-        {patient && <div className="min-w-0 space-y-4 xl:sticky xl:top-4 xl:col-start-1 xl:row-start-1">{patient}</div>}
-        <div className={cn("min-w-0 space-y-4", patient && "xl:col-start-2 xl:row-start-1")}>{stage}</div>
-        {(controls || challenge) && (
-          <div
-            className={cn(
-              "min-w-0 space-y-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1 xl:col-start-3",
-              patient && "lg:row-span-2 xl:row-span-1",
-            )}
-          >
-            {controls}
-            {challenge}
-          </div>
-        )}
-      </div>
+      {isDesktop ? (
+        // Duas áreas lado a lado, cada uma com rolagem própria: o aluno lê a
+        // questão e mexe na conduta à direita sem perder de vista os exames e
+        // gráficos à esquerda. A divisória é arrastável e a largura fica salva.
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="posologia-sim-workspace-v1"
+          className="h-[calc(100dvh-13rem)] min-h-[560px] rounded-xl"
+        >
+          <ResizablePanel defaultSize={58} minSize={38} className="min-w-0">
+            <div className="h-full space-y-4 overflow-y-auto overscroll-contain pr-4">
+              {patientBlock}
+              {stage}
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle className="mx-1 bg-border/70 hover:bg-primary/50" />
+          <ResizablePanel defaultSize={42} minSize={30} className="min-w-0">
+            <div className="h-full space-y-4 overflow-y-auto overscroll-contain pl-4">
+              {controls}
+              {challenge}
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        <div className="space-y-4">
+          {patientBlock}
+          {controls}
+          {stage}
+          {challenge}
+        </div>
+      )}
       {footer}
     </div>
   );
