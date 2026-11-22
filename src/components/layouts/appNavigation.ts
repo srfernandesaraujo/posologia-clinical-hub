@@ -38,7 +38,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "inicio",
     label: "Início",
-    items: [{ labelKey: "nav.dashboard", label: "Painel", to: "/dashboard", icon: LayoutDashboard }],
+    items: [{ label: "Painel", to: "/dashboard", icon: LayoutDashboard }],
   },
   {
     id: "praticar",
@@ -64,7 +64,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "progresso",
     label: "Meu progresso",
-    items: [{ labelKey: "nav.gamification", label: "Conquistas", to: "/gamificacao", icon: Trophy }],
+    items: [{ label: "Conquistas", to: "/gamificacao", icon: Trophy }],
   },
 ];
 
@@ -82,7 +82,7 @@ export const ADMIN_GROUP: NavGroup = {
 /** Itens do menu do avatar (conta e ajuda) — fora da navegação principal. */
 export const ACCOUNT_ITEMS: NavItem[] = [
   { labelKey: "nav.myAccount", label: "Minha conta", to: "/minha-conta", icon: User },
-  { labelKey: "nav.plans", label: "Plano e assinatura", to: "/planos", icon: Crown },
+  { label: "Plano e assinatura", to: "/planos", icon: Crown },
   { label: "Documentação", to: "/documentacao", icon: FileText },
   { label: "Suporte e contato", to: "/suporte", icon: LifeBuoy },
 ];
