@@ -1,4 +1,5 @@
-import { Badge } from "@/components/ui/badge";
+import { Sparkles } from "lucide-react";
+import { DifficultyPill } from "@/components/simulators/shell/SimulatorShell";
 import { CaseCardMeta } from "@/components/CaseCardMeta";
 import { AdminCaseActions } from "@/components/AdminCaseActions";
 
@@ -24,7 +25,7 @@ export function AICaseCard({
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-colors relative"
+      className="group relative flex w-full flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/30"
     >
       <div className="absolute top-3 right-3 z-10">
         <AdminCaseActions
@@ -36,11 +37,13 @@ export function AICaseCard({
           onToggleMarketplace={onToggleMarketplace}
         />
       </div>
-      <div className="flex items-center justify-between mb-1 pr-10">
-        <span className="font-semibold">{c.title}</span>
-        <div className="flex gap-2">
-          <Badge variant="secondary">IA</Badge>
-          <Badge variant="outline">{c.difficulty}</Badge>
+      <div className="flex items-start justify-between gap-3 pr-10">
+        <span className="font-semibold leading-snug group-hover:text-primary">{c.title}</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 px-2 py-0.5 text-[11px] font-semibold text-accent">
+            <Sparkles className="h-3 w-3" /> IA
+          </span>
+          <DifficultyPill value={c.difficulty} />
         </div>
       </div>
       <div className="pr-10">

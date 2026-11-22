@@ -15,6 +15,7 @@ import { ExamBanner } from "@/components/ExamBanner";
 import { ExamFeedbackOverlay } from "@/components/ExamFeedbackOverlay";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import SimulatorChallengeMode from "@/components/simulators/SimulatorChallengeMode";
+import { SimulatorCasePicker, SimulatorWorkspace, ShellPanel, PatientCard, LabValueTile } from "@/components/simulators/shell/SimulatorShell";
 import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { ShareToolButton } from "@/components/ShareToolButton";
 import { useIsEmbed, useEmbedCaseId } from "@/contexts/EmbedContext";
@@ -229,102 +230,103 @@ export default function SimuladorRenal() {
 
   if (!activeCase) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(isRoom ? "/sala" : "/simuladores")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">Disfunção Renal e Ajuste de Dose</h1>
-            <p className="text-muted-foreground">Calcule ClCr/TFG, classifique DRC e ajuste doses de nefrotóxicos.</p>
-            <ShareToolButton toolSlug="farmacoterapia-renal" toolName="Função Renal e Ajuste de Dose" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Disfunção Renal" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} />
-          </div>
-        </div>
-        <ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />
-        <Card><CardHeader><CardTitle className="flex items-center gap-2"><Droplets className="h-5 w-5 text-primary" /> Casos Clínicos</CardTitle></CardHeader><CardContent className="space-y-3">
-          {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
-          {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
-          {!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} className="w-full gap-2 mt-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar Caso com IA</Button>}
-        </CardContent></Card>
-      </div>
+      <SimulatorCasePicker
+        slug="farmacoterapia-renal"
+        title="Disfunção Renal e Ajuste de Dose"
+        description="Calcule ClCr/TFG, classifique a DRC e ajuste doses de nefrotóxicos e fármacos de eliminação renal."
+        onBack={() => navigate(isRoom ? "/sala" : "/simuladores")}
+        actions={<><ShareToolButton toolSlug="farmacoterapia-renal" toolName="Função Renal e Ajuste de Dose" /><AdminPromptViewer toolSlug={`sim-${SLUG}`} toolName="Disfunção Renal" toolType="simulator" prompt={getNativePrompt(`sim-${SLUG}`) || ""} /></>}
+        banner={<ExamBanner simulatorSlug={SLUG} examProgress={examProgress} />}
+        footer={!isVirtualRoom && <Button onClick={() => generateCase()} disabled={isGenerating} variant="outline" className="w-full gap-2">{isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Gerar caso com IA</Button>}
+      >
+        {BUILT_IN_CASES.map((c, i) => <NativeCaseCard key={i} caseItem={c} onClick={() => setActiveCase(c)} />)}
+        {!isVirtualRoom && aiCases.filter((c: any) => c.isAI).map((c: any) => <AICaseCard key={c.id} caseItem={c} onClick={() => loadAICase(c)} onDelete={deleteCase} onUpdate={updateCase} onCopy={copyCase} availableTargets={availableTargets} onToggleMarketplace={toggleCaseMarketplace} />)}
+      </SimulatorCasePicker>
     );
   }
 
+  const caseIdx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title);
+  const doseRange = !selectedDrug.suspende && (selectedDrug.renalMax || selectedDrug.semAjusteRenal) ? (
+    <div className="space-y-1 rounded-lg border border-border bg-background/40 px-3 py-2.5">
+      <p className="text-[11px] text-muted-foreground">Faixa de dose para este ClCr · {selectedDrug.name}</p>
+      {isContraindicated ? (
+        <p className="text-sm font-semibold text-status-crit">Evitar neste ClCr (qualquer dose)</p>
+      ) : selectedDrug.semAjusteRenal ? (
+        <p className="text-sm font-semibold text-status-ok">Dispensa ajuste renal</p>
+      ) : simulation.doseMaxRenal === null ? (
+        <p className="text-sm font-semibold text-status-ok">Sem teto específico para este ClCr</p>
+      ) : (
+        <p className={`text-sm font-semibold ${simulation.acimaDaFaixa ? "text-status-crit" : "text-status-ok"}`}>
+          Máx. {simulation.doseMaxRenal} {selectedDrug.doseUnit} · {simulation.acimaDaFaixa ? "dose ACIMA da faixa" : "dose dentro da faixa"}
+        </p>
+      )}
+      {simulation.aucVanco !== null && (
+        <p className={`font-mono text-xs ${simulation.aucVanco > 600 ? "text-status-crit" : simulation.aucVanco < 400 ? "text-status-warn" : "text-status-ok"}`}>
+          AUC₂₄ estimada: {simulation.aucVanco} mg·h/L (alvo 400–600)
+        </p>
+      )}
+    </div>
+  ) : null;
+
   return (
-    <div className="space-y-4">
-      {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
-      <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
-      <div className="flex items-center gap-3 flex-wrap">
-        {!isEmbed && <Button variant="ghost" size="icon" onClick={isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}><ArrowLeft className="h-5 w-5" /></Button>}
-        <h2 className="text-xl font-bold">{activeCase.title}</h2>
-        <Badge variant="outline">{activeCase.difficulty}</Badge>
-        <div className="ml-auto"><ShareToolButton toolSlug="farmacoterapia-renal" toolName="Função Renal e Ajuste de Dose" caseId={activeCase.title} /></div>
-      </div>
-      <Card><CardContent className="pt-4 space-y-2">
-        <p className="text-sm"><strong>Paciente:</strong> {activeCase.patient.name}, {activeCase.patient.age}a, {activeCase.patient.weight}kg, {activeCase.patient.sex}</p>
-        {activeCase.patient.specialGroup.length > 0 && <p className="text-sm"><strong>Grupo especial:</strong> {activeCase.patient.specialGroup.join(", ")}</p>}
-        <p className="text-sm text-muted-foreground">{activeCase.scenario}</p>
-      </CardContent></Card>
-
-      {/* ClCr + DRC */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4 flex items-center gap-4 flex-wrap">
-          <div><p className="text-xs text-muted-foreground">Cockcroft-Gault</p><p className="text-2xl font-mono font-bold text-primary">{clCr} <span className="text-xs">mL/min</span></p></div>
-          <Badge className={drc.color}>DRC {drc.stage}</Badge>
-          {isContraindicated && <Badge variant="destructive">⚠️ CI com ClCr &lt;{selectedDrug.contraindicatedBelow}</Badge>}
-          {/* Faixa de dose para este ClCr (só para os fármacos que têm regra de ajuste renal) */}
-          {!selectedDrug.suspende && (selectedDrug.renalMax || selectedDrug.semAjusteRenal) && (
-            <div className="border-l pl-4 space-y-0.5">
-              <p className="text-xs text-muted-foreground">Faixa de dose para este ClCr — {selectedDrug.name}</p>
-              {isContraindicated ? (
-                <p className="text-sm font-semibold text-destructive">Evitar neste ClCr (qualquer dose)</p>
-              ) : selectedDrug.semAjusteRenal ? (
-                <p className="text-sm font-semibold text-green-600">Dispensa ajuste renal</p>
-              ) : simulation.doseMaxRenal === null ? (
-                <p className="text-sm font-semibold text-green-600">Sem teto específico para este ClCr</p>
-              ) : (
-                <p className={`text-sm font-semibold ${simulation.acimaDaFaixa ? "text-destructive" : "text-green-600"}`}>
-                  Máx. {simulation.doseMaxRenal} {selectedDrug.doseUnit} {simulation.acimaDaFaixa ? "— dose ACIMA da faixa" : "— dose dentro da faixa"}
-                </p>
-              )}
-              {simulation.aucVanco !== null && (
-                <p className={`text-xs font-mono ${simulation.aucVanco > 600 ? "text-destructive" : simulation.aucVanco < 400 ? "text-chart-5" : "text-green-600"}`}>
-                  AUC₂₄ estimada: {simulation.aucVanco} mg·h/L (alvo 400–600)
-                </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Lab Gauges */}
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Função Renal (após tratamento)</CardTitle></CardHeader>
-        <CardContent><div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${simulation.labGauges.length > 6 ? "md:grid-cols-7" : "md:grid-cols-6"}`}>{simulation.labGauges.map(g => <LabGauge key={g.name} {...g} />)}</div></CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">Prescrição</CardTitle></CardHeader><CardContent className="space-y-4">
-          <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => (!d.caseFlag || activeCase.flags?.includes(d.caseFlag)) ? <SelectItem key={i} value={String(i)}>{d.name}</SelectItem> : null)}</SelectContent></Select>
-          {selectedDrug.noDose ? (
-            <p className="text-xs text-muted-foreground">{selectedDrug.suspende ? (activeCase.recuperacao?.nota ?? "Conduta sem dose: retira o agente suspeito.") : `Dose fixa: ${selectedDrug.doseMin} ${selectedDrug.doseUnit}.`}</p>
-          ) : (
-            <div><div className="flex justify-between mb-1"><span className="text-xs">Dose</span><span className="text-xs font-bold">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /></div>
-          )}
-          <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando..." : "Simular 7 dias"}</Button>
-        </CardContent></Card>
-        <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Tendência (7 dias)</CardTitle><p className="text-xs text-muted-foreground">Cr = creatinina (mg/dL); K⁺ em mEq/L. Linha vermelha pontilhada: limite superior da creatinina (1,3). Linha cinza pontilhada: creatinina no dia 0 do caso.</p></CardHeader><CardContent>
-          <ResponsiveContainer width="100%" height={200}>
+    <SimulatorWorkspace
+      slug="farmacoterapia-renal"
+      simulatorName="Função Renal e Ajuste de Dose"
+      caseTitle={activeCase.title}
+      difficulty={activeCase.difficulty}
+      onBack={isEmbed ? undefined : isVirtualRoom ? () => navigate("/") : () => setActiveCase(null)}
+      actions={<ShareToolButton toolSlug="farmacoterapia-renal" toolName="Função Renal e Ajuste de Dose" caseId={activeCase.title} />}
+      banners={<>
+        {examFeedback && <ExamFeedbackOverlay score={examFeedback.score} simulatorSlug={SLUG} caseTitle={examFeedback.caseTitle} examProgress={examProgress!} onProceed={proceedToNext} isFinalActivity={examFeedback.isFinalActivity} />}
+        <ExamBanner simulatorSlug={SLUG} caseTitle={activeCase.title} examProgress={examProgress} />
+      </>}
+      patient={<>
+        <PatientCard
+          name={activeCase.patient.name}
+          age={activeCase.patient.age}
+          weight={activeCase.patient.weight}
+          sex={activeCase.patient.sex}
+          scenario={activeCase.scenario}
+          extra={activeCase.patient.specialGroup.length > 0 && <div className="flex flex-wrap gap-1.5">{activeCase.patient.specialGroup.map(g => <span key={g} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">{g}</span>)}</div>}
+        />
+        <ShellPanel title="Função renal estimada">
+          <div className="space-y-2">
+            <p className="text-[11px] text-muted-foreground">Cockcroft-Gault</p>
+            <p className="font-mono text-3xl font-semibold tabular-nums text-primary">{clCr} <span className="text-sm text-muted-foreground">mL/min</span></p>
+            <div className="flex flex-wrap gap-1.5"><Badge className={drc.color}>DRC {drc.stage}</Badge>{isContraindicated && <Badge variant="destructive">Contraindicado com ClCr &lt;{selectedDrug.contraindicatedBelow}</Badge>}</div>
+          </div>
+        </ShellPanel>
+      </>}
+      stage={<>
+        <ShellPanel title="Função renal após o tratamento" icon={<Activity />}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-4">{simulation.labGauges.map(g => <LabValueTile key={g.name} {...g} />)}</div>
+        </ShellPanel>
+        <ShellPanel title="Tendência em 7 dias" aside={running && <span className="text-[11px] font-semibold text-primary">Simulando…</span>}>
+          <p className="mb-2 text-xs text-muted-foreground">Cr = creatinina (mg/dL); K⁺ em mEq/L. Linha vermelha pontilhada: limite superior da creatinina (1,3). Linha cinza pontilhada: creatinina no dia 0 do caso.</p>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={displayTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Line type="monotone" dataKey="creatinina" name="Cr" stroke="hsl(var(--chart-1))" strokeWidth={2} dot /><Line type="monotone" dataKey="k" name="K⁺" stroke="hsl(var(--chart-3))" strokeWidth={2} dot /><ReferenceLine y={1.3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" /><ReferenceLine y={activeCase.baseLab.creatinina} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" /></LineChart>
           </ResponsiveContainer>
-        </CardContent></Card>
-      </div>
-
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /> Risco de Eventos Adversos (%)</CardTitle></CardHeader><CardContent>
-        <ResponsiveContainer width="100%" height={140}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--destructive))" : e.risco > 15 ? "hsl(38 92% 50%)" : "hsl(142 71% 45%)"} />)}</Bar></BarChart></ResponsiveContainer>
-      </CardContent></Card>
-
-
-      {(() => { const idx = BUILT_IN_CASES.findIndex(c => c.title === activeCase.title); return <SimulatorChallengeMode challengeSet={getRenalChallenges(idx >= 0 ? idx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated, doseMaxRenal: simulation.doseMaxRenal, acimaDaFaixa: simulation.acimaDaFaixa, aucVanco: simulation.aucVanco, digoxinemia: simulation.digoxinemia, suspende: simulation.suspende, semAjusteRenal: !!selectedDrug.semAjusteRenal }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />; })()}
-
-      {isVirtualRoom && submitted && (!showFeedback ? <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar Resultados</Button><p className="text-xs text-center text-muted-foreground">Resultados enviados ✓</p></div> : <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-green-600" : "text-yellow-600"}`}>{lastScore}%</div></div>)}
-    </div>
+        </ShellPanel>
+        <ShellPanel title="Risco de eventos adversos (%)" icon={<ShieldAlert />}>
+          <ResponsiveContainer width="100%" height={150}><BarChart data={simulation.sideEffects} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" /><YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={80} /><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} labelStyle={{ color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} /><Bar dataKey="risco" name="Risco %">{simulation.sideEffects.map((e, i) => <Cell key={i} fill={e.risco > 30 ? "hsl(var(--status-crit))" : e.risco > 15 ? "hsl(var(--status-warn))" : "hsl(var(--status-ok))"} />)}</Bar></BarChart></ResponsiveContainer>
+        </ShellPanel>
+      </>}
+      controls={
+        <ShellPanel title="Prescrição">
+          <div className="space-y-4">
+            <Select value={String(selectedDrugIdx)} onValueChange={v => { setSelectedDrugIdx(Number(v)); setDose(DRUGS[Number(v)].doseMin); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DRUGS.map((d, i) => (!d.caseFlag || activeCase.flags?.includes(d.caseFlag)) ? <SelectItem key={i} value={String(i)}>{d.name}</SelectItem> : null)}</SelectContent></Select>
+            {selectedDrug.noDose ? (
+              <p className="text-xs text-muted-foreground">{selectedDrug.suspende ? (activeCase.recuperacao?.nota ?? "Conduta sem dose: retira o agente suspeito.") : `Dose fixa: ${selectedDrug.doseMin} ${selectedDrug.doseUnit}.`}</p>
+            ) : (
+              <div className="space-y-2"><div className="flex justify-between text-xs"><span className="text-muted-foreground">Dose</span><span className="font-mono font-semibold text-primary">{dose} {selectedDrug.doseUnit}</span></div><Slider value={[dose]} onValueChange={([v]) => setDose(v)} min={selectedDrug.doseMin} max={selectedDrug.doseMax} step={selectedDrug.doseStep} /><div className="flex justify-between text-[10px] text-muted-foreground"><span>{selectedDrug.doseMin}</span><span>{selectedDrug.doseMax} {selectedDrug.doseUnit}</span></div></div>
+            )}
+            {doseRange}
+            <Button className="w-full gap-2" onClick={handleStart} disabled={running}><Play className="h-4 w-4" /> {running ? "Simulando…" : "Simular 7 dias"}</Button>
+          </div>
+        </ShellPanel>
+      }
+      challenge={<SimulatorChallengeMode challengeSet={getRenalChallenges(caseIdx >= 0 ? caseIdx : undefined)} simulatorState={{ drug: selectedDrug.name, dose, labGauges: simulation.labGauges, sideEffects: simulation.sideEffects, trend: simulation.trend, lastLab: simulation.lastLab, baseLab: activeCase.baseLab, clCr, drcStage: drc.stage, isContraindicated, doseMaxRenal: simulation.doseMaxRenal, acimaDaFaixa: simulation.acimaDaFaixa, aucVanco: simulation.aucVanco, digoxinemia: simulation.digoxinemia, suspende: simulation.suspende, semAjusteRenal: !!selectedDrug.semAjusteRenal }} onComplete={(score, total) => { setLastScore(total > 0 ? Math.round((score / total) * 100) : 0); setChallengeCompleted(true); }} />}
+      footer={isVirtualRoom && submitted && (!showFeedback ? <div className="space-y-2"><Button onClick={() => setShowFeedback(true)} variant="outline" className="w-full gap-2"><Eye className="h-4 w-4" /> Mostrar resultados</Button><p className="text-center text-xs text-muted-foreground">Resultados enviados ✓</p></div> : <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center"><div className={`text-3xl font-bold ${lastScore >= 80 ? "text-status-ok" : "text-status-warn"}`}>{lastScore}%</div></div>)}
+    />
   );
 }
