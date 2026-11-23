@@ -405,6 +405,9 @@ export default function SalaVirtualAluno() {
             inputMode="numeric"
             autoFocus
             aria-label="PIN da sala"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             containerClassName="gap-2"
           >
             <InputOTPGroup className="gap-2">

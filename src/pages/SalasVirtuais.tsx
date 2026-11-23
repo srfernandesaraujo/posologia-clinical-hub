@@ -1074,11 +1074,11 @@ export default function SalasVirtuais() {
             <FormSection step={1} title="Identificação">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Título da sala</Label>
+                  <Label className="flex h-5 items-center">Título da sala</Label>
                   <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2026.1 – Farmácia Clínica" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
+                  <Label className="flex h-5 items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
                   <Select value={classId} onValueChange={setClassId}>
                     <SelectTrigger><SelectValue placeholder="Sem turma" /></SelectTrigger>
                     <SelectContent>
