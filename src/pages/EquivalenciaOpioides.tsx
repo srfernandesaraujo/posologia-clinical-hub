@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
@@ -483,7 +484,6 @@ export default function EquivalenciaOpioides() {
 
   const set = (field: keyof FormData, value: any) => {
     setForm((p) => ({ ...p, [field]: value }));
-    setResultado(null);
     setErro("");
   };
 
@@ -494,7 +494,6 @@ export default function EquivalenciaOpioides() {
         ? p[field].filter((x) => x !== value)
         : [...p[field], value],
     }));
-    setResultado(null);
   };
 
   const opioideAtualInfo = OPIOIDES.find((o) => o.nome === form.opioideAtual);
@@ -585,6 +584,7 @@ export default function EquivalenciaOpioides() {
     setErro("");
   };
 
+  useLiveCalc({ run: calcular, deps: [form, modo, simulacoes], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="equivalencia-opioides" actions={<>

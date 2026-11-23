@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -89,6 +90,7 @@ export default function GanhoPesoGestacional() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [modo, pesoPreGest, altura, pesoAtual, igSemanas, nomePaciente, data], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="ganho-peso-gestacional" actions={<>
@@ -117,10 +119,10 @@ export default function GanhoPesoGestacional() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Dados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Peso pre-gestacional (kg) *</Label><Input type="number" step="0.1" value={pesoPreGest} onChange={e => { setPesoPreGest(e.target.value); setResultado(null); }} placeholder="Ex: 60" /></div>
-              <div className="space-y-1.5"><Label>Altura (cm) *</Label><Input type="number" step="1" value={altura} onChange={e => { setAltura(e.target.value); setResultado(null); }} placeholder="Ex: 165" /></div>
-              <div className="space-y-1.5"><Label>Peso atual (kg) *</Label><Input type="number" step="0.1" value={pesoAtual} onChange={e => { setPesoAtual(e.target.value); setResultado(null); }} placeholder="Ex: 68" /></div>
-              <div className="space-y-1.5"><Label>IG atual (semanas) *</Label><Input type="number" min="0" max="42" value={igSemanas} onChange={e => { setIgSemanas(e.target.value); setResultado(null); }} placeholder="Ex: 28" /></div>
+              <div className="space-y-1.5"><Label>Peso pre-gestacional (kg) *</Label><Input type="number" step="0.1" value={pesoPreGest} onChange={e => { setPesoPreGest(e.target.value); }} placeholder="Ex: 60" /></div>
+              <div className="space-y-1.5"><Label>Altura (cm) *</Label><Input type="number" step="1" value={altura} onChange={e => { setAltura(e.target.value); }} placeholder="Ex: 165" /></div>
+              <div className="space-y-1.5"><Label>Peso atual (kg) *</Label><Input type="number" step="0.1" value={pesoAtual} onChange={e => { setPesoAtual(e.target.value); }} placeholder="Ex: 68" /></div>
+              <div className="space-y-1.5"><Label>IG atual (semanas) *</Label><Input type="number" min="0" max="42" value={igSemanas} onChange={e => { setIgSemanas(e.target.value); }} placeholder="Ex: 28" /></div>
             </div>
           </div>
 

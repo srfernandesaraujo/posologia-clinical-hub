@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -81,7 +82,7 @@ export default function QTcCorrigido() {
   const [erro, setErro] = useState("");
   const { saveCalculation } = useCalculationHistory();
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setErro(""); };
 
   const handleCalc = () => {
     if (!form.qt || (!form.fc && !form.rr)) { setErro("Preencha QT e FC ou intervalo RR."); return; }
@@ -112,6 +113,7 @@ export default function QTcCorrigido() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="qtc-corrigido" actions={<>

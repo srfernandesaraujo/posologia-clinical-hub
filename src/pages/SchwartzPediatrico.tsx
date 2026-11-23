@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -77,6 +78,7 @@ export default function SchwartzPediatrico() {
     { min: 90, max: 100, color: "hsl(142 71% 45%)", label: "G1" },
   ];
 
+  useLiveCalc({ run: handleCalc, deps: [modo, creatinina, altura, faixa, formula, nomePaciente, data], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="schwartz-pediatrico" actions={<>
@@ -105,18 +107,18 @@ export default function SchwartzPediatrico() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Dados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Creatinina Serica (mg/dL) *</Label><Input type="number" step="0.01" value={creatinina} onChange={e => { setCreatinina(e.target.value); setResultado(null); setErro(""); }} placeholder="Ex: 0.5" /></div>
-              <div className="space-y-1.5"><Label>Altura (cm) *</Label><Input type="number" step="0.1" value={altura} onChange={e => { setAltura(e.target.value); setResultado(null); setErro(""); }} placeholder="Ex: 110" /></div>
+              <div className="space-y-1.5"><Label>Creatinina Serica (mg/dL) *</Label><Input type="number" step="0.01" value={creatinina} onChange={e => { setCreatinina(e.target.value); setErro(""); }} placeholder="Ex: 0.5" /></div>
+              <div className="space-y-1.5"><Label>Altura (cm) *</Label><Input type="number" step="0.1" value={altura} onChange={e => { setAltura(e.target.value); setErro(""); }} placeholder="Ex: 110" /></div>
               <div className="space-y-1.5">
                 <Label>Faixa Etaria</Label>
-                <Select value={faixa} onValueChange={v => { setFaixa(v); setResultado(null); }}>
+                <Select value={faixa} onValueChange={v => { setFaixa(v); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{FAIXAS.map((f, i) => <SelectItem key={i} value={String(i)}>{f.label} (k={f.k})</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Formula</Label>
-                <Select value={formula} onValueChange={v => { setFormula(v as any); setResultado(null); }}>
+                <Select value={formula} onValueChange={v => { setFormula(v as any); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="bedside">Bedside Schwartz 2009 (k=0.413)</SelectItem>

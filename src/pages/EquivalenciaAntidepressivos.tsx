@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
@@ -238,7 +239,7 @@ export default function EquivalenciaAntidepressivos() {
   const [erro, setErro] = useState("");
   const { saveCalculation } = useCalculationHistory();
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setErro(""); };
 
   const calcular = () => {
     if (!form.origem || !form.destino || !form.doseOrigem) { setErro("Preencha antidepressivo de origem, destino e dose atual."); return; }
@@ -263,6 +264,7 @@ export default function EquivalenciaAntidepressivos() {
   const origDrug = form.origem ? ANTIDEPRESSIVOS[form.origem] : null;
   const destDrug = form.destino ? ANTIDEPRESSIVOS[form.destino] : null;
 
+  useLiveCalc({ run: calcular, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="equivalencia-antidepressivos" actions={<>

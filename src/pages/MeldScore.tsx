@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -88,8 +89,8 @@ export default function MeldScore() {
   const [erro, setErro] = useState("");
   const { saveCalculation } = useCalculationHistory();
 
-  const setM = (f: keyof MeldForm, v: string) => { setMeldForm(p => ({ ...p, [f]: v })); setResultado(null); setErro(""); };
-  const setC = (f: keyof ChildForm, v: string) => { setChildForm(p => ({ ...p, [f]: v })); setResultado(null); setErro(""); };
+  const setM = (f: keyof MeldForm, v: string) => { setMeldForm(p => ({ ...p, [f]: v })); setErro(""); };
+  const setC = (f: keyof ChildForm, v: string) => { setChildForm(p => ({ ...p, [f]: v })); setErro(""); };
 
   const calcularMeld = () => {
     if (!meldForm.creatinina || !meldForm.bilirrubina || !meldForm.inr || !meldForm.sodio) { setErro("Preencha todos os campos."); return; }
@@ -121,6 +122,7 @@ export default function MeldScore() {
     });
   };
 
+  useLiveCalc({ run: tipo === "meld" ? calcularMeld : calcularChild, deps: [meldForm, childForm, tipo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="meld-score" actions={<>
@@ -139,7 +141,7 @@ export default function MeldScore() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-2xl border border-border bg-card p-6">
-            <Tabs value={tipo} onValueChange={(v) => { setTipo(v as Tipo); setResultado(null); setErro(""); }}>
+            <Tabs value={tipo} onValueChange={(v) => { setTipo(v as Tipo); setErro(""); }}>
               <TabsList className="w-full mb-4">
                 <TabsTrigger value="meld" className="flex-1">MELD / MELD-Na</TabsTrigger>
                 <TabsTrigger value="child" className="flex-1">Child-Pugh</TabsTrigger>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
@@ -278,7 +279,6 @@ export default function AjusteDoseRenal() {
 
   const set = (field: keyof FormData, value: string) => {
     setForm((p) => ({ ...p, [field]: value }));
-    setResultado(null);
     setErro("");
   };
 
@@ -336,6 +336,7 @@ export default function AjusteDoseRenal() {
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
+  useLiveCalc({ run: calcular, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="ajuste-dose-renal" actions={<>

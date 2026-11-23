@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
@@ -126,7 +127,7 @@ export default function CkdEpi() {
   const [erro, setErro] = useState("");
   
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setErro(""); };
 
   const calcular = () => {
     if (!form.creatinina || !form.idade || !form.sexo) { setErro("Preencha creatinina, idade e sexo."); return; }
@@ -140,6 +141,7 @@ export default function CkdEpi() {
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
+  useLiveCalc({ run: calcular, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="ckd-epi" actions={<>

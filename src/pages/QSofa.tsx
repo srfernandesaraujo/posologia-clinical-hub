@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
@@ -85,6 +86,7 @@ export default function QSofa() {
 
   const limpar = () => { setChecked({}); setResultado(null); };
 
+  useLiveCalc({ run: calcular, deps: [checked, modo], erro: "", clear: () => setResultado(null) });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="qsofa" actions={<>
@@ -126,7 +128,7 @@ export default function QSofa() {
                 <label key={c.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                   <Checkbox
                     checked={!!checked[c.id]}
-                    onCheckedChange={(v) => { setChecked((p) => ({ ...p, [c.id]: !!v })); setResultado(null); }}
+                    onCheckedChange={(v) => { setChecked((p) => ({ ...p, [c.id]: !!v })); }}
                     className="mt-0.5"
                   />
                   <span className="text-sm flex-1">{c.label}</span>

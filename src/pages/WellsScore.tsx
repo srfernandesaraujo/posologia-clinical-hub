@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { CalculationHistory } from "@/components/CalculationHistory";
 import { SaveToHistoryButton } from "@/components/SaveToHistoryButton";
@@ -133,6 +134,7 @@ export default function WellsScore() {
   const checked = tipo === "tep" ? checkedTEP : checkedTVP;
   const setChecked = tipo === "tep" ? setCheckedTEP : setCheckedTVP;
 
+  useLiveCalc({ run: calcular, deps: [checkedTEP, checkedTVP, tipo, modo], erro: "", clear: () => setResultado(null) });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="wells-score" actions={<>
@@ -168,7 +170,7 @@ export default function WellsScore() {
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-6">
-            <Tabs value={tipo} onValueChange={(v) => { setTipo(v as Tipo); setResultado(null); }}>
+            <Tabs value={tipo} onValueChange={(v) => { setTipo(v as Tipo); }}>
               <TabsList className="w-full mb-4">
                 <TabsTrigger value="tep" className="flex-1">TEP (Embolia Pulmonar)</TabsTrigger>
                 <TabsTrigger value="tvp" className="flex-1">TVP (Trombose Venosa)</TabsTrigger>
@@ -180,7 +182,7 @@ export default function WellsScore() {
                     <label key={c.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                       <Checkbox
                         checked={!!checked[c.id]}
-                        onCheckedChange={(v) => { setChecked((p) => ({ ...p, [c.id]: !!v })); setResultado(null); }}
+                        onCheckedChange={(v) => { setChecked((p) => ({ ...p, [c.id]: !!v })); }}
                         className="mt-0.5"
                       />
                       <div className="flex-1">

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
@@ -135,7 +136,7 @@ export default function HomaIR() {
   const [erro, setErro] = useState("");
   const { saveCalculation } = useCalculationHistory();
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setErro(""); };
 
   const imc = useMemo(() => {
     if (form.altura && form.peso) { const h = Number(form.altura) / 100; const w = Number(form.peso); if (h > 0 && w > 0) return (w / (h * h)).toFixed(1); }
@@ -162,6 +163,7 @@ export default function HomaIR() {
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
+  useLiveCalc({ run: calcular, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="homa-ir" actions={<>

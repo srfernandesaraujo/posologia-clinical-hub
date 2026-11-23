@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -81,6 +82,7 @@ export default function DrogasVasoativasPediatricas() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [modo, peso, drogaIdx, dose, concentracao, volumeTotal, nomePaciente, data], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="drogas-vasoativas-pediatricas" actions={<>
@@ -109,17 +111,17 @@ export default function DrogasVasoativasPediatricas() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Parametros</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Peso (kg) *</Label><Input type="number" step="0.1" value={peso} onChange={e => { setPeso(e.target.value); setResultado(null); setErro(""); }} placeholder="Ex: 10" /></div>
+              <div className="space-y-1.5"><Label>Peso (kg) *</Label><Input type="number" step="0.1" value={peso} onChange={e => { setPeso(e.target.value); setErro(""); }} placeholder="Ex: 10" /></div>
               <div className="space-y-1.5">
                 <Label>Droga *</Label>
-                <Select value={drogaIdx} onValueChange={v => { setDrogaIdx(v); setDose(""); setResultado(null); }}>
+                <Select value={drogaIdx} onValueChange={v => { setDrogaIdx(v); setDose(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{DROGAS.map((d, i) => <SelectItem key={i} value={String(i)}>{d.nome}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label>Dose desejada ({droga.unidade}) *</Label><Input type="number" step="0.01" value={dose} onChange={e => { setDose(e.target.value); setResultado(null); setErro(""); }} placeholder={`${droga.doseMin} - ${droga.doseMax}`} /></div>
-              <div className="space-y-1.5"><Label>Quantidade da droga na solucao (mg)</Label><Input type="number" step="0.1" value={concentracao} onChange={e => { setConcentracao(e.target.value); setResultado(null); }} placeholder={String(droga.concentracaoPadrao)} /></div>
-              <div className="space-y-1.5"><Label>Volume total da solucao (mL)</Label><Input type="number" value={volumeTotal} onChange={e => { setVolumeTotal(e.target.value); setResultado(null); }} placeholder="50" /></div>
+              <div className="space-y-1.5"><Label>Dose desejada ({droga.unidade}) *</Label><Input type="number" step="0.01" value={dose} onChange={e => { setDose(e.target.value); setErro(""); }} placeholder={`${droga.doseMin} - ${droga.doseMax}`} /></div>
+              <div className="space-y-1.5"><Label>Quantidade da droga na solucao (mg)</Label><Input type="number" step="0.1" value={concentracao} onChange={e => { setConcentracao(e.target.value); }} placeholder={String(droga.concentracaoPadrao)} /></div>
+              <div className="space-y-1.5"><Label>Volume total da solucao (mL)</Label><Input type="number" value={volumeTotal} onChange={e => { setVolumeTotal(e.target.value); }} placeholder="50" /></div>
             </div>
             <div className="mt-4 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
               <strong>{droga.nome}:</strong> {droga.doseMin}-{droga.doseMax} {droga.unidade} | {droga.diluicaoPadrao} | {droga.indicacao}

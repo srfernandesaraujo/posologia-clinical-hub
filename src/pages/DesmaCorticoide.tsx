@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory, HistoryConsentBanner } from "@/components/CalculationHistory";
@@ -494,7 +495,6 @@ export default function DesmaCorticoide() {
 
   const set = (field: keyof FormData, value: any) => {
     setForm((p) => ({ ...p, [field]: value }));
-    setResultado(null);
     setErro("");
   };
 
@@ -505,7 +505,6 @@ export default function DesmaCorticoide() {
         ? p.comorbidades.filter((x) => x !== c)
         : [...p.comorbidades, c],
     }));
-    setResultado(null);
   };
 
   const calcular = () => {
@@ -579,6 +578,7 @@ export default function DesmaCorticoide() {
     lento: "Desmame Lento (com monitoramento)",
   };
 
+  useLiveCalc({ run: calcular, deps: [form, modo, metodo, percentual], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="desmame-corticoide" actions={<>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -77,7 +78,6 @@ export default function BishopScore() {
     const next = [...values];
     next[idx] = val;
     setValues(next);
-    setResultado(null);
   };
 
   const handleCalc = () => {
@@ -107,6 +107,7 @@ export default function BishopScore() {
     { min: 8, max: 13, color: "hsl(142 71% 45%)", label: "Muito favoravel" },
   ];
 
+  useLiveCalc({ run: handleCalc, deps: [modo, nomePaciente, data, values], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="bishop-score" actions={<>

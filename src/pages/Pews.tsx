@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -91,7 +92,7 @@ export default function Pews() {
     <div className="space-y-2">
       {options.map(opt => (
         <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${value === opt.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
-          <input type="radio" name={name} checked={value === opt.value} onChange={() => { onChange(opt.value); setCalculado(false); }} className="mt-0.5" />
+          <input type="radio" name={name} checked={value === opt.value} onChange={() => { onChange(opt.value); }} className="mt-0.5" />
           <div>
             <span className="font-medium text-sm">{opt.value} ponto{opt.value !== 1 ? "s" : ""}</span>
             <p className="text-xs text-muted-foreground mt-0.5">{opt.label}</p>
@@ -101,6 +102,7 @@ export default function Pews() {
     </div>
   );
 
+  useLiveCalc({ run: handleCalc, deps: [comportamento, cardiovascular, respiratorio], erro: "", clear: () => setCalculado(false) });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="pews" actions={<>

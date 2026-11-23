@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -109,6 +110,7 @@ export default function CurvasCrescimentoOMS() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [modo, sexo, idadeMeses, peso, nomePaciente, data], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="curvas-crescimento-oms" actions={<>
@@ -147,8 +149,8 @@ export default function CurvasCrescimentoOMS() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label>Idade (meses) *</Label><Input type="number" min="0" max="60" value={idadeMeses} onChange={e => { setIdadeMeses(e.target.value); setResultado(null); setErro(""); }} placeholder="0-60" /></div>
-              <div className="space-y-1.5"><Label>Peso (kg) *</Label><Input type="number" step="0.1" value={peso} onChange={e => { setPeso(e.target.value); setResultado(null); setErro(""); }} placeholder="Ex: 8.5" /></div>
+              <div className="space-y-1.5"><Label>Idade (meses) *</Label><Input type="number" min="0" max="60" value={idadeMeses} onChange={e => { setIdadeMeses(e.target.value); setErro(""); }} placeholder="0-60" /></div>
+              <div className="space-y-1.5"><Label>Peso (kg) *</Label><Input type="number" step="0.1" value={peso} onChange={e => { setPeso(e.target.value); setErro(""); }} placeholder="Ex: 8.5" /></div>
             </div>
           </div>
 

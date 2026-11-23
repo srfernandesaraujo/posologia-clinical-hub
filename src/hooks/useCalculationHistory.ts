@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { isLiveCalcRunning } from "@/hooks/useLiveCalc";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -47,7 +48,7 @@ export function useCalculationHistory() {
 
   const saveCalculation = useCallback(
     async (entry: Omit<CalculationEntry, "id" | "createdAt">) => {
-      if (!user) return;
+      if (!user || isLiveCalcRunning()) return;
       const { error } = await supabase.from("calculation_history").insert({
         user_id: user.id,
         calculator_name: entry.calculatorName,

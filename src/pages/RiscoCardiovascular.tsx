@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { Heart, User, Stethoscope } from "lucide-react";
 import { ShareToolButton } from "@/components/ShareToolButton";
@@ -400,7 +401,6 @@ export default function RiscoCardiovascular() {
 
   const set = (field: keyof FormData, value: string) => {
     setForm((p) => ({ ...p, [field]: value }));
-    setResultado(null);
     setErro("");
   };
 
@@ -462,6 +462,7 @@ export default function RiscoCardiovascular() {
     setErro("");
   };
 
+  useLiveCalc({ run: calcular, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="risco-cardiovascular" actions={<>

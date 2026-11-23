@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -156,7 +157,7 @@ export default function VancomicinaAUC() {
   const [erro, setErro] = useState("");
   const { saveCalculation } = useCalculationHistory();
 
-  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setResultado(null); setErro(""); };
+  const set = (field: keyof FormData, value: string) => { setForm((p) => ({ ...p, [field]: value })); setErro(""); };
 
   const handleCalc = () => {
     if (!form.peso || !form.creatinina || !form.idade) { setErro("Preencha peso, creatinina e idade."); return; }
@@ -175,6 +176,7 @@ export default function VancomicinaAUC() {
 
   const limpar = () => { setForm(INITIAL); setResultado(null); setErro(""); };
 
+  useLiveCalc({ run: handleCalc, deps: [form, modo], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="vancomicina-auc" actions={<>

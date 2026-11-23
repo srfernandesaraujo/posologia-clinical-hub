@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -93,6 +94,7 @@ export default function IdadeGestacional() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [modo, metodo, dum, usgIG, usgIGDias, dataUSG, nomePaciente, data], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="idade-gestacional" actions={<>
@@ -121,7 +123,7 @@ export default function IdadeGestacional() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Metodo de Calculo</h2>
             <div className="space-y-4">
-              <Select value={metodo} onValueChange={v => { setMetodo(v as any); setResultado(null); }}>
+              <Select value={metodo} onValueChange={v => { setMetodo(v as any); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="dum">Data da Ultima Menstruacao (DUM)</SelectItem>
@@ -130,12 +132,12 @@ export default function IdadeGestacional() {
               </Select>
 
               {metodo === "dum" ? (
-                <div className="space-y-1.5"><Label>DUM *</Label><Input type="date" value={dum} onChange={e => { setDum(e.target.value); setResultado(null); }} /></div>
+                <div className="space-y-1.5"><Label>DUM *</Label><Input type="date" value={dum} onChange={e => { setDum(e.target.value); }} /></div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5"><Label>IG no USG (semanas) *</Label><Input type="number" min="0" max="42" value={usgIG} onChange={e => { setUsgIG(e.target.value); setResultado(null); }} placeholder="Ex: 12" /></div>
-                  <div className="space-y-1.5"><Label>Dias</Label><Input type="number" min="0" max="6" value={usgIGDias} onChange={e => { setUsgIGDias(e.target.value); setResultado(null); }} placeholder="0-6" /></div>
-                  <div className="space-y-1.5"><Label>Data do USG *</Label><Input type="date" value={dataUSG} onChange={e => { setDataUSG(e.target.value); setResultado(null); }} /></div>
+                  <div className="space-y-1.5"><Label>IG no USG (semanas) *</Label><Input type="number" min="0" max="42" value={usgIG} onChange={e => { setUsgIG(e.target.value); }} placeholder="Ex: 12" /></div>
+                  <div className="space-y-1.5"><Label>Dias</Label><Input type="number" min="0" max="6" value={usgIGDias} onChange={e => { setUsgIGDias(e.target.value); }} placeholder="0-6" /></div>
+                  <div className="space-y-1.5"><Label>Data do USG *</Label><Input type="date" value={dataUSG} onChange={e => { setDataUSG(e.target.value); }} /></div>
                 </div>
               )}
             </div>

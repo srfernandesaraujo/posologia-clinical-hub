@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLiveCalc } from "@/hooks/useLiveCalc";
 import { CalculatorHeader } from "@/components/calculators/CalculatorShell";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import { CalculationHistory } from "@/components/CalculationHistory";
@@ -77,6 +78,7 @@ export default function SulfatoMagnesio() {
     });
   };
 
+  useLiveCalc({ run: handleCalc, deps: [modo, nomePaciente, data, protocolo, peso, magnesemia], erro, clear: () => { setErro(""); setResultado(null); } });
   return (
     <div className="max-w-6xl mx-auto">
       <CalculatorHeader slug="sulfato-magnesio" actions={<>
@@ -107,7 +109,7 @@ export default function SulfatoMagnesio() {
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label>Protocolo *</Label>
-                <Select value={protocolo} onValueChange={v => { setProtocolo(v as any); setResultado(null); }}>
+                <Select value={protocolo} onValueChange={v => { setProtocolo(v as any); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="zuspan">Zuspan (IV puro — mais comum)</SelectItem>
@@ -117,7 +119,7 @@ export default function SulfatoMagnesio() {
               </div>
               <div className="space-y-1.5">
                 <Label>Magnesemia (mEq/L) — opcional</Label>
-                <Input type="number" step="0.1" value={magnesemia} onChange={e => { setMagnesemia(e.target.value); setResultado(null); }} placeholder="Ex: 4.5 (para avaliar toxicidade)" />
+                <Input type="number" step="0.1" value={magnesemia} onChange={e => { setMagnesemia(e.target.value); }} placeholder="Ex: 4.5 (para avaliar toxicidade)" />
               </div>
             </div>
             <div className="mt-4 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
