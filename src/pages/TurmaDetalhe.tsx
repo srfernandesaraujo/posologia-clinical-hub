@@ -20,6 +20,9 @@ import { toast } from "sonner";
 import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
 import { matchStudentsToParticipants } from "@/lib/participantMatching";
 import { SIMULATOR_LABELS } from "./Analytics";
+import { KpiTile, scoreTone } from "@/components/rooms/RoomAnalytics";
+import { cn } from "@/lib/utils";
+import { Copy, Search, Lock } from "lucide-react";
 
 export default function TurmaDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +34,7 @@ export default function TurmaDetalhe() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
 
   const { data: rooms = [] } = useQuery({
     queryKey: ["class-rooms", id],
@@ -129,6 +133,19 @@ export default function TurmaDetalhe() {
         className="mb-0"
       />
 
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiTile icon={<Users />} label="Alunos" value={studentsQ.data?.length || 0} sub="cadastrados na turma" />
+        <KpiTile icon={<DoorOpen />} label="Salas" value={rooms.length} sub={`${(rooms as any[]).filter((r: any) => r.is_active).length} ativas`} />
+        <KpiTile icon={<BarChart3 />} label="Envios" value={(classSubmissions as any[]).length} sub="em todas as salas" />
+        <KpiTile
+          icon={<BarChart3 />}
+          label="Nota média"
+          value={(classSubmissions as any[]).length ? `${Math.round((classSubmissions as any[]).reduce((a: number, s: any) => a + (s.score || 0), 0) / (classSubmissions as any[]).length)}%` : "—"}
+          valueClassName={(classSubmissions as any[]).length ? scoreTone(Math.round((classSubmissions as any[]).reduce((a: number, s: any) => a + (s.score || 0), 0) / (classSubmissions as any[]).length)).text : undefined}
+          sub="média da turma"
+        />
+      </div>
+
       <Tabs defaultValue="alunos" className="space-y-4">
         <TabsList>
           <TabsTrigger value="alunos"><Users className="h-3.5 w-3.5 mr-1" /> Alunos ({studentsQ.data?.length || 0})</TabsTrigger>
@@ -139,12 +156,17 @@ export default function TurmaDetalhe() {
 
         {/* ALUNOS */}
         <TabsContent value="alunos" className="space-y-4">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
+          <section className="rounded-xl border border-border bg-card">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div>
-                <CardTitle className="text-base">Alunos cadastrados</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">Esta lista é reaproveitada nas salas restritas desta turma.</p>
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Alunos cadastrados <span className="tabular-nums">{studentsQ.data?.length || 0}</span></h3>
+                <p className="mt-1 text-xs text-muted-foreground">Esta lista é reaproveitada nas salas restritas desta turma.</p>
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={studentSearch} onChange={e => setStudentSearch(e.target.value)} placeholder="Buscar aluno ou e-mail…" className="h-8 w-56 pl-8 text-sm" />
+                </div>
               <Dialog open={importOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Adicionar alunos</Button>
@@ -169,29 +191,31 @@ export default function TurmaDetalhe() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </CardHeader>
-            <CardContent>
-              {(studentsQ.data?.length || 0) === 0 ? (
-                <p className="text-sm text-muted-foreground py-6 text-center">Nenhum aluno cadastrado ainda.</p>
-              ) : (
-                <div className="border rounded-md divide-y divide-border">
-                  {studentsQ.data!.map(s => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+              </div>
+            </header>
+            {(studentsQ.data?.length || 0) === 0 ? (
+              <EmptyState className="m-4" icon={<Users />} title="Nenhum aluno cadastrado ainda" description="Use Adicionar alunos para colar a lista da turma." />
+            ) : (
+              <ul className="divide-y divide-border">
+                {studentsQ.data!
+                  .filter(s => { const q = studentSearch.trim().toLowerCase(); return !q || s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q); })
+                  .map(s => (
+                    <li key={s.id} className="group flex items-center gap-3 px-4 py-2.5">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">
+                        {s.full_name.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("")}
+                      </span>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{s.full_name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                          <Mail className="h-3 w-3" /> {s.email}
-                        </p>
+                        <p className="truncate text-sm font-medium">{s.full_name}</p>
+                        <p className="flex items-center gap-1 truncate text-xs text-muted-foreground"><Mail className="h-3 w-3" /> {s.email}</p>
                       </div>
-                      <Button size="icon" variant="ghost" onClick={() => removeStudent.mutate(s.id)}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      <Button size="icon" variant="ghost" className="h-8 w-8 opacity-60 transition-opacity group-hover:opacity-100" aria-label={"Remover " + s.full_name} onClick={() => removeStudent.mutate(s.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
-                    </div>
+                    </li>
                   ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </ul>
+            )}
+          </section>
         </TabsContent>
 
         {/* SALAS */}
@@ -206,32 +230,39 @@ export default function TurmaDetalhe() {
             </div>
           </div>
           {rooms.length === 0 ? (
-            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Nenhuma sala criada para esta turma.
-            </CardContent></Card>
+            <EmptyState icon={<DoorOpen />} title="Nenhuma sala criada para esta turma" description="Crie uma sala nova ou vincule uma existente." />
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {rooms.map((r: any) => (
-                <Card key={r.id} className="hover:border-primary/50 transition-colors">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium truncate">{r.title}</p>
-                      <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Ativa" : "Encerrada"}</Badge>
-                    </div>
-                    {r.description && <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>}
-                    <div className="flex items-center justify-between pt-2 gap-2">
-                      <span className="text-xs text-muted-foreground">PIN: <span className="font-mono">{r.pin}</span></span>
-                      <div className="flex gap-1">
-                        <UnlinkRoomButton roomId={r.id} classId={turma.id} />
-                        <Button size="sm" variant="outline" asChild>
-                          <Link to={`/turmas/${turma.id}/salas/${r.id}`}>
-                            <BarChart3 className="h-3.5 w-3.5 mr-1" /> Abrir
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {(rooms as any[]).map((r: any) => (
+                <div key={r.id} className={cn("flex flex-col gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/40", r.is_active ? "border-status-ok/30" : "border-border")}>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold", r.is_active ? "border-status-ok/40 text-status-ok" : "border-border text-muted-foreground")}>
+                      <span className={cn("h-1.5 w-1.5 rounded-full", r.is_active ? "bg-status-ok" : "bg-muted-foreground/60")} />
+                      {r.is_active ? "Ativa" : "Encerrada"}
+                    </span>
+                    {r.restricted_access && <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"><Lock className="h-3 w-3" />Restrita</span>}
+                  </div>
+                  <div>
+                    <p className="line-clamp-2 font-semibold leading-snug">{r.title}</p>
+                    {r.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.description}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(r.pin); toast.success("PIN copiado"); }}
+                    aria-label={"Copiar PIN " + r.pin}
+                    className="group flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2 transition-colors hover:border-primary/40"
+                  >
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">PIN</span>
+                    <code className="font-mono text-xl font-bold tracking-[0.2em] text-primary">{r.pin}</code>
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                  </button>
+                  <div className="mt-auto flex items-center gap-2">
+                    <Button size="sm" asChild className="flex-1">
+                      <Link to={`/turmas/${turma.id}/salas/${r.id}`}><BarChart3 className="mr-1.5 h-4 w-4" />Abrir</Link>
+                    </Button>
+                    <UnlinkRoomButton roomId={r.id} classId={turma.id} />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -265,19 +296,34 @@ function ConfigPanel({ turma, onSave, onDelete }: { turma: any; onSave: (p: any)
   const [name, setName] = useState(turma.name);
   const [semester, setSemester] = useState(turma.semester || "");
   const [description, setDescription] = useState(turma.description || "");
+  const dirty = name !== turma.name || semester !== (turma.semester || "") || description !== (turma.description || "");
   return (
-    <Card>
-      <CardHeader><CardTitle className="text-base">Configurações da turma</CardTitle></CardHeader>
-      <CardContent className="space-y-3">
-        <div><Label>Nome</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-        <div><Label>Semestre</Label><Input value={semester} onChange={e => setSemester(e.target.value)} /></div>
-        <div><Label>Descrição</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} /></div>
-        <div className="flex justify-between pt-2">
-          <Button variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4 mr-1" /> Excluir turma</Button>
-          <Button onClick={() => onSave({ name, semester, description })}>Salvar</Button>
+    <div className="max-w-2xl space-y-6">
+      <section className="rounded-xl border border-border bg-card">
+        <header className="border-b border-border px-4 py-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Dados da turma</h3>
+        </header>
+        <div className="space-y-4 p-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-1.5 sm:col-span-2"><Label>Nome</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Semestre</Label><Input value={semester} onChange={e => setSemester(e.target.value)} placeholder="2026.1" /></div>
+          </div>
+          <div className="space-y-1.5"><Label>Descrição</Label><Textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} /></div>
+          <div className="flex justify-end">
+            <Button onClick={() => onSave({ name, semester, description })} disabled={!dirty || !name.trim()}>Salvar alterações</Button>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </section>
+      <section className="rounded-xl border border-status-crit/30 bg-status-crit/5">
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-status-crit">Excluir turma</h3>
+            <p className="mt-1 max-w-md text-xs text-muted-foreground">As salas vinculadas perdem o vínculo com a turma, mas não são apagadas.</p>
+          </div>
+          <Button variant="destructive" onClick={onDelete}><Trash2 className="mr-1.5 h-4 w-4" /> Excluir turma</Button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -360,12 +406,7 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-        <StatBox label="Salas" value={rooms.length} />
-        <StatBox label="Alunos cadastrados" value={students.length} />
-        <StatBox label="Submissões" value={totalSubs} />
-        <StatBox label="Nota média" value={avgScore} />
-      </div>
+
 
       <Card>
         <CardHeader><CardTitle className="text-base">Desempenho por sala</CardTitle></CardHeader>
@@ -426,9 +467,9 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
                       <div className="col-span-2 text-center">{r.salas}</div>
                       <div className="col-span-2 text-center">{r.submissoes}</div>
                       <div className="col-span-2 text-right">
-                        <Badge variant={r.score >= 70 ? "default" : r.score > 0 ? "secondary" : "outline"}>
-                          {r.submissoes > 0 ? r.score : "—"}
-                        </Badge>
+                        {r.submissoes > 0
+                          ? <span className={cn("rounded-full border px-2 py-0.5 font-mono text-xs font-semibold tabular-nums", scoreTone(r.score).soft)}>{r.score}%</span>
+                          : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div className="col-span-2 text-right">
                         {badge ? (

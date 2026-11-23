@@ -84,7 +84,7 @@ export function RoomsOverview(p: Props) {
     return [...map.entries()].sort((a, b) => (a[0] === "Sem turma" ? 1 : b[0] === "Sem turma" ? -1 : a[0].localeCompare(b[0])));
   }, [history, p.classNameById]);
 
-  const toggleOne = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleOne = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const toggleMany = (ids: string[], on: boolean) => setSelected((s) => { const n = new Set(s); ids.forEach((id) => (on ? n.add(id) : n.delete(id))); return n; });
 
   const menu = (room: any) => (
@@ -273,7 +273,7 @@ export function RoomsOverview(p: Props) {
             <AlertDialogCancel onClick={() => { if (selected.size === 1) setSelected(new Set()); }}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { const ids = [...selected]; setSelected(new Set()); ids.length === 1 ? p.onDelete(ids[0]) : p.onDeleteMany(ids); }}
+              onClick={() => { const ids = [...selected]; setSelected(new Set()); if (ids.length === 1) p.onDelete(ids[0]); else p.onDeleteMany(ids); }}
             >
               Excluir
             </AlertDialogAction>

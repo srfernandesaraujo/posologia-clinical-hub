@@ -1,4 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { KpiTile, ScoreDistributionCard, ActivityPerformanceCard, RankingCard, scoreTone, formatDuration, type ActivityRow } from "@/components/rooms/RoomAnalytics";
+import { NATIVE_SIMULATORS } from "@/data/simulatorCatalog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -360,7 +366,8 @@ export default function SalaDetalhe() {
     const avgScore = count ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / count) : 0;
     const max = count ? Math.max(...subs.map((s: any) => s.score || 0)) : 0;
     const min = count ? Math.min(...subs.map((s: any) => s.score || 0)) : 0;
-    return { count, avgScore, max, min, participants: participants.length };
+    const avgTime = count ? subs.reduce((a: number, s: any) => a + (s.time_spent_seconds || 0), 0) / count : 0;
+    return { count, avgScore, max, min, avgTime, participants: participants.length };
   }, [submissions, participants]);
 
   const isExam = activities.length > 0;
@@ -388,7 +395,7 @@ export default function SalaDetalhe() {
     return (participants as any[]).map(p => {
       const subs = map.get(p.id) || [];
       const score = subs.length ? Math.round(subs.reduce((a, s) => a + (s.score || 0), 0) / subs.length) : 0;
-      return { id: p.id, name: (p.participant_name || "—").slice(0, 20), score, subs: subs.length };
+      return { id: p.id, name: p.participant_name || "—", score, subs: subs.length };
     }).filter(d => d.subs > 0).sort((a, b) => b.score - a.score);
   }, [participants, submissions]);
 
@@ -397,6 +404,44 @@ export default function SalaDetalhe() {
     const el = document.getElementById(`participant-${focusParticipantId}`);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focusParticipantId, participants]);
+
+  const [studentQuery, setStudentQuery] = useState("");
+  const [studentSort, setStudentSort] = useState<"score-desc" | "score-asc" | "name" | "recent">("score-desc");
+  const [onlyAtRisk, setOnlyAtRisk] = useState(false);
+
+  const participantsWithSubs = useMemo(
+    () => (participants as any[]).filter((p: any) => (submissions as any[]).some((s: any) => s.participant_id === p.id)),
+    [participants, submissions],
+  );
+  const studentRows = useMemo(() => {
+    const q = studentQuery.trim().toLowerCase();
+    const rows = participantsWithSubs.map((p: any) => {
+      const pSubs = (submissions as any[]).filter((s: any) => s.participant_id === p.id);
+      const pAvg = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + (s.score || 0), 0) / pSubs.length) : 0;
+      const pTime = pSubs.reduce((a, s) => a + (s.time_spent_seconds || 0), 0);
+      return { p, pSubs, pAvg, pTime };
+    })
+      .filter((r) => !q || String(r.p.participant_name || "").toLowerCase().includes(q) || String(r.p.participant_email || "").toLowerCase().includes(q))
+      .filter((r) => !onlyAtRisk || r.pAvg < 60);
+    rows.sort((a, b) => studentSort === "score-desc" ? b.pAvg - a.pAvg
+      : studentSort === "score-asc" ? a.pAvg - b.pAvg
+      : studentSort === "name" ? String(a.p.participant_name).localeCompare(String(b.p.participant_name), "pt-BR")
+      : new Date(b.p.joined_at).getTime() - new Date(a.p.joined_at).getTime());
+    return rows;
+  }, [participantsWithSubs, submissions, studentQuery, studentSort, onlyAtRisk]);
+
+  const toolLabel = (slug: string) => SIMULATOR_LABELS[slug] || NATIVE_SIMULATORS.find((s) => s.slug === slug)?.name || slug;
+  const activityRows: ActivityRow[] = useMemo(() => (activities as any[]).map((act: any, i: number) => {
+    const actSubs = (submissions as any[]).filter((s: any) => s.activity_id === act.id);
+    return {
+      id: act.id,
+      index: i,
+      label: toolLabel(act.simulator_slug),
+      caseTitle: act.simulator_cases?.title ?? null,
+      avg: actSubs.length ? Math.round(actSubs.reduce((a, s) => a + (s.score || 0), 0) / actSubs.length) : null,
+      count: actSubs.length,
+    };
+  }), [activities, submissions]);
 
   const copyPin = () => {
     if (!room) return;
@@ -437,147 +482,113 @@ export default function SalaDetalhe() {
         </TabsList>
 
         {/* ANALYTICS — RICH VIEW */}
-        <TabsContent value="analytics" className="space-y-4">
-          {/* KPIs */}
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
-            <StatCard label="Cadastrados" value={studentsQ.data?.length || 0} />
-            <StatCard label="Ingressos" value={stats.participants} />
-            <StatCard label="Submissões" value={stats.count} />
-            <StatCard label="Nota média" value={`${stats.avgScore}%`} />
-            <StatCard label="Maior / Menor" value={stats.count ? `${stats.max}% / ${stats.min}%` : "—"} />
+        <TabsContent value="analytics" className="space-y-6">
+          {/* Indicadores */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile icon={<Users />} label="Participação" value={stats.participants} sub={`${studentsQ.data?.length || 0} cadastrados · ${perParticipant.length} enviaram`} />
+            <KpiTile icon={<ClipboardList />} label="Envios" value={stats.count} sub={isExam ? `${activities.length} atividades na prova` : "resultados recebidos"} />
+            <KpiTile
+              icon={<BarChart3 />}
+              label="Nota média"
+              value={stats.count ? `${stats.avgScore}%` : "—"}
+              valueClassName={stats.count ? scoreTone(stats.avgScore).text : undefined}
+              sub={stats.count ? `menor ${stats.min}% · maior ${stats.max}%` : "sem envios"}
+            />
+            <KpiTile icon={<Clock />} label="Tempo médio" value={formatDuration(stats.avgTime)} sub="por envio" />
           </div>
 
-          {/* Activities for exam */}
+          {/* Desempenho */}
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <ScoreDistributionCard scores={(submissions as any[]).map((s: any) => s.score || 0)} />
+            </div>
+            <div className="lg:col-span-3">
+              {isExam ? (
+                <ActivityPerformanceCard rows={activityRows} />
+              ) : (
+                <RankingCard rows={perParticipant} onSelect={(id) => document.getElementById(`participant-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })} />
+              )}
+            </div>
+          </div>
           {isExam && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Atividades da prova</CardTitle></CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {(activities as any[]).map((act: any, i: number) => {
-                    const actSubs = (submissions as any[]).filter((s: any) => s.activity_id === act.id);
-                    const actAvg = actSubs.length ? Math.round(actSubs.reduce((a, s) => a + s.score, 0) / actSubs.length) : null;
-                    return (
-                      <div key={act.id} className="text-xs border border-border rounded-lg px-3 py-2 bg-muted/30">
-                        <span className="font-medium">{i + 1}. {SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug}</span>
-                        {act.simulator_cases?.title && (
-                          <span className="text-muted-foreground ml-1">({act.simulator_cases.title})</span>
-                        )}
-                        {actAvg !== null && (
-                          <Badge variant={actAvg >= 80 ? "secondary" : actAvg >= 50 ? "default" : "destructive"} className={`ml-2 text-xs ${actAvg >= 80 ? "bg-status-ok/10 text-status-ok" : ""}`}>
-                            {actAvg}%
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            <RankingCard rows={perParticipant} onSelect={(id) => document.getElementById(`participant-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })} />
           )}
 
-          {/* Score distribution + ranking */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Distribuição de Scores</CardTitle></CardHeader>
-              <CardContent>
-                {scoreDist.length === 0 || stats.count === 0 ? (
-                  <p className="text-sm text-muted-foreground py-6 text-center">Sem submissões ainda.</p>
-                ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={scoreDist}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="range" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                      <Bar dataKey="count" name="Alunos" radius={[4, 4, 0, 0]}>
-                        {scoreDist.map((_, i) => (
-                          <Cell key={i} fill={["hsl(var(--destructive))", "hsl(var(--chart-4))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][i]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader><CardTitle className="text-base">Ranking de participantes</CardTitle></CardHeader>
-              <CardContent>
-                {perParticipant.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-6 text-center">Sem submissões ainda.</p>
-                ) : (
-                  <ResponsiveContainer width="100%" height={Math.max(220, perParticipant.length * 26)}>
-                    <BarChart data={perParticipant.slice(0, 20)} layout="vertical" margin={{ left: 4, right: 40 }} barCategoryGap={8}>
-                      <CartesianGrid horizontal={false} />
-                      <XAxis type="number" domain={[0, 100]} tickCount={5} />
-                      <YAxis type="category" dataKey="name" width={150} tickFormatter={(v: string) => (v.length > 22 ? v.slice(0, 21).trimEnd() + "…" : v)} />
-                      <Tooltip />
-                      <Bar dataKey="score" name="Nota" fill="hsl(var(--primary))" background={{ fill: "hsl(var(--muted) / 0.35)", radius: 6 }}>
-                        <LabelList dataKey="score" position="right" style={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Per-participant detail with ParticipantDetail (decisions, mini-report, etc.) */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">Análise detalhada por aluno</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              {(() => {
-                const participantsWithSubs = (participants as any[]).filter((p: any) =>
-                  (submissions as any[]).some((s: any) => s.participant_id === p.id)
-                );
-                if (participantsWithSubs.length === 0) {
-                  return <p className="text-sm text-muted-foreground py-4 text-center">Nenhum aluno enviou ainda.</p>;
-                }
-                return participantsWithSubs.map((p: any) => {
-                  const pSubs = (submissions as any[]).filter((s: any) => s.participant_id === p.id);
-                  const pAvg = pSubs.length ? Math.round(pSubs.reduce((a, s) => a + s.score, 0) / pSubs.length) : 0;
-                  const pTime = pSubs.reduce((a, s) => a + (s.time_spent_seconds || 0), 0);
-                  const isFocused = p.id === focusParticipantId;
-                  return (
-                    <div key={p.id} id={`participant-${p.id}`} className={`rounded-lg border p-3 ${isFocused ? "border-primary ring-2 ring-primary/40" : "border-border"}`}>
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Análise por aluno */}
+          <section className="rounded-xl border border-border bg-card">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Análise por aluno <span className="tabular-nums">{studentRows.length}</span></h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={studentQuery} onChange={(e) => setStudentQuery(e.target.value)} placeholder="Buscar aluno ou e-mail…" className="h-8 w-56 pl-8 text-sm" />
+                </div>
+                <Select value={studentSort} onValueChange={(v) => setStudentSort(v as any)}>
+                  <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="score-desc">Maior nota</SelectItem>
+                    <SelectItem value="score-asc">Menor nota</SelectItem>
+                    <SelectItem value="name">Nome (A–Z)</SelectItem>
+                    <SelectItem value="recent">Mais recentes</SelectItem>
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  aria-pressed={onlyAtRisk}
+                  onClick={() => setOnlyAtRisk((v) => !v)}
+                  className={cn("rounded-full border px-3 py-1 text-xs font-medium transition-colors", onlyAtRisk ? "border-status-warn/50 bg-status-warn/10 text-status-warn" : "border-border text-muted-foreground hover:text-foreground")}
+                >
+                  Abaixo de 60%
+                </button>
+              </div>
+            </header>
+            <div className="space-y-2 p-3">
+              {studentRows.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">{participantsWithSubs.length === 0 ? "Nenhum aluno enviou ainda." : "Nenhum aluno com esse filtro."}</p>
+              ) : studentRows.map(({ p, pSubs, pAvg, pTime }) => {
+                const isFocused = p.id === focusParticipantId;
+                const tone = scoreTone(pAvg);
+                const initials = String(p.participant_name || "?").trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("");
+                return (
+                  <div key={p.id} id={`participant-${p.id}`} className={cn("rounded-xl border p-4 transition-colors", isFocused ? "border-primary ring-2 ring-primary/40" : "border-border")}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">{initials}</span>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium">{p.participant_name}</p>
-                          {p.participant_email && <p className="text-xs text-muted-foreground">{p.participant_email}</p>}
+                          <p className="truncate text-sm font-semibold">{p.participant_name}</p>
+                          {p.participant_email && <p className="truncate text-xs text-muted-foreground">{p.participant_email}</p>}
                           {p.is_group && <p className="text-xs text-muted-foreground">Grupo: {(p.group_members as any[] || []).map((m: any) => typeof m === "string" ? m : (m?.name || m?.email)).join(", ")}</p>}
                           <p className="text-xs text-muted-foreground">{new Date(p.joined_at).toLocaleString("pt-BR")}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {pTime > 0 && <span className="text-xs text-muted-foreground">{Math.floor(pTime / 60)}m{pTime % 60}s</span>}
-                          <Badge variant={pAvg >= 80 ? "secondary" : pAvg >= 50 ? "default" : "destructive"} className={pAvg >= 80 ? "bg-status-ok/10 text-status-ok" : ""}>
-                            {pAvg}%
-                          </Badge>
-                          <Button
-                            variant="ghost" size="icon" className="h-7 w-7"
-                            title="Remover este envio"
-                            onClick={() => {
-                              if (confirm(`Remover envio de "${p.participant_name}"? Esta ação não pode ser desfeita.`)) {
-                                deleteParticipant.mutate(p.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </Button>
-                        </div>
                       </div>
-                      {/* Per-activity breakdown for exams */}
-                      {isExam && pSubs.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {(activities as any[]).map((act: any, i: number) => {
-                            const actSub = pSubs.find((s: any) => s.activity_id === act.id);
-                            return (
-                              <span key={act.id} className={`text-xs px-2 py-0.5 rounded-full ${actSub ? (actSub.score >= 80 ? "bg-status-ok/10 text-status-ok" : actSub.score >= 50 ? "bg-status-warn/10 text-status-warn" : "bg-status-crit/10 text-status-crit") : "bg-muted text-muted-foreground"}`}>
-                                {(SIMULATOR_LABELS[act.simulator_slug] || act.simulator_slug).substring(0, 5)}{i + 1}: {actSub ? `${actSub.score}%` : "—"}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {pTime > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{formatDuration(pTime)}</span>}
+                        <span className={cn("rounded-full border px-2.5 py-0.5 font-mono text-sm font-semibold tabular-nums", tone.soft)}>{pAvg}%</span>
+                        <Button
+                          variant="ghost" size="icon" className="h-8 w-8"
+                          aria-label="Remover este envio"
+                          onClick={() => {
+                            if (confirm(`Remover envio de "${p.participant_name}"? Esta ação não pode ser desfeita.`)) {
+                              deleteParticipant.mutate(p.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    {isExam && pSubs.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {(activities as any[]).map((act: any, i: number) => {
+                          const actSub = pSubs.find((s: any) => s.activity_id === act.id);
+                          return (
+                            <span key={act.id} className={cn("rounded-full border px-2 py-0.5 text-xs", actSub ? scoreTone(actSub.score).soft : "border-border bg-muted text-muted-foreground")}>
+                              {i + 1}. {toolLabel(act.simulator_slug)}: <strong className="font-mono">{actSub ? `${actSub.score}%` : "—"}</strong>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                       {/* Certificado OSCE — só quando a prova está completa para este aluno */}
                       {isExam && activities.length > 0 && pSubs.length >= activities.length && (() => {
                         const cert = certificateByParticipant.get(p.id);
@@ -631,11 +642,10 @@ export default function SalaDetalhe() {
                         </div>
                       ))}
                     </div>
-                  );
-                });
-              })()}
-            </CardContent>
-          </Card>
+                );
+              })}
+            </div>
+          </section>
         </TabsContent>
 
         {/* PARTICIPANTS */}
@@ -646,30 +656,52 @@ export default function SalaDetalhe() {
         {/* OVERVIEW */}
         <TabsContent value="overview" className="space-y-4">
           {room.description && (
-            <Card><CardContent className="py-4 text-sm text-muted-foreground">{room.description}</CardContent></Card>
+            <section className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">{room.description}</section>
           )}
-          <Card>
-            <CardContent className="py-4 text-sm space-y-1">
-              <p><span className="text-muted-foreground">PIN:</span> <span className="font-mono">{room.pin}</span></p>
-              <p><span className="text-muted-foreground">Criada em:</span> {new Date(room.created_at).toLocaleString("pt-BR")}</p>
-              {room.expires_at && <p><span className="text-muted-foreground">Expira em:</span> {new Date(room.expires_at).toLocaleString("pt-BR")}</p>}
-              <p><span className="text-muted-foreground">Acesso restrito:</span> {room.restricted_access ? "Sim" : "Não"}</p>
+          <section className="rounded-xl border border-border bg-card">
+            <header className="border-b border-border px-4 py-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Dados da sala</h3>
+            </header>
+            <dl className="grid gap-x-8 gap-y-4 p-4 sm:grid-cols-2">
+              <div><dt className="text-xs text-muted-foreground">PIN</dt><dd className="mt-0.5 font-mono text-lg font-semibold tracking-widest text-primary">{room.pin}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Situação</dt><dd className="mt-0.5 text-sm font-medium">{room.is_active ? "Ativa" : "Encerrada"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Criada em</dt><dd className="mt-0.5 text-sm">{new Date(room.created_at).toLocaleString("pt-BR")}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Expira em</dt><dd className="mt-0.5 text-sm">{room.expires_at ? new Date(room.expires_at).toLocaleString("pt-BR") : "Sem prazo"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Acesso restrito</dt><dd className="mt-0.5 text-sm">{room.restricted_access ? "Sim, só alunos cadastrados" : "Não, qualquer pessoa com o PIN"}</dd></div>
               {room.restricted_access && (
-                <p><span className="text-muted-foreground">Respostas no grupo:</span> {(room as any).group_mode === "collective" ? "Todos respondem (estilo TBL)" : "Líder responde, demais observam"}</p>
+                <div><dt className="text-xs text-muted-foreground">Respostas no grupo</dt><dd className="mt-0.5 text-sm">{(room as any).group_mode === "collective" ? "Todos respondem (estilo TBL)" : "Líder responde, demais observam"}</dd></div>
               )}
-            </CardContent>
-          </Card>
+            </dl>
+          </section>
+          {isExam && (
+            <section className="rounded-xl border border-border bg-card">
+              <header className="border-b border-border px-4 py-3">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Atividades da prova <span className="tabular-nums">{activities.length}</span></h3>
+              </header>
+              <ol className="divide-y divide-border">
+                {(activities as any[]).map((act: any, i: number) => (
+                  <li key={act.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-border text-xs font-semibold text-muted-foreground">{i + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{toolLabel(act.simulator_slug)}</span>
+                      {act.simulator_cases?.title && <span className="block truncate text-xs text-muted-foreground">{act.simulator_cases.title}</span>}
+                    </span>
+                    {act.group_label?.trim() && <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">{act.group_label}</span>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
         </TabsContent>
 
         <TabsContent value="config">
-          <Card>
-            <CardContent className="py-6 space-y-2">
-              <p className="text-sm text-muted-foreground">
-                A edição completa da sala (atividades, alunos, prazo) é feita na página{" "}
-                <Link to="/salas-virtuais" className="underline">Salas Virtuais</Link>.
-              </p>
-            </CardContent>
-          </Card>
+          <section className="max-w-2xl rounded-xl border border-border bg-card p-5">
+            <h3 className="text-sm font-semibold">Editar esta sala</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A edição completa da sala (atividades, alunos, prazo, acesso) é feita em Salas Virtuais, pelo menu da sala.
+            </p>
+            <Button asChild className="mt-4"><Link to="/salas-virtuais"><SettingsIcon className="mr-2 h-4 w-4" />Abrir Salas Virtuais</Link></Button>
+          </section>
         </TabsContent>
       </Tabs>
     </div>
@@ -741,7 +773,14 @@ function ParticipantsList({ students, participants, restricted, activities = [] 
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Participantes</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle className="text-base">Participantes</CardTitle>
+        <div className="flex flex-wrap gap-2 pt-1 text-xs">
+          <span className="rounded-full bg-secondary px-2.5 py-1"><strong className="tabular-nums">{groups.length}</strong> grupos</span>
+          <span className="rounded-full bg-secondary px-2.5 py-1"><strong className="tabular-nums">{solos.length}</strong> individuais</span>
+          {restricted && <span className="rounded-full bg-status-warn/10 px-2.5 py-1 text-status-warn"><strong className="tabular-nums">{pendingStudents.length}</strong> aguardando ingresso</span>}
+        </div>
+      </CardHeader>
       <CardContent className="space-y-4">
         {!hasAny ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Nenhum participante ainda.</p>
