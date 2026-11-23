@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight } from "lucide-react";
+import { DoorOpen, Users, UserPlus, X, ArrowLeft, CheckCircle, Loader2, ClipboardList, ArrowRight, Lock, User } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { GAME_LABELS, isGameSlug } from "@/data/virtualRoomGames";
 
 const LAB_PREFIX = "lab-";
@@ -391,214 +392,217 @@ export default function SalaVirtualAluno() {
 
   if (step === "pin") {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 inline-flex rounded-2xl bg-primary/10 p-4">
-              <DoorOpen className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Entrar na Sala Virtual</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Insira o PIN de 6 dígitos fornecido pelo professor</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>PIN da Sala</Label>
-              <Input
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
-                className="text-center text-3xl font-mono tracking-[0.5em] h-16"
-                maxLength={6}
-                onKeyDown={e => e.key === "Enter" && joinRoom()}
-              />
-            </div>
-            <Button onClick={() => joinRoom()} disabled={pin.length !== 6 || loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Entrar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <StudentShell step={1}>
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary"><DoorOpen className="h-7 w-7" /></div>
+        <h1 className="text-center text-2xl font-semibold">Entrar na sala virtual</h1>
+        <p className="mt-1 text-center text-sm text-muted-foreground">Digite o PIN de 6 dígitos que o professor passou.</p>
+        <div className="mt-6 flex justify-center">
+          <InputOTP
+            maxLength={6}
+            value={pin}
+            onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 6))}
+            onComplete={(v) => joinRoom(v)}
+            inputMode="numeric"
+            autoFocus
+            aria-label="PIN da sala"
+            containerClassName="gap-2"
+          >
+            <InputOTPGroup className="gap-2">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <InputOTPSlot key={i} index={i} className="h-14 w-11 rounded-lg border border-border bg-background/60 font-mono text-2xl font-semibold first:rounded-l-lg first:border last:rounded-r-lg sm:w-12" />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
+        </div>
+        <Button onClick={() => joinRoom()} disabled={pin.length !== 6 || loading} size="lg" className="mt-6 w-full">
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Entrar
+        </Button>
+      </StudentShell>
     );
   }
 
   if (step === "identify") {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <Button variant="ghost" size="sm" onClick={() => { setStep("pin"); setRoom(null); setActivities([]); }} className="w-fit mb-2">
-              <ArrowLeft className="h-4 w-4 mr-1" />Voltar
-            </Button>
-            <CardTitle className="text-xl">{room?.title}</CardTitle>
-            <p className="text-sm text-muted-foreground">Identifique-se para começar a atividade</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {room?.restricted_access && (
-              <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-xs text-primary">
+      <StudentShell step={2} onBack={() => { setStep("pin"); setRoom(null); setActivities([]); }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Sala</p>
+        <h1 className="mt-1 text-xl font-semibold leading-snug">{room?.title}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Identifique-se para começar a atividade.</p>
+
+        <div className="mt-5 space-y-4">
+          {room?.restricted_access && (
+            <div className="flex gap-2 rounded-lg border border-primary/20 bg-primary/10 p-3 text-xs text-primary">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
                 {hasGroupAssignments
-                  ? "🔒 O professor já dividiu a turma em grupos, cada um com seu caso. Identifique-se com seu e-mail e você entrará automaticamente no grupo/caso designado."
-                  : "🔒 Esta sala tem acesso restrito. Apenas alunos previamente cadastrados pelo professor podem entrar."}
-              </div>
-            )}
-
-            {!hasGroupAssignments && (
-              <div className="flex items-center justify-between">
-                <Label>Modo Grupo</Label>
-                <Switch checked={isGroup} onCheckedChange={setIsGroup} />
-              </div>
-            )}
-
-            <div>
-              <Label>{isGroup ? "Nome do Grupo" : "Seu Nome Completo"}</Label>
-              <Input value={participantName} onChange={e => setParticipantName(e.target.value)} placeholder={isGroup ? "Ex: Grupo A" : "Ex: Maria Silva"} />
+                  ? "O professor já dividiu a turma em grupos, cada um com seu caso. Identifique-se com seu e-mail e você entra automaticamente no grupo e no caso designados."
+                  : "Esta sala tem acesso restrito. Só entram alunos cadastrados pelo professor."}
+              </span>
             </div>
+          )}
 
-            {room?.restricted_access && (
-              <div>
-                <Label>{isGroup ? "Seu E-mail (líder do grupo)" : "Seu E-mail"}</Label>
-                <Input
-                  type="email"
-                  value={participantEmail}
-                  onChange={e => setParticipantEmail(e.target.value)}
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-            )}
+          {!hasGroupAssignments && (
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1" role="radiogroup" aria-label="Como você vai participar">
+              {([[false, "Sozinho", <User key="u" className="h-4 w-4" />], [true, "Em grupo", <Users key="g" className="h-4 w-4" />]] as const).map(([val, label, icon]) => (
+                <button
+                  key={label}
+                  type="button"
+                  role="radio"
+                  aria-checked={isGroup === val}
+                  onClick={() => setIsGroup(val)}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isGroup === val ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {icon}{label}
+                </button>
+              ))}
+            </div>
+          )}
 
-            {!hasGroupAssignments && isGroup && (
-              <div className="space-y-2">
-                <Label>Componentes do Grupo {room?.restricted_access && "(nome + e-mail)"}</Label>
-                {groupMembers.map((m, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Input value={m} onChange={e => updateGroupMember(i, e.target.value)} placeholder={`Componente ${i + 1} — nome`} />
-                      {groupMembers.length > 1 && (
-                        <Button variant="ghost" size="icon" onClick={() => removeGroupMember(i)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    {room?.restricted_access && (
-                      <Input
-                        type="email"
-                        value={groupEmails[i] || ""}
-                        onChange={e => updateGroupEmail(i, e.target.value)}
-                        placeholder={`E-mail do componente ${i + 1}`}
-                      />
+          <div className="space-y-1.5">
+            <Label>{isGroup ? "Nome do grupo" : "Seu nome completo"}</Label>
+            <Input value={participantName} onChange={e => setParticipantName(e.target.value)} placeholder={isGroup ? "Ex: Grupo A" : "Ex: Maria Silva"} />
+          </div>
+
+          {room?.restricted_access && (
+            <div className="space-y-1.5">
+              <Label>{isGroup ? "Seu e-mail (líder do grupo)" : "Seu e-mail"}</Label>
+              <Input type="email" value={participantEmail} onChange={e => setParticipantEmail(e.target.value)} placeholder="email@exemplo.com" />
+            </div>
+          )}
+
+          {!hasGroupAssignments && isGroup && (
+            <div className="space-y-2">
+              <Label>Componentes do grupo {room?.restricted_access && "(nome + e-mail)"}</Label>
+              {groupMembers.map((m, i) => (
+                <div key={i} className="space-y-1.5 rounded-lg border border-border p-2.5">
+                  <div className="flex items-center gap-2">
+                    <Input value={m} onChange={e => updateGroupMember(i, e.target.value)} placeholder={`Componente ${i + 1} — nome`} />
+                    {groupMembers.length > 1 && (
+                      <Button variant="ghost" size="icon" aria-label={`Remover componente ${i + 1}`} onClick={() => removeGroupMember(i)}>
+                        <X className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={addGroupMember}>
-                  <UserPlus className="h-4 w-4 mr-1" />Adicionar Componente
-                </Button>
-              </div>
-            )}
+                  {room?.restricted_access && (
+                    <Input type="email" value={groupEmails[i] || ""} onChange={e => updateGroupEmail(i, e.target.value)} placeholder={`E-mail do componente ${i + 1}`} />
+                  )}
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addGroupMember}>
+                <UserPlus className="mr-1 h-4 w-4" />Adicionar componente
+              </Button>
+            </div>
+          )}
 
-            <Button onClick={submitIdentification} disabled={!participantName.trim() || loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Users className="h-4 w-4 mr-2" />}
-              Confirmar e Entrar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <Button onClick={submitIdentification} disabled={!participantName.trim() || loading} size="lg" className="w-full">
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Confirmar e entrar
+          </Button>
+        </div>
+      </StudentShell>
     );
   }
 
   if (step === "waiting-group") {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <Button variant="ghost" size="sm" onClick={() => { setStep("pin"); setRoom(null); setActivities([]); pendingJoinRef.current = null; }} className="w-fit mb-2">
-              <ArrowLeft className="h-4 w-4 mr-1" />Voltar
-            </Button>
-            <CardTitle className="text-xl">{room?.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-center">
-            <div className="mx-auto inline-flex rounded-2xl bg-status-warn/10 p-4">
-              <Loader2 className="h-8 w-8 text-status-warn animate-spin" />
-            </div>
-            <p className="text-sm">
-              Seu e-mail ainda não foi atribuído a nenhum grupo nesta sala. Assim que o
-              professor formar seu grupo, você entrará automaticamente.
-            </p>
-            <p className="text-xs text-muted-foreground">Verificando periodicamente…</p>
-            <Button variant="outline" size="sm" onClick={checkGroupAssignment} disabled={loading}>
-              Verificar agora
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <StudentShell step={2} onBack={() => { setStep("pin"); setRoom(null); setActivities([]); pendingJoinRef.current = null; }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Sala</p>
+        <h1 className="mt-1 text-xl font-semibold leading-snug">{room?.title}</h1>
+        <div className="mt-6 flex flex-col items-center gap-4 text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-status-warn/10"><Loader2 className="h-7 w-7 animate-spin text-status-warn" /></div>
+          <p className="text-sm">
+            Seu e-mail ainda não foi atribuído a nenhum grupo nesta sala. Assim que o professor formar seu grupo, você entra automaticamente.
+          </p>
+          <p className="text-xs text-muted-foreground">Verificando a cada poucos segundos…</p>
+          <Button variant="outline" size="sm" onClick={checkGroupAssignment} disabled={loading}>Verificar agora</Button>
+        </div>
+      </StudentShell>
     );
   }
 
-  // Ready
+  // Pronto
+  const allDone = isExam && resumeFromIndex >= activities.length;
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-8 space-y-4 text-center">
-          <div className="mx-auto inline-flex rounded-full bg-status-ok/10 p-4">
-            {isExam ? (
-              <ClipboardList className="h-10 w-10 text-status-ok" />
-            ) : (
-              <CheckCircle className="h-10 w-10 text-status-ok" />
-            )}
-          </div>
-          <h2 className="text-2xl font-bold">
-            {isExam ? "Prova de Simulação" : "Tudo pronto!"}
-          </h2>
-          <p className="text-muted-foreground">
-            Olá, <strong>{participantName}</strong>! Você está na sala <strong>{room?.title}</strong>.
-          </p>
+    <StudentShell step={3}>
+      <div className="flex items-center gap-3">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-status-ok/10 text-status-ok">
+          {isExam ? <ClipboardList className="h-6 w-6" /> : <CheckCircle className="h-6 w-6" />}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-status-ok">{isExam ? "Prova de simulação" : "Tudo pronto"}</p>
+          <h1 className="truncate text-xl font-semibold">{room?.title}</h1>
+        </div>
+      </div>
+      <p className="mt-4 text-sm text-muted-foreground">Olá, <strong className="text-foreground">{participantName}</strong>! Você está dentro da sala.</p>
 
-          {isExam && (
-            <div className="text-left space-y-2 bg-muted/50 rounded-lg p-4">
-              <p className="text-sm font-semibold">Atividades ({activities.length}):</p>
-              {activities.map((act: any, i: number) => {
-                const done = i < resumeFromIndex;
-                return (
-                  <div key={act.id} className="flex items-center gap-2 text-sm">
-                    <Badge variant={done ? "default" : "outline"} className="text-xs min-w-[24px] justify-center">
-                      {done ? "✓" : i + 1}
-                    </Badge>
-                    <span className={done ? "line-through text-muted-foreground" : ""}>
-                      {TOOL_LABELS[act.simulator_slug] || act.simulator_slug}
-                    </span>
-                  </div>
-                );
-              })}
-              {completedCount > 0 && resumeFromIndex < activities.length && (
-                <p className="text-xs text-primary font-medium mt-2">
-                  Você já enviou {completedCount} atividade(s). Vamos retomar a partir da atividade {resumeFromIndex + 1}.
-                </p>
-              )}
-              {resumeFromIndex >= activities.length && (
-                <p className="text-xs text-status-ok font-medium mt-2">
-                  Todas as atividades já foram enviadas. Obrigado!
-                </p>
-              )}
-              {completedCount === 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Complete cada atividade em sequência. Ao finalizar uma, você será direcionado à próxima.
-                </p>
-              )}
-            </div>
+      {isExam && (
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Atividades · {activities.length}</p>
+          <ol className="space-y-1.5">
+            {activities.map((act: any, i: number) => {
+              const done = i < resumeFromIndex;
+              const current = i === resumeFromIndex && !allDone;
+              return (
+                <li key={act.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${current ? "border-primary bg-primary/10" : "border-border"}`}>
+                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border text-xs font-semibold ${done ? "border-status-ok/50 bg-status-ok/10 text-status-ok" : current ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"}`}>
+                    {done ? "✓" : i + 1}
+                  </span>
+                  <span className={done ? "text-muted-foreground line-through" : ""}>{TOOL_LABELS[act.simulator_slug] || act.simulator_slug}</span>
+                  {current && <span className="ml-auto text-[11px] font-medium text-primary">próxima</span>}
+                </li>
+              );
+            })}
+          </ol>
+          {completedCount > 0 && resumeFromIndex < activities.length && (
+            <p className="mt-3 text-xs font-medium text-primary">Você já enviou {completedCount} atividade(s). Vamos retomar na atividade {resumeFromIndex + 1}.</p>
           )}
+          {allDone && <p className="mt-3 text-xs font-medium text-status-ok">Todas as atividades já foram enviadas. Obrigado!</p>}
+          {completedCount === 0 && <p className="mt-3 text-xs text-muted-foreground">Faça cada atividade em sequência. Ao terminar uma, você segue para a próxima.</p>}
+        </div>
+      )}
 
-          <Button onClick={goToSimulator} size="lg" className="w-full" disabled={isExam && resumeFromIndex >= activities.length}>
-            {isExam ? (
-              completedCount > 0 && resumeFromIndex < activities.length ? (
-                <>Retomar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
-              ) : (
-                <>Iniciar Prova <ArrowRight className="h-4 w-4 ml-2" /></>
-              )
-            ) : (
-              "Iniciar Simulador"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+      <Button onClick={goToSimulator} size="lg" className="mt-6 w-full" disabled={allDone}>
+        {isExam ? (
+          completedCount > 0 && resumeFromIndex < activities.length ? <>Retomar prova <ArrowRight className="ml-2 h-4 w-4" /></> : <>Iniciar prova <ArrowRight className="ml-2 h-4 w-4" /></>
+        ) : (
+          <>Iniciar simulador <ArrowRight className="ml-2 h-4 w-4" /></>
+        )}
+      </Button>
+    </StudentShell>
+  );
+}
+
+const STUDENT_STEPS = ["PIN", "Identificação", "Pronto"];
+
+/** Moldura das telas do aluno: passos no topo e um painel central com brilho suave. */
+function StudentShell({ step, onBack, children }: { step: 1 | 2 | 3; onBack?: () => void; children: React.ReactNode }) {
+  return (
+    <div className="relative flex min-h-[78vh] items-center justify-center overflow-hidden px-4 py-8">
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/4 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+      <div className="relative w-full max-w-md">
+        <ol className="mb-5 flex items-center justify-center gap-2 text-xs" aria-label="Etapas">
+          {STUDENT_STEPS.map((label, i) => {
+            const n = i + 1;
+            const active = n === step;
+            const done = n < step;
+            return (
+              <li key={label} className="flex items-center gap-2" aria-current={active ? "step" : undefined}>
+                <span className={`grid h-5 w-5 place-items-center rounded-full border text-[10px] font-bold ${done ? "border-primary bg-primary text-primary-foreground" : active ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>{done ? "✓" : n}</span>
+                <span className={active ? "font-medium text-foreground" : "text-muted-foreground"}>{label}</span>
+                {n < STUDENT_STEPS.length && <span className="h-px w-6 bg-border" />}
+              </li>
+            );
+          })}
+        </ol>
+        <div className="rounded-2xl border border-border bg-card/90 p-6 shadow-xl backdrop-blur sm:p-8">
+          {onBack && (
+            <button type="button" onClick={onBack} className="mb-4 -ml-1 inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" />Voltar
+            </button>
+          )}
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

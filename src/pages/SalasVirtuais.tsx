@@ -1065,102 +1065,82 @@ export default function SalasVirtuais() {
 
       {/* Create Room Dialog */}
       <Dialog open={createOpen} onOpenChange={(open) => { if (!open) resetForm(); else setCreateOpen(true); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Criar Nova Sala Virtual</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Título da Sala</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2025.1 – Farmácia Clínica" />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger><SelectValue placeholder="Sem turma" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem turma</SelectItem>
-                  {(classesList.data || []).map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
+        <DialogContent className="max-w-3xl max-h-[88vh] gap-0 overflow-y-auto p-0">
+          <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
+            <DialogTitle>Criar nova sala virtual</DialogTitle>
+            <p className="text-sm text-muted-foreground">Os alunos entram com o PIN que será gerado ao criar a sala.</p>
+          </DialogHeader>
+          <div className="space-y-8 px-6 py-6">
+            <FormSection step={1} title="Identificação">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Título da sala</Label>
+                  <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Turma 2026.1 – Farmácia Clínica" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> Turma</Label>
+                  <Select value={classId} onValueChange={setClassId}>
+                    <SelectTrigger><SelectValue placeholder="Sem turma" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem turma</SelectItem>
+                      {(classesList.data || []).map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
                 Vincule a sala a uma turma para reaproveitar a lista de alunos cadastrados e ver analytics agrupados.
                 {" "}<Link to="/turmas" className="underline">Gerenciar turmas</Link>
               </p>
-            </div>
+            </FormSection>
 
-            <Separator />
+            <FormSection step={2} title="O que os alunos vão fazer">
+              <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Tipo de ferramenta">
+                {([
+                  ["simulator", "Simuladores", "Casos clínicos com Modo Desafio", <Cpu key="i" className="h-4 w-4" />],
+                  ["laboratory", "Laboratórios", "Bancadas de pesquisa virtual", <FlaskConical key="i" className="h-4 w-4" />],
+                  ["game", "Jogos", "Jogos clínicos interativos", <Gamepad2 key="i" className="h-4 w-4" />],
+                ] as const).map(([key, label, desc, icon]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={toolType === key}
+                    onClick={() => handleToolTypeChange(key)}
+                    className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition-colors", toolType === key ? "border-primary bg-primary/10" : "border-border hover:border-primary/40")}
+                  >
+                    <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", toolType === key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground")}>{icon}</span>
+                    <span><span className="block text-sm font-semibold">{label}</span><span className="block text-xs text-muted-foreground">{desc}</span></span>
+                  </button>
+                ))}
+              </div>
 
-            {/* Tool Type Selector */}
-            <div className="flex items-center justify-between rounded-lg border border-border p-4">
-              <div>
-                <p className="font-medium text-sm">Tipo de Ferramenta</p>
-                <p className="text-xs text-muted-foreground">
-                  {toolType === "simulator"
-                    ? "Simuladores clínicos com casos"
-                    : toolType === "laboratory"
-                      ? "Laboratórios virtuais de pesquisa"
-                      : "Jogos clínicos interativos"}
-                </p>
+              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Tipo de atividade">
+                {([
+                  [false, "Atividade unitária", "Uma única atividade, para a turma toda."],
+                  [true, "Atividade simulada (prova)", "Várias atividades em sequência, com enunciado e nota final."],
+                ] as const).map(([val, label, desc]) => (
+                  <button
+                    key={String(val)}
+                    type="button"
+                    role="radio"
+                    aria-checked={isExamMode === val}
+                    onClick={() => { if (isExamMode !== val) handleModeChange(val); }}
+                    className={cn("rounded-xl border p-3 text-left transition-colors", isExamMode === val ? "border-primary bg-primary/10" : "border-border hover:border-primary/40")}
+                  >
+                    <span className="block text-sm font-semibold">{label}</span>
+                    <span className="block text-xs text-muted-foreground">{desc}</span>
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                <Button
-                  size="sm"
-                  variant={toolType === "simulator" ? "default" : "outline"}
-                  onClick={() => handleToolTypeChange("simulator")}
-                  className="gap-1.5 h-8"
-                >
-                  <Cpu className="h-3.5 w-3.5" />
-                  Simuladores
-                </Button>
-                <Button
-                  size="sm"
-                  variant={toolType === "laboratory" ? "default" : "outline"}
-                  onClick={() => handleToolTypeChange("laboratory")}
-                  className="gap-1.5 h-8"
-                >
-                  <FlaskConical className="h-3.5 w-3.5" />
-                  Laboratórios
-                </Button>
-                <Button
-                  size="sm"
-                  variant={toolType === "game" ? "default" : "outline"}
-                  onClick={() => handleToolTypeChange("game")}
-                  className="gap-1.5 h-8"
-                >
-                  <Gamepad2 className="h-3.5 w-3.5" />
-                  Jogos
-                </Button>
-              </div>
-            </div>
-
-            {/* Mode Toggle */}
-            <div className="flex items-center justify-between rounded-lg border border-border p-4">
-              <div>
-                <p className="font-medium text-sm">Tipo de Atividade</p>
-                <p className="text-xs text-muted-foreground">
-                  {(() => {
-                    const plural = toolType === "laboratory" ? "laboratórios" : toolType === "game" ? "jogos" : "simuladores";
-                    const singular = toolType === "laboratory" ? "um laboratório" : toolType === "game" ? "um jogo clínico" : "um simulador e um caso clínico";
-                    return isExamMode
-                      ? `Atividade Simulada — múltiplos ${plural} com enunciados`
-                      : `Atividade Unitária — ${singular}`;
-                  })()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-medium ${!isExamMode ? "text-primary" : "text-muted-foreground"}`}>Unitária</span>
-                <Switch checked={isExamMode} onCheckedChange={handleModeChange} />
-                <span className={`text-xs font-medium ${isExamMode ? "text-primary" : "text-muted-foreground"}`}>Simulada</span>
-              </div>
-            </div>
 
             {/* Activities */}
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">
-                  {isExamMode ? "Atividades da Prova" : (toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo Clínico" : "Simulador")}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <Label className="text-sm font-semibold">
+                  {isExamMode ? `Atividades da prova (${activities.length})` : (toolType === "laboratory" ? "Laboratório" : toolType === "game" ? "Jogo clínico" : "Simulador")}
                 </Label>
                 {isExamMode && (
                   <div className="flex gap-2">
@@ -1342,13 +1322,14 @@ export default function SalasVirtuais() {
               </div>
             </div>
 
-            <Separator />
+            </FormSection>
 
-            <div>
-              <Label>Data de Expiração (opcional)</Label>
-              <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
-            </div>
-
+            <FormSection step={3} title="Prazo e acesso">
+              <div className="max-w-xs space-y-1.5">
+                <Label>Data de expiração (opcional)</Label>
+                <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Depois dessa data a sala deixa de aceitar alunos.</p>
+              </div>
             <RestrictedAccessSection
               enabled={restrictedAccess}
               onEnabledChange={setRestrictedAccess}
@@ -1366,14 +1347,22 @@ export default function SalasVirtuais() {
             {restrictedAccess && groupActivityOptions.length > 1 && (
               <GroupModeSection collective={collectiveMode} onChange={setCollectiveMode} />
             )}
+            </FormSection>
           </div>
-          <DialogFooter>
-            <Button
-              onClick={() => createRoom.mutate()}
-              disabled={!title || activities.every(a => !a.simulatorSlug) || createRoom.isPending}
-            >
-              {createRoom.isPending ? "Criando..." : "Criar Sala"}
-            </Button>
+          <DialogFooter className="sticky bottom-0 z-10 flex-row items-center justify-between gap-3 border-t border-border bg-background px-6 py-4 sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+              {activities.filter(a => a.simulatorSlug).length} {activities.filter(a => a.simulatorSlug).length === 1 ? "atividade escolhida" : "atividades escolhidas"}
+              {expiresAt ? ` · expira em ${new Date(expiresAt).toLocaleDateString("pt-BR")}` : " · sem prazo"}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => { resetForm(); }}>Cancelar</Button>
+              <Button
+                onClick={() => createRoom.mutate()}
+                disabled={!title || activities.every(a => !a.simulatorSlug) || createRoom.isPending}
+              >
+                {createRoom.isPending ? "Criando..." : "Criar sala"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1832,5 +1821,17 @@ export default function SalasVirtuais() {
         />
       )}
     </div>
+  );
+}
+
+function FormSection({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4">
+      <h3 className="flex items-center gap-2.5 text-sm font-semibold">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">{step}</span>
+        {title}
+      </h3>
+      <div className="space-y-4 sm:pl-[34px]">{children}</div>
+    </section>
   );
 }
