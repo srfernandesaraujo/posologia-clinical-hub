@@ -1500,7 +1500,7 @@ export default function SalasVirtuais() {
               <>
                 {isRestricted && (
                   <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40">Ingressou</Badge> entrou na sala</span>
+                    <span className="flex items-center gap-1.5"><Badge className="bg-status-ok/15 text-status-ok border-status-ok/40">Ingressou</Badge> entrou na sala</span>
                     <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-primary/40 text-primary"><Lock className="h-2.5 w-2.5 mr-1" />Cadastrado</Badge> autorizado por e-mail</span>
                     <span className="flex items-center gap-1.5"><Badge variant="outline" className="border-status-warn/40 text-status-warn">Aguardando</Badge> ainda não entrou</span>
                   </div>
@@ -1529,7 +1529,7 @@ export default function SalasVirtuais() {
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {p.is_group && <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                                   <p className="font-medium">{p.participant_name}</p>
-                                  <Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                  <Badge className="bg-status-ok/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
                                   {leaderAuthorized && (
                                     <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                       <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado
@@ -1562,7 +1562,7 @@ export default function SalasVirtuais() {
                                   return (
                                     <div key={i} className="flex items-center gap-1.5 flex-wrap">
                                       <p className="text-sm">{name}</p>
-                                      <Badge className="bg-status-ok/100/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
+                                      <Badge className="bg-status-ok/15 text-status-ok border-status-ok/40 text-[10px] px-1.5 py-0">Ingressou</Badge>
                                       {memberAuthorized && (
                                         <Badge variant="outline" className="border-primary/40 text-primary text-[10px] px-1.5 py-0">
                                           <Lock className="h-2.5 w-2.5 mr-1" />Cadastrado

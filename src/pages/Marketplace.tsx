@@ -252,7 +252,7 @@ export default function Marketplace() {
             {tool.short_description || tool.description || "Sem descrição"}
           </p>
           {tool.clinically_validated && (
-            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-status-ok bg-status-ok/100/10 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-status-ok bg-status-ok/10 rounded-full px-2 py-0.5">
               <ShieldCheck className="h-3 w-3" /> Validado clinicamente
             </span>
           )}
@@ -296,7 +296,7 @@ export default function Marketplace() {
     const actionVariant = getActionVariant(caseItem, "caso_clinico");
 
     const difficultyColor = caseItem.difficulty === "Fácil"
-      ? "text-status-ok bg-status-ok/100/10"
+      ? "text-status-ok bg-status-ok/10"
       : caseItem.difficulty === "Difícil"
         ? "text-status-crit bg-status-crit/10"
         : "text-status-warn bg-status-warn/10";

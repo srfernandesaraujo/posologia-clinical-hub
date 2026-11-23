@@ -4,15 +4,15 @@
 // só quem está conectado agora; a fonte de verdade de "quem tem qual papel" é a tabela.
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layouts/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Play, Square, Zap } from "lucide-react";
+import { Play, Radio, Square, Users, Zap } from "lucide-react";
 import { getLiveTeamCase, LiveTeamRole } from "@/data/liveTeamCases/sepseGrave";
 
 export default function SalaAoVivo() {
@@ -196,85 +196,101 @@ export default function SalaAoVivo() {
   });
 
   if (!teamCase) {
-    return <div className="container mx-auto py-8 text-sm text-muted-foreground">Carregando caso...</div>;
+    return <div className="mx-auto max-w-5xl py-8 text-sm text-muted-foreground">Carregando caso...</div>;
   }
 
+  const status = session?.status as string | undefined;
+  const isLive = status === "active";
+  const onlineCount = (sessionParticipants as any[]).filter((p) => onlineIds.has(p.participant_id)).length;
+
   return (
-    <div className="container mx-auto py-8 space-y-6 max-w-4xl">
-      <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to="/salas-virtuais"><ArrowLeft className="h-4 w-4 mr-1" /> Salas Virtuais</Link>
-      </Button>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <PageHeader
+        backTo="/salas-virtuais"
+        backLabel="Salas Virtuais"
+        icon={<Radio />}
+        title={teamCase.title}
+        badges={
+          <>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                isLive ? "border-status-crit/40 bg-status-crit/10 text-status-crit" : status === "ended" ? "border-border text-muted-foreground" : "border-status-warn/40 bg-status-warn/10 text-status-warn"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full bg-current ${isLive ? "animate-pulse" : ""}`} />
+              {isLive ? "Ao vivo" : status === "ended" ? "Encerrada" : "Lobby"}
+            </span>
+            <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" />{onlineCount}/{teamCase.roles.length} conectados</Badge>
+          </>
+        }
+        description={`${teamCase.patient.name}, ${teamCase.patient.age} anos, ${teamCase.patient.sex} — ${teamCase.patient.context}`}
+        className="mb-0"
+      />
 
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">{teamCase.title}</h1>
-          <p className="text-sm text-muted-foreground">{teamCase.patient.name}, {teamCase.patient.age} anos, {teamCase.patient.sex} — {teamCase.patient.context}</p>
-        </div>
-        <Badge variant={session?.status === "active" ? "default" : session?.status === "ended" ? "secondary" : "outline"}>
-          {session?.status === "active" ? "Ao vivo" : session?.status === "ended" ? "Encerrada" : "Lobby"}
-        </Badge>
-      </div>
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cenário</h2>
+        <p className="text-sm leading-relaxed">{teamCase.scenario}</p>
+      </section>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Cenário</CardTitle></CardHeader>
-        <CardContent><p className="text-sm">{teamCase.scenario}</p></CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Papéis</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
+      <section className="space-y-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Papéis</h2>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {teamCase.roles.map((r) => {
             const sp = (sessionParticipants as any[]).find((p) => p.role === r.role);
             const online = sp && onlineIds.has(sp.participant_id);
             return (
-              <div key={r.role} className="flex items-center justify-between text-sm p-2 rounded-md border border-border">
-                <span>{r.icon} {r.label}</span>
+              <div key={r.role} className={`rounded-xl border p-3 ${sp ? "border-border bg-card" : "border-dashed border-border bg-card/40"}`}>
+                <div className="flex items-center gap-2 text-sm font-medium"><span aria-hidden>{r.icon}</span>{r.label}</div>
                 {sp ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className={`h-2 w-2 rounded-full ${online ? "bg-status-ok/100" : "bg-muted-foreground/40"}`} />
-                    {nameById.get(sp.participant_id) || "Participante"}
-                  </span>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-sm">
+                    <span className={`h-2 w-2 rounded-full ${online ? "bg-status-ok" : "bg-muted-foreground/40"}`} aria-hidden />
+                    <span className="truncate">{nameById.get(sp.participant_id) || "Participante"}</span>
+                    <span className="ml-auto text-[11px] text-muted-foreground">{online ? "online" : "offline"}</span>
+                  </p>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Aguardando alguém escolher este papel</span>
+                  <p className="mt-1.5 text-xs text-muted-foreground">Aguardando alguém escolher este papel</p>
                 )}
               </div>
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        {session?.status === "lobby" && (
+      <section className="sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-sm backdrop-blur">
+        {status === "lobby" && (
           <Button onClick={() => startSession.mutate()} disabled={startSession.isPending}>
-            <Play className="h-4 w-4 mr-1" /> Iniciar sessão
+            <Play className="mr-1 h-4 w-4" /> Iniciar sessão
           </Button>
         )}
-        {session?.status === "active" && (
+        {isLive && (
           <Button variant="destructive" onClick={() => { if (confirm("Encerrar a sessão? Isso gera o relatório de cada participante.")) endSession.mutate(); }} disabled={endSession.isPending}>
-            <Square className="h-4 w-4 mr-1" /> Encerrar sessão
+            <Square className="mr-1 h-4 w-4" /> Encerrar sessão
           </Button>
         )}
-        {session?.status === "active" && teamCase.intercorrencias.map((inter) => (
+        {isLive && <span className="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden />}
+        {isLive && teamCase.intercorrencias.map((inter) => (
           <Button
             key={inter.id}
             variant="outline"
             size="sm"
             disabled={injectedIds.has(inter.id) || injectEvent.isPending}
             onClick={() => injectEvent.mutate(inter.id)}
+            className="gap-1"
           >
-            <Zap className="h-3.5 w-3.5 mr-1" /> {injectedIds.has(inter.id) ? `${inter.label} ✓` : inter.label}
+            <Zap className="h-3.5 w-3.5 text-status-warn" /> {injectedIds.has(inter.id) ? `${inter.label} ✓` : inter.label}
           </Button>
         ))}
-      </div>
+        {status === "ended" && <span className="text-sm text-muted-foreground">Sessão encerrada. O relatório está em Analytics.</span>}
+      </section>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Linha do tempo</CardTitle></CardHeader>
-        <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+      <section className="space-y-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Linha do tempo <span className="tabular-nums">{events.length}</span></h2>
+        <div className="max-h-[28rem] space-y-2 overflow-y-auto rounded-2xl border border-border bg-card p-4" aria-live="polite">
           {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Nenhum evento ainda.</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">Nenhum evento ainda.</p>
           ) : (
             (events as any[]).map((e) => (
-              <div key={e.id} className="text-sm border-l-2 border-border pl-3 py-1">
+              <div key={e.id} className={`border-l-2 py-1 pl-3 text-sm ${e.event_type === "intercorrencia" ? "border-status-crit" : "border-border"}`}>
                 {e.event_type === "intercorrencia" ? (
                   <p><Badge variant="destructive" className="mr-2 text-[10px]">Intercorrência</Badge>{e.payload?.label} — <span className="text-muted-foreground">{e.payload?.description}</span></p>
                 ) : (
@@ -286,8 +302,8 @@ export default function SalaAoVivo() {
               </div>
             ))
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

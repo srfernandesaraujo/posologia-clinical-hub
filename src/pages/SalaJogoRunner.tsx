@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Send, Loader2, Gamepad2, ArrowRight, CheckCircle } from "lucide-react";
+import { Send, Loader2, Gamepad2, ArrowRight, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getGameBySlug } from "@/data/virtualRoomGames";
 
@@ -144,9 +144,13 @@ export default function SalaJogoRunner() {
 
   if (!game) {
     return (
-      <div className="max-w-3xl mx-auto py-12 text-center">
-        <p className="text-muted-foreground">Jogo não encontrado.</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/")}>Voltar</Button>
+      <div className="mx-auto max-w-3xl py-8">
+        <EmptyState
+          icon={<Gamepad2 />}
+          title="Jogo não encontrado"
+          description="Este jogo não existe mais ou o link da atividade está incorreto."
+          action={<Button variant="outline" onClick={() => navigate("/")}>Voltar ao início</Button>}
+        />
       </div>
     );
   }
@@ -156,52 +160,63 @@ export default function SalaJogoRunner() {
   const isFinal = isExam && ctx && ctx.activityIndex !== undefined
     ? ctx.activityIndex + 1 >= (ctx.totalActivities ?? 1)
     : true;
+  const current = (ctx?.activityIndex ?? 0) + 1;
+  const total = ctx?.totalActivities ?? 1;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-4 gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />Sair da sala
-        </Button>
-        {isExam && ctx && (
-          <Badge variant="outline">
-            Atividade {(ctx.activityIndex ?? 0) + 1} de {ctx.totalActivities}
-          </Badge>
-        )}
-      </div>
+    <div className="mx-auto max-w-4xl">
+      <PageHeader
+        onBack={() => navigate("/")}
+        backLabel="Sair da sala"
+        icon={<Gamepad2 />}
+        title={game.label}
+        badges={
+          <>
+            <Badge variant="secondary">Jogo clínico</Badge>
+            <Badge variant="outline">Sala Virtual</Badge>
+          </>
+        }
+        description="Jogue normalmente. Quando terminar, envie o resultado para o professor."
+        className="mb-4"
+      />
 
-      <div className="mb-3 flex items-center gap-2">
-        <Gamepad2 className="h-5 w-5 text-primary" />
-        <h1 className="text-2xl font-bold">{game.label}</h1>
-        <Badge variant="secondary" className="ml-2">Jogo Clínico</Badge>
-      </div>
-      {ctx?.viewOnly && (
-        <div className="mb-3 rounded-md border border-status-warn/40 bg-status-warn/100/10 p-3 text-xs text-status-warn">
-          Modo somente-leitura. Você pode jogar, mas o resultado não será registrado pois seu e-mail já está vinculado a um grupo.
+      {isExam && ctx && (
+        <div className="mb-4 space-y-1.5" role="group" aria-label={`Atividade ${current} de ${total}`}>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Atividade {current} de {total}</span>
+            <span className="tabular-nums">{Math.round((current / total) * 100)}%</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(current / total) * 100}%` }} />
+          </div>
         </div>
       )}
 
-      <Card className="mb-4">
-        <CardContent className="pt-4">
-          <div onClickCapture={handleInteraction}>
-            <GameComponent />
-          </div>
-        </CardContent>
-      </Card>
+      {ctx?.viewOnly && (
+        <div className="mb-4 rounded-xl border border-status-warn/40 bg-status-warn/10 p-3 text-xs text-status-warn">
+          Modo somente-leitura. Você pode jogar, mas o resultado não será registrado, pois seu e-mail já está vinculado a um grupo.
+        </div>
+      )}
+
+      <div onClickCapture={handleInteraction} className="mb-4 rounded-2xl border border-border bg-card/60 p-4 sm:p-6">
+        <GameComponent />
+      </div>
 
       {!submitted ? (
-        <Button
-          onClick={handleSubmit}
-          disabled={submitting || !ctx || ctx.viewOnly}
-          className="w-full gap-2"
-          size="lg"
-        >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Enviar resultado para o professor
-        </Button>
+        <div className="sticky bottom-3 z-10 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || !ctx || ctx.viewOnly}
+            className="w-full gap-2"
+            size="lg"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar resultado para o professor
+          </Button>
+        </div>
       ) : (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-5 text-center space-y-3">
-          <div className="flex items-center justify-center gap-2 text-primary">
+        <div className="space-y-4 rounded-2xl border border-status-ok/40 bg-status-ok/10 p-5 text-center" role="status">
+          <div className="flex items-center justify-center gap-2 text-status-ok">
             <CheckCircle className="h-5 w-5" />
             <span className="font-semibold">Resultado enviado!</span>
           </div>
@@ -209,7 +224,7 @@ export default function SalaJogoRunner() {
             Interações registradas: {interactionsRef.current} · Tempo:{" "}
             {Math.floor((Date.now() - startRef.current) / 60000)}m
           </p>
-          <Button onClick={goNextOrHome} className="w-full gap-2">
+          <Button onClick={goNextOrHome} className="w-full gap-2" size="lg">
             {isFinal ? "Concluir e voltar" : "Próxima atividade"}
             <ArrowRight className="h-4 w-4" />
           </Button>
