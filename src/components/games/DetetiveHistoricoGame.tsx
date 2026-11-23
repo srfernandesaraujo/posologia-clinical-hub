@@ -363,7 +363,7 @@ export default function DetetiveHistoricoGame({ customData }: { customData?: any
               ))}
             </div>
             {diagnosisCorrect !== null && (
-              <div className={`p-3 rounded-lg text-sm ${diagnosisCorrect ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-destructive/10 text-destructive"}`}>
+              <div className={`p-3 rounded-lg text-sm ${diagnosisCorrect ? "bg-status-ok/10 text-status-ok dark:text-status-ok" : "bg-destructive/10 text-destructive"}`}>
                 {diagnosisExplanation}
               </div>
             )}

@@ -29,15 +29,15 @@ export default function GameNarrative({
   const [step, setStep] = useState(0);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-      <Card className="max-w-lg w-full border-primary/20 shadow-xl bg-card/95 backdrop-blur-sm">
+    <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in">
+      <Card className="max-w-lg w-full rounded-2xl border-border bg-card shadow-lg">
         <CardContent className="p-8 space-y-6">
           {step === 0 && (
             <div className="space-y-5 text-center animate-fade-in">
-              <div className="inline-flex rounded-full bg-primary/10 p-5 mx-auto">
+              <div className="inline-flex rounded-2xl bg-primary/10 p-4 ring-1 ring-primary/20 mx-auto">
                 {icon || <BookOpen className="h-10 w-10 text-primary" />}
               </div>
-              <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+              <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
               <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{setting}</span>
                 {difficulty && (
@@ -72,7 +72,7 @@ export default function GameNarrative({
                 </div>
               </div>
               {patientHistory && (
-                <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <div className="rounded-xl border border-border bg-muted/40 p-4">
                   <p className="text-sm text-foreground leading-relaxed">{patientHistory}</p>
                 </div>
               )}

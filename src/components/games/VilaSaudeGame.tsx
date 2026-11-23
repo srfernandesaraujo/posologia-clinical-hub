@@ -217,7 +217,7 @@ export default function VilaSaudeGame({ customData }: { customData?: any }) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          {dayPhase === "morning" ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-blue-400" />}
+          {dayPhase === "morning" ? <Sun className="h-5 w-5 text-status-warn" /> : <Moon className="h-5 w-5 text-blue-400" />}
           <h3 className="font-bold text-foreground">Dia {currentDay}/{totalDays} — {dayPhase === "morning" ? "Manhã" : "Noite"}</h3>
         </div>
         <div className="flex gap-2">
@@ -242,7 +242,7 @@ export default function VilaSaudeGame({ customData }: { customData?: any }) {
           {currentMeds.length === 0 ? (
             <Card><CardContent className="p-4 text-center text-sm text-muted-foreground">Nenhum medicamento neste turno</CardContent></Card>
           ) : currentMeds.map(med => (
-            <Card key={med.id} className={`transition-all ${med.taken ? "border-green-500/30 bg-green-500/5" : ""}`}>
+            <Card key={med.id} className={`transition-all ${med.taken ? "border-status-ok/30 bg-status-ok/5" : ""}`}>
               <CardContent className="flex items-center justify-between py-3 px-4">
                 <div>
                   <p className="font-semibold text-sm text-foreground">{med.name}</p>
@@ -275,7 +275,7 @@ export default function VilaSaudeGame({ customData }: { customData?: any }) {
               const displayName = b.levelNames[b.level - 1] ?? b.name;
               return (
                 <div key={b.id} className="flex flex-col items-center rounded-xl bg-card p-3 text-center border border-border transition-all hover:border-primary/30">
-                  <Icon className={`${isMax ? "text-yellow-500" : b.level >= 3 ? "text-primary" : "text-muted-foreground"}`} size={b.level >= 3 ? 32 : 24} />
+                  <Icon className={`${isMax ? "text-status-warn" : b.level >= 3 ? "text-primary" : "text-muted-foreground"}`} size={b.level >= 3 ? 32 : 24} />
                   <p className="mt-1 text-xs font-bold text-foreground leading-tight">{displayName}</p>
                   <p className="text-[10px] text-muted-foreground">Nv {b.level}/{b.maxLevel}</p>
                   {isMax ? (

@@ -65,8 +65,8 @@ const TypeIcon = ({ type }: { type: string }) => {
 
 function getItemStyle(type: string) {
   if (type === "Pill") return "bg-primary/10 text-primary border-primary/20";
-  if (type === "Leaf") return "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20";
-  if (type === "Food") return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20";
+  if (type === "Leaf") return "bg-status-ok/10 text-status-ok dark:text-status-ok border-status-ok/20";
+  if (type === "Food") return "bg-status-warn/10 text-status-warn dark:text-status-warn border-status-warn/20";
   return "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20";
 }
 
@@ -180,10 +180,10 @@ export default function LaboratorioInteracoesGame({ customData }: { customData?:
         ) : (
           <div className="space-y-3">
             {discovered.map((d, i) => (
-              <Card key={i} className={d.type === "danger" ? "border-destructive/30" : d.type === "caution" ? "border-yellow-500/30" : "border-green-500/30"}>
+              <Card key={i} className={d.type === "danger" ? "border-destructive/30" : d.type === "caution" ? "border-status-warn/30" : "border-status-ok/30"}>
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    {d.type === "danger" ? <AlertTriangle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
+                    {d.type === "danger" ? <AlertTriangle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-status-ok" />}
                     <h3 className="font-semibold text-foreground text-sm">{d.title}</h3>
                     <Badge variant={d.type === "danger" ? "destructive" : "secondary"} className="text-xs">{d.severity}</Badge>
                   </div>
@@ -240,7 +240,7 @@ export default function LaboratorioInteracoesGame({ customData }: { customData?:
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Descobertas: {discoveredDanger}/{totalDangerInteractions}</Badge>
-          <Badge variant="outline" className="gap-1"><Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />{score}</Badge>
+          <Badge variant="outline" className="gap-1"><Star className="h-3 w-3 fill-status-warn text-status-warn" />{score}</Badge>
           <Button variant="ghost" size="sm" onClick={() => setPhase("select")}>Menu</Button>
         </div>
       </div>
@@ -316,9 +316,9 @@ export default function LaboratorioInteracoesGame({ customData }: { customData?:
                   {lastResult.type === "danger" ? (
                     <div className="rounded-full bg-destructive/10 p-4"><AlertTriangle className="h-10 w-10 text-destructive" /></div>
                   ) : lastResult.type === "caution" ? (
-                    <div className="rounded-full bg-yellow-500/10 p-4"><AlertTriangle className="h-10 w-10 text-yellow-500" /></div>
+                    <div className="rounded-full bg-status-warn/10 p-4"><AlertTriangle className="h-10 w-10 text-status-warn" /></div>
                   ) : (
-                    <div className="rounded-full bg-green-500/10 p-4"><CheckCircle className="h-10 w-10 text-green-500" /></div>
+                    <div className="rounded-full bg-status-ok/10 p-4"><CheckCircle className="h-10 w-10 text-status-ok" /></div>
                   )}
                 </div>
                 <DialogTitle className="text-center text-lg">{lastResult.title}</DialogTitle>

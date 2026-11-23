@@ -57,10 +57,10 @@ interface Wave {
 
 const antibiotics: Antibiotic[] = [
   { id: "amox", name: "Amoxicilina", shortName: "AMOX", spectrum: ["gram+"], cost: 50, color: "bg-blue-500", damage: 20, range: 3, cooldown: 2000, sideEffect: "Diarreia", description: "Beta-lactâmico de amplo espectro. Eficaz contra Gram+" },
-  { id: "ceftri", name: "Ceftriaxona", shortName: "CEFT", spectrum: ["gram+", "gram-"], cost: 100, color: "bg-green-500", damage: 30, range: 3, cooldown: 2500, sideEffect: "Colite pseudomembranosa", description: "Cefalosporina 3ª geração. Cobre Gram+ e Gram-" },
+  { id: "ceftri", name: "Ceftriaxona", shortName: "CEFT", spectrum: ["gram+", "gram-"], cost: 100, color: "bg-status-ok", damage: 30, range: 3, cooldown: 2500, sideEffect: "Colite pseudomembranosa", description: "Cefalosporina 3ª geração. Cobre Gram+ e Gram-" },
   { id: "vanco", name: "Vancomicina", shortName: "VANC", spectrum: ["gram+", "mrsa"], cost: 150, color: "bg-purple-500", damage: 40, range: 2, cooldown: 3000, sideEffect: "Nefrotoxicidade", description: "Glicopeptídeo. Última linha contra MRSA" },
-  { id: "mero", name: "Meropenem", shortName: "MERO", spectrum: ["gram+", "gram-", "anaerob"], cost: 200, color: "bg-red-500", damage: 50, range: 3, cooldown: 3500, sideEffect: "Convulsões", description: "Carbapenêmico. Amplo espectro — reservar para casos graves" },
-  { id: "poli", name: "Polimixina B", shortName: "POLI", spectrum: ["gram-", "kpc"], cost: 250, color: "bg-orange-500", damage: 60, range: 2, cooldown: 4000, sideEffect: "Nefro/neurotoxicidade", description: "Último recurso contra KPC e Gram- multirresistentes" },
+  { id: "mero", name: "Meropenem", shortName: "MERO", spectrum: ["gram+", "gram-", "anaerob"], cost: 200, color: "bg-status-crit", damage: 50, range: 3, cooldown: 3500, sideEffect: "Convulsões", description: "Carbapenêmico. Amplo espectro — reservar para casos graves" },
+  { id: "poli", name: "Polimixina B", shortName: "POLI", spectrum: ["gram-", "kpc"], cost: 250, color: "bg-status-warn", damage: 60, range: 2, cooldown: 4000, sideEffect: "Nefro/neurotoxicidade", description: "Último recurso contra KPC e Gram- multirresistentes" },
   { id: "metro", name: "Metronidazol", shortName: "METR", spectrum: ["anaerob"], cost: 80, color: "bg-teal-500", damage: 25, range: 3, cooldown: 2000, sideEffect: "Efeito dissulfiram", description: "Nitroimidazólico. Específico para anaeróbios e Clostridioides" },
 ];
 
@@ -395,7 +395,7 @@ export default function PandemicFarmaGame({ customData }: { customData?: any }) 
       {/* Status bar */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-1.5">
-          <Heart className="h-4 w-4 text-red-500" />
+          <Heart className="h-4 w-4 text-status-crit" />
           <Progress value={patientHP} className="w-24 h-2" />
           <span className="text-xs font-medium">{patientHP}%</span>
         </div>

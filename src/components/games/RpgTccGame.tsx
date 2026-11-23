@@ -364,11 +364,11 @@ export default function RpgTccGame({ customData }: { customData?: any }) {
         </Card>
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
-            <div className="rounded-full bg-green-500/10 p-2"><Heart className="h-4 w-4 text-green-500" /></div>
+            <div className="rounded-full bg-status-ok/10 p-2"><Heart className="h-4 w-4 text-status-ok" /></div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-foreground">Saúde Mental</p>
               <div className="flex items-center gap-2">
-                <Progress value={playerHp} className={cn("h-1.5 flex-1", playerHp < 30 ? "[&>div]:bg-destructive" : "[&>div]:bg-green-500")} />
+                <Progress value={playerHp} className={cn("h-1.5 flex-1", playerHp < 30 ? "[&>div]:bg-destructive" : "[&>div]:bg-status-ok")} />
                 <span className="text-[10px] text-muted-foreground">{playerHp}/100</span>
               </div>
             </div>

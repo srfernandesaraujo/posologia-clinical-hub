@@ -423,7 +423,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
           </Badge>
           <div className="flex gap-1.5">
             <button onClick={useFiftyFifty} disabled={usedFiftyFifty || selected !== null} className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${usedFiftyFifty ? "opacity-30 border-border cursor-not-allowed" : "border-primary/50 text-primary hover:bg-primary/10 cursor-pointer hover:scale-110"}`} title="Revisão de Literatura (50/50)"><BookOpen className="h-4 w-4" /></button>
-            <button onClick={usePhone} disabled={usedPhone || selected !== null} className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${usedPhone ? "opacity-30 border-border cursor-not-allowed" : "border-green-500/50 text-green-500 hover:bg-green-500/10 cursor-pointer hover:scale-110"}`} title="Ligar para o Preceptor"><PhoneCall className="h-4 w-4" /></button>
+            <button onClick={usePhone} disabled={usedPhone || selected !== null} className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${usedPhone ? "opacity-30 border-border cursor-not-allowed" : "border-status-ok/50 text-status-ok hover:bg-status-ok/10 cursor-pointer hover:scale-110"}`} title="Ligar para o Preceptor"><PhoneCall className="h-4 w-4" /></button>
             <button onClick={useAudience} disabled={usedAudience || selected !== null} className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${usedAudience ? "opacity-30 border-border cursor-not-allowed" : "border-purple-500/50 text-purple-500 hover:bg-purple-500/10 cursor-pointer hover:scale-110"}`} title="Reunião Clínica"><Users className="h-4 w-4" /></button>
           </div>
         </div>
@@ -437,7 +437,7 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
           <Badge
             key={i}
             variant={i === qIndex ? "default" : i < qIndex ? "secondary" : "outline"}
-            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""} ${safeHaven !== null && i === safeHaven - 1 ? "ring-2 ring-green-500 ring-offset-1" : ""}`}
+            className={`text-[9px] whitespace-nowrap shrink-0 transition-all ${i === qIndex ? "scale-110 shadow-md" : ""} ${safeHaven !== null && i === safeHaven - 1 ? "ring-2 ring-status-ok ring-offset-1" : ""}`}
           >
             {safeHaven !== null && i === safeHaven - 1 && <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />}
             {i + 1}. {p}
@@ -468,9 +468,9 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
         {q.options.map((opt, i) => {
           if (hiddenOptions.has(i)) return <div key={i} className="rounded-lg border border-border bg-muted/20 p-4 opacity-20 h-full" />;
           let style = "border-primary/20 bg-card text-foreground hover:border-primary/50 cursor-pointer";
-          if (selected === i && !revealed) style = "border-yellow-500 bg-yellow-500/10 text-foreground ring-2 ring-yellow-500/50 animate-pulse";
+          if (selected === i && !revealed) style = "border-status-warn bg-status-warn/10 text-foreground ring-2 ring-status-warn/50 animate-pulse";
           if (revealed) {
-            if (i === q.correctIndex) style = "border-green-500 bg-green-500/10 text-green-500 ring-2 ring-green-500/50";
+            if (i === q.correctIndex) style = "border-status-ok bg-status-ok/10 text-status-ok ring-2 ring-status-ok/50";
             else if (i === selected) style = "border-destructive bg-destructive/10 text-destructive ring-2 ring-destructive/50";
           }
           const disabled = (selected !== null && selected !== i && !revealed) || isRevealing || revealed;
@@ -495,21 +495,21 @@ export default function MilionarioFarmaGame({ customData }: { customData?: any }
       {!isRevealing && !revealed && selected === null && score > 0 && (
         <div className="flex justify-center gap-3 animate-in fade-in">
           {safeHaven === null && !pendingSafeHaven && (
-            <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-green-500/50 text-green-600 hover:bg-green-500/10">
+            <Button size="lg" variant="outline" onClick={handleSetSafeHaven} className="gap-2 border-status-ok/50 text-status-ok hover:bg-status-ok/10">
               <Shield className="h-4 w-4" /> Ativar Porto Seguro
             </Button>
           )}
           {pendingSafeHaven && safeHaven === null && (
-            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5 animate-pulse border-amber-500/50">
-              <Shield className="h-3.5 w-3.5 text-amber-500" /> Porto Seguro pendente — acerte para confirmar em {prizeValues[qIndex]}
+            <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5 animate-pulse border-status-warn/50">
+              <Shield className="h-3.5 w-3.5 text-status-warn" /> Porto Seguro pendente — acerte para confirmar em {prizeValues[qIndex]}
             </Badge>
           )}
           {safeHaven !== null && (
             <Badge variant="secondary" className="text-xs py-2 px-3 gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Porto Seguro: {prizeValues[safeHaven - 1]}
+              <ShieldCheck className="h-3.5 w-3.5 text-status-ok" /> Porto Seguro: {prizeValues[safeHaven - 1]}
             </Badge>
           )}
-          <Button size="lg" variant="outline" onClick={handleStop} className="gap-2 border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10">
+          <Button size="lg" variant="outline" onClick={handleStop} className="gap-2 border-status-warn/50 text-status-warn hover:bg-status-warn/10">
             <Award className="h-4 w-4" /> Parar e Garantir {prizeValues[score - 1]}
           </Button>
         </div>

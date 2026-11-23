@@ -416,7 +416,7 @@ export default function AlertaVermelhoGame({ customData }: { customData?: any })
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Caso {caseIndex + 1}/{cases.length}</Badge>
           <Badge variant="outline">Pontos: {score}</Badge>
-          <div className={`flex items-center gap-1 text-sm font-bold ${budget < 30 ? "text-destructive animate-pulse" : "text-green-500"}`}>
+          <div className={`flex items-center gap-1 text-sm font-bold ${budget < 30 ? "text-destructive animate-pulse" : "text-status-ok"}`}>
             <DollarSign className="h-4 w-4" />{budget}
           </div>
         </div>
@@ -477,10 +477,10 @@ export default function AlertaVermelhoGame({ customData }: { customData?: any })
               {ordered.map(id => {
                 const t = currentCase.tests.find(x => x.id === id)!;
                 return (
-                  <Card key={id} className={t.isKey ? "border-yellow-500/30 bg-yellow-500/5" : ""}>
+                  <Card key={id} className={t.isKey ? "border-status-warn/30 bg-status-warn/5" : ""}>
                     <CardContent className="py-2">
                       <p className="text-xs font-semibold">{t.name}</p>
-                      <p className={`text-xs mt-0.5 ${t.isKey ? "text-yellow-500 font-medium" : "text-muted-foreground"}`}>{t.result}</p>
+                      <p className={`text-xs mt-0.5 ${t.isKey ? "text-status-warn font-medium" : "text-muted-foreground"}`}>{t.result}</p>
                     </CardContent>
                   </Card>
                 );

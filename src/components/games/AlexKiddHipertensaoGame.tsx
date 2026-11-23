@@ -74,8 +74,8 @@ function buildLevels(): LevelData[] {
       collectibles: [
         { id: "1-1", x: 210, y: 260, w: 36, h: 36, type: "good", name: "Losartana", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
         { id: "1-2", x: 440, y: 220, w: 36, h: 36, type: "good", name: "Losartana", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "1-3", x: 660, y: 240, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-red-500", points: -150, collected: false },
-        { id: "1-4", x: 930, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-yellow-400", points: 0, collected: false, question: quizQuestions[0] },
+        { id: "1-3", x: 660, y: 240, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-status-crit", points: -150, collected: false },
+        { id: "1-4", x: 930, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-status-warn", points: 0, collected: false, question: quizQuestions[0] },
         { id: "1-5", x: 1140, y: 260, w: 36, h: 36, type: "good", name: "Losartana", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
         { id: "1-6", x: 800, y: 340, w: 36, h: 36, type: "bad", name: "Sal em excesso", label: "NaCl", color: "bg-gray-300", points: -100, collected: false },
       ],
@@ -95,11 +95,11 @@ function buildLevels(): LevelData[] {
         { x: 1250, y: 300, w: 140, h: 20 },
       ],
       collectibles: [
-        { id: "2-1", x: 170, y: 270, w: 36, h: 36, type: "bad", name: "Enalapril (tosse!)", label: "ENA⚠", color: "bg-red-400", points: -150, collected: false },
+        { id: "2-1", x: 170, y: 270, w: 36, h: 36, type: "bad", name: "Enalapril (tosse!)", label: "ENA⚠", color: "bg-status-crit", points: -150, collected: false },
         { id: "2-2", x: 380, y: 230, w: 36, h: 36, type: "good", name: "Losartana (BRA)", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "2-3", x: 580, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-yellow-400", points: 0, collected: false, question: quizQuestions[1] },
+        { id: "2-3", x: 580, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-status-warn", points: 0, collected: false, question: quizQuestions[1] },
         { id: "2-4", x: 780, y: 250, w: 36, h: 36, type: "good", name: "Losartana (BRA)", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "2-5", x: 900, y: 340, w: 36, h: 36, type: "bad", name: "Enalapril (tosse!)", label: "ENA⚠", color: "bg-red-400", points: -150, collected: false },
+        { id: "2-5", x: 900, y: 340, w: 36, h: 36, type: "bad", name: "Enalapril (tosse!)", label: "ENA⚠", color: "bg-status-crit", points: -150, collected: false },
         { id: "2-6", x: 1030, y: 210, w: 36, h: 36, type: "good", name: "Valsartana (BRA)", label: "VAL", color: "bg-blue-400", points: 100, collected: false },
         { id: "2-7", x: 1280, y: 260, w: 36, h: 36, type: "bad", name: "Sal em excesso", label: "NaCl", color: "bg-gray-300", points: -100, collected: false },
       ],
@@ -122,12 +122,12 @@ function buildLevels(): LevelData[] {
       ],
       collectibles: [
         { id: "3-1", x: 140, y: 280, w: 36, h: 36, type: "good", name: "Anlodipino (BCC)", label: "AML", color: "bg-purple-500", points: 80, collected: false },
-        { id: "3-2", x: 300, y: 230, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-orange-500", points: -200, collected: false },
-        { id: "3-3", x: 460, y: 190, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-green-500", points: 100, collected: false },
-        { id: "3-4", x: 640, y: 240, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-red-500", points: -150, collected: false },
-        { id: "3-5", x: 820, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-yellow-400", points: 0, collected: false, question: quizQuestions[2] },
+        { id: "3-2", x: 300, y: 230, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-status-warn", points: -200, collected: false },
+        { id: "3-3", x: 460, y: 190, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-status-ok", points: 100, collected: false },
+        { id: "3-4", x: 640, y: 240, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-status-crit", points: -150, collected: false },
+        { id: "3-5", x: 820, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-status-warn", points: 0, collected: false, question: quizQuestions[2] },
         { id: "3-6", x: 1010, y: 250, w: 36, h: 36, type: "good", name: "Losartana (BRA)", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "3-7", x: 1220, y: 210, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-yellow-500", points: 80, collected: false },
+        { id: "3-7", x: 1220, y: 210, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-status-warn", points: 80, collected: false },
         { id: "3-8", x: 1420, y: 270, w: 36, h: 36, type: "bad", name: "Sal em excesso", label: "NaCl", color: "bg-gray-300", points: -100, collected: false },
       ],
     },
@@ -146,13 +146,13 @@ function buildLevels(): LevelData[] {
         { x: 1200, y: 250, w: 140, h: 20 },
       ],
       collectibles: [
-        { id: "4-1", x: 190, y: 260, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-green-500", points: 100, collected: false },
-        { id: "4-2", x: 400, y: 210, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-yellow-500", points: 80, collected: false },
-        { id: "4-3", x: 590, y: 260, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-red-500", points: -150, collected: false },
-        { id: "4-4", x: 790, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-yellow-400", points: 0, collected: false, question: quizQuestions[3] },
+        { id: "4-1", x: 190, y: 260, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-status-ok", points: 100, collected: false },
+        { id: "4-2", x: 400, y: 210, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-status-warn", points: 80, collected: false },
+        { id: "4-3", x: 590, y: 260, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-status-crit", points: -150, collected: false },
+        { id: "4-4", x: 790, y: 200, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-status-warn", points: 0, collected: false, question: quizQuestions[3] },
         { id: "4-5", x: 990, y: 240, w: 36, h: 36, type: "good", name: "Anlodipino (BCC)", label: "AML", color: "bg-purple-500", points: 80, collected: false },
         { id: "4-6", x: 1240, y: 210, w: 36, h: 36, type: "good", name: "Losartana (BRA)", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "4-7", x: 700, y: 340, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-orange-500", points: -200, collected: false },
+        { id: "4-7", x: 700, y: 340, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-status-warn", points: -200, collected: false },
       ],
     },
     {
@@ -172,15 +172,15 @@ function buildLevels(): LevelData[] {
         { x: 1550, y: 310, w: 100, h: 20 },
       ],
       collectibles: [
-        { id: "5-1", x: 160, y: 270, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-green-500", points: 100, collected: false },
-        { id: "5-2", x: 340, y: 220, w: 36, h: 36, type: "bad", name: "Atenolol (BB⚠)", label: "BB⚠", color: "bg-red-500", points: -150, collected: false },
+        { id: "5-1", x: 160, y: 270, w: 36, h: 36, type: "good", name: "Enalapril (IECA)", label: "ENA", color: "bg-status-ok", points: 100, collected: false },
+        { id: "5-2", x: 340, y: 220, w: 36, h: 36, type: "bad", name: "Atenolol (BB⚠)", label: "BB⚠", color: "bg-status-crit", points: -150, collected: false },
         { id: "5-3", x: 540, y: 190, w: 36, h: 36, type: "good", name: "Losartana (BRA)", label: "LOS", color: "bg-blue-500", points: 100, collected: false },
-        { id: "5-4", x: 730, y: 240, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-yellow-400", points: 0, collected: false, question: quizQuestions[4] },
-        { id: "5-5", x: 920, y: 200, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-yellow-500", points: 80, collected: false },
-        { id: "5-6", x: 1130, y: 250, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-red-500", points: -150, collected: false },
+        { id: "5-4", x: 730, y: 240, w: 36, h: 36, type: "question", name: "?", label: "?", color: "bg-status-warn", points: 0, collected: false, question: quizQuestions[4] },
+        { id: "5-5", x: 920, y: 200, w: 36, h: 36, type: "good", name: "HCTZ (Diurético)", label: "HCTZ", color: "bg-status-warn", points: 80, collected: false },
+        { id: "5-6", x: 1130, y: 250, w: 36, h: 36, type: "bad", name: "Ibuprofeno (AINE)", label: "AINE", color: "bg-status-crit", points: -150, collected: false },
         { id: "5-7", x: 1370, y: 210, w: 36, h: 36, type: "good", name: "Anlodipino (BCC)", label: "AML", color: "bg-purple-500", points: 80, collected: false },
         { id: "5-8", x: 1200, y: 340, w: 36, h: 36, type: "bad", name: "Sal em excesso", label: "NaCl", color: "bg-gray-300", points: -100, collected: false },
-        { id: "5-9", x: 1570, y: 270, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-orange-500", points: -200, collected: false },
+        { id: "5-9", x: 1570, y: 270, w: 36, h: 36, type: "bad", name: "Hipotensão!", label: "HIPO", color: "bg-status-warn", points: -200, collected: false },
       ],
     },
   ];
@@ -496,7 +496,7 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
             <div className="flex items-center gap-3">
               <div className="flex gap-1">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Heart key={i} className={`h-5 w-5 ${i < lives ? "fill-red-500 text-red-500" : "text-muted-foreground/30"}`} />
+                  <Heart key={i} className={`h-5 w-5 ${i < lives ? "fill-status-crit text-status-crit" : "text-muted-foreground/30"}`} />
                 ))}
               </div>
               <Badge variant="secondary" className="text-sm font-bold">{score} pts</Badge>
@@ -662,13 +662,13 @@ export default function AlexKiddHipertensaoGame({ customData }: { customData?: a
         <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-yellow-500" /> Fase Concluída!
+              <Trophy className="h-6 w-6 text-status-warn" /> Fase Concluída!
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex justify-center gap-1">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Star key={i} className={`h-8 w-8 ${i < (starsPerLevel[currentLevel] || 0) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
+                <Star key={i} className={`h-8 w-8 ${i < (starsPerLevel[currentLevel] || 0) ? "fill-status-warn text-status-warn" : "text-muted-foreground/30"}`} />
               ))}
             </div>
             <div className="text-center space-y-1">

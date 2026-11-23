@@ -59,7 +59,7 @@ const scenarios: Scenario[] = [
       { id: "monitor", name: "Monitor de Sinais", icon: <Thermometer className="h-8 w-8" />, position: { top: "20%", left: "55%" },
         action: "examine", content: "SpO₂: 78% ↓↓ | FR: 6 irpm ↓↓ | FC: 52 bpm ↓ | PA: 85/50 ↓ | Pupilas: mióticas bilaterais. ALERTA: Necessidade imediata de suporte ventilatório!",
         isKey: false, explanation: "Hipoxemia grave (SpO₂ <90%) exige ventilação assistida ANTES do antídoto. ABC sempre primeiro." },
-      { id: "cofre", name: "Cofre do Antídoto", icon: <Lock className="h-10 w-10 text-yellow-500" />, position: { top: "45%", right: "8%" },
+      { id: "cofre", name: "Cofre do Antídoto", icon: <Lock className="h-10 w-10 text-status-warn" />, position: { top: "45%", right: "8%" },
         action: "code", codeLength: 4, correctCode: "0420", content: "", isKey: true },
     ],
   },
@@ -86,7 +86,7 @@ const scenarios: Scenario[] = [
       { id: "monitor2", name: "Monitor Multiparamétrico", icon: <Thermometer className="h-8 w-8" />, position: { top: "18%", right: "20%" },
         action: "examine", content: "PA em queda: 70/40 → 65/35 mmHg. FC 135bpm. SpO₂ 85% com O₂ a 10L/min. Estridor laríngeo audível. URGÊNCIA: edema de via aérea progressivo!",
         isKey: false },
-      { id: "cofre2", name: "Kit de Emergência", icon: <Lock className="h-10 w-10 text-yellow-500" />, position: { top: "40%", right: "5%" },
+      { id: "cofre2", name: "Kit de Emergência", icon: <Lock className="h-10 w-10 text-status-warn" />, position: { top: "40%", right: "5%" },
         action: "code", codeLength: 4, correctCode: "1500", content: "", isKey: true },
     ],
   },
@@ -113,7 +113,7 @@ const scenarios: Scenario[] = [
       { id: "gasometria", name: "Resultado Gasometria", icon: <Beaker className="h-8 w-8" />, position: { top: "20%", left: "60%" },
         action: "examine", content: "pH 7.15 | pCO₂ 20 | HCO₃ 8 | BE -18 | Lactato 2.8 | AG 22. Acidose metabólica com ânion gap elevado. Compensação respiratória adequada (Kussmaul).",
         isKey: false, explanation: "Respiração de Kussmaul é a compensação respiratória da acidose metabólica (hiperventilação para eliminar CO₂)." },
-      { id: "cofre3", name: "Armário de Insulinas", icon: <Lock className="h-10 w-10 text-yellow-500" />, position: { top: "42%", right: "6%" },
+      { id: "cofre3", name: "Armário de Insulinas", icon: <Lock className="h-10 w-10 text-status-warn" />, position: { top: "42%", right: "6%" },
         action: "code", codeLength: 4, correctCode: "7350", content: "", isKey: true },
     ],
   },
@@ -140,7 +140,7 @@ const scenarios: Scenario[] = [
       { id: "monitor4", name: "Monitor Cardíaco", icon: <Thermometer className="h-8 w-8" />, position: { top: "18%", right: "18%" },
         action: "examine", content: "FC 42 bpm — bradicardia severa. Episódio de TV não sustentada registrado há 30 min. ALERTA: não cardioverter (risco de fibrilação ventricular em intoxicação digitálica)!",
         isKey: false },
-      { id: "cofre4", name: "Dispensador Antídoto", icon: <Lock className="h-10 w-10 text-yellow-500" />, position: { top: "40%", right: "6%" },
+      { id: "cofre4", name: "Dispensador Antídoto", icon: <Lock className="h-10 w-10 text-status-warn" />, position: { top: "40%", right: "6%" },
         action: "code", codeLength: 4, correctCode: "2538", content: "", isKey: true },
     ],
   },
@@ -383,7 +383,7 @@ export default function PlantaoNoturnoGame({ customData }: { customData?: any })
       </div>
 
       {/* Urgency progress */}
-      <Progress value={urgencyPct} className={`h-2 transition-all ${urgencyPct < 20 ? "[&>div]:bg-destructive" : urgencyPct < 50 ? "[&>div]:bg-yellow-500" : ""}`} />
+      <Progress value={urgencyPct} className={`h-2 transition-all ${urgencyPct < 20 ? "[&>div]:bg-destructive" : urgencyPct < 50 ? "[&>div]:bg-status-warn" : ""}`} />
 
       {/* Room */}
       <div className="relative w-full h-[380px] sm:h-[440px] bg-card border rounded-xl overflow-hidden"
@@ -397,9 +397,9 @@ export default function PlantaoNoturnoGame({ customData }: { customData?: any })
             style={{ top: obj.position.top, left: obj.position.left, right: obj.position.right }}
           >
             <div className={`p-3 rounded-lg transition-all group-hover:scale-110 group-hover:shadow-lg ${
-              unlocked.has(obj.id) ? "bg-green-500/10 shadow-green-500/20 ring-1 ring-green-500/30" : "bg-muted hover:bg-accent"
+              unlocked.has(obj.id) ? "bg-status-ok/10 shadow-green-500/20 ring-1 ring-status-ok/30" : "bg-muted hover:bg-accent"
             }`}>
-              <span className={unlocked.has(obj.id) ? "text-green-500" : "text-muted-foreground"}>
+              <span className={unlocked.has(obj.id) ? "text-status-ok" : "text-muted-foreground"}>
                 {obj.icon}
               </span>
             </div>

@@ -80,15 +80,11 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, 
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <Badge variant="secondary" className="text-xs">
-          Versão {versionLabel}
-        </Badge>
-
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 text-xs"
+          className="gap-1.5 text-xs" aria-haspopup="dialog"
           onClick={() => setShowHelp(true)}
         >
           <HelpCircle className="h-3.5 w-3.5" />
@@ -109,8 +105,8 @@ export default function GameHeader({ howToPlay, aiPrompt, gameId, versionLabel, 
       </div>
 
       {showAiPanel && (
-        <div className="mb-4 p-4 rounded-lg border bg-muted/30 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-          <p className="text-sm font-medium">✨ Descreva a melhoria específica para este jogo:</p>
+        <div className="mb-4 space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <p className="text-sm font-medium">Descreva a melhoria específica para este jogo:</p>
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button

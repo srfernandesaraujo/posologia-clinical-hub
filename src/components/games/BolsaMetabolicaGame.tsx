@@ -197,8 +197,8 @@ export default function BolsaMetabolicaGame({ customData }: { customData?: any }
   if (phase === "event" && currentEvent) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-5 animate-in fade-in">
-        <div className={`rounded-full p-5 ${currentEvent.type === "negative" ? "bg-destructive/10" : currentEvent.type === "positive" ? "bg-green-500/10" : "bg-muted"}`}>
-          {currentEvent.type === "negative" ? <AlertTriangle className="h-12 w-12 text-destructive" /> : <Newspaper className="h-12 w-12 text-green-500" />}
+        <div className={`rounded-full p-5 ${currentEvent.type === "negative" ? "bg-destructive/10" : currentEvent.type === "positive" ? "bg-status-ok/10" : "bg-muted"}`}>
+          {currentEvent.type === "negative" ? <AlertTriangle className="h-12 w-12 text-destructive" /> : <Newspaper className="h-12 w-12 text-status-ok" />}
         </div>
         <h2 className="text-lg font-bold text-foreground">{currentEvent.title}</h2>
         <p className="text-sm text-muted-foreground max-w-md">{currentEvent.description}</p>
@@ -273,7 +273,7 @@ export default function BolsaMetabolicaGame({ customData }: { customData?: any }
           return (
             <Card
               key={b.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${selectedBio === b.id ? "ring-2 ring-primary" : ""} ${atTarget ? "border-green-500/30" : ""}`}
+              className={`cursor-pointer transition-all hover:shadow-md ${selectedBio === b.id ? "ring-2 ring-primary" : ""} ${atTarget ? "border-status-ok/30" : ""}`}
               onClick={() => setSelectedBio(b.id)}
             >
               <CardContent className="py-2 px-3 space-y-0.5">
@@ -282,15 +282,15 @@ export default function BolsaMetabolicaGame({ customData }: { customData?: any }
                   <span className="text-lg font-bold font-mono">{b.value}{b.unit === "%" ? "%" : ""}</span>
                   {diff !== 0 && (
                     <div className="flex items-center gap-0.5">
-                      {favorable ? <TrendingUp className="h-3 w-3 text-green-500" /> : <TrendingDown className="h-3 w-3 text-destructive" />}
-                      <span className={`text-[10px] font-mono ${favorable ? "text-green-500" : "text-destructive"}`}>
+                      {favorable ? <TrendingUp className="h-3 w-3 text-status-ok" /> : <TrendingDown className="h-3 w-3 text-destructive" />}
+                      <span className={`text-[10px] font-mono ${favorable ? "text-status-ok" : "text-destructive"}`}>
                         {diff > 0 ? "+" : ""}{diff}
                       </span>
                     </div>
                   )}
                 </div>
                 <p className="text-[10px] text-muted-foreground">Meta: {b.isHigherBetter ? ">" : "<"} {b.target} {b.unit}</p>
-                {atTarget && <Badge className="text-[8px] px-1 py-0 bg-green-500/20 text-green-500 border-0">NA META ✓</Badge>}
+                {atTarget && <Badge className="text-[8px] px-1 py-0 bg-status-ok/20 text-status-ok border-0">NA META ✓</Badge>}
               </CardContent>
             </Card>
           );

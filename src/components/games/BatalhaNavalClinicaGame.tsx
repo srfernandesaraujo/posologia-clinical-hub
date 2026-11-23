@@ -507,7 +507,7 @@ export default function BatalhaNavalClinicaGame() {
           <Badge variant="outline" className="gap-1.5 text-xs">
             <Crosshair className="h-3.5 w-3.5" /> Tiros: {shotsLeft}
           </Badge>
-          <Badge variant="outline" className="gap-1.5 text-xs text-green-600">
+          <Badge variant="outline" className="gap-1.5 text-xs text-status-ok">
             <Activity className="h-3.5 w-3.5" /> Pontos: {score}
           </Badge>
         </div>
@@ -516,7 +516,7 @@ export default function BatalhaNavalClinicaGame() {
             <Badge
               key={o.id}
               variant={o.sunk ? "default" : "outline"}
-              className={`text-xs gap-1 ${o.sunk ? "bg-green-600 text-white" : ""}`}
+              className={`text-xs gap-1 ${o.sunk ? "bg-status-ok text-white" : ""}`}
             >
               {o.emoji} {o.hitCells.size}/{o.size}
             </Badge>
@@ -528,7 +528,7 @@ export default function BatalhaNavalClinicaGame() {
       {sunkMessages.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {sunkMessages.map((msg, i) => (
-            <Badge key={i} className="bg-green-600/10 text-green-700 border-green-200 text-xs">{msg}</Badge>
+            <Badge key={i} className="bg-status-ok/10 text-status-ok border-status-ok/40 text-xs">{msg}</Badge>
           ))}
         </div>
       )}
@@ -560,12 +560,12 @@ export default function BatalhaNavalClinicaGame() {
                   bg = "bg-blue-100 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800";
                   content = <Waves className="h-3.5 w-3.5 text-blue-400" />;
                 } else if (cell.status === "hit") {
-                  bg = "bg-green-100 dark:bg-green-950/40 border-green-300 dark:border-green-800";
+                  bg = "bg-status-ok/15 dark:bg-status-ok/40 border-status-ok/40 dark:border-status-ok/70";
                   const org = organs.find((o) => o.id === cell.organId);
                   content = <span className="text-sm">{org?.emoji}</span>;
                 } else if (cell.status === "miss") {
-                  bg = "bg-red-100 dark:bg-red-950/40 border-red-300 dark:border-red-800";
-                  content = <span className="text-red-500 text-xs font-bold">✕</span>;
+                  bg = "bg-status-crit/15 dark:bg-status-crit/40 border-status-crit/40 dark:border-status-crit/70";
+                  content = <span className="text-status-crit text-xs font-bold">✕</span>;
                 }
 
                 return (
@@ -588,8 +588,8 @@ export default function BatalhaNavalClinicaGame() {
       <div className="flex justify-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-muted/40 border border-border inline-block" /> Oculto</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100 dark:bg-blue-950 border border-blue-200 inline-block" /> Água</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 dark:bg-green-950 border border-green-300 inline-block" /> Acerto</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 dark:bg-red-950 border border-red-300 inline-block" /> Erro</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-status-ok/15 dark:bg-status-ok border border-status-ok/40 inline-block" /> Acerto</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-status-crit/15 dark:bg-status-crit border border-status-crit/40 inline-block" /> Erro</span>
       </div>
     </div>
   );

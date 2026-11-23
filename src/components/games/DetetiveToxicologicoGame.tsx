@@ -337,15 +337,15 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
   if (phase === "caseIntro") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6 animate-fade-in">
-        <div className="rounded-full bg-amber-500/10 p-6">
-          <Search className="h-12 w-12 text-amber-500" />
+        <div className="rounded-full bg-status-warn/10 p-6">
+          <Search className="h-12 w-12 text-status-warn" />
         </div>
         <h2 className="text-2xl font-bold">{toxCase.title}</h2>
         <Card className="max-w-md w-full">
           <CardContent className="p-4 space-y-3">
             <p className="text-sm">{toxCase.arrival}</p>
-            <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 border border-red-200 dark:border-red-800">
-              <p className="text-sm font-medium text-red-600 dark:text-red-400">⚠️ {toxCase.deteriorationWarning}</p>
+            <div className="bg-status-crit/15 dark:bg-status-crit/30 rounded-lg p-3 border border-status-crit/40 dark:border-status-crit/70">
+              <p className="text-sm font-medium text-status-crit dark:text-status-crit">⚠️ {toxCase.deteriorationWarning}</p>
             </div>
           </CardContent>
         </Card>
@@ -407,9 +407,9 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
         <p className="text-center text-muted-foreground">Selecione o antídoto correto para {toxCase.title}</p>
 
         {conf.showHints && (
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
+          <Card className="border-status-warn/30 bg-status-warn/5">
             <CardContent className="p-3 text-sm">
-              <p className="font-medium text-yellow-600 dark:text-yellow-400">💡 Toxidrome: {toxCase.toxidrome}</p>
+              <p className="font-medium text-status-warn dark:text-status-warn">💡 Toxidrome: {toxCase.toxidrome}</p>
               <p className="text-xs text-muted-foreground mt-1">{toxidromeDescriptions[toxCase.toxidromeType]?.symptoms}</p>
             </CardContent>
           </Card>
@@ -451,7 +451,7 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
           <Clock className="h-3 w-3" /> {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </Badge>
         <div className="flex items-center gap-1.5">
-          <Heart className="h-3 w-3 text-red-500" />
+          <Heart className="h-3 w-3 text-status-crit" />
           <Progress value={patientStability} className="w-20 h-2" />
           <span className="text-xs">{patientStability}%</span>
         </div>
@@ -485,9 +485,9 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
                 const labels: Record<string, string> = { fc: "FC", pa: "PA", fr: "FR", temp: "Temp", spo2: "SpO₂", pupilas: "Pupilas", glasgow: "Glasgow" };
                 const isAbnormal = value.includes("↓") || value.includes("↑");
                 return (
-                  <div key={key} className={`rounded-lg p-3 border ${isAbnormal ? "border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-800" : "border-border bg-muted/30"}`}>
+                  <div key={key} className={`rounded-lg p-3 border ${isAbnormal ? "border-status-crit/40 bg-status-crit/15 dark:bg-status-crit/20 dark:border-status-crit/70" : "border-border bg-muted/30"}`}>
                     <p className="text-[10px] text-muted-foreground uppercase">{labels[key] || key}</p>
-                    <p className={`text-sm font-bold ${isAbnormal ? "text-red-600 dark:text-red-400" : ""}`}>{value}</p>
+                    <p className={`text-sm font-bold ${isAbnormal ? "text-status-crit dark:text-status-crit" : ""}`}>{value}</p>
                   </div>
                 );
               })}
@@ -515,7 +515,7 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
               {toxCase.evidences.map(ev => {
                 const found = evidencesFound.includes(ev.id);
                 return (
-                  <Card key={ev.id} className={`cursor-pointer transition-all ${found ? "border-green-500/30 bg-green-50 dark:bg-green-950/20" : "hover:border-primary/40"}`}
+                  <Card key={ev.id} className={`cursor-pointer transition-all ${found ? "border-status-ok/30 bg-status-ok/15 dark:bg-status-ok/20" : "hover:border-primary/40"}`}
                     onClick={() => findEvidence(ev.id)}>
                     <CardContent className="p-3 flex items-start gap-3">
                       <span className="text-2xl">{ev.icon}</span>
@@ -545,7 +545,7 @@ export default function DetetiveToxicologicoGame({ customData }: { customData?: 
               {toxCase.labTests.map(lab => {
                 const ordered = labsOrdered.includes(lab.id);
                 return (
-                  <Card key={lab.id} className={ordered && lab.isKey ? "border-yellow-500/30 bg-yellow-50 dark:bg-yellow-950/20" : ""}>
+                  <Card key={lab.id} className={ordered && lab.isKey ? "border-status-warn/30 bg-status-warn/15 dark:bg-status-warn/20" : ""}>
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm">{lab.name}</p>

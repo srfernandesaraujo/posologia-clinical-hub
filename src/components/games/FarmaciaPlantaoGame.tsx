@@ -381,7 +381,7 @@ export default function FarmaciaPlantaoGame({ customData }: { customData?: any }
   // Playing phase
   if (!currentPresc) return null;
 
-  const urgencyColors = { normal: "bg-green-500", urgent: "bg-yellow-500", critical: "bg-red-500" };
+  const urgencyColors = { normal: "bg-status-ok", urgent: "bg-status-warn", critical: "bg-status-crit" };
   const urgencyLabels = { normal: "Normal", urgent: "Urgente", critical: "Crítica" };
 
   return (
@@ -440,7 +440,7 @@ export default function FarmaciaPlantaoGame({ customData }: { customData?: any }
 
           {/* Action buttons */}
           <div className="grid grid-cols-3 gap-2 pt-2">
-            <Button onClick={() => handleAction("dispense")} className="gap-1.5 bg-green-600 hover:bg-green-700 text-white">
+            <Button onClick={() => handleAction("dispense")} className="gap-1.5 bg-status-ok hover:bg-status-ok text-white">
               <CheckCircle className="h-4 w-4" /> Dispensar
             </Button>
             <Button onClick={() => handleAction("return")} variant="destructive" className="gap-1.5">

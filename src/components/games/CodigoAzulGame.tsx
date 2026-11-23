@@ -278,7 +278,7 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
         patientAge="4 cenários, múltiplos ritmos"
         patientHistory="FV pós-cirúrgica, Assistolia na emergência, AESP no trauma, TV no IAM. Cada caso tem uma causa reversível dos 5H e 5T."
         onStart={() => setPhase("difficulty")}
-        icon={<Heart className="h-10 w-10 text-red-500" />}
+        icon={<Heart className="h-10 w-10 text-status-crit" />}
       />
     );
   }
@@ -298,14 +298,14 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
   if (phase === "scenario") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6 animate-fade-in">
-        <div className="rounded-full bg-red-500/10 p-6">
-          <AlertTriangle className="h-12 w-12 text-red-500 animate-pulse" />
+        <div className="rounded-full bg-status-crit/10 p-6">
+          <AlertTriangle className="h-12 w-12 text-status-crit animate-pulse" />
         </div>
         <h2 className="text-2xl font-bold text-destructive">{scenario.title}</h2>
         <Card className="max-w-md w-full">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-lg font-bold text-red-600">
+              <div className="w-10 h-10 rounded-full bg-status-crit/15 dark:bg-status-crit/30 flex items-center justify-center text-lg font-bold text-status-crit">
                 {scenario.patientName[0]}
               </div>
               <div>
@@ -316,7 +316,7 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
             <p className="text-sm">{scenario.history}</p>
             <div className="bg-muted/50 rounded-lg p-3 border font-mono text-center">
               <p className="text-xs text-muted-foreground mb-1">Monitor Cardíaco</p>
-              <p className="text-2xl tracking-widest text-red-500">{rhythm.ecgPattern}</p>
+              <p className="text-2xl tracking-widest text-status-crit">{rhythm.ecgPattern}</p>
               <p className="text-sm font-semibold mt-1">{rhythm.name}</p>
               <Badge variant={rhythm.shockable ? "destructive" : "secondary"} className="mt-1">
                 {rhythm.shockable ? "CHOCÁVEL" : "NÃO CHOCÁVEL"}
@@ -331,7 +331,7 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
           setCycleTimer(conf.timerSec);
           setCycle(1);
           setPhase("playing");
-        }} className="gap-2 bg-red-600 hover:bg-red-700">
+        }} className="gap-2 bg-status-crit hover:bg-status-crit">
           <Zap className="h-4 w-4" /> INICIAR PROTOCOLO
         </Button>
       </div>
@@ -395,7 +395,7 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
 
   // Playing
   const timerPercent = (cycleTimer / conf.timerSec) * 100;
-  const timerColor = cycleTimer < 30 ? "text-red-500" : cycleTimer < 60 ? "text-yellow-500" : "text-foreground";
+  const timerColor = cycleTimer < 30 ? "text-status-crit" : cycleTimer < 60 ? "text-status-warn" : "text-foreground";
 
   return (
     <div className="space-y-4">
@@ -417,22 +417,22 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
       <Progress value={timerPercent} className="h-2" />
 
       {/* Monitor */}
-      <Card className="border-red-500/30 bg-black/5 dark:bg-black/20">
+      <Card className="border-status-crit/30 bg-black/5 dark:bg-black/20">
         <CardContent className="p-3 text-center">
-          <p className="font-mono text-xl tracking-[0.3em] text-red-500">{rhythm.ecgPattern}</p>
+          <p className="font-mono text-xl tracking-[0.3em] text-status-crit">{rhythm.ecgPattern}</p>
           <p className="text-sm font-semibold">{rhythm.name}</p>
           <div className="flex gap-2 justify-center mt-1">
             <Badge variant={rhythm.shockable ? "destructive" : "secondary"}>{rhythm.shockable ? "CHOCÁVEL" : "NÃO CHOCÁVEL"}</Badge>
-            {causeFound && <Badge className="bg-green-600 text-white">Causa: {scenario.reversibleCause}</Badge>}
+            {causeFound && <Badge className="bg-status-ok text-white">Causa: {scenario.reversibleCause}</Badge>}
           </div>
         </CardContent>
       </Card>
 
       {/* Hint (academic) */}
       {conf.hintLevel >= 2 && !causeFound && (
-        <Card className="border-yellow-500/30 bg-yellow-500/5">
+        <Card className="border-status-warn/30 bg-status-warn/5">
           <CardContent className="p-3 text-sm">
-            <p className="font-medium text-yellow-600 dark:text-yellow-400">💡 Dica: {scenario.reversibleCauseHint}</p>
+            <p className="font-medium text-status-warn dark:text-status-warn">💡 Dica: {scenario.reversibleCauseHint}</p>
           </CardContent>
         </Card>
       )}
@@ -468,7 +468,7 @@ export default function CodigoAzulGame({ customData }: { customData?: any }) {
       {/* ROSC check */}
       <Button
         onClick={checkROSC}
-        className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+        className="w-full gap-2 bg-status-ok hover:bg-status-ok text-white"
         size="lg"
         disabled={actionsPerformed.length < 3}
       >

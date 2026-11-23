@@ -40,6 +40,7 @@ import AdminPromptViewer from "@/components/AdminPromptViewer";
 import { getNativePrompt } from "@/data/nativeSystemPrompts";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/layouts/PageHeader";
 import { CatalogHub, type CatalogItem } from "@/components/catalog/CatalogHub";
 import type { PreviewKind } from "@/data/catalogAreas";
 
@@ -436,18 +437,16 @@ export default function JogosClinicos() {
   // ── AI GAME VIEW ──
   if (activeAiGame && activeGame) {
     return (
-      <div className="max-w-3xl">
-        <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
-          ← Voltar aos jogos
-        </Button>
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-bold">{activeAiGame.title}</h1>
-            <Badge variant="secondary" className="bg-primary/10 text-primary">Criado com IA</Badge>
-          </div>
-          <p className="text-muted-foreground">{activeAiGame.description}</p>
-        </div>
-        <div onClickCapture={handleGameInteraction}>
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          onBack={() => setActiveGame(null)}
+          backLabel="Voltar aos jogos"
+          icon={<Sparkles />}
+          title={activeAiGame.title}
+          badges={<Badge variant="secondary" className="bg-primary/10 text-primary">Criado com IA</Badge>}
+          description={activeAiGame.description}
+        />
+        <div onClickCapture={handleGameInteraction} className="rounded-2xl border border-border bg-card/60 p-4 sm:p-6">
           <DynamicAIGame config={activeAiGame.gameConfig} />
         </div>
         <GameRanking gameId={activeGame} currentScore={sessionScore} />
@@ -460,25 +459,30 @@ export default function JogosClinicos() {
     const GameComponent = active.component;
     const customData = aiData[activeGame] || undefined;
     const versionLabel = formatVersion(getVersion(activeGame));
+    const meta = games.find((g) => g.id === activeGame);
 
     return (
-      <div className="max-w-3xl">
-        <Button variant="ghost" className="mb-4 gap-2" onClick={() => setActiveGame(null)}>
-          ← Voltar aos jogos
-        </Button>
-        <div className="mb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-bold">{active.title}</h1>
-            <Badge variant="secondary">v{versionLabel}</Badge>
-          </div>
-          <p className="text-muted-foreground">{active.subtitle}</p>
-          <AdminPromptViewer
-            toolSlug={gamePromptSlugMap[activeGame] || activeGame}
-            toolName={active.title}
-            toolType="game"
-            prompt={getNativePrompt(gamePromptSlugMap[activeGame] || activeGame) || ""}
-          />
-        </div>
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          onBack={() => setActiveGame(null)}
+          backLabel="Voltar aos jogos"
+          icon={meta ? <meta.icon /> : <Gamepad2 />}
+          title={active.title}
+          badges={
+            <>
+              <Badge variant="secondary">v{versionLabel}</Badge>
+              <Badge variant="outline">{categoryLabels.find((c) => c.id === meta?.category)?.label}</Badge>
+            </>
+          }
+          description={active.subtitle}
+          className="mb-4"
+        />
+        <AdminPromptViewer
+          toolSlug={gamePromptSlugMap[activeGame] || activeGame}
+          toolName={active.title}
+          toolType="game"
+          prompt={getNativePrompt(gamePromptSlugMap[activeGame] || activeGame) || ""}
+        />
         <GameHeader
           howToPlay={active.howToPlay}
           aiPrompt={active.aiPrompt}
@@ -488,7 +492,7 @@ export default function JogosClinicos() {
           onAiUpdate={handleAiUpdate}
           showAiFeatures={isAdmin}
         />
-        <div onClickCapture={handleGameInteraction}>
+        <div onClickCapture={handleGameInteraction} className="rounded-2xl border border-border bg-card/60 p-4 sm:p-6">
           <GameComponent key={JSON.stringify(customData)} customData={customData} />
         </div>
         <GameRanking gameId={activeGame} currentScore={sessionScore} />

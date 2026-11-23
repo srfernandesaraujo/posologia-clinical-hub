@@ -49,14 +49,14 @@ export default function GameRanking({ gameId, currentScore = 0 }: GameRankingPro
   }, [currentScore, showRanking]);
 
   const getMedalIcon = (index: number) => {
-    if (index === 0) return <Trophy className="h-4 w-4 text-yellow-500" />;
+    if (index === 0) return <Trophy className="h-4 w-4 text-status-warn" />;
     if (index === 1) return <Medal className="h-4 w-4 text-gray-400" />;
-    if (index === 2) return <Medal className="h-4 w-4 text-amber-600" />;
+    if (index === 2) return <Medal className="h-4 w-4 text-status-warn" />;
     return <span className="text-xs font-bold text-muted-foreground w-4 text-center">{index + 1}</span>;
   };
 
   return (
-    <div className="mt-6 space-y-3">
+    <div className="mt-6 space-y-3 rounded-xl border border-border bg-card/40 p-3">
       <div className="flex items-center gap-2 flex-wrap">
         <Button
           variant="outline"
@@ -83,8 +83,8 @@ export default function GameRanking({ gameId, currentScore = 0 }: GameRankingPro
         <Card className="animate-in fade-in slide-in-from-top-2 duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              Ranking — {gameId}
+              <Trophy className="h-4 w-4 text-status-warn" />
+              Ranking
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">

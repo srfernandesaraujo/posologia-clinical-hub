@@ -614,9 +614,9 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
           </div>
         ))}
         <span className="mx-2 text-muted-foreground">|</span>
-        <span className="text-red-400">🔴 Alta</span>
-        <span className="text-yellow-400">🟡 Moderada</span>
-        <span className="text-green-400">🟢 Alvo (não destruir!)</span>
+        <span className="text-status-crit">🔴 Alta</span>
+        <span className="text-status-warn">🟡 Moderada</span>
+        <span className="text-status-ok">🟢 Alvo (não destruir!)</span>
         <span className="text-zinc-400">⬜ Resistência</span>
       </div>
 
@@ -651,11 +651,11 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {phaseResult === "lost" ? (
-                <><XCircle className="h-5 w-5 text-red-500" /> Fase Não Concluída</>
+                <><XCircle className="h-5 w-5 text-status-crit" /> Fase Não Concluída</>
               ) : phaseResult === "complete" ? (
-                <><Trophy className="h-5 w-5 text-yellow-500" /> Jogo Completo!</>
+                <><Trophy className="h-5 w-5 text-status-warn" /> Jogo Completo!</>
               ) : (
-                <><Star className="h-5 w-5 text-yellow-500" /> Fase Concluída!</>
+                <><Star className="h-5 w-5 text-status-warn" /> Fase Concluída!</>
               )}
             </DialogTitle>
           </DialogHeader>
@@ -664,7 +664,7 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
               {phaseResult !== "lost" && (
                 <div className="flex gap-1 justify-center py-2">
                   {[1, 2, 3].map(s => (
-                    <Star key={s} className={`h-8 w-8 ${s <= stars ? "text-yellow-400 fill-yellow-400" : "text-zinc-600"}`} />
+                    <Star key={s} className={`h-8 w-8 ${s <= stars ? "text-status-warn fill-status-warn" : "text-zinc-600"}`} />
                   ))}
                 </div>
               )}
@@ -687,7 +687,7 @@ export default function InsulinaBirdsGame({ customData }: { customData?: any }) 
                   </Button>
                 )}
                 {phaseResult === "complete" && (
-                  <p className="text-sm font-bold text-green-400">Pontuação total: {finalTotalScore}</p>
+                  <p className="text-sm font-bold text-status-ok">Pontuação total: {finalTotalScore}</p>
                 )}
               </div>
             </div>

@@ -219,7 +219,7 @@ export default function JanelaTerapeuticaGame({ customData }: { customData?: any
     }
   }, [gameStatus, feedback]);
 
-  const valueColor = currentValue < scenario.lowerLimit ? "text-yellow-600" : currentValue <= scenario.upperLimit ? "text-green-600" : "text-destructive";
+  const valueColor = currentValue < scenario.lowerLimit ? "text-status-warn" : currentValue <= scenario.upperLimit ? "text-status-ok" : "text-destructive";
 
   if (phase === "select") {
     return (
@@ -347,9 +347,9 @@ export default function JanelaTerapeuticaGame({ customData }: { customData?: any
             </LineChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-yellow-400/30 rounded" /> Subterapêutico</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-green-500/30 rounded" /> Terapêutico</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-red-500/30 rounded" /> Tóxico</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-status-warn/30 rounded" /> Subterapêutico</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-status-ok/30 rounded" /> Terapêutico</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-status-crit/30 rounded" /> Tóxico</span>
           </div>
         </CardContent>
       </Card>
@@ -359,8 +359,8 @@ export default function JanelaTerapeuticaGame({ customData }: { customData?: any
           <Button key={i} onClick={() => applyDose(i)} variant="outline" className="flex-col h-auto py-3 gap-1" disabled={gameStatus !== "playing"}>
             {action.icon === "up" && <TrendingUp className="h-4 w-4 text-destructive" />}
             {action.icon === "maintain" && <Activity className="h-4 w-4 text-primary" />}
-            {action.icon === "down" && <TrendingDown className="h-4 w-4 text-green-500" />}
-            {action.icon === "suspend" && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
+            {action.icon === "down" && <TrendingDown className="h-4 w-4 text-status-ok" />}
+            {action.icon === "suspend" && <AlertTriangle className="h-4 w-4 text-status-warn" />}
             <span className="text-xs">{action.label}</span>
           </Button>
         ))}

@@ -32,8 +32,8 @@ const board: BoardSpace[] = [
   { id: 2, name: "Caso Clínico!", type: "quiz" },
   { id: 3, name: "Especialização Anamnese", type: "property", cost: 100, rent: 15, color: "bg-blue-500", specialty: "clinica" },
   { id: 4, name: "IMPOSTO DE RENDA", type: "tax" },
-  { id: 5, name: "Software Prontuário", type: "property", cost: 150, rent: 25, color: "bg-green-500", specialty: "tech" },
-  { id: 6, name: "Laboratório de Testes", type: "property", cost: 180, rent: 30, color: "bg-green-500", specialty: "lab" },
+  { id: 5, name: "Software Prontuário", type: "property", cost: 150, rent: 25, color: "bg-status-ok", specialty: "tech" },
+  { id: 6, name: "Laboratório de Testes", type: "property", cost: 180, rent: 30, color: "bg-status-ok", specialty: "lab" },
   { id: 7, name: "CONSELHO DE ÉTICA", type: "jail" },
   { id: 8, name: "Equip. Diagnóstico", type: "property", cost: 220, rent: 40, color: "bg-purple-500", specialty: "diagnostico" },
   { id: 9, name: "Marketing Médico", type: "property", cost: 240, rent: 45, color: "bg-purple-500", specialty: "gestao" },
@@ -362,7 +362,7 @@ export default function CarreiraClinicaGame({ customData }: { customData?: any }
             <CardContent className="py-3 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Seu Saldo</span>
-                <span className={`text-lg font-bold font-mono ${balance < 100 ? "text-destructive" : "text-green-500"}`}>${balance}</span>
+                <span className={`text-lg font-bold font-mono ${balance < 100 ? "text-destructive" : "text-status-ok"}`}>${balance}</span>
               </div>
               {config.aiOpponent && (
                 <div className="flex justify-between items-center">

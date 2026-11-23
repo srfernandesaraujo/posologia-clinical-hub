@@ -44,9 +44,9 @@ export default function GameStarsResult({
 
   const starColors = [
     "text-muted-foreground/30",
-    "text-yellow-500",
-    "text-yellow-500",
-    "text-yellow-500",
+    "text-status-warn",
+    "text-status-warn",
+    "text-status-warn",
   ];
 
   return (
@@ -64,7 +64,7 @@ export default function GameStarsResult({
           <Star
             key={s}
             className={`h-10 w-10 transition-all duration-500 ${
-              s <= stars ? "text-yellow-500 fill-yellow-500 scale-110" : "text-muted-foreground/30"
+              s <= stars ? "text-status-warn fill-status-warn scale-110" : "text-muted-foreground/30"
             }`}
             style={{ transitionDelay: `${s * 150}ms` }}
           />
@@ -73,26 +73,26 @@ export default function GameStarsResult({
 
       {/* Stats */}
       <div className="flex flex-wrap gap-4 justify-center">
-        <div className="bg-muted/50 rounded-lg px-4 py-2 border border-border">
+        <div className="rounded-xl border border-border bg-card px-5 py-3">
           <p className="text-xs text-muted-foreground">Pontuação</p>
-          <p className="text-lg font-bold text-foreground">{score}/{maxScore}</p>
+          <p className="text-xl font-semibold tabular-nums text-foreground">{score}/{maxScore}</p>
         </div>
         {errors !== undefined && (
-          <div className="bg-muted/50 rounded-lg px-4 py-2 border border-border">
+          <div className="rounded-xl border border-border bg-card px-5 py-3">
             <p className="text-xs text-muted-foreground">Erros</p>
-            <p className="text-lg font-bold text-foreground">{errors}</p>
+            <p className="text-xl font-semibold tabular-nums text-foreground">{errors}</p>
           </div>
         )}
         {timeSeconds !== undefined && (
-          <div className="bg-muted/50 rounded-lg px-4 py-2 border border-border">
+          <div className="rounded-xl border border-border bg-card px-5 py-3">
             <p className="text-xs text-muted-foreground">Tempo</p>
-            <p className="text-lg font-bold text-foreground">{Math.floor(timeSeconds / 60)}:{String(timeSeconds % 60).padStart(2, "0")}</p>
+            <p className="text-xl font-semibold tabular-nums text-foreground">{Math.floor(timeSeconds / 60)}:{String(timeSeconds % 60).padStart(2, "0")}</p>
           </div>
         )}
       </div>
 
       {details && details.length > 0 && (
-        <div className="bg-muted/30 rounded-lg p-4 border border-border max-w-sm w-full space-y-2">
+        <div className="rounded-xl border border-border bg-card/60 p-4 max-w-sm w-full space-y-2">
           {details.map((d, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-muted-foreground">{d.label}</span>

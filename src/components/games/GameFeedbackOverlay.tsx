@@ -23,15 +23,15 @@ export default function GameFeedbackOverlay({
       <div className="max-w-md w-full mx-4 rounded-xl border bg-card shadow-2xl p-6 space-y-4 animate-scale-in">
         <div className="flex items-center gap-3">
           {isCorrect ? (
-            <div className="rounded-full bg-green-500/10 p-2">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
+            <div className="rounded-full bg-status-ok/10 p-2">
+              <CheckCircle2 className="h-8 w-8 text-status-ok" />
             </div>
           ) : (
             <div className="rounded-full bg-destructive/10 p-2">
               <XCircle className="h-8 w-8 text-destructive" />
             </div>
           )}
-          <h3 className="text-lg font-bold text-foreground">{title}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         </div>
 
         <div className="bg-muted/50 rounded-lg p-4 border border-border">
@@ -43,7 +43,7 @@ export default function GameFeedbackOverlay({
 
         {tip && (
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
-            <Lightbulb className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+            <Lightbulb className="h-4 w-4 text-status-warn shrink-0 mt-0.5" />
             <p>{tip}</p>
           </div>
         )}
@@ -55,7 +55,7 @@ export default function GameFeedbackOverlay({
           </p>
         )}
 
-        <Button onClick={onContinue} className="w-full" size="lg">
+        <Button onClick={onContinue} className="w-full" size="lg" autoFocus>
           Continuar
         </Button>
       </div>

@@ -1,5 +1,4 @@
 import { GraduationCap, Stethoscope, Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export type GameDifficulty = "academic" | "clinical" | "specialist";
 
@@ -18,21 +17,27 @@ export default function GameDifficultySelector({ selected, onChange }: GameDiffi
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="text-sm font-medium text-muted-foreground">Selecione a dificuldade:</p>
-      <div className="flex gap-2">
+      <div role="radiogroup" aria-label="Dificuldade" className="grid w-full max-w-xl gap-2 sm:grid-cols-3">
         {difficulties.map((d) => {
           const Icon = d.icon;
           const isActive = selected === d.key;
           return (
-            <Button
+            <button
               key={d.key}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              className="gap-1.5 text-xs"
+              type="button"
+              role="radio"
+              aria-checked={isActive}
               onClick={() => onChange(d.key)}
+              className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                isActive
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
             >
-              <Icon className="h-3.5 w-3.5" />
-              {d.label}
-            </Button>
+              <Icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+              <span className="text-sm font-semibold">{d.label}</span>
+              <span className="text-[11px] leading-tight opacity-80">{d.desc}</span>
+            </button>
           );
         })}
       </div>

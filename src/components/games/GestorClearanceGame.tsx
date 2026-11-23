@@ -336,8 +336,8 @@ export default function GestorClearanceGame({ customData }: { customData?: any }
 
       {/* Notifications */}
       {lab.event && (
-        <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 animate-in slide-in-from-top-2">
-          <Bell className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-lg border border-status-warn/30 bg-status-warn/5 p-3 animate-in slide-in-from-top-2">
+          <Bell className="h-4 w-4 text-status-warn shrink-0 mt-0.5" />
           <p className="text-xs text-foreground">{lab.event}</p>
         </div>
       )}
@@ -349,11 +349,11 @@ export default function GestorClearanceGame({ customData }: { customData?: any }
           <CardContent className="space-y-3">
             <div>
               <p className="text-xs text-muted-foreground">Creatinina Sérica</p>
-              <p className={`text-2xl font-bold ${lab.creatinina > 1.2 ? "text-destructive" : "text-green-500"}`}>{lab.creatinina} mg/dL</p>
+              <p className={`text-2xl font-bold ${lab.creatinina > 1.2 ? "text-destructive" : "text-status-ok"}`}>{lab.creatinina} mg/dL</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">TFG Estimada</p>
-              <p className={`text-2xl font-bold ${lab.tfg < 50 ? "text-orange-500" : "text-green-500"}`}>{lab.tfg} mL/min</p>
+              <p className={`text-2xl font-bold ${lab.tfg < 50 ? "text-status-warn" : "text-status-ok"}`}>{lab.tfg} mL/min</p>
             </div>
             <Badge variant={lab.tfg < 30 ? "destructive" : lab.tfg < 50 ? "secondary" : "outline"} className="text-xs">{lab.alert}</Badge>
           </CardContent>
@@ -391,9 +391,9 @@ export default function GestorClearanceGame({ customData }: { customData?: any }
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="flex items-center gap-1"><Activity className="h-3 w-3" /> Eficácia</span>
-                <span className={efficacy < 35 ? "text-orange-500 font-bold animate-pulse" : ""}>{Math.round(efficacy)}%</span>
+                <span className={efficacy < 35 ? "text-status-warn font-bold animate-pulse" : ""}>{Math.round(efficacy)}%</span>
               </div>
-              <Progress value={efficacy} className="h-3 [&>div]:bg-green-500" />
+              <Progress value={efficacy} className="h-3 [&>div]:bg-status-ok" />
             </div>
           </CardContent>
         </Card>

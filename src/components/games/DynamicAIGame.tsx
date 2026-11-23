@@ -259,13 +259,13 @@ export default function DynamicAIGame({ config, customData }: DynamicAIGameProps
             {Array.from({ length: maxLives }).map((_, i) => (
               <Heart
                 key={i}
-                className={`h-5 w-5 transition-all ${i < lives ? "text-red-500 fill-red-500" : "text-muted-foreground/30"}`}
+                className={`h-5 w-5 transition-all ${i < lives ? "text-status-crit fill-status-crit" : "text-muted-foreground/30"}`}
               />
             ))}
           </div>
           {/* Timer */}
           {gc.settings.timerPerRound && (
-            <div className={`flex items-center gap-1 text-sm font-mono font-bold ${timer <= 5 ? "text-red-500 animate-pulse" : "text-foreground"}`}>
+            <div className={`flex items-center gap-1 text-sm font-mono font-bold ${timer <= 5 ? "text-status-crit animate-pulse" : "text-foreground"}`}>
               <Clock className="h-4 w-4" />
               {timer}s
             </div>
@@ -308,11 +308,11 @@ export default function DynamicAIGame({ config, customData }: DynamicAIGameProps
           if (isEliminated) {
             className += "opacity-30 cursor-not-allowed border-border bg-muted/20 line-through";
           } else if (showResult && isSelected && opt.isCorrect) {
-            className += "border-green-500 bg-green-500/10 text-foreground";
+            className += "border-status-ok bg-status-ok/10 text-foreground";
           } else if (showResult && isSelected && !opt.isCorrect) {
-            className += "border-red-500 bg-red-500/10 text-foreground";
+            className += "border-status-crit bg-status-crit/10 text-foreground";
           } else if (showResult && opt.isCorrect) {
-            className += "border-green-500/50 bg-green-500/5 text-foreground";
+            className += "border-status-ok/50 bg-status-ok/5 text-foreground";
           } else if (isSelected) {
             className += "border-primary bg-primary/10 text-foreground";
           } else {
@@ -331,8 +331,8 @@ export default function DynamicAIGame({ config, customData }: DynamicAIGameProps
                   {String.fromCharCode(65 + i)}
                 </span>
                 <span>{opt.text}</span>
-                {showResult && opt.isCorrect && <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" />}
-                {showResult && isSelected && !opt.isCorrect && <XCircle className="h-5 w-5 text-red-500 ml-auto shrink-0" />}
+                {showResult && opt.isCorrect && <CheckCircle2 className="h-5 w-5 text-status-ok ml-auto shrink-0" />}
+                {showResult && isSelected && !opt.isCorrect && <XCircle className="h-5 w-5 text-status-crit ml-auto shrink-0" />}
               </div>
             </button>
           );
@@ -348,7 +348,7 @@ export default function DynamicAIGame({ config, customData }: DynamicAIGameProps
           disabled={lifelineUsed || confirmed}
           onClick={useLifeline}
         >
-          <Lightbulb className={`h-4 w-4 ${lifelineUsed ? "text-muted-foreground" : "text-yellow-500"}`} />
+          <Lightbulb className={`h-4 w-4 ${lifelineUsed ? "text-muted-foreground" : "text-status-warn"}`} />
           Consulta Rápida
           {lifelineUsed && <span className="text-xs">(usado)</span>}
         </Button>
