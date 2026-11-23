@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { useClassStudents } from "@/hooks/useClasses";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
 } from "recharts";
 import { ParticipantDetail, SIMULATOR_LABELS } from "./Analytics";
 
@@ -507,12 +507,14 @@ export default function SalaDetalhe() {
                   <p className="text-sm text-muted-foreground py-6 text-center">Sem submissões ainda.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={Math.max(220, perParticipant.length * 26)}>
-                    <BarChart data={perParticipant.slice(0, 20)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
-                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                      <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    <BarChart data={perParticipant.slice(0, 20)} layout="vertical" margin={{ left: 4, right: 40 }} barCategoryGap={8}>
+                      <CartesianGrid horizontal={false} />
+                      <XAxis type="number" domain={[0, 100]} tickCount={5} />
+                      <YAxis type="category" dataKey="name" width={150} tickFormatter={(v: string) => (v.length > 22 ? v.slice(0, 21).trimEnd() + "…" : v)} />
+                      <Tooltip />
+                      <Bar dataKey="score" name="Nota" fill="hsl(var(--primary))" background={{ fill: "hsl(var(--muted) / 0.35)", radius: 6 }}>
+                        <LabelList dataKey="score" position="right" style={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}

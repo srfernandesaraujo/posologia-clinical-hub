@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2, Users, DoorOpen, BarChart3, Settings as SettingsIcon, Mail, Link2, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { computeStudentRisk, riskBadgeProps } from "@/lib/studentRisk";
@@ -374,12 +374,14 @@ function ClassAnalyticsPanel({ rooms, participants, submissions, activities, stu
             <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma sala vinculada.</p>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(220, roomStats.length * 36)}>
-              <BarChart data={roomStats} layout="vertical" margin={{ left: 80, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={150} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="score" name="Nota média" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+              <BarChart data={roomStats} layout="vertical" margin={{ left: 4, right: 44 }} barCategoryGap={10}>
+                <CartesianGrid horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} tickCount={5} />
+                <YAxis type="category" dataKey="name" width={210} tickFormatter={(v: string) => (v.length > 30 ? v.slice(0, 29).trimEnd() + "…" : v)} />
+                <Tooltip formatter={(v: number) => [v > 0 ? v : "sem envios", "Nota média"]} labelFormatter={(l: string) => l} />
+                <Bar dataKey="score" name="Nota média" fill="hsl(var(--chart-1))" background={{ fill: "hsl(var(--muted) / 0.35)", radius: 6 }}>
+                  <LabelList dataKey="score" position="right" formatter={(v: number) => (v > 0 ? v : "—")} style={{ fill: "hsl(var(--foreground))", fontSize: 11, fontVariantNumeric: "tabular-nums" }} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
