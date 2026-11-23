@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { PageHeader, EmptyState } from "@/components/layouts/PageHeader";
+import { RoomsOverview, type RoomStats } from "@/components/rooms/RoomsOverview";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3, Check, ChevronsUpDown, MoreHorizontal, Search } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DoorOpen, Plus, Copy, Trash2, Users, EyeOff, Calendar, Lock, ArrowUp, ArrowDown, X, ClipboardList, FlaskConical, Cpu, Edit3, Target, Pencil, RotateCcw, Gamepad2, GraduationCap, BarChart3, Check, ChevronsUpDown } from "lucide-react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import ChallengeEditor, { EditableChallengeSet } from "@/components/simulators/ChallengeEditor";
@@ -380,8 +380,6 @@ export default function SalasVirtuais() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
-  const [roomSearch, setRoomSearch] = useState("");
-  const [roomFilter, setRoomFilter] = useState<"all" | "active" | "inactive" | "exam">("all");
   const [title, setTitle] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isExamMode, setIsExamMode] = useState(false); // false = unitária, true = atividade simulada
@@ -449,6 +447,31 @@ export default function SalasVirtuais() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const roomIdsKey = (rooms as any[]).map((r) => r.id).join(",");
+  const { data: roomStats = {} } = useQuery({
+    queryKey: ["room-stats", roomIdsKey],
+    enabled: !!roomIdsKey,
+    queryFn: async () => {
+      const ids = roomIdsKey.split(",");
+      const [parts, subs] = await Promise.all([
+        supabase.from("room_participants").select("room_id, joined_at").in("room_id", ids).limit(5000),
+        supabase.from("room_submissions").select("room_id, participant_id").in("room_id", ids).limit(5000),
+      ]);
+      const out: Record<string, RoomStats> = {};
+      const seen: Record<string, Set<string>> = {};
+      for (const p of parts.data || []) {
+        const s = (out[p.room_id] ||= { participants: 0, submitted: 0 });
+        s.participants += 1;
+        if (!s.lastJoin || p.joined_at > s.lastJoin) s.lastJoin = p.joined_at;
+      }
+      for (const s of subs.data || []) {
+        (seen[s.room_id] ||= new Set()).add(s.participant_id);
+      }
+      for (const [id, set] of Object.entries(seen)) (out[id] ||= { participants: 0, submitted: 0 }).submitted = set.size;
+      return out;
     },
   });
 
@@ -697,6 +720,18 @@ export default function SalasVirtuais() {
       toast.success("Sala reativada");
     },
     onError: (err: any) => toast.error(err.message || "Erro ao reativar sala"),
+  });
+
+  const deleteRooms = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("virtual_rooms").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["virtual-rooms"] });
+      toast.success(`${ids.length} salas excluídas`);
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao excluir salas"),
   });
 
   const deleteRoom = useMutation({
@@ -963,10 +998,6 @@ export default function SalasVirtuais() {
   };
 
   const isRoomExam = (room: any) => !room.simulator_slug;
-  const visibleRooms = [...rooms]
-    .filter((r: any) => roomFilter === "all" || (roomFilter === "active" ? r.is_active : roomFilter === "inactive" ? !r.is_active : isRoomExam(r)))
-    .filter((r: any) => { const q = roomSearch.trim().toLowerCase(); return !q || String(r.title || "").toLowerCase().includes(q) || String(r.pin || "").includes(q); })
-    .sort((a: any, b: any) => Number(!!b.is_active) - Number(!!a.is_active));
 
   const isRoomLab = (room: any) => {
     if (room.simulator_slug) return isLabTool(room.simulator_slug);
@@ -1014,108 +1045,22 @@ export default function SalasVirtuais() {
       ) : rooms.length === 0 ? (
         <EmptyState icon={<DoorOpen />} title="Nenhuma sala criada ainda" description="Clique em Nova Sala para começar." />
       ) : (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={roomSearch} onChange={e => setRoomSearch(e.target.value)} placeholder="Buscar por título ou PIN…" className="pl-9" />
-            </div>
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar salas">
-              {([["all", "Todas", rooms.length], ["active", "Ativas", rooms.filter((r: any) => r.is_active).length], ["inactive", "Inativas", rooms.filter((r: any) => !r.is_active).length], ["exam", "Provas", rooms.filter((r: any) => isRoomExam(r)).length]] as const).map(([key, label, n]) => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={roomFilter === key}
-                  onClick={() => setRoomFilter(key)}
-                  className={cn("rounded-full border px-3 py-1 text-xs font-medium transition-colors", roomFilter === key ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground")}
-                >
-                  {label} <span className="ml-1 tabular-nums opacity-70">{n}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {visibleRooms.length === 0 ? (
-            <EmptyState icon={<Search />} title="Nenhuma sala encontrada" description="Ajuste a busca ou o filtro." />
-          ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {visibleRooms.map((room: any) => (
-            <Card key={room.id} className={cn("flex flex-col overflow-hidden transition-colors hover:border-primary/40", !room.is_active && "bg-card/60")}>
-              <div className="flex items-start justify-between gap-2 px-4 pt-4">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold", room.is_active ? "border-status-ok/40 text-status-ok" : "border-border text-muted-foreground")}>
-                    <span className={cn("h-1.5 w-1.5 rounded-full", room.is_active ? "bg-status-ok" : "bg-muted-foreground/60")} />
-                    {room.is_active ? "Ativa" : "Inativa"}
-                  </span>
-                  {isRoomExam(room) && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"><ClipboardList className="h-3 w-3" />Prova</span>
-                  )}
-                  {room.restricted_access && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"><Lock className="h-3 w-3" />Restrita</span>
-                  )}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-8 w-8" aria-label="Mais ações da sala"><MoreHorizontal className="h-4 w-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEdit(room)}><Pencil className="mr-2 h-4 w-4" />Editar sala</DropdownMenuItem>
-                    {room.is_active ? (
-                      <DropdownMenuItem onClick={() => toggleRoom.mutate({ id: room.id, is_active: false })}><EyeOff className="mr-2 h-4 w-4" />Desativar</DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem onClick={() => reactivateRoom.mutate(room)}><RotateCcw className="mr-2 h-4 w-4" />Reativar</DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => deleteRoom.mutate(room.id)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <CardContent className="flex flex-1 flex-col gap-3 pt-2">
-                <h3 className="line-clamp-2 min-h-[2.5rem] font-semibold leading-snug">{room.title}</h3>
-                <button
-                  type="button"
-                  onClick={() => copyPin(room.pin)}
-                  aria-label={"Copiar PIN " + room.pin}
-                  className="group flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2 transition-colors hover:border-primary/40"
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">PIN</span>
-                  <code className="font-mono text-2xl font-bold tracking-[0.2em] text-primary">{room.pin}</code>
-                  <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
-                </button>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  {room.simulator_slug ? (
-                    <p className="flex items-center gap-1.5">
-                      {isLabTool(room.simulator_slug) ? (
-                        <><FlaskConical className="h-3.5 w-3.5" /> Lab: {getToolLabel(room.simulator_slug)}</>
-                      ) : isGameTool(room.simulator_slug) ? (
-                        <><Gamepad2 className="h-3.5 w-3.5" /> Jogo: {getToolLabel(room.simulator_slug)}</>
-                      ) : (
-                        <><Cpu className="h-3.5 w-3.5" /> Simulador: {getToolLabel(room.simulator_slug)}</>
-                      )}
-                    </p>
-                  ) : (
-                    <p className="flex items-center gap-1.5"><ClipboardList className="h-3.5 w-3.5" /> Prova com múltiplas atividades</p>
-                  )}
-                  {room.expires_at && (
-                    <p className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Expira em {new Date(room.expires_at).toLocaleDateString("pt-BR")}</p>
-                  )}
-                </div>
-                <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
-                  <Button variant="outline" size="sm" onClick={() => setDetailRoom(room)}>
-                    <Users className="mr-2 h-4 w-4" />Participantes
-                  </Button>
-                  <Button size="sm" asChild>
-                    <Link to={room.class_id ? `/turmas/${room.class_id}/salas/${room.id}` : `/salas/${room.id}`}>
-                      <BarChart3 className="mr-2 h-4 w-4" />Analytics
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-          )}
-        </div>
+        <RoomsOverview
+          rooms={rooms as any[]}
+          stats={roomStats}
+          classNameById={Object.fromEntries((classesList.data || []).map(c => [c.id, c.name]))}
+          describe={(room) => room.simulator_slug
+            ? { kind: isLabTool(room.simulator_slug) ? "lab" : isGameTool(room.simulator_slug) ? "game" : "sim", label: getToolLabel(room.simulator_slug) }
+            : { kind: "exam", label: "Prova com múltiplas atividades" }}
+          analyticsHref={(room) => room.class_id ? `/turmas/${room.class_id}/salas/${room.id}` : `/salas/${room.id}`}
+          onEdit={openEdit}
+          onDeactivate={(room) => toggleRoom.mutate({ id: room.id, is_active: false })}
+          onReactivate={(room) => reactivateRoom.mutate(room)}
+          onDelete={(id) => deleteRoom.mutate(id)}
+          onDeleteMany={(ids) => deleteRooms.mutate(ids)}
+          onParticipants={(room) => setDetailRoom(room)}
+          onCopyPin={copyPin}
+        />
       )}
 
       {/* Create Room Dialog */}
