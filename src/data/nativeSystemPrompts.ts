@@ -2260,6 +2260,27 @@ REFERÊNCIAS BASE:
 - GINA 2023 Report
 - Reddel HK et al. Lancet 2022 (MART)`,
 
+  "sim-farmacoterapia-coagulacao": `Você é um especialista em hematologia clínica e anticoagulação. Crie um simulador de Coagulação e Anticoagulantes (categoria Farmacoterapia Laboratorial).
+
+REQUISITOS:
+- Coagulograma projetado após o tratamento (efeito pleno no dia 7): INR, TTPa, Anti-Xa, Plaquetas, Fibrinogênio, D-dímero e Hb, com limites de referência de quem não anticoagula; gráfico de 7 dias de INR, TTPa e Anti-Xa com linha de INR 3; banner de Risco Hemorrágico e barras de risco (Sangramento, HIT, Osteoporose, Necrose Cutânea, GI)
+- Controles: lista "Prescrição" (Varfarina, Heparina NF, Enoxaparina, Rivaroxabana, Apixabana, Dabigatrana, Vitamina K, Ácido Tranexâmico, Protamina) com slider de dose; condutas sem dose só nos casos que as liberam ("Suspender varfarina", "Suspender HNF") e a "Pausa da rivaroxabana" (slider de horas sem tomar, com Anti-Xa = pico × 0,5^(h ÷ 12))
+- Modelo: varfarina ≈0,3 INR por mg/dia (efeito pleno em 7 dias); vitamina K reverte uma fração do excesso (1 − e^(−0,45·dose)); enoxaparina com Anti-Xa por mg/kg (peso do caso); DOAC com Anti-Xa por mg e INR quase inalterado; heparinas e DOAC agem em ~1 dia; protamina pela dose necessária (1 mg por 100 UI de HNF das últimas 2 h, campo "infusion"), com efeito anticoagulante no excesso
+- 5 casos nativos: início de anticoagulação na FA (Carlos), INR 8,2 em prótese mecânica mitral (Dona Helena), TVP aguda em usuária de anticoncepcional (Amanda), sangramento digestivo em HNF pós-SCA (Roberto), preparo de artroplastia em rivaroxabana com TFG 55 (Sônia)
+- Casos gerados por IA seguem o mesmo formato (baseLab, expectedDrugs, infusion opcional) e não têm as condutas "Suspender" nem a pausa
+
+MODO DESAFIO (padrão da plataforma):
+- 6 desafios por caso, pelo menos 3 de ajuste: o aluno escolhe fármaco e dose, lê o coagulograma, o banner de risco e o gráfico, e só então responde
+- Enunciado com os números do caso, comando exato do que testar (um por vez), o que comparar e "discutam em grupo"; campo context com "onde fica cada coisa" (inclui que "▲ Alto" no cartão é só acima do normal de quem não anticoagula)
+- Tipos: titulação da varfarina e INR tardio (dia 3 × dia 7; dose de ataque ultrapassa a faixa); INR do DOAC não orienta dose e dose reduzida de apixabana só com 2 critérios; vitamina K em dose baixa × 10 mg (INR normaliza mas a prótese fica desprotegida); manter a varfarina com INR 8,2; CCP por INR e peso; enoxaparina por mg/kg e Anti-Xa 0,6–1,0; rivaroxabana de ataque (15 mg 12/12h); D-dímero não guia dose; ponte na TVP aguda (INR só chega a 2,0 por volta do dia 6) × sem ponte na FA; protamina na dose necessária × falta × excesso; suspender × reverter no sangramento maior; 4Ts com queda de plaquetas em 48 h; pausa do DOAC (48 h; 72 h em bloqueio neuraxial), sem ponte e sem sobrepor heparina
+- Alternativas: 4, comprimento parecido, correta em posição variada, mesmo fato observado em todas, sem absolutos, um erro definido por distrator
+- O simulador não modela HIT por dose, CCP, plasma, transfusão, cinética em horas nem seguimento além de 7 dias: esses pontos entram só como raciocínio
+
+REFERÊNCIAS:
+- Holbrook A et al. Chest 2012 (manejo de anticoagulantes); Garcia DA et al. Chest 2012 (anticoagulantes parenterais); Stevens SM et al. CHEST 2021 (TEV)
+- Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Horlocker TT et al. Reg Anesth Pain Med 2018 (ASRA); Steffel J et al. Europace 2021 (guia EHRA dos NOAC)
+- Hindricks G et al. Eur Heart J 2021 (ESC FA 2020); Eikelboom JW et al. N Engl J Med 2013 (RE-ALIGN); Tomaselli GF et al. JACC 2020 (sangramento em anticoagulantes)`,
+
   "sim-farmacoterapia-dislipidemia": `Você é um especialista em lipidologia e prevenção cardiovascular. Crie um simulador de Dislipidemia e Risco Cardiovascular (categoria Farmacoterapia Laboratorial).
 
 REQUISITOS:

@@ -3358,52 +3358,551 @@ export function getGlicemiaLabChallenges(caseIndex?: number): ChallengeSet {
 // ═══════════════════════════════════════════════════════════════════════════════
 // FARMACOTERAPIA LABORATORIAL — COAGULAÇÃO
 // ═══════════════════════════════════════════════════════════════════════════════
+// Motor: src/lib/coagulacao/engine.ts (números fixados em engine.test.ts). Casos: src/lib/coagulacao/cases.ts.
+// Estado que a página envia: { drug, dose, labGauges, sideEffects, trend[dia 0..7], lastLab (dia 7), baseLab, weight }.
+// Números verificados (dia 7, salvo indicação):
+//  Caso 1 (Carlos, 78 kg, INR 1,0): varfarina 2/5/10 mg → INR 1,6/2,5/4,0; dia 3 = 1,1/1,3/1,6; dia 5 (10 mg) = 2,8; dia 6 (10 mg) = 3,4;
+//    faixa 2,0–3,0 com 3,5–6,5 mg. Rivaroxabana 20 mg → INR 1,3, Anti-Xa 0,50; apixabana 5 mg → INR 1,1, Anti-Xa 0,40 (2,5 mg → 0,20).
+//    CHA₂DS₂-VASc = 3 (HAS, DM, idade 65–74); ClCr (Cockcroft-Gault) = (140−72)×78 ÷ (72×1,0) = 73,7 mL/min.
+//  Caso 2 (Helena, 55 kg, INR 8,2, TTPa 65): vit K 1/2,5/5/10 mg → INR 5,6/3,3/1,8/1,1 (dia 2 já estável); faixa 2,5–3,5 com 2,5–3,5 mg.
+//    Suspender varfarina → INR 3,2 (dia 5); varfarina 5 mg → 9,7 (risco ALTO). CCP: 50 UI/kg × 55 kg = 2.750 UI.
+//  Caso 3 (Amanda, 68 kg): enoxaparina 40/100/120/140/160 mg → Anti-Xa 0,24/0,59/0,71/0,82/0,94; rivaroxabana 20/30 mg → 0,50/0,75
+//    (Sangramento 18%/26%); D-dímero 4,5 → 4,2 (enox 140), 4,1 (riva 30), 4,2 (apixa 10); varfarina 5 mg → INR 1,3 (d3), 1,9 (d5), 2,5 (d7).
+//  Caso 4 (Roberto, 85 kg, HNF 1.500 UI/h, TTPa 95, Anti-Xa 0,8, Hb 8,5): protamina necessária = 1.500 × 2 h ÷ 100 = 30 mg;
+//    10/20/30/50/100 mg → TTPa 73/52/30/35/85, Anti-Xa 0,53/0,27/0/0/0; suspender HNF → TTPa 40, Anti-Xa 0,12; 4Ts = 1+0+0+1 = 2.
+//  Caso 5 (Sônia, 70 kg, Anti-Xa 0,5 no pico): pausa 24/36/48/72/96 h → Anti-Xa 0,13/0,06/0,03/0,01/0,00; enoxaparina 100 mg sobreposta → 1,07
+//    (40 mg → 0,73); CHA₂DS₂-VASc = 2 (idade 65–74 e sexo feminino).
+const CG_CTX = "Onde fica cada coisa: em “Prescrição” (coluna de controles) ficam o seletor de fármaco e o controle de dose; os cartões de “Coagulograma após o tratamento” mostram o exame no dia 7 e se atualizam ao mexer na dose (o botão “Simular 7 dias” só anima o gráfico). No gráfico “Tendência do coagulograma em 7 dias” as linhas são INR, TTPa e Anti-Xa por dia: passe o mouse para ler cada dia. O banner “Risco Hemorrágico” fica acima do coagulograma e “Risco de efeitos adversos (%)” abaixo do gráfico. No cartão, “▲ Alto” só quer dizer acima do normal de quem não anticoagula (INR até 1,2; TTPa até 35 s; Anti-Xa até 0,1 UI/mL): quem está anticoagulado aparece “Alto” mesmo na faixa terapêutica, e o alvo vem no enunciado.";
+const cgDay = (s: any, d: number, k: string): number => s.trend?.[d]?.[k] ?? 0;
+const cgRisk = (s: any, n: string): number => (s.sideEffects ?? []).find((e: any) => e.name === n)?.risco ?? 0;
 
 export function getCoagulacaoLabChallenges(caseIndex?: number): ChallengeSet {
   const caseSets: Challenge[][] = [
-    // Caso 1: Início de Varfarina (FA) (Carlos Mendes, 72a, CHA2DS2-VASc 4 — INR basal 1.0)
+    // Caso 1: Início de anticoagulação na FA (Carlos Mendes, 72a, 78 kg, CHA₂DS₂-VASc 3 — INR basal 1,0)
     [
-      { type: "mcq", question: "INR alvo para FA não valvar em anticoagulação com varfarina?", options: ["1.0-1.5", "2.0-3.0", "3.0-4.0", "4.0-5.0"], correctIndex: 1, explanation: "FA não valvar: INR 2.0-3.0. Prótese mecânica mitral: 2.5-3.5. Trombofilia com TEV recorrente: 2.5-3.5.", reference: "ACCP 2012" },
-      { type: "mcq", question: "DOACs são preferidos sobre varfarina em FA não valvar porque:", options: ["São mais baratos", "Não necessitam monitoramento de INR, têm menos interações alimentares, menor risco de sangramento intracraniano", "São mais potentes", "Podem ser usados em próteses valvares"], correctIndex: 1, explanation: "DOACs vs varfarina em FA: ↓AVC hemorrágico ~50%, ↓sangramento intracraniano, dose fixa, sem monitoramento. Contraindicados: prótese mecânica, estenose mitral moderada-grave.", reference: "Ruff CT. Lancet 2014" },
-      { type: "mcq", question: "CHA₂DS₂-VASc 4 (como este paciente): qual o risco anual de AVC sem anticoagulação?", options: ["<1%", "~4-5% ao ano — benefício claro da anticoagulação", "15%", "30%"], correctIndex: 1, explanation: "CHA₂DS₂-VASc: 0=baixo (sem ACO), 1=intermediário (considerar), ≥2=alto (anticoagular). Score 4: ~4%/ano de AVC. ACO reduz esse risco em ~64% (varfarina) ou ~70% (DOACs).", reference: "Lip GYH. Chest 2010" },
-      { type: "adjust", question: "Selecione Varfarina com dose ≥5mg e observe o INR subir no painel, partindo do basal 1.0, buscando a faixa terapêutica 2.0-3.0.\n\nQual o mecanismo pelo qual a varfarina eleva o INR?", targetParams: {}, validator: (s) => { if (s.drug !== "Varfarina") return { correct: false, feedback: "Selecione Varfarina." }; if ((s.dose ?? 0) < 5) return { correct: false, feedback: "Suba a dose para ≥5mg." }; return ((s.lastLab?.inr ?? 0) >= 2 && (s.lastLab?.inr ?? 0) <= 3.5) ? { correct: true, feedback: `INR atingiu ${s.lastLab?.inr} — dentro ou próximo da faixa terapêutica.` } : { correct: false, feedback: "Ajuste a dose até o INR chegar perto de 2.0-3.0." }; }, options: ["Ativa diretamente os fatores de coagulação", "Antagoniza a vitamina K — inibe a epóxido redutase (VKORC1), bloqueando a carboxilação dos fatores II, VII, IX, X e das proteínas C/S. O efeito pleno leva 3-5 dias (meia-vida do fator II: ~60h), por isso o INR sobe gradualmente no painel", "Aumenta a produção de plaquetas", "Dissolve coágulos já formados"], correctIndex: 1, explanation: "Varfarina: antagonista da vitamina K. Bloqueia a carboxilação γ dos fatores dependentes de vitamina K. O efeito pleno demora dias (dependendo da meia-vida de cada fator), o que explica por que o INR sobe progressivamente ao longo da simulação, não instantaneamente.", reference: "Ansell J. Chest 2008" },
-      { type: "adjust", question: "Troque para Rivaroxabana (alternativa DOAC, também aceitável para este paciente) e observe que o INR sobe pouco, mas o Anti-Xa se torna detectável.\n\nPor que o INR não é o exame adequado para monitorar um DOAC como a rivaroxabana?", targetParams: {}, validator: (s) => { if (s.drug !== "Rivaroxabana") return { correct: false, feedback: "Selecione Rivaroxabana." }; return (s.lastLab?.antiXa ?? 0) > (s.baseLab?.antiXa ?? 0) ? { correct: true, feedback: "Anti-Xa detectável, enquanto o INR mal se altera — ao contrário da varfarina." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["O INR sobe exatamente igual com DOAC e varfarina, sem diferença", "DOACs anti-Xa (rivaroxabana, apixabana) têm efeito mínimo e variável sobre o INR — o exame que reflete sua atividade é o anti-Xa específico para o fármaco, não o INR (que foi desenhado para monitorar antagonistas de vitamina K)", "O INR é sempre inútil em qualquer contexto de anticoagulação", "A rivaroxabana não tem nenhum efeito mensurável em exames laboratoriais"], correctIndex: 1, explanation: "Um dos motivos pelos quais os DOACs 'não necessitam monitoramento de INR' é justamente porque o INR não reflete adequadamente sua atividade anticoagulante — o painel demonstra isso: rivaroxabana eleva discretamente o INR mas eleva claramente o anti-Xa.", reference: "Ruff CT. Lancet 2014" },
-      { type: "mcq", question: "Bridge com heparina ao iniciar varfarina é necessário quando:", options: ["Sempre, em qualquer paciente iniciando varfarina", "Em pacientes com alto risco trombótico (TEV agudo, prótese mecânica) — período de 5-7 dias até o INR atingir a faixa terapêutica. Na FA de novo sem evento agudo, como este paciente, pode-se iniciar varfarina sem bridge", "Nunca, em nenhuma situação", "Apenas se o INR basal já estiver >2"], correctIndex: 1, explanation: "Bridge: HNF ou HBPM nos primeiros 5-7 dias, necessário em TEV agudo (fase procoagulante transitória: queda da proteína C antes da queda dos fatores dependentes de vitamina K). Na FA sem evento trombótico recente, o bridge geralmente é desnecessário.", reference: "BRIDGE Trial. NEJM 2015" },
+      {
+        type: "mcq",
+        question: "Carlos (72 anos, homem) tem fibrilação atrial não valvar, hipertensão e diabetes tipo 2, sem AVC prévio, sem insuficiência cardíaca e sem doença vascular. Pontuação do CHA₂DS₂-VASc: hipertensão 1, diabetes 1, idade 65–74 anos 1, idade ≥75 anos 2, sexo feminino 1, insuficiência cardíaca 1, AVC/AIT 2, doença vascular 1.\n\nQual é o escore de Carlos e o que ele decide?",
+        options: [
+          "Escore 4, porque idade de 65 a 74 anos e diabetes valem 2 pontos cada; há indicação de anticoagulação, com preferência por DOAC",
+          "Escore 2, porque o sexo masculino não pontua e só hipertensão e diabetes contam; a anticoagulação pode ser considerada, sem indicação firme",
+          "Escore 3 (hipertensão, diabetes e idade 65–74, 1 ponto cada); em homem, escore 2 ou mais indica anticoagulação, com preferência por DOAC",
+          "Escore 3 (hipertensão, diabetes e idade 65–74, 1 ponto cada); em homem, só escore 4 ou mais indica anticoagulação, então se mantém o seguimento",
+        ],
+        correctIndex: 2,
+        explanation: "Hipertensão (1) + diabetes (1) + idade 65–74 (1) = 3; sexo masculino, AVC, insuficiência cardíaca e doença vascular não pontuam (o texto antigo do caso dizia 4, o que não fecha com os dados). Em homens, a diretriz recomenda anticoagular com escore ≥2 (≥3 em mulheres) e considerar com 1 (2 em mulheres); o risco anual de AVC com escore 3 fica em torno de 3% sem anticoagulante. Como a FA é não valvar, o DOAC é preferido à varfarina.",
+        reference: "Hindricks G et al. 2020 ESC Guidelines for AF (Eur Heart J 2021); Lip GYH et al. Chest 2010",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Carlos vai iniciar varfarina (INR basal 1,0; alvo 2,0–3,0). Em “Prescrição”, escolha Varfarina e teste 2 mg/dia, 5 mg/dia e 10 mg/dia, um de cada vez. Para cada dose, anote o INR do cartão (dia 7) e, no gráfico, o INR do dia 3 (passe o mouse na linha INR).\n\nDiscutam em grupo e deixem a Varfarina numa dose que leve o INR do dia 7 para a faixa de 2,0 a 3,0. Com essa dose, o INR do dia 3 fica entre 1,2 e 1,4 e um colega propõe dobrar a dose “porque o INR não subiu”. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Varfarina") return { correct: false, feedback: "Selecione a Varfarina." };
+          const inr = s.lastLab?.inr ?? 0;
+          if (inr < 2.0 || inr > 3.0) return { correct: false, feedback: `Com essa dose o INR do dia 7 fica em ${inr}; ajuste até ele entrar na faixa de 2,0 a 3,0.` };
+          return cgDay(s, 3, "inr") < 2.0 ? { correct: true, feedback: `INR de ${inr} no dia 7, mas só ${cgDay(s, 3, "inr")} no dia 3: o efeito pleno leva dias.` } : { correct: false, feedback: "Confira o INR do dia 3 no gráfico." };
+        },
+        options: [
+          "Manter a dose: o efeito pleno da varfarina leva cerca de 1 semana (a faixa só vem por volta do dia 6–7), e subir para 10 mg/dia por um INR precoce levaria o INR a 4,0 no dia 7",
+          "Dobrar a dose: o INR do dia 3 está abaixo de 2,0, e a dose maior leva o INR à faixa mais cedo, sem passar de 3,0 no dia 7, o que encurta o tempo sem proteção contra o AVC",
+          "Associar enoxaparina até o INR chegar a 2,0: na FA, o INR abaixo da faixa nos primeiros dias deixa o paciente sem proteção contra o AVC, e a ponte com heparina é rotina",
+          "Trocar para rivaroxabana no dia 3: o INR baixo indica resistência à varfarina, e o DOAC dispensa a espera pelo efeito pleno e corrige a falta de resposta ao fármaco",
+        ],
+        correctIndex: 0,
+        explanation: "No simulador a varfarina soma ≈0,3 de INR por mg/dia, mas só atinge o efeito pleno no dia 7: com 5 mg o INR é 1,0 (dia 2), 1,3 (dia 3), 1,9 (dia 5) e 2,5 (dia 7); com 2 mg termina em 1,6 e com 10 mg em 4,0. O INR do início reflete sobretudo o fator VII (meia-vida de poucas horas), enquanto a proteção antitrombótica depende do fator II (≈60–72 h): por isso a dose só se reajusta depois de alguns dias estável, e dobrá-la no dia 3 leva ao excesso (4,0 com 10 mg). Na FA sem evento agudo não se faz ponte com heparina (BRIDGE/ACCP); a ponte entra na TVP aguda (Caso 3). Resistência à varfarina não se diagnostica no dia 3.",
+        reference: "Ageno W et al. Chest 2012 (Oral anticoagulant therapy, 9th ed.); Douketis JD. NEJM 2015 (BRIDGE)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Carlos também poderia usar um DOAC. Em “Prescrição”, teste um de cada vez: Rivaroxabana 20 mg/dia e Apixabana 5 mg 12/12h, e compare com a Varfarina 5 mg/dia. Anote INR e Anti-Xa (cartões, dia 7) de cada um.\n\nDiscutam em grupo e deixem selecionada a Rivaroxabana 20 mg/dia. Um residente diz que o INR de 1,3 “mostra que a rivaroxabana está subdosada” e quer subir a dose. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Rivaroxabana") return { correct: false, feedback: "Deixe a Rivaroxabana selecionada." };
+          if (s.dose !== 20) return { correct: false, feedback: "Ajuste a rivaroxabana para 20 mg/dia (a dose da FA com ClCr acima de 50)." };
+          return (s.lastLab?.inr ?? 9) < 1.6 && (s.lastLab?.antiXa ?? 0) > 0.1 ? { correct: true, feedback: `INR ${s.lastLab.inr} (quase inalterado) e Anti-Xa ${s.lastLab.antiXa}: o efeito aparece no Anti-Xa, não no INR.` } : { correct: false, feedback: "Confira INR e Anti-Xa dos cartões." };
+        },
+        options: [
+          "Subir a dose: o INR de 1,3 está longe da faixa de 2,0–3,0 e, como na varfarina, só entraria na faixa com a dose máxima, então a rivaroxabana de 20 mg seria insuficiente",
+          "Manter a dose e conferir a segurança pelo Anti-Xa, que deve ficar abaixo de 0,1 UI/mL, como em quem não anticoagula; um valor de 0,5 indicaria excesso de efeito do fármaco",
+          "Trocar para varfarina 5 mg/dia: o INR de 1,3 mostra que o DOAC não anticoagula, e a varfarina leva o INR para 2,0–3,0 já nos primeiros 3 dias de tratamento do paciente",
+          "Manter 20 mg/dia: o INR muda pouco com o DOAC (1,3), o Anti-Xa de 0,5 mostra que há efeito, e a dose se ajusta por idade, peso e função renal, não pelo INR",
+        ],
+        correctIndex: 3,
+        explanation: "No simulador a rivaroxabana 20 mg dá INR 1,3 e Anti-Xa 0,50 no dia 7 (10 mg: 1,1 e 0,25; 30 mg: 1,4 e 0,75); a apixabana 5 mg dá INR 1,1 e Anti-Xa 0,40. O INR foi desenhado para antagonistas da vitamina K e é pouco sensível aos DOACs; o Anti-Xa específico mostra a presença do fármaco, mas não é exame de rotina para ajustar dose: a dose do DOAC segue idade, peso e função renal (rivaroxabana 20 mg/dia com a refeição se ClCr >50 mL/min). Um Anti-Xa de 0,5 não é excesso, é o efeito esperado; e a varfarina leva ~7 dias, não 3, para chegar à faixa.",
+        reference: "Steffel J et al. 2021 EHRA Practical Guide on NOACs (Europace 2021); Ruff CT. Lancet 2014",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "A equipe escolheu apixabana para Carlos e a farmácia revisa a prescrição em 3 itens: dose, exames de acompanhamento e início do tratamento. Carlos tem 72 anos, 78 kg e creatinina 1,0 mg/dL (ClCr de Cockcroft-Gault ≈ 74 mL/min). A apixabana só é reduzida para 2,5 mg 12/12h com pelo menos 2 destes critérios: idade ≥80 anos, peso ≤60 kg, creatinina ≥1,5 mg/dL.\n\nEm “Prescrição”, teste Apixabana 2,5 mg e 5 mg (12/12h) e compare o Anti-Xa. Discutam em grupo e deixem selecionada a dose que Carlos deve usar. Qual prescrição está correta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Apixabana") return { correct: false, feedback: "Selecione a Apixabana." };
+          if (s.dose !== 5) return { correct: false, feedback: `Carlos cumpre 0 dos 3 critérios de redução; a dose é 5 mg 12/12h (com ${s.dose} mg o Anti-Xa fica em ${s.lastLab?.antiXa}).` };
+          return { correct: true, feedback: `Apixabana 5 mg 12/12h: Anti-Xa ${s.lastLab?.antiXa} (2,5 mg daria 0,2).` };
+        },
+        options: [
+          "Apixabana 2,5 mg 12/12h; creatinina e hemograma ao menos 1 vez ao ano, sem INR de rotina; início direto, sem ponte com heparina",
+          "Apixabana 5 mg 12/12h; creatinina e hemograma ao menos 1 vez ao ano, sem INR de rotina; início direto, sem ponte com heparina",
+          "Apixabana 5 mg 12/12h; INR toda semana para ajustar a dose até a faixa de 2,0–3,0; início direto, sem ponte com heparina",
+          "Apixabana 5 mg 12/12h; creatinina e hemograma ao menos 1 vez ao ano, sem INR de rotina; início com enoxaparina até o 5º dia",
+        ],
+        correctIndex: 1,
+        explanation: "Carlos cumpre 0 dos 3 critérios de redução (72 anos, 78 kg, creatinina 1,0): a dose é 5 mg 12/12h. No simulador, 5 mg dá Anti-Xa 0,40 e 2,5 mg dá 0,20, metade da exposição: subdose, com mais AVC sem menos sangramento relevante. O INR não orienta a apixabana (item 2) e a ponte com heparina não existe no início de DOAC (item 3: a ação começa em horas). Acompanhamento: função renal e hemograma ao menos anuais (mais a cada 6 meses ou menos se ClCr baixa), adesão e interações.",
+        reference: "Steffel J et al. EHRA Practical Guide 2021; Granger CB et al. NEJM 2011 (ARISTOTLE)",
+      },
+      {
+        type: "mcq",
+        question: "A Dona Helena (Caso 2) tem prótese mecânica mitral e usa varfarina com alvo de INR 2,5–3,5. Depois do que a equipe viu com Carlos, alguém sugere trocar a varfarina dela por apixabana, “já que o DOAC é preferido na fibrilação atrial”.\n\nO que os dados sustentam para a Helena?",
+        options: [
+          "Trocar: o DOAC tem o mesmo desempenho da varfarina em qualquer doença valvar, e a prótese mecânica não muda a escolha do anticoagulante oral",
+          "Trocar só se o INR for instável: com INR estável em 2,5–3,5 a varfarina permanece, e com INR instável o DOAC passa a ser a opção indicada",
+          "Não trocar: em prótese mecânica o DOAC teve mais tromboembolismo (RE-ALIGN, PROACT Xa), e a varfarina com INR de 2,5–3,5 segue como padrão",
+          "Não trocar agora porque o INR dela está em 8,2, e o DOAC só pode ser iniciado com INR normal; depois da correção, a troca estaria liberada",
+        ],
+        correctIndex: 2,
+        explanation: "“FA não valvar” (Carlos) é a condição em que o DOAC substitui a varfarina; prótese valvar mecânica não é. Na RE-ALIGN, a dabigatrana teve mais eventos tromboembólicos e mais sangramento que a varfarina, e o PROACT Xa (apixabana em prótese aórtica On-X) foi interrompido por excesso de eventos tromboembólicos. O DOAC é contraindicado em prótese mecânica, mesmo com INR instável (nesse caso se melhora o controle da varfarina), e o INR de 8,2 não é o motivo.",
+        reference: "Eikelboom JW et al. NEJM 2013 (RE-ALIGN); Wang TY et al. NEJM Evidence 2023 (PROACT Xa); ACC/AHA Valvular Heart Disease Guideline 2020",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Para ganhar tempo, um residente propõe iniciar a Varfarina em 10 mg/dia, como “dose de ataque”. Em “Prescrição”, escolha Varfarina 10 mg/dia e leia no gráfico o INR dos dias 5, 6 e 7 (passe o mouse na linha INR); depois compare com 5 mg/dia.\n\nDiscutam em grupo e deixem selecionados os 10 mg/dia. O INR do dia 5 parece ótimo. O que acontece com ele até o dia 7, e o que isso diz sobre iniciar a varfarina nesta FA?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Varfarina" || s.dose !== 10) return { correct: false, feedback: "Deixe a Varfarina em 10 mg/dia para ler a curva." };
+          const d5 = cgDay(s, 5, "inr"), d7 = s.lastLab?.inr ?? 0;
+          return d5 >= 2.0 && d5 <= 3.0 && d7 > 3.5 ? { correct: true, feedback: `INR ${d5} no dia 5 (na faixa) e ${d7} no dia 7 (acima do alvo): a curva ultrapassa a faixa.` } : { correct: false, feedback: "Confira o INR dos dias 5 e 7." };
+        },
+        options: [
+          "Passa de 2,8 (dia 5) para 4,0 (dia 7), acima do alvo: a dose de ataque é desnecessária e arriscada aos 72 anos; começar com cerca de 5 mg e ajustar depois de dias",
+          "Passa de 2,8 (dia 5) para 4,0 (dia 7), mas um INR de 4,0 ainda é seguro na FA e só exigiria redução se passasse de 4,5; a dose de ataque pode ser mantida",
+          "Passa de 2,8 (dia 5) para 4,0 (dia 7), mas a dose de ataque se justifica porque o INR do dia 5 já estava na faixa, e o valor do dia 7 é um erro de leitura do exame",
+          "Passa de 2,8 (dia 5) para 4,0 (dia 7); para compensar, manter os 10 mg e associar vitamina K oral de rotina, para que o INR não ultrapasse 3,0 na semana",
+        ],
+        correctIndex: 0,
+        explanation: "Com 10 mg/dia o INR do simulador é 1,0 (dia 2), 1,6 (dia 3), 2,2 (dia 4), 2,8 (dia 5), 3,4 (dia 6) e 4,0 (dia 7): o INR cruza a faixa de 2,0–3,0 por volta do dia 4–5 e continua subindo porque o efeito da varfarina só se completa depois de alguns dias, então olhar o dia 5 engana. Com 5 mg o INR chega a 2,5 e para. Doses de ataque aumentam o risco de INR >4 sem trazer proteção antes (a proteção depende do fator II), sobretudo em idosos; o início usual é 2,5–5 mg/dia com ajuste a cada poucos dias. Vitamina K de rotina para conter o INR é a combinação errada de fármacos.",
+        reference: "Ageno W et al. Chest 2012 (Oral anticoagulant therapy, 9th ed.)",
+      },
     ],
-    // Caso 2: INR Supraterapêutico (Dona Helena, 78a, prótese valvar mecânica — INR 8.2)
+    // Caso 2: INR supraterapêutico em prótese mecânica (Dona Helena, 78a, 55 kg — INR 8,2, TTPa 65, Hb 11,8, ciprofloxacino há 5 dias)
     [
-      { type: "mcq", question: "INR 8.2 sem sangramento ativo nesta paciente com prótese valvar: conduta inicial?", options: ["Manter varfarina na mesma dose e apenas monitorar", "Suspender a varfarina e administrar vitamina K oral. Reavaliar o INR em 24h", "Plasma fresco congelado de urgência, sem necessidade de suspender a varfarina", "CCP 4 fatores imediato, reservado para sangramento grave"], correctIndex: 1, explanation: "INR 4.5-10 sem sangramento: suspender varfarina + vitamina K oral (1-2.5mg). INR >10: vitamina K 2.5-5mg VO. Sangramento grave: CCP 4 fatores + vitamina K EV. PFC: volume excessivo, ação lenta, reservado para quando CCP não está disponível.", reference: "ACCP 2012" },
-      { type: "adjust", question: "Selecione Vitamina K (Fitomenadiona) com dose adequada e observe o INR cair no painel, partindo de 8.2.\n\nQuando a vitamina K deve ser administrada por via EV em vez de oral?", targetParams: {}, validator: (s) => { if (s.drug !== "Vitamina K (Fitomenadiona)") return { correct: false, feedback: "Selecione Vitamina K (Fitomenadiona)." }; return (s.lastLab?.inr ?? 99) < (s.baseLab?.inr ?? 0) ? { correct: true, feedback: "INR caindo em direção à faixa terapêutica." } : { correct: false, feedback: "Suba a dose para ver o INR cair." }; }, options: ["Sempre por via EV, por ser mais rápida em qualquer cenário", "Apenas em sangramento grave ou risco de vida — a via oral é eficaz e segura na maioria dos casos (como este, sem sangramento ativo); a via EV tem risco de reação anafilactoide se infundida rápido demais", "Nunca por via EV, é sempre contraindicada", "Apenas se o INR estiver acima de 20"], correctIndex: 1, explanation: "Vitamina K oral: efeito em ~24h, segura e previsível — apropriada para este caso sem sangramento. EV: efeito mais rápido (6-8h), reservada para sangramento ativo/grave, com risco de reação anafilactoide se infundida rápido.", reference: "Crowther MA. Ann Intern Med 2009" },
-      { type: "mcq", question: "Se esta paciente tivesse sangramento grave associado ao INR 8.2, qual reversor forneceria correção mais rápida que a vitamina K isolada?", options: ["Apenas fator VII isolado", "Complexo Protrombínico (CCP) 4 fatores — contém os fatores II, VII, IX e X, agindo como reversor rápido enquanto a vitamina K sustenta o efeito a longo prazo", "Apenas fibrinogênio isolado", "Concentrado de plaquetas"], correctIndex: 1, explanation: "CCP 4 fatores: dose baseada no INR e peso. Vantagem sobre plasma fresco congelado: volume menor, ação praticamente imediata, sem necessidade de tipagem ABO. Sempre associar vitamina K para sustentar o efeito (o CCP tem meia-vida curta).", reference: "Sarode R. Circulation 2013" },
-      { type: "mcq", question: "Esta paciente tem prótese mecânica MITRAL, com INR alvo de 2.5-3.5 (mais alto que o alvo de FA não valvar).\n\nPor que a posição mitral exige um alvo de INR mais elevado que a posição aórtica?", options: ["Porque o fluxo sanguíneo é maior na posição mitral", "A posição mitral tem maior risco trombogênico (fluxo mais lento, câmara atrial maior), exigindo INR alvo mais alto (2.5-3.5) que a posição aórtica (2.0-3.0)", "Porque a paciente é mais idosa que a média", "Porque a prótese mitral é fisicamente maior"], correctIndex: 1, explanation: "Posição mitral: fluxo mais lento, átrio esquerdo maior → maior risco de formação de trombo na prótese. INR alvo 2.5-3.5. Algumas próteses mais antigas (ex: Starr-Edwards) exigem INR ainda mais alto (3.0-4.0).", reference: "ACC/AHA Valvular 2020" },
-      { type: "mcq", question: "Este INR supraterapêutico surgiu sem mudança de dose relatada.\n\nQuais causas devem ser investigadas para uma elevação inesperada do INR?", options: ["Apenas exercício físico intenso", "Interações medicamentosas (amiodarona, fluconazol, metronidazol, antibióticos que reduzem a vitamina K intestinal), hepatopatia, redução da ingesta alimentar ou diarreia recente", "Apenas hipertensão arterial mal controlada", "Apenas diabetes descompensado"], correctIndex: 1, explanation: "Causas de INR elevado inesperadamente: inibidores de CYP2C9/3A4 (amiodarona, fluconazol, metronidazol), redução da flora intestinal produtora de vitamina K (antibióticos), hepatopatia, hipertireoidismo, febre, desnutrição/baixa ingesta.", reference: "Holbrook AM. Arch Intern Med 2005" },
-      { type: "adjust", question: "Após corrigir o INR, selecione Varfarina novamente com dose reduzida (≤3mg).\n\nEste simulador de fármaco único sempre recalcula o gráfico a partir do INR basal do caso (8.2) — ele NÃO representa reiniciar a varfarina já a partir de um INR normalizado, então ignore a curva mostrada aqui; o que importa é a dose selecionada. Quando e como reiniciar a varfarina após um episódio de INR supraterapêutico?", targetParams: {}, validator: (s) => (s.drug === "Varfarina" && (s.dose ?? 99) <= 3) ? { correct: true, feedback: "Dose reduzida selecionada — reinício mais cauteloso." } : { correct: false, feedback: "Selecione Varfarina com dose ≤3mg." }, options: ["No dia seguinte, com a mesma dose de antes do episódio", "Quando o INR estiver de volta a valores seguros: reiniciar com dose REDUZIDA (~10-20% menor), investigar e corrigir a causa da elevação, e monitorar o INR mais frequentemente (a cada 2-3 dias) até estabilizar", "Somente após 1 semana sem nenhum ajuste de dose", "Trocar obrigatoriamente para DOAC em todos os casos"], correctIndex: 1, explanation: "Reiniciar a varfarina com dose reduzida após identificar e, se possível, corrigir a causa da elevação (suspender interação, tratar a causa de base). Monitorar o INR com maior frequência até nova estabilização.", reference: "ACCP 2012" },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender varfarina (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, e na prática a vitamina K oral age em 24–48 h.",
+        question: "Helena (78 anos, 55 kg, prótese mecânica mitral, alvo de INR 2,5–3,5) está com INR 8,2, sem sangramento, depois de 5 dias de ciprofloxacino. Em “Prescrição”, escolha Vitamina K e teste 1 mg, 2,5 mg e 10 mg, um de cada vez. Anote o INR do cartão (dia 7) e o banner “Risco Hemorrágico”.\n\nDiscutam em grupo e deixem selecionada a dose que devolve o INR ao alvo da prótese (2,5–3,5), sem passar dele. Qual dose escolher e por quê?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Vitamina K (Fitomenadiona)") return { correct: false, feedback: "Selecione a Vitamina K (Fitomenadiona)." };
+          const inr = s.lastLab?.inr ?? 0;
+          return inr >= 2.5 && inr <= 3.5 ? { correct: true, feedback: `Vitamina K ${s.dose} mg: INR ${inr}, dentro do alvo da prótese (2,5–3,5).` } : { correct: false, feedback: `Com ${s.dose} mg o INR do dia 7 fica em ${inr}; procure a dose que o leve a 2,5–3,5.` };
+        },
+        options: [
+          "Escolher 1 mg: INR de 5,6 no dia 7; é a dose mais segura, e em prótese mecânica um INR acima do alvo é preferível a um abaixo, então o excesso é aceitável",
+          "Escolher 2,5 mg: INR de 3,3 no dia 7; fica dentro do alvo de 2,5–3,5 da prótese e evita tanto o excesso de anticoagulação quanto a falta dela",
+          "Escolher 5 mg: INR de 1,8 no dia 7; corrige o excesso com folga, e a prótese pode ficar alguns dias abaixo do alvo sem risco relevante de trombose",
+          "Escolher 10 mg: INR de 1,1 no dia 7; normaliza o exame por completo, e é a dose que elimina o risco de sangramento e a necessidade de novos exames",
+        ],
+        correctIndex: 1,
+        explanation: "No simulador, a vitamina K reduz uma fração do excesso do INR (1 − e^(−0,45·dose)): 1 mg → 5,6; 2,5 mg → 3,3; 3,5 mg → 2,5; 5 mg → 1,8; 10 mg → 1,1 (TTPa 65 → 30 s). A faixa 2,5–3,5 corresponde a 2,5–3,5 mg, o limite superior da dose oral baixa (1–2,5 mg) usada em INR 4,5–10 sem sangramento. Em INR 8,2 sem sangramento o ACCP sugere até não dar vitamina K de rotina; em paciente idosa de 55 kg com prótese o balanço favorece dose baixa, porque a vitamina K em dose alta deixa a prótese sem proteção (INR 1,1) e a resistência à varfarina dura dias.",
+        reference: "Holbrook A et al. Chest 2012 (Evidence-based management of anticoagulant therapy, 9th ed.); ACC/AHA Valvular Heart Disease Guideline 2020",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender varfarina (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, e na prática a vitamina K oral age em 24–48 h.",
+        question: "Agora compare condutas para Helena. Em “Prescrição”, escolha “Suspender varfarina (sem dose)” e anote o INR do dia 5 e do dia 7. Depois escolha Vitamina K 2,5 mg e anote o INR dos dias 2 e 7. Por fim, escolha Varfarina 5 mg/dia (a dose atual de Helena) e leia o INR do dia 7 e o banner “Risco Hemorrágico”.\n\nDiscutam em grupo e deixem selecionada uma conduta que leve o INR ao alvo da prótese (2,5–3,5). Um residente diz que “suspender sozinho não resolve, só a vitamina K”. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          const inr = s.lastLab?.inr ?? 0;
+          const ok = s.drug === "Suspender varfarina (sem dose)" || (s.drug === "Vitamina K (Fitomenadiona)" && s.dose >= 2.5 && s.dose <= 3.5);
+          if (!ok) return { correct: false, feedback: "Deixe selecionada a suspensão da varfarina ou a vitamina K em 2,5–3,5 mg, as condutas que levam ao alvo." };
+          return inr >= 2.5 && inr <= 3.5 ? { correct: true, feedback: `INR ${inr} no dia 7, dentro do alvo (a suspensão chega ao alvo no dia 5; a vitamina K no dia 2).` } : { correct: false, feedback: `INR ${inr}: fora do alvo de 2,5–3,5.` };
+        },
+        options: [
+          "Só a vitamina K resolve: suspender a varfarina deixa o INR acima de 4,0 no dia 7, e manter os 5 mg/dia leva a 9,7 sem risco adicional de sangramento nesta paciente",
+          "Só suspender resolve: a vitamina K 2,5 mg é desnecessária e perigosa, pois leva o INR a 1,1 no dia 7, e manter os 5 mg/dia leva a 9,7 sem risco relevante",
+          "Manter os 5 mg/dia é aceitável: o INR de 9,7 no dia 7 é compensado pela suspensão do ciprofloxacino, e o controle em 1 semana basta nesta paciente",
+          "Suspender e vitamina K 2,5 mg chegam ao alvo (INR 3,2 e 3,3 no dia 7), a vitamina K em 2 dias e a suspensão em 5; manter os 5 mg/dia leva a 9,7",
+        ],
+        correctIndex: 3,
+        explanation: "Suspender a varfarina leva o INR de 8,2 a 6,9 (dia 2), 5,7 (dia 3), 4,4 (dia 4) e 3,2 (dia 5), onde estabiliza; a vitamina K 2,5 mg leva a 5,8 (dia 1) e 3,3 (dia 2). Manter a varfarina 5 mg leva o INR a 9,7 e o banner a ALTO. Para Helena (78 anos, 55 kg), as duas condutas que levam ao alvo são defensáveis: suspender e controlar o INR em ~24 h, ou somar vitamina K oral em dose baixa quando o risco hemorrágico pesa mais; o que não é aceitável é manter a dose, nem corrigir em excesso (10 mg → 1,1, Desafio 5).",
+        reference: "Holbrook A et al. Chest 2012; Crowther MA et al. Ann Intern Med 2009 (vitamina K oral em dose baixa)",
+      },
+      {
+        type: "mcq",
+        question: "Suponha que, em vez de INR alto sem sangramento, Helena (55 kg, INR 8,2) tivesse uma hemorragia grave. O CCP de 4 fatores é dosado pelo INR e pelo peso: INR 2 a menos de 4 → 25 UI/kg; 4 a 6 → 35 UI/kg; acima de 6 → 50 UI/kg (máximo de 5.000 UI, considerando no máximo 100 kg).\n\nQual dose de CCP e qual vitamina K acompanham a reversão?",
+        options: [
+          "2.750 UI de CCP (50 UI/kg × 55 kg), com vitamina K 5–10 mg EV lento para sustentar o efeito, porque o CCP tem meia-vida curta",
+          "1.925 UI de CCP (35 UI/kg × 55 kg), com vitamina K 5–10 mg EV lento para sustentar o efeito, porque o CCP tem meia-vida curta",
+          "2.750 UI de CCP (50 UI/kg × 55 kg), sem vitamina K, porque o CCP corrige a coagulação por completo e por tempo prolongado",
+          "5.000 UI de CCP (dose máxima da bula), com vitamina K 5–10 mg EV lento para sustentar o efeito, porque o CCP tem meia-vida curta",
+        ],
+        correctIndex: 0,
+        explanation: "INR 8,2 está na faixa acima de 6: 50 UI/kg × 55 kg = 2.750 UI (35 UI/kg daria 1.925 UI; o teto de 5.000 UI vale para pacientes de 100 kg ou mais, não para 55 kg). O CCP repõe fatores II, VII, IX e X em minutos, mas some em horas, enquanto a varfarina continua agindo: a vitamina K 5–10 mg EV, lenta, sustenta a reversão. O plasma fresco só entra se o CCP não estiver disponível (volume e demora).",
+        reference: "Tomaselli GF et al. 2020 ACC Expert Consensus Decision Pathway on Management of Bleeding in Patients on Oral Anticoagulants (JACC 2020); bula do Kcentra",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender varfarina (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, e na prática a vitamina K oral age em 24–48 h.",
+        question: "Um residente quer manter a Varfarina 5 mg/dia e “só repetir o INR em 1 semana”, já que Helena não sangra. Em “Prescrição”, escolha Varfarina 5 mg/dia e leia o INR do dia 7 e o banner “Risco Hemorrágico”; compare com “Suspender varfarina (sem dose)”.\n\nDiscutam em grupo e deixem selecionada a Varfarina 5 mg/dia. O que os números mostram e qual é a conduta correta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Varfarina" || (s.dose ?? 0) < 4) return { correct: false, feedback: "Deixe a Varfarina em 5 mg/dia (a dose atual de Helena) para ver o efeito de mantê-la." };
+          return (s.lastLab?.inr ?? 0) > (s.baseLab?.inr ?? 99) ? { correct: true, feedback: `Mantendo a varfarina o INR sobe de ${s.baseLab.inr} para ${s.lastLab.inr}.` } : { correct: false, feedback: "Confira o INR do dia 7." };
+        },
+        options: [
+          "O INR vai de 8,2 a 9,7 e o risco é ALTO; aguardar 1 semana é aceitável, porque a suspensão só se justifica se o INR passar de 10 ou houver sangramento",
+          "O INR vai de 8,2 a 9,7 e o risco é ALTO; o ideal é reduzir para 2,5 mg e controlar em 1 semana, porque suspender expõe a prótese à trombose",
+          "O INR vai de 8,2 a 9,7 e o risco é ALTO; suspender a varfarina, identificar a causa (ciprofloxacino recente) e repetir o INR em cerca de 24 h",
+          "O INR vai de 8,2 a 9,7 e o risco é ALTO; trocar a varfarina por enoxaparina em dose plena até o INR cair, porque a prótese mecânica não pode ficar sem anticoagulante",
+        ],
+        correctIndex: 2,
+        explanation: "Com a varfarina mantida o INR do simulador vai de 8,2 para 9,7 (TTPa 65 → 69 s), e o banner fica em ALTO; suspender leva a 3,2 no dia 5. Em INR 4,5–10 sem sangramento a conduta é suspender 1–2 doses, procurar a causa (ciprofloxacino, que potencializa a varfarina; ingesta, febre, hepatopatia) e repetir o INR em ~24 h; reduzir a dose sem suspender, ou esperar uma semana, mantém o excesso. Heparina em dose plena com INR 8,2 soma efeito sem proteger a prótese (que já está sobre-anticoagulada).",
+        reference: "Holbrook A et al. Chest 2012; Crowther MA et al. Ann Intern Med 2009 (vitamina K oral em dose baixa)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender varfarina (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, e na prática a vitamina K oral age em 24–48 h.",
+        question: "Outro residente prefere a Vitamina K 10 mg, “para normalizar logo”. Em “Prescrição”, escolha Vitamina K 10 mg e leia o INR do dia 7, o TTPa e o banner “Risco Hemorrágico”; compare com 2,5 mg.\n\nDiscutam em grupo e deixem selecionados os 10 mg. O exame ficou “bonito”: o INR normalizou e o risco hemorrágico caiu para BAIXO. O que isso significa para esta paciente?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Vitamina K (Fitomenadiona)" || s.dose !== 10) return { correct: false, feedback: "Deixe a Vitamina K em 10 mg para ver o que acontece." };
+          return (s.lastLab?.inr ?? 9) < 1.5 ? { correct: true, feedback: `INR ${s.lastLab.inr} (e TTPa ${s.lastLab.ttpa} s): normalizado, mas abaixo do alvo 2,5–3,5 da prótese.` } : { correct: false, feedback: "Confira o INR do dia 7." };
+        },
+        options: [
+          "O INR de 1,1 e o risco BAIXO são o melhor resultado: quanto mais perto de 1,0, menor o risco, e a varfarina volta na dose de antes já no dia seguinte",
+          "O INR de 1,1 e o risco BAIXO são aceitáveis: como o INR caiu bem abaixo do alvo, basta reiniciar a mesma dose, e a resistência passa em 24 horas",
+          "O INR de 1,1 e o risco BAIXO dispensam nova anticoagulação: o risco hemorrágico foi eliminado e a prótese segue protegida sem varfarina por alguns dias",
+          "O INR de 1,1 e o risco BAIXO escondem outro risco: está abaixo do alvo de 2,5–3,5 e a prótese fica desprotegida, com resistência à varfarina por dias",
+        ],
+        correctIndex: 3,
+        explanation: "Vitamina K 10 mg leva o INR a 1,1 e o TTPa a 30 s (risco BAIXO), mas a meta de Helena é INR 2,5–3,5, não 1,0: uma prótese mecânica mitral sem anticoagulação eficaz corre risco de trombose valvar e embolia, e a vitamina K em dose alta torna a varfarina pouco eficaz por alguns dias, exigindo ponte com heparina. É a armadilha do número bonito: o painel de risco hemorrágico não enxerga o risco trombótico. A dose de 2,5 mg faz o INR parar em 3,3.",
+        reference: "Holbrook A et al. Chest 2012; ACC/AHA Valvular Heart Disease Guideline 2020",
+      },
+      {
+        type: "mcq",
+        question: "Dois dias depois, com a conduta escolhida, o INR de Helena está em 3,4, sem sangramento, o ciprofloxacino foi suspenso e o alvo continua 2,5–3,5.\n\nComo reiniciar a varfarina e acompanhar?",
+        options: [
+          "Retomar os 5 mg/dia de antes, porque a causa do excesso (o antibiótico) acabou, com o próximo INR em cerca de 1 semana",
+          "Retomar com dose semanal 10–20% menor, porque o antibiótico pode ter efeito residual, com INR em 3 a 5 dias até estabilizar no alvo",
+          "Retomar os 5 mg/dia com enoxaparina em dose plena, porque um INR de 3,4 já é baixo demais para uma prótese mecânica mitral",
+          "Não retomar a varfarina e trocar por DOAC, que dispensa controle do INR e não sofre interação com antibióticos como o ciprofloxacino",
+        ],
+        correctIndex: 1,
+        explanation: "INR 3,4 já está no alvo (2,5–3,5): a varfarina volta, em dose semanal 10–20% menor quando houve uma causa corrigível com efeito residual, e o INR é reavaliado em poucos dias até estabilizar (a mesma dose de antes é razoável se a causa foi totalmente removida, mas o controle em 1 semana é longo demais para esta paciente). Heparina plena nesse INR soma efeito sem necessidade; o DOAC é contraindicado em prótese mecânica (Caso 1, Desafio 5).",
+        reference: "Holbrook A et al. Chest 2012; ACC/AHA Valvular Heart Disease Guideline 2020",
+      },
     ],
-    // Caso 3: TVP Aguda (Amanda Rocha, 35a, em ACO — D-dímero 4.5)
+    // Caso 3: TVP aguda (Amanda Rocha, 35a, 68 kg, ACO combinado — D-dímero 4,5, creatinina 0,8)
     [
-      { type: "mcq", question: "Mulher 35a, em anticoncepcional oral, TVP femoropoplítea confirmada por USG Doppler.\n\nQual o esquema padrão de rivaroxabana para TVP aguda?", options: ["20mg 1x/dia desde o início do tratamento", "15mg 12/12h por 21 dias → 20mg 1x/dia (esquema de dose de ataque seguida de manutenção)", "10mg 1x/dia, sem fase de ataque", "5mg 12/12h de forma contínua"], correctIndex: 1, explanation: "Rivaroxabana na TVP: dose de ataque 15mg 12/12h × 21 dias → manutenção 20mg/dia. Não necessita bridge com heparina, diferente da varfarina. Apixabana: esquema análogo com 10mg 12/12h × 7 dias → 5mg 12/12h.", reference: "EINSTEIN-DVT. NEJM 2010" },
-      { type: "mcq", question: "D-dímero 4.5 mg/L nesta paciente: o que este valor indica isoladamente?", options: ["Diagnóstico definitivo de TVP, sem necessidade de outro exame", "Alta sensibilidade para TEV (>95%), mas baixa especificidade — o D-dímero elevado por si só não confirma TVP (pode subir em infecção, neoplasia, cirurgia, gravidez); o diagnóstico definitivo veio do USG Doppler. Um D-dímero NORMAL, por outro lado, é útil para EXCLUIR TEV em baixa probabilidade clínica", "Indica especificamente infecção bacteriana concomitante", "Indica insuficiência renal aguda"], correctIndex: 1, explanation: "D-dímero: produto da degradação de fibrina, elevado em TEV mas também em muitas outras condições (baixa especificidade). Seu maior valor prático é o alto valor preditivo NEGATIVO — se normal e probabilidade pré-teste baixa, exclui TEV sem necessidade de imagem.", reference: "Wells PS. JAMA 2006" },
-      { type: "mcq", question: "Esta TVP tem um fator provocador claro (uso de anticoncepcional oral, que será suspenso).\n\nQual a duração recomendada de anticoagulação para uma primeira TVP provocada por fator transitório removível?", options: ["Anticoagulação vitalícia, independente do fator causal", "3 meses — fator provocador transitório identificado e removido (o ACO será suspenso)", "1 mês apenas", "6 semanas fixas, sem individualização"], correctIndex: 1, explanation: "TEV provocado por fator transitório e reversível (cirurgia, imobilização, uso de ACO que será suspenso): anticoagular por 3 meses. TEV não provocado: considerar extensão além de 3 meses. TEV recorrente: geralmente vitalício.", reference: "ACCP 2016" },
-      { type: "adjust", question: "Selecione Enoxaparina com dose ≥80mg/dia (dose plena) e observe o Anti-Xa subir no painel a partir do basal.\n\nQual a dose terapêutica padrão de HBPM (enoxaparina) para tratamento de TEV, e por que ela difere da dose profilática?", targetParams: {}, validator: (s) => { if (s.drug !== "Enoxaparina") return { correct: false, feedback: "Selecione Enoxaparina." }; if ((s.dose ?? 0) < 80) return { correct: false, feedback: "Suba a dose para ≥80mg/dia (dose plena)." }; return (s.lastLab?.antiXa ?? 0) > (s.baseLab?.antiXa ?? 0) ? { correct: true, feedback: "Anti-Xa subindo — dose terapêutica atingindo faixa de tratamento." } : { correct: false, feedback: "Suba mais a dose." }; }, options: ["40mg 1x/dia, igual à dose de qualquer indicação", "~1mg/kg 12/12h SC (ou 1.5mg/kg 1x/dia) para TRATAMENTO — muito maior que a dose profilática (40mg 1x/dia usada para prevenção), pois o objetivo aqui é anticoagulação plena, não apenas profilaxia", "20mg 1x/dia, dose única para qualquer situação", "0.5mg/kg 1x/dia, sem diferença entre tratamento e profilaxia"], correctIndex: 1, explanation: "Enoxaparina terapêutica (tratamento de TEV): ~1mg/kg 12/12h (padrão) ou 1.5mg/kg 1x/dia — dose muito maior que a profilática (40mg 1x/dia, usada para prevenção em pacientes de risco, não para tratar um evento já estabelecido).", reference: "ACCP 2012" },
-      { type: "adjust", question: "Troque para Rivaroxabana (alternativa oral direta, também correta) e observe o Anti-Xa subir de forma semelhante à Enoxaparina.\n\nQual a vantagem prática da rivaroxabana sobre a enoxaparina seguida de varfarina, no contexto ambulatorial desta paciente jovem?", targetParams: {}, validator: (s) => { if (s.drug !== "Rivaroxabana") return { correct: false, feedback: "Selecione Rivaroxabana." }; return (s.lastLab?.antiXa ?? 0) > (s.baseLab?.antiXa ?? 0) ? { correct: true, feedback: "Anti-Xa subindo com a rivaroxabana." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["A rivaroxabana é sempre mais barata que a enoxaparina em qualquer sistema de saúde", "A rivaroxabana permite tratamento totalmente oral desde o início, sem necessidade de injeções de HBPM nem do período de sobreposição/bridge com varfarina até o INR ficar terapêutico — mais prática para uma paciente jovem, ativa e sem contraindicações", "A rivaroxabana funciona apenas em pacientes hospitalizados", "Não há diferença prática entre as duas estratégias"], correctIndex: 1, explanation: "DOACs (rivaroxabana, apixabana) eliminam a necessidade de injeções de HBPM e o período de sobreposição com varfarina até o INR atingir a faixa terapêutica — simplificando o tratamento ambulatorial da TVP em pacientes sem contraindicação (ex: gravidez, síndrome antifosfolípide grave).", reference: "EINSTEIN-DVT. NEJM 2010" },
-      { type: "mcq", question: "Em qual situação um filtro de veia cava inferior estaria indicado nesta paciente?", options: ["Rotineiramente em todas as pacientes com TVP proximal", "Apenas se houver contraindicação ABSOLUTA à anticoagulação (sangramento ativo, trombocitopenia severa) ou TEP recorrente apesar de anticoagulação adequada — não é indicado nesta paciente, que não tem contraindicação", "Como profilaxia de rotina em qualquer mulher em uso de ACO", "Sempre que o D-dímero estiver acima de 4"], correctIndex: 1, explanation: "Filtro de VCI: indicação restrita e preferencialmente temporário. Não substitui a anticoagulação. Estudo PREPIC-2 não mostrou diferença em TEP recorrente ao adicionar filtro à anticoagulação adequada — reservar para os cenários específicos de contraindicação ou falha terapêutica.", reference: "PREPIC-2. JAMA 2015" },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Amanda (68 kg, creatinina 0,8 mg/dL) tem TVP femoropoplítea e vai começar a anticoagulação. Em “Prescrição”, escolha Enoxaparina e teste 40 mg/dia e 140 mg/dia (140 mg/dia = 2 aplicações de 70 mg, cerca de 1 mg/kg 12/12h). Anote o Anti-Xa de cada uma. O alvo do Anti-Xa no tratamento com HBPM 12/12h é 0,6–1,0 UI/mL.\n\nDiscutam em grupo e deixem selecionada a dose de tratamento. Um residente defende manter 40 mg/dia “porque o D-dímero já é alto e mais dose só soma sangramento”. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Enoxaparina") return { correct: false, feedback: "Selecione a Enoxaparina." };
+          const ax = s.lastLab?.antiXa ?? 0;
+          return ax >= 0.6 && ax <= 1.0 ? { correct: true, feedback: `Enoxaparina ${s.dose} mg/dia: Anti-Xa ${ax}, dentro do alvo de 0,6–1,0.` } : { correct: false, feedback: `Com ${s.dose} mg/dia o Anti-Xa fica em ${ax}; ajuste para ficar entre 0,6 e 1,0.` };
+        },
+        options: [
+          "Manter 40 mg: o Anti-Xa de 0,24 é suficiente, porque o D-dímero alto mostra que o trombo está estável, e mais dose apenas aumentaria o sangramento",
+          "Dar os 140 mg numa única aplicação por dia: o Anti-Xa de 0,82 vale para a dose diária total, e dividir a dose em duas não muda a exposição",
+          "Usar cerca de 70 mg 12/12h (140 mg/dia): Anti-Xa de 0,82, dentro do alvo; os 40 mg (0,24) são dose de profilaxia e deixam a TVP sem tratamento",
+          "Usar 160 mg/dia: o Anti-Xa de 0,94 é melhor por chegar mais perto de 1,0, e quanto maior o Anti-Xa, mais rápido o trombo se dissolve",
+        ],
+        correctIndex: 2,
+        explanation: "O simulador calcula o Anti-Xa da enoxaparina por mg/kg/dia (0,4 UI/mL por mg/kg/dia, para 68 kg): 40 mg → 0,24 (profilaxia); 100 mg → 0,59; 120 mg → 0,71; 140 mg → 0,82; 160 mg → 0,94 (com Sangramento de 10%, 18%, 21%, 23% e 26%). Tratamento da TVP é ≈1 mg/kg 12/12h (70 mg 12/12h para Amanda); com 40 mg a TVP fica subtratada, e o D-dímero alto não é motivo para poupar dose. Dose maior não dissolve o trombo mais rápido: só aumenta o sangramento. A dose única diária é 1,5 mg/kg (≈100 mg), e dobrar a dose em uma única aplicação (140 mg) produz picos acima do alvo.",
+        reference: "Stevens SM et al. CHEST Guideline 2021 (Antithrombotic Therapy for VTE Disease, 2nd update); Garcia DA et al. Chest 2012 (Parenteral anticoagulants)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Na Rivaroxabana, “30 mg/dia” equivale a 15 mg de 12/12h.",
+        question: "Amanda prefere comprimido. Em “Prescrição”, escolha Rivaroxabana e teste 20 mg/dia e 30 mg/dia (30 mg/dia = 15 mg 12/12h). Anote o Anti-Xa e a barra Sangramento em “Risco de efeitos adversos (%)”.\n\nDiscutam em grupo e deixem selecionada a dose das 3 primeiras semanas desta TVP. Um colega diz que 20 mg/dia é a dose “padrão” de rivaroxabana e que 30 mg/dia é excesso. O que os números e o esquema sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Rivaroxabana") return { correct: false, feedback: "Selecione a Rivaroxabana." };
+          if (s.dose !== 30) return { correct: false, feedback: `A fase inicial da TVP é 15 mg 12/12h (30 mg/dia); com ${s.dose} mg/dia o Anti-Xa fica em ${s.lastLab?.antiXa}.` };
+          return { correct: true, feedback: `30 mg/dia: Anti-Xa ${s.lastLab?.antiXa} e Sangramento ${cgRisk(s, "Sangramento")}% (20 mg/dia daria 0,5 e 18%).` };
+        },
+        options: [
+          "20 mg/dia desde o início: Anti-Xa de 0,50 e Sangramento de 18%, menos risco que com 30 mg (0,75 e 26%); a fase de ataque só se usa em TEP, não em TVP",
+          "15 mg 12/12h por 21 dias, depois 20 mg/dia: Anti-Xa de 0,75 contra 0,50 e Sangramento de 26% contra 18%, risco aceito pela chance de extensão nas primeiras semanas",
+          "30 mg/dia mantidos pelos 3 meses: o Anti-Xa de 0,75 protege melhor e o Sangramento de 26% é igual ao de 20 mg/dia, então não há motivo para reduzir e a dose menor só serviria a quem sangra",
+          "10 mg/dia nos 21 dias iniciais e depois 20 mg/dia: Anti-Xa de 0,25 e Sangramento de 10%, o suficiente enquanto o trombo é recente, com menos sangramento que as doses maiores",
+        ],
+        correctIndex: 1,
+        explanation: "Rivaroxabana no simulador: 10 mg/dia → Anti-Xa 0,25 (Sangramento 10%); 20 mg/dia → 0,50 (18%); 30 mg/dia → 0,75 (26%). Na TVP aguda o esquema é 15 mg 12/12h por 21 dias (maior risco de extensão do trombo e de embolia nas primeiras semanas) e depois 20 mg/dia; a dose inicial maior custa mais sangramento (26% × 18% no painel), por isso a fase tem prazo. A dose de ataque vale para TVP e TEP, não só TEP; mantê-la por 3 meses repete o risco; 10 mg/dia é a dose de profilaxia estendida, depois de 6 meses.",
+        reference: "EINSTEIN Investigators. NEJM 2010 (EINSTEIN-DVT); Stevens SM et al. CHEST Guideline 2021",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Uma semana depois, o colega do plantão repara que o D-dímero de Amanda (4,5 de partida) continua alto e propõe subir a dose. Em “Prescrição”, escolha Enoxaparina 140 mg/dia e anote o D-dímero do cartão (dia 7); repita com Rivaroxabana 30 mg/dia e Apixabana 10 mg 12/12h.\n\nDiscutam em grupo e deixem selecionada a Enoxaparina 140 mg/dia. Nos três fármacos o D-dímero fica perto de 4,2. O que fazer com esse dado?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Enoxaparina" || (s.lastLab?.antiXa ?? 0) < 0.6) return { correct: false, feedback: "Deixe a Enoxaparina em dose de tratamento (≈140 mg/dia) selecionada." };
+          return (s.lastLab?.dDimero ?? 0) > 3.5 ? { correct: true, feedback: `D-dímero ${s.lastLab.dDimero} com a dose de tratamento: continua alto, e isso não indica falha.` } : { correct: false, feedback: "Confira o D-dímero." };
+        },
+        options: [
+          "Manter a dose: o D-dímero fica perto de 4,2 nos três fármacos, não mede eficácia nem orienta a dose; avaliar dor, edema, sangramento e função renal",
+          "Subir para 160 mg/dia: o D-dímero de 4,2 mostra anticoagulação insuficiente, mesmo com Anti-Xa de 0,82, e a dose só é adequada quando ele cair abaixo de 0,5 µg/mL",
+          "Trocar para rivaroxabana 30 mg/dia: o D-dímero de 4,1 é menor que o de 4,2 da enoxaparina, o que mostra que o DOAC é mais eficaz que a HBPM nesta paciente",
+          "Associar um segundo anticoagulante até o D-dímero de 4,2 normalizar, porque dois anticoagulantes somam proteção sem somar risco de sangramento relevante",
+        ],
+        correctIndex: 0,
+        explanation: "No simulador, o D-dímero do dia 7 é 4,22 com enoxaparina 140 mg, 4,10 com rivaroxabana 30 mg e 4,20 com apixabana 10 mg (de 4,5), com Anti-Xa de 0,82, 0,75 e 0,80: a diferença entre fármacos é pequena e não indica melhor ou pior. O D-dímero é marcador de ativação da coagulação e fibrinólise (útil para excluir TEV em baixa probabilidade), não de resposta ao tratamento nem de dose: a resposta se acompanha por sintomas (dor, edema), sangramento, plaquetas e função renal. Subir a dose ou associar anticoagulantes soma sangramento (Sangramento 23% a 26% no painel) sem benefício comprovado.",
+        reference: "Stevens SM et al. CHEST Guideline 2021; Wells PS et al. NEJM 2003 (D-dímero e probabilidade clínica)",
+      },
+      {
+        type: "mcq",
+        question: "Amanda usa anticoncepcional oral combinado e esta é a primeira TVP dela, sem trombofilia conhecida e sem outro fator de risco além do estrogênio.\n\nQual plano de alta é coerente?",
+        options: [
+          "Manter o anticoncepcional combinado e anticoagular por 3 meses, porque o estrogênio não influencia o risco de nova trombose depois de terminado o tratamento da TVP",
+          "Suspender o estrogênio e anticoagular por 6 semanas, porque a TVP provocada por um fator transitório removido dispensa os 3 meses completos de tratamento e a reavaliação",
+          "Suspender o estrogênio, anticoagular por 3 meses e orientar método sem estrogênio (DIU hormonal ou progestágeno isolado), avisando do sangramento menstrual maior com rivaroxabana",
+          "Suspender o estrogênio e anticoagular por tempo indeterminado, porque a TVP proximal exige anticoagulação vitalícia, mesmo com o fator provocador removido e sem recorrência",
+        ],
+        correctIndex: 2,
+        explanation: "TVP proximal provocada por fator de risco transitório maior removível (aqui, o estrogênio) trata-se por 3 meses, sem anticoagulação indefinida. O estrogênio combinado deve ser suspenso e substituído por método sem estrogênio (DIU de levonorgestrel, DIU de cobre ou progestágeno isolado). A rivaroxabana e a apixabana aumentam o sangramento uterino anormal em relação à HBPM e à varfarina, e o DIU hormonal reduz esse sangramento. Seis semanas é pouco, e a anticoagulação vitalícia fica para TVP não provocada ou recorrente.",
+        reference: "Stevens SM et al. CHEST Guideline 2021; CDC US Medical Eligibility Criteria for Contraceptive Use 2024",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Outro serviço prefere varfarina isolada para Amanda. Em “Prescrição”, escolha Varfarina 5 mg/dia e leia o INR dos dias 3, 5 e 7 no gráfico (passe o mouse na linha INR); compare com Enoxaparina 140 mg/dia, lendo o Anti-Xa do dia 1.\n\nDiscutam em grupo e deixem selecionada a Varfarina 5 mg/dia. Na FA de Carlos (Caso 1) não se faz ponte com heparina. Em uma TVP aguda, o que o INR e o Anti-Xa mostram sobre a conduta?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Varfarina" || (s.dose ?? 0) < 4 || (s.dose ?? 0) > 6.5) return { correct: false, feedback: "Deixe a Varfarina em uma dose de manutenção (4–6,5 mg/dia)." };
+          return cgDay(s, 5, "inr") < 2.0 && cgDay(s, 3, "inr") < 1.6 ? { correct: true, feedback: `INR ${cgDay(s, 3, "inr")} no dia 3 e ${cgDay(s, 5, "inr")} no dia 5: abaixo de 2,0 até o dia 5.` } : { correct: false, feedback: "Confira o INR dos dias 3 e 5." };
+        },
+        options: [
+          "O INR fica em 1,3 (dia 3) e 1,9 (dia 5), abaixo de 2,0; como na FA de Carlos, não há ponte, porque o INR sobe sozinho até 2,5 no dia 7 e a TVP não evolui nesse intervalo",
+          "O INR fica em 1,3 (dia 3) e 1,9 (dia 5), abaixo de 2,0; na TVP aguda a varfarina entra sobreposta a heparina ou DOAC por pelo menos 5 dias e até o INR ser ≥2,0 por 24 h",
+          "O INR fica em 1,3 (dia 3) e 1,9 (dia 5), abaixo de 2,0; a varfarina isolada é aceitável porque o trombo já está tratado antes da primeira dose, e a heparina só entra se o INR passar de 3,0",
+          "O INR fica em 1,3 (dia 3) e 1,9 (dia 5), abaixo de 2,0; basta dobrar a varfarina para 10 mg/dia nos primeiros dias, que o INR passa de 2,0 já no dia 4 (2,2) sem usar heparina",
+        ],
+        correctIndex: 1,
+        explanation: "Varfarina 5 mg: INR 1,0 (dia 2), 1,3 (dia 3), 1,6 (dia 4), 1,9 (dia 5), 2,2 (dia 6) e 2,5 (dia 7); a enoxaparina 140 mg tem Anti-Xa de 0,82 já no dia 1. Na TVP aguda o risco trombótico é imediato e o INR só chega a 2,0 por volta do dia 6, então a varfarina precisa de sobreposição com heparina ou DOAC por pelo menos 5 dias e até INR ≥2,0 por 24 h; na FA de Carlos não havia evento agudo. Dobrar a dose atinge o INR 2,2 no dia 4, mas ultrapassa o alvo (4,0 no dia 7, Caso 1). A TVP não está “tratada” sem anticoagulante efetivo.",
+        reference: "Kearon C et al. Chest 2012 (Antithrombotic therapy for VTE, 9th ed.); Stevens SM et al. CHEST Guideline 2021",
+      },
+      {
+        type: "mcq",
+        question: "Com a TVP em tratamento e já sem o anticoncepcional, Amanda descobre que está grávida de 6 semanas.\n\nQual conduta para a anticoagulação?",
+        options: [
+          "Manter a rivaroxabana, porque o DOAC não atravessa a placenta e é seguro em qualquer idade gestacional, sem necessidade de troca",
+          "Trocar para varfarina, porque é o anticoagulante oral com mais dados em gestantes e o INR permite controlar a dose, sobretudo no 1º trimestre",
+          "Suspender a anticoagulação, porque a gestação protege contra trombose e o risco de nova TVP só volta no pós-parto, quando se reinicia",
+          "Trocar para enoxaparina em dose de tratamento (≈1 mg/kg 12/12h), que não atravessa a placenta, mantida até 6 semanas após o parto",
+        ],
+        correctIndex: 3,
+        explanation: "É o contraste com o Caso 3: mesmo diagnóstico, paciente diferente, conduta diferente. Rivaroxabana e outros DOACs atravessam a placenta e não têm segurança estabelecida na gestação; a varfarina é teratogênica (embriopatia, sobretudo entre as semanas 6 e 12) e deve ser evitada no 1º trimestre; a gestação aumenta, e não reduz, o risco de trombose. HBPM em dose de tratamento não atravessa a placenta e é o anticoagulante da gestação, mantido por pelo menos 3 meses no total e até 6 semanas depois do parto.",
+        reference: "Bates SM et al. ASH 2018 Guidelines for VTE: management in the context of pregnancy (Blood Adv 2018)",
+      },
     ],
-    // Caso 4: Sangramento por HNF (Roberto Alves, 60a, SCA — TTPa 95, plaquetas 130, Hb 8.5 caindo)
+    // Caso 4: Sangramento por HNF (Roberto Alves, 60a, 85 kg, SCA — HNF 1.500 UI/h, TTPa 95, Hb 8,5, plaquetas 130)
     [
-      { type: "mcq", question: "TTPa 95s neste paciente (alvo terapêutico 60-80s): o que este valor indica?", options: ["Anticoagulação adequada, dentro do esperado", "SUPRATERAPÊUTICO — risco aumentado de sangramento, coerente com a melena e queda de Hb relatadas no caso. Conduta: reduzir ou suspender temporariamente a infusão de HNF", "Valor normal para HNF em qualquer contexto", "Subdosagem, exigindo aumento da infusão"], correctIndex: 1, explanation: "TTPa 95 está bem acima do alvo terapêutico de 60-80s. Conduta: suspender a infusão por 1-2h, reavaliar o TTPa, reiniciar com redução de 10-20% na taxa. Se sangramento clinicamente significativo (como neste caso): reverter com protamina.", reference: "ACCP 2012" },
-      { type: "adjust", question: "Selecione Heparina NF (HNF) na dose atual (como se estivesse mantendo a infusão) e observe o TTPa subir ainda mais no painel.\n\nDiante do sangramento ativo (melena, Hb caindo) e TTPa já supraterapêutico, por que MANTER a HNF seria uma conduta perigosa?", targetParams: {}, validator: (s) => { if (s.drug !== "Heparina NF (HNF)") return { correct: false, feedback: "Selecione Heparina NF (HNF)." }; return (s.lastLab?.ttpa ?? 0) > (s.baseLab?.ttpa ?? 0) ? { correct: true, feedback: "TTPa subindo ainda mais — piorando o quadro de sangramento." } : { correct: false, feedback: "Suba a dose para ver o TTPa subir." }; }, options: ["Manter a HNF nunca representa risco adicional", "Continuar a infusão empurraria o TTPa ainda mais para cima, ampliando o risco de sangramento maior — diante de sangramento ativo com TTPa já supraterapêutico, a conduta correta é suspender/reduzir a infusão e considerar reversão com protamina, não mantê-la", "A HNF não tem relação com o TTPa", "Manter a dose é sempre a escolha mais segura em qualquer cenário de sangramento"], correctIndex: 1, explanation: "Este é um exemplo direto de quando 'manter a conduta atual' é o erro: o painel mostra claramente que persistir com a HNF nesta dose intensifica a anticoagulação e o sangramento, reforçando a necessidade de suspender/reduzir e reverter.", reference: "ACCP 2012" },
-      { type: "adjust", question: "Agora selecione Protamina com dose ≥50mg e observe o TTPa cair no painel, partindo de 95s.\n\nEm qual proporção a protamina neutraliza a HNF, e como essa dose é calculada na prática?", targetParams: {}, validator: (s) => { if (s.drug !== "Protamina") return { correct: false, feedback: "Selecione Protamina." }; if ((s.dose ?? 0) < 50) return { correct: false, feedback: "Suba a dose para ≥50mg." }; return (s.lastLab?.ttpa ?? 999) < (s.baseLab?.ttpa ?? 0) ? { correct: true, feedback: "TTPa caindo — reversão da HNF." } : { correct: false, feedback: "Aguarde o painel atualizar." }; }, options: ["1mg de protamina para cada 10.000 UI de HNF, dose fixa", "1mg de protamina para cada 100 UI de HNF administrada na ÚLTIMA HORA (considerando a meia-vida curta da HNF, 60-90 min), com dose máxima de 50mg em dose única — infusão lenta pelo risco de hipotensão/bradicardia", "10mg de protamina para cada 100 UI de HNF", "Dose fixa de 100mg, independente da dose de HNF usada"], correctIndex: 1, explanation: "Protamina: 1mg neutraliza ~100 UI de HNF administrada na última hora (a meia-vida curta da HNF, 60-90 min, significa que HNF de horas atrás já foi parcialmente eliminada, exigindo menos protamina). Infusão lenta é essencial pelo risco de hipotensão e bradicardia.", reference: "Harrison's 21e" },
-      { type: "mcq", question: "Plaquetas 130k neste paciente em HNF por 48h (queda em relação ao basal).\n\nO que deve ser suspeitado diante desta queda de plaquetas durante o uso de heparina?", options: ["Erro laboratorial isolado, sem necessidade de investigação", "Trombocitopenia Induzida por Heparina (HIT) tipo II — mediada por anticorpos anti-PF4/heparina, tipicamente com queda >50% entre os dias 5-14 de exposição (embora possa ocorrer mais cedo em reexposição), com risco paradoxal de TROMBOSE, não apenas sangramento", "Efeito esperado e inofensivo de qualquer heparina", "Coagulação intravascular disseminada isolada, sem relação com a heparina"], correctIndex: 1, explanation: "HIT tipo II: anticorpos anti-PF4/heparina ativam plaquetas → trombocitopenia + risco de TROMBOSE paradoxal (não sangramento). Score 4Ts para triagem clínica. Se suspeitado: suspender TODA heparina (incluindo HBPM) e iniciar anticoagulante alternativo não-heparínico.", reference: "Warkentin TE. NEJM 2015" },
-      { type: "mcq", question: "Se este paciente estivesse em HBPM (não HNF) no momento do sangramento, a protamina teria a mesma eficácia de reversão?", options: ["Sim, exatamente a mesma eficácia (100%) que para HNF", "NÃO — a protamina neutraliza apenas ~60% da atividade da HBPM (principalmente a atividade anti-IIa, não a anti-Xa completamente), com dose ajustada pelo tempo desde a última aplicação (1mg:1mg se <8h, reduzindo progressivamente depois)", "A protamina não tem nenhum efeito sobre a HBPM", "A protamina neutraliza 200% da atividade da HBPM, sendo mais potente que para HNF"], correctIndex: 1, explanation: "Protamina neutraliza completamente (~100%) a HNF (moléculas grandes, uniformes), mas apenas parcialmente (~60%) a HBPM, por essa ter maior proporção de atividade anti-Xa (menos neutralizada pela protamina) em relação à anti-IIa. Ajuste de dose pelo tempo desde a última aplicação de HBPM.", reference: "ACCP 2012" },
+      {
+        type: "mcq",
+        question: "Roberto (85 kg) está em HNF EV 1.500 UI/h, com melena e queda de Hb de 3 g/dL em 6 h. Regra da protamina: 1 mg para cada 100 UI de HNF recebidas nas últimas cerca de 2 h (a meia-vida da HNF é de 60–90 min), no máximo 50 mg em dose única, infundida lentamente (até 5 mg/min).\n\nQual é a dose de protamina?",
+        options: [
+          "30 mg (1.500 UI/h × 2 h = 3.000 UI, dividido por 100), em infusão lenta de no máximo 5 mg/min, abaixo do teto de 50 mg",
+          "15 mg (1.500 UI da última hora dividido por 100), em infusão lenta de no máximo 5 mg/min, considerando só 1 h de infusão",
+          "85 mg (1 mg por kg de peso corporal), em infusão lenta de no máximo 5 mg/min, ajustando a dose ao peso do paciente",
+          "50 mg (a dose máxima), em bolus rápido, porque o sangramento é grave e a velocidade importa mais",
+        ],
+        correctIndex: 0,
+        explanation: "Cálculo: 1.500 UI/h × 2 h = 3.000 UI → 30 mg. A dose se baseia na heparina que ainda circula (últimas 2–3 h), não no peso do paciente (85 mg seria quase o dobro do teto) nem só na última hora (15 mg subdosa). A infusão rápida causa hipotensão e bradicardia (até anafilaxia), então vai lenta (≤5 mg/min); o teto de 50 mg por dose evita o efeito anticoagulante do excesso de protamina, que o painel mostra no Desafio 2.",
+        reference: "Garcia DA et al. Chest 2012 (Parenteral anticoagulants, 9th ed.)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender HNF (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, mas a protamina age em minutos e a HNF cai em horas.",
+        question: "Roberto continua sangrando, com TTPa de 95 s (alvo da HNF: 60–80 s) e Anti-Xa de 0,8. Em “Prescrição”, escolha Protamina e teste 10 mg, 20 mg, 30 mg e 100 mg, um de cada vez. Anote o TTPa e o Anti-Xa (cartões, dia 7).\n\nDiscutam em grupo e deixem selecionada a dose que neutraliza a HNF sem excesso. Um colega diz que 10 mg “já resolve, porque o TTPa de 73 s caiu para dentro do alvo de 60–80 s”. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Protamina") return { correct: false, feedback: "Selecione a Protamina." };
+          const t = s.lastLab?.ttpa ?? 99, ax = s.lastLab?.antiXa ?? 9;
+          return t <= 36 && ax <= 0.05 ? { correct: true, feedback: `Protamina ${s.dose} mg: TTPa ${t} s e Anti-Xa ${ax}: HNF neutralizada, sem excesso.` } : { correct: false, feedback: `Com ${s.dose} mg o TTPa fica em ${t} s e o Anti-Xa em ${ax}; busque a dose que zera o Anti-Xa sem voltar a prolongar o TTPa.` };
+        },
+        options: [
+          "10 mg: TTPa de 73 s (dentro do alvo de 60–80 s) e Anti-Xa de 0,53; basta, porque o alvo de TTPa da HNF já foi atingido",
+          "30 mg: TTPa de 30 s e Anti-Xa zerado; neutraliza a heparina infundida nas últimas 2 h, sem sobra de protamina que volte a anticoagular",
+          "100 mg: TTPa de 85 s e Anti-Xa zerado; a dose maior garante a reversão completa, e o TTPa alto vem do sangramento, não da protamina",
+          "20 mg: TTPa de 52 s e Anti-Xa de 0,27; reversão parcial é a ideal no sangramento, para não perder a anticoagulação da SCA",
+        ],
+        correctIndex: 1,
+        explanation: "Dose necessária = 30 mg (Desafio 1). No simulador: 10 mg → TTPa 73 s e Anti-Xa 0,53 (HNF ainda ativa, num paciente que sangra: o alvo de 60–80 s é para quem precisa estar anticoagulado, não para quem sangra); 20 mg → 52 s e 0,27; 30 mg → 30 s e 0; 50 mg → 35 s; 100 mg → 85 s, porque a protamina em excesso tem efeito anticoagulante próprio e piora o banner de risco para ALTO. Reversão parcial também não é “mais segura” numa SCA: o sangramento maior define a prioridade, e a decisão sobre antitrombóticos vem depois do controle.",
+        reference: "Garcia DA et al. Chest 2012 (Parenteral anticoagulants, 9th ed.)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Suspender HNF (sem dose)”, sem controle de dose; o gráfico mostra a tendência em dias, mas a protamina age em minutos e a HNF cai em horas.",
+        question: "Um colega diz que, como a HNF tem meia-vida de 60–90 min, “basta suspender a infusão”. Em “Prescrição”, escolha “Suspender HNF (sem dose)” e anote o TTPa e o Anti-Xa; depois escolha Protamina 30 mg e compare.\n\nDiscutam em grupo e deixem selecionada a conduta que defendem para Roberto. Quando suspender basta, e quando a protamina é necessária?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Protamina" || (s.dose ?? 0) < 30 || (s.dose ?? 0) > 50) return { correct: false, feedback: "Deixe a Protamina em 30 mg (a dose calculada): o sangramento é maior." };
+          return (s.lastLab?.ttpa ?? 99) <= 36 ? { correct: true, feedback: `Protamina ${s.dose} mg: TTPa ${s.lastLab.ttpa} s e Anti-Xa ${s.lastLab.antiXa} (suspender isolado deixaria 40 s e 0,12).` } : { correct: false, feedback: "Confira o TTPa." };
+        },
+        options: [
+          "Suspender basta para o Roberto: o TTPa cai para 40 s sem protamina, e o risco de hipotensão e anafilaxia da protamina supera o benefício neste sangramento",
+          "A protamina deve ser dada quando o TTPa passa de 80 s, mesmo sem sangramento, e a suspensão da infusão só vale para quem está com TTPa até 80 s",
+          "Suspender e esperar a Hb estabilizar: a protamina só entra se a Hb cair abaixo de 7 g/dL, porque antes disso o sangramento não é considerado grave",
+          "Roberto perdeu 3 g/dL de Hb em 6 h (sangramento maior): suspender e dar protamina 30 mg; sem sangramento, bastaria suspender ou reduzir e monitorar",
+        ],
+        correctIndex: 3,
+        explanation: "Suspender a HNF leva o TTPa a 40 s e o Anti-Xa a 0,12 (a heparina sai em horas, e a curva do painel é a tendência); a protamina 30 mg leva a 30 s e 0 em minutos. Com sangramento maior (queda de Hb ≥2 g/dL, melena, 8,5 g/dL) a reversão imediata é indicada, porque cada hora com heparina ativa sangra mais; sem sangramento importante (TTPa 95 s apenas), reduzir ou suspender a infusão e acompanhar o TTPa é a conduta, e protamina de rotina para TTPa alto sem sangramento é desnecessária (e traz risco de reação). A Hb de 7 g/dL é limiar de transfusão, não de gravidade do sangramento.",
+        reference: "Garcia DA et al. Chest 2012; Tomaselli GF et al. JACC 2020 (sangramento em uso de anticoagulantes)",
+      },
+      {
+        type: "mcq",
+        question: "As plaquetas de Roberto foram de 210 mil (admissão) para 130 mil (48 h de HNF, sem heparina nos 100 dias anteriores). Escore 4Ts: trombocitopenia — queda de 30–50% = 1 ponto; tempo — queda em até 4 dias sem exposição recente = 0; trombose nova — nenhuma = 0; outra causa — provável (SCA, sangramento maior, hemodiluição) = 1.\n\nQual é a pontuação e a conduta?",
+        options: [
+          "Total 6 (alta probabilidade): suspender toda heparina e iniciar argatrobana, porque a queda de 38% nas primeiras 48 h já define HIT",
+          "Total 4 (intermediária): pedir anticorpo anti-PF4 e trocar para anticoagulante não heparínico enquanto se aguarda o resultado do exame",
+          "Total 2 (baixa): HIT é improvável, a queda reflete SCA, sangramento e hemodiluição; não pedir anti-PF4 e acompanhar as plaquetas",
+          "Total 2 (baixa), mas a queda de 38% exige trocar a HNF por enoxaparina, que não causa HIT, e repetir o hemograma em 1 semana",
+        ],
+        correctIndex: 2,
+        explanation: "Queda de 38% (210 → 130) = 1 ponto; início em 48 h sem exposição prévia = 0; sem trombose = 0; outra causa provável = 1; total 2 (baixa probabilidade: 0–3). A HIT imune costuma aparecer entre os dias 5 e 10 de heparina (antes disso, só com exposição prévia); aqui a queda é explicável pela SCA, pelo sangramento e pela hemodiluição. Escore baixo dispensa anti-PF4 e troca de anticoagulante; trocar HNF por enoxaparina por “HIT” não faz sentido com este escore (e a HNF será interrompida pelo sangramento). Nota: o simulador não reduz plaquetas com a dose de heparina, porque a HIT é imune e não depende da dose.",
+        reference: "Lo GK et al. J Thromb Haemost 2006 (escore 4Ts); Cuker A et al. Blood 2012; Cuker A et al. ASH 2018 Guidelines on HIT (Blood Adv 2018)",
+      },
+      {
+        type: "mcq",
+        question: "Imagine o mesmo sangramento em Roberto (85 kg), mas em uso de enoxaparina 85 mg 12/12h, com a última aplicação há 4 h, em vez de HNF.\n\nO que muda na reversão com protamina?",
+        options: [
+          "Dose pela enoxaparina (1 mg por mg aplicado, máximo de 50 mg, se a última dose foi há menos de 8 h), mas neutraliza só cerca de 60% do Anti-Xa e a reversão é parcial",
+          "A protamina neutraliza a HBPM por completo, como a HNF, e o cálculo é o mesmo de 1 mg para cada 100 UI recebidas nas últimas 2 h, sem diferença entre as duas heparinas",
+          "A protamina não tem papel com a HBPM; basta aguardar, porque a meia-vida da enoxaparina é igual à da HNF, de 60–90 min, e a reversão não mudaria a conduta",
+          "A dose é de 0,5 mg para cada 1 mg de enoxaparina em qualquer horário da última aplicação, repetida a cada hora até o Anti-Xa zerar por completo e sem limite de dose",
+        ],
+        correctIndex: 0,
+        explanation: "É o contraste com a HNF (Desafio 1): a protamina neutraliza toda a atividade anti-IIa e só parte da anti-Xa da HBPM, por isso o efeito é incompleto (≈60%). Dose: 1 mg por mg de enoxaparina se a última aplicação foi há menos de 8 h (0,5 mg por mg depois disso, com segunda dose de 0,5 mg por mg se o sangramento continuar). Aqui, 85 mg × 1 = 85 mg, limitado ao máximo de 50 mg. A HBPM tem meia-vida de 4–7 h, não de 60–90 min, e não se aguarda: se o sangramento é grave, reverte-se parcialmente e trata-se o sangramento.",
+        reference: "Garcia DA et al. Chest 2012 (Parenteral anticoagulants, 9th ed.)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX,
+        question: "Depois da protamina, a equipe comemora: TTPa normal. Em “Prescrição”, deixe a Protamina em 30 mg e leia o TTPa, o Anti-Xa e a Hb nos cartões, e o banner “Risco Hemorrágico”.\n\nDiscutam em grupo. O TTPa voltou a 30 s e o Anti-Xa a 0, mas a Hb continua em 8,5 g/dL e o banner continua em MODERADO. O que o simulador não corrigiu e qual é o próximo passo para Roberto?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Protamina" || (s.dose ?? 0) < 30 || (s.dose ?? 0) > 50) return { correct: false, feedback: "Deixe a Protamina em 30 mg para ver o efeito da dose calculada." };
+          return (s.lastLab?.ttpa ?? 99) <= 36 && (s.baseLab?.hb ?? 99) < 9 ? { correct: true, feedback: `TTPa ${s.lastLab.ttpa} s e Anti-Xa ${s.lastLab.antiXa}, mas a Hb segue ${s.baseLab.hb} g/dL: a protamina trata a coagulação, não a perda de sangue.` } : { correct: false, feedback: "Confira o TTPa e a Hb." };
+        },
+        options: [
+          "Nada: com o TTPa normal o risco acabou, e a Hb de 8,5 g/dL se recupera sozinha em alguns dias, sem investigar a origem do sangramento nem repor hemácias",
+          "Repetir a protamina até o banner de risco ficar em BAIXO, porque o risco restante vem do excesso de heparina que ainda circula no sangue, mesmo com o Anti-Xa já zerado",
+          "Reiniciar a HNF em dose plena assim que o TTPa normalizar, porque a SCA tem prioridade e o sangramento já foi revertido pela protamina, sem esperar a endoscopia",
+          "A protamina corrige a coagulação, não a causa: investigar a origem da melena (endoscopia), repor hemácias conforme a clínica e só depois rediscutir antitrombóticos",
+        ],
+        correctIndex: 3,
+        explanation: "Com a protamina 30 mg o TTPa vai a 30 s e o Anti-Xa a 0, mas a Hb permanece em 8,5 g/dL (o painel não a modifica) e o banner fica em MODERADO só pela Hb: o risco que sobra não é de heparina. A reversão tira o fator agravante; a lesão que sangra continua lá e precisa de diagnóstico (endoscopia digestiva alta), reposição conforme a clínica e decisão compartilhada sobre quando retomar anticoagulante e antiagregante numa SCA recente. Repetir a protamina levaria ao excesso (Desafio 2), e reiniciar a HNF logo repete a causa.",
+        reference: "Tomaselli GF et al. JACC 2020 (ACC Expert Consensus Decision Pathway on bleeding on oral anticoagulants); Garcia DA et al. Chest 2012",
+      },
     ],
-    // Caso 5: Preparo Pré-operatório (Sônia Ferreira, 65a, FA + DRC, rivaroxabana 20mg — TFG 55)
+    // Caso 5: Preparo pré-operatório de DOAC (Sônia Ferreira, 65a, 70 kg, FA + DRC, rivaroxabana 20 mg — TFG 55, Anti-Xa 0,5 no pico)
     [
-      { type: "mcq", question: "Esta paciente usa rivaroxabana 20mg e fará artroplastia de quadril (alto risco de sangramento) em 5 dias.\n\nQuanto tempo antes da cirurgia a rivaroxabana deve ser suspensa?", options: ["12 horas antes, independente do risco cirúrgico", "≥48 horas antes para cirurgia de alto risco de sangramento (como artroplastia); considerar intervalo ainda maior se a função renal estiver reduzida", "Não é necessário suspender antes de nenhuma cirurgia", "1 semana antes, sem necessidade de individualizar pelo risco"], correctIndex: 1, explanation: "Meia-vida da rivaroxabana: ~5-9h (jovem) a 11-13h (idoso). Para cirurgia de alto risco de sangramento: suspender por pelo menos 2 meias-vidas completas antes, geralmente ≥48h. DRC prolonga a meia-vida, exigindo intervalo maior.", reference: "PAUSE Trial. NEJM 2019" },
-      { type: "mcq", question: "Esta paciente tem FA (não tem prótese valvar nem TEV recente).\n\nO bridge com HBPM no período de suspensão pré-operatória está indicado neste caso?", options: ["Sim, sempre indicado em qualquer paciente em anticoagulação oral", "NÃO indicado na maioria dos casos de FA (BRIDGE trial: sem redução de TEV, mas com aumento de sangramento) — bridge é reservado para ALTO risco trombótico: prótese mecânica mitral, TEV <3 meses, trombofilia de alto risco, nenhum presente nesta paciente", "Apenas se o INR estivesse acima de 5, o que não se aplica a DOACs", "Nunca é indicado em nenhuma situação clínica"], correctIndex: 1, explanation: "BRIDGE trial: bridge com HBPM na FA não reduziu TEV e AUMENTOU sangramento comparado à simples suspensão/reintrodução do anticoagulante oral. Bridge reservado para alto risco trombótico específico, ausente nesta paciente com FA isolada.", reference: "Douketis JD. NEJM 2015" },
-      { type: "mcq", question: "Quando reiniciar a anticoagulação terapêutica após a artroplastia de quadril (cirurgia de alto risco de sangramento)?", options: ["No dia da cirurgia, imediatamente após o procedimento", "48-72h pós-operatório, se a hemostasia estiver adequada — a profilaxia com HBPM em dose baixa pode começar mais cedo (12h pós-op), mas a dose terapêutica plena aguarda esse intervalo maior", "Somente após 2 semanas completas, independente da evolução", "Apenas após a retirada dos pontos cirúrgicos"], correctIndex: 1, explanation: "Reinício pós-operatório: cirurgia de baixo risco de sangramento, ~24h; alto risco (como artroplastia), 48-72h para dose terapêutica. Profilaxia com HBPM em dose baixa pode começar mais cedo (12h pós-op) sem o mesmo risco de sangramento da dose plena.", reference: "ASRA 2018" },
-      { type: "adjust", question: "Selecione Enoxaparina em dose baixa (profilática, ≤40mg) para o período de bridge (embora, como visto na questão anterior, o bridge não seja tipicamente indicado para FA isolada) e observe o Anti-Xa subir discretamente a partir do valor residual de rivaroxabana (0.3).\n\nQual a diferença entre bridge PROFILÁTICO e TERAPÊUTICO neste contexto perioperatório?", targetParams: {}, validator: (s) => { if (s.drug !== "Enoxaparina") return { correct: false, feedback: "Selecione Enoxaparina." }; return (s.lastLab?.antiXa ?? 0) > (s.baseLab?.antiXa ?? 0) ? { correct: true, feedback: "Anti-Xa subindo a partir do nível residual de rivaroxabana." } : { correct: false, feedback: "Suba a dose para ver o efeito." }; }, options: ["Não há diferença entre as duas doses no contexto perioperatório", "A dose profilática (baixa, ex: 40mg/dia) previne TVP relacionada à imobilização pós-operatória, mas NÃO substitui a anticoagulação terapêutica plena necessária para prevenir AVC na FA — são objetivos e doses completamente diferentes", "A dose profilática é sempre mais potente que a terapêutica", "A dose profilática é usada apenas em pacientes sem nenhum risco cardiovascular"], correctIndex: 1, explanation: "Profilática (baixa dose): previne TVP/TEP relacionada à imobilização cirúrgica — praticamente todo paciente cirúrgico se beneficia. Terapêutica (dose plena): objetivo de anticoagulação sistêmica completa (ex: prevenção de AVC na FA) — só usada como 'bridge' nos casos de alto risco trombótico específico.", reference: "ASRA 2018" },
-      { type: "mcq", question: "O Anti-Xa pré-operatório desta paciente é 0.3 UI/mL, refletindo atividade residual da rivaroxabana.\n\nO que esse valor indica sobre a segurança de prosseguir com a cirurgia de alto risco de sangramento neste momento?", options: ["Anticoagulação terapêutica ativa, mas segura para prosseguir com qualquer cirurgia", "Nível residual de DOAC ainda presente — para cirurgia de alto risco, idealmente o anti-Xa deveria estar <0.1 antes do procedimento; um valor de 0.3 sugere que a suspensão pode não ter sido por tempo suficiente, e adiar a cirurgia ou aguardar mais tempo deve ser considerado", "Valor normal, equivalente a ausência completa de anticoagulação", "Indica uso de heparina em dose profilática, não de DOAC"], correctIndex: 1, explanation: "Anti-Xa inespecífico detecta atividade residual de rivaroxabana/apixabana/HBPM. Para cirurgia de alto risco de sangramento, o ideal é anti-Xa <0.1 antes do procedimento. Um valor de 0.3 sugere atividade anticoagulante residual significativa, merecendo reavaliação do timing cirúrgico.", reference: "Levy JH. Blood 2018" },
-      { type: "mcq", question: "Esta paciente tem TFG 55 mL/min (função renal levemente reduzida).\n\nComo essa TFG impacta o planejamento da suspensão pré-operatória do DOAC?", options: ["Nenhum impacto, pois TFG 55 é considerada normal para qualquer DOAC", "A função renal reduzida prolonga a meia-vida de eliminação dos DOACs (especialmente dabigatrana, com eliminação renal de ~80%; rivaroxabana tem menor dependência renal, ~36%) — quanto pior a função renal, maior o intervalo de suspensão necessário antes da cirurgia", "A TFG reduzida acelera a eliminação do DOAC, permitindo suspensão mais curta", "TFG 55 contraindica completamente o uso de qualquer DOAC, exigindo troca obrigatória para varfarina"], correctIndex: 1, explanation: "Eliminação renal dos DOACs: dabigatrana ~80% (maior impacto renal), rivaroxabana ~36%, apixabana ~27%. Com TFG reduzida, a meia-vida se prolonga, exigindo intervalo de suspensão pré-operatória maior que o padrão para função renal normal.", reference: "Heidbuchel H. Europace 2015" },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Pausa da rivaroxabana”: o controle é o “Tempo sem tomar” (0–96 h, passos de 12 h); o eixo “Dia” do gráfico vai de hoje (0) até a cirurgia (7) e o cartão Anti-Xa mostra o valor na hora da cirurgia.",
+        question: "Sônia (70 kg, TFG 55 mL/min) toma rivaroxabana 20 mg/dia e opera o quadril em 5 dias (cirurgia de alto risco de sangramento). O Anti-Xa dela no pico é 0,5 UI/mL e a meia-vida da rivaroxabana nela é ≈12 h (idade e TFG 55). Em “Prescrição”, escolha “Pausa da rivaroxabana” e teste 24 h, 36 h, 48 h e 72 h sem tomar; leia o Anti-Xa do cartão. Considere seguro, para cirurgia de grande sangramento, um Anti-Xa abaixo de 0,05 UI/mL (cerca de 1/10 do pico).\n\nDiscutam em grupo e deixem selecionado o menor intervalo que atinge essa meta. Um colega propõe 24 h “porque a meia-vida da rivaroxabana é curta”. O que os números sustentam?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Pausa da rivaroxabana") return { correct: false, feedback: "Selecione “Pausa da rivaroxabana”." };
+          const ax = s.lastLab?.antiXa ?? 9;
+          if (ax >= 0.05) return { correct: false, feedback: `Com ${s.dose} h sem tomar o Anti-Xa fica em ${ax}, ainda acima de 0,05.` };
+          return (s.dose ?? 0) <= 60 ? { correct: true, feedback: `${s.dose} h sem tomar: Anti-Xa ${ax} (abaixo de 0,05).` } : { correct: false, feedback: `${s.dose} h passa da meta com folga; procure o menor intervalo que fica abaixo de 0,05.` };
+        },
+        options: [
+          "24 h bastam: o Anti-Xa de 0,13 já caiu a um quarto do pico, e a meia-vida de 12 h garante a eliminação completa nesse intervalo",
+          "36 h bastam: o Anti-Xa de 0,06 está praticamente no limite, e a diferença para 0,05 não tem importância clínica em artroplastia",
+          "48 h (omitir 2 dias): Anti-Xa de 0,03, abaixo de 0,05; com meia-vida de ≈12 h, 24 h deixam 0,13 e 36 h deixam 0,06, ainda acima do limite",
+          "96 h: Anti-Xa zerado; pausas longas são preferíveis porque o risco de AVC em 4 dias sem anticoagulante na FA é desprezível",
+        ],
+        correctIndex: 2,
+        explanation: "Com meia-vida de 12 h o Anti-Xa cai a metade a cada 12 h: 24 h → 0,13; 36 h → 0,06; 48 h → 0,03; 72 h → 0,01; 96 h → 0,00. O menor intervalo abaixo de 0,05 é 48 h, o que corresponde a omitir 2 dias antes de cirurgia de alto risco (PAUSE). Em 24 h ainda restam 26% do pico; 36 h passam do limite escolhido. A pausa de 96 h zera o Anti-Xa mas alonga o período sem proteção sem benefício (o risco de AVC na pausa é baixo, não nulo).",
+        reference: "Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Steffel J et al. EHRA Practical Guide 2021",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Pausa da rivaroxabana”: o controle é o “Tempo sem tomar” (0–96 h, passos de 12 h); o eixo “Dia” do gráfico vai de hoje (0) até a cirurgia (7) e o cartão Anti-Xa mostra o valor na hora da cirurgia.",
+        question: "A cirurgia de Sônia será sob raquianestesia (bloqueio neuraxial), em que um hematoma raquimedular tem desfecho catastrófico, e a ASRA recomenda a última dose de rivaroxabana pelo menos 72 h antes da punção. Em “Prescrição”, “Pausa da rivaroxabana”: compare 48 h e 72 h e anote o Anti-Xa de cada.\n\nDiscutam em grupo e deixem selecionados 72 h. Se Sônia tomou a última dose na manhã de segunda-feira, em que horário a punção pode ser feita, e o que sustenta a recomendação?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Pausa da rivaroxabana" || (s.dose ?? 0) < 72) return { correct: false, feedback: "Deixe a pausa em pelo menos 72 h, o intervalo para bloqueio neuraxial." };
+          return (s.lastLab?.antiXa ?? 9) < 0.05 ? { correct: true, feedback: `${s.dose} h: Anti-Xa ${s.lastLab.antiXa}, ainda mais baixo que o de 48 h (0,03).` } : { correct: false, feedback: "Confira o Anti-Xa." };
+        },
+        options: [
+          "Quinta de manhã (72 h depois): o Anti-Xa cai de 0,03 (48 h) para 0,01 (72 h), e o hematoma raquimedular tem desfecho muito pior que um sangramento cirúrgico, o que pede mais margem",
+          "Quarta de manhã (48 h depois): o Anti-Xa de 0,03 já está abaixo de 0,05, e o mesmo limite do exame vale para a cirurgia e para o bloqueio neuraxial, sem diferença de risco entre os dois",
+          "Terça de manhã (24 h depois): o Anti-Xa de 0,13 está abaixo do pico, e o bloqueio neuraxial só exige que a dose seja omitida no dia da cirurgia, sem intervalo mínimo em horas",
+          "Sexta de manhã (96 h depois): com TFG de 55 mL/min o intervalo para bloqueio neuraxial dobra para 96 h, porque a rivaroxabana é eliminada principalmente pelos rins e a TFG dela está reduzida",
+        ],
+        correctIndex: 0,
+        explanation: "No simulador a pausa de 48 h deixa Anti-Xa 0,03 e a de 72 h deixa 0,01 (o Anti-Xa é 0,5 no pico). A ASRA exige ≥72 h para bloqueio neuraxial com rivaroxabana porque um hematoma no canal é raro, mas leva a paraplegia permanente, então a margem é maior que para o sangramento cirúrgico (PAUSE, 2 dias). Segunda de manhã + 72 h = quinta de manhã. A TFG de 55 mL/min não dobra o intervalo (a rivaroxabana é eliminada ≈1/3 pelos rins); a ASRA também orienta aguardar ≥6 h depois da retirada do cateter para a primeira dose.",
+        reference: "Horlocker TT et al. ASRA Evidence-Based Guidelines, 4th ed. (Reg Anesth Pain Med 2018)",
+      },
+      {
+        type: "mcq",
+        question: "Sônia (65 anos, mulher) tem FA, sem hipertensão, diabetes, AVC, insuficiência cardíaca ou doença vascular conhecidos (a DRC não pontua no CHA₂DS₂-VASc). A rivaroxabana ficará em pausa por 2 dias antes da cirurgia.\n\nQual é o CHA₂DS₂-VASc e se faz ponte com heparina?",
+        options: [
+          "Escore 2 (idade 65–74 e sexo feminino): ponte com enoxaparina em dose terapêutica nos 2 dias de pausa, porque FA com escore 2 ou mais exige ponte durante a pausa do DOAC",
+          "Escore 2 (idade 65–74 e sexo feminino): sem ponte; no PAUSE, omitir o DOAC teve tromboembolismo arterial abaixo de 1%, e a ponte só somaria sangramento sem reduzir o AVC",
+          "Escore 4 (idade 65–74, sexo feminino e DRC com 2 pontos): ponte com enoxaparina em dose profilática, porque a DRC eleva o risco de AVC e de sangramento na pausa",
+          "Escore 2 (idade 65–74 e sexo feminino): ponte com HNF EV nos 2 dias de pausa, porque esse é o período de maior risco e a HNF tem meia-vida curta, suspensa horas antes da cirurgia",
+        ],
+        correctIndex: 1,
+        explanation: "Idade 65–74 (1) + sexo feminino (1) = 2; DRC não pontua. No estudo PAUSE, os pacientes com FA em DOAC não receberam ponte e o tromboembolismo arterial em 30 dias foi baixo (<1%), com sangramento maior de 0,9% a 1,9%; a ponte com HBPM (BRIDGE, com varfarina) não reduziu eventos e aumentou o sangramento. O DOAC tem início e fim de ação em horas, então a “janela sem proteção” é curta e a ponte não tem lugar. Cuidado: sobrepor heparina com DOAC ainda circulante soma efeito (Desafio 4).",
+        reference: "Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Douketis JD et al. NEJM 2015 (BRIDGE)",
+      },
+      {
+        type: "adjust",
+        context: CG_CTX + " Neste caso há a conduta “Pausa da rivaroxabana”: o controle é o “Tempo sem tomar” (0–96 h, passos de 12 h); o eixo “Dia” do gráfico vai de hoje (0) até a cirurgia (7) e o cartão Anti-Xa mostra o valor na hora da cirurgia.",
+        question: "Para “proteger” os 2 dias de pausa, um residente prescreve enoxaparina a partir de hoje, sem esperar a rivaroxabana sair. Em “Prescrição”, escolha Enoxaparina e teste 40 mg/dia e 100 mg/dia (≈1,5 mg/kg); o Anti-Xa já parte de 0,5, porque a rivaroxabana ainda circula. Anote o Anti-Xa (cartão, dia 7) e a barra Sangramento.\n\nDiscutam em grupo e deixem selecionada a Enoxaparina 100 mg/dia. O que os números mostram sobre sobrepor os dois anticoagulantes?",
+        targetParams: {},
+        validator: (s) => {
+          if (s.drug !== "Enoxaparina" || (s.dose ?? 0) < 100) return { correct: false, feedback: "Deixe a Enoxaparina em 100 mg/dia, a dose de ponte proposta." };
+          return (s.lastLab?.antiXa ?? 0) > 1.0 ? { correct: true, feedback: `Anti-Xa ${s.lastLab.antiXa} (o dobro do 0,5 de partida): os dois fármacos somam efeito.` } : { correct: false, feedback: "Confira o Anti-Xa." };
+        },
+        options: [
+          "O Anti-Xa de 1,07 é a soma de dois fármacos que protegem em dobro; é seguro, porque a enoxaparina compensa a queda da rivaroxabana antes da cirurgia",
+          "A enoxaparina só soma efeito se for em dose plena; com 40 mg o Anti-Xa de 0,73 já é seguro para operar na sexta, e a dose profilática dispensa a pausa",
+          "A sobreposição é segura enquanto o Anti-Xa ficar abaixo de 1,0; com 100 mg o valor de 1,07 só passa pouco do limite e se corrige no dia da cirurgia",
+          "A sobreposição soma efeito no fator Xa (0,5 → 1,07, acima de 1,0) e aumenta o sangramento; a enoxaparina só entra depois da saída do DOAC",
+        ],
+        correctIndex: 3,
+        explanation: "Com a rivaroxabana ainda circulando (Anti-Xa 0,5), enoxaparina 40 mg leva a 0,73 e 100 mg leva a 1,07 (cartão em Crítico, Sangramento 18%): os dois inibem o mesmo alvo, então os efeitos somam em vez de se substituir. O objetivo da pausa é baixar o Anti-Xa (≈0,03 em 48 h); somar heparina antes disso desfaz o objetivo. Na FA com escore 2 não há indicação de ponte (Desafio 3); a profilaxia de TEV com enoxaparina 40 mg só começa depois da cirurgia (≥12 h após a punção neuraxial).",
+        reference: "Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Horlocker TT et al. ASRA 2018",
+      },
+      {
+        type: "mcq",
+        question: "A cirurgia ocorreu sem intercorrências e a hemostasia é adequada. Sônia tem alto risco de sangramento cirúrgico (artroplastia de quadril).\n\nQuando e como reiniciar a rivaroxabana 20 mg/dia?",
+        options: [
+          "No mesmo dia, 6 h após a cirurgia, em dose plena, porque a FA não deve ficar sem anticoagulante depois da cirurgia, sem esperar a hemostasia",
+          "Depois de 14 dias, com ponte de enoxaparina em dose terapêutica, para eliminar o risco de sangramento na ferida operatória, mantida até o fim do mês",
+          "Em 48–72 h, em dose plena, com hemostasia adequada; antes, profilaxia de TEV com enoxaparina 40 mg/dia, iniciada ≥12 h após a punção",
+          "Em 24 h, com metade da dose (10 mg) mantida por 3 meses, porque cirurgia ortopédica contraindica dose plena por esse período e exige reavaliação",
+        ],
+        correctIndex: 2,
+        explanation: "Em cirurgia de alto risco de sangramento, o DOAC volta em dose plena 48–72 h depois (PAUSE: dia 2–3), se a hemostasia estiver boa; a dose plena precoce (6 h) soma sangramento de ferida, e esperar 14 dias deixa a FA sem proteção sem ganho. Entre a cirurgia e o reinício, a profilaxia de TEV com enoxaparina 40 mg/dia (Anti-Xa ≈0,23 isolada) começa ≥12 h depois da punção neuraxial, e a rivaroxabana 10 mg/dia é dose de profilaxia pós-artroplastia, não de FA.",
+        reference: "Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Horlocker TT et al. ASRA 2018",
+      },
+      {
+        type: "mcq",
+        question: "Contraste: suponha que Sônia usasse dabigatrana 150 mg 12/12h, em vez de rivaroxabana, e que a TFG dela estivesse em 45 mL/min (menor que 50), para a mesma cirurgia de alto risco.\n\nQuanto tempo de pausa antes da cirurgia?",
+        options: [
+          "2 dias, igual ao da rivaroxabana, porque os DOACs têm o mesmo intervalo independentemente da função renal",
+          "4 dias, porque a eliminação renal de ≈80% prolonga a meia-vida da dabigatrana quando o ClCr cai abaixo de 50 mL/min",
+          "1 dia, porque a dabigatrana age só no fator IIa e é revertida pelo idarucizumabe, então a pausa pode ser mais curta",
+          "7 dias, porque com ClCr abaixo de 50 mL/min a dabigatrana é contraindicada e se troca por varfarina com ponte de heparina",
+        ],
+        correctIndex: 1,
+        explanation: "A dabigatrana é eliminada ≈80% pelos rins, por isso a pausa depende do ClCr: no PAUSE, em cirurgia de alto risco, 2 dias se ClCr ≥50 mL/min e 4 dias se <50. Para a rivaroxabana e a apixabana (eliminação renal ≈1/3 e ≈1/4) o intervalo de 2 dias foi o mesmo, com ClCr ≥30 mL/min. Por isso o simulador, com TFG 55, usa a pausa de 48 h para a rivaroxabana. O idarucizumabe é para emergência, não substitui a pausa planejada.",
+        reference: "Douketis JD et al. JAMA Intern Med 2019 (PAUSE); Steffel J et al. EHRA Practical Guide 2021",
+      },
     ],
   ];
 
@@ -3413,7 +3912,7 @@ export function getCoagulacaoLabChallenges(caseIndex?: number): ChallengeSet {
 
   return {
     title: idx !== undefined ? `Desafios: ${caseNames[idx]}` : "Desafio: Coagulação e Anticoagulantes",
-    description: "Interprete coagulograma (INR, TTPa, anti-Xa) e faça ajustes na anticoagulação.",
+    description: "Ajuste a anticoagulação, leia INR, TTPa e Anti-Xa e decida em grupo.",
     challenges,
   };
 }

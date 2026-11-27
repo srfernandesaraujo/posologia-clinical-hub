@@ -906,6 +906,30 @@ ARQUÉTIPOS (varie entre eles): (1) DM2 sem tratamento, obeso, com HOMA-IR alto;
 
 COERÊNCIA OBRIGATÓRIA: scenario, baseLab, regimen, hba1cTarget e expectedDrugs precisam concordar entre si; o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora (ex.: a sulfonilureia com a menor HbA1c mas hipoglicemia alta; a pioglitazona na IC; a metformina acima do limite renal; o pH que normaliza com o ânion gap ainda aberto).`,
 
+  "farmacoterapia-coagulacao": `Gere um caso clínico COMPLETO para o Simulador de Coagulação e Anticoagulantes (Farmacoterapia Laboratorial).
+O simulador projeta, para o fármaco e a dose escolhidos pelo aluno, o coagulograma do 7º dia (INR, TTPa, Anti-Xa, plaquetas, fibrinogênio, D-dímero; a Hb é a do caso e não muda), o gráfico de 7 dias de INR, TTPa e Anti-Xa, as barras de risco de efeitos adversos e um banner de risco hemorrágico. O caso é usado em atividades em grupo (sala virtual): o aluno mexe na conduta, lê os números e decide.
+
+O JSON deve conter EXATAMENTE estas propriedades:
+- title: "Caso IA: Nome do paciente"
+- difficulty: "Fácil"|"Médio"|"Difícil"
+- patient: { name (nome brasileiro), age (number), weight (kg, number), sex ("M"|"F"), specialGroup (array curto: "FA", "Prótese Valvar", "TVP", "DRC", "SCA", "Gestante", "Idoso frágil"...), diagnosis (descrição NEUTRA e curta do motivo da consulta, sem a conduta nem o escore calculado) }
+- scenario: apresentação em 3-5 frases com idade, peso, comorbidades, anticoagulante em uso (com dose), creatinina/TFG, Hb e TODOS os valores do baseLab que o texto usar (INR, TTPa, plaquetas...). NUNCA escreva o diagnóstico, a conduta nem "precisa de X". Se o caso pedir um escore (CHA₂DS₂-VASc, 4Ts), traga só os dados de entrada.
+- baseLab: { inr (number), ttpa (s), tp (s), antiXa (UI/mL), plaquetas (×10³/µL), fibrinogenio (mg/dL), dDimero (µg/mL FEU), hb (g/dL) }. Coerência obrigatória: INR alto só com varfarina ou hepatopatia; TTPa alto só com heparina ou coagulopatia; Anti-Xa >0 só com heparina, HBPM ou DOAC anti-Xa em uso.
+- expectedDrugs: 1 a 3 nomes EXATOS da lista: "Varfarina", "Heparina NF (HNF)", "Enoxaparina", "Rivaroxabana", "Apixabana", "Dabigatrana", "Vitamina K (Fitomenadiona)", "Ácido Tranexâmico", "Protamina". NÃO use "Suspender varfarina", "Suspender HNF" nem "Pausa da rivaroxabana": essas condutas só existem nos casos nativos.
+- clinicalTip: 1-2 frases com a conduta e seus limites.
+- references: 1 a 3 referências REAIS (autor, periódico, ano). Não invente.
+- OPCIONAL: infusion: { hnfUnitsPerHour: number } quando o paciente está em HNF EV e a conduta é a protamina (a dose necessária é 1 mg por 100 UI das últimas 2 h; escreva a taxa de infusão também no scenario).
+
+O QUE O SIMULADOR CONSEGUE MOSTRAR (escreva o caso para que a conduta esperada produza um efeito visível):
+- Varfarina soma ≈0,3 de INR por mg/dia, com efeito pleno só no dia 7 (5 mg: INR 1,0 → 2,5; 10 mg → 4,0); a vitamina K reduz uma fração do excesso do INR e do TTPa (1 mg ≈ 36%, 2,5 mg ≈ 67%, 10 mg ≈ 99%); sobre INR 1,0 não faz nada.
+- Enoxaparina: Anti-Xa ≈0,4 UI/mL por mg/kg/dia (1 mg/kg 12/12h ≈ 0,8); rivaroxabana ≈0,025 por mg/dia (30 mg/dia = 15 mg 12/12h); apixabana ≈0,08 por mg 12/12h; DOAC quase não altera o INR; heparinas e DOAC agem em ~1 dia.
+- Protamina: neutraliza a HNF pela dose necessária; menos que isso deixa Anti-Xa e TTPa altos, e mais de 1,5× a necessária volta a prolongar o TTPa.
+- NÃO modela: queda de plaquetas por HIT (imune, não por dose), ajuste renal das doses, CCP, plasma, transfusão, o efeito do D-dímero como resposta ao tratamento (cai pouco em 7 dias), cinética em horas nem seguimento além de 7 dias.
+
+ARQUÉTIPOS (varie entre eles): (1) início de anticoagulação na FA não valvar (varfarina × DOAC); (2) INR supraterapêutico sem sangramento em varfarina; (3) TVP/TEP aguda (HBPM ou DOAC em dose de ataque); (4) sangramento em uso de HNF ou HBPM (protamina); (5) paciente com função renal reduzida ou peso extremo em DOAC/HBPM.
+
+COERÊNCIA OBRIGATÓRIA: scenario, baseLab, expectedDrugs e clinicalTip precisam concordar entre si, e o caso precisa permitir pelo menos uma decisão em que os números do simulador sustentem a conduta correta e desmintam uma conduta tentadora (ex.: vitamina K 10 mg que normaliza o INR de uma prótese mecânica abaixo do alvo; INR de 1,3 que "parece subdose" no DOAC; D-dímero que continua alto na dose certa; protamina em excesso).`,
+
   "dispensacao-344": `Gere um caso clínico COMPLETO para o Simulador de Dispensação de Medicamentos Controlados (Portaria 344/98 - ANVISA).
 O caso simula um paciente chegando ao balcão da farmácia com uma prescrição de medicamento controlado. O estudante deve verificar a prescrição, identificar erros e decidir se dispensa ou não.
 
